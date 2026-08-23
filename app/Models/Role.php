@@ -8,4 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 class Role extends SpatieRole
 {
     use HasUlids;
+
+    protected $keyType = 'string';
+    public $incrementing = false;
 }

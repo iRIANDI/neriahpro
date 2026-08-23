@@ -19,6 +19,15 @@ class VisionBlueprintsTable
                     ->label('ID')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('slug')
+                    ->label('Invite Link')
+                    ->copyable()
+                    ->copyMessage('Link undangan berhasil disalin')
+                    ->copyMessageDuration(1500)
+                    ->formatStateUsing(fn (string $state): string => url('/invite/' . $state))
+                    ->color('primary')
+                    ->icon('heroicon-m-clipboard-document-check')
+                    ->searchable(),
                 TextColumn::make('client_name')
                     ->searchable(),
                 TextColumn::make('email')

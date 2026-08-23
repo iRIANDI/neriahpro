@@ -12,6 +12,10 @@ class VisionBlueprintForm
     {
         return $schema
             ->components([
+                \Filament\Forms\Components\TextInput::make('slug')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->helperText('Otomatis di-generate saat data dibuat'),
                 TextInput::make('client_name')
                     ->required(),
                 TextInput::make('email')

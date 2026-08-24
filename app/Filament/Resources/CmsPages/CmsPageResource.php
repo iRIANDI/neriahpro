@@ -35,46 +35,45 @@ class CmsPageResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema
+            ->columns(12)
             ->components([
-                Grid::make(['default' => 1, 'sm' => 1, 'md' => 3])->schema([
-                    Group::make()->schema([
-                        Section::make('Page Information')
-                            ->description('Basic information and content for this page.')
-                            ->schema([
-                                TextInput::make('slug')
-                                    ->required()
-                                    ->unique(ignoreRecord: true)
-                                    ->prefix('/')
-                                    ->helperText('The URL slug for this page (e.g. about-us)'),
-                                KeyValue::make('title')
-                                    ->label('Page Titles (Multilingual)')
-                                    ->keyLabel('Language Code (e.g. en, id)')
-                                    ->valueLabel('Title')
-                                    ->helperText('Define the page title in multiple languages.'),
-                            ]),
-                            
-                        Section::make('SEO & Metadata')
-                            ->description('Search engine optimization settings.')
-                            ->schema([
-                                KeyValue::make('meta_description')
-                                    ->label('Meta Descriptions')
-                                    ->keyLabel('Language Code')
-                                    ->valueLabel('Description')
-                                    ->helperText('A brief description for search engines.'),
-                            ]),
-                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2]),
+                Group::make()->schema([
+                    Section::make('Page Information')
+                        ->description('Basic information and content for this page.')
+                        ->schema([
+                            TextInput::make('slug')
+                                ->required()
+                                ->unique(ignoreRecord: true)
+                                ->prefix('/')
+                                ->helperText('The URL slug for this page (e.g. about-us)'),
+                            KeyValue::make('title')
+                                ->label('Page Titles (Multilingual)')
+                                ->keyLabel('Language Code (e.g. en, id)')
+                                ->valueLabel('Title')
+                                ->helperText('Define the page title in multiple languages.'),
+                        ])->columns(1),
+                        
+                    Section::make('SEO & Metadata')
+                        ->description('Search engine optimization settings.')
+                        ->schema([
+                            KeyValue::make('meta_description')
+                                ->label('Meta Descriptions')
+                                ->keyLabel('Language Code')
+                                ->valueLabel('Description')
+                                ->helperText('A brief description for search engines.'),
+                        ])->columns(1),
+                ])->columnSpan(['default' => 12, 'md' => 8]),
 
-                    Group::make()->schema([
-                        Section::make('Visibility')
-                            ->description('Control the page visibility.')
-                            ->schema([
-                                Toggle::make('is_published')
-                                    ->label('Published')
-                                    ->helperText('Toggle to make this page visible to the public.')
-                                    ->default(false),
-                            ]),
-                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 1]),
-                ])
+                Group::make()->schema([
+                    Section::make('Visibility')
+                        ->description('Control the page visibility.')
+                        ->schema([
+                            Toggle::make('is_published')
+                                ->label('Published')
+                                ->helperText('Toggle to make this page visible to the public.')
+                                ->default(false),
+                        ])->columns(1),
+                ])->columnSpan(['default' => 12, 'md' => 4]),
             ]);
     }
 

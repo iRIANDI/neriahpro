@@ -33,44 +33,43 @@ class CmsGlobalSettingResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema
+            ->columns(12)
             ->components([
-                Grid::make(['default' => 1, 'sm' => 1, 'md' => 3])->schema([
-                    Group::make()->schema([
-                        Section::make('Configuration')
-                            ->description('Define the global setting key and its configuration values.')
-                            ->schema([
-                                Select::make('key')
-                                    ->label('Setting Key')
-                                    ->options([
-                                        'navigation_format' => 'Navigation Format',
-                                        'footer_format' => 'Footer Format',
-                                        'site_identity' => 'Site Identity',
-                                        'social_links' => 'Social Links',
-                                        'contact_info' => 'Contact Information',
-                                    ])
-                                    ->searchable()
-                                    ->required()
-                                    ->unique(ignoreRecord: true)
-                                    ->helperText('Select the specific setting you want to manage.'),
-                                
-                                KeyValue::make('value')
-                                    ->label('Properties Data')
-                                    ->keyLabel('Property (e.g. style, align)')
-                                    ->valueLabel('Value (e.g. dark, center)')
-                                    ->helperText('Provide specific attributes for this setting.')
-                                    ->required(),
-                            ]), 
-                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2]),
+                Group::make()->schema([
+                    Section::make('Configuration')
+                        ->description('Define the global setting key and its configuration values.')
+                        ->schema([
+                            Select::make('key')
+                                ->label('Setting Key')
+                                ->options([
+                                    'navigation_format' => 'Navigation Format',
+                                    'footer_format' => 'Footer Format',
+                                    'site_identity' => 'Site Identity',
+                                    'social_links' => 'Social Links',
+                                    'contact_info' => 'Contact Information',
+                                ])
+                                ->searchable()
+                                ->required()
+                                ->unique(ignoreRecord: true)
+                                ->helperText('Select the specific setting you want to manage.'),
+                            
+                            KeyValue::make('value')
+                                ->label('Properties Data')
+                                ->keyLabel('Property (e.g. style, align)')
+                                ->valueLabel('Value (e.g. dark, center)')
+                                ->helperText('Provide specific attributes for this setting.')
+                                ->required(),
+                        ])->columns(1), 
+                ])->columnSpan(['default' => 12, 'md' => 8]),
 
-                    Group::make()->schema([
-                        Section::make('Information')
-                            ->schema([
-                                \Filament\Forms\Components\Placeholder::make('help')
-                                    ->content('This setting affects the site-wide frontend appearance. The Properties Data table allows you to define flexible key-value pairs.')
-                                    ->hiddenLabel(),
-                            ]),
-                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 1]),
-                ])
+                Group::make()->schema([
+                    Section::make('Information')
+                        ->schema([
+                            \Filament\Forms\Components\Placeholder::make('help')
+                                ->content('This setting affects the site-wide frontend appearance. The Properties Data table allows you to define flexible key-value pairs.')
+                                ->hiddenLabel(),
+                        ])->columns(1),
+                ])->columnSpan(['default' => 12, 'md' => 4]),
             ]);
     }
 

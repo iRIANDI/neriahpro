@@ -22,11 +22,24 @@ class EditCmsGlobalSetting extends EditRecord
         $key = $data['key'] ?? '';
         $value = $data['value'] ?? [];
         
+        // Initialize all virtual fields to prevent hydration issues
+        $data['navigation_value'] = [];
+        $data['footer_value'] = [];
+        $data['schema_value'] = '';
+        $data['properties_value'] = [];
+        
         // Helper to check if an array is a valid Builder block array
         $isBuilderArray = function($val) {
             if (!is_array($val) || empty($val)) return false;
-            $first = reset($val);
-            return is_array($first) && isset($first['type']);
+            
+            // Filament Builder expects a sequential array (list) of blocks, or string keys (UUIDs)
+            // But fundamentally, EVERY item must be an array with a 'type' key.
+            foreach ($val as $item) {
+                if (!is_array($item) || !isset($item['type'])) {
+                    return false;
+                }
+            }
+            return true;
         };
 
         if ($key === 'navigation_format') {

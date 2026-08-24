@@ -1,9 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function HeroIsland({ headline, subheadline, cta_text, cta_link }) {
+export default function HeroIsland({ headline, subheadline, cta_text, cta_link, full_screen }) {
+  const heightClass = full_screen ? "min-h-screen" : "min-h-[90vh]";
+
   return (
-    <div className="relative w-full min-h-[90vh] flex flex-col items-center justify-center text-center overflow-hidden bg-black text-white px-4">
+    <div className={`relative w-full ${heightClass} flex flex-col items-center justify-center text-center overflow-hidden bg-black text-white px-4`}>
       {/* Decorative Blur Backgrounds */}
       <div className="absolute top-1/4 left-1/4 w-[40vw] h-[40vw] bg-[#00f0ff] opacity-10 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[30vw] h-[30vw] bg-purple-600 opacity-10 rounded-full blur-[150px] pointer-events-none" />

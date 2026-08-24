@@ -57,31 +57,6 @@ class CmsGlobalSettingResource extends Resource
                             
                             \Filament\Forms\Components\Builder::make('value')
                                 ->label('Configuration Format')
-                                ->formatStateUsing(function ($state) {
-                                    if (empty($state)) return [];
-                                    
-                                    if (is_array($state)) {
-                                        $first = reset($state);
-                                        if (is_array($first) && isset($first['type'])) {
-                                            return $state;
-                                        }
-                                        // Legacy key-value array
-                                        return [
-                                            [
-                                                'type' => 'properties',
-                                                'data' => ['data' => $state],
-                                            ]
-                                        ];
-                                    }
-
-                                    // Fallback for non-array legacy data
-                                    return [
-                                        [
-                                            'type' => 'properties',
-                                            'data' => ['data' => ['legacy_value' => (string) $state]],
-                                        ]
-                                    ];
-                                })
                                 ->blocks([
                                     \Filament\Forms\Components\Builder\Block::make('simple_nav')
                                         ->label('Simple Navigation')

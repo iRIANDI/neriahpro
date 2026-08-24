@@ -9,7 +9,7 @@
     
     <!-- Vite React and CSS -->
     @viteReactRefresh
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/islands.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/islands.jsx'])
 </head>
 <body class="font-sans antialiased overflow-x-hidden">
     

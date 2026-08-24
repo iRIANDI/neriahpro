@@ -34,7 +34,7 @@ class CmsGlobalSettingResource extends Resource
     {
         return $schema
             ->components([
-                Grid::make(['default' => 1, 'sm' => 1, 'md' => 12])->schema([
+                Grid::make(['default' => 1, 'sm' => 1, 'md' => 3])->schema([
                     Group::make()->schema([
                         Section::make('Configuration')
                             ->description('Define the global setting key and its configuration values.')
@@ -59,17 +59,17 @@ class CmsGlobalSettingResource extends Resource
                                     ->valueLabel('Value (e.g. dark, center)')
                                     ->helperText('Provide specific attributes for this setting.')
                                     ->required(),
-                            ])->columns(['default' => 1, 'lg' => 2]), // Put them side-by-side on large screens
-                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 8, 'lg' => 9]),
+                            ]), 
+                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 2]),
 
                     Group::make()->schema([
                         Section::make('Information')
                             ->schema([
                                 \Filament\Forms\Components\Placeholder::make('help')
-                                    ->content('This setting affects the site-wide frontend appearance.')
+                                    ->content('This setting affects the site-wide frontend appearance. The Properties Data table allows you to define flexible key-value pairs.')
                                     ->hiddenLabel(),
                             ]),
-                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 4, 'lg' => 3]),
+                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 1]),
                 ])
             ]);
     }

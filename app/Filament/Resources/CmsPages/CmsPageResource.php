@@ -125,7 +125,7 @@ class CmsPageResource extends Resource
                                     ])
                                     ->columns(2)
                                     ->columnSpan(['default' => 12, 'md' => 12])
-                                    ->visible(fn (Get $get) => $get('plugin_type') === 'hero_section'),
+                                    ->visible(fn ($get) => $get('plugin_type') === 'hero_section'),
 
                                     // Dynamic Form: Onboarding Form
                                     Group::make()->schema([
@@ -134,7 +134,7 @@ class CmsPageResource extends Resource
                                     ])
                                     ->columns(2)
                                     ->columnSpan(['default' => 12, 'md' => 12])
-                                    ->visible(fn (Get $get) => $get('plugin_type') === 'onboarding_form'),
+                                    ->visible(fn ($get) => $get('plugin_type') === 'onboarding_form'),
                                     
                                     // Dynamic Form: Product Grid
                                     Group::make()->schema([
@@ -143,7 +143,7 @@ class CmsPageResource extends Resource
                                     ])
                                     ->columns(2)
                                     ->columnSpan(['default' => 12, 'md' => 12])
-                                    ->visible(fn (Get $get) => $get('plugin_type') === 'product_grid'),
+                                    ->visible(fn ($get) => $get('plugin_type') === 'product_grid'),
 
                                     // Dynamic Form: HTML Block
                                     Group::make()->schema([
@@ -151,7 +151,7 @@ class CmsPageResource extends Resource
                                     ])
                                     ->columns(1)
                                     ->columnSpan(['default' => 12, 'md' => 12])
-                                    ->visible(fn (Get $get) => $get('plugin_type') === 'html_block'),
+                                    ->visible(fn ($get) => $get('plugin_type') === 'html_block'),
                                 ])
                                 ->columns(12)
                                 ->collapsible()
@@ -173,7 +173,7 @@ class CmsPageResource extends Resource
                                                 ->live(),
                                             Select::make('source_plugin_id')
                                                 ->label('Plugin to Copy')
-                                                ->options(function (Get $get, array $arguments, Repeater $component) {
+                                                ->options(function ($get, array $arguments, Repeater $component) {
                                                     $pageId = $get('source_page_id');
                                                     if (! $pageId) return [];
                                                     

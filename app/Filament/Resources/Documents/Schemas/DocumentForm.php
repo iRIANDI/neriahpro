@@ -7,7 +7,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DateTimePicker;
-// use Saade\FilamentAutograph\Forms\Components\SignaturePad;
+use Saade\FilamentAutograph\Forms\Components\SignaturePad;
 
 class DocumentForm
 {
@@ -52,17 +52,17 @@ class DocumentForm
                         DateTimePicker::make('signed_at')
                             ->label('Waktu Ditandatangani')
                             ->disabled(),
-                        // SignaturePad::make('digital_signature_image')
-                        //     ->label('Tanda Tangan')
-                        //     ->dotSize(2.0)
-                        //     ->lineMinWidth(1.0)
-                        //     ->lineMaxWidth(2.5)
-                        //     ->penColor('blue')
-                        //     ->backgroundColor('rgba(0,0,0,0)')
-                        //     ->clearable()
-                        //     ->columnSpanFull()
-                        //     ->visible(fn ($record) => $record?->status !== 'signed')
-                        //     ->disabled(fn ($record) => $record?->status === 'signed'),
+                        SignaturePad::make('digital_signature_image')
+                            ->label('Tanda Tangan')
+                            ->dotSize(2.0)
+                            ->lineMinWidth(1.0)
+                            ->lineMaxWidth(2.5)
+                            ->penColor('blue')
+                            ->backgroundColor('rgba(0,0,0,0)')
+                            ->clearable()
+                            ->columnSpanFull()
+                            ->visible(fn ($record) => $record?->status !== 'signed')
+                            ->disabled(fn ($record) => $record?->status === 'signed'),
                     ])->columns(2),
             ]);
     }

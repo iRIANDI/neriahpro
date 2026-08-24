@@ -9,10 +9,9 @@ use App\Models\CmsGlobalSetting;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
-use Filament\Forms\Form;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\KeyValue;
-use Filament\Forms\Components\Builder;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\TextInput;
+use Filament\Schemas\Components\KeyValue;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\EditAction;
@@ -27,10 +26,10 @@ class CmsGlobalSettingResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'key';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TextInput::make('key')
                     ->required()
                     ->unique(ignoreRecord: true),
@@ -47,10 +46,10 @@ class CmsGlobalSettingResource extends Resource
                 TextColumn::make('key')->searchable()->sortable(),
             ])
             ->filters([])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

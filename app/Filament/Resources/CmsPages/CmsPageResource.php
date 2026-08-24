@@ -9,10 +9,10 @@ use App\Models\CmsPage;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
-use Filament\Forms\Form;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\KeyValue;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\TextInput;
+use Filament\Schemas\Components\Toggle;
+use Filament\Schemas\Components\KeyValue;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
@@ -28,10 +28,10 @@ class CmsPageResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'slug';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TextInput::make('slug')
                     ->required()
                     ->unique(ignoreRecord: true),
@@ -49,10 +49,10 @@ class CmsPageResource extends Resource
                 IconColumn::make('is_published')->boolean(),
             ])
             ->filters([])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

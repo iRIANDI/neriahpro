@@ -1,11 +1,18 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-// Impor komponen islands di sini
 import ClientOnboardingIsland from './Islands/ClientOnboardingIsland.jsx';
+import HeroIsland from './Islands/HeroIsland.jsx';
+import ProductGridIsland from './Islands/ProductGridIsland.jsx';
+import GlobalNavigationIsland from './Islands/GlobalNavigationIsland.jsx';
+import FooterIsland from './Islands/FooterIsland.jsx';
 
 const islands = {
     ClientOnboardingIsland,
+    HeroIsland,
+    ProductGridIsland,
+    GlobalNavigationIsland,
+    FooterIsland,
 };
 
 document.addEventListener('DOMContentLoaded', () => {

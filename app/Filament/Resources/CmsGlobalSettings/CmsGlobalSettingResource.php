@@ -34,10 +34,10 @@ class CmsGlobalSettingResource extends Resource
     {
         return $schema
             ->components([
-                Grid::make(3)->schema([
+                Grid::make(['default' => 1, 'sm' => 1, 'md' => 12])->schema([
                     Group::make()->schema([
-                        Section::make('Setting Configuration')
-                            ->description('Define the global setting key and its corresponding configuration data.')
+                        Section::make('Configuration')
+                            ->description('Define the global setting key and its configuration values.')
                             ->schema([
                                 Select::make('key')
                                     ->label('Setting Key')
@@ -51,26 +51,25 @@ class CmsGlobalSettingResource extends Resource
                                     ->searchable()
                                     ->required()
                                     ->unique(ignoreRecord: true)
-                                    ->helperText('Select the predefined setting key.'),
+                                    ->helperText('Select the specific setting you want to manage.'),
                                 
                                 KeyValue::make('value')
-                                    ->label('Configuration Data')
-                                    ->keyLabel('Property Name')
-                                    ->valueLabel('Property Value')
-                                    ->helperText('Define the configuration data for this setting key. e.g. "style" => "minimalist", "layout" => "center".')
+                                    ->label('Properties Data')
+                                    ->keyLabel('Property (e.g. style, align)')
+                                    ->valueLabel('Value (e.g. dark, center)')
+                                    ->helperText('Provide specific attributes for this setting.')
                                     ->required(),
-                            ]),
-                    ])->columnSpan(['sm' => 3, 'md' => 2]),
+                            ])->columns(['default' => 1, 'lg' => 2]), // Put them side-by-side on large screens
+                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 8, 'lg' => 9]),
 
                     Group::make()->schema([
                         Section::make('Information')
-                            ->description('About Global Settings')
                             ->schema([
                                 \Filament\Forms\Components\Placeholder::make('help')
-                                    ->content('Global settings control site-wide features. Choose a Setting Key and define its properties in the Configuration Data table.')
+                                    ->content('This setting affects the site-wide frontend appearance.')
                                     ->hiddenLabel(),
                             ]),
-                    ])->columnSpan(['sm' => 3, 'md' => 1]),
+                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 4, 'lg' => 3]),
                 ])
             ]);
     }

@@ -36,7 +36,7 @@ class CmsPageResource extends Resource
     {
         return $schema
             ->components([
-                Grid::make(3)->schema([
+                Grid::make(['default' => 1, 'sm' => 1, 'md' => 12])->schema([
                     Group::make()->schema([
                         Section::make('Page Information')
                             ->description('Basic information and content for this page.')
@@ -51,7 +51,8 @@ class CmsPageResource extends Resource
                                     ->keyLabel('Language Code (e.g. en, id)')
                                     ->valueLabel('Title')
                                     ->helperText('Define the page title in multiple languages.'),
-                            ]),
+                            ])->columns(['default' => 1, 'lg' => 2]),
+                            
                         Section::make('SEO & Metadata')
                             ->description('Search engine optimization settings.')
                             ->schema([
@@ -61,7 +62,7 @@ class CmsPageResource extends Resource
                                     ->valueLabel('Description')
                                     ->helperText('A brief description for search engines.'),
                             ]),
-                    ])->columnSpan(['sm' => 3, 'md' => 2]),
+                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 8, 'lg' => 9]),
 
                     Group::make()->schema([
                         Section::make('Visibility')
@@ -72,7 +73,7 @@ class CmsPageResource extends Resource
                                     ->helperText('Toggle to make this page visible to the public.')
                                     ->default(false),
                             ]),
-                    ])->columnSpan(['sm' => 3, 'md' => 1]),
+                    ])->columnSpan(['default' => 1, 'sm' => 1, 'md' => 4, 'lg' => 3]),
                 ])
             ]);
     }

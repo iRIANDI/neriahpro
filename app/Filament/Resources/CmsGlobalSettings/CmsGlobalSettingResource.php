@@ -5,14 +5,19 @@ namespace App\Filament\Resources\CmsGlobalSettings;
 use App\Filament\Resources\CmsGlobalSettings\Pages\CreateCmsGlobalSetting;
 use App\Filament\Resources\CmsGlobalSettings\Pages\EditCmsGlobalSetting;
 use App\Filament\Resources\CmsGlobalSettings\Pages\ListCmsGlobalSettings;
-use App\Filament\Resources\CmsGlobalSettings\Schemas\CmsGlobalSettingForm;
-use App\Filament\Resources\CmsGlobalSettings\Tables\CmsGlobalSettingsTable;
 use App\Models\CmsGlobalSetting;
 use BackedEnum;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Forms\Form;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\Builder;
 use Filament\Tables\Table;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
 
 class CmsGlobalSettingResource extends Resource
 {
@@ -22,14 +27,34 @@ class CmsGlobalSettingResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'key';
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
-        return CmsGlobalSettingForm::configure($schema);
+        return $form
+            ->schema([
+                TextInput::make('key')
+                    ->required()
+                    ->unique(ignoreRecord: true),
+                KeyValue::make('value')
+                    ->label('Settings Data')
+                    ->required(),
+            ]);
     }
 
     public static function table(Table $table): Table
     {
-        return CmsGlobalSettingsTable::configure($table);
+        return $table
+            ->columns([
+                TextColumn::make('key')->searchable()->sortable(),
+            ])
+            ->filters([])
+            ->actions([
+                EditAction::make(),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getRelations(): array

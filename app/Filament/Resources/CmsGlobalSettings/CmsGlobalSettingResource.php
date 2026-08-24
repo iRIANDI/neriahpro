@@ -44,6 +44,7 @@ class CmsGlobalSettingResource extends Resource
                                 ->options([
                                     'navigation_format' => 'Navigation Format',
                                     'footer_format' => 'Footer Format',
+                                    'footer_links' => 'Footer Links (Legacy)',
                                     'site_identity' => 'Site Identity',
                                     'social_links' => 'Social Links',
                                     'contact_info' => 'Contact Information',
@@ -55,8 +56,8 @@ class CmsGlobalSettingResource extends Resource
                                 ->live()
                                 ->helperText('Select the specific setting you want to manage.'),
                             
-                            \Filament\Forms\Components\Builder::make('value')
-                                ->label('Configuration Format')
+                            \Filament\Forms\Components\Builder::make('navigation_value')
+                                ->label('Navigation Configuration')
                                 ->blocks([
                                     \Filament\Forms\Components\Builder\Block::make('simple_nav')
                                         ->label('Simple Navigation')
@@ -79,6 +80,13 @@ class CmsGlobalSettingResource extends Resource
                                                 ])->columns(2)
                                             ])
                                         ]),
+                                ])
+                                ->maxItems(1)
+                                ->visible(fn ($get) => $get('key') === 'navigation_format'),
+
+                            \Filament\Forms\Components\Builder::make('footer_value')
+                                ->label('Footer Configuration')
+                                ->blocks([
                                     \Filament\Forms\Components\Builder\Block::make('simple_footer')
                                         ->label('Simple Footer')
                                         ->icon('heroicon-m-document-minus')
@@ -98,23 +106,19 @@ class CmsGlobalSettingResource extends Resource
                                                 ])->columns(2)
                                             ])
                                         ]),
-                                    \Filament\Forms\Components\Builder\Block::make('schema_org')
-                                        ->label('Schema.org JSON-LD')
-                                        ->icon('heroicon-m-code-bracket')
-                                        ->schema([
-                                            \Filament\Forms\Components\Textarea::make('code')->rows(10)->required(),
-                                        ]),
-                                    \Filament\Forms\Components\Builder\Block::make('properties')
-                                        ->label('Key-Value Properties')
-                                        ->icon('heroicon-m-table-cells')
-                                        ->schema([
-                                            KeyValue::make('data')->required(),
-                                        ]),
                                 ])
                                 ->maxItems(1)
-                                ->required()
-                                ->helperText('Add the corresponding block format for the Setting Key you selected.'),
-                        ])->columns(1), 
+                                ->visible(fn ($get) => in_array($get('key'), ['footer_format', 'footer_links'])),
+
+                            \Filament\Forms\Components\Textarea::make('schema_value')
+                                ->label('Schema.org JSON-LD')
+                                ->rows(10)
+                                ->visible(fn ($get) => $get('key') === 'schema_org_jsonld'),
+
+                            KeyValue::make('properties_value')
+                                ->label('Properties Data')
+                                ->visible(fn ($get) => !in_array($get('key'), ['navigation_format', 'footer_format', 'footer_links', 'schema_org_jsonld'])),
+                        ])->columns(1),  
                 ])->columnSpan(['default' => 12, 'md' => 8]),
 
                 Group::make()->schema([
@@ -188,3 +192,4 @@ class CmsGlobalSettingResource extends Resource
         ];
     }
 }
+

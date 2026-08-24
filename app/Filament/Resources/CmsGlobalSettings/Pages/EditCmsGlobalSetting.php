@@ -19,37 +19,50 @@ class EditCmsGlobalSetting extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $value = $data['value'] ?? null;
+        $key = $data['key'] ?? '';
+        $value = $data['value'] ?? [];
 
-        if (empty($value)) {
-            $data['value'] = [];
-            return $data;
-        }
-
-        if (is_array($value)) {
-            $first = reset($value);
-            if (is_array($first) && isset($first['type'])) {
-                return $data; // Already a valid Builder array
+        if ($key === 'navigation_format') {
+            $data['navigation_value'] = is_array($value) ? $value : [];
+        } elseif (in_array($key, ['footer_format', 'footer_links'])) {
+            $data['footer_value'] = is_array($value) ? $value : [];
+        } elseif ($key === 'schema_org_jsonld') {
+            $data['schema_value'] = is_string($value) ? $value : (is_array($value) ? json_encode($value) : '');
+        } else {
+            // For other legacy keys, wrap in a properties block if it's not already a builder
+            if (empty($value)) {
+                $data['properties_value'] = [];
+            } elseif (is_array($value)) {
+                $first = reset($value);
+                if (is_array($first) && isset($first['type'])) {
+                    $data['properties_value'] = $value;
+                } else {
+                    $data['properties_value'] = [['type' => 'properties', 'data' => ['data' => $value]]];
+                }
+            } else {
+                $data['properties_value'] = [['type' => 'properties', 'data' => ['data' => ['legacy_value' => (string) $value]]]];
             }
-            
-            // Legacy key-value array
-            $data['value'] = [
-                [
-                    'type' => 'properties',
-                    'data' => ['data' => $value],
-                ]
-            ];
-            return $data;
         }
 
-        // Fallback for non-array legacy data (e.g. string or true)
-        $data['value'] = [
-            [
-                'type' => 'properties',
-                'data' => ['data' => ['legacy_value' => (string) $value]],
-            ]
-        ];
+        return $data;
+    }
 
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $key = $data['key'] ?? '';
+        
+        if ($key === 'navigation_format') {
+            $data['value'] = $data['navigation_value'] ?? [];
+        } elseif (in_array($key, ['footer_format', 'footer_links'])) {
+            $data['value'] = $data['footer_value'] ?? [];
+        } elseif ($key === 'schema_org_jsonld') {
+            $data['value'] = $data['schema_value'] ?? '';
+        } else {
+            $data['value'] = $data['properties_value'] ?? [];
+        }
+        
+        unset($data['navigation_value'], $data['footer_value'], $data['schema_value'], $data['properties_value']);
+        
         return $data;
     }
 }

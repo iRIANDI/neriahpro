@@ -132,7 +132,34 @@ class CmsGlobalSettingResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('key')->searchable()->sortable(),
+                TextColumn::make('key')
+                    ->label('Setting Key')
+                    ->searchable()
+                    ->sortable()
+                    ->formatStateUsing(fn (string $state): string => \Illuminate\Support\Str::headline($state))
+                    ->icon('heroicon-m-cog-6-tooth')
+                    ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                    ->color('primary'),
+                    
+                TextColumn::make('value')
+                    ->label('Configured Format')
+                    ->formatStateUsing(function ($state) {
+                        if (is_array($state) && !empty($state)) {
+                            $first = reset($state);
+                            if (is_array($first) && isset($first['type'])) {
+                                return \Illuminate\Support\Str::headline($first['type']);
+                            }
+                        }
+                        return 'Legacy / Empty';
+                    })
+                    ->badge()
+                    ->color('info'),
+                    
+                TextColumn::make('updated_at')
+                    ->label('Last Updated')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([])
             ->recordActions([

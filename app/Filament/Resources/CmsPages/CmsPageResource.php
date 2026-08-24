@@ -20,12 +20,16 @@ use Filament\Schemas\Components\Group;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
-use Illuminate\Support\HtmlString;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Filament\Forms\Components\Actions\Action;
+use App\Models\CmsPage;
+use App\Models\CmsPlugin;
+use Illuminate\Support\Str;
 
 class CmsPageResource extends Resource
 {
@@ -96,21 +100,60 @@ class CmsPageResource extends Resource
                                         ->searchable()
                                         ->live()
                                         ->columnSpan(['default' => 12, 'md' => 4]),
+                                    
+                                    TextInput::make('content_data.anchor_id')
+                                        ->label('Anchor ID')
+                                        ->prefix('#')
+                                        ->helperText('Used for page scrolling (e.g. hero)')
+                                        ->columnSpan(['default' => 12, 'md' => 4]),
+
                                     TextInput::make('order')
                                         ->numeric()
                                         ->default(0)
                                         ->required()
                                         ->columnSpan(['default' => 12, 'md' => 2]),
+
                                     Toggle::make('is_active')
                                         ->default(true)
                                         ->required()
                                         ->columnSpan(['default' => 12, 'md' => 2]),
-                                    KeyValue::make('content_data')
-                                        ->label('Plugin Configuration Data')
-                                        ->keyLabel('Property Name')
-                                        ->valueLabel('Property Value')
-                                        ->required()
-                                        ->columnSpan(['default' => 12, 'md' => 12]),
+
+                                    // Dynamic Form: Hero Section
+                                    Group::make()->schema([
+                                        TextInput::make('content_data.headline')->required(),
+                                        TextInput::make('content_data.subheadline'),
+                                        TextInput::make('content_data.button_text'),
+                                        TextInput::make('content_data.button_url'),
+                                    ])
+                                    ->columns(2)
+                                    ->columnSpan(['default' => 12, 'md' => 12])
+                                    ->visible(fn (Get $get) => $get('plugin_type') === 'hero_section'),
+
+                                    // Dynamic Form: Onboarding Form
+                                    Group::make()->schema([
+                                        TextInput::make('content_data.form_title')->required(),
+                                        TextInput::make('content_data.webhook_url')->label('Webhook/Submission URL'),
+                                    ])
+                                    ->columns(2)
+                                    ->columnSpan(['default' => 12, 'md' => 12])
+                                    ->visible(fn (Get $get) => $get('plugin_type') === 'onboarding_form'),
+                                    
+                                    // Dynamic Form: Product Grid
+                                    Group::make()->schema([
+                                        TextInput::make('content_data.section_title'),
+                                        TextInput::make('content_data.limit')->numeric()->default(6),
+                                    ])
+                                    ->columns(2)
+                                    ->columnSpan(['default' => 12, 'md' => 12])
+                                    ->visible(fn (Get $get) => $get('plugin_type') === 'product_grid'),
+
+                                    // Dynamic Form: HTML Block
+                                    Group::make()->schema([
+                                        Textarea::make('content_data.html_content')->rows(5),
+                                    ])
+                                    ->columns(1)
+                                    ->columnSpan(['default' => 12, 'md' => 12])
+                                    ->visible(fn (Get $get) => $get('plugin_type') === 'html_block'),
                                 ])
                                 ->columns(12)
                                 ->collapsible()
@@ -118,6 +161,46 @@ class CmsPageResource extends Resource
                                 ->cloneable()
                                 ->reorderableWithDragAndDrop()
                                 ->orderColumn('order')
+                                ->headerActions([
+                                    Action::make('copy_plugin')
+                                        ->label('Copy Plugin from Another Page')
+                                        ->icon('heroicon-m-document-duplicate')
+                                        ->form([
+                                            Select::make('source_page_id')
+                                                ->label('Source Page')
+                                                ->options(function () {
+                                                    return CmsPage::all()->pluck('slug', 'id');
+                                                })
+                                                ->required()
+                                                ->live(),
+                                            Select::make('source_plugin_id')
+                                                ->label('Plugin to Copy')
+                                                ->options(function (Get $get) {
+                                                    $pageId = $get('source_page_id');
+                                                    if (! $pageId) return [];
+                                                    return CmsPlugin::where('cms_page_id', $pageId)
+                                                        ->get()
+                                                        ->mapWithKeys(function ($plugin) {
+                                                            $anchor = $plugin->content_data['anchor_id'] ?? 'no-anchor';
+                                                            return [$plugin->id => "{$plugin->plugin_type} (#{$anchor})"];
+                                                        });
+                                                })
+                                                ->required(),
+                                        ])
+                                        ->action(function (array $data, Set $set, Get $get) {
+                                            $pluginToCopy = CmsPlugin::find($data['source_plugin_id']);
+                                            if ($pluginToCopy) {
+                                                $currentState = $get('plugins') ?? [];
+                                                $currentState[(string) Str::uuid()] = [
+                                                    'plugin_type' => $pluginToCopy->plugin_type,
+                                                    'content_data' => $pluginToCopy->content_data,
+                                                    'order' => count($currentState) + 1,
+                                                    'is_active' => $pluginToCopy->is_active,
+                                                ];
+                                                $set('plugins', $currentState);
+                                            }
+                                        }),
+                                ])
                                 ->itemLabel(function (array $state): ?string {
                                     $type = $state['plugin_type'] ?? null;
                                     if (! $type) return null;

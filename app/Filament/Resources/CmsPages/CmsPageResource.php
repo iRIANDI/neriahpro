@@ -159,9 +159,9 @@ class CmsPageResource extends Resource
                                 ->cloneable()
                                 ->reorderableWithDragAndDrop()
                                 ->orderColumn('order')
-                                ->headerActions([
+                                ->extraItemActions([
                                     Action::make('copy_plugin')
-                                        ->label('Copy Plugin from Another Page')
+                                        ->label('Salin Settings')
                                         ->icon('heroicon-m-document-duplicate')
                                         ->form([
                                             Select::make('source_page_id')
@@ -173,11 +173,20 @@ class CmsPageResource extends Resource
                                                 ->live(),
                                             Select::make('source_plugin_id')
                                                 ->label('Plugin to Copy')
-                                                ->options(function (Get $get) {
+                                                ->options(function (Get $get, array $arguments, Repeater $component) {
                                                     $pageId = $get('source_page_id');
                                                     if (! $pageId) return [];
-                                                    return CmsPlugin::where('cms_page_id', $pageId)
-                                                        ->get()
+                                                    
+                                                    $itemUuid = $arguments['item'] ?? null;
+                                                    $itemState = $itemUuid ? $component->getItemState($itemUuid) : [];
+                                                    $currentType = $itemState['plugin_type'] ?? null;
+                                                    
+                                                    $query = CmsPlugin::where('cms_page_id', $pageId);
+                                                    if ($currentType) {
+                                                        $query->where('plugin_type', $currentType);
+                                                    }
+                                                    
+                                                    return $query->get()
                                                         ->mapWithKeys(function ($plugin) {
                                                             $anchor = $plugin->content_data['anchor_id'] ?? 'no-anchor';
                                                             return [$plugin->id => "{$plugin->plugin_type} (#{$anchor})"];
@@ -185,17 +194,15 @@ class CmsPageResource extends Resource
                                                 })
                                                 ->required(),
                                         ])
-                                        ->action(function (array $data, Set $set, Get $get) {
+                                        ->action(function (array $data, array $arguments, Repeater $component) {
                                             $pluginToCopy = CmsPlugin::find($data['source_plugin_id']);
-                                            if ($pluginToCopy) {
-                                                $currentState = $get('plugins') ?? [];
-                                                $currentState[(string) Str::uuid()] = [
-                                                    'plugin_type' => $pluginToCopy->plugin_type,
-                                                    'content_data' => $pluginToCopy->content_data,
-                                                    'order' => count($currentState) + 1,
-                                                    'is_active' => $pluginToCopy->is_active,
-                                                ];
-                                                $set('plugins', $currentState);
+                                            $itemUuid = $arguments['item'] ?? null;
+                                            if ($pluginToCopy && $itemUuid) {
+                                                $state = $component->getState();
+                                                if (isset($state[$itemUuid])) {
+                                                    $state[$itemUuid]['content_data'] = $pluginToCopy->content_data;
+                                                    $component->state($state);
+                                                }
                                             }
                                         }),
                                 ])

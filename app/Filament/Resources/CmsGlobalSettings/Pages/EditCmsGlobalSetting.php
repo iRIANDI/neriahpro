@@ -21,24 +21,28 @@ class EditCmsGlobalSetting extends EditRecord
     {
         $key = $data['key'] ?? '';
         $value = $data['value'] ?? [];
+        
+        // Helper to check if an array is a valid Builder block array
+        $isBuilderArray = function($val) {
+            if (!is_array($val) || empty($val)) return false;
+            $first = reset($val);
+            return is_array($first) && isset($first['type']);
+        };
 
         if ($key === 'navigation_format') {
-            $data['navigation_value'] = is_array($value) ? $value : [];
+            $data['navigation_value'] = $isBuilderArray($value) ? $value : [];
         } elseif (in_array($key, ['footer_format', 'footer_links'])) {
-            $data['footer_value'] = is_array($value) ? $value : [];
+            $data['footer_value'] = $isBuilderArray($value) ? $value : [];
         } elseif ($key === 'schema_org_jsonld') {
             $data['schema_value'] = is_string($value) ? $value : (is_array($value) ? json_encode($value) : '');
         } else {
             // For other legacy keys, wrap in a properties block if it's not already a builder
             if (empty($value)) {
                 $data['properties_value'] = [];
+            } elseif ($isBuilderArray($value)) {
+                $data['properties_value'] = $value;
             } elseif (is_array($value)) {
-                $first = reset($value);
-                if (is_array($first) && isset($first['type'])) {
-                    $data['properties_value'] = $value;
-                } else {
-                    $data['properties_value'] = [['type' => 'properties', 'data' => ['data' => $value]]];
-                }
+                $data['properties_value'] = [['type' => 'properties', 'data' => ['data' => $value]]];
             } else {
                 $data['properties_value'] = [['type' => 'properties', 'data' => ['data' => ['legacy_value' => (string) $value]]]];
             }

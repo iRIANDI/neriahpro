@@ -52,14 +52,68 @@ class CmsGlobalSettingResource extends Resource
                                 ->searchable()
                                 ->required()
                                 ->unique(ignoreRecord: true)
+                                ->live()
                                 ->helperText('Select the specific setting you want to manage.'),
                             
-                            KeyValue::make('value')
-                                ->label('Properties Data')
-                                ->keyLabel('Property (e.g. style, align)')
-                                ->valueLabel('Value (e.g. dark, center)')
-                                ->helperText('Provide specific attributes for this setting.')
-                                ->required(),
+                            \Filament\Forms\Components\Builder::make('value')
+                                ->label('Configuration Format')
+                                ->blocks([
+                                    \Filament\Forms\Components\Builder\Block::make('simple_nav')
+                                        ->label('Simple Navigation')
+                                        ->icon('heroicon-m-bars-3')
+                                        ->schema([
+                                            \Filament\Forms\Components\Repeater::make('links')->schema([
+                                                TextInput::make('label')->required(),
+                                                TextInput::make('url')->required(),
+                                            ])->columns(2)
+                                        ]),
+                                    \Filament\Forms\Components\Builder\Block::make('mega_menu_nav')
+                                        ->label('Mega Menu Navigation')
+                                        ->icon('heroicon-m-queue-list')
+                                        ->schema([
+                                            \Filament\Forms\Components\Repeater::make('menus')->schema([
+                                                TextInput::make('title')->required(),
+                                                \Filament\Forms\Components\Repeater::make('links')->schema([
+                                                    TextInput::make('label')->required(),
+                                                    TextInput::make('url')->required(),
+                                                ])->columns(2)
+                                            ])
+                                        ]),
+                                    \Filament\Forms\Components\Builder\Block::make('simple_footer')
+                                        ->label('Simple Footer')
+                                        ->icon('heroicon-m-document-minus')
+                                        ->schema([
+                                            TextInput::make('copyright_text')->required(),
+                                        ]),
+                                    \Filament\Forms\Components\Builder\Block::make('multi_column_footer')
+                                        ->label('Multi-Column Footer')
+                                        ->icon('heroicon-m-view-columns')
+                                        ->schema([
+                                            TextInput::make('copyright_text')->required(),
+                                            \Filament\Forms\Components\Repeater::make('columns')->schema([
+                                                TextInput::make('title')->required(),
+                                                \Filament\Forms\Components\Repeater::make('links')->schema([
+                                                    TextInput::make('label')->required(),
+                                                    TextInput::make('url')->required(),
+                                                ])->columns(2)
+                                            ])
+                                        ]),
+                                    \Filament\Forms\Components\Builder\Block::make('schema_org')
+                                        ->label('Schema.org JSON-LD')
+                                        ->icon('heroicon-m-code-bracket')
+                                        ->schema([
+                                            \Filament\Forms\Components\Textarea::make('code')->rows(10)->required(),
+                                        ]),
+                                    \Filament\Forms\Components\Builder\Block::make('properties')
+                                        ->label('Key-Value Properties')
+                                        ->icon('heroicon-m-table-cells')
+                                        ->schema([
+                                            KeyValue::make('data')->required(),
+                                        ]),
+                                ])
+                                ->maxItems(1)
+                                ->required()
+                                ->helperText('Add the corresponding block format for the Setting Key you selected.'),
                         ])->columns(1), 
                 ])->columnSpan(['default' => 12, 'md' => 8]),
 

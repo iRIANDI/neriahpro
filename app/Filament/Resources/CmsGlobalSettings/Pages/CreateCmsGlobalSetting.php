@@ -19,11 +19,13 @@ class CreateCmsGlobalSetting extends CreateRecord
             $data['value'] = $data['footer_value'] ?? [];
         } elseif ($key === 'schema_org_jsonld') {
             $data['value'] = $data['schema_value'] ?? '';
+        } elseif ($key === 'app_timezone') {
+            $data['value'] = $data['timezone_value'] ?? 'UTC';
         } else {
             $data['value'] = $data['properties_value'] ?? [];
         }
         
-        unset($data['navigation_value'], $data['footer_value'], $data['schema_value'], $data['properties_value']);
+        unset($data['navigation_value'], $data['footer_value'], $data['schema_value'], $data['properties_value'], $data['timezone_value']);
         
         return $data;
     }

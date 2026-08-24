@@ -40,7 +40,7 @@ class DocumentForm
                             ->default('draft'),
                     ])->columns(2),
 
-                Section::make('Tanda Tangan Digital')
+                Section::make('Informasi Penandatangan')
                     ->schema([
                         TextInput::make('signer_name')
                             ->label('Nama Penandatangan')
@@ -49,9 +49,13 @@ class DocumentForm
                             ->label('Email Penandatangan')
                             ->email()
                             ->maxLength(255),
-                        DateTimePicker::make('signed_at')
-                            ->label('Waktu Ditandatangani')
-                            ->disabled(),
+                        \Filament\Forms\Components\Placeholder::make('signed_at_display')
+                            ->label('Waktu Ditandatangani (Otomatis)')
+                            ->content(fn ($record) => $record?->signed_at ? $record->signed_at->format('d M Y H:i:s') : '-')
+                    ])->columns(2),
+                    
+                Section::make('Tanda Tangan Digital')
+                    ->schema([
                         SignaturePad::make('digital_signature_image')
                             ->label('Tanda Tangan')
                             ->dotSize(2.0)
@@ -63,7 +67,7 @@ class DocumentForm
                             ->columnSpanFull()
                             ->visible(fn ($record) => $record?->status !== 'signed')
                             ->disabled(fn ($record) => $record?->status === 'signed'),
-                    ])->columns(2),
+                    ])->columns(1),
             ]);
     }
 }

@@ -14,6 +14,10 @@ Route::get('/document/{document}/preview', [DocumentController::class, 'preview'
     ->name('document.preview')
     ->middleware(['web']);
 
+Route::get('/document/{document}/sign', \App\Livewire\DocumentSignature::class)
+    ->name('document.sign')
+    ->middleware(['web']);
+
 // Fallback dynamic route for CMS pages (Must be at the very bottom)
 Route::get('/{slug?}', [PageController::class, 'show'])->where('slug', '.*');
 

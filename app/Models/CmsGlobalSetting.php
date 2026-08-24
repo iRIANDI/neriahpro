@@ -18,4 +18,19 @@ class CmsGlobalSetting extends Model
     protected $casts = [
         'value' => 'array',
     ];
+
+    protected static function booted()
+    {
+        static::saved(function ($setting) {
+            if ($setting->key === 'app_timezone') {
+                \Illuminate\Support\Facades\Cache::forget('app_timezone');
+            }
+        });
+
+        static::deleted(function ($setting) {
+            if ($setting->key === 'app_timezone') {
+                \Illuminate\Support\Facades\Cache::forget('app_timezone');
+            }
+        });
+    }
 }

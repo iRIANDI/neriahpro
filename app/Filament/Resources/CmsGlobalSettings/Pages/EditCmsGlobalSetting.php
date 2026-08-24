@@ -27,6 +27,7 @@ class EditCmsGlobalSetting extends EditRecord
         $data['footer_value'] = [];
         $data['schema_value'] = '';
         $data['properties_value'] = [];
+        $data['timezone_value'] = 'UTC';
         
         // Helper to check if an array is a valid Builder block array
         $isBuilderArray = function($val) {
@@ -48,6 +49,8 @@ class EditCmsGlobalSetting extends EditRecord
             $data['footer_value'] = $isBuilderArray($value) ? $value : [];
         } elseif ($key === 'schema_org_jsonld') {
             $data['schema_value'] = is_string($value) ? $value : (is_array($value) ? json_encode($value) : '');
+        } elseif ($key === 'app_timezone') {
+            $data['timezone_value'] = is_string($value) ? $value : 'UTC';
         } else {
             // For other legacy keys, wrap in a properties block if it's not already a builder
             if (empty($value)) {
@@ -74,11 +77,13 @@ class EditCmsGlobalSetting extends EditRecord
             $data['value'] = $data['footer_value'] ?? [];
         } elseif ($key === 'schema_org_jsonld') {
             $data['value'] = $data['schema_value'] ?? '';
+        } elseif ($key === 'app_timezone') {
+            $data['value'] = $data['timezone_value'] ?? 'UTC';
         } else {
             $data['value'] = $data['properties_value'] ?? [];
         }
         
-        unset($data['navigation_value'], $data['footer_value'], $data['schema_value'], $data['properties_value']);
+        unset($data['navigation_value'], $data['footer_value'], $data['schema_value'], $data['properties_value'], $data['timezone_value']);
         
         return $data;
     }

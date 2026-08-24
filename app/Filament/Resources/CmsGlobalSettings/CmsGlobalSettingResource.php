@@ -47,6 +47,7 @@ class CmsGlobalSettingResource extends Resource
                                     'site_identity' => 'Site Identity',
                                     'social_links' => 'Social Links',
                                     'contact_info' => 'Contact Information',
+                                    'schema_org_jsonld' => 'Schema.org JSON-LD (SEO)',
                                 ])
                                 ->searchable()
                                 ->required()

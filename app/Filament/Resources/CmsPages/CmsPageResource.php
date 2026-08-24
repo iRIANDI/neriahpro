@@ -23,6 +23,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\CmsPages\RelationManagers\PluginsRelationManager;
 
 class CmsPageResource extends Resource
 {
@@ -98,7 +99,7 @@ class CmsPageResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            PluginsRelationManager::class,
         ];
     }
 

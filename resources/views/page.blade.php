@@ -16,6 +16,18 @@
     <!-- Global Navigation -->
     @react('GlobalNavigationIsland', ['settings' => $globalSettings['main_navigation']->value ?? null])
 
+    <!-- Breadcrumb (Dynamic) -->
+    @php
+        $breadcrumbPaths = [
+            ['label' => 'Home', 'url' => '/'],
+        ];
+        if($page->slug !== 'home') {
+            $title = json_decode($page->title)->en ?? $page->title;
+            $breadcrumbPaths[] = ['label' => $title, 'url' => '/' . $page->slug];
+        }
+    @endphp
+    @react('BreadcrumbIsland', ['paths' => $breadcrumbPaths])
+
     <main>
         @foreach($page->plugins as $plugin)
             @if($plugin->is_active)

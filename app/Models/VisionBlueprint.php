@@ -18,10 +18,13 @@ class VisionBlueprint extends Model
         'phone',
         'service_options',
         'project_status',
+        'ip_address',
+        'user_metadata',
     ];
 
     protected $casts = [
         'service_options' => 'array',
+        'user_metadata' => 'array',
     ];
 
     protected static function boot()

@@ -121,20 +121,16 @@ class CmsPageResource extends Resource
                                 ->itemLabel(function (array $state): ?string {
                                     $type = $state['plugin_type'] ?? null;
                                     if (! $type) return null;
-                                    return ucwords(str_replace('_', ' ', $type));
-                                })
-                                ->extraItemAttributes(function (array $state): array {
-                                    $type = $state['plugin_type'] ?? 'default';
-                                    $colors = [
-                                        'hero_section' => 'border-l-4 border-l-blue-500 bg-blue-500/5',
-                                        'onboarding_form' => 'border-l-4 border-l-purple-500 bg-purple-500/5',
-                                        'product_grid' => 'border-l-4 border-l-emerald-500 bg-emerald-500/5',
-                                        'html_block' => 'border-l-4 border-l-amber-500 bg-amber-500/5',
-                                        'default' => 'border-l-4 border-l-gray-500 bg-gray-500/5',
+                                    
+                                    $emojis = [
+                                        'hero_section' => '✨ ',
+                                        'onboarding_form' => '📝 ',
+                                        'product_grid' => '🛍️ ',
+                                        'html_block' => '💻 ',
                                     ];
-                                    return [
-                                        'class' => $colors[$type] ?? $colors['default'],
-                                    ];
+                                    
+                                    $icon = $emojis[$type] ?? '📦 ';
+                                    return $icon . ucwords(str_replace('_', ' ', $type));
                                 }),
                         ])->columns(1),
                 ])->columnSpan(['default' => 12, 'md' => 12]),

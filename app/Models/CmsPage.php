@@ -16,16 +16,15 @@ class CmsPage extends Model
         'title',
         'meta_description',
         'is_published',
+        'plugins',
     ];
 
     protected $casts = [
         'title' => 'array',
         'meta_description' => 'array',
         'is_published' => 'boolean',
+        'plugins' => 'array',
     ];
 
-    public function plugins(): HasMany
-    {
-        return $this->hasMany(CmsPlugin::class)->orderBy('order');
-    }
+
 }

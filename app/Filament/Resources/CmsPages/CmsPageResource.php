@@ -23,12 +23,11 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
-use Filament\Actions\Action;
-use App\Models\CmsPlugin;
+use Filament\Actions\Action as FormAction; // prevent collision with extraItemActions Action
 use Illuminate\Support\Str;
 
 class CmsPageResource extends Resource
@@ -86,143 +85,148 @@ class CmsPageResource extends Resource
                     Section::make('Page Content (Plugins)')
                         ->description('Add and arrange the content blocks (React Islands) for this page.')
                         ->schema([
-                            Repeater::make('plugins')
-                                ->relationship('plugins')
-                                ->schema([
-                                    Select::make('plugin_type')
-                                        ->options([
-                                            'hero_section' => 'Hero Island (React)',
-                                            'onboarding_form' => 'Client Onboarding (React)',
-                                            'product_grid' => 'Product Grid (React)',
-                                            'html_block' => 'Raw HTML Block',
-                                        ])
-                                        ->required()
-                                        ->searchable()
-                                        ->live()
-                                        ->columnSpan(['default' => 12, 'md' => 4]),
-                                    
-                                    TextInput::make('content_data.anchor_id')
-                                        ->label('Anchor ID')
-                                        ->prefix('#')
-                                        ->helperText('Used for page scrolling (e.g. hero)')
-                                        ->columnSpan(['default' => 12, 'md' => 4]),
+                            Builder::make('plugins')
+                                ->blocks([
+                                    Builder\Block::make('hero_section')
+                                        ->label('✨ Hero Island (React)')
+                                        ->icon('heroicon-m-sparkles')
+                                        ->schema([
+                                            TextInput::make('anchor_id')
+                                                ->label('Anchor ID')
+                                                ->prefix('#')
+                                                ->helperText('Used for page scrolling (e.g. hero)')
+                                                ->columnSpan(['default' => 12, 'md' => 6]),
+                                            Toggle::make('is_active')
+                                                ->default(true)
+                                                ->required()
+                                                ->columnSpan(['default' => 12, 'md' => 6]),
+                                            Group::make()->schema([
+                                                TextInput::make('headline')->required(),
+                                                TextInput::make('subheadline'),
+                                                TextInput::make('button_text'),
+                                                TextInput::make('button_url'),
+                                            ])->columns(2)->columnSpan(['default' => 12, 'md' => 12]),
+                                        ])->columns(12),
+                                        
+                                    Builder\Block::make('onboarding_form')
+                                        ->label('📝 Client Onboarding (React)')
+                                        ->icon('heroicon-m-clipboard-document-list')
+                                        ->schema([
+                                            TextInput::make('anchor_id')
+                                                ->label('Anchor ID')
+                                                ->prefix('#')
+                                                ->helperText('Used for page scrolling (e.g. hero)')
+                                                ->columnSpan(['default' => 12, 'md' => 6]),
+                                            Toggle::make('is_active')
+                                                ->default(true)
+                                                ->required()
+                                                ->columnSpan(['default' => 12, 'md' => 6]),
+                                            Group::make()->schema([
+                                                TextInput::make('form_title')->required(),
+                                                TextInput::make('webhook_url')->label('Webhook/Submission URL'),
+                                            ])->columns(2)->columnSpan(['default' => 12, 'md' => 12]),
+                                        ])->columns(12),
 
-                                    TextInput::make('order')
-                                        ->numeric()
-                                        ->default(0)
-                                        ->required()
-                                        ->columnSpan(['default' => 12, 'md' => 2]),
+                                    Builder\Block::make('product_grid')
+                                        ->label('🛍️ Product Grid (React)')
+                                        ->icon('heroicon-m-shopping-bag')
+                                        ->schema([
+                                            TextInput::make('anchor_id')
+                                                ->label('Anchor ID')
+                                                ->prefix('#')
+                                                ->helperText('Used for page scrolling (e.g. hero)')
+                                                ->columnSpan(['default' => 12, 'md' => 6]),
+                                            Toggle::make('is_active')
+                                                ->default(true)
+                                                ->required()
+                                                ->columnSpan(['default' => 12, 'md' => 6]),
+                                            Group::make()->schema([
+                                                TextInput::make('section_title'),
+                                                TextInput::make('limit')->numeric()->default(6),
+                                            ])->columns(2)->columnSpan(['default' => 12, 'md' => 12]),
+                                        ])->columns(12),
 
-                                    Toggle::make('is_active')
-                                        ->default(true)
-                                        ->required()
-                                        ->columnSpan(['default' => 12, 'md' => 2]),
-
-                                    // Dynamic Form: Hero Section
-                                    Group::make()->schema([
-                                        TextInput::make('content_data.headline')->required(),
-                                        TextInput::make('content_data.subheadline'),
-                                        TextInput::make('content_data.button_text'),
-                                        TextInput::make('content_data.button_url'),
-                                    ])
-                                    ->columns(2)
-                                    ->columnSpan(['default' => 12, 'md' => 12])
-                                    ->visible(fn ($get) => $get('plugin_type') === 'hero_section'),
-
-                                    // Dynamic Form: Onboarding Form
-                                    Group::make()->schema([
-                                        TextInput::make('content_data.form_title')->required(),
-                                        TextInput::make('content_data.webhook_url')->label('Webhook/Submission URL'),
-                                    ])
-                                    ->columns(2)
-                                    ->columnSpan(['default' => 12, 'md' => 12])
-                                    ->visible(fn ($get) => $get('plugin_type') === 'onboarding_form'),
-                                    
-                                    // Dynamic Form: Product Grid
-                                    Group::make()->schema([
-                                        TextInput::make('content_data.section_title'),
-                                        TextInput::make('content_data.limit')->numeric()->default(6),
-                                    ])
-                                    ->columns(2)
-                                    ->columnSpan(['default' => 12, 'md' => 12])
-                                    ->visible(fn ($get) => $get('plugin_type') === 'product_grid'),
-
-                                    // Dynamic Form: HTML Block
-                                    Group::make()->schema([
-                                        Textarea::make('content_data.html_content')->rows(5),
-                                    ])
-                                    ->columns(1)
-                                    ->columnSpan(['default' => 12, 'md' => 12])
-                                    ->visible(fn ($get) => $get('plugin_type') === 'html_block'),
+                                    Builder\Block::make('html_block')
+                                        ->label('💻 Raw HTML Block')
+                                        ->icon('heroicon-m-code-bracket')
+                                        ->schema([
+                                            TextInput::make('anchor_id')
+                                                ->label('Anchor ID')
+                                                ->prefix('#')
+                                                ->helperText('Used for page scrolling (e.g. hero)')
+                                                ->columnSpan(['default' => 12, 'md' => 6]),
+                                            Toggle::make('is_active')
+                                                ->default(true)
+                                                ->required()
+                                                ->columnSpan(['default' => 12, 'md' => 6]),
+                                            Group::make()->schema([
+                                                Textarea::make('html_content')->rows(5),
+                                            ])->columns(1)->columnSpan(['default' => 12, 'md' => 12]),
+                                        ])->columns(12),
                                 ])
-                                ->columns(12)
                                 ->collapsible()
                                 ->collapsed()
                                 ->cloneable()
                                 ->reorderableWithDragAndDrop()
-                                ->orderColumn('order')
                                 ->extraItemActions([
-                                    Action::make('copy_plugin')
+                                    \Filament\Forms\Components\Actions\Action::make('copy_plugin')
                                         ->label('Salin Settings')
                                         ->icon('heroicon-m-document-duplicate')
                                         ->form([
                                             Select::make('source_page_id')
                                                 ->label('Source Page')
                                                 ->options(function () {
-                                                    return CmsPage::all()->pluck('slug', 'id');
+                                                    return \App\Models\CmsPage::all()->mapWithKeys(function ($page) {
+                                                        $titles = is_array($page->title) ? $page->title : [];
+                                                        $titleStr = collect($titles)->map(fn($t, $k) => strtoupper($k) . ': ' . $t)->implode(' | ');
+                                                        return [$page->id => $page->slug . ' - ' . ($titleStr ?: 'No Title')];
+                                                    });
                                                 })
                                                 ->required()
                                                 ->live(),
-                                            Select::make('source_plugin_id')
+                                            Select::make('source_plugin_uuid')
                                                 ->label('Plugin to Copy')
-                                                ->options(function ($get, array $arguments, Repeater $component) {
+                                                ->options(function ($get, array $arguments, Builder $component) {
                                                     $pageId = $get('source_page_id');
                                                     if (! $pageId) return [];
                                                     
                                                     $itemUuid = $arguments['item'] ?? null;
                                                     $itemState = $itemUuid ? $component->getItemState($itemUuid) : [];
-                                                    $currentType = $itemState['plugin_type'] ?? null;
+                                                    $currentType = $itemState['type'] ?? null;
                                                     
-                                                    $query = CmsPlugin::where('cms_page_id', $pageId);
-                                                    if ($currentType) {
-                                                        $query->where('plugin_type', $currentType);
+                                                    $page = \App\Models\CmsPage::find($pageId);
+                                                    if (! $page || ! is_array($page->plugins)) return [];
+                                                    
+                                                    $options = [];
+                                                    foreach ($page->plugins as $uuid => $plugin) {
+                                                        if (! is_array($plugin) || ! isset($plugin['type'])) continue;
+                                                        if ($currentType && $plugin['type'] !== $currentType) continue;
+                                                        
+                                                        $anchor = $plugin['data']['anchor_id'] ?? 'no-anchor';
+                                                        $typeLabel = ucwords(str_replace('_', ' ', $plugin['type']));
+                                                        $options[$uuid] = "{$typeLabel} (#{$anchor})";
                                                     }
                                                     
-                                                    return $query->get()
-                                                        ->mapWithKeys(function ($plugin) {
-                                                            $anchor = $plugin->content_data['anchor_id'] ?? 'no-anchor';
-                                                            return [$plugin->id => "{$plugin->plugin_type} (#{$anchor})"];
-                                                        });
+                                                    return $options;
                                                 })
                                                 ->required(),
                                         ])
-                                        ->action(function (array $data, array $arguments, Repeater $component) {
-                                            $pluginToCopy = CmsPlugin::find($data['source_plugin_id']);
+                                        ->action(function (array $data, array $arguments, Builder $component) {
+                                            $page = \App\Models\CmsPage::find($data['source_page_id']);
+                                            $sourceUuid = $data['source_plugin_uuid'];
                                             $itemUuid = $arguments['item'] ?? null;
-                                            if ($pluginToCopy && $itemUuid) {
+                                            
+                                            if ($page && is_array($page->plugins) && isset($page->plugins[$sourceUuid]) && $itemUuid) {
+                                                $pluginToCopy = $page->plugins[$sourceUuid];
                                                 $state = $component->getState();
                                                 if (isset($state[$itemUuid])) {
-                                                    $state[$itemUuid]['content_data'] = $pluginToCopy->content_data;
+                                                    $state[$itemUuid]['data'] = $pluginToCopy['data'] ?? [];
                                                     $component->state($state);
                                                 }
                                             }
                                         }),
                                 ])
-                                ->itemLabel(function (array $state): ?string {
-                                    $type = $state['plugin_type'] ?? null;
-                                    if (! $type) return null;
-                                    
-                                    $emojis = [
-                                        'hero_section' => '✨ ',
-                                        'onboarding_form' => '📝 ',
-                                        'product_grid' => '🛍️ ',
-                                        'html_block' => '💻 ',
-                                    ];
-                                    
-                                    $icon = $emojis[$type] ?? '📦 ';
-                                    return $icon . ucwords(str_replace('_', ' ', $type));
-                                }),
-                        ])->columns(1),
+                                ->columnSpan(['default' => 12, 'md' => 12]),
                 ])->columnSpan(['default' => 12, 'md' => 12]),
             ]);
     }

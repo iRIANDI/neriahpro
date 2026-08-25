@@ -11,7 +11,7 @@ class PageController extends Controller
 {
     public function show($slug = 'home')
     {
-        $page = CmsPage::with('plugins')->where('slug', $slug)->where('is_published', true)->firstOrFail();
+        $page = CmsPage::where('slug', $slug)->where('is_published', true)->firstOrFail();
         
         $globalSettings = CmsGlobalSetting::all()->keyBy('key');
 

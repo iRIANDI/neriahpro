@@ -254,7 +254,7 @@ class CmsPageResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
-                \Filament\Tables\Actions\DeleteAction::make()
+                \Filament\Actions\DeleteAction::make()
                     ->disabled(fn (\App\Models\CmsPage $record) => in_array($record->slug, ['home', 'beranda', 'index', '/']))
                     ->tooltip(fn (\App\Models\CmsPage $record) => in_array($record->slug, ['home', 'beranda', 'index', '/']) ? 'Landing page inti tidak boleh dihapus.' : ''),
             ])

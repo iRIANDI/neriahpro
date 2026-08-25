@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    <title>{{ json_decode($page->title)->en ?? 'Neriah Pro' }}</title>
-    <meta name="description" content="{{ json_decode($page->meta_description)->en ?? '' }}">
+    <title>{{ $page->title['en'] ?? 'Neriah Pro' }}</title>
+    <meta name="description" content="{{ $page->meta_description['en'] ?? '' }}">
     
     <!-- Vite React and CSS -->
     @viteReactRefresh
@@ -22,7 +22,7 @@
             ['label' => 'Home', 'url' => '/'],
         ];
         if($page->slug !== 'home') {
-            $title = json_decode($page->title)->en ?? $page->title;
+            $title = $page->title['en'] ?? (is_string($page->title) ? $page->title : 'Neriah Pro');
             $breadcrumbPaths[] = ['label' => $title, 'url' => '/' . $page->slug];
         }
     @endphp

@@ -29,18 +29,23 @@
     @react('BreadcrumbIsland', ['paths' => $breadcrumbPaths])
 
     <main>
-        @foreach($page->plugins as $plugin)
-            @if($plugin->is_active)
+        @foreach($page->plugins ?? [] as $plugin)
+            @php
+                // Cast array to object if necessary
+                $plugin = is_array($plugin) ? (object) $plugin : $plugin;
+            @endphp
+            @if($plugin->is_active ?? true)
                 @php
                     $pluginName = '';
-                    if($plugin->plugin_type == 'hero_section') $pluginName = 'HeroIsland';
-                    if($plugin->plugin_type == 'onboarding_form') $pluginName = 'ClientOnboardingIsland';
-                    if($plugin->plugin_type == 'feature_grid') $pluginName = 'ProductGridIsland';
+                    $type = $plugin->plugin_type ?? $plugin->type ?? '';
+                    if($type == 'hero_section') $pluginName = 'HeroIsland';
+                    if($type == 'onboarding_form') $pluginName = 'ClientOnboardingIsland';
+                    if($type == 'feature_grid') $pluginName = 'ProductGridIsland';
                     // ... other mappings
                 @endphp
                 
                 @if($pluginName)
-                    @react($pluginName, $plugin->content_data)
+                    @react($pluginName, (array) ($plugin->content_data ?? $plugin->data ?? []))
                 @endif
             @endif
         @endforeach

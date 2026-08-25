@@ -27,7 +27,7 @@ class ManageSettings extends Page implements HasForms
     protected static string | \Illuminate\Contracts\Support\Htmlable | null $title = 'Global Settings';
     protected static ?int $navigationSort = 100;
 
-    protected static string $view = 'filament.pages.manage-settings';
+    protected string $view = 'filament.pages.manage-settings';
 
     public ?array $data = [];
 

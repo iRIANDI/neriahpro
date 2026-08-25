@@ -40,6 +40,50 @@ class CmsPageResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
+        $getCopyDropdown = function (string $blockType) {
+            return \Filament\Forms\Components\Select::make('copy_from_uuid')
+                ->label('💡 Copy Settings Dari Halaman Lain')
+                ->placeholder('Pilih plugin sejenis dari halaman lain untuk disalin...')
+                ->options(function () use ($blockType) {
+                    $options = [];
+                    foreach (\App\Models\CmsPage::all() as $page) {
+                        if (! is_array($page->plugins)) continue;
+                        
+                        $titles = is_array($page->title) ? $page->title : [];
+                        $titleStr = collect($titles)->map(fn($t, $k) => strtoupper($k) . ': ' . $t)->implode(' | ');
+                        $pageName = $page->slug . ' - ' . ($titleStr ?: 'No Title');
+                        
+                        foreach ($page->plugins as $uuid => $plugin) {
+                            if (! is_array($plugin) || ! isset($plugin['type'])) continue;
+                            if ($plugin['type'] !== $blockType) continue;
+                            
+                            $anchor = $plugin['data']['anchor_id'] ?? 'no-anchor';
+                            $options[$uuid] = "{$pageName} (Anchor: #{$anchor})";
+                        }
+                    }
+                    return $options;
+                })
+                ->searchable()
+                ->live()
+                ->afterStateUpdated(function ($state, \Filament\Forms\Set $set) {
+                    if (! $state) return;
+                    foreach (\App\Models\CmsPage::all() as $page) {
+                        if (! is_array($page->plugins)) continue;
+                        if (isset($page->plugins[$state])) {
+                            $pluginData = $page->plugins[$state]['data'] ?? [];
+                            foreach ($pluginData as $key => $value) {
+                                if ($key === 'copy_from_uuid') continue;
+                                $set($key, $value);
+                            }
+                            break;
+                        }
+                    }
+                    $set('copy_from_uuid', null);
+                })
+                ->dehydrated(false)
+                ->columnSpan(['default' => 12, 'md' => 12]);
+        };
+
         return $schema
             ->columns(12)
             ->components([
@@ -91,6 +135,7 @@ class CmsPageResource extends Resource
                                         ->label('✨ Hero Island (React)')
                                         ->icon('heroicon-m-sparkles')
                                         ->schema([
+                                            $getCopyDropdown('hero_section'),
                                             TextInput::make('anchor_id')
                                                 ->label('Anchor ID')
                                                 ->prefix('#')
@@ -112,6 +157,7 @@ class CmsPageResource extends Resource
                                         ->label('📝 Client Onboarding (React)')
                                         ->icon('heroicon-m-clipboard-document-list')
                                         ->schema([
+                                            $getCopyDropdown('onboarding_form'),
                                             TextInput::make('anchor_id')
                                                 ->label('Anchor ID')
                                                 ->prefix('#')
@@ -131,6 +177,7 @@ class CmsPageResource extends Resource
                                         ->label('🛍️ Product Grid (React)')
                                         ->icon('heroicon-m-shopping-bag')
                                         ->schema([
+                                            $getCopyDropdown('product_grid'),
                                             TextInput::make('anchor_id')
                                                 ->label('Anchor ID')
                                                 ->prefix('#')
@@ -150,6 +197,7 @@ class CmsPageResource extends Resource
                                         ->label('💻 Raw HTML Block')
                                         ->icon('heroicon-m-code-bracket')
                                         ->schema([
+                                            $getCopyDropdown('html_block'),
                                             TextInput::make('anchor_id')
                                                 ->label('Anchor ID')
                                                 ->prefix('#')
@@ -168,64 +216,6 @@ class CmsPageResource extends Resource
                                 ->collapsed()
                                 ->cloneable()
                                 ->reorderableWithDragAndDrop()
-                                ->extraItemActions([
-                                    \Filament\Forms\Components\Actions\Action::make('copy_plugin')
-                                        ->label('Salin Settings')
-                                        ->icon('heroicon-m-document-duplicate')
-                                        ->form([
-                                            Select::make('source_page_id')
-                                                ->label('Source Page')
-                                                ->options(function () {
-                                                    return \App\Models\CmsPage::all()->mapWithKeys(function ($page) {
-                                                        $titles = is_array($page->title) ? $page->title : [];
-                                                        $titleStr = collect($titles)->map(fn($t, $k) => strtoupper($k) . ': ' . $t)->implode(' | ');
-                                                        return [$page->id => $page->slug . ' - ' . ($titleStr ?: 'No Title')];
-                                                    });
-                                                })
-                                                ->required()
-                                                ->live(),
-                                            Select::make('source_plugin_uuid')
-                                                ->label('Plugin to Copy')
-                                                ->options(function ($get, array $arguments, Builder $component) {
-                                                    $pageId = $get('source_page_id');
-                                                    if (! $pageId) return [];
-                                                    
-                                                    $itemUuid = $arguments['item'] ?? null;
-                                                    $itemState = $itemUuid ? $component->getItemState($itemUuid) : [];
-                                                    $currentType = $itemState['type'] ?? null;
-                                                    
-                                                    $page = \App\Models\CmsPage::find($pageId);
-                                                    if (! $page || ! is_array($page->plugins)) return [];
-                                                    
-                                                    $options = [];
-                                                    foreach ($page->plugins as $uuid => $plugin) {
-                                                        if (! is_array($plugin) || ! isset($plugin['type'])) continue;
-                                                        if ($currentType && $plugin['type'] !== $currentType) continue;
-                                                        
-                                                        $anchor = $plugin['data']['anchor_id'] ?? 'no-anchor';
-                                                        $typeLabel = ucwords(str_replace('_', ' ', $plugin['type']));
-                                                        $options[$uuid] = "{$typeLabel} (#{$anchor})";
-                                                    }
-                                                    
-                                                    return $options;
-                                                })
-                                                ->required(),
-                                        ])
-                                        ->action(function (array $data, array $arguments, Builder $component) {
-                                            $page = \App\Models\CmsPage::find($data['source_page_id']);
-                                            $sourceUuid = $data['source_plugin_uuid'];
-                                            $itemUuid = $arguments['item'] ?? null;
-                                            
-                                            if ($page && is_array($page->plugins) && isset($page->plugins[$sourceUuid]) && $itemUuid) {
-                                                $pluginToCopy = $page->plugins[$sourceUuid];
-                                                $state = $component->getState();
-                                                if (isset($state[$itemUuid])) {
-                                                    $state[$itemUuid]['data'] = $pluginToCopy['data'] ?? [];
-                                                    $component->state($state);
-                                                }
-                                            }
-                                        }),
-                                ])
                                 ->columnSpan(['default' => 12, 'md' => 12]),
                 ])->columnSpan(['default' => 12, 'md' => 12]),
             ]);

@@ -21,10 +21,10 @@ class ManageSettings extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static ?string $navigationGroup = 'Settings';
-    protected static ?string $navigationLabel = 'Global Settings';
-    protected static ?string $title = 'Global Settings';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static string | \UnitEnum | null $navigationGroup = 'Settings';
+    protected static string | null $navigationLabel = 'Global Settings';
+    protected static string | \Illuminate\Contracts\Support\Htmlable | null $title = 'Global Settings';
     protected static ?int $navigationSort = 100;
 
     protected static string $view = 'filament.pages.manage-settings';

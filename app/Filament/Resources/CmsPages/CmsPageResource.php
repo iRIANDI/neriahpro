@@ -95,7 +95,9 @@ class CmsPageResource extends Resource
                                 ->required()
                                 ->unique(ignoreRecord: true)
                                 ->prefix('/')
-                                ->helperText('The URL slug for this page (e.g. about-us)'),
+                                ->disabled(fn (?\App\Models\CmsPage $record) => $record && in_array($record->slug, ['home', 'beranda', 'index', '/']))
+                                ->dehydrated()
+                                ->helperText(fn (?\App\Models\CmsPage $record) => $record && in_array($record->slug, ['home', 'beranda', 'index', '/']) ? 'Slug landing page permanen dan tidak dapat diubah.' : 'The URL slug for this page (e.g. about-us)'),
                             KeyValue::make('title')
                                 ->label('Page Titles (Multilingual)')
                                 ->keyLabel('Language Code (e.g. en, id)')
@@ -226,16 +228,46 @@ class CmsPageResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('slug')->searchable()->sortable(),
-                IconColumn::make('is_published')->boolean(),
+                TextColumn::make('title')
+                    ->label('Page Title')
+                    ->getStateUsing(function (\App\Models\CmsPage $record) {
+                        $titles = is_array($record->title) ? $record->title : [];
+                        return collect($titles)->first() ?? 'No Title';
+                    })
+                    ->description(fn (\App\Models\CmsPage $record) => 'URL: /' . $record->slug)
+                    ->searchable()
+                    ->sortable(),
+                    
+                TextColumn::make('plugins_count')
+                    ->label('Total Blocks')
+                    ->getStateUsing(fn (\App\Models\CmsPage $record) => is_array($record->plugins) ? count($record->plugins) : 0)
+                    ->badge()
+                    ->color('info')
+                    ->icon('heroicon-m-puzzle-piece'),
+                    
+                \Filament\Tables\Columns\ToggleColumn::make('is_published')
+                    ->label('Public / Published')
+                    ->sortable(),
             ])
-            ->filters([])
+            ->filters([
+                //
+            ])
             ->recordActions([
                 EditAction::make(),
+                \Filament\Tables\Actions\DeleteAction::make()
+                    ->disabled(fn (\App\Models\CmsPage $record) => in_array($record->slug, ['home', 'beranda', 'index', '/']))
+                    ->tooltip(fn (\App\Models\CmsPage $record) => in_array($record->slug, ['home', 'beranda', 'index', '/']) ? 'Landing page inti tidak boleh dihapus.' : ''),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            $records->each(function ($record) {
+                                if (!in_array($record->slug, ['home', 'beranda', 'index', '/'])) {
+                                    $record->delete();
+                                }
+                            });
+                        }),
                 ]),
             ]);
     }

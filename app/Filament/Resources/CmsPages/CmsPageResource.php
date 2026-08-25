@@ -217,6 +217,7 @@ class CmsPageResource extends Resource
                                 ->cloneable()
                                 ->reorderableWithDragAndDrop()
                                 ->columnSpan(['default' => 12, 'md' => 12]),
+                        ])->columns(1),
                 ])->columnSpan(['default' => 12, 'md' => 12]),
             ]);
     }

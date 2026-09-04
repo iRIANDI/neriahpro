@@ -24,26 +24,42 @@ if [ -z "$DEPLOY_SYNCED" ]; then
         git fetch origin main
         git reset --hard origin/main
         DEPLOY_SYNCED=1 exec bash "$0" "$@"
+    elif [ -n "$GIT_REMOTE_URL" ]; then
+        echo "[1/3] Sinkronisasi kode via GIT_REMOTE_URL..."
+        git init -b main 2>/dev/null || true
+        git remote add origin "$GIT_REMOTE_URL" 2>/dev/null || git remote set-url origin "$GIT_REMOTE_URL"
+        git fetch origin main
+        git reset --hard origin/main
+        DEPLOY_SYNCED=1 exec bash "$0" "$@"
     else
-        echo "[1/3] Container environment terdeteksi (tanpa .git), melewati git sync..."
+        echo "[1/3] Container environment terdeteksi (tanpa .git), menjalankan skenario..."
     fi
 fi
 
 echo "[2/3] Mengeksekusi Skenario $1..."
 # Selalu bersihkan cache config terlebih dahulu agar environment variables terbaru langsung terbaca
 rm -f bootstrap/cache/*.php 2>/dev/null || true
-php artisan optimize:clear 2>/dev/null || true
+php artisan config:clear 2>/dev/null || true
+php artisan route:clear 2>/dev/null || true
+php artisan view:clear 2>/dev/null || true
+php artisan cache:clear 2>/dev/null || true
 
 case $1 in
     1)
         echo "--- Menjalankan Skenario 1: UI/Blade Only ---"
-        php artisan optimize:clear
+        php artisan config:clear
+        php artisan route:clear
+        php artisan view:clear
+        php artisan cache:clear 2>/dev/null || true
         ;;
     2)
         echo "--- Menjalankan Skenario 2: Migrate Safe ---"
         composer install --no-dev --optimize-autoloader
         php artisan migrate --force
-        php artisan optimize:clear
+        php artisan config:clear
+        php artisan route:clear
+        php artisan view:clear
+        php artisan cache:clear 2>/dev/null || true
         ;;
     3)
         echo "--- Menjalankan Skenario 3: Migrate Fresh (HANCURKAN DB) ---"
@@ -51,24 +67,36 @@ case $1 in
         rm -rf storage/app/public/*
         php artisan migrate:fresh --seed --force
         php artisan storage:link 2>/dev/null || true
-        php artisan optimize:clear
+        php artisan config:clear
+        php artisan route:clear
+        php artisan view:clear
+        php artisan cache:clear 2>/dev/null || true
         ;;
     4)
         echo "--- Menjalankan Skenario 4: Install Package Baru ---"
         composer install --no-dev --optimize-autoloader
         php artisan filament:upgrade
-        php artisan optimize:clear
+        php artisan config:clear
+        php artisan route:clear
+        php artisan view:clear
+        php artisan cache:clear 2>/dev/null || true
         ;;
     5)
         echo "--- Menjalankan Skenario 5: Dump Autoload ---"
         composer dump-autoload -o
-        php artisan optimize:clear
+        php artisan config:clear
+        php artisan route:clear
+        php artisan view:clear
+        php artisan cache:clear 2>/dev/null || true
         ;;
     6)
         echo "--- Menjalankan Skenario 6: Build Assets (Vite/Tailwind) ---"
         npm install
         npm run build
-        php artisan optimize:clear
+        php artisan config:clear
+        php artisan route:clear
+        php artisan view:clear
+        php artisan cache:clear 2>/dev/null || true
         ;;
     *)
         echo "❌ Error: Pilihan Skenario Tidak Valid! Ketik ./deploy.sh untuk melihat daftar."

@@ -128,7 +128,15 @@ When writing inline javascript within AlpineJS attributes (such as `x-data="..."
     ```php
     'client' => (env('REDIS_CLIENT') === 'predis' || ! extension_loaded('redis')) ? 'predis' : 'phpredis',
     ```
-  - Always maintain `predis/predis` in `composer.json` (`composer require predis/predis`) as a pure PHP Redis client fallback to prevent `Class "Redis" not found` fatal crashes during `php artisan optimize:clear`.
-- **Container Execution in `deploy.sh`**:
-  - Inside a Docker/Nixpacks container, the `.git` folder does not exist. `deploy.sh` must guard Git synchronization with `if [ -d .git ]` to prevent fatal Git errors when run directly inside containers.
+  - In `config/cache.php`, ensure the default cache store gracefully falls back to `database` if Redis client is missing:
+    ```php
+    'default' => (env('CACHE_STORE') === 'redis' && ! extension_loaded('redis') && ! class_exists(\Predis\Client::class))
+        ? 'database'
+        : env('CACHE_STORE', 'database'),
+    ```
+  - Always maintain `predis/predis` in `composer.json` (`composer require predis/predis`) as a pure PHP Redis client fallback.
+  - In `deploy.sh`, avoid naked `php artisan optimize:clear` which crashes if the cache store has driver issues; clear `config:clear`, `route:clear`, `view:clear` and guard `cache:clear 2>/dev/null || true`.
+- **Container Execution in `deploy.sh` & Git Sync**:
+  - Inside a Docker/Nixpacks container, the `.git` folder does not exist by default. `deploy.sh` guards Git synchronization with `if [ -d .git ]` or `elif [ -n "$GIT_REMOTE_URL" ]` to allow container-level sync via `GIT_REMOTE_URL` without hardcoding credentials in repository files.
+
 

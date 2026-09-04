@@ -15,7 +15,9 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => (env('CACHE_STORE') === 'redis' && ! extension_loaded('redis') && ! class_exists(\Predis\Client::class))
+        ? 'database'
+        : env('CACHE_STORE', 'database'),
 
     /*
     |--------------------------------------------------------------------------

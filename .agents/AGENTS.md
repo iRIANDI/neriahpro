@@ -88,3 +88,35 @@ When writing inline javascript within AlpineJS attributes (such as `x-data="..."
       'hideFooter' => false,
   ])
   ```
+
+### 6. Nixpacks, PHP Versioning & Modern PHP Syntax Compatibility (PHP 8.4 & 8.5)
+- **Nixpacks PHP Provider Detection**:
+  - Nixpacks (used by Coolify / Railway) automatically provisions the PHP runtime binary by directly parsing the `"require": { "php": "..." }` constraint in `composer.json`.
+  - ⚠️ Environment variables like `NIXPACKS_PHP_VERSION` in `nixpacks.toml` or Coolify environment settings are **ignored** by Nixpacks's PHP provider when choosing the Nix package.
+- **PHP 8.4+ Syntax in Modern Packages (Property Hooks)**:
+  - Framework dependencies in Laravel 13 (notably `symfony/http-foundation`) use PHP 8.4 property hooks syntax:
+    ```php
+    public ParameterBag $attributes {
+        set { ... }
+    }
+    ```
+  - If `composer.json` targets PHP 8.3 (`^8.3`), Nixpacks provisions PHP 8.3. During `composer install --ignore-platform-reqs`, post-autoload-dump runs `@php artisan package:discover`, which crashes on PHP 8.3 with:
+    `Parse error: syntax error, unexpected token "{", expecting "," or ";" in /app/vendor/symfony/http-foundation/Request.php on line 117`.
+- **PHP 8.4 vs PHP 8.5 Strategy (Local Development vs Production Container)**:
+  - Local workstation runs **PHP 8.5** (`PHP 8.5.x` CLI).
+  - Nixpacks / NixOS (`nixpkgs`) currently only provides up to **PHP 8.4** (`php84`). Specifying only `"php": "^8.5"` will cause Nixpacks to fail with `No version available for ^8.5`.
+- **MANDATORY RULE**: In `composer.json`, ALWAYS maintain the dual-version requirement:
+    ```json
+    "require": {
+        "php": "^8.4|^8.5",
+        ...
+    },
+    "config": {
+        "platform": {
+            "php": "8.4.4"
+        }
+    }
+    ```
+    This satisfies local PHP 8.5 execution while guaranteeing Nixpacks resolves to PHP 8.4 on Coolify.
+- **Lock File Synchronization**:
+  - Whenever modifying PHP constraints or dependencies in `composer.json`, ALWAYS run `composer update --lock` to update `content-hash` in `composer.lock` without unintentionally upgrading other dependencies.

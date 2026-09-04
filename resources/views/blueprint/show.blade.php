@@ -15,6 +15,24 @@
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <script>
+        if (localStorage.getItem('neriah_theme') === 'dark' || (!localStorage.getItem('neriah_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('neriah_theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('neriah_theme', 'dark');
+            }
+        }
+    </script>
+
     <style>
         @media print {
             .no-print { display: none !important; }
@@ -23,158 +41,161 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+<body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
-    <!-- Header Navigation Bar -->
-    <header class="bg-slate-900 text-white border-b border-slate-800 py-4 px-6 sticky top-0 z-50 no-print">
+    <!-- Header Navigation Bar (Sharp Precision Theme) -->
+    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-3 px-6 sticky top-0 z-50 no-print transition-colors">
         <div class="max-w-6xl mx-auto flex items-center justify-between">
-            <a href="/" class="text-lg font-extrabold tracking-tight flex items-center gap-2">
-                <span class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xs font-black">N</span>
-                <span>NERIAH<span class="text-indigo-400">PRO</span></span>
+            <a href="/" class="text-sm font-black uppercase tracking-tight flex items-center gap-2 text-zinc-900 dark:text-white">
+                <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black flex items-center justify-center text-xs font-mono font-bold rounded-none">N</span>
+                <span>NERIAH<span class="text-emerald-500">PRO</span> // PRD SPEC</span>
             </a>
 
             <div class="flex items-center gap-3">
-                <button onclick="window.print()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                <button onclick="toggleTheme()" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono rounded-none border border-zinc-300 dark:border-zinc-700 transition">
+                    THEME
+                </button>
+                <button onclick="window.print()" class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                     <span>Cetak / PDF</span>
                 </button>
-                <a href="/blueprint" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow transition">
-                    + Buat Proposal Baru
+                <a href="/blueprint" class="px-3 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none transition">
+                    + Proposal Baru
                 </a>
             </div>
         </div>
     </header>
 
     @if(!$blueprint->is_published)
-        <!-- PRIVATE DRAFT SHIELD -->
+        <!-- PRIVATE DRAFT SHIELD (SHARP BRUTALIST) -->
         <main class="flex-1 flex items-center justify-center p-6">
-            <div class="max-w-xl w-full bg-white rounded-2xl shadow-xl border border-amber-200 p-8 text-center">
-                <div class="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <div class="max-w-xl w-full bg-white dark:bg-zinc-900 border-2 border-amber-500 rounded-none p-8 text-center shadow-none">
+                <div class="w-12 h-12 bg-amber-500 text-black flex items-center justify-center mx-auto mb-4 font-mono font-bold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                 </div>
-                <span class="inline-block px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full uppercase tracking-wider mb-2">
-                    Dokumen Bersifat Privat
+                <span class="inline-block px-3 py-1 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-xs font-mono font-bold uppercase tracking-widest border border-amber-300 dark:border-amber-800 mb-3 rounded-none">
+                    ACCESS RESTRICTED // PRIVATE DRAFT
                 </span>
-                <h1 class="text-2xl font-bold text-slate-800 mb-3">Dokumen Masih Dalam Tahap Tinjauan</h1>
-                <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                <h1 class="text-xl sm:text-2xl font-black uppercase text-zinc-900 dark:text-zinc-100 mb-3">
+                    Dokumen Masih Dalam Tinjauan Arsitektur
+                </h1>
+                <p class="text-zinc-600 dark:text-zinc-400 text-xs sm:text-sm leading-relaxed mb-6 font-sans">
                     Spesifikasi PRD & Blueprint untuk proyek <strong>{{ $blueprint->nama_bisnis ?: $blueprint->client_name }}</strong> saat ini masih dalam proses penyesuaian arsitektural internal oleh tim pengembang Neriah Pro.
                 </p>
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500 mb-6 text-left space-y-1 font-mono">
-                    <div>Proyek: <span class="text-slate-800 font-semibold">{{ $blueprint->nama_bisnis }}</span></div>
-                    <div>PIC Klien: <span class="text-slate-800 font-semibold">{{ $blueprint->client_name }}</span></div>
-                    <div>Status Akses: <span class="text-rose-600 font-semibold">Private Mode (Akses Dibatasi)</span></div>
+                <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 text-xs text-zinc-500 dark:text-zinc-400 mb-6 text-left space-y-1 font-mono rounded-none">
+                    <div>PROJECT_NAME: <span class="text-zinc-900 dark:text-zinc-100 font-bold">{{ $blueprint->nama_bisnis }}</span></div>
+                    <div>CLIENT_PIC: <span class="text-zinc-900 dark:text-zinc-100 font-bold">{{ $blueprint->client_name }}</span></div>
+                    <div>ACCESS_MODE: <span class="text-rose-600 font-bold">LOCKED_PRIVATE</span></div>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                    <a href="/admin/login" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition">
+                    <a href="/admin/login" class="px-5 py-2.5 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none transition">
                         Login Administrator
                     </a>
-                    <a href="/" class="px-5 py-2.5 border border-slate-300 hover:bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl transition">
+                    <a href="/" class="px-5 py-2.5 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold rounded-none transition">
                         Kembali ke Beranda
                     </a>
                 </div>
             </div>
         </main>
     @else
-        <!-- PUBLISHED FULL ULTIMATE PRD -->
+        <!-- PUBLISHED FULL ULTIMATE PRD (SHARP BRUTALIST TECHNICAL THEME) -->
         <main class="flex-1 py-10 px-4 sm:px-6 max-w-5xl mx-auto w-full">
             
             <!-- Document Hero Card -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-8 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-2 h-full bg-emerald-600"></div>
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6 mb-6">
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none relative">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-6">
                     <div>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
-                                Product Requirements Document (PRD)
+                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                            <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black rounded-none">
+                                SPEC_ID: {{ strtoupper(substr($blueprint->id, 0, 10)) }}
                             </span>
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800">
-                                v1.0.0 Architecture Blueprint
+                            <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 rounded-none">
+                                POSTGRESQL STRICT ULID
                             </span>
                         </div>
-                        <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+                        <h1 class="text-2xl sm:text-4xl font-black uppercase text-zinc-900 dark:text-zinc-100 tracking-tight">
                             {{ $blueprint->nama_bisnis ?: $blueprint->client_name }}
                         </h1>
-                        <p class="text-slate-500 text-sm mt-1">
-                            Disiapkan oleh <strong>Neriah Pro Tech Hub</strong> &bull; Terakhir disinkronisasi: {{ $blueprint->updated_at->format('d M Y, H:i') }} WIB
+                        <p class="text-zinc-500 dark:text-zinc-400 text-xs mt-1 font-mono">
+                            PREPARED BY NERIAH PRO TECH HUB // SYNCHRONIZED: {{ $blueprint->updated_at->format('Y-m-d H:i') }} UTC
                         </p>
                     </div>
-                    <div class="flex flex-col items-start md:items-end gap-1">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Status Proyek</span>
-                        <span class="px-3 py-1 rounded-lg text-sm font-bold bg-slate-100 text-slate-800 border border-slate-200">
-                            {{ $blueprint->project_status }}
+
+                    <div class="flex flex-col items-start md:items-end gap-1 font-mono text-xs">
+                        <span class="text-zinc-400 uppercase tracking-widest">STATUS KONTRAK</span>
+                        <span class="px-3 py-1 font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-none">
+                            {{ strtoupper($blueprint->project_status) }}
                         </span>
                     </div>
                 </div>
 
-                <!-- Snapshot Meta Grid -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <span class="text-slate-400 block mb-0.5">Penanggung Jawab (PIC)</span>
-                        <span class="font-bold text-slate-800 text-sm">{{ $blueprint->client_name }}</span>
+                <!-- Meta Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                    <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                        <span class="text-zinc-400 block mb-0.5">PIC KLIEN</span>
+                        <span class="font-bold text-zinc-900 dark:text-zinc-100 truncate block">{{ $blueprint->client_name }}</span>
                     </div>
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <span class="text-slate-400 block mb-0.5">Email Klien</span>
-                        <span class="font-bold text-slate-800 text-sm truncate block">{{ $blueprint->email }}</span>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                        <span class="text-zinc-400 block mb-0.5">EMAIL RESMI</span>
+                        <span class="font-bold text-zinc-900 dark:text-zinc-100 truncate block">{{ $blueprint->email }}</span>
                     </div>
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <span class="text-slate-400 block mb-0.5">Kesiapan Aset</span>
-                        <span class="font-bold text-slate-800 text-sm">{{ $blueprint->kesiapan_aset ?? 'Sedang Disiapkan' }}</span>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                        <span class="text-zinc-400 block mb-0.5">DURASI PROYEK</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $blueprint->target_waktu ?? '30 Hari Kerja' }}</span>
                     </div>
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <span class="text-slate-400 block mb-0.5">Target Waktu Rilis</span>
-                        <span class="font-bold text-slate-800 text-sm">{{ $blueprint->target_waktu ?? 'Fase 1' }}</span>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                        <span class="text-zinc-400 block mb-0.5">KESIAPAN ASET</span>
+                        <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $blueprint->kesiapan_aset ?? 'Sedang Disiapkan' }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- SECTION 1: EXECUTIVE TECHNICAL DISCOVERY -->
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-8 print-break-inside-avoid">
-                <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-                    <span class="w-7 h-7 rounded-md bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">1</span>
-                    <h2 class="text-xl font-bold text-slate-900">Executive Technical Discovery</h2>
+            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01</span>
+                    <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Executive Technical Discovery</h2>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-rose-600 mb-2">Masalah Utama yang Diselesaikan</h3>
-                        <p class="text-slate-700 text-sm leading-relaxed">
+                <div class="grid md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-zinc-50 dark:bg-zinc-950 p-5 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                        <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-2">Masalah Utama yang Diselesaikan</h3>
+                        <p class="text-zinc-700 dark:text-zinc-300 text-sm leading-relaxed font-sans">
                             {{ $blueprint->masalah_utama ?? ($prd['executive_summary']['problem_statement'] ?? '-') }}
                         </p>
                     </div>
-                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-2">Tolak Ukur Kesuksesan (KPI)</h3>
-                        <p class="text-slate-700 text-sm leading-relaxed">
+                    <div class="bg-zinc-50 dark:bg-zinc-950 p-5 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                        <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">Tolak Ukur Kesuksesan (KPI)</h3>
+                        <p class="text-zinc-700 dark:text-zinc-300 text-sm leading-relaxed font-sans">
                             {{ $blueprint->tujuan_utama ?? ($prd['executive_summary']['success_metrics'] ?? '-') }}
                         </p>
                     </div>
                 </div>
 
-                <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-5">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-800 mb-1">Filosofi Arsitektur & Efisiensi Biaya</h3>
-                    <p class="text-slate-700 text-sm leading-relaxed">
-                        {{ $prd['executive_summary']['architecture_philosophy'] ?? 'Sistem menggunakan infrastruktur Modern Monolith (Laravel 13 + Filament PHP + PostgreSQL) untuk memangkas kompleksitas multi-container dan mempercepat peluncuran fitur hingga 3x lipat.' }}
-                    </p>
+                <div class="bg-zinc-50 dark:bg-zinc-950 border-l-4 border-emerald-500 p-4 font-sans text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed rounded-none">
+                    <strong class="font-mono uppercase text-xs text-emerald-600 dark:text-emerald-400 block mb-1">Filosofi Arsitektur & Efisiensi Biaya</strong>
+                    {{ $prd['executive_summary']['architecture_philosophy'] ?? 'Sistem menggunakan arsitektur Modern Monolith (Laravel 13 & Filament PHP) untuk memangkas biaya server, menjamin isolasi data, dan mempercepat peluncuran fitur hingga 3x lipat.' }}
                 </div>
             </section>
 
             <!-- SECTION 2: PENGGUNA & HAK AKSES (RBAC) -->
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-8 print-break-inside-avoid">
-                <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-                    <span class="w-7 h-7 rounded-md bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">2</span>
-                    <h2 class="text-xl font-bold text-slate-900">Pengguna & Hak Akses Sistem (Aktor / RBAC)</h2>
+            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">02</span>
+                    <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Pengguna & Hak Akses (Aktor / RBAC)</h2>
                 </div>
-                <div class="mb-4 text-sm text-slate-600">
-                    <strong>Target Audiens / Pengunjung:</strong> {{ $blueprint->target_audiens ?? ($prd['executive_summary']['target_audience'] ?? '-') }}
+                <div class="mb-4 text-xs font-mono text-zinc-500 dark:text-zinc-400">
+                    TARGET_AUDIENCE: <span class="text-zinc-900 dark:text-zinc-100 font-bold">{{ $blueprint->target_audiens ?? ($prd['executive_summary']['target_audience'] ?? '-') }}</span>
                 </div>
 
-                <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
                     @foreach($prd['system_actors'] ?? [] as $actor)
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 rounded-none flex flex-col justify-between">
                             <div>
-                                <span class="inline-block px-2.5 py-0.5 rounded text-xs font-bold bg-indigo-100 text-indigo-800 mb-2">
+                                <span class="inline-block px-2 py-0.5 text-xs font-mono font-bold uppercase tracking-wider bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 mb-2 rounded-none">
                                     {{ $actor['name'] ?? 'Aktor Sistem' }}
                                 </span>
-                                <p class="text-xs text-slate-600 leading-relaxed">
+                                <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
                                     {{ $actor['role'] ?? '-' }}
                                 </p>
                             </div>
@@ -183,44 +204,44 @@
                 </div>
             </section>
 
-            <!-- SECTION 3: FUNGSIONALITAS SISTEM (MVP vs FASE 2) -->
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-8 print-break-inside-avoid">
-                <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-                    <span class="w-7 h-7 rounded-md bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">3</span>
-                    <h2 class="text-xl font-bold text-slate-900">Spesifikasi Fitur (MVP vs Fase 2)</h2>
+            <!-- SECTION 3: SPESIFIKASI FITUR (MVP VS ROADMAP) -->
+            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">03</span>
+                    <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Spesifikasi Fitur (MVP vs Fase 2)</h2>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-6">
+                <div class="grid md:grid-cols-2 gap-4">
                     <!-- MVP Phase 1 -->
-                    <div class="border border-emerald-200 bg-emerald-50/20 rounded-xl p-5">
-                        <div class="flex items-center gap-2 text-emerald-800 font-bold mb-4">
-                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div class="border border-emerald-500/40 bg-emerald-500/5 p-5 rounded-none">
+                        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold uppercase tracking-wider mb-4">
+                            <span class="w-2 h-2 bg-emerald-500 inline-block"></span>
                             <h3>Fitur Wajib (Fase 1 - MVP Peluncuran)</h3>
                         </div>
-                        <ul class="space-y-3">
+                        <ul class="space-y-2.5">
                             @foreach($prd['features']['mvp_phase1'] ?? [] as $fitur)
-                                <li class="text-sm bg-white p-3 rounded-lg border border-emerald-100 shadow-2xs">
-                                    <div class="font-semibold text-slate-800">{{ $fitur['title'] ?? '-' }}</div>
-                                    <div class="text-xs text-slate-500 mt-0.5">{{ $fitur['desc'] ?? '' }}</div>
+                                <li class="text-xs bg-white dark:bg-zinc-900 p-3 border border-emerald-500/20 rounded-none">
+                                    <div class="font-bold text-zinc-900 dark:text-zinc-100">{{ $fitur['title'] ?? '-' }}</div>
+                                    <div class="text-zinc-500 dark:text-zinc-400 mt-0.5 font-sans">{{ $fitur['desc'] ?? '' }}</div>
                                 </li>
                             @endforeach
                         </ul>
                     </div>
 
                     <!-- Phase 2 Roadmap -->
-                    <div class="border border-slate-200 bg-slate-50/50 rounded-xl p-5">
-                        <div class="flex items-center gap-2 text-slate-700 font-bold mb-4">
-                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div class="border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-5 rounded-none">
+                        <div class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 font-mono text-xs font-bold uppercase tracking-wider mb-4">
+                            <span class="w-2 h-2 bg-zinc-400 inline-block"></span>
                             <h3>Fitur Tambahan (Fase 2 - Roadmap)</h3>
                         </div>
                         @if(empty($prd['features']['phase2_roadmap']))
-                            <p class="text-xs text-slate-400 italic">Belum ada fitur susulan yang didefinisikan. Seluruh fokus saat ini ditujukan ke Fase 1 MVP.</p>
+                            <p class="text-xs text-zinc-400 italic font-mono">Belum ada fitur susulan. Fokus 100% pada rilis Fase 1 MVP.</p>
                         @else
-                            <ul class="space-y-3">
+                            <ul class="space-y-2.5">
                                 @foreach($prd['features']['phase2_roadmap'] as $fitur)
-                                    <li class="text-sm bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
-                                        <div class="font-semibold text-slate-800">{{ $fitur['title'] ?? '-' }}</div>
-                                        <div class="text-xs text-slate-500 mt-0.5">{{ $fitur['desc'] ?? '' }}</div>
+                                    <li class="text-xs bg-white dark:bg-zinc-900 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                                        <div class="font-bold text-zinc-900 dark:text-zinc-100">{{ $fitur['title'] ?? '-' }}</div>
+                                        <div class="text-zinc-500 dark:text-zinc-400 mt-0.5 font-sans">{{ $fitur['desc'] ?? '' }}</div>
                                     </li>
                                 @endforeach
                             </ul>
@@ -230,21 +251,21 @@
             </section>
 
             <!-- SECTION 4: ALUR KERJA (USER FLOW) -->
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-8 print-break-inside-avoid">
-                <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-                    <span class="w-7 h-7 rounded-md bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">4</span>
-                    <h2 class="text-xl font-bold text-slate-900">Alur Kerja Utama Sistem (User Flow)</h2>
+            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">04</span>
+                    <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Alur Kerja Utama (User Flow)</h2>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     @foreach($prd['workflow'] ?? [] as $flow)
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 relative flex flex-col justify-between">
-                            <div class="absolute -top-3 left-4 w-6 h-6 bg-slate-900 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                        <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 rounded-none flex flex-col justify-between">
+                            <div class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono font-bold flex items-center justify-center rounded-none mb-3">
                                 {{ $flow['step'] ?? $loop->iteration }}
                             </div>
-                            <div class="pt-2">
-                                <h4 class="font-bold text-slate-800 text-sm mb-1">{{ $flow['action'] ?? '-' }}</h4>
-                                <p class="text-xs text-slate-500 leading-relaxed">{{ $flow['description'] ?? '' }}</p>
+                            <div>
+                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1 font-mono uppercase">{{ $flow['action'] ?? '-' }}</h4>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed font-sans">{{ $flow['description'] ?? '' }}</p>
                             </div>
                         </div>
                     @endforeach
@@ -252,30 +273,26 @@
             </section>
 
             <!-- SECTION 5: ENTERPRISE DATABASE ERD & SCHEMA BLUEPRINT -->
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-8 print-break-inside-avoid">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-4">
+            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
                     <div class="flex items-center gap-2">
-                        <span class="w-7 h-7 rounded-md bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">5</span>
-                        <h2 class="text-xl font-bold text-slate-900">Database ERD & Schema Blueprint (PostgreSQL Strict)</h2>
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">05</span>
+                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Database ERD & Schema (PostgreSQL Strict)</h2>
                     </div>
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 self-start sm:self-auto font-mono">
-                        ULID Primary Keys &bull; Keyset O(1)
+                    <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 rounded-none">
+                        ULID Primary Key &bull; O(1) Complexity
                     </span>
                 </div>
 
-                <p class="text-sm text-slate-600 mb-6">
-                    {{ $prd['erd_schema']['description'] ?? 'Skema basis data dengan kompleksitas O(1) keystone pagination, UUID-agnostic ULID 26-char string primary keys, dan integritas relasi foreign key terisolasi.' }}
-                </p>
-
                 <div class="space-y-6">
                     @foreach($prd['erd_schema']['tables'] ?? [] as $table)
-                        <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-                            <div class="bg-slate-900 text-white px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <div class="border border-zinc-200 dark:border-zinc-800 rounded-none overflow-hidden">
+                            <div class="bg-zinc-900 text-white px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 font-mono text-xs">
                                 <div class="flex items-center gap-2">
-                                    <span class="font-mono text-emerald-400 font-bold text-sm">TABLE: {{ $table['name'] }}</span>
-                                    <span class="text-xs text-slate-400 hidden sm:inline">&bull; {{ $table['description'] }}</span>
+                                    <span class="text-emerald-400 font-bold">TABLE: {{ $table['name'] }}</span>
+                                    <span class="text-zinc-400 hidden sm:inline">&bull; {{ $table['description'] }}</span>
                                 </div>
-                                <span class="text-xs text-slate-300 font-mono bg-slate-800 px-2 py-0.5 rounded">
+                                <span class="text-zinc-400">
                                     PK: {{ $table['primary_key'] ?? 'id (ULID)' }}
                                 </span>
                             </div>
@@ -283,32 +300,32 @@
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-xs border-collapse">
                                     <thead>
-                                        <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-                                            <th class="py-2.5 px-4">Column Name</th>
-                                            <th class="py-2.5 px-4">Data Type</th>
-                                            <th class="py-2.5 px-4">Index</th>
-                                            <th class="py-2.5 px-4">Nullable</th>
-                                            <th class="py-2.5 px-4">Description / Notes</th>
+                                        <tr class="bg-zinc-100 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold">
+                                            <th class="py-2 px-3">Column Name</th>
+                                            <th class="py-2 px-3">Data Type</th>
+                                            <th class="py-2 px-3">Index</th>
+                                            <th class="py-2 px-3">Nullable</th>
+                                            <th class="py-2 px-3">Description / Notes</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-200 font-mono">
+                                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800 font-mono">
                                         @foreach($table['columns'] ?? [] as $col)
-                                            <tr class="hover:bg-slate-50 transition">
-                                                <td class="py-2.5 px-4 font-bold text-slate-800">{{ $col['name'] }}</td>
-                                                <td class="py-2.5 px-4 text-indigo-600">{{ $col['type'] }}</td>
-                                                <td class="py-2.5 px-4">
+                                            <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition">
+                                                <td class="py-2 px-3 font-bold text-zinc-900 dark:text-zinc-100">{{ $col['name'] }}</td>
+                                                <td class="py-2 px-3 text-emerald-600 dark:text-emerald-400">{{ $col['type'] }}</td>
+                                                <td class="py-2 px-3">
                                                     @if($col['index'] === 'PRIMARY')
-                                                        <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">PRIMARY</span>
+                                                        <span class="px-1.5 py-0.5 bg-emerald-500 text-black font-bold text-[10px]">PRIMARY</span>
                                                     @elseif($col['index'] === 'UNIQUE')
-                                                        <span class="px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-bold text-[10px]">UNIQUE</span>
+                                                        <span class="px-1.5 py-0.5 bg-purple-500 text-white font-bold text-[10px]">UNIQUE</span>
                                                     @elseif($col['index'] === 'INDEX')
-                                                        <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold text-[10px]">INDEX</span>
+                                                        <span class="px-1.5 py-0.5 bg-blue-500 text-white font-bold text-[10px]">INDEX</span>
                                                     @else
-                                                        <span class="text-slate-400 text-[10px]">-</span>
+                                                        <span class="text-zinc-400 text-[10px]">-</span>
                                                     @endif
                                                 </td>
-                                                <td class="py-2.5 px-4 text-slate-600">{{ $col['nullable'] ? 'YES' : 'NO' }}</td>
-                                                <td class="py-2.5 px-4 font-sans text-slate-600">{{ $col['notes'] ?? '-' }}</td>
+                                                <td class="py-2 px-3 text-zinc-500">{{ $col['nullable'] ? 'YES' : 'NO' }}</td>
+                                                <td class="py-2 px-3 font-sans text-zinc-600 dark:text-zinc-400">{{ $col['notes'] ?? '-' }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -319,74 +336,108 @@
                 </div>
             </section>
 
-            <!-- SECTION 6: REKOMENDASI TECH STACK JANGKA PANJANG -->
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-8 print-break-inside-avoid">
-                <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-                    <span class="w-7 h-7 rounded-md bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">6</span>
-                    <h2 class="text-xl font-bold text-slate-900">Rekomendasi Arsitektur & Platform Jangka Panjang</h2>
+            <!-- SECTION 6: TIMELINE & GANTT MILESTONE (ALIGNED TO WORKING DAYS) -->
+            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
+                    <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Timeline & Milestone Proyek (Aligned)</h2>
                 </div>
 
-                <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    @foreach($prd['tech_stack'] ?? [] as $key => $stack)
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-1">
-                                {{ strtoupper(str_replace('_', ' ', $key)) }}
-                            </span>
-                            <div class="font-bold text-slate-900 text-sm mb-1">{{ $stack['name'] ?? '-' }}</div>
-                            <p class="text-xs text-slate-500 leading-relaxed">{{ $stack['role'] ?? '-' }}</p>
+                <div class="space-y-2.5 font-mono text-xs">
+                    <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                        <div class="flex items-center gap-3">
+                            <span class="w-2 h-2 bg-emerald-500"></span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 1: Architecture & Database ERD Setup</span>
                         </div>
-                    @endforeach
+                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">Hari 1 - 5</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                        <div class="flex items-center gap-3">
+                            <span class="w-2 h-2 bg-zinc-400"></span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 2: Core MVP Logic & Filament Admin CRUD</span>
+                        </div>
+                        <span class="text-zinc-500">Hari 6 - 18</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                        <div class="flex items-center gap-3">
+                            <span class="w-2 h-2 bg-zinc-400"></span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 3: Frontend User Flow & API Integrasi</span>
+                        </div>
+                        <span class="text-zinc-500">Hari 19 - 25</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                        <div class="flex items-center gap-3">
+                            <span class="w-2 h-2 bg-zinc-400"></span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 4: Security Audit, Stress Test & UAT</span>
+                        </div>
+                        <span class="text-zinc-500">Hari 26 - 28</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                        <div class="flex items-center gap-3">
+                            <span class="w-2 h-2 bg-zinc-400"></span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 5: Production Deployment & Serah Terima</span>
+                        </div>
+                        <span class="text-zinc-500">Hari 29 - 30</span>
+                    </div>
                 </div>
             </section>
 
-            <!-- SECTION 7: RENCANA KERJA & MILESTONE -->
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-8 print-break-inside-avoid">
-                <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-                    <span class="w-7 h-7 rounded-md bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">7</span>
-                    <h2 class="text-xl font-bold text-slate-900">Action Plan & Tahapan Pelaksanaan</h2>
+            <!-- SECTION 7: SCOPE FREEZE, DIGITAL CONTRACT & DP MIDTRANS (CRUCIAL) -->
+            <section class="bg-zinc-900 text-white border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none no-print">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6 mb-6">
+                    <div>
+                        <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-widest bg-emerald-500 text-black inline-block mb-2 rounded-none">
+                            LEGAL & PAYMENT PROTOCOL
+                        </span>
+                        <h3 class="text-xl sm:text-2xl font-black uppercase tracking-tight">
+                            Kunci Scope Proyek & Pembayaran DP
+                        </h3>
+                        <p class="text-zinc-400 text-xs mt-1 font-sans">
+                            Pengerjaan proyek resmi dimulai setelah penandatanganan kontrak digital dan konfirmasi DP via Midtrans.
+                        </p>
+                    </div>
+                    <div class="text-left sm:text-right font-mono">
+                        <span class="text-zinc-400 text-xs block">TERMIN PEMBAYARAN</span>
+                        <span class="text-xl font-black text-emerald-400">DP 50% &bull; Pelunasan 50%</span>
+                    </div>
                 </div>
 
-                <div class="space-y-3">
-                    @foreach($prd['action_plan'] ?? [] as $plan)
-                        <div class="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm">
-                            <div class="flex items-center gap-3">
-                                <span class="w-2 h-2 rounded-full {{ $plan['status'] === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300' }}"></span>
-                                <span class="font-bold text-slate-800">{{ $plan['phase'] ?? '-' }}</span>
-                            </div>
-                            <span class="text-slate-500 font-mono bg-white px-2.5 py-1 rounded border border-slate-200 text-xs">
-                                {{ $plan['duration'] ?? '-' }}
-                            </span>
-                        </div>
-                    @endforeach
+                <!-- Scope Lock Policy Notice -->
+                <div class="p-4 bg-zinc-950 border border-zinc-800 text-zinc-400 text-xs font-mono leading-relaxed mb-6">
+                    <strong class="text-amber-400 block mb-1 uppercase font-bold">&bull; Batasan Ruang Lingkup & Ketentuan Tambah Fitur (Change Request)</strong>
+                    Seluruh fitur yang tertera di atas terkunci secara hukum dalam Kontrak Induk. Apabila di kemudian hari Klien menghendaki penambahan fitur baru di luar spesifikasi ini, penambahan tersebut akan diakomodasikan melalui <strong>Change Request (CR) / Addendum</strong> terpisah dengan perhitungan biaya dan tambahan hari kerja tersendiri tanpa mengganggu jadwal kontrak utama.
                 </div>
-            </section>
 
-            <!-- CALL TO ACTION / CONFIRMATION -->
-            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-8 text-center shadow-lg no-print">
-                <h3 class="text-2xl font-black mb-2">Siap Merealisasikan Blueprint Proyek Ini?</h3>
-                <p class="text-slate-300 text-sm max-w-xl mx-auto mb-6">
-                    Dokumen ini telah terkunci dan tersinkronisasi. Tim developer kami siap memulai implementasi tahap Discovery & Database Setup.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    @if(!empty($blueprint->phone))
-                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $blueprint->phone) }}?text={{ urlencode('Halo, saya ingin mendiskusikan kelanjutan Ultimate PRD proyek: ' . $blueprint->nama_bisnis) }}" target="_blank" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition shadow-lg">
-                            Hubungi via WhatsApp
-                        </a>
-                    @endif
-                    <a href="mailto:{{ $blueprint->email }}?subject={{ urlencode('Konfirmasi Proyek: ' . $blueprint->nama_bisnis) }}" class="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-sm border border-white/20 transition">
-                        Kirim Email Konfirmasi
+                <!-- Action Buttons: Sign Contract & Pay DP -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <a 
+                        href="https://wa.me/628123456789?text={{ urlencode('Halo Neriah Pro, saya menyetujui Ultimate PRD untuk proyek: ' . $blueprint->nama_bisnis . '. Mohon panduan tanda tangan kontrak digital dan pembayaran DP via Midtrans.') }}" 
+                        target="_blank" 
+                        class="bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-widest py-4 px-6 text-center rounded-none transition flex items-center justify-center gap-2"
+                    >
+                        <span>Tanda Tangani Kontrak & Kunci Scope</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </a>
+
+                    <a 
+                        href="https://wa.me/628123456789?text={{ urlencode('Halo Neriah Pro, saya ingin meminta Invoice DP Midtrans untuk proyek: ' . $blueprint->nama_bisnis) }}" 
+                        target="_blank" 
+                        class="bg-zinc-800 hover:bg-zinc-700 text-white font-mono font-bold text-xs uppercase tracking-widest py-4 px-6 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2"
+                    >
+                        <span>Instruksi Pembayaran DP (Midtrans)</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     </a>
                 </div>
-            </div>
+            </section>
 
         </main>
     @endif
 
-    <!-- Footer -->
-    <footer class="bg-slate-900 text-slate-400 py-6 px-4 text-center text-xs border-t border-slate-800 no-print">
+    <!-- Global Footer -->
+    <footer class="bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 py-6 px-4 text-center text-xs border-t border-zinc-200 dark:border-zinc-800 font-mono no-print">
         <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p>&copy; {{ date('Y') }} Neriah Pro HUB &bull; Vision Blueprint & Ultimate PRD Engine</p>
-            <p class="text-slate-500">Enterprise PostgreSQL &bull; Monolith Rapid Architecture</p>
+            <p>&copy; {{ date('Y') }} NERIAH PRO HUB &bull; ULTIMATE PRD & ARCHITECTURE BLUEPRINT</p>
+            <p class="text-zinc-400 dark:text-zinc-500">POSTGRESQL STRICT ULID // MODERN MONOLITH</p>
         </div>
     </footer>
 

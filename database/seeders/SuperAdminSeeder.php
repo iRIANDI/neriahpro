@@ -16,7 +16,7 @@ class SuperAdminSeeder extends Seeder
     {
         $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
 
-        $user = User::firstOrCreate(
+        $user = User::updateOrCreate(
             ['email' => 'yoseph.iriandi.tambunan@gmail.com'],
             [
                 'name' => 'Yoseph Iriandi',
@@ -25,6 +25,8 @@ class SuperAdminSeeder extends Seeder
             ]
         );
 
-        $user->assignRole($role);
+        if (!$user->hasRole('super_admin')) {
+            $user->assignRole($role);
+        }
     }
 }

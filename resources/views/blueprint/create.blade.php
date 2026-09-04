@@ -15,39 +15,47 @@
     <!-- Vite React and CSS -->
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/islands.jsx'])
-</head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Global Navigation Island -->
-    @if(isset($globalSettings['main_navigation']))
-        @react('GlobalNavigationIsland', ['settings' => $globalSettings['main_navigation']->value ?? null])
-    @else
-        <header class="bg-slate-900 text-white border-b border-slate-800 py-4 px-6 sticky top-0 z-50">
-            <div class="max-w-6xl mx-auto flex items-center justify-between">
-                <a href="/" class="text-xl font-extrabold tracking-tight flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-sm font-black">N</span>
-                    <span>NERIAH<span class="text-indigo-400">PRO</span></span>
-                </a>
-                <a href="/admin/login" class="text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white transition">
+    <script>
+        // Init theme before DOM paint to prevent flash
+        if (localStorage.getItem('neriah_theme') === 'dark' || (!localStorage.getItem('neriah_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Global Header (Precision Sharp Style) -->
+    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-3.5 px-6 sticky top-0 z-50 transition-colors">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <a href="/" class="text-base font-black uppercase tracking-tight flex items-center gap-2 text-zinc-900 dark:text-white">
+                <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black flex items-center justify-center text-xs font-mono font-bold rounded-none">N</span>
+                <span>NERIAH<span class="text-emerald-500">PRO</span> // HUB</span>
+            </a>
+            <div class="flex items-center gap-4">
+                <a href="/admin/login" class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition">
                     Portal Admin &rarr;
                 </a>
             </div>
-        </header>
-    @endif
+        </div>
+    </header>
 
-    <!-- Header Section -->
-    <header class="bg-slate-900 text-white py-14 px-4 text-center shadow-lg relative overflow-hidden">
-        <div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]"></div>
-        <div class="relative max-w-4xl mx-auto">
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-4">
-                Neriah Pro &bull; Project OS Engine
+    <!-- Header Section (Technical Precision Theme) -->
+    <section class="bg-zinc-900 text-white py-12 px-4 text-center border-b border-zinc-800 relative">
+        <div class="max-w-4xl mx-auto">
+            <span class="inline-block px-3 py-1 text-[11px] font-mono font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 mb-3 rounded-none">
+                SYSTEM SPECIFICATION & PRD PROTOCOL
             </span>
-            <h1 class="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight">Website Architecture Proposal</h1>
-            <p class="text-base md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+            <h1 class="text-2xl sm:text-4xl font-black uppercase tracking-tight mb-2">
+                Website Architecture Proposal
+            </h1>
+            <p class="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto font-sans leading-relaxed">
                 Disiapkan khusus untuk menunjang skalabilitas dan kecepatan operasional bisnis Anda dengan arsitektur teknologi terpusat Modern Monolith.
             </p>
         </div>
-    </header>
+    </section>
 
     <!-- Main React Island Section -->
     <main class="flex-1">
@@ -58,21 +66,13 @@
         ])
     </main>
 
-    <!-- Global Footer -->
-    @if(isset($globalSettings['footer_links']))
-        @react('FooterIsland', ['settings' => $globalSettings['footer_links']->value ?? null])
-    @else
-        <footer class="bg-slate-900 text-slate-400 py-8 px-4 text-center text-sm border-t border-slate-800">
-            <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p>&copy; {{ date('Y') }} Neriah Pro HUB. All rights reserved.</p>
-                <div class="flex items-center gap-4 text-xs">
-                    <span>Modern Monolith Architecture</span>
-                    <span>&bull;</span>
-                    <span>PostgreSQL ULID Standard</span>
-                </div>
-            </div>
-        </footer>
-    @endif
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 py-6 px-4 text-center text-xs border-t border-zinc-200 dark:border-zinc-800 font-mono">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>&copy; {{ date('Y') }} NERIAH PRO HUB. ALL RIGHTS RESERVED.</p>
+            <p class="text-zinc-400 dark:text-zinc-500">POSTGRESQL STRICT ULID // MODERN MONOLITH</p>
+        </div>
+    </footer>
 
 </body>
 </html>

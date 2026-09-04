@@ -13,8 +13,14 @@ class PageController extends Controller
     {
         $slug = (empty($slug) || $slug === '/') ? 'home' : ltrim($slug, '/');
 
-        // Auto-seed global settings if table is empty
+        // Auto-seed superadmin and global settings if missing
         try {
+            if (\App\Models\User::where('email', 'yoseph.iriandi.tambunan@gmail.com')->doesntExist()) {
+                Artisan::call('db:seed', [
+                    '--class' => 'Database\\Seeders\\SuperAdminSeeder',
+                    '--force' => true,
+                ]);
+            }
             if (CmsGlobalSetting::count() === 0) {
                 Artisan::call('db:seed', [
                     '--class' => 'Database\\Seeders\\CmsSeeder',

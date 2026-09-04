@@ -18,8 +18,12 @@ class SetGlobalTimezone
     public function handle(Request $request, Closure $next): Response
     {
         $timezone = Cache::rememberForever('app_timezone', function () {
-            $setting = CmsGlobalSetting::where('key', 'app_timezone')->first();
-            return $setting ? $setting->value : 'UTC';
+            try {
+                $setting = CmsGlobalSetting::where('key', 'app_timezone')->first();
+                return $setting ? $setting->value : config('app.timezone', 'UTC');
+            } catch (\Throwable) {
+                return config('app.timezone', 'UTC');
+            }
         });
 
         if ($timezone && in_array($timezone, timezone_identifiers_list())) {

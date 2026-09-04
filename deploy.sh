@@ -56,6 +56,7 @@ case $1 in
         echo "--- Menjalankan Skenario 2: Migrate Safe ---"
         composer install --no-dev --optimize-autoloader
         php artisan migrate --force
+        php artisan db:seed --class=CmsSeeder --force
         php artisan config:clear
         php artisan route:clear
         php artisan view:clear

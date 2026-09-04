@@ -139,4 +139,22 @@ When writing inline javascript within AlpineJS attributes (such as `x-data="..."
 - **Container Execution in `deploy.sh` & Git Sync**:
   - Inside a Docker/Nixpacks container, the `.git` folder does not exist by default. `deploy.sh` guards Git synchronization with `if [ -d .git ]` or `elif [ -n "$GIT_REMOTE_URL" ]` to allow container-level sync via `GIT_REMOTE_URL` without hardcoding credentials in repository files.
 
+### 8. Global Middleware & Initial Database Bootstrapping Resiliency
+- **Missing Table Guard in Global Middleware**:
+  - Any global middleware executing on every HTTP request (such as `SetGlobalTimezone`) that queries database settings (e.g., `CmsGlobalSetting::where(...)`) MUST be wrapped in `try { ... } catch (\Throwable)`:
+    ```php
+    $timezone = Cache::rememberForever('app_timezone', function () {
+        try {
+            $setting = CmsGlobalSetting::where('key', 'app_timezone')->first();
+            return $setting ? $setting->value : config('app.timezone', 'UTC');
+        } catch (\Throwable) {
+            return config('app.timezone', 'UTC');
+        }
+    });
+    ```
+    This prevents `SQLSTATE[42P01]: Undefined table` (or `relation does not exist`) 500 errors if the database has not yet been migrated or during fresh deployment setups.
+- **Initial Database Seeding Dependency**:
+  - In `deploy.sh` Skenario 2 (Migrate Safe), always chain essential configuration seeders (`php artisan db:seed --class=CmsSeeder --force`) so global settings tables (`cms_global_settings`) are populated immediately after migration without manual intervention.
+
+
 

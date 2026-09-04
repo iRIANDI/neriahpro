@@ -1,0 +1,20 @@
+[variables]
+NIXPACKS_PHP_VERSION = "8.4"
+NIXPACKS_NODE_VERSION = "22"
+NIXPACKS_PHP_ROOT_DIR = "/app/public"
+NIXPACKS_PHP_FALLBACK_PATH = "/index.php"
+PUPPETEER_SKIP_DOWNLOAD = "true"
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+
+[phases.setup]
+aptPkgs = ["curl", "wget", "unzip"]
+
+[phases.build]
+cmds = [
+    "npm run build",
+    "mkdir -p storage/framework/views storage/framework/cache/data storage/framework/sessions storage/logs storage/app/public bootstrap/cache /tmp/views /tmp/cache",
+    "chmod -R 777 storage bootstrap/cache /tmp",
+    "cp /app/nginx.conf /nginx.conf 2>/dev/null || true",
+    "cp /app/nginx.conf /assets/nginx.conf 2>/dev/null || true",
+    "cp /app/nginx.conf /etc/nginx/nginx.conf 2>/dev/null || true"
+]

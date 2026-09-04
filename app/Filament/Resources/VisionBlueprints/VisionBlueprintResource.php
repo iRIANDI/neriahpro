@@ -20,9 +20,17 @@ class VisionBlueprintResource extends Resource
 {
     protected static ?string $model = VisionBlueprint::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $navigationLabel = 'Project OS / PRD';
 
-    protected static ?string $recordTitleAttribute = 'client_name';
+    protected static ?string $modelLabel = 'Project Blueprint & PRD';
+
+    protected static ?string $pluralModelLabel = 'Project Blueprints & PRDs';
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cpu-chip';
+
+    protected static string | \UnitEnum | null $navigationGroup = 'Project Management';
+
+    protected static ?string $recordTitleAttribute = 'nama_bisnis';
 
     public static function form(Schema $schema): Schema
     {

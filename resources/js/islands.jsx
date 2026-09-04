@@ -7,6 +7,7 @@ import ProductGridIsland from './Islands/ProductGridIsland.jsx';
 import GlobalNavigationIsland from './Islands/GlobalNavigationIsland.jsx';
 import FooterIsland from './Islands/FooterIsland.jsx';
 import BreadcrumbIsland from './Islands/BreadcrumbIsland.jsx';
+import ProjectBlueprintIsland from './Islands/ProjectBlueprintIsland.jsx';
 
 const islands = {
     ClientOnboardingIsland,
@@ -15,6 +16,7 @@ const islands = {
     GlobalNavigationIsland,
     FooterIsland,
     BreadcrumbIsland,
+    ProjectBlueprintIsland,
 };
 
 document.addEventListener('DOMContentLoaded', () => {

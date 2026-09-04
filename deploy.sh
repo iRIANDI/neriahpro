@@ -19,12 +19,14 @@ if [ -z "$1" ]; then
 fi
 
 if [ -z "$DEPLOY_SYNCED" ]; then
-    echo "[1/3] Sinkronisasi kode ke versi GitHub (main)..."
     if [ -d .git ]; then
+        echo "[1/3] Sinkronisasi kode ke versi GitHub (main)..."
         git fetch origin main
         git reset --hard origin/main
+        DEPLOY_SYNCED=1 exec bash "$0" "$@"
+    else
+        echo "[1/3] Container environment terdeteksi (tanpa .git), melewati git sync..."
     fi
-    DEPLOY_SYNCED=1 exec bash "$0" "$@"
 fi
 
 echo "[2/3] Mengeksekusi Skenario $1..."

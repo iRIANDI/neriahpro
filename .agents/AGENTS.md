@@ -120,3 +120,15 @@ When writing inline javascript within AlpineJS attributes (such as `x-data="..."
     This satisfies local PHP 8.5 execution while guaranteeing Nixpacks resolves to PHP 8.4 on Coolify.
 - **Lock File Synchronization**:
   - Whenever modifying PHP constraints or dependencies in `composer.json`, ALWAYS run `composer update --lock` to update `content-hash` in `composer.lock` without unintentionally upgrading other dependencies.
+
+### 7. Redis Client Resiliency & Container Execution
+- **Redis Driver Fallback (`Class "Redis" not found` Prevention)**:
+  - If `CACHE_STORE=redis`, `SESSION_DRIVER=redis`, or `QUEUE_CONNECTION=redis` is used in production, never assume the PHP C-extension (`ext-redis` / `phpredis`) is installed in the container.
+  - In `config/database.php`, always configure Redis client to gracefully fall back:
+    ```php
+    'client' => (env('REDIS_CLIENT') === 'predis' || ! extension_loaded('redis')) ? 'predis' : 'phpredis',
+    ```
+  - Always maintain `predis/predis` in `composer.json` (`composer require predis/predis`) as a pure PHP Redis client fallback to prevent `Class "Redis" not found` fatal crashes during `php artisan optimize:clear`.
+- **Container Execution in `deploy.sh`**:
+  - Inside a Docker/Nixpacks container, the `.git` folder does not exist. `deploy.sh` must guard Git synchronization with `if [ -d .git ]` to prevent fatal Git errors when run directly inside containers.
+

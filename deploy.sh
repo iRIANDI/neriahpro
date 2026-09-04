@@ -18,11 +18,20 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-echo "[1/3] Sinkronisasi kode ke versi GitHub (main)..."
-git fetch origin main
-git reset --hard origin/main
+if [ -z "$DEPLOY_SYNCED" ]; then
+    echo "[1/3] Sinkronisasi kode ke versi GitHub (main)..."
+    if [ -d .git ]; then
+        git fetch origin main
+        git reset --hard origin/main
+    fi
+    DEPLOY_SYNCED=1 exec bash "$0" "$@"
+fi
 
 echo "[2/3] Mengeksekusi Skenario $1..."
+# Selalu bersihkan cache config terlebih dahulu agar environment variables terbaru langsung terbaca
+rm -f bootstrap/cache/*.php 2>/dev/null || true
+php artisan optimize:clear 2>/dev/null || true
+
 case $1 in
     1)
         echo "--- Menjalankan Skenario 1: UI/Blade Only ---"
@@ -36,7 +45,10 @@ case $1 in
         ;;
     3)
         echo "--- Menjalankan Skenario 3: Migrate Fresh (HANCURKAN DB) ---"
+        # Bersihkan file fisik media lama agar tidak menjadi file yatim (orphan)
+        rm -rf storage/app/public/*
         php artisan migrate:fresh --seed --force
+        php artisan storage:link 2>/dev/null || true
         php artisan optimize:clear
         ;;
     4)
@@ -61,5 +73,10 @@ case $1 in
         exit 1
         ;;
 esac
+
+# Otomatis pastikan izin folder storage selalu aman setelah artisan dijalankan
+mkdir -p storage/app/public storage/app/.cache storage/framework/views storage/framework/cache/data storage/framework/sessions storage/logs bootstrap/cache
+chmod -R 777 storage bootstrap/cache 2>/dev/null || true
+chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 
 echo "[3/3] === DEPLOYMENT SELESAI === 🎉"

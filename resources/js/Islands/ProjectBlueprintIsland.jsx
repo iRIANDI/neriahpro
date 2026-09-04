@@ -167,6 +167,20 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       setIsDarkMode(false);
       document.documentElement.classList.remove('dark');
     }
+
+    // Prefill from URL query params (Simulator handoff)
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlName = searchParams.get('name');
+      const urlProblem = searchParams.get('problem');
+      if (urlName || urlProblem) {
+        setFormData(prev => ({
+          ...prev,
+          namaBisnis: urlName || prev.namaBisnis,
+          masalahUtama: urlProblem || prev.masalahUtama,
+        }));
+      }
+    }
   }, []);
 
   const toggleTheme = () => {

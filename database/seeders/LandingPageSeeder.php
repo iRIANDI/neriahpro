@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\CmsPage;
-use Illuminate\Support\Str;
 
 class LandingPageSeeder extends Seeder
 {
@@ -15,8 +14,16 @@ class LandingPageSeeder extends Seeder
     {
         $homePage = CmsPage::firstOrNew(['slug' => 'home']);
         
-        $homePage->title = ['en' => 'Neriah Pro - Default Home', 'id' => 'Neriah Pro - Beranda Default'];
-        $homePage->meta_description = ['en' => 'Neriah Pro Default Landing Page', 'id' => 'Halaman Landing Default Neriah Pro'];
+        $homePage->title = [
+            'en' => 'Neriah Pro // Enterprise Architecture & Digital Services Hub',
+            'id' => 'Neriah Pro // Pusat Arsitektur & Layanan Rekayasa Digital'
+        ];
+        
+        $homePage->meta_description = [
+            'en' => 'High-retention digital architecture platform. Generate PRD blueprints, PostgreSQL Strict ULID schemas, contract lock, and enterprise systems.',
+            'id' => 'Platform arsitektur digital teruji. Hasilkan PRD blueprint instan, skema database PostgreSQL Strict ULID, penguncian kontrak, dan sistem enterprise.'
+        ];
+        
         $homePage->is_published = true;
         
         $plugins = [
@@ -24,28 +31,25 @@ class LandingPageSeeder extends Seeder
                 'type' => 'hero_section',
                 'is_active' => true,
                 'data' => [
-                    'title' => 'Welcome to Neriah Pro',
-                    'subtitle' => 'The ultimate platform for your needs',
-                    'cta_text' => 'Get Started',
-                    'cta_link' => '#pricing'
+                    'headline' => 'PUSAT ARSITEKTUR & REKAYASA DIGITAL UNTUK PROYEK BERSKALA TINGGI.',
+                    'subheadline' => 'Ubah visi bisnis Anda menjadi Product Requirements Document (PRD) lengkap, skema basis data ERD PostgreSQL Strict ULID, alur kerja bertahap, dan penguncian kontrak kerja sama dalam hitungan menit.',
+                    'cta_text' => 'Mulai Blueprint Lengkap',
+                    'cta_link' => '/blueprint'
                 ]
             ],
             [
                 'type' => 'feature_grid',
                 'is_active' => true,
                 'data' => [
-                    'features' => [
-                        ['title' => 'Fast', 'description' => 'Lightning fast performance.'],
-                        ['title' => 'Secure', 'description' => 'Top tier security.'],
-                    ]
+                    'title' => '4 Pilar Layanan Digital Hub.'
                 ]
             ],
             [
                 'type' => 'onboarding_form',
                 'is_active' => true,
                 'data' => [
-                    'title' => 'Join Us Today',
-                    'description' => 'Fill out the form below to get started.'
+                    'title' => 'Onboarding Engine & Discovery',
+                    'description' => 'Sampaikan ide dan spesifikasi aplikasi Anda secara rahasia dan terenkripsi.'
                 ]
             ]
         ];
@@ -53,6 +57,6 @@ class LandingPageSeeder extends Seeder
         $homePage->plugins = $plugins;
         $homePage->save();
         
-        $this->command->info('Landing Page seeded successfully!');
+        $this->command->info('Landing Page seeded successfully with 4 Pillars Hub data!');
     }
 }

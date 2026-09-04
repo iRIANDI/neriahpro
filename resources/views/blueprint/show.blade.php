@@ -337,10 +337,27 @@
             </section>
 
             <!-- SECTION 6: TIMELINE & GANTT MILESTONE (ALIGNED TO WORKING DAYS) -->
+            @php
+                preg_match('/(\d+)/', $blueprint->target_waktu ?? '30', $matches);
+                $totalDays = !empty($matches[1]) ? (int)$matches[1] : 30;
+                if ($totalDays < 5) $totalDays = 5;
+
+                $s1End = max(2, (int) round($totalDays * 0.16));
+                $s2End = max($s1End + 1, (int) round($totalDays * 0.55));
+                $s3End = max($s2End + 1, (int) round($totalDays * 0.78));
+                $s4End = max($s3End + 1, (int) round($totalDays * 0.90));
+                $s5Start = $s4End + 1;
+                if ($s5Start > $totalDays) $s5Start = $totalDays;
+            @endphp
             <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
-                <div class="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                    <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
-                    <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Timeline & Milestone Proyek (Aligned)</h2>
+                <div class="flex items-center justify-between gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
+                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Timeline & Milestone Proyek (Aligned)</h2>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
+                        Total Alokasi: {{ $totalDays }} Hari Kerja
+                    </span>
                 </div>
 
                 <div class="space-y-2.5 font-mono text-xs">
@@ -349,35 +366,35 @@
                             <span class="w-2 h-2 bg-emerald-500"></span>
                             <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 1: Architecture & Database ERD Setup</span>
                         </div>
-                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">Hari 1 - 5</span>
+                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">Hari 1 - {{ $s1End }}</span>
                     </div>
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-zinc-400"></span>
                             <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 2: Core MVP Logic & Filament Admin CRUD</span>
                         </div>
-                        <span class="text-zinc-500">Hari 6 - 18</span>
+                        <span class="text-zinc-500">Hari {{ $s1End + 1 }} - {{ $s2End }}</span>
                     </div>
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-zinc-400"></span>
                             <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 3: Frontend User Flow & API Integrasi</span>
                         </div>
-                        <span class="text-zinc-500">Hari 19 - 25</span>
+                        <span class="text-zinc-500">Hari {{ $s2End + 1 }} - {{ $s3End }}</span>
                     </div>
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-zinc-400"></span>
                             <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 4: Security Audit, Stress Test & UAT</span>
                         </div>
-                        <span class="text-zinc-500">Hari 26 - 28</span>
+                        <span class="text-zinc-500">Hari {{ $s3End + 1 }} - {{ $s4End }}</span>
                     </div>
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-zinc-400"></span>
                             <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 5: Production Deployment & Serah Terima</span>
                         </div>
-                        <span class="text-zinc-500">Hari 29 - 30</span>
+                        <span class="text-zinc-500">Hari {{ $s5Start }} - {{ $totalDays }}</span>
                     </div>
                 </div>
             </section>

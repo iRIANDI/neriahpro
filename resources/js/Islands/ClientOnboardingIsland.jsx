@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Terminal, Layers } from 'lucide-react';
 
 const steps = [
-  { id: 'intro', title: 'Start Your Journey', desc: 'Tell us who you are.' },
-  { id: 'vision', title: 'The Vision', desc: 'What are we building?' },
-  { id: 'budget', title: 'Investment', desc: 'Scope & Budget' },
-  { id: 'consent', title: 'Privacy First', desc: 'Finalize & Submit' }
+  { id: 'intro', title: 'Identitas Proyek', desc: 'Siapa Anda dan apa nama entitas Anda?' },
+  { id: 'vision', title: 'Visi & Target Masalah', desc: 'Apa masalah mendesak yang diselesaikan?' },
+  { id: 'budget', title: 'Alokasi & Timeline', desc: 'Berapa estimasi investasi & target rilis?' },
+  { id: 'consent', title: 'Protokol Keamanan Data', desc: 'Finalisasi dan persetujuan pengolahan ide' }
 ];
 
 export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
@@ -29,171 +30,299 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name === 'vision') {
-        setVisionText(value);
-        setFormData(prev => ({ ...prev, project_needs: { ...prev.project_needs, vision: value } }));
+      setVisionText(value);
+      setFormData(prev => ({ ...prev, project_needs: { ...prev.project_needs, vision: value } }));
     } else {
-        setFormData(prev => ({
+      setFormData(prev => ({
         ...prev,
         [name]: type === 'checkbox' ? checked : value
-        }));
+      }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.privacy_consent_agreed) {
-        alert("You must agree to the privacy policy.");
-        return;
+      alert("Harap setujui komitmen kerahasiaan dan privasi data.");
+      return;
     }
     
     setIsSubmitting(true);
     
     try {
-        const response = await fetch(submitUrl || '/api/onboarding', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        if (response.ok) {
-            setIsSuccess(true);
-        } else {
-            console.error("Submission failed.");
-        }
+      const response = await fetch(submitUrl || '/api/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        setIsSuccess(true);
+      } else {
+        console.error("Submission failed.");
+        alert("Gagal mengirim data. Silakan coba lagi atau hubungi via WhatsApp.");
+      }
     } catch (err) {
-        console.error(err);
+      console.error(err);
+      alert("Terjadi kendala jaringan.");
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   if (isSuccess) {
-      return (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }} 
-            animate={{ opacity: 1, scale: 1 }} 
-            className="p-10 border border-[#00f0ff] bg-black text-white rounded-xl shadow-[0_0_20px_rgba(0,240,255,0.3)] text-center max-w-2xl mx-auto font-sans"
-          >
-              <h2 className="text-4xl font-black uppercase tracking-tighter mb-4 text-[#00f0ff]">Idea Logged.</h2>
-              <p className="text-lg opacity-80">Your vision is secure with us. We will reach out shortly to begin mapping out your Project OS.</p>
-          </motion.div>
-      );
+    return (
+      <section className="py-20 px-4 sm:px-6 max-w-4xl mx-auto font-sans">
+        <div className="p-8 sm:p-12 border-2 border-emerald-500 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-none shadow-none text-center">
+          <div className="w-12 h-12 bg-emerald-500 text-black flex items-center justify-center mx-auto mb-6 rounded-none font-bold">
+            <CheckCircle2 className="w-7 h-7" />
+          </div>
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 block mb-2">
+            INITIALIZATION COMPLETE // DATA ENCRYPTED
+          </span>
+          <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight mb-4">
+            Ide & Kebutuhan Berhasil Diterima.
+          </h2>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed mb-8 font-sans">
+            Data Anda telah diamankan dengan standar PostgreSQL Strict ULID. Tim teknis Neriah Pro akan menyusun draf proposal arsitektur awal dalam 1x24 jam kerja.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 font-mono text-xs uppercase font-bold">
+            <a
+              href="/blueprint"
+              className="bg-emerald-600 hover:bg-emerald-500 text-black px-6 py-3.5 rounded-none transition flex items-center gap-2"
+            >
+              <span>Buka PRD Blueprint Generator &rarr;</span>
+            </a>
+            <a
+              href="/"
+              className="border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-6 py-3.5 rounded-none transition"
+            >
+              Kembali ke Beranda
+            </a>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-8 font-sans text-white bg-[#0a0a0a] border-l-4 border-[#00f0ff] relative overflow-hidden shadow-2xl">
-      {/* Decorative neon blur */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-[#00f0ff] opacity-10 blur-[100px] pointer-events-none rounded-full" />
-      
-      <div className="mb-10">
-        <h2 className="text-3xl font-black uppercase tracking-tighter">{steps[currentStep].title}</h2>
-        <p className="text-sm opacity-60 font-mono mt-1">{steps[currentStep].desc}</p>
+    <section className="py-20 px-4 sm:px-6 max-w-4xl mx-auto font-sans">
+      <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 p-6 sm:p-10 rounded-none shadow-none text-zinc-900 dark:text-zinc-100 transition-colors">
         
-        <div className="flex gap-2 mt-6">
-            {steps.map((step, idx) => (
-                <div key={step.id} className={`h-2 flex-1 rounded-full transition-all duration-500 ${idx <= currentStep ? 'bg-[#00f0ff] shadow-[0_0_10px_rgba(0,240,255,0.5)]' : 'bg-gray-800'}`} />
-            ))}
+        {/* Header Bar */}
+        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-8">
+          <div>
+            <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold mb-1">
+              <Terminal className="w-4 h-4" />
+              <span>ONBOARDING ENGINE // TAHAP {currentStep + 1} DARI {steps.length}</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
+              {steps[currentStep].title}
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-mono mt-1">
+              {steps[currentStep].desc}
+            </p>
+          </div>
+
+          <div className="hidden sm:block text-right font-mono text-xs text-zinc-400">
+            <span>MODERN MONOLITH PROTOCOL</span>
+          </div>
         </div>
-      </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentStep}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3 }}
-          className="min-h-[250px]"
-        >
-          {currentStep === 0 && (
-            <div className="space-y-6">
-              <div>
-                  <label className="block text-xs uppercase font-bold tracking-widest opacity-50 mb-2">Full Name</label>
-                  <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-black border-b-2 border-gray-800 focus:border-[#00f0ff] outline-none py-3 text-xl transition-colors" placeholder="John Doe" />
-              </div>
-              <div>
-                  <label className="block text-xs uppercase font-bold tracking-widest opacity-50 mb-2">Email Address</label>
-                  <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full bg-black border-b-2 border-gray-800 focus:border-[#00f0ff] outline-none py-3 text-xl transition-colors" placeholder="john@example.com" />
-              </div>
-              <div>
-                  <label className="block text-xs uppercase font-bold tracking-widest opacity-50 mb-2">Company (Optional)</label>
-                  <input type="text" name="company_name" value={formData.company_name} onChange={handleChange} className="w-full bg-black border-b-2 border-gray-800 focus:border-[#00f0ff] outline-none py-3 text-xl transition-colors" placeholder="Acme Corp" />
-              </div>
-            </div>
-          )}
+        {/* Sharp Step Indicators */}
+        <div className="grid grid-cols-4 gap-2 mb-10">
+          {steps.map((step, idx) => (
+            <div 
+              key={step.id} 
+              className={`h-2 rounded-none transition-all duration-300 ${
+                idx <= currentStep 
+                  ? 'bg-emerald-500' 
+                  : 'bg-zinc-200 dark:bg-zinc-800'
+              }`} 
+            />
+          ))}
+        </div>
 
-          {currentStep === 1 && (
-            <div className="space-y-6">
-              <div>
-                  <label className="block text-xs uppercase font-bold tracking-widest opacity-50 mb-2">Describe Your Vision</label>
-                  <textarea name="vision" value={visionText} onChange={handleChange} rows="5" className="w-full bg-[#111] border border-gray-800 focus:border-[#00f0ff] p-4 text-lg outline-none resize-none transition-colors" placeholder="We are trying to solve..." />
-                  <p className="text-xs text-gray-500 mt-2">Do not include sensitive financial data or passwords.</p>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 2 && (
-            <div className="space-y-6">
-              <label className="block text-xs uppercase font-bold tracking-widest opacity-50 mb-4">Select Budget Range</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {['<$5k', '$5k - $15k', '$15k - $50k', '>$50k (Enterprise)'].map(range => (
-                      <button 
-                        key={range} 
-                        onClick={() => handleChange({ target: { name: 'budget_range', value: range } })}
-                        className={`py-4 px-6 border ${formData.budget_range === range ? 'border-[#00f0ff] bg-[rgba(0,240,255,0.05)] text-[#00f0ff]' : 'border-gray-800 hover:border-gray-600'} text-left transition-all duration-300 font-mono`}
-                      >
-                          {range}
-                      </button>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          {currentStep === 3 && (
-            <div className="space-y-6">
-              <div className="bg-[#111] p-6 border border-gray-800">
-                  <h3 className="text-lg font-bold mb-2">Data Privacy Commitment</h3>
-                  <p className="text-sm opacity-70 mb-4">Your responses are securely logged using ULID architecture. We map your ideas to provide a tailored Project OS blueprint without compromising your privacy.</p>
-                  
-                  <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" name="privacy_consent_agreed" checked={formData.privacy_consent_agreed} onChange={handleChange} className="w-5 h-5 accent-[#00f0ff]" />
-                      <span className="text-sm">I agree to the secure processing of my project ideas.</span>
+        {/* Step Body */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="min-h-[260px]"
+          >
+            {currentStep === 0 && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
+                    Nama Lengkap PIC *
                   </label>
+                  <input 
+                    type="text" 
+                    name="name" 
+                    value={formData.name} 
+                    onChange={handleChange} 
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none" 
+                    placeholder="Contoh: Alexander Wijaya" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
+                    Alamat Email Kerja *
+                  </label>
+                  <input 
+                    type="email" 
+                    name="email" 
+                    value={formData.email} 
+                    onChange={handleChange} 
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none" 
+                    placeholder="alexander@perusahaan.co.id" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
+                    Nama Badan Usaha / Brand (Opsional)
+                  </label>
+                  <input 
+                    type="text" 
+                    name="company_name" 
+                    value={formData.company_name} 
+                    onChange={handleChange} 
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none" 
+                    placeholder="PT. Inovasi Solusi Bersama" 
+                  />
+                </div>
               </div>
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
+            )}
 
-      <div className="mt-10 flex justify-between items-center">
+            {currentStep === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
+                    Uraikan Masalah atau Ide Aplikasi yang Ingin Dibuat *
+                  </label>
+                  <textarea 
+                    name="vision" 
+                    value={visionText} 
+                    onChange={handleChange} 
+                    rows="6" 
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none resize-none leading-relaxed" 
+                    placeholder="Jelaskan kebutuhan Anda: Misal kami membutuhkan platform logistik multi-cabang dengan tracking armada real-time, invoice otomatis, dan hak akses bertingkat..." 
+                  />
+                  <p className="text-xs font-mono text-zinc-500 mt-2">
+                    &bull; Catatan: Jangan sertakan kata sandi atau data kredensial rahasia.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="space-y-6">
+                <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-3">
+                  Pilih Rentang Estimasi Investasi Proyek *
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { id: '<Rp 15 Juta', desc: 'MVP Ringan / Prototyping Cepat' },
+                    { id: 'Rp 15 - 50 Juta', desc: 'Sistem Bisnis Operasional Standar' },
+                    { id: 'Rp 50 - 150 Juta', desc: 'Enterprise Monolith Skala Penuh' },
+                    { id: '> Rp 150 Juta', desc: 'Custom Distributed / High Throughput' }
+                  ].map(range => (
+                    <button 
+                      key={range.id} 
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, budget_range: range.id }))}
+                      className={`p-4 border text-left rounded-none font-mono transition-all ${
+                        formData.budget_range === range.id 
+                          ? 'border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 text-zinc-900 dark:text-white' 
+                          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300'
+                      }`}
+                    >
+                      <div className="text-sm font-bold">{range.id}</div>
+                      <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{range.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div className="space-y-6">
+                <div className="bg-zinc-50 dark:bg-zinc-950 p-6 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold uppercase mb-2">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>KOMITMEN KERAHASIAAN & DATA PRIVACY</span>
+                  </div>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6 font-sans">
+                    Seluruh ide, deskripsi proses bisnis, dan rincian arsitektur yang Anda bagikan dilindungi dengan standar kerahasiaan ketat. Neriah Pro tidak akan pernah membagikan atau menjual data Anda kepada pihak ketiga.
+                  </p>
+                  
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      name="privacy_consent_agreed" 
+                      checked={formData.privacy_consent_agreed} 
+                      onChange={handleChange} 
+                      className="w-4 h-4 mt-0.5 accent-emerald-500 rounded-none cursor-pointer" 
+                    />
+                    <span className="text-xs font-sans text-zinc-700 dark:text-zinc-300">
+                      Saya menyetujui pemrosesan data ide dan spesifikasi teknis ini untuk keperluan penyusunan blueprint Neriah Pro.
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Footer Navigation */}
+        <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center font-mono text-xs uppercase font-bold">
           <button 
+            type="button"
             onClick={prevStep} 
             disabled={currentStep === 0}
-            className={`text-sm uppercase tracking-widest font-bold ${currentStep === 0 ? 'opacity-20 cursor-not-allowed' : 'opacity-100 hover:text-[#00f0ff]'} transition-colors`}
+            className={`px-4 py-2.5 rounded-none border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 flex items-center gap-2 transition ${
+              currentStep === 0 
+                ? 'opacity-20 cursor-not-allowed' 
+                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
+            }`}
           >
-              Back
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Kembali</span>
           </button>
           
           {currentStep < steps.length - 1 ? (
-              <button 
-                onClick={nextStep}
-                className="bg-white text-black px-8 py-3 font-black uppercase tracking-widest hover:bg-[#00f0ff] transition-colors"
-              >
-                  Next
-              </button>
+            <button 
+              type="button"
+              onClick={nextStep}
+              className="bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black px-6 py-2.5 rounded-none transition flex items-center gap-2"
+            >
+              <span>Lanjut</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           ) : (
-              <button 
-                onClick={handleSubmit}
-                disabled={isSubmitting || !formData.privacy_consent_agreed}
-                className={`bg-[#00f0ff] text-black px-8 py-3 font-black uppercase tracking-widest transition-all ${isSubmitting || !formData.privacy_consent_agreed ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white shadow-[0_0_15px_rgba(0,240,255,0.4)]'}`}
-              >
-                  {isSubmitting ? 'Securing...' : 'Initialize OS'}
-              </button>
+            <button 
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting || !formData.privacy_consent_agreed}
+              className={`px-6 py-2.5 rounded-none transition flex items-center gap-2 ${
+                isSubmitting || !formData.privacy_consent_agreed
+                  ? 'bg-zinc-300 dark:bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-black font-black'
+              }`}
+            >
+              <span>{isSubmitting ? 'Mengamankan...' : 'Kirim Kebutuhan'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           )}
+        </div>
+
       </div>
-    </div>
+    </section>
   );
 }

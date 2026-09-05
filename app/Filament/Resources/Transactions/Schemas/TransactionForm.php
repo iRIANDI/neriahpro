@@ -3,6 +3,10 @@
 namespace App\Filament\Resources\Transactions\Schemas;
 
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\KeyValue;
 
 class TransactionForm
 {
@@ -10,21 +14,21 @@ class TransactionForm
     {
         return $schema
             ->components([
-                \Filament\Schemas\Components\Section::make('Transaction Details')
+                Section::make('Transaction Details')
                     ->schema([
-                        \Filament\Schemas\Components\Select::make('user_id')
+                        Select::make('user_id')
                             ->relationship('user', 'name')
                             ->searchable()
                             ->preload(),
-                        \Filament\Schemas\Components\Select::make('product_id')
+                        Select::make('product_id')
                             ->relationship('product', 'slug')
                             ->searchable()
                             ->preload(),
-                        \Filament\Schemas\Components\TextInput::make('midtrans_transaction_id')
+                        TextInput::make('midtrans_transaction_id')
                             ->maxLength(255),
-                        \Filament\Schemas\Components\TextInput::make('midtrans_order_id')
+                        TextInput::make('midtrans_order_id')
                             ->maxLength(255),
-                        \Filament\Schemas\Components\Select::make('status')
+                        Select::make('status')
                             ->options([
                                 'pending' => 'Pending',
                                 'settlement' => 'Settlement',
@@ -37,24 +41,24 @@ class TransactionForm
                             ->required(),
                     ])->columns(2),
                     
-                \Filament\Schemas\Components\Section::make('Financial Details')
+                Section::make('Financial Details')
                     ->schema([
-                        \Filament\Schemas\Components\TextInput::make('total_idr')
+                        TextInput::make('total_idr')
                             ->required()
                             ->numeric()
                             ->prefix('Rp'),
-                        \Filament\Schemas\Components\TextInput::make('original_currency')
+                        TextInput::make('original_currency')
                             ->default('IDR')
                             ->maxLength(255),
-                        \Filament\Schemas\Components\TextInput::make('original_amount')
+                        TextInput::make('original_amount')
                             ->numeric(),
-                        \Filament\Schemas\Components\TextInput::make('exchange_rate')
+                        TextInput::make('exchange_rate')
                             ->numeric(),
                     ])->columns(2),
 
-                \Filament\Schemas\Components\Section::make('Customer Details')
+                Section::make('Customer Details')
                     ->schema([
-                        \Filament\Schemas\Components\KeyValue::make('customer_details')
+                        KeyValue::make('customer_details')
                             ->columnSpanFull(),
                     ]),
             ]);

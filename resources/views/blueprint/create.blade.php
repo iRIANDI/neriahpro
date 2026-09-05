@@ -23,6 +23,16 @@
         } else {
             document.documentElement.classList.remove('dark');
         }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('neriah_theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('neriah_theme', 'dark');
+            }
+        }
     </script>
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
@@ -35,6 +45,9 @@
                 <span>NERIAH<span class="text-emerald-500">PRO</span> // HUB</span>
             </a>
             <div class="flex items-center gap-4">
+                <button onclick="toggleTheme()" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono rounded-none border border-zinc-300 dark:border-zinc-700 transition">
+                    THEME
+                </button>
                 <a href="/admin/login" class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition">
                     Portal Admin &rarr;
                 </a>

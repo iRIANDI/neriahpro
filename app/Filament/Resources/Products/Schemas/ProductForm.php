@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Products\Schemas;
 
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Toggle;
@@ -14,39 +15,65 @@ class ProductForm
     {
         return $schema
             ->components([
-                Section::make('Product Details')
+                Section::make('Identifikasi Produk')
                     ->schema([
-                        TextInput::make('name.en')
-                            ->label('Name (English)')
-                            ->required()
-                            ->maxLength(255),
-                        TextInput::make('name.id')
-                            ->label('Name (Indonesian)')
-                            ->maxLength(255),
                         TextInput::make('slug')
+                            ->label('Slug / Identifier')
                             ->required()
                             ->maxLength(255)
                             ->unique(ignoreRecord: true),
-                        RichEditor::make('description.en')
-                            ->label('Description (English)')
-                            ->columnSpanFull(),
-                        RichEditor::make('description.id')
-                            ->label('Description (Indonesian)')
-                            ->columnSpanFull(),
+                        Toggle::make('is_active')
+                            ->label('Status Aktif')
+                            ->default(true),
                     ])->columns(2),
 
-                Section::make('Pricing & Status')
+                Section::make('Konten Multi-Bahasa (JSON)')
+                    ->schema([
+                        Tabs::make('Language Selector')
+                            ->tabs([
+                                Tabs\Tab::make('Bahasa Indonesia')
+                                    ->icon('heroicon-m-language')
+                                    ->badge('ID')
+                                    ->schema([
+                                        TextInput::make('name.id')
+                                            ->label('Nama Layanan / Produk (ID)')
+                                            ->placeholder('Contoh: Enterprise Rapid Monolith')
+                                            ->required()
+                                            ->maxLength(255),
+                                        RichEditor::make('description.id')
+                                            ->label('Deskripsi Layanan (ID)')
+                                            ->columnSpanFull(),
+                                    ]),
+
+                                Tabs\Tab::make('English')
+                                    ->icon('heroicon-m-globe-alt')
+                                    ->badge('EN')
+                                    ->schema([
+                                        TextInput::make('name.en')
+                                            ->label('Service / Product Name (EN)')
+                                            ->placeholder('e.g. Enterprise Rapid Monolith')
+                                            ->required()
+                                            ->maxLength(255),
+                                        RichEditor::make('description.en')
+                                            ->label('Service Description (EN)')
+                                            ->columnSpanFull(),
+                                    ]),
+                            ])
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make('Harga & Pembayaran (Midtrans Ready)')
                     ->schema([
                         TextInput::make('price_idr')
-                            ->label('Price (IDR)')
+                            ->label('Harga (IDR)')
                             ->required()
                             ->numeric()
+                            ->prefix('Rp')
                             ->default(0),
                         TextInput::make('price_usd')
-                            ->label('Price (USD)')
-                            ->numeric(),
-                        Toggle::make('is_active')
-                            ->default(true),
+                            ->label('Harga Ekivalen (USD)')
+                            ->numeric()
+                            ->prefix('$'),
                     ])->columns(2),
             ]);
     }

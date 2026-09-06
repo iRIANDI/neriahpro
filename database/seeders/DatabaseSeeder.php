@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             CmsSeeder::class,
             LandingPageSeeder::class,
+            WorkflowEndToEndSeeder::class,
         ]);
     }
 }

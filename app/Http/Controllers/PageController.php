@@ -13,11 +13,17 @@ class PageController extends Controller
     {
         $slug = (empty($slug) || $slug === '/') ? 'home' : ltrim($slug, '/');
 
-        // Auto-seed superadmin and global settings if missing
+        // Auto-seed superadmin, midtrans reviewer, and workflow data if missing
         try {
-            if (\App\Models\User::where('email', 'yoseph.iriandi.tambunan@gmail.com')->doesntExist()) {
+            if (\App\Models\User::where('email', 'reviewer.midtrans@neriahpro.com')->doesntExist()) {
                 Artisan::call('db:seed', [
                     '--class' => 'Database\\Seeders\\SuperAdminSeeder',
+                    '--force' => true,
+                ]);
+            }
+            if (\App\Models\LegalPolicy::count() === 0) {
+                Artisan::call('db:seed', [
+                    '--class' => 'Database\\Seeders\\WorkflowEndToEndSeeder',
                     '--force' => true,
                 ]);
             }

@@ -16,17 +16,32 @@ class SuperAdminSeeder extends Seeder
     {
         $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
 
-        $user = User::updateOrCreate(
+        // 1. Primary Superadmin
+        $admin = User::updateOrCreate(
             ['email' => 'yoseph.iriandi.tambunan@gmail.com'],
             [
-                'name' => 'Yoseph Iriandi',
+                'name' => 'Yoseph Iriandi Tambunan',
                 'password' => Hash::make('#T4mbun4n#'),
                 'email_verified_at' => now(),
             ]
         );
 
-        if (!$user->hasRole('super_admin')) {
-            $user->assignRole($role);
+        if (!$admin->hasRole('super_admin')) {
+            $admin->assignRole($role);
+        }
+
+        // 2. Dedicated Midtrans QA / Reviewer Dummy Account
+        $reviewer = User::updateOrCreate(
+            ['email' => 'reviewer.midtrans@neriahpro.com'],
+            [
+                'name' => 'Midtrans QA Reviewer',
+                'password' => Hash::make('MidtransDemo2026#'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        if (!$reviewer->hasRole('super_admin')) {
+            $reviewer->assignRole($role);
         }
     }
 }

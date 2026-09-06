@@ -118,6 +118,22 @@ class VisionBlueprintsTable
                             ->send();
                     }),
 
+                Action::make('convert_to_contract')
+                    ->label('Ikat Kontrak Digital')
+                    ->icon('heroicon-o-document-check')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Ikat Blueprint Menjadi Kontrak Digital Resmi')
+                    ->modalDescription('Sistem akan mengunci ruang lingkup PRD ini (Scope Locked), menyusun klausul kontrak hukum, menyematkan E-Meterai, dan menyiapkan tautan pembayaran DP 50% via Midtrans.')
+                    ->action(function ($record) {
+                        $contract = $record->convertToDigitalContract();
+                        Notification::make()
+                            ->title('Kontrak Digital Berhasil Diterbitkan!')
+                            ->body('Dokumen kontrak telah dibuat dengan nomor seri E-Meterai dan tagihan DP Midtrans.')
+                            ->success()
+                            ->send();
+                    }),
+
                 ViewAction::make(),
                 EditAction::make(),
             ])

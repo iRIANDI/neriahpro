@@ -59,6 +59,7 @@ case $1 in
         php artisan db:seed --class=SuperAdminSeeder --force
         php artisan db:seed --class=CmsSeeder --force
         php artisan db:seed --class=LandingPageSeeder --force
+        php artisan db:seed --class=WorkflowEndToEndSeeder --force
         php artisan config:clear
         php artisan route:clear
         php artisan view:clear

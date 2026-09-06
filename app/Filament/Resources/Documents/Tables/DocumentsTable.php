@@ -32,23 +32,6 @@ class DocumentsTable
                         'success' => 'signed',
                     ]),
 
-                TextColumn::make('e_meterai_status')
-                    ->label('E-Meterai')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'stamped' => 'E-Meterai Sah',
-                        'pending' => 'Menunggu Pembubuhan',
-                        'failed' => 'Gagal',
-                        default => 'Tanpa E-Meterai',
-                    })
-                    ->colors([
-                        'success' => 'stamped',
-                        'warning' => 'pending',
-                        'danger' => 'failed',
-                        'gray' => 'none',
-                    ])
-                    ->description(fn ($record) => $record->e_meterai_sn ?: null),
-
                 IconColumn::make('scope_locked')
                     ->label('Scope Lock')
                     ->boolean()
@@ -80,12 +63,6 @@ class DocumentsTable
                         'draft' => 'Draft',
                         'pending_signature' => 'Menunggu Tanda Tangan',
                         'signed' => 'Ditandatangani',
-                    ]),
-                \Filament\Tables\Filters\SelectFilter::make('e_meterai_status')
-                    ->options([
-                        'stamped' => 'E-Meterai Sah',
-                        'pending' => 'Menunggu Pembubuhan',
-                        'none' => 'Tanpa E-Meterai',
                     ]),
             ])
             ->recordActions([

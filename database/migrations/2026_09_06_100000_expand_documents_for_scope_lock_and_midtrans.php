@@ -12,10 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('documents', function (Blueprint $table) {
-            $table->string('e_meterai_status')->default('none')->after('status');
-            $table->string('e_meterai_sn')->nullable()->after('e_meterai_status');
-            $table->timestamp('e_meterai_stamped_at')->nullable()->after('e_meterai_sn');
-            $table->boolean('scope_locked')->default(false)->after('e_meterai_stamped_at');
+            $table->boolean('scope_locked')->default(false)->after('status');
             $table->decimal('contract_amount', 15, 2)->nullable()->after('scope_locked');
             $table->decimal('dp_amount', 15, 2)->nullable()->after('contract_amount');
             $table->string('midtrans_order_id')->nullable()->after('dp_amount');
@@ -31,9 +28,6 @@ return new class extends Migration
     {
         Schema::table('documents', function (Blueprint $table) {
             $table->dropColumn([
-                'e_meterai_status',
-                'e_meterai_sn',
-                'e_meterai_stamped_at',
                 'scope_locked',
                 'contract_amount',
                 'dp_amount',

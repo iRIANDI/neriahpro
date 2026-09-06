@@ -124,12 +124,12 @@ class VisionBlueprintsTable
                     ->color('success')
                     ->requiresConfirmation()
                     ->modalHeading('Ikat Blueprint Menjadi Kontrak Digital Resmi')
-                    ->modalDescription('Sistem akan mengunci ruang lingkup PRD ini (Scope Locked), menyusun klausul kontrak hukum, menyematkan E-Meterai, dan menyiapkan tautan pembayaran DP 50% via Midtrans.')
+                    ->modalDescription('Sistem akan mengunci ruang lingkup PRD ini (Scope Locked), menyusun klausul kontrak hukum, dan menyiapkan tautan pembayaran DP 50% via Midtrans.')
                     ->action(function ($record) {
                         $contract = $record->convertToDigitalContract();
                         Notification::make()
                             ->title('Kontrak Digital Berhasil Diterbitkan!')
-                            ->body('Dokumen kontrak telah dibuat dengan nomor seri E-Meterai dan tagihan DP Midtrans.')
+                            ->body('Dokumen kontrak telah dibuat dengan tanda tangan digital sah dan tagihan DP Midtrans.')
                             ->success()
                             ->send();
                     }),

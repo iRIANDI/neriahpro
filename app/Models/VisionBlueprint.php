@@ -100,8 +100,8 @@ class VisionBlueprint extends Model
                 'description' => 'Seluruh fitur di luar spesifikasi PRD ini dinyatakan sebagai ruang lingkup baru yang akan diakomodasikan melalui Addendum / Change Request (CR) terpisah dengan biaya dan tambahan hari kerja tersendiri tanpa mengubah tanggal kontrak utama.',
             ],
             'pasal_5_keabsahan_hukum' => [
-                'title' => 'Pasal 5: Tanda Tangan Elektronik & E-Meterai',
-                'description' => 'Surat perjanjian ini sah dan berkekuatan hukum tetap, ditandatangani secara digital dengan pencatatan audit trail IP address, timestamp, enkripsi SHA-256, dan pembubuhan E-Meterai resmi.',
+                'title' => 'Pasal 5: Tanda Tangan Elektronik & Integritas Dokumen',
+                'description' => 'Surat perjanjian ini sah dan berkekuatan hukum tetap, ditandatangani secara digital dengan pencatatan audit trail IP address, timestamp, dan enkripsi cryptographic hash SHA-256.',
             ],
         ];
 
@@ -114,9 +114,6 @@ class VisionBlueprint extends Model
             'scope_locked' => true,
             'contract_amount' => $contractAmount,
             'dp_amount' => $dpAmount,
-            'e_meterai_status' => $overrides['e_meterai_status'] ?? 'pending',
-            'e_meterai_sn' => $overrides['e_meterai_sn'] ?? ('MTR-' . date('Y') . '-NPRO-' . strtoupper(Str::random(8))),
-            'e_meterai_stamped_at' => $overrides['e_meterai_stamped_at'] ?? now(),
             'midtrans_order_id' => $overrides['midtrans_order_id'] ?? ('NPRO-DP-' . strtoupper(Str::random(8))),
             'midtrans_payment_url' => $overrides['midtrans_payment_url'] ?? 'https://app.sandbox.midtrans.com/snap/v2/vtweb/demo-neriahpro-dp',
             'signer_name' => $this->client_name ?: $this->nama_bisnis,

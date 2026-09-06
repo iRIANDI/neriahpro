@@ -17,9 +17,6 @@ class Document extends Model
         'related_type',
         'file_path',
         'status',
-        'e_meterai_status',
-        'e_meterai_sn',
-        'e_meterai_stamped_at',
         'scope_locked',
         'contract_amount',
         'dp_amount',
@@ -36,7 +33,6 @@ class Document extends Model
 
     protected $casts = [
         'signed_at' => 'datetime',
-        'e_meterai_stamped_at' => 'datetime',
         'scope_locked' => 'boolean',
         'contract_amount' => 'decimal:2',
         'dp_amount' => 'decimal:2',
@@ -46,11 +42,6 @@ class Document extends Model
     public function related(): MorphTo
     {
         return $this->morphTo();
-    }
-
-    public function isStamped(): bool
-    {
-        return $this->e_meterai_status === 'stamped';
     }
 
     public function isScopeLocked(): bool

@@ -30,7 +30,7 @@ class WorkflowEndToEndSeeder extends Seeder
         // 3. SEED LIVE VISION BLUEPRINT (PILAR 1: PROJECT OS)
         $blueprint = $this->seedVisionBlueprint();
 
-        // 4. SEED CONNECTED DIGITAL CONTRACT WITH E-METERAI & SCOPE LOCK (PILAR 2: DIGITAL CONTRACT)
+        // 4. SEED CONNECTED DIGITAL CONTRACT WITH SCOPE LOCK (PILAR 2: DIGITAL CONTRACT)
         $contract = $this->seedDigitalContract($blueprint);
 
         // 5. SEED SETTLED DP TRANSACTION (PILAR 4: MIDTRANS PROOF)
@@ -38,7 +38,7 @@ class WorkflowEndToEndSeeder extends Seeder
 
         Schema::enableForeignKeyConstraints();
 
-        $this->command->info('WorkflowEndToEndSeeder executed successfully: Blueprint, Contract with E-Meterai, Products, Policies, and Transactions are ready for Midtrans verification!');
+        $this->command->info('WorkflowEndToEndSeeder executed successfully: Blueprint, Digital Contract, Products, Policies, and Transactions are ready for Midtrans verification!');
     }
 
     private function seedLegalPolicies(): void
@@ -132,7 +132,7 @@ class WorkflowEndToEndSeeder extends Seeder
                     'Backend Laravel 13 Monolith Berkecepatan Tinggi',
                     'Panel Admin Filament PHP v5 Enterprise',
                     'Paginasi Keyset O(1) Tanpa Limitasi Skala',
-                    'Penguncian Kontrak Digital & E-Meterai',
+                    'Penguncian Kontrak Digital & Scope Freeze',
                     'Termin Pembayaran DP 50% via Midtrans'
                 ],
                 'price_idr' => 50000000.00,
@@ -165,20 +165,20 @@ class WorkflowEndToEndSeeder extends Seeder
         );
 
         $products['contract'] = Product::updateOrCreate(
-            ['slug' => 'digital-contract-e-sign-emeterai'],
+            ['slug' => 'digital-contract-e-sign'],
             [
                 'name' => [
-                    'id' => 'Digital Contract & Legal E-Signature with E-Meterai',
-                    'en' => 'Digital Contract & Legal E-Signature with E-Meterai'
+                    'id' => 'Digital Contract & Legal E-Signature',
+                    'en' => 'Digital Contract & Legal E-Signature'
                 ],
                 'description' => [
-                    'id' => 'Penyusunan surat perjanjian kerja sama resmi dengan tanda tangan digital sah touchscreen/mouse, enkripsi hash SHA-256, dan pembubuhan nomor seri E-Meterai resmi.',
-                    'en' => 'Official agreement preparation with legal touchscreen/mouse digital signature, SHA-256 cryptographic audit trail, and official E-Meterai serial stamping.'
+                    'id' => 'Penyusunan surat perjanjian kerja sama resmi dengan tanda tangan digital sah touchscreen/mouse, audit trail IP address, dan enkripsi hash kriptografi SHA-256.',
+                    'en' => 'Official agreement preparation with legal touchscreen/mouse digital signature, IP address audit trail, and SHA-256 cryptographic hashing.'
                 ],
                 'features' => [
                     'Tanda Tangan Digital Touchscreen & Mouse',
                     'Pencatatan Audit Trail IP Address & UTC Timestamp',
-                    'Stempel E-Meterai Resmi PERURI / Midtrans Partner',
+                    'Enkripsi Kriptografi SHA-256 Terverifikasi',
                     'Protokol Scope Freeze / Anti-Revisi Liar'
                 ],
                 'price_idr' => 1500000.00,
@@ -204,9 +204,9 @@ class WorkflowEndToEndSeeder extends Seeder
                 'target_audiens' => 'Staf gudang cabang, pengemudi armada logistik, manajer operasional pusat, dan klien korporat B2B.',
                 'aktor_sistem' => '1. Superadmin Pusat (Kontrol Penuh & Audit Log), 2. Kepala Cabang (Validasi Masuk/Keluar Barang), 3. Driver/Kurir (Scan Manifest Surat Jalan), 4. Klien B2B (Pantau Resi & Unduh Invoice).',
                 'fitur_wajib' => '1. Manajemen Data Armada & Cabang, 2. Manifest Pengiriman Digital dengan Barcode/QR, 3. Dasbor Analitik Operasional Harian Filament, 4. Ekspor Surat Jalan & Rekap Excel/PDF, 5. Pelacakan Status Pengiriman Real-Time.',
-                'fitur_tambahan' => '1. Integrasi Notifikasi WhatsApp Gateway Otomatis, 2. Pelacakan GPS Telematika Armada, 3. Pembayaran Invoice via Midtrans, 4. Pembubuhan E-Meterai pada Invoice Tagihan.',
+                'fitur_tambahan' => '1. Integrasi Notifikasi WhatsApp Gateway Otomatis, 2. Pelacakan GPS Telematika Armada, 3. Pembayaran Invoice via Midtrans, 4. Dasbor Analitik Performa Pengiriman.',
                 'alur_kerja' => 'Admin Cabang Input Muatan -> Sistem Terbitkan Nomor Manifest ULID -> Driver Scan Barcode Pengiriman -> Status Berubah "In Transit" -> Penerima TTD Digital di Cabang Tujuan -> Invoice Otomatis Terbit.',
-                'kebutuhan_integrasi' => 'Payment Gateway Midtrans, WhatsApp Business Gateway, Cloudflare R2 Cloud Storage, E-Meterai PERURI.',
+                'kebutuhan_integrasi' => 'Payment Gateway Midtrans, WhatsApp Business Gateway, Cloudflare R2 Cloud Storage.',
                 'referensi_desain' => 'Linear.app, Vercel & Stripe Dashboard: Desain presisi monokromatik sharp (rounded-none), kontras tajam, dan font monospaced untuk kode manifest.',
                 'kesiapan_aset' => 'Sudah Siap Lengkap',
                 'target_waktu' => '30 Hari Kerja',
@@ -247,9 +247,9 @@ class WorkflowEndToEndSeeder extends Seeder
                 'title' => 'Pasal 4: Penguncian Ruang Lingkup & Addendum',
                 'description' => 'Seluruh fitur di luar daftar MVP Fase 1 dinyatakan sebagai lingkup baru (Change Request) yang wajib dituangkan dalam Addendum terpisah dengan estimasi biaya dan waktu tersendiri tanpa mengubah tanggal jatuh tempo kontrak induk.',
             ],
-            'pasal_5_e_meterai' => [
-                'title' => 'Pasal 5: Keabsahan Hukum & Stempel E-Meterai',
-                'description' => 'Surat perjanjian ini berkekuatan hukum tetap, ditandatangani secara digital dengan pencatatan audit trail IP Address 182.253.51.197, enkripsi hash SHA-256, dan telah dibubuhi E-Meterai resmi Nomor Seri: MTR-2026-NPRO-89218371.',
+            'pasal_5_tanda_tangan_elektronik' => [
+                'title' => 'Pasal 5: Tanda Tangan Elektronik & Integritas Dokumen (SHA-256)',
+                'description' => 'Surat perjanjian ini berkekuatan hukum tetap, ditandatangani secara digital dengan pencatatan audit trail IP Address 182.253.51.197, UTC timestamp, dan enkripsi verifikasi hash SHA-256.',
             ],
         ];
 
@@ -263,16 +263,13 @@ class WorkflowEndToEndSeeder extends Seeder
                 'scope_locked' => true,
                 'contract_amount' => 50000000.00,
                 'dp_amount' => 25000000.00,
-                'e_meterai_status' => 'stamped',
-                'e_meterai_sn' => 'MTR-2026-NPRO-89218371',
-                'e_meterai_stamped_at' => now()->subDays(2),
                 'midtrans_order_id' => 'NPRO-DP-APEX-001',
                 'midtrans_payment_url' => 'https://app.sandbox.midtrans.com/snap/v2/vtweb/demo-neriahpro-dp',
                 'signer_name' => 'Alexander Wijaya',
                 'signer_email' => 'alexander@apexlogistics.co.id',
                 'signer_ip_address' => '182.253.51.197',
                 'signed_at' => now()->subDays(2),
-                'document_hash' => hash('sha256', 'NERIAHPRO-APEX-CONTRACT-2026-STAMPED'),
+                'document_hash' => hash('sha256', 'NERIAHPRO-APEX-CONTRACT-2026-SIGNED'),
                 'digital_signature_image' => 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="100" viewBox="0 0 300 100"><path d="M 20 60 Q 60 10, 100 50 T 180 40 T 260 70" fill="none" stroke="#0044cc" stroke-width="3" stroke-linecap="round"/><text x="20" y="90" font-family="monospace" font-size="12" fill="#666">Verified by Neriah Pro E-Sign</text></svg>'),
                 'content_clauses' => $clauses,
             ]

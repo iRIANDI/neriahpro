@@ -1,3 +1,7 @@
+# Ponytail & Graphify Token Conservation Rules
+- **Ponytail Decision Ladder**: Always follow [.agents/PONYTAIL.md](file:///c:/xampp/htdocs/neriahpro/.agents/PONYTAIL.md) (Rung 1: Framework Native First -> Rung 2: Reuse Existing Codebase -> Rung 3: Configuration Over Code -> Rung 4: Surgical & Minimalist Diff) to cut token waste by >50%.
+- **Graphify Architectural Knowledge Graph**: Always check [.agents/graphify/GRAPH_REPORT.md](file:///c:/xampp/htdocs/neriahpro/.agents/graphify/GRAPH_REPORT.md) before performing blind file exploration. Use it to immediately locate existing models, resources, controllers, and services.
+
 # Git Sync Rule
 Always automatically commit and push any changes to GitHub after completing a task.
 Git Remote: https://github.com/iRIANDI/neriahpro.git

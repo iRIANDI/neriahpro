@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class VisionBlueprint extends Model
@@ -62,6 +63,14 @@ class VisionBlueprint extends Model
     public function documents(): MorphMany
     {
         return $this->morphMany(Document::class, 'related');
+    }
+
+    /**
+     * Domains and hosting assets linked to this project.
+     */
+    public function domainHostingAssets(): HasMany
+    {
+        return $this->hasMany(DomainHostingAsset::class, 'vision_blueprint_id');
     }
 
     /**

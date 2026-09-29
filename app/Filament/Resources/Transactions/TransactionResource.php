@@ -20,9 +20,19 @@ class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';
 
-    protected static ?string $recordTitleAttribute = 'id';
+    protected static string | \UnitEnum | null $navigationGroup = 'Commerce & Billing';
+
+    protected static ?string $navigationLabel = 'Riwayat Transaksi';
+
+    protected static ?string $modelLabel = 'Transaksi';
+
+    protected static ?string $pluralModelLabel = 'Riwayat Transaksi Midtrans';
+
+    protected static ?int $navigationSort = 20;
+
+    protected static ?string $recordTitleAttribute = 'midtrans_order_id';
 
     public static function form(Schema $schema): Schema
     {

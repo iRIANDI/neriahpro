@@ -5,8 +5,9 @@ namespace App\Filament\Resources\Documents\Schemas;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\DateTimePicker;
 use Saade\FilamentAutograph\Forms\Components\SignaturePad;
 
 class DocumentForm
@@ -24,13 +25,13 @@ class DocumentForm
                         Select::make('document_type')
                             ->label('Tipe Dokumen')
                             ->options([
-                                'contract' => 'Kontrak',
+                                'contract' => 'Kontrak Kerja Sama',
                                 'blueprint_approval' => 'Persetujuan Vision Blueprint',
                             ])
                             ->required()
                             ->default('contract'),
                         Select::make('status')
-                            ->label('Status')
+                            ->label('Status Dokumen')
                             ->options([
                                 'draft' => 'Draft',
                                 'pending_signature' => 'Menunggu Tanda Tangan',
@@ -38,9 +39,34 @@ class DocumentForm
                             ])
                             ->required()
                             ->default('draft'),
+                    ])->columns(3),
+
+                Section::make('Nilai Kontrak & Termin Pembayaran Midtrans')
+                    ->schema([
+                        TextInput::make('contract_amount')
+                            ->label('Total Nilai Kontrak (IDR)')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->default(0),
+                        TextInput::make('dp_amount')
+                            ->label('Uang Muka / DP 50% (IDR)')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->default(0),
+                        Toggle::make('scope_locked')
+                            ->label('Kunci Ruang Lingkup (Scope Locked)')
+                            ->helperText('Jika aktif, seluruh fitur terkunci berdasarkan dokumen PRD yang disepakati.')
+                            ->default(true),
+                        TextInput::make('midtrans_order_id')
+                            ->label('Midtrans Order ID')
+                            ->maxLength(255),
+                        TextInput::make('midtrans_payment_url')
+                            ->label('Tautan Pembayaran Midtrans (Snap URL)')
+                            ->url()
+                            ->columnSpanFull(),
                     ])->columns(2),
 
-                Section::make('Informasi Penandatangan')
+                Section::make('Informasi Penandatangan & Audit Trail')
                     ->schema([
                         TextInput::make('signer_name')
                             ->label('Nama Penandatangan')
@@ -49,9 +75,16 @@ class DocumentForm
                             ->label('Email Penandatangan')
                             ->email()
                             ->maxLength(255),
-                        \Filament\Forms\Components\Placeholder::make('signed_at_display')
-                            ->label('Waktu Ditandatangani (Otomatis)')
-                            ->content(fn ($record) => $record?->signed_at ? $record->signed_at->format('d M Y H:i:s') : '-')
+                        Placeholder::make('signer_ip_address_display')
+                            ->label('IP Address Penandatangan')
+                            ->content(fn ($record) => $record?->signer_ip_address ?: '-'),
+                        Placeholder::make('signed_at_display')
+                            ->label('Waktu Ditandatangani (UTC)')
+                            ->content(fn ($record) => $record?->signed_at ? $record->signed_at->format('d M Y H:i:s') : '-'),
+                        Placeholder::make('document_hash_display')
+                            ->label('SHA-256 Cryptographic Hash')
+                            ->content(fn ($record) => $record?->document_hash ?: '-')
+                            ->columnSpanFull(),
                     ])->columns(2),
                     
                 Section::make('Tanda Tangan Digital')

@@ -18,7 +18,17 @@ class LegalPolicyResource extends Resource
 {
     protected static ?string $model = LegalPolicy::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
+
+    protected static string | \UnitEnum | null $navigationGroup = 'Settings';
+
+    protected static ?string $navigationLabel = 'Legal & Kebijakan';
+
+    protected static ?string $modelLabel = 'Dokumen Legal';
+
+    protected static ?string $pluralModelLabel = 'Kebijakan Legal';
+
+    protected static ?int $navigationSort = 90;
 
     protected static ?string $recordTitleAttribute = 'type';
 

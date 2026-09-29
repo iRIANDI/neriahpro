@@ -34,7 +34,17 @@ class CmsPageResource extends Resource
 {
     protected static ?string $model = CmsPage::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-window';
+
+    protected static string | \UnitEnum | null $navigationGroup = 'Content Management';
+
+    protected static ?string $navigationLabel = 'Manajemen Halaman (CMS)';
+
+    protected static ?string $modelLabel = 'Halaman CMS';
+
+    protected static ?string $pluralModelLabel = 'Halaman CMS';
+
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $recordTitleAttribute = 'slug';
 
@@ -253,6 +263,12 @@ class CmsPageResource extends Resource
                 //
             ])
             ->recordActions([
+                \Filament\Actions\Action::make('view_live')
+                    ->label('Lihat Web')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->color('primary')
+                    ->url(fn (\App\Models\CmsPage $record) => url('/' . ($record->slug === 'home' || $record->slug === 'index' ? '' : $record->slug)))
+                    ->openUrlInNewTab(),
                 EditAction::make(),
                 \Filament\Actions\DeleteAction::make()
                     ->disabled(fn (\App\Models\CmsPage $record) => in_array($record->slug, ['home', 'beranda', 'index', '/']))

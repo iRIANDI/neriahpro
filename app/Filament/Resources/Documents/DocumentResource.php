@@ -18,7 +18,17 @@ class DocumentResource extends Resource
 {
     protected static ?string $model = Document::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-check';
+
+    protected static string | \UnitEnum | null $navigationGroup = 'Contracts & Legal';
+
+    protected static ?string $navigationLabel = 'Kontrak & Perjanjian';
+
+    protected static ?string $modelLabel = 'Dokumen Kontrak';
+
+    protected static ?string $pluralModelLabel = 'Kontrak & Perjanjian Digital';
+
+    protected static ?int $navigationSort = 15;
 
     protected static ?string $recordTitleAttribute = 'title';
 

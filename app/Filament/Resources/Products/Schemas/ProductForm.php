@@ -62,6 +62,15 @@ class ProductForm
                             ->columnSpanFull(),
                     ]),
 
+                Section::make('Fitur Unggulan Layanan')
+                    ->schema([
+                        \Filament\Forms\Components\TagsInput::make('features')
+                            ->label('Daftar Fitur')
+                            ->placeholder('Ketik fitur lalu tekan Enter...')
+                            ->helperText('Contoh: Backend Laravel 13, Paginasi Keyset O(1), Dasbor Admin Filament')
+                            ->columnSpanFull(),
+                    ]),
+
                 Section::make('Harga & Pembayaran (Midtrans Ready)')
                     ->schema([
                         TextInput::make('price_idr')

@@ -22,7 +22,21 @@ export default function GlobalNavigationIsland({ settings }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [lang, setLang] = useState('id');
+  const [lang, setLang] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const match = document.cookie.match(new RegExp('(^| )neriah_locale=([^;]+)'));
+      if (match) return match[2];
+      return document.documentElement.lang?.startsWith('en') ? 'en' : 'id';
+    }
+    return 'id';
+  });
+
+  const changeLanguage = (newLang) => {
+    if (newLang === lang) return;
+    setLang(newLang);
+    document.cookie = `neriah_locale=${newLang};path=/;max-age=31536000`;
+    window.location.href = `/lang/${newLang}`;
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -87,14 +101,14 @@ export default function GlobalNavigationIsland({ settings }) {
             {/* Language Switch */}
             <div className="flex items-center gap-1 text-[11px] font-bold">
               <button 
-                onClick={() => setLang('id')} 
+                onClick={() => changeLanguage('id')} 
                 className={`px-1.5 py-0.5 rounded-none transition ${lang === 'id' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-400 hover:text-white'}`}
               >
                 ID
               </button>
               <span className="text-zinc-600">/</span>
               <button 
-                onClick={() => setLang('en')} 
+                onClick={() => changeLanguage('en')} 
                 className={`px-1.5 py-0.5 rounded-none transition ${lang === 'en' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-400 hover:text-white'}`}
               >
                 EN

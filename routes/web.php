@@ -26,5 +26,13 @@ Route::get('/blueprint/{slug}', [BlueprintController::class, 'show'])->name('blu
 
 Route::get('/invite/{slug}', \App\Livewire\ClientInviteForm::class)->name('invite');
 
+Route::get('/lang/{locale}', function (string $locale) {
+    if (in_array($locale, ['id', 'en'])) {
+        session(['locale' => $locale]);
+        cookie()->queue(cookie()->forever('neriah_locale', $locale));
+    }
+    return redirect()->back();
+})->name('lang.switch');
+
 // Fallback dynamic route for CMS pages (Must be at the very bottom)
 Route::get('/{slug?}', [PageController::class, 'show'])->where('slug', '.*');

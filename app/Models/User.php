@@ -39,4 +39,19 @@ class User extends Authenticatable implements FilamentUser
             || $this->email === 'yoseph.iriandi.tambunan@gmail.com'
             || $this->email === 'reviewer.midtrans@neriahpro.com';
     }
+
+    public function resumes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Resume::class);
+    }
+
+    public function interviewSessions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(InterviewSession::class);
+    }
+
+    public function transactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
 }

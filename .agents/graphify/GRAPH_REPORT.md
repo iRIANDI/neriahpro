@@ -45,12 +45,15 @@ graph TD
 
 ---
 
-## 2. Katalog Domain & Entity Model (12 Models)
+## 2. Katalog Domain & Entity Model (15 Models)
 
 Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter untuk menjamin skalabilitas enterprise dan integritas PostgreSQL:
 
 | Model | Lokasi File | Primary Key | Traits / Fitur Utama | Relasi Utama |
 | :--- | :--- | :---: | :--- | :--- |
+| `Resume` | [Resume.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Resume.php) | ULID | `HasUlids`, Multi-template ATS CV, Score audit, Experience/Edu JSON | `user` (belongsTo), `interviewSessions` (hasMany), `outreachLetters` (hasMany) |
+| `InterviewSession` | [InterviewSession.php](file:///c:/xampp/htdocs/neriahpro/app/Models/InterviewSession.php) | ULID | `HasUlids`, Mock interview Q&A, Voice audio transcription, STAR score evaluation | `resume` (belongsTo), `user` (belongsTo) |
+| `OutreachLetter` | [OutreachLetter.php](file:///c:/xampp/htdocs/neriahpro/app/Models/OutreachLetter.php) | ULID | `HasUlids`, Thank you / follow-up / cold pitch letter generator | `resume` (belongsTo), `user` (belongsTo) |
 | `VisionBlueprint` | [VisionBlueprint.php](file:///c:/xampp/htdocs/neriahpro/app/Models/VisionBlueprint.php) | ULID | `HasUlids`, Project OS discovery questionnaire, PRD synthesis, Contract converter | `documents` (morphMany), `domainHostingAssets` (hasMany) |
 | `Document` | [Document.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Document.php) | ULID | `HasUlids`, Scope Lock, Digital signature, SHA-256 hash, Midtrans DP 50% | `related` (morphTo) |
 | `DomainHostingAsset` | [DomainHostingAsset.php](file:///c:/xampp/htdocs/neriahpro/app/Models/DomainHostingAsset.php) | ULID | `HasUlids`, Domain & hosting subscription tracking, Expiration alerts, Quick renewal | `visionBlueprint` (belongsTo) |
@@ -60,16 +63,18 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 | `Transaction` | [Transaction.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Transaction.php) | ULID | `HasUlids`, Midtrans Snap gateway integration, Settlement audit | `user` (belongsTo), `product` (belongsTo) |
 | `LegalPolicy` | [LegalPolicy.php](file:///c:/xampp/htdocs/neriahpro/app/Models/LegalPolicy.php) | ULID | `HasUlids`, Multilingual legal policies (`title`, `content` array) | - |
 | `ClientOnboarding` | [ClientOnboarding.php](file:///c:/xampp/htdocs/neriahpro/app/Models/ClientOnboarding.php) | ULID | `HasUlids`, Rapid lead intake & onboarding payload | - |
-| `User` | [User.php](file:///c:/xampp/htdocs/neriahpro/app/Models/User.php) | ULID | `HasUlids`, `HasRoles`, Spatie Shield RBAC, FilamentUser access control | `transactions` (hasMany) |
+| `User` | [User.php](file:///c:/xampp/htdocs/neriahpro/app/Models/User.php) | ULID | `HasUlids`, `HasRoles`, Spatie Shield RBAC, FilamentUser access control | `transactions` (hasMany), `resumes` (hasMany) |
 | `Role` | [Role.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Role.php) | Default | Spatie Permission Role entity | `permissions`, `users` |
 | `Permission` | [Permission.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Permission.php) | Default | Spatie Permission Permission entity | `roles`, `users` |
 
 ---
 
-## 3. Katalog Filament v5 Resources (7 Resources)
+## 3. Katalog Filament v5 Resources (9 Resources)
 
 | Resource | Navigation Group | Fitur Utama | Schema / Tables |
 | :--- | :--- | :--- | :--- |
+| `ResumeResource` | Career & SaaS | Resume management, ATS score breakdown, Skills tags, Live view link | `ResumeForm`, `ResumesTable` |
+| `InterviewSessionResource` | Career & SaaS | Mock interview recordings, STAR analysis, Confidence score, Transcript audit | `InterviewSessionsTable`, Infolist |
 | `VisionBlueprintResource` | Project Management | Discovery questionnaire, Sintesis PRD, Publikasi URL publik, Ikat Kontrak Digital | `VisionBlueprintForm`, `VisionBlueprintsTable` |
 | `DomainHostingAssetResource` | Project Management | Pencatatan domain/hosting, Expiration badge, Auto-renew, Widget analitik, Pengingat harian | `DomainHostingAssetForm`, `DomainHostingAssetsTable`, `DomainHostingStatsWidget` |
 | `DocumentResource` | Contracts & Legal | Digital contract viewer, Scope lock status, Midtrans order ID, Signature pad | `DocumentForm`, `DocumentsTable` |
@@ -82,6 +87,13 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 ## 4. Routing & Endpoints Map
 
+- `/cv-pro`: Full-stack interactive Studio CV Pro SaaS (`CvProStudioIsland`).
+- `/cv/{slug}`: Public ATS printable resume preview & print view (`CvProController::show`).
+- `/api/cv-pro/save`: Auto-save & sync resume state (POST).
+- `/api/cv-pro/lint`: ATS quality auditor & metric detector (POST).
+- `/api/cv-pro/interview/generate`: AI mock interview question generator (POST).
+- `/api/cv-pro/interview/evaluate`: STAR method answer evaluation & scoring (POST).
+- `/api/cv-pro/outreach/generate`: Job application letter generator (Thank You, Follow-up, Cold Pitch) (POST).
 - `/blueprint`: Halaman public kuesioner Project OS (`BlueprintController::create`).
 - `/blueprint/{slug}`: Halaman preview dokumen PRD, ERD, dan Tech Stack (`BlueprintController::show`).
 - `/document/{document}/preview`: Preview draft kontrak kerja sama digital.
@@ -95,6 +107,8 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 ## 5. Layanan Inti & Background Scheduler
 
+- **`App\Services\CvPro\CvAiService`**:
+  Mesin kecerdasan karir CV Pro SaaS: linter ATS CV dengan deteksi kata kerja lemah dan metrik kuantitatif, generator pertanyaan mock interview strategis berdasarkan posisi/target, evaluator jawaban kandidat berbasis formula STAR (Situation, Task, Action, Result), serta generator surat korespondensi pasca-wawancara.
 - **`App\Services\PrdGeneratorService`**:
   Mesin pengolah ide kuesioner klien menjadi Ultimate PRD: menyusun ringkasan eksekutif, aktor sistem (RBAC), fitur MVP Fase 1, roadmap Fase 2, alur kerja (workflow), dan skema basis data ERD PostgreSQL Strict ULID.
 - **`App\Console\Commands\CheckExpiringAssetsCommand`** (`assets:check-expirations`):

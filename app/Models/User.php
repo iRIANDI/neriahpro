@@ -54,4 +54,9 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(Transaction::class);
     }
+
+    public function cvQuota(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserCvQuota::class);
+    }
 }

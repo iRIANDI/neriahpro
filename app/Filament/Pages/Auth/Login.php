@@ -9,7 +9,7 @@ use Illuminate\Support\HtmlString;
 
 class Login extends BaseLogin
 {
-    protected Width | string | null $maxContentWidth = Width::Large;
+    protected Width | string | null $maxContentWidth = Width::Medium;
 
     public function getTitle(): string | Htmlable
     {
@@ -19,16 +19,13 @@ class Login extends BaseLogin
     public function getHeading(): string | Htmlable | null
     {
         return new HtmlString('
-            <div class="flex flex-col items-center text-center space-y-2.5">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-wider uppercase bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.5rem;">
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 11px; font-family: monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.25);">
+                    <span style="width: 8px; height: 8px; border-radius: 9999px; background: #10b981; display: inline-block;"></span>
                     <span>Scope Lock OS &bull; Vision Blueprint &bull; CV Pro</span>
                 </div>
-                <h1 class="text-2xl font-black tracking-tight text-zinc-950 dark:text-white uppercase font-sans">
-                    Neriah<span class="text-amber-500">Pro</span> Control Hub
+                <h1 style="font-size: 1.5rem; font-weight: 900; letter-spacing: -0.025em; text-transform: uppercase; margin: 0; line-height: 1.2;" class="text-zinc-950 dark:text-white font-sans">
+                    Neriah<span style="color: #f59e0b;">Pro</span> Control Hub
                 </h1>
             </div>
         ');

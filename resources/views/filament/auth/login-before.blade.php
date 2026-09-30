@@ -1,55 +1,56 @@
-<div class="mb-5 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 transition-all">
-    <div class="flex items-center justify-between mb-3 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-2">
-        <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded bg-zinc-900 dark:bg-white text-zinc-100 dark:text-zinc-900 font-mono text-[10px] font-bold uppercase tracking-wider">
+<div style="margin-bottom: 1.25rem; padding: 0.875rem 1rem; border-radius: 0.75rem; background: rgba(244, 244, 245, 0.8); border: 1px solid rgba(228, 228, 231, 1); text-align: left;" class="dark:bg-zinc-900/80 dark:border-zinc-800">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.625rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(228, 228, 231, 0.8);" class="dark:border-zinc-800">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="display: inline-block; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-family: monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;" class="bg-zinc-900 text-zinc-100 dark:bg-white dark:text-zinc-900">
                 CORE PILLARS
             </span>
-            <span class="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+            <span style="font-size: 11px; font-weight: 600; color: #3f3f46;" class="dark:text-zinc-300">
                 Enterprise Mission Architecture
             </span>
         </div>
-        <span class="text-[10px] font-mono text-zinc-600 dark:text-zinc-300">
-            v2.5 // PRODUCTION
+        <span style="font-family: monospace; font-size: 9px; color: #71717a;" class="dark:text-zinc-400">
+            v2.5 // PROD
         </span>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-left">
+    <!-- Responsive auto-fit grid: 1 column on mobile portrait, 3 columns on tablet/desktop landscape -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem;">
         <!-- Pillar 1: Vision Blueprint -->
-        <div class="p-2.5 rounded-lg bg-white dark:bg-zinc-950/60 border border-zinc-200/70 dark:border-zinc-800/70 hover:border-amber-500/40 transition">
-            <div class="flex items-center gap-1.5 mb-1 text-amber-500 font-bold text-xs font-mono">
-                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div style="padding: 0.5rem 0.625rem; border-radius: 0.5rem; background: #ffffff; border: 1px solid rgba(228, 228, 231, 0.9);" class="dark:bg-zinc-950 dark:border-zinc-800">
+            <div style="display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.25rem; color: #d97706; font-size: 11px; font-weight: 700; font-family: monospace;" class="dark:text-amber-400">
+                <svg width="14" height="14" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; max-width: 14px; max-height: 14px; display: inline-block; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
                 <span>Vision Blueprint</span>
             </div>
-            <p class="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
-                Sintesis PRD otomatis, diagram arsitektur ERD, dan skema PostgreSQL ULID skala enterprise.
+            <p style="font-size: 10px; color: #52525b; line-height: 1.35; margin: 0;" class="dark:text-zinc-400">
+                Sintesis PRD otomatis, arsitektur ERD, dan skema PostgreSQL ULID.
             </p>
         </div>
 
         <!-- Pillar 2: Scope Lock OS -->
-        <div class="p-2.5 rounded-lg bg-white dark:bg-zinc-950/60 border border-zinc-200/70 dark:border-zinc-800/70 hover:border-amber-500/40 transition">
-            <div class="flex items-center gap-1.5 mb-1 text-amber-500 font-bold text-xs font-mono">
-                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div style="padding: 0.5rem 0.625rem; border-radius: 0.5rem; background: #ffffff; border: 1px solid rgba(228, 228, 231, 0.9);" class="dark:bg-zinc-950 dark:border-zinc-800">
+            <div style="display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.25rem; color: #d97706; font-size: 11px; font-weight: 700; font-family: monospace;" class="dark:text-amber-400">
+                <svg width="14" height="14" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; max-width: 14px; max-height: 14px; display: inline-block; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                 </svg>
                 <span>Scope Lock OS</span>
             </div>
-            <p class="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
-                Kontrak kerja anti-scope-creep, milestone escrow Midtrans, serta determinisme deliverable.
+            <p style="font-size: 10px; color: #52525b; line-height: 1.35; margin: 0;" class="dark:text-zinc-400">
+                Kontrak anti-scope-creep, milestone escrow, dan kepastian deliverable.
             </p>
         </div>
 
         <!-- Pillar 3: CV Pro Studio -->
-        <div class="p-2.5 rounded-lg bg-white dark:bg-zinc-950/60 border border-zinc-200/70 dark:border-zinc-800/70 hover:border-amber-500/40 transition">
-            <div class="flex items-center gap-1.5 mb-1 text-amber-500 font-bold text-xs font-mono">
-                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div style="padding: 0.5rem 0.625rem; border-radius: 0.5rem; background: #ffffff; border: 1px solid rgba(228, 228, 231, 0.9);" class="dark:bg-zinc-950 dark:border-zinc-800">
+            <div style="display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.25rem; color: #d97706; font-size: 11px; font-weight: 700; font-family: monospace;" class="dark:text-amber-400">
+                <svg width="14" height="14" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; max-width: 14px; max-height: 14px; display: inline-block; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"></path>
                 </svg>
                 <span>CV Pro Studio</span>
             </div>
-            <p class="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
-                MarkItDown physical scan, audit ATS resume real-time, dan simulasi mock interview rekaman suara.
+            <p style="font-size: 10px; color: #52525b; line-height: 1.35; margin: 0;" class="dark:text-zinc-400">
+                MarkItDown scan dokumen, audit ATS CV, dan mock interview suara.
             </p>
         </div>
     </div>

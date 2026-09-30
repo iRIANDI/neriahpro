@@ -49,6 +49,9 @@ Route::prefix('api/cv-pro')->group(function () {
     Route::post('/tailor', [\App\Http\Controllers\Api\CvProApiController::class, 'tailor'])->middleware('throttle:30,1');
     Route::post('/linkedin', [\App\Http\Controllers\Api\CvProApiController::class, 'generateLinkedIn'])->middleware('throttle:30,1');
     Route::post('/ai-helper', [\App\Http\Controllers\Api\CvProApiController::class, 'aiHelper'])->middleware('throttle:60,1');
+    Route::get('/pricing', [\App\Http\Controllers\Api\CvProApiController::class, 'pricing'])->middleware('throttle:60,1');
+    Route::get('/quota', [\App\Http\Controllers\Api\CvProApiController::class, 'quota'])->middleware('throttle:60,1');
+    Route::post('/topup', [\App\Http\Controllers\Api\CvProApiController::class, 'topup'])->middleware('throttle:30,1');
 });
 
 // Fallback dynamic route for CMS pages (Must be at the very bottom)

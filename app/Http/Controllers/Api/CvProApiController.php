@@ -322,5 +322,110 @@ class CvProApiController extends Controller
                 return response()->json(['success' => false, 'message' => 'Action tidak dikenali.'], 400);
         }
     }
+
+    /**
+     * Get dynamic pricing tiers, a la carte top-ups, and financial margins.
+     */
+    public function pricing(Request $request): JsonResponse
+    {
+        $economicsData = \App\Services\CvPro\CvPricingService::getAllPlansWithEconomics();
+
+        $user = $request->user();
+        $userQuota = null;
+        if ($user) {
+            $userQuota = \App\Services\CvPro\CvQuotaService::getUserQuota($user);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'plans' => $economicsData['plans'],
+                'exchange_rate' => $economicsData['exchange_rate_usd_idr'],
+                'unit_costs' => $economicsData['unit_costs'],
+                'current_user_quota' => $userQuota,
+            ],
+        ]);
+    }
+
+    /**
+     * Get current user quota status.
+     */
+    public function quota(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([
+                'success' => true,
+                'is_guest' => true,
+                'quota' => [
+                    'tier_code' => 'free',
+                    'tailor_cv_remaining' => 1,
+                    'mock_interviews_remaining' => 1,
+                    'ats_audits_remaining' => 3,
+                    'linkedin_packs_remaining' => 0,
+                    'outreach_letters_remaining' => 1,
+                    'ai_credits_balance' => 10,
+                ],
+            ]);
+        }
+
+        $quota = \App\Services\CvPro\CvQuotaService::getUserQuota($user);
+
+        return response()->json([
+            'success' => true,
+            'is_guest' => false,
+            'quota' => [
+                'tier_code' => $quota->tier_code,
+                'plan_id' => $quota->plan_id,
+                'tailor_cv_remaining' => $quota->remaining('tailor_cv'),
+                'mock_interviews_remaining' => $quota->remaining('mock_interviews'),
+                'ats_audits_remaining' => $quota->remaining('ats_audits'),
+                'linkedin_packs_remaining' => $quota->remaining('linkedin_packs'),
+                'outreach_letters_remaining' => $quota->remaining('outreach_letters'),
+                'ai_credits_balance' => $quota->ai_credits_balance,
+                'plan_expires_at' => $quota->plan_expires_at?->toIso8601String(),
+            ],
+        ]);
+    }
+
+    /**
+     * Top-up or activate a plan (Simulated or via Midtrans settlement).
+     */
+    public function topup(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'plan_code' => 'required|string|exists:cv_pro_plans,code',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Autentikasi diperlukan untuk aktivasi paket atau top-up kuota.',
+            ], 401);
+        }
+
+        $plan = \App\Models\CvProPlan::where('code', $request->input('plan_code'))->firstOrFail();
+
+        if ($plan->type === 'subscription') {
+            $updatedQuota = \App\Services\CvPro\CvQuotaService::applyPlan($user, $plan);
+        } else {
+            $updatedQuota = \App\Services\CvPro\CvQuotaService::applyTopUp($user, $plan);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Paket '{$plan->code}' berhasil diterapkan ke akun Anda.",
+            'quota' => $updatedQuota,
+        ]);
+    }
 }
+
 

@@ -1,36 +1,37 @@
-<div class="mt-5 space-y-4">
+<div style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
     <!-- One-Click Credential Assistant Card -->
-    <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-left">
-        <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-zinc-200/60 dark:border-zinc-800/60">
-            <div class="flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div style="padding: 0.75rem 0.875rem; border-radius: 0.75rem; background: rgba(244, 244, 245, 0.8); border: 1px solid rgba(228, 228, 231, 1); text-align: left;" class="dark:bg-zinc-900/80 dark:border-zinc-800">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; padding-bottom: 0.375rem; border-bottom: 1px solid rgba(228, 228, 231, 0.8);" class="dark:border-zinc-800">
+            <div style="display: flex; align-items: center; gap: 0.375rem;">
+                <svg width="14" height="14" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; max-width: 14px; max-height: 14px; display: inline-block; color: #d97706;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
                 </svg>
-                <span class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200">
+                <span style="font-size: 11px; font-family: monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #27272a;" class="dark:text-zinc-200">
                     Quick Access Assistant
                 </span>
             </div>
-            <span class="text-[10px] font-mono text-zinc-600 dark:text-zinc-300">
+            <span style="font-size: 9px; font-family: monospace; color: #71717a;" class="dark:text-zinc-400">
                 1-Click Populate
             </span>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.5rem;">
             <!-- Super Admin Button -->
             <button
                 type="button"
                 onclick="fillAdminCredentials('yoseph.iriandi.tambunan@gmail.com', '#T4mbun4n#')"
-                class="flex flex-col text-left p-2 rounded-lg bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 hover:border-amber-500 hover:shadow-sm transition group cursor-pointer"
+                style="display: flex; flex-direction: column; text-align: left; padding: 0.5rem 0.625rem; border-radius: 0.5rem; background: #ffffff; border: 1px solid rgba(228, 228, 231, 0.9); cursor: pointer; transition: all 0.2s;"
+                class="dark:bg-zinc-950 dark:border-zinc-800 hover:border-amber-500"
             >
-                <div class="flex items-center justify-between w-full">
-                    <span class="text-[11px] font-bold text-zinc-900 dark:text-white group-hover:text-amber-500 font-sans">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <span style="font-size: 11px; font-weight: 700; color: #18181b;" class="dark:text-white">
                         👑 Super Admin
                     </span>
-                    <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                    <span style="font-size: 9px; font-family: monospace; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: #f4f4f5; color: #52525b;" class="dark:bg-zinc-800 dark:text-zinc-300">
                         FILL
                     </span>
                 </div>
-                <span class="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 truncate w-full mt-0.5">
+                <span style="font-size: 10px; font-family: monospace; color: #71717a; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;" class="dark:text-zinc-400">
                     yoseph.iriandi.tambunan@gmail.com
                 </span>
             </button>
@@ -39,17 +40,18 @@
             <button
                 type="button"
                 onclick="fillAdminCredentials('reviewer.midtrans@neriahpro.com', 'MidtransDemo2026#')"
-                class="flex flex-col text-left p-2 rounded-lg bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 hover:shadow-sm transition group cursor-pointer"
+                style="display: flex; flex-direction: column; text-align: left; padding: 0.5rem 0.625rem; border-radius: 0.5rem; background: #ffffff; border: 1px solid rgba(228, 228, 231, 0.9); cursor: pointer; transition: all 0.2s;"
+                class="dark:bg-zinc-950 dark:border-zinc-800 hover:border-emerald-500"
             >
-                <div class="flex items-center justify-between w-full">
-                    <span class="text-[11px] font-bold text-zinc-900 dark:text-white group-hover:text-emerald-500 font-sans">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <span style="font-size: 11px; font-weight: 700; color: #18181b;" class="dark:text-white">
                         🛡️ QA Reviewer
                     </span>
-                    <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                    <span style="font-size: 9px; font-family: monospace; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: #f4f4f5; color: #52525b;" class="dark:bg-zinc-800 dark:text-zinc-300">
                         FILL
                     </span>
                 </div>
-                <span class="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 truncate w-full mt-0.5">
+                <span style="font-size: 10px; font-family: monospace; color: #71717a; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;" class="dark:text-zinc-400">
                     reviewer.midtrans@neriahpro.com
                 </span>
             </button>
@@ -57,45 +59,33 @@
     </div>
 
     <!-- System Telemetry & Mission Badges -->
-    <div class="p-3 rounded-xl bg-zinc-900 text-zinc-300 border border-zinc-800 space-y-2 text-left font-mono text-[10px]">
-        <div class="flex items-center justify-between text-zinc-400 border-b border-zinc-800/80 pb-1.5">
-            <span class="font-bold uppercase tracking-wider text-zinc-200">System Telemetry & Protection</span>
-            <span class="text-emerald-400 font-semibold flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                ALL ENGINES ONLINE
+    <div style="padding: 0.625rem 0.75rem; border-radius: 0.75rem; background: #18181b; color: #d4d4d8; border: 1px solid #27272a; font-family: monospace; font-size: 10px; text-align: left;">
+        <div style="display: flex; align-items: center; justify-content: space-between; color: #a1a1aa; border-bottom: 1px solid #27272a; padding-bottom: 0.375rem; margin-bottom: 0.375rem;">
+            <span style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #f4f4f5;">System Telemetry</span>
+            <span style="color: #34d399; font-weight: 600; display: inline-flex; align-items: center; gap: 0.375rem;">
+                <span style="width: 6px; height: 6px; border-radius: 9999px; background: #34d399; display: inline-block;"></span>
+                ONLINE
             </span>
         </div>
 
-        <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-zinc-400">
-            <div class="flex items-center justify-between">
-                <span>Database:</span>
-                <span class="text-zinc-200 font-semibold">PostgreSQL 16 ULID</span>
-            </div>
-            <div class="flex items-center justify-between">
-                <span>Pagination:</span>
-                <span class="text-emerald-400 font-semibold">Keyset O(1) Cursor</span>
-            </div>
-            <div class="flex items-center justify-between">
-                <span>Threat Defense:</span>
-                <span class="text-zinc-200 font-semibold">AI Honeypot Active</span>
-            </div>
-            <div class="flex items-center justify-between">
-                <span>Core Framework:</span>
-                <span class="text-zinc-200 font-semibold">Laravel 13 &bull; Filament v5</span>
-            </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.25rem 0.5rem; color: #a1a1aa;">
+            <div>DB: <strong style="color: #f4f4f5;">PostgreSQL 16 ULID</strong></div>
+            <div>Cursor: <strong style="color: #34d399;">Keyset O(1)</strong></div>
+            <div>Shield: <strong style="color: #f4f4f5;">AI Honeypot</strong></div>
+            <div>Stack: <strong style="color: #f4f4f5;">Laravel 13 &bull; Filament 5</strong></div>
         </div>
     </div>
 
     <!-- Quick Navigation Links -->
-    <div class="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 pt-1 font-mono">
-        <a href="/" class="hover:text-amber-500 hover:underline transition flex items-center gap-1">
-            <span>&larr; Landing Page</span>
+    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-family: monospace; color: #71717a; padding: 0 0.25rem;" class="dark:text-zinc-400">
+        <a href="/" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;" class="hover:text-amber-500">
+            <span>&larr; Beranda</span>
         </a>
-        <a href="/cv-pro" class="hover:text-amber-500 hover:underline transition flex items-center gap-1">
+        <a href="/cv-pro" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;" class="hover:text-amber-500">
             <span>CV Pro Studio &rarr;</span>
         </a>
-        <a href="/blueprint" class="hover:text-amber-500 hover:underline transition flex items-center gap-1">
-            <span>Vision Blueprint &rarr;</span>
+        <a href="/blueprint" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;" class="hover:text-amber-500">
+            <span>Blueprint &rarr;</span>
         </a>
     </div>
 </div>

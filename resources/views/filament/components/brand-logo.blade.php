@@ -1,5 +1,5 @@
-<div class="flex items-center gap-2.5 py-1 select-none">
-    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 flex items-center justify-center shadow-md shadow-amber-500/20 text-zinc-950 font-mono font-black text-sm tracking-tight border border-amber-400/30">
+<div style="display: flex; align-items: center; gap: 0.625rem; padding: 0.25rem 0; user-select: none;">
+    <div style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f59e0b, #d97706); color: #09090b; font-family: monospace; font-weight: 900; font-size: 13px; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.2); border: 1px solid rgba(251, 191, 36, 0.3);">
         NP
     </div>
     <div class="flex flex-col text-left">

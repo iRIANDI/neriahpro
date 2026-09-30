@@ -51,6 +51,9 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 | Model | Lokasi File | Primary Key | Traits / Fitur Utama | Relasi Utama |
 | :--- | :--- | :---: | :--- | :--- |
+| `CvProPlan` | [CvProPlan.php](file:///c:/xampp/htdocs/neriahpro/app/Models/CvProPlan.php) | ULID | `HasUlids`, Dynamic pricing tiers (A, B, C) & a la carte top-up packages | `userQuotas` (hasMany), `transactions` (hasMany) |
+| `UserCvQuota` | [UserCvQuota.php](file:///c:/xampp/htdocs/neriahpro/app/Models/UserCvQuota.php) | ULID | `HasUlids`, User quota tracking (tailor, interview, audit, credits) & expiration | `user` (belongsTo), `plan` (belongsTo) |
+| `CvQuotaTransaction` | [CvQuotaTransaction.php](file:///c:/xampp/htdocs/neriahpro/app/Models/CvQuotaTransaction.php) | ULID | `HasUlids`, Quota top-up and feature consumption audit trail | `user` (belongsTo), `plan` (belongsTo), `paymentTransaction` (belongsTo) |
 | `Resume` | [Resume.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Resume.php) | ULID | `HasUlids`, Multi-template ATS CV, Score audit, Experience/Edu JSON | `user` (belongsTo), `interviewSessions` (hasMany), `outreachLetters` (hasMany) |
 | `InterviewSession` | [InterviewSession.php](file:///c:/xampp/htdocs/neriahpro/app/Models/InterviewSession.php) | ULID | `HasUlids`, Mock interview Q&A, Voice audio transcription, STAR score evaluation | `resume` (belongsTo), `user` (belongsTo) |
 | `OutreachLetter` | [OutreachLetter.php](file:///c:/xampp/htdocs/neriahpro/app/Models/OutreachLetter.php) | ULID | `HasUlids`, Thank you / follow-up / cold pitch letter generator | `resume` (belongsTo), `user` (belongsTo) |
@@ -74,6 +77,7 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 | Resource | Navigation Group | Fitur Utama | Schema / Tables |
 | :--- | :--- | :--- | :--- |
+| `CvProPlanResource` | Career & CV Pro | Katalog paket langganan & top-up kuota ala carte, penetapan harga dinamis, kalkulator margin keuntungan AI | `CvProPlanForm`, `CvProPlansTable` |
 | `ResumeResource` | Career & CV Pro | Resume management, ATS score breakdown, Skills tags, Live view link | `ResumeForm`, `ResumesTable` |
 | `InterviewSessionResource` | Career & CV Pro | Mock interview recordings, STAR analysis, Confidence score, Transcript audit | `InterviewSessionsTable`, Infolist |
 | `SecurityThreatResource` | System & Security | AI-Shield threat interception dashboard, RCE monitoring, IP quarantine & unblock | `SecurityThreatsTable`, Infolist, `SecurityThreatStatsWidget` |
@@ -96,6 +100,9 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/api/cv-pro/tailor`: Tailor CV specifically to target Job Description (POST).
 - `/api/cv-pro/linkedin`: LinkedIn Personal Branding Suite (Headlines, About, Skills, Post ideas) (POST).
 - `/api/cv-pro/ai-helper`: Quick AI Helper for summary, bullet enhancer/condenser, and skill suggest (POST).
+- `/api/cv-pro/pricing`: Dynamic pricing plans, a la carte top-ups, and financial margin economics (GET).
+- `/api/cv-pro/quota`: Real-time user quota balance & entitlements (GET).
+- `/api/cv-pro/topup`: Top-up quota a la carte atau aktivasi paket (POST).
 - `/api/cv-pro/interview/generate`: AI mock interview question generator (POST).
 - `/api/cv-pro/interview/evaluate`: STAR method answer evaluation & scoring (POST).
 - `/api/cv-pro/outreach/generate`: Job application letter generator (Thank You, Follow-up, Cold Pitch) (POST).
@@ -116,6 +123,10 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 - **`App\Services\CvPro\CvAiService`**:
   Mesin kecerdasan karir CV Pro SaaS: linter ATS CV dengan deteksi kata kerja lemah dan metrik kuantitatif, generator penyesuaian CV presisi terhadap lowongan (Applied CV Generator & Diff), generator LinkedIn personal branding pack, AI bullet enhancer/condenser, generator pertanyaan mock interview strategis berdasarkan posisi/target, evaluator jawaban kandidat berbasis formula STAR (Situation, Task, Action, Result), serta generator surat korespondensi pasca-wawancara.
+- **`App\Services\CvPro\CvPricingService`**:
+  Mesin kalkulator biaya API AI dan margin keuntungan dinamis: memproyeksikan biaya unit LLM (OpenAI GPT-4o-mini & Google Gemini 2.0 Flash) dan audio Whisper per aksi pengguna, menghitung COGS (Cost of Goods Sold) maksimal dan realistis per paket langganan dan top-up, serta memvalidasi margin keuntungan admin (>90%) untuk menjamin admin tidak pernah merugi/nombok.
+- **`App\Services\CvPro\CvQuotaService`**:
+  Mesin manajemen kuota pengguna dan hak akses fitur (entitlements): inisialisasi kuota gratis awal, pengecekan ketersediaan kuota fitur sebelum eksekusi AI, konsumsi saldo kuota/kredit dengan fallback transaksional, aktivasi paket langganan berjangka waktu, penerapan paket top-up kuota a la carte permanen, serta pencatatan audit log di `cv_quota_transactions`.
 - **`App\Services\PrdGeneratorService`**:
   Mesin pengolah ide kuesioner klien menjadi Ultimate PRD: menyusun ringkasan eksekutif, aktor sistem (RBAC), fitur MVP Fase 1, roadmap Fase 2, alur kerja (workflow), dan skema basis data ERD PostgreSQL Strict ULID.
 - **`App\Console\Commands\CheckExpiringAssetsCommand`** (`assets:check-expirations`):

@@ -101,7 +101,7 @@
     <footer class="bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 py-6 px-4 text-center text-xs border-t border-zinc-200 dark:border-zinc-800 font-mono">
         <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
             <p>&copy; {{ date('Y') }} NERIAH PRO HUB. ALL RIGHTS RESERVED.</p>
-            <p class="text-zinc-400 dark:text-zinc-500">POSTGRESQL STRICT ULID // MODERN MONOLITH</p>
+            <p class="text-zinc-400 dark:text-zinc-500">ENTERPRISE ARCHITECTURE // HIGH-INTEGRITY DATA</p>
         </div>
     </footer>
 

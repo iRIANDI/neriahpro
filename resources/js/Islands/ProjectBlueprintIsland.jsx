@@ -322,7 +322,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
             <div className="flex justify-between">
               <span className="text-zinc-500">ERD_DATABASE:</span>
-              <span className="text-zinc-900 dark:text-zinc-100 font-bold">PostgreSQL Strict ULID</span>
+              <span className="text-zinc-900 dark:text-zinc-100 font-bold">Enterprise Distributed ULID</span>
             </div>
           </div>
 

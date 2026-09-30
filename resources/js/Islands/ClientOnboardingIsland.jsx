@@ -87,7 +87,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
             Ide & Kebutuhan Berhasil Diterima.
           </h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed mb-8 font-sans">
-            Data Anda telah diamankan dengan standar PostgreSQL Strict ULID. Tim teknis Neriah Pro akan menyusun draf proposal arsitektur awal dalam 1x24 jam kerja.
+            Data Anda telah diamankan dengan enkripsi enterprise dan arsitektur database terdistribusi. Tim teknis Neriah Pro akan menyusun draf proposal arsitektur awal dalam 1x24 jam kerja.
           </p>
           <div className="flex flex-wrap justify-center gap-4 font-mono text-xs uppercase font-bold">
             <a

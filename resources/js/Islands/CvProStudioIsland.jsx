@@ -53,6 +53,32 @@ import {
 export default function CvProStudioIsland({ initialData, featureFlags, currentUser }) {
   // Navigation Tabs: 'editor' | 'job_hub' | 'finance' | 'ats_audit' | 'mock_interview' | 'outreach'
   const [activeTab, setActiveTab] = useState('editor');
+
+  // Tour Guide State
+  const [tourModalOpen, setTourModalOpen] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+
+  // Avatar & Photo Cropper State
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState(null);
+  const [photoZoom, setPhotoZoom] = useState(1);
+  const [photoStyle, setPhotoStyle] = useState('circle'); // 'circle' | 'rounded' | 'blob'
+  const [showPhoto, setShowPhoto] = useState(true);
+  const cropCanvasRef = useRef(null);
+
+  // Sosmed Promo Generator State
+  const [sosmedTopic, setSosmedTopic] = useState('OpenToWork');
+  const [sosmedCustomPrompt, setSosmedCustomPrompt] = useState('');
+  const [sosmedData, setSosmedData] = useState(null);
+  const [generatingSosmed, setGeneratingSosmed] = useState(false);
+  const [sosmedGradient, setSosmedGradient] = useState('purple'); // 'purple' | 'emerald' | 'amber' | 'blue'
+  const sosmedCanvasRef = useRef(null);
+
+  // Transcript Paste & Analysis State
+  const [transcriptModalOpen, setTranscriptModalOpen] = useState(false);
+  const [pastedTranscript, setPastedTranscript] = useState('');
+  const [analyzingTranscript, setAnalyzingTranscript] = useState(false);
+  const [transcriptResult, setTranscriptResult] = useState(null);
   const [lang, setLang] = useState('id');
   const [humanize, setHumanize] = useState(false);
 
@@ -109,7 +135,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       salary: 'Rp 35.000.000 / bln',
       status: 'interviewing',
       date: '2026-09-28',
-      desc: 'Mencari Lead Systems Architect untuk memimpin arsitektur cloud terdistribusi dengan Laravel 13, React 19, dan PostgreSQL Strict ULID.',
+      desc: 'Mencari Lead Systems Architect untuk memimpin arsitektur cloud terdistribusi dengan Laravel 13, React 19, dan Distributed Architecture.',
       notes: 'Wawancara user teknis dijadwalkan Jumat jam 14:00 WIB.'
     },
     {
@@ -978,6 +1004,221 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
   };
 
   // Remove skill
+  // Section Reordering & Management
+  const sectionOrder = content.section_order || [
+    'experiences',
+    'education',
+    'skills',
+    'projects',
+    'certifications',
+    'references'
+  ];
+
+  const moveSection = (idx, direction) => {
+    const newOrder = [...sectionOrder];
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= newOrder.length) return;
+    const temp = newOrder[idx];
+    newOrder[idx] = newOrder[targetIdx];
+    newOrder[targetIdx] = temp;
+    setContent(prev => ({ ...prev, section_order: newOrder }));
+  };
+
+  // Education Handlers
+  const addEducation = () => {
+    const newEdu = {
+      id: Date.now(),
+      institution: 'Institut Teknologi Bandung (ITB)',
+      degree: 'Sarjana Komputer (S.Kom)',
+      field: 'Teknik Informatika',
+      year: '2018 - 2022',
+      gpa: '3.85 / 4.00'
+    };
+    setContent(prev => ({ ...prev, education: [...(prev.education || []), newEdu] }));
+  };
+
+  const removeEducation = (id) => {
+    setContent(prev => ({
+      ...prev,
+      education: (prev.education || []).filter(item => item.id !== id)
+    }));
+  };
+
+  // Project Handlers
+  const addProject = () => {
+    const newProj = {
+      id: Date.now(),
+      name: 'Project OS & PRD Platform',
+      role: 'Principal Architect',
+      description: 'Platform perancangan arsitektur dan sintesis spesifikasi sistem otomatis.',
+      link: 'https://neriahpro.com/blueprint'
+    };
+    setContent(prev => ({ ...prev, projects: [...(prev.projects || []), newProj] }));
+  };
+
+  const removeProject = (id) => {
+    setContent(prev => ({
+      ...prev,
+      projects: (prev.projects || []).filter(item => item.id !== id)
+    }));
+  };
+
+  // Certification Handlers
+  const addCertification = () => {
+    const newCert = {
+      id: Date.now(),
+      name: 'AWS Solutions Architect - Associate',
+      issuer: 'Amazon Web Services',
+      year: '2024',
+      link: ''
+    };
+    setContent(prev => ({ ...prev, certifications: [...(prev.certifications || []), newCert] }));
+  };
+
+  const removeCertification = (id) => {
+    setContent(prev => ({
+      ...prev,
+      certifications: (prev.certifications || []).filter(item => item.id !== id)
+    }));
+  };
+
+  // Reference Handlers
+  const addReference = () => {
+    const newRef = {
+      id: Date.now(),
+      name: 'Dr. Ir. Hendra Gunawan, M.T.',
+      title: 'Chief Technology Officer (CTO)',
+      company: 'Neriah Pro Enterprise',
+      email: 'hendra.gunawan@neriahpro.com',
+      phone: '+62 811-9876-5432',
+      note: 'Supervisi langsung selama 3 tahun dalam pengembangan sistem enterprise.'
+    };
+    setContent(prev => ({ ...prev, references: [...(prev.references || []), newRef] }));
+  };
+
+  const removeReference = (id) => {
+    setContent(prev => ({
+      ...prev,
+      references: (prev.references || []).filter(item => item.id !== id)
+    }));
+  };
+
+  // Photo Cropper Handlers
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setTempImageSrc(event.target.result);
+      setPhotoZoom(1);
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const applyCropPhoto = () => {
+    if (!tempImageSrc) return;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = 300;
+      canvas.height = 300;
+      ctx.clearRect(0, 0, 300, 300);
+
+      const minDim = Math.min(img.width, img.height);
+      const sWidth = minDim / (photoZoom || 1);
+      const sHeight = minDim / (photoZoom || 1);
+      const sx = (img.width - sWidth) / 2;
+      const sy = (img.height - sHeight) / 2;
+
+      ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, 300, 300);
+      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+      handlePersonalChange('photo_url', croppedDataUrl);
+      setShowPhoto(true);
+      setCropModalOpen(false);
+    };
+    img.src = tempImageSrc;
+  };
+
+  // Sosmed Promo Handlers
+  const handleGenerateSosmed = async () => {
+    if (!checkAiAccessOrShowUpgrade(lang === 'id' ? 'Generator Promo Sosmed' : 'Social Media Promo Generator')) return;
+    setGeneratingSosmed(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/cv-pro/sosmed/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrf || '',
+        },
+        body: JSON.stringify({
+          content,
+          topic: sosmedTopic,
+          custom_prompt: sosmedCustomPrompt,
+          lang,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSosmedData(data.data);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Gagal menghasilkan promo sosmed.');
+    } finally {
+      setGeneratingSosmed(false);
+    }
+  };
+
+  const downloadSosmedCanvasPng = () => {
+    const canvas = document.getElementById('sosmed-preview-canvas');
+    if (!canvas) return;
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Promo-${(content?.personal_info?.name || 'CV').replace(/\s+/g, '-')}.png`;
+    a.click();
+  };
+
+  // Transcript Analysis Handlers
+  const handleRunTranscriptAnalysis = async () => {
+    if (!checkAiAccessOrShowUpgrade(lang === 'id' ? 'Analisis Transkrip Wawancara' : 'Interview Transcript Analysis')) return;
+    if (!pastedTranscript.trim()) {
+      alert(lang === 'id' ? 'Silakan tempel teks transkrip wawancara terlebih dahulu.' : 'Please paste transcript text first.');
+      return;
+    }
+    setAnalyzingTranscript(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/cv-pro/transcript/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrf || '',
+        },
+        body: JSON.stringify({
+          transcript: pastedTranscript,
+          content,
+          lang,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTranscriptResult(data.data);
+      } else {
+        alert(data.message || 'Gagal menganalisis transkrip.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Terjadi kesalahan saat memproses transkrip.');
+    } finally {
+      setAnalyzingTranscript(false);
+    }
+  };
+
   const removeSkill = (index) => {
     setContent((prev) => ({
       ...prev,
@@ -1073,6 +1314,28 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 <Check className="w-3.5 h-3.5 inline" /> {saveSuccessMessage}
               </span>
             )}
+
+            {/* Tour Guide Button */}
+            <button
+              onClick={() => { setTourStep(0); setTourModalOpen(true); }}
+              id="start-tour-btn"
+              className="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition flex items-center gap-1.5 shadow-sm rounded-sm"
+              title="Mulai panduan interaktif seluruh fitur CV Pro"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Panduan Tur</span>
+            </button>
+
+            {/* Transcript Paste Button */}
+            <button
+              onClick={() => setTranscriptModalOpen(true)}
+              id="open-transcript-modal-btn"
+              className="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 text-xs font-bold transition flex items-center gap-1.5 shadow-sm rounded-sm"
+              title="Tempel transkrip wawancara untuk evaluasi AI STAR"
+            >
+              <FileText className="w-3.5 h-3.5 text-blue-500" />
+              <span className="hidden md:inline">Evaluasi Transkrip</span>
+            </button>
 
             {/* Plan Tier & AI Quota Pill */}
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border border-amber-500/30 rounded-full text-xs">
@@ -1587,7 +1850,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
         {/* ========================================================================= */}
         {/* TAB 1: EDITOR & LIVE PREVIEW CANVAS                                       */}
         {/* ========================================================================= */}
-        {activeTab === 'editor' && (
+                {activeTab === 'editor' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Left Column: Form Editor (5 cols) */}
@@ -1598,7 +1861,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 <h3 className="text-xs font-mono font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-3 flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <Palette className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>Gaya & Format Visual</span>
+                    <span>Gaya & Format Visual (5 Preset Standar)</span>
                   </span>
                   <div className="flex items-center gap-1.5">
                     <button
@@ -1633,10 +1896,11 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                       onChange={(e) => setTemplate(e.target.value)}
                       className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-2 py-1.5 text-xs text-zinc-900 dark:text-zinc-100"
                     >
-                      <option value="modern_minimalist">Modern Minimalist</option>
-                      <option value="executive_clean">Executive Clean</option>
-                      <option value="creative_ats">Creative ATS</option>
-                      <option value="tech_dark">Tech Dark</option>
+                      <option value="modern_minimalist">1. Modern Minimalist</option>
+                      <option value="executive_clean">2. Executive Clean</option>
+                      <option value="creative_ats">3. Creative ATS (Sidebar)</option>
+                      <option value="tech_dark">4. Tech Dark (Terminal)</option>
+                      <option value="compact_elegant">5. Compact Elegant (1 Hal)</option>
                     </select>
                   </div>
                   <div>
@@ -1646,10 +1910,11 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                       onChange={(e) => setFontFamily(e.target.value)}
                       className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-2 py-1.5 text-xs text-zinc-900 dark:text-zinc-100"
                     >
-                      <option value="Inter">Inter (Sans)</option>
+                      <option value="Inter">Inter (Modern Sans)</option>
                       <option value="Roboto">Roboto (Clean)</option>
-                      <option value="Lato">Lato (Warm)</option>
-                      <option value="Merriweather">Merriweather (Serif)</option>
+                      <option value="Lato">Lato (Balanced)</option>
+                      <option value="Merriweather">Merriweather (Classic Serif)</option>
+                      <option value="Georgia">Georgia (Formal)</option>
                     </select>
                   </div>
                   <div>
@@ -1669,7 +1934,149 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 </div>
               </div>
 
-              {/* Personal Info Section */}
+              {/* Avatar Photo & Shape Card */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm space-y-3">
+                <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                  <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                    <Eye className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Foto Profil & Avatar Header</span>
+                  </h3>
+                  <label className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={showPhoto}
+                      onChange={(e) => setShowPhoto(e.target.checked)}
+                      className="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span>Tampilkan Foto</span>
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-4 text-xs">
+                  {/* Photo Preview Thumbnail */}
+                  <div className="relative group shrink-0">
+                    {p.photo_url ? (
+                      <img
+                        src={p.photo_url}
+                        alt="Avatar Preview"
+                        className={`w-14 h-14 object-cover border-2 shadow-sm ${photoStyle === 'circle' ? 'rounded-full' : (photoStyle === 'blob' ? 'rounded-[35%_65%_65%_35%/40%_40%_60%_60%]' : 'rounded-lg')}`}
+                        style={{ borderColor: primaryColor }}
+                      />
+                    ) : (
+                      <div
+                        className={`w-14 h-14 bg-zinc-100 dark:bg-zinc-800 border-2 border-dashed border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-zinc-400 font-mono text-[10px] ${photoStyle === 'circle' ? 'rounded-full' : 'rounded-lg'}`}
+                      >
+                        No Foto
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <label className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded cursor-pointer transition shadow-sm">
+                        Unggah Foto
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      {p.photo_url && (
+                        <button
+                          onClick={() => {
+                            setTempImageSrc(p.photo_url);
+                            setCropModalOpen(true);
+                          }}
+                          className="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 rounded transition"
+                        >
+                          Crop & Sesuaikan
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-1">
+                      <span className="text-zinc-500 text-[11px]">Bentuk:</span>
+                      <button
+                        type="button"
+                        onClick={() => setPhotoStyle('circle')}
+                        className={`px-2 py-0.5 rounded text-[11px] font-medium border ${photoStyle === 'circle' ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400'}`}
+                      >
+                        Lingkaran
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPhotoStyle('rounded')}
+                        className={`px-2 py-0.5 rounded text-[11px] font-medium border ${photoStyle === 'rounded' ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400'}`}
+                      >
+                        Kotak Bulat
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPhotoStyle('blob')}
+                        className={`px-2 py-0.5 rounded text-[11px] font-medium border ${photoStyle === 'blob' ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400'}`}
+                      >
+                        Modern Blob
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Urutan Bagian CV (Reorder Sections Tool) */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm space-y-2">
+                <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                  <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                    <Sliders className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Urutan Hirarki Bagian Resume</span>
+                  </h3>
+                  <span className="text-[10px] text-zinc-500 font-mono">Geser Posisi</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-xs font-mono">
+                  {sectionOrder.map((sec, idx) => {
+                    const secLabels = {
+                      experiences: 'Pengalaman',
+                      education: 'Pendidikan',
+                      skills: 'Keahlian',
+                      projects: 'Proyek',
+                      certifications: 'Sertifikasi',
+                      references: 'Referensi'
+                    };
+                    return (
+                      <div
+                        key={sec}
+                        className="p-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-between rounded"
+                      >
+                        <span className="font-bold text-zinc-800 dark:text-zinc-200 truncate">
+                          {idx + 1}. {secLabels[sec] || sec}
+                        </span>
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => moveSection(idx, -1)}
+                            disabled={idx === 0}
+                            className="p-0.5 text-zinc-500 hover:text-indigo-600 disabled:opacity-30"
+                            title="Pindah ke atas"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveSection(idx, 1)}
+                            disabled={idx === sectionOrder.length - 1}
+                            className="p-0.5 text-zinc-500 hover:text-indigo-600 disabled:opacity-30"
+                            title="Pindah ke bawah"
+                          >
+                            ▼
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 1. Personal Info Section */}
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3.5">
                 <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-800 pb-2 flex items-center justify-between">
                   <span>1. Identitas & Kontak</span>
@@ -1778,7 +2185,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 </div>
               </div>
 
-              {/* Work Experience Section */}
+              {/* 2. Work Experience Section */}
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
                   <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
@@ -1798,50 +2205,50 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                       onClick={addExperience}
                       className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Tambah Karir</span>
+                      <Plus className="w-3.5 h-3.5" /> Tambah Posisi
                     </button>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   {(content.experiences || []).map((exp, eIdx) => (
-                    <div key={exp.id || eIdx} className="p-3 bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700/60 rounded space-y-2 text-xs">
-                      <div className="flex justify-between items-start">
-                        <div className="grid grid-cols-2 gap-2 flex-1 mr-2">
-                          <input
-                            type="text"
-                            value={exp.role || ''}
-                            onChange={(e) => {
-                              const arr = [...content.experiences];
-                              arr[eIdx].role = e.target.value;
-                              setContent({ ...content, experiences: arr });
-                            }}
-                            placeholder="Posisi (e.g. Lead Engineer)"
-                            className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-2 py-1 font-bold"
-                          />
-                          <input
-                            type="text"
-                            value={exp.company || ''}
-                            onChange={(e) => {
-                              const arr = [...content.experiences];
-                              arr[eIdx].company = e.target.value;
-                              setContent({ ...content, experiences: arr });
-                            }}
-                            placeholder="Perusahaan"
-                            className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-2 py-1"
-                          />
-                        </div>
+                    <div key={exp.id || eIdx} className="p-3.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 space-y-2.5 rounded">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+                          {exp.role || 'Posisi Baru'} &bull; <span className="text-zinc-500 font-normal">{exp.company || 'Perusahaan'}</span>
+                        </span>
                         <button
                           onClick={() => removeExperience(exp.id)}
-                          className="text-zinc-400 hover:text-rose-500 p-1"
-                          title="Hapus"
+                          className="text-zinc-400 hover:text-rose-500"
+                          title="Hapus Pengalaman Ini"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <input
+                          type="text"
+                          value={exp.role || ''}
+                          onChange={(e) => {
+                            const arr = [...content.experiences];
+                            arr[eIdx].role = e.target.value;
+                            setContent({ ...content, experiences: arr });
+                          }}
+                          placeholder="Jabatan (e.g. Lead Systems Architect)"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="text"
+                          value={exp.company || ''}
+                          onChange={(e) => {
+                            const arr = [...content.experiences];
+                            arr[eIdx].company = e.target.value;
+                            setContent({ ...content, experiences: arr });
+                          }}
+                          placeholder="Perusahaan"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
                         <input
                           type="text"
                           value={exp.period || ''}
@@ -1851,7 +2258,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                             setContent({ ...content, experiences: arr });
                           }}
                           placeholder="Periode (e.g. 2022 - Sekarang)"
-                          className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-[11px]"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
                         />
                         <input
                           type="text"
@@ -1862,16 +2269,15 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                             setContent({ ...content, experiences: arr });
                           }}
                           placeholder="Lokasi (e.g. Jakarta / Remote)"
-                          className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-[11px]"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
                         />
                       </div>
 
-                      {/* Bullets with AI Enhance / Condense */}
+                      {/* Bullet Achievements */}
                       <div className="space-y-1.5 pt-1">
-                        <label className="text-[11px] font-bold text-zinc-500 block">Poin Pencapaian & Metrik:</label>
+                        <label className="block text-[11px] font-mono text-zinc-500 uppercase">Poin Pencapaian STAR (Metrik):</label>
                         {(exp.bullets || []).map((bullet, bIdx) => (
                           <div key={bIdx} className="flex items-center gap-1.5">
-                            <span className="text-zinc-400">•</span>
                             <input
                               type="text"
                               value={bullet}
@@ -1880,23 +2286,20 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                                 arr[eIdx].bullets[bIdx] = e.target.value;
                                 setContent({ ...content, experiences: arr });
                               }}
-                              className="flex-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-[11px]"
+                              className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
                             />
-                            {/* AI Enhance Button */}
                             <button
                               type="button"
-                              onClick={() => triggerAiHelper('enhance_bullet', { bullet, role: exp.role || 'Engineer', expIndex: eIdx, bulletIndex: bIdx })}
-                              disabled={aiLoading[`enhance_bullet_${eIdx}`]}
-                              className="px-1.5 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 text-[10px] font-mono rounded border border-emerald-300 dark:border-emerald-800"
-                              title="Perkuat dengan kata kerja aksi & angka"
+                              onClick={() => triggerAiHelper('enhance_bullet', { bullet }, eIdx, bIdx)}
+                              className="px-1.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 text-[10px] rounded hover:bg-indigo-100"
+                              title="Pertajam dengan kata kerja aktif"
                             >
-                              ⚡ Poles
+                              ⚡ AI
                             </button>
-                            {/* AI Condense Button */}
                             <button
                               type="button"
-                              onClick={() => triggerAiHelper('condense_bullet', { bullet, expIndex: eIdx, bulletIndex: bIdx })}
-                              className="px-1.5 py-1 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-300 text-[10px] font-mono rounded"
+                              onClick={() => triggerAiHelper('condense_bullet', { bullet }, eIdx, bIdx)}
+                              className="px-1.5 py-1 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 text-[10px] rounded hover:bg-amber-100"
                               title="Ringkas agar muat 1 halaman"
                             >
                               ✂ Ringkas
@@ -1929,11 +2332,92 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 </div>
               </div>
 
-              {/* Skills Section */}
+              {/* 3. Education Section */}
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3">
                 <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
                   <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
-                    3. Keahlian Teknis (ATS Skills)
+                    3. Riwayat Pendidikan
+                  </h3>
+                  <button
+                    onClick={addEducation}
+                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Tambah Pendidikan
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {(content.education || []).map((edu, edIdx) => (
+                    <div key={edu.id || edIdx} className="p-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 space-y-2 rounded">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+                          {edu.degree || 'Gelar'} &bull; <span className="text-zinc-500 font-normal">{edu.institution || 'Kampus'}</span>
+                        </span>
+                        <button
+                          onClick={() => removeEducation(edu.id)}
+                          className="text-zinc-400 hover:text-rose-500"
+                          title="Hapus Pendidikan"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <input
+                          type="text"
+                          value={edu.institution || ''}
+                          onChange={(e) => {
+                            const arr = [...content.education];
+                            arr[edIdx].institution = e.target.value;
+                            setContent({ ...content, education: arr });
+                          }}
+                          placeholder="Nama Universitas / Lembaga"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="text"
+                          value={edu.degree || ''}
+                          onChange={(e) => {
+                            const arr = [...content.education];
+                            arr[edIdx].degree = e.target.value;
+                            setContent({ ...content, education: arr });
+                          }}
+                          placeholder="Gelar (e.g. S.Kom / Bachelor)"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="text"
+                          value={edu.field || ''}
+                          onChange={(e) => {
+                            const arr = [...content.education];
+                            arr[edIdx].field = e.target.value;
+                            setContent({ ...content, education: arr });
+                          }}
+                          placeholder="Jurusan / Program Studi"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="text"
+                          value={edu.year || ''}
+                          onChange={(e) => {
+                            const arr = [...content.education];
+                            arr[edIdx].year = e.target.value;
+                            setContent({ ...content, education: arr });
+                          }}
+                          placeholder="Tahun / Periode (e.g. 2018 - 2022)"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4. Skills Section */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3">
+                <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                  <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
+                    4. Keahlian Teknis (ATS Skills)
                   </h3>
                   <button
                     type="button"
@@ -1992,120 +2476,821 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 </div>
               </div>
 
+              {/* 5. Projects Section */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3">
+                <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                  <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
+                    5. Proyek & Portofolio Pilihan
+                  </h3>
+                  <button
+                    onClick={addProject}
+                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Tambah Proyek
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {(content.projects || []).map((proj, prIdx) => (
+                    <div key={proj.id || prIdx} className="p-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 space-y-2 rounded">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+                          {proj.name || 'Proyek Baru'} &bull; <span className="text-zinc-500 font-normal">{proj.role || 'Role'}</span>
+                        </span>
+                        <button
+                          onClick={() => removeProject(proj.id)}
+                          className="text-zinc-400 hover:text-rose-500"
+                          title="Hapus Proyek"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <input
+                          type="text"
+                          value={proj.name || ''}
+                          onChange={(e) => {
+                            const arr = [...content.projects];
+                            arr[prIdx].name = e.target.value;
+                            setContent({ ...content, projects: arr });
+                          }}
+                          placeholder="Nama Proyek / Aplikasi"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="text"
+                          value={proj.role || ''}
+                          onChange={(e) => {
+                            const arr = [...content.projects];
+                            arr[prIdx].role = e.target.value;
+                            setContent({ ...content, projects: arr });
+                          }}
+                          placeholder="Peran Anda (e.g. Lead Architect)"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="text"
+                          value={proj.link || ''}
+                          onChange={(e) => {
+                            const arr = [...content.projects];
+                            arr[prIdx].link = e.target.value;
+                            setContent({ ...content, projects: arr });
+                          }}
+                          placeholder="URL / Tautan Proyek (e.g. https://...)"
+                          className="col-span-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <textarea
+                          rows={2}
+                          value={proj.description || ''}
+                          onChange={(e) => {
+                            const arr = [...content.projects];
+                            arr[prIdx].description = e.target.value;
+                            setContent({ ...content, projects: arr });
+                          }}
+                          placeholder="Deskripsi singkat arsitektur & pencapaian proyek..."
+                          className="col-span-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 p-2 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 6. Certifications Section */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3">
+                <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                  <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
+                    6. Sertifikasi & Lisensi
+                  </h3>
+                  <button
+                    onClick={addCertification}
+                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Tambah Sertifikat
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {(content.certifications || []).map((cert, cIdx) => (
+                    <div key={cert.id || cIdx} className="p-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 space-y-2 rounded">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+                          {cert.name || 'Sertifikat'} &bull; <span className="text-zinc-500 font-normal">{cert.issuer || 'Penerbit'}</span>
+                        </span>
+                        <button
+                          onClick={() => removeCertification(cert.id)}
+                          className="text-zinc-400 hover:text-rose-500"
+                          title="Hapus Sertifikat"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <input
+                          type="text"
+                          value={cert.name || ''}
+                          onChange={(e) => {
+                            const arr = [...content.certifications];
+                            arr[cIdx].name = e.target.value;
+                            setContent({ ...content, certifications: arr });
+                          }}
+                          placeholder="Nama Sertifikasi"
+                          className="col-span-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="text"
+                          value={cert.issuer || ''}
+                          onChange={(e) => {
+                            const arr = [...content.certifications];
+                            arr[cIdx].issuer = e.target.value;
+                            setContent({ ...content, certifications: arr });
+                          }}
+                          placeholder="Lembaga Penerbit (e.g. AWS)"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="text"
+                          value={cert.year || ''}
+                          onChange={(e) => {
+                            const arr = [...content.certifications];
+                            arr[cIdx].year = e.target.value;
+                            setContent({ ...content, certifications: arr });
+                          }}
+                          placeholder="Tahun Perolehan (e.g. 2024)"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 7. References Section */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3">
+                <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                  <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
+                    7. Referensi Profesional
+                  </h3>
+                  <button
+                    onClick={addReference}
+                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Tambah Referensi
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {(content.references || []).map((ref, rIdx) => (
+                    <div key={ref.id || rIdx} className="p-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 space-y-2 rounded">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+                          {ref.name || 'Nama Referensi'} &bull; <span className="text-zinc-500 font-normal">{ref.title || 'Jabatan'}</span>
+                        </span>
+                        <button
+                          onClick={() => removeReference(ref.id)}
+                          className="text-zinc-400 hover:text-rose-500"
+                          title="Hapus Referensi"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <input
+                          type="text"
+                          value={ref.name || ''}
+                          onChange={(e) => {
+                            const arr = [...content.references];
+                            arr[rIdx].name = e.target.value;
+                            setContent({ ...content, references: arr });
+                          }}
+                          placeholder="Nama Lengkap"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="text"
+                          value={ref.title || ''}
+                          onChange={(e) => {
+                            const arr = [...content.references];
+                            arr[rIdx].title = e.target.value;
+                            setContent({ ...content, references: arr });
+                          }}
+                          placeholder="Jabatan (e.g. CTO / VP Eng)"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="text"
+                          value={ref.company || ''}
+                          onChange={(e) => {
+                            const arr = [...content.references];
+                            arr[rIdx].company = e.target.value;
+                            setContent({ ...content, references: arr });
+                          }}
+                          placeholder="Perusahaan"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="email"
+                          value={ref.email || ''}
+                          onChange={(e) => {
+                            const arr = [...content.references];
+                            arr[rIdx].email = e.target.value;
+                            setContent({ ...content, references: arr });
+                          }}
+                          placeholder="Email Kontak"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                        <input
+                          type="text"
+                          value={ref.note || ''}
+                          onChange={(e) => {
+                            const arr = [...content.references];
+                            arr[rIdx].note = e.target.value;
+                            setContent({ ...content, references: arr });
+                          }}
+                          placeholder="Catatan relasi kerja..."
+                          className="col-span-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
 
             {/* Right Column: Live Interactive Preview (7 cols) */}
             <div className="lg:col-span-7 sticky top-28">
               <div className="bg-zinc-200 dark:bg-zinc-900 p-2 sm:p-6 border border-zinc-300 dark:border-zinc-800 shadow-inner flex flex-col items-center">
                 <div className="w-full flex items-center justify-between pb-3 text-xs text-zinc-500 font-mono">
-                  <span>LIVE PREVIEW // A4 REALTIME CANVAS</span>
-                  <span>FONT: {fontFamily} • ATS SCORE: {atsScore}%</span>
+                  <span>PREVIEW // TEMPLATE: {template.toUpperCase()}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-zinc-700 dark:text-zinc-300">ATS: {atsScore}%</span>
+                    <button
+                      onClick={() => window.print()}
+                      className="px-2 py-0.5 bg-zinc-900 text-white rounded text-[11px] font-mono hover:bg-black"
+                    >
+                      Cetak / PDF
+                    </button>
+                  </div>
                 </div>
 
-                {/* The Paper Canvas */}
+                {/* THE PAPER CANVAS (Renders 5 Distinct Templates Dynamically) */}
                 <div
-                  className="w-full max-w-[210mm] bg-white text-zinc-900 shadow-2xl p-8 sm:p-12 min-h-[700px] border border-zinc-200 transition-all text-xs"
+                  id="cv-document-canvas"
+                  className={`w-full max-w-[210mm] shadow-2xl transition-all ${template === 'tech_dark' ? 'bg-[#0f172a] text-slate-100 border border-slate-800' : 'bg-white text-zinc-900 border border-zinc-200'} ${template === 'compact_elegant' ? 'p-6 sm:p-8 text-[11px] leading-tight' : 'p-8 sm:p-12 text-xs'}`}
                   style={{ fontFamily: `'${fontFamily}', sans-serif` }}
                 >
-                  {/* Header Preview */}
-                  <div className="border-b pb-5 mb-5" style={{ borderColor: `${primaryColor}25` }}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h1 className="text-2xl font-black tracking-tight text-zinc-950">{p.name || 'Nama Anda'}</h1>
-                        <p className="text-sm font-bold mt-0.5" style={{ color: primaryColor }}>{p.title || 'Posisi Impian'}</p>
+                  
+                  {/* ========================================================= */}
+                  {/* LAYOUT A: CREATIVE ATS (TWO-COLUMN MAGAZINE SIDEBAR)      */}
+                  {/* ========================================================= */}
+                  {template === 'creative_ats' ? (
+                    <div className="grid grid-cols-12 gap-6">
+                      {/* Left Sidebar (4 cols) */}
+                      <div
+                        className="col-span-4 p-5 rounded-lg text-white space-y-5"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        {/* Avatar */}
+                        {showPhoto && p.photo_url && (
+                          <div className="flex justify-center">
+                            <img
+                              src={p.photo_url}
+                              alt={p.name}
+                              className={`w-28 h-28 object-cover border-4 border-white/60 shadow-lg ${photoStyle === 'circle' ? 'rounded-full' : (photoStyle === 'blob' ? 'rounded-[35%_65%_65%_35%/40%_40%_60%_60%]' : 'rounded-xl')}`}
+                            />
+                          </div>
+                        )}
+
+                        <div>
+                          <h1 className="text-xl font-black tracking-tight leading-tight">{p.name || 'Nama Anda'}</h1>
+                          <p className="text-xs font-medium text-white/80 mt-0.5">{p.title || 'Posisi Impian'}</p>
+                        </div>
+
+                        {/* Contacts */}
+                        <div className="space-y-1.5 text-[11px] text-white/90 font-mono border-t border-white/20 pt-3">
+                          {p.email && <div className="truncate">✉ {p.email}</div>}
+                          {p.phone && <div>📞 {p.phone}</div>}
+                          {p.location && <div>📍 {p.location}</div>}
+                          {p.linkedin && <div className="truncate">💼 {p.linkedin}</div>}
+                          {p.website && <div className="truncate">🌐 {p.website}</div>}
+                        </div>
+
+                        {/* Skills in Sidebar */}
+                        {(content.skills || []).length > 0 && (
+                          <div className="border-t border-white/20 pt-3 space-y-2">
+                            <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-white/90">Keahlian Inti</h4>
+                            <div className="flex flex-wrap gap-1">
+                              {content.skills.map((s, idx) => (
+                                <span key={idx} className="px-2 py-0.5 bg-black/20 text-white text-[10px] font-mono rounded">
+                                  {s}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Certifications in Sidebar */}
+                        {(content.certifications || []).length > 0 && (
+                          <div className="border-t border-white/20 pt-3 space-y-1.5">
+                            <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-white/90">Sertifikasi</h4>
+                            {content.certifications.map((c, idx) => (
+                              <div key={idx} className="text-[10.5px]">
+                                <div className="font-bold">{c.name}</div>
+                                <div className="text-white/70 text-[10px]">{c.issuer} ({c.year})</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Main Body (8 cols) */}
+                      <div className="col-span-8 space-y-5">
+                        {p.summary && (
+                          <div>
+                            <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider pb-1 mb-1.5 border-b" style={{ color: primaryColor, borderColor: `${primaryColor}30` }}>
+                              Ringkasan Eksekutif
+                            </h4>
+                            <p className="text-zinc-700 leading-relaxed text-justify text-[11.5px]">{p.summary}</p>
+                          </div>
+                        )}
+
+                        {/* Dynamic Section Iteration */}
+                        {sectionOrder.filter(s => s !== 'skills' && s !== 'certifications').map(sec => {
+                          if (sec === 'experiences' && (content.experiences || []).length > 0) {
+                            return (
+                              <div key="experiences">
+                                <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider pb-1 mb-2 border-b" style={{ color: primaryColor, borderColor: `${primaryColor}30` }}>
+                                  Pengalaman Profesional
+                                </h4>
+                                <div className="space-y-3.5">
+                                  {content.experiences.map((exp, eIdx) => (
+                                    <div key={eIdx}>
+                                      <div className="flex justify-between font-bold text-zinc-900 text-xs">
+                                        <span>{exp.role}</span>
+                                        <span className="font-mono text-zinc-500 font-normal">{exp.period}</span>
+                                      </div>
+                                      <div className="text-zinc-600 text-[11px] font-medium">{exp.company} &bull; {exp.location}</div>
+                                      {exp.bullets && (
+                                        <ul className="list-disc list-outside ml-4 mt-1 text-[11px] text-zinc-700 space-y-1 leading-relaxed">
+                                          {exp.bullets.map((b, bIdx) => (
+                                            <li key={bIdx}>{b}</li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (sec === 'education' && (content.education || []).length > 0) {
+                            return (
+                              <div key="education">
+                                <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider pb-1 mb-2 border-b" style={{ color: primaryColor, borderColor: `${primaryColor}30` }}>
+                                  Pendidikan
+                                </h4>
+                                <div className="space-y-2">
+                                  {content.education.map((edu, edIdx) => (
+                                    <div key={edIdx} className="flex justify-between items-start text-xs">
+                                      <div>
+                                        <div className="font-bold text-zinc-900">{edu.institution}</div>
+                                        <div className="text-zinc-600 text-[11px]">{edu.degree} - {edu.field}</div>
+                                      </div>
+                                      <span className="font-mono text-zinc-500 text-[11px]">{edu.year}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (sec === 'projects' && (content.projects || []).length > 0) {
+                            return (
+                              <div key="projects">
+                                <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider pb-1 mb-2 border-b" style={{ color: primaryColor, borderColor: `${primaryColor}30` }}>
+                                  Proyek & Karya
+                                </h4>
+                                <div className="space-y-2.5">
+                                  {content.projects.map((proj, prIdx) => (
+                                    <div key={prIdx}>
+                                      <div className="flex justify-between items-center font-bold text-zinc-900 text-xs">
+                                        <span>{proj.name}</span>
+                                        <span className="text-[10px] text-zinc-500 font-mono">{proj.role}</span>
+                                      </div>
+                                      <p className="text-[11px] text-zinc-600">{proj.description}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (sec === 'references' && (content.references || []).length > 0) {
+                            return (
+                              <div key="references">
+                                <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider pb-1 mb-2 border-b" style={{ color: primaryColor, borderColor: `${primaryColor}30` }}>
+                                  Referensi Profesional
+                                </h4>
+                                <div className="grid grid-cols-2 gap-3 text-xs">
+                                  {content.references.map((rf, rIdx) => (
+                                    <div key={rIdx} className="p-2 bg-zinc-50 border border-zinc-200 rounded">
+                                      <div className="font-bold text-zinc-900">{rf.name}</div>
+                                      <div className="text-[10.5px] text-zinc-600">{rf.title} &bull; {rf.company}</div>
+                                      <div className="text-[10px] text-zinc-500 font-mono">{rf.email} &bull; {rf.phone}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })}
                       </div>
                     </div>
+                  ) : (
+                    /* ========================================================= */
+                    /* LAYOUTS B, C, D, E: STANDARD SINGLE/DUAL COLUMN FORMATS   */
+                    /* ========================================================= */
+                    <div className="space-y-5">
+                      
+                      {/* Header with Photo & Accent */}
+                      <div className={`pb-4 border-b ${template === 'executive_clean' ? 'text-center border-double border-b-4' : 'flex items-start justify-between'} ${template === 'tech_dark' ? 'border-slate-700' : ''}`} style={{ borderColor: template === 'executive_clean' ? primaryColor : `${primaryColor}30` }}>
+                        <div className={template === 'executive_clean' ? 'mx-auto' : ''}>
+                          <h1 className={`font-black tracking-tight ${template === 'tech_dark' ? 'text-white font-mono text-2xl' : 'text-zinc-950 text-2xl sm:text-3xl'}`}>
+                            {p.name || 'Nama Anda'}
+                          </h1>
+                          <p className={`font-bold mt-0.5 ${template === 'tech_dark' ? 'text-emerald-400 font-mono text-xs' : 'text-sm'}`} style={{ color: template === 'tech_dark' ? undefined : primaryColor }}>
+                            {template === 'tech_dark' ? `> ${p.title || 'Systems Architect'}` : (p.title || 'Posisi Impian')}
+                          </p>
+                          
+                          <div className={`flex flex-wrap gap-x-3 gap-y-1 text-[11px] mt-2 font-mono ${template === 'executive_clean' ? 'justify-center' : ''} ${template === 'tech_dark' ? 'text-slate-400' : 'text-zinc-600'}`}>
+                            {p.email && <span>✉ {p.email}</span>}
+                            {p.phone && <span>📞 {p.phone}</span>}
+                            {p.location && <span>📍 {p.location}</span>}
+                            {p.linkedin && <span>💼 {p.linkedin}</span>}
+                            {p.website && <span>🌐 {p.website}</span>}
+                          </div>
+                        </div>
 
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-zinc-600 mt-3 font-mono">
-                      {p.email && <span>✉ {p.email}</span>}
-                      {p.phone && <span>📞 {p.phone}</span>}
-                      {p.location && <span>📍 {p.location}</span>}
-                      {p.linkedin && <span>💼 {p.linkedin}</span>}
-                    </div>
-                  </div>
+                        {/* Optional Header Avatar */}
+                        {showPhoto && p.photo_url && template !== 'executive_clean' && (
+                          <img
+                            src={p.photo_url}
+                            alt={p.name}
+                            className={`w-20 h-20 object-cover border-2 shadow-sm shrink-0 ml-4 ${photoStyle === 'circle' ? 'rounded-full' : (photoStyle === 'blob' ? 'rounded-[35%_65%_65%_35%/40%_40%_60%_60%]' : 'rounded-lg')}`}
+                            style={{ borderColor: primaryColor }}
+                          />
+                        )}
+                      </div>
 
-                  {/* Summary */}
-                  {p.summary && (
-                    <div className="mb-5">
-                      <h4 className="text-[10px] font-bold uppercase font-mono tracking-wider mb-1.5" style={{ color: primaryColor }}>
-                        // Ringkasan Profesional
-                      </h4>
-                      <p className="text-zinc-700 leading-relaxed text-justify text-[11.5px]">{p.summary}</p>
-                    </div>
-                  )}
+                      {/* Summary */}
+                      {p.summary && (
+                        <div>
+                          <h4 className={`text-[11px] font-bold uppercase tracking-wider mb-1 font-mono ${template === 'tech_dark' ? 'text-emerald-400' : ''}`} style={{ color: template === 'tech_dark' ? undefined : primaryColor }}>
+                            {template === 'tech_dark' ? '// 01. EXECUTIVE_SUMMARY' : 'Ringkasan Profesional'}
+                          </h4>
+                          <p className={`leading-relaxed text-justify ${template === 'tech_dark' ? 'text-slate-300' : 'text-zinc-700'}`}>{p.summary}</p>
+                        </div>
+                      )}
 
-                  {/* Experience */}
-                  {(content.experiences || []).length > 0 && (
-                    <div className="mb-5">
-                      <h4 className="text-[10px] font-bold uppercase font-mono tracking-wider mb-2.5 border-b pb-0.5" style={{ color: primaryColor, borderColor: `${primaryColor}20` }}>
-                        // Pengalaman Kerja
-                      </h4>
-                      <div className="space-y-3.5">
-                        {content.experiences.map((exp, eIdx) => (
-                          <div key={eIdx}>
-                            <div className="flex justify-between font-bold text-zinc-900">
-                              <span>{exp.role}</span>
-                              <span className="font-mono text-zinc-500 font-normal">{exp.period}</span>
-                            </div>
-                            <div className="flex justify-between text-zinc-600 text-[11px] mb-1">
-                              <span className="font-semibold">{exp.company}</span>
-                              <span className="italic">{exp.location}</span>
-                            </div>
-                            {exp.description && <p className="text-zinc-700 mb-1">{exp.description}</p>}
-                            {(exp.bullets || []).filter(Boolean).length > 0 && (
-                              <ul className="list-disc list-outside ml-4 space-y-0.5 text-zinc-700">
-                                {exp.bullets.filter(Boolean).map((b, bIdx) => (
-                                  <li key={bIdx}>{b}</li>
+                      {/* Iterasi Urutan Bagian Dinamis */}
+                      {sectionOrder.map((secKey) => {
+                        // Experiences
+                        if (secKey === 'experiences' && (content.experiences || []).length > 0) {
+                          return (
+                            <div key="experiences">
+                              <h4 className={`text-[11px] font-bold uppercase tracking-wider mb-2 font-mono border-b pb-0.5 ${template === 'tech_dark' ? 'text-emerald-400 border-slate-700' : ''}`} style={{ color: template === 'tech_dark' ? undefined : primaryColor, borderColor: template === 'tech_dark' ? undefined : `${primaryColor}25` }}>
+                                {template === 'tech_dark' ? '// 02. WORK_EXPERIENCE' : 'Pengalaman Kerja'}
+                              </h4>
+                              <div className="space-y-3">
+                                {content.experiences.map((exp, eIdx) => (
+                                  <div key={eIdx}>
+                                    <div className="flex justify-between font-bold text-xs">
+                                      <span className={template === 'tech_dark' ? 'text-white' : 'text-zinc-900'}>{exp.role}</span>
+                                      <span className="font-mono text-zinc-500 font-normal">{exp.period}</span>
+                                    </div>
+                                    <div className={`text-[11px] font-medium mb-1 ${template === 'tech_dark' ? 'text-slate-400' : 'text-zinc-600'}`}>
+                                      {exp.company} &bull; {exp.location}
+                                    </div>
+                                    {exp.bullets && (
+                                      <ul className={`list-disc list-outside ml-4 text-[11px] space-y-1 leading-relaxed ${template === 'tech_dark' ? 'text-slate-300' : 'text-zinc-700'}`}>
+                                        {exp.bullets.map((b, bIdx) => (
+                                          <li key={bIdx}>{b}</li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                  </div>
                                 ))}
-                              </ul>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Education */}
-                  {(content.education || []).length > 0 && (
-                    <div className="mb-5">
-                      <h4 className="text-[10px] font-bold uppercase font-mono tracking-wider mb-2 border-b pb-0.5" style={{ color: primaryColor, borderColor: `${primaryColor}20` }}>
-                        // Pendidikan Formal
-                      </h4>
-                      <div className="space-y-2">
-                        {content.education.map((edu, edIdx) => (
-                          <div key={edIdx} className="flex justify-between items-start">
-                            <div>
-                              <span className="font-bold text-zinc-900">{edu.institution}</span>
-                              <p className="text-zinc-600 text-[11px]">{edu.degree} - {edu.field}</p>
+                              </div>
                             </div>
-                            <span className="font-mono text-zinc-500 text-[11px]">{edu.year}</span>
-                          </div>
-                        ))}
-                      </div>
+                          );
+                        }
+
+                        // Education
+                        if (secKey === 'education' && (content.education || []).length > 0) {
+                          return (
+                            <div key="education">
+                              <h4 className={`text-[11px] font-bold uppercase tracking-wider mb-2 font-mono border-b pb-0.5 ${template === 'tech_dark' ? 'text-emerald-400 border-slate-700' : ''}`} style={{ color: template === 'tech_dark' ? undefined : primaryColor, borderColor: template === 'tech_dark' ? undefined : `${primaryColor}25` }}>
+                                {template === 'tech_dark' ? '// 03. ACADEMIC_BACKGROUND' : 'Riwayat Pendidikan'}
+                              </h4>
+                              <div className="space-y-2">
+                                {content.education.map((edu, edIdx) => (
+                                  <div key={edIdx} className="flex justify-between items-start text-xs">
+                                    <div>
+                                      <div className={`font-bold ${template === 'tech_dark' ? 'text-white' : 'text-zinc-900'}`}>{edu.institution}</div>
+                                      <div className={`text-[11px] ${template === 'tech_dark' ? 'text-slate-400' : 'text-zinc-600'}`}>{edu.degree} - {edu.field}</div>
+                                    </div>
+                                    <span className="font-mono text-zinc-500 text-[11px]">{edu.year}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Skills
+                        if (secKey === 'skills' && (content.skills || []).length > 0) {
+                          return (
+                            <div key="skills">
+                              <h4 className={`text-[11px] font-bold uppercase tracking-wider mb-2 font-mono border-b pb-0.5 ${template === 'tech_dark' ? 'text-emerald-400 border-slate-700' : ''}`} style={{ color: template === 'tech_dark' ? undefined : primaryColor, borderColor: template === 'tech_dark' ? undefined : `${primaryColor}25` }}>
+                                {template === 'tech_dark' ? '// 04. TECHNICAL_SKILLS' : 'Keahlian Teknis & Alat'}
+                              </h4>
+                              <div className="flex flex-wrap gap-1.5">
+                                {content.skills.map((skill, sIdx) => (
+                                  <span
+                                    key={sIdx}
+                                    className={`px-2 py-0.5 text-[11px] font-mono rounded ${template === 'tech_dark' ? 'bg-slate-800 text-emerald-300 border border-slate-700' : 'bg-zinc-100 text-zinc-800 border border-zinc-200'}`}
+                                  >
+                                    {skill}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Projects
+                        if (secKey === 'projects' && (content.projects || []).length > 0) {
+                          return (
+                            <div key="projects">
+                              <h4 className={`text-[11px] font-bold uppercase tracking-wider mb-2 font-mono border-b pb-0.5 ${template === 'tech_dark' ? 'text-emerald-400 border-slate-700' : ''}`} style={{ color: template === 'tech_dark' ? undefined : primaryColor, borderColor: template === 'tech_dark' ? undefined : `${primaryColor}25` }}>
+                                {template === 'tech_dark' ? '// 05. KEY_PROJECTS' : 'Proyek Portofolio Pilihan'}
+                              </h4>
+                              <div className="space-y-2">
+                                {content.projects.map((proj, prIdx) => (
+                                  <div key={prIdx}>
+                                    <div className="flex justify-between items-center text-xs font-bold">
+                                      <span className={template === 'tech_dark' ? 'text-white' : 'text-zinc-900'}>{proj.name}</span>
+                                      <span className="text-[10px] text-zinc-500 font-mono">{proj.role}</span>
+                                    </div>
+                                    <p className={`text-[11px] mt-0.5 ${template === 'tech_dark' ? 'text-slate-400' : 'text-zinc-600'}`}>{proj.description}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Certifications
+                        if (secKey === 'certifications' && (content.certifications || []).length > 0) {
+                          return (
+                            <div key="certifications">
+                              <h4 className={`text-[11px] font-bold uppercase tracking-wider mb-2 font-mono border-b pb-0.5 ${template === 'tech_dark' ? 'text-emerald-400 border-slate-700' : ''}`} style={{ color: template === 'tech_dark' ? undefined : primaryColor, borderColor: template === 'tech_dark' ? undefined : `${primaryColor}25` }}>
+                                {template === 'tech_dark' ? '// 06. CERTIFICATIONS' : 'Sertifikasi & Lisensi'}
+                              </h4>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                {content.certifications.map((c, idx) => (
+                                  <div key={idx} className="flex justify-between items-center">
+                                    <span className={`font-medium ${template === 'tech_dark' ? 'text-slate-200' : 'text-zinc-800'}`}>{c.name}</span>
+                                    <span className="text-zinc-500 font-mono text-[10px]">{c.year}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // References
+                        if (secKey === 'references' && (content.references || []).length > 0) {
+                          return (
+                            <div key="references">
+                              <h4 className={`text-[11px] font-bold uppercase tracking-wider mb-2 font-mono border-b pb-0.5 ${template === 'tech_dark' ? 'text-emerald-400 border-slate-700' : ''}`} style={{ color: template === 'tech_dark' ? undefined : primaryColor, borderColor: template === 'tech_dark' ? undefined : `${primaryColor}25` }}>
+                                {template === 'tech_dark' ? '// 07. REFERENCES' : 'Referensi Profesional'}
+                              </h4>
+                              <div className="grid grid-cols-2 gap-3 text-xs">
+                                {content.references.map((rf, rIdx) => (
+                                  <div key={rIdx} className={`p-2 rounded border ${template === 'tech_dark' ? 'bg-slate-900 border-slate-800' : 'bg-zinc-50 border-zinc-200'}`}>
+                                    <div className={`font-bold ${template === 'tech_dark' ? 'text-white' : 'text-zinc-900'}`}>{rf.name}</div>
+                                    <div className="text-[10px] text-zinc-500 font-mono">{rf.title} &bull; {rf.company}</div>
+                                    <div className="text-[10px] text-zinc-400 font-mono">{rf.email}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return null;
+                      })}
+
                     </div>
                   )}
 
-                  {/* Skills */}
-                  {(content.skills || []).length > 0 && (
-                    <div>
-                      <h4 className="text-[10px] font-bold uppercase font-mono tracking-wider mb-2 border-b pb-0.5" style={{ color: primaryColor, borderColor: `${primaryColor}20` }}>
-                        // Keahlian Teknis
-                      </h4>
-                      <div className="flex flex-wrap gap-1">
-                        {content.skills.map((skill, sIdx) => (
-                          <span key={sIdx} className="px-1.5 py-0.5 bg-zinc-100 text-zinc-800 text-[10.5px] font-medium border border-zinc-200">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
 
           </div>
         )}
+
+        {/* ========================================================================= */}
+        {/* TAB 1.5: SOCIAL MEDIA PROMO GRAPHIC & CAPTION STUDIO                      */}
+        {/* ========================================================================= */}
+        {activeTab === 'sosmed' && (
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-pink-500/20 text-pink-600 dark:text-pink-400">
+                    <Share2 className="w-5 h-5" />
+                  </span>
+                  <h2 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">
+                    Social Media Announcement & Promo Card Generator
+                  </h2>
+                </div>
+                <p className="text-xs text-zinc-500 mt-1">
+                  Hasilkan grafik banner pengumuman LinkedIn/Instagram beresolusi tinggi dengan sorotan ATS score dan teks caption teroptimasi.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono text-zinc-500">Gradien Kartu:</span>
+                {['purple', 'emerald', 'amber', 'blue'].map((gr) => (
+                  <button
+                    key={gr}
+                    type="button"
+                    onClick={() => setSosmedGradient(gr)}
+                    className={`px-2.5 py-1 text-xs font-bold rounded capitalize border transition ${sosmedGradient === gr ? 'border-zinc-900 dark:border-white scale-105 shadow' : 'border-zinc-300 dark:border-zinc-700 opacity-70'}`}
+                  >
+                    {gr}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Left Controls */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                    Topik Kampanye Pengumuman:
+                  </label>
+                  <select
+                    value={sosmedTopic}
+                    onChange={(e) => setSosmedTopic(e.target.value)}
+                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 rounded"
+                  >
+                    <option value="OpenToWork">1. #OpenToWork - Mencari Peluang Karir Baru</option>
+                    <option value="Milestone">2. Karir Milestone - Berbagi Sertifikasi / Pencapaian</option>
+                    <option value="ProjectShowcase">3. Show Off Proyek & Portofolio</option>
+                    <option value="Other">4. Kustom (Tuliskan Arahan Khusus Anda)</option>
+                  </select>
+                </div>
+
+                {sosmedTopic === 'Other' && (
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                      Instruksi Brief Kreatif Kustom:
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={sosmedCustomPrompt}
+                      onChange={(e) => setSosmedCustomPrompt(e.target.value)}
+                      placeholder="Contoh: 'Saya baru saja lulus ujian sertifikasi AWS dan siap membantu perusahaan start-up mendesain cloud'..."
+                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 rounded"
+                    />
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleGenerateSosmed}
+                  disabled={generatingSosmed}
+                  id="btn-gen-sosmed-image"
+                  className="w-full py-3 bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 hover:from-pink-500 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-lg flex items-center justify-center gap-2 transition disabled:opacity-50"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>{generatingSosmed ? 'AI Sedang Merancang Banner...' : 'Buat Gambar & Teks Promo Sosmed'}</span>
+                </button>
+
+                {sosmedData?.caption && (
+                  <div className="space-y-2 pt-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase">
+                        Caption Siap Posting LinkedIn / IG:
+                      </span>
+                      <button
+                        onClick={() => copyToClipboard(sosmedData.caption)}
+                        className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
+                      >
+                        <Copy className="w-3.5 h-3.5" /> Salin Teks
+                      </button>
+                    </div>
+                    <textarea
+                      rows={7}
+                      readOnly
+                      value={sosmedData.caption}
+                      className="w-full bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 p-3 text-xs text-zinc-800 dark:text-zinc-200 font-mono rounded"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Graphic Canvas Preview */}
+              <div className="lg:col-span-7 flex flex-col items-center">
+                <div
+                  className={`w-full max-w-[600px] aspect-[1200/630] rounded-xl shadow-2xl p-6 sm:p-8 flex flex-col justify-between text-white relative overflow-hidden transition-all ${
+                    sosmedGradient === 'emerald'
+                      ? 'bg-gradient-to-br from-emerald-900 via-zinc-900 to-black border border-emerald-500/30'
+                      : sosmedGradient === 'amber'
+                      ? 'bg-gradient-to-br from-amber-700 via-zinc-900 to-black border border-amber-500/30'
+                      : sosmedGradient === 'blue'
+                      ? 'bg-gradient-to-br from-blue-900 via-slate-900 to-black border border-blue-500/30'
+                      : 'bg-gradient-to-br from-purple-900 via-indigo-950 to-black border border-purple-500/30'
+                  }`}
+                  id="promo-card-wrapper"
+                >
+                  {/* Background Accents */}
+                  <div className="absolute -top-16 -right-16 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                  
+                  {/* Top Bar */}
+                  <div className="flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded bg-white text-zinc-950 font-black font-mono text-xs flex items-center justify-center">
+                        NP
+                      </div>
+                      <span className="font-mono text-[10px] tracking-wider text-white/80 font-bold uppercase">
+                        Neriah Pro // Verified Candidate
+                      </span>
+                    </div>
+
+                    <span className="px-2.5 py-0.5 bg-emerald-500 text-black font-mono font-black text-[10px] rounded-full shadow">
+                      ATS VERIFIED 98%
+                    </span>
+                  </div>
+
+                  {/* Center Content */}
+                  <div className="space-y-2 relative z-10 my-4">
+                    <span className="px-2 py-0.5 bg-white/15 text-white/90 font-mono text-[10px] rounded font-bold uppercase tracking-wide">
+                      {sosmedTopic === 'OpenToWork' ? '🚀 READY FOR NEW ROLE' : '🌟 CAREER HIGHLIGHT'}
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black tracking-tight leading-snug">
+                      {sosmedData?.card_headline || `Siap Memberi Dampak Baru Sebagai ${p.title || 'Senior Engineer'}`}
+                    </h3>
+                    <p className="text-xs text-white/80 line-clamp-2">
+                      {p.name || 'Alex Pratama'} &bull; {p.title || 'Software Engineer'} &bull; {p.location || 'Jakarta, ID'}
+                    </p>
+                  </div>
+
+                  {/* Bottom Stats & Skills */}
+                  <div className="border-t border-white/20 pt-3 flex items-center justify-between relative z-10 text-xs font-mono">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {(content.skills || []).slice(0, 3).map((sk, idx) => (
+                        <span key={idx} className="px-2 py-0.5 bg-white/20 text-white rounded text-[10px]">
+                          {sk}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-white/70">neriahpro.com/cv-pro</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="mt-4 flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      alert('Grafik siap dibagikan! Silakan gunakan tombol screenshot atau salin caption untuk diposkan ke LinkedIn.');
+                    }}
+                    className="px-4 py-2 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded flex items-center gap-1.5 shadow"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download Gambar Promo</span>
+                  </button>
+                  <button
+                    onClick={() => copyToClipboard(sosmedData?.caption || '')}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded flex items-center gap-1.5 shadow"
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span>Salin Teks Caption</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* ========================================================================= */}
         {/* TAB 2: JOB HUB & KANBAN APPLICATION TRACKER                               */}
@@ -3301,6 +4486,388 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 )}
               </div>
 
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* ========================================================================= */}
+      {/* MODAL 1: INTERACTIVE TOUR GUIDE WALKTHROUGH                              */}
+      {/* ========================================================================= */}
+      {tourModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-xl shadow-2xl flex flex-col rounded-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-amber-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold text-sm">
+                <HelpCircle className="w-5 h-5 text-amber-300" />
+                <span>Panduan Interaktif Fitur CV Pro Studio</span>
+              </div>
+              <span className="font-mono text-xs px-2 py-0.5 bg-black/30 rounded-full">
+                Langkah {tourStep + 1} dari 8
+              </span>
+            </div>
+
+            {/* Tour Steps Content */}
+            <div className="p-6 space-y-4 text-xs">
+              {tourStep === 0 && (
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xl">
+                    👋
+                  </div>
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+                    Selamat Datang di Neriah Pro CV Pro Studio!
+                  </h3>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                    CV Pro Studio dirancang untuk mengakselerasi karir Anda ke level tertinggi. Mulai dari pembuat resume berstandar internasional, scanner ATS AI, asisten wawancara suara langsung (Voice Copilot), hingga generator grafis promo sosmed siap pakai.
+                  </p>
+                  <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded text-indigo-700 dark:text-indigo-300">
+                    💡 <strong>Tips:</strong> Pengunjung gratis dapat mengetik seluruh isi resume dan mengunduh format PDF sepuasnya tanpa biaya!
+                  </div>
+                </div>
+              )}
+
+              {tourStep === 1 && (
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                    <Palette className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                    1. Gaya & Format Visual (5 Preset Standar Industri)
+                  </h3>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                    Pilih salah satu dari 5 template resume modern: <strong>Modern Minimalist</strong>, <strong>Executive Clean</strong>, <strong>Creative ATS (Sidebar)</strong>, <strong>Tech Dark (Terminal)</strong>, atau <strong>Compact Elegant (1 Halaman)</strong>. Sesuaikan font dan aksen warna favorit Anda.
+                  </p>
+                </div>
+              )}
+
+              {tourStep === 2 && (
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-lg bg-pink-100 dark:bg-pink-950/60 text-pink-600 dark:text-pink-400 flex items-center justify-center font-bold">
+                    <Eye className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                    2. Foto Profil & Avatar Header Cropper
+                  </h3>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                    Unggah foto profesional Anda langsung dari laptop atau HP. Manfaatkan fitur <strong>Crop Interaktif</strong> untuk memperbesar dan memusatkan wajah, serta pilih bentuk bingkai: Lingkaran, Kotak Bulat, atau Modern Blob.
+                  </p>
+                </div>
+              )}
+
+              {tourStep === 3 && (
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                    <Sliders className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                    3. Urutan Hirarki Bagian Resume (Reorder Sections)
+                  </h3>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                    Anda memiliki kendali penuh atas susunan resume. Gunakan tombol panah <strong>▲ Pindah ke atas</strong> dan <strong>▼ Pindah ke bawah</strong> untuk mengatur apakah bagian Keahlian, Proyek, atau Pendidikan yang ingin ditampilkan lebih dahulu.
+                  </p>
+                </div>
+              )}
+
+              {tourStep === 4 && (
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                    4. AI ATS Audit & Penajaman Kata Kerja (Formula STAR)
+                  </h3>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                    Audit skor resume secara real-time. Tombol <strong>⚡ AI Pertajam</strong> membantu mengubah kalimat pasif menjadi kata kerja aktif terukur, dan <strong>✂ Ringkas</strong> memastikan teks padat muat dalam 1 halaman.
+                  </p>
+                </div>
+              )}
+
+              {tourStep === 5 && (
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                    <Headphones className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                    5. Asisten Wawancara Real-Time (Live Voice Copilot)
+                  </h3>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                    Saat wawancara via Zoom/Google Meet berlangsung, aktifkan mikrofon. AI mendengarkan pertanyaan pewawancara dan seketika menampilkan contekkan <strong>STAR (Situation, Task, Action, Result)</strong> di layar Anda!
+                  </p>
+                </div>
+              )}
+
+              {tourStep === 6 && (
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-lg bg-pink-100 dark:bg-pink-950/60 text-pink-600 dark:text-pink-400 flex items-center justify-center font-bold">
+                    <Share2 className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                    6. Social Media Promo Graphic & Caption Generator
+                  </h3>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                    Umumkan ketersediaan Anda di LinkedIn dengan banner grafis 1200x630 yang elegan. Lengkap dengan lencana <em>ATS VERIFIED 98%</em> dan teks postingan siap salin!
+                  </p>
+                </div>
+              )}
+
+              {tourStep === 7 && (
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                    <FileDown className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                    7. Unduh PDF, Cetak & Portofolio Web Interaktif
+                  </h3>
+                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                    Selesai menyusun resume? Klik tombol <strong>Cetak / PDF</strong> untuk mencetak dokumen format A4 beresolusi tinggi, atau klik <strong>Web Portfolio</strong> untuk mengubah CV Anda menjadi website online interaktif!
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Navigation */}
+            <div className="p-4 bg-zinc-50 dark:bg-zinc-800/80 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setTourModalOpen(false)}
+                className="text-zinc-500 hover:text-zinc-800 dark:hover:text-white text-xs font-mono"
+              >
+                Lewati Tur
+              </button>
+
+              <div className="flex items-center gap-2">
+                {tourStep > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setTourStep(prev => prev - 1)}
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-600 rounded text-xs font-bold"
+                  >
+                    &larr; Sebelumnya
+                  </button>
+                )}
+
+                {tourStep < 7 ? (
+                  <button
+                    type="button"
+                    onClick={() => setTourStep(prev => prev + 1)}
+                    className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-bold shadow"
+                  >
+                    Selanjutnya &rarr;
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setTourModalOpen(false)}
+                    className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold shadow"
+                  >
+                    Selesai & Mulai Buat CV
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 2: INTERACTIVE AVATAR PHOTO CROPPER MODAL                           */}
+      {/* ========================================================================= */}
+      {cropModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-md shadow-2xl flex flex-col rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                <Eye className="w-4 h-4 text-indigo-500" />
+                <span>Crop & Sesuaikan Foto Anda</span>
+              </h3>
+              <button onClick={() => setCropModalOpen(false)} className="text-zinc-400 hover:text-zinc-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 flex flex-col items-center">
+              {/* Image Canvas Box */}
+              <div className="w-64 h-64 bg-zinc-100 dark:bg-zinc-800 border-2 border-dashed border-zinc-300 dark:border-zinc-700 flex items-center justify-center overflow-hidden rounded-xl relative shadow-inner">
+                {tempImageSrc ? (
+                  <img
+                    src={tempImageSrc}
+                    alt="Source to Crop"
+                    className="object-cover max-w-none transition-transform"
+                    style={{
+                      transform: `scale(${photoZoom})`,
+                      width: '100%',
+                      height: '100%'
+                    }}
+                  />
+                ) : (
+                  <span className="text-xs text-zinc-400">Tidak ada gambar</span>
+                )}
+                {/* Crop Overlay Grid Guide */}
+                <div
+                  className={`absolute inset-4 pointer-events-none border-2 border-indigo-500/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)] ${photoStyle === 'circle' ? 'rounded-full' : (photoStyle === 'blob' ? 'rounded-[35%_65%_65%_35%/40%_40%_60%_60%]' : 'rounded-lg')}`}
+                />
+              </div>
+
+              {/* Zoom Control Slider */}
+              <div className="w-full space-y-1">
+                <div className="flex justify-between text-xs text-zinc-600 dark:text-zinc-400 font-mono">
+                  <span>Zoom / Pembesaran:</span>
+                  <span>{photoZoom.toFixed(1)}x</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="0.1"
+                  value={photoZoom}
+                  onChange={(e) => setPhotoZoom(parseFloat(e.target.value))}
+                  className="w-full accent-indigo-600"
+                />
+              </div>
+
+              {/* Shape Selection */}
+              <div className="flex items-center gap-2 w-full pt-1">
+                <span className="text-xs text-zinc-500 font-mono">Bentuk:</span>
+                <button
+                  type="button"
+                  onClick={() => setPhotoStyle('circle')}
+                  className={`flex-1 py-1 text-xs font-bold rounded border ${photoStyle === 'circle' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700'}`}
+                >
+                  Lingkaran
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPhotoStyle('rounded')}
+                  className={`flex-1 py-1 text-xs font-bold rounded border ${photoStyle === 'rounded' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700'}`}
+                >
+                  Kotak Bulat
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPhotoStyle('blob')}
+                  className={`flex-1 py-1 text-xs font-bold rounded border ${photoStyle === 'blob' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700'}`}
+                >
+                  Modern Blob
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 bg-zinc-50 dark:bg-zinc-800/80 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCropModalOpen(false)}
+                id="cancel-crop-btn"
+                className="px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:underline"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={applyCropPhoto}
+                id="crop-btn"
+                className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded shadow"
+              >
+                Crop & Gunakan Foto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 3: INTERVIEW TRANSCRIPT PASTE & STAR ANALYSIS MODAL                 */}
+      {/* ========================================================================= */}
+      {transcriptModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col rounded-xl">
+            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-indigo-500" />
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                  Analisis Transkrip Wawancara (Recruiter Call / Mock Interview)
+                </h3>
+              </div>
+              <button onClick={() => setTranscriptModalOpen(false)} className="text-zinc-400 hover:text-zinc-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-xs">
+              <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                Tempelkan percakapan atau transkrip wawancara Anda dari Zoom, Google Meet, rekaman audio, atau panggilan telepon. AI akan mengevaluasi jawaban Anda dan menyusun respon STAR yang ideal.
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Transkrip Percakapan Wawancara:
+                </label>
+                <textarea
+                  rows={5}
+                  value={pastedTranscript}
+                  onChange={(e) => setPastedTranscript(e.target.value)}
+                  placeholder="Pewawancara: Ceritakan pengalaman Anda saat memimpin migrasi basis data?\nSaya: Kami memigrasikan database ke cloud dan latency berkurang 50%..."
+                  className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-3 text-xs text-zinc-900 dark:text-zinc-100 font-mono rounded"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleRunTranscriptAnalysis}
+                disabled={analyzingTranscript || !pastedTranscript.trim()}
+                id="run-transcript-analysis-btn"
+                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded shadow flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>{analyzingTranscript ? 'AI Sedang Menganalisis Transkrip...' : 'Jalankan Analisis Transkrip STAR'}</span>
+              </button>
+
+              {/* Analysis Result */}
+              {transcriptResult && (
+                <div className="mt-4 p-4 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-lg space-y-3">
+                  <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 pb-2">
+                    <span className="font-bold text-zinc-900 dark:text-white uppercase font-mono">
+                      Rating Jawaban: <span className="text-indigo-600 dark:text-indigo-400">{transcriptResult.overall_rating}</span>
+                    </span>
+                    <span className="text-[10px] text-zinc-500 font-mono">
+                      {transcriptResult.transcript_length} Kata Terdeteksi
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="font-bold text-emerald-600 dark:text-emerald-400">✓ Kekuatan Jawaban:</div>
+                    <ul className="list-disc list-outside ml-4 text-zinc-700 dark:text-zinc-300 space-y-1">
+                      {(transcriptResult.strengths || []).map((st, i) => (
+                        <li key={i}>{st}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="font-bold text-amber-600 dark:text-amber-400">⚡ Area Peningkatan:</div>
+                    <ul className="list-disc list-outside ml-4 text-zinc-700 dark:text-zinc-300 space-y-1">
+                      {(transcriptResult.improvements || []).map((imp, i) => (
+                        <li key={i}>{imp}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {transcriptResult.recommended_star_response && (
+                    <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded space-y-1.5">
+                      <div className="font-bold text-indigo-700 dark:text-indigo-300 font-mono text-[11px] uppercase">
+                        Rekomendasi Jawaban STAR Ideal:
+                      </div>
+                      <div className="text-zinc-700 dark:text-zinc-300 space-y-1">
+                        <div><strong>Situation:</strong> {transcriptResult.recommended_star_response.situation}</div>
+                        <div><strong>Task:</strong> {transcriptResult.recommended_star_response.task}</div>
+                        <div><strong>Action:</strong> {transcriptResult.recommended_star_response.action}</div>
+                        <div><strong>Result:</strong> {transcriptResult.recommended_star_response.result}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

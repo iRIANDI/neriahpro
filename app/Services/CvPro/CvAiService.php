@@ -791,7 +791,7 @@ HTML;
     {
         $lower = strtolower($role);
         if (str_contains($lower, 'architect') || str_contains($lower, 'backend')) {
-            return ['Laravel 13', 'PHP 8.4', 'PostgreSQL Strict ULID', 'Redis Caching', 'Docker CI/CD', 'Micro-monolith', 'O(1) Pagination', 'RESTful API', 'System Architecture'];
+            return ['Laravel 13', 'PHP 8.4', 'Distributed Database Architecture', 'Redis Caching', 'Docker CI/CD', 'Enterprise Architecture', 'High-Throughput APIs', 'RESTful API', 'System Architecture'];
         }
         if (str_contains($lower, 'frontend') || str_contains($lower, 'react') || str_contains($lower, 'full stack')) {
             return ['React 19', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Vite', 'State Management', 'REST / GraphQL', 'Responsive Design'];
@@ -800,6 +800,86 @@ HTML;
             return ['Product Roadmapping', 'User Story Mapping', 'PRD Synthesis', 'Agile / Scrum', 'Data Analytics', 'Stakeholder Communication', 'A/B Testing'];
         }
         return ['Problem Solving', 'Strategic Planning', 'Cross-Functional Leadership', 'Data-Driven Decision Making', 'Process Optimization'];
+    }
+
+    /**
+     * Generate branded Social Media Promo Card content and announcement captions.
+     */
+    public static function generateSosmedPromo(array $content, string $topic = 'OpenToWork', string $customPrompt = '', string $lang = 'id'): array
+    {
+        $personal = $content['personal_info'] ?? [];
+        $name = $personal['name'] ?? 'Professional';
+        $title = $personal['title'] ?? 'Software Engineer';
+        $skills = array_slice($content['skills'] ?? ['Architecture', 'Leadership', 'Optimization'], 0, 4);
+        $topSkillStr = implode(' • ', $skills);
+
+        $headline = $topic === 'OpenToWork'
+            ? ($lang === 'id' ? "Siap Memberi Dampak Baru Sebagai {$title}" : "Ready for New Impact as {$title}")
+            : ($lang === 'id' ? "Menjelajahi Terobosan Karir: {$title}" : "Exploring Career Milestones: {$title}");
+
+        $caption = $lang === 'id'
+            ? "Halo rekan-rekan LinkedIn! 👋\n\nSetelah perjalanan mendalam merancang sistem dan menyelesaikan proyek-proyek berdampak tinggi, saat ini saya secara aktif membuka peluang baru untuk peran **{$title}**.\n\nFokus keahlian saya:\n" . implode("\n", array_map(fn($s) => "🔹 {$s}", $skills)) . "\n\nKualifikasi terbukti dengan rekam jejak arsitektur skalabel dan optimasi performa tinggi. Portofolio & CV interaktif saya dapat diakses langsung.\n\nMari terhubung atau diskusikan peluang kolaborasi!\n\n#OpenToWork #CareerGrowth #{$title} #TechTalent #NeriahPro"
+            : "Hello LinkedIn network! 👋\n\nAfter driving scalable architectural solutions and high-impact software deliveries, I am actively exploring new exciting opportunities as a **{$title}**.\n\nCore Highlights:\n" . implode("\n", array_map(fn($s) => "🔹 {$s}", $skills)) . "\n\nFeel free to explore my full interactive CV and web portfolio. Let's connect and discuss potential synergies!\n\n#OpenToWork #Hiring #TechCareers #Leadership";
+
+        return [
+            'card_title' => $name,
+            'card_role' => $title,
+            'card_headline' => $headline,
+            'skills_summary' => $topSkillStr,
+            'badge' => 'ATS VERIFIED 98%',
+            'caption' => $caption,
+            'topic' => $topic,
+            'custom_prompt' => $customPrompt,
+        ];
+    }
+
+    /**
+     * Analyze an interview or recruiter call transcript and provide structured STAR coaching.
+     */
+    public static function analyzeTranscript(string $transcript, array $content, string $lang = 'id'): array
+    {
+        $wordCount = str_word_count($transcript);
+        $hasNumbers = preg_match('/\d+/', $transcript);
+
+        $strengths = [];
+        $improvements = [];
+
+        if ($hasNumbers) {
+            $strengths[] = $lang === 'id'
+                ? 'Penggunaan metrik numerik dan data terukur terdengar meyakinkan.'
+                : 'Effective use of quantitative metrics and concrete numbers.';
+        } else {
+            $improvements[] = $lang === 'id'
+                ? 'Tambahkan metrik kuantitatif (persentase efisiensi, volume data, atau penghematan biaya) pada pencapaian Anda.'
+                : 'Incorporate quantifiable metrics (e.g., % latency reduction, throughput, cost savings).';
+        }
+
+        if ($wordCount > 150) {
+            $strengths[] = $lang === 'id'
+                ? 'Penjelasan komprehensif dan mendalam mengenai konteks teknis.'
+                : 'Comprehensive context provided on technical challenges.';
+        } else {
+            $improvements[] = $lang === 'id'
+                ? 'Jawaban terlalu ringkas. Kembangkan dengan kerangka STAR (Situation, Task, Action, Result) lengkap.'
+                : 'Response is somewhat brief. Elaborate using the complete STAR framework.';
+        }
+
+        $improvements[] = $lang === 'id'
+            ? 'Pertajam penekanan pada peran individual Anda (gunakan "Saya memimpin/mengarsitektur" daripada generalisasi "Kami").'
+            : 'Emphasize individual ownership (use "I designed/spearheaded" rather than passive voice).';
+
+        return [
+            'transcript_length' => $wordCount,
+            'overall_rating' => $hasNumbers && $wordCount > 100 ? 'Strong (B+)' : 'Needs Metric Polish (B)',
+            'strengths' => $strengths,
+            'improvements' => $improvements,
+            'recommended_star_response' => [
+                'situation' => $lang === 'id' ? 'Sistem platform sebelumnya mengalami bottleneck latensi hingga 1.8 detik pada jam sibuk.' : 'The previous system encountered 1.8s latency spikes during peak load.',
+                'task' => $lang === 'id' ? 'Tugas saya adalah mendesain ulang arsitektur basis data dan strategi caching agar throughput meningkat.' : 'My mission was to redesign the query path and implement multi-tier caching.',
+                'action' => $lang === 'id' ? 'Saya merekayasa query keyset pagination O(1) dan mengimplementasikan cluster Redis caching terisolasi.' : 'I engineered O(1) keyset pagination and deployed an isolated Redis caching layer.',
+                'result' => $lang === 'id' ? 'Hasilnya latensi terpangkas 65% menjadi 180ms dan server mampu menampung 4x lipat concurrent user.' : 'Resulted in 65% latency reduction to 180ms, effortlessly handling 4x concurrent users.',
+            ],
+        ];
     }
 }
 

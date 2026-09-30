@@ -44,7 +44,7 @@ export default function HeroIsland({ headline, subheadline, cta_text, cta_link }
 
         {/* Subheadline */}
         <p className="text-sm sm:text-lg md:text-xl text-zinc-600 dark:text-zinc-400 font-sans max-w-3xl leading-relaxed mb-10">
-          Ubah visi bisnis Anda menjadi <strong>Product Requirements Document (PRD)</strong> lengkap, skema basis data <strong>ERD PostgreSQL Strict ULID</strong>, alur kerja bertahap, dan penguncian kontrak kerja sama dalam hitungan menit.
+          Ubah visi bisnis Anda menjadi <strong>Product Requirements Document (PRD)</strong> lengkap, skema basis data <strong>ERD Arsitektur Terdistribusi</strong>, alur kerja bertahap, dan penguncian kontrak kerja sama dalam hitungan menit.
         </p>
 
         {/* INTERACTIVE DISCOVERY SIMULATOR (HIGH RETENTION WIDGET) */}
@@ -110,19 +110,19 @@ export default function HeroIsland({ headline, subheadline, cta_text, cta_link }
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-zinc-200 dark:border-zinc-800 pt-8 text-xs font-mono">
           <div className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none">
             <span className="text-zinc-400 block text-[10px] uppercase">ARSITEKTUR CORE</span>
-            <span className="font-bold text-zinc-900 dark:text-white text-sm">Laravel 13 Monolith</span>
+            <span className="font-bold text-zinc-900 dark:text-white text-sm">High-Availability Monolith</span>
           </div>
           <div className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none">
-            <span className="text-zinc-400 block text-[10px] uppercase">STANDAR DATABASE</span>
-            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">PostgreSQL Strict ULID</span>
+            <span className="text-zinc-400 block text-[10px] uppercase">STANDAR BASIS DATA</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">Distributed ULID Engine</span>
           </div>
           <div className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none">
-            <span className="text-zinc-400 block text-[10px] uppercase">ALGORITMA PAGINASI</span>
-            <span className="font-bold text-zinc-900 dark:text-white text-sm">O(1) Keystone Cursor</span>
+            <span className="text-zinc-400 block text-[10px] uppercase">OPTIMASI QUERY</span>
+            <span className="font-bold text-zinc-900 dark:text-white text-sm">Sub-millisecond Keyset</span>
           </div>
           <div className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none">
             <span className="text-zinc-400 block text-[10px] uppercase">INFRASTRUKTUR</span>
-            <span className="font-bold text-zinc-900 dark:text-white text-sm">Dedicated Docker VPS</span>
+            <span className="font-bold text-zinc-900 dark:text-white text-sm">Dedicated Cloud VPS</span>
           </div>
         </div>
 

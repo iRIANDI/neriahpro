@@ -21,7 +21,7 @@
                     MIDTRANS COMPLIANCE READY
                 </span>
                 <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; font-weight: 700; color: #a1a1aa; background: #27272a; padding: 4px 10px; text-transform: uppercase;">
-                    POSTGRESQL STRICT ULID
+                    DISTRIBUTED ULID ARCHITECTURE
                 </span>
             </div>
         </div>

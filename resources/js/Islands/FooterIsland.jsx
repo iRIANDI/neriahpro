@@ -68,19 +68,19 @@ export default function FooterIsland({ settings, whatsappNumber = '628123456789'
             <ul className="space-y-2.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>Laravel 13 Monolith</span>
+                <span>Enterprise Monolith</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>PostgreSQL Strict ULID</span>
+                <span>Distributed Database</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>O(1) Keystone Cursor</span>
+                <span>Optimized Keyset Engine</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>Dedicated Nixpacks VPS</span>
+                <span>Isolated Dedicated VPS</span>
               </li>
             </ul>
           </div>
@@ -105,7 +105,7 @@ export default function FooterIsland({ settings, whatsappNumber = '628123456789'
                 className="inline-flex items-center gap-2 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-500 text-zinc-700 dark:text-zinc-300 px-3 py-2 rounded-none transition w-full justify-center"
               >
                 <Terminal className="w-3.5 h-3.5" />
-                <span>Portal Admin</span>
+                <span>Portal Akses</span>
               </a>
             </div>
           </div>
@@ -116,8 +116,8 @@ export default function FooterIsland({ settings, whatsappNumber = '628123456789'
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-500 dark:text-zinc-400">
           <p>&copy; {currentYear} NERIAH PRO. Seluruh hak cipta dilindungi undang-undang.</p>
           <div className="flex items-center gap-6">
-            <span className="text-zinc-400 dark:text-zinc-500">POSTGRESQL STRICT ULID // ZERO DEPENDENCY LOCK</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold uppercase">SYSTEM ARMED</span>
+            <span className="text-zinc-400 dark:text-zinc-500">SECURE CLOUD PLATFORM // ENTERPRISE DATA INTEGRITY</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold uppercase">SECURED</span>
           </div>
         </div>
 

@@ -23,7 +23,8 @@ class AdminLoginAndNotificationTest extends TestCase
         $response->assertSee('Scope Lock OS');
         $response->assertSee('Vision Blueprint');
         $response->assertSee('CV Pro Studio');
-        $response->assertSee('yoseph.iriandi.tambunan@gmail.com');
+        $response->assertDontSee('yoseph.iriandi.tambunan@gmail.com');
+        $response->assertDontSee('PostgreSQL 16');
         $response->assertSee('reviewer.midtrans@neriahpro.com');
     }
 

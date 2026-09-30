@@ -461,6 +461,48 @@ class CvProApiController extends Controller
             'quota' => $updatedQuota,
         ]);
     }
+
+    /**
+     * Generate branded Social Media Promo Card content and announcement captions.
+     */
+    public function generateSosmed(Request $request): JsonResponse
+    {
+        $content = $request->input('content', []);
+        $topic = $request->input('topic', 'OpenToWork');
+        $customPrompt = $request->input('custom_prompt', '');
+        $lang = $request->input('lang', 'id');
+
+        $result = CvAiService::generateSosmedPromo($content, $topic, $customPrompt, $lang);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * Analyze an interview or recruiter call transcript and provide structured STAR coaching.
+     */
+    public function analyzeTranscript(Request $request): JsonResponse
+    {
+        $transcript = $request->input('transcript', '');
+        $content = $request->input('content', []);
+        $lang = $request->input('lang', 'id');
+
+        if (empty(trim($transcript))) {
+            return response()->json([
+                'success' => false,
+                'message' => $lang === 'id' ? 'Teks transkrip tidak boleh kosong.' : 'Transcript text cannot be empty.',
+            ], 422);
+        }
+
+        $result = CvAiService::analyzeTranscript($transcript, $content, $lang);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
 }
 
 

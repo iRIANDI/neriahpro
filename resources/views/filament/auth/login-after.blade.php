@@ -15,64 +15,26 @@
             </span>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.5rem;">
-            <!-- Super Admin Button -->
-            <button
-                type="button"
-                onclick="fillAdminCredentials('yoseph.iriandi.tambunan@gmail.com', '#T4mbun4n#')"
-                style="display: flex; flex-direction: column; text-align: left; padding: 0.5rem 0.625rem; border-radius: 0.5rem; background: #ffffff; border: 1px solid rgba(228, 228, 231, 0.9); cursor: pointer; transition: all 0.2s;"
-                class="dark:bg-zinc-950 dark:border-zinc-800 hover:border-amber-500"
-            >
-                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                    <span style="font-size: 11px; font-weight: 700; color: #18181b;" class="dark:text-white">
-                        👑 Super Admin
-                    </span>
-                    <span style="font-size: 9px; font-family: monospace; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: #f4f4f5; color: #52525b;" class="dark:bg-zinc-800 dark:text-zinc-300">
-                        FILL
-                    </span>
-                </div>
-                <span style="font-size: 10px; font-family: monospace; color: #71717a; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;" class="dark:text-zinc-400">
-                    yoseph.iriandi.tambunan@gmail.com
-                </span>
-            </button>
-
-            <!-- QA Reviewer Button -->
+        <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem;">
+            <!-- QA Reviewer Button for Midtrans Evaluator -->
             <button
                 type="button"
                 onclick="fillAdminCredentials('reviewer.midtrans@neriahpro.com', 'MidtransDemo2026#')"
-                style="display: flex; flex-direction: column; text-align: left; padding: 0.5rem 0.625rem; border-radius: 0.5rem; background: #ffffff; border: 1px solid rgba(228, 228, 231, 0.9); cursor: pointer; transition: all 0.2s;"
+                style="display: flex; flex-direction: column; text-align: left; padding: 0.625rem 0.75rem; border-radius: 0.5rem; background: #ffffff; border: 1px solid rgba(228, 228, 231, 0.9); cursor: pointer; transition: all 0.2s;"
                 class="dark:bg-zinc-950 dark:border-zinc-800 hover:border-emerald-500"
             >
                 <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                     <span style="font-size: 11px; font-weight: 700; color: #18181b;" class="dark:text-white">
-                        🛡️ QA Reviewer
+                        🛡️ QA Reviewer (Midtrans Compliance)
                     </span>
-                    <span style="font-size: 9px; font-family: monospace; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: #f4f4f5; color: #52525b;" class="dark:bg-zinc-800 dark:text-zinc-300">
-                        FILL
+                    <span style="font-size: 9px; font-family: monospace; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: #10b981; color: #000000; font-weight: 700;">
+                        1-CLICK LOGIN
                     </span>
                 </div>
                 <span style="font-size: 10px; font-family: monospace; color: #71717a; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;" class="dark:text-zinc-400">
                     reviewer.midtrans@neriahpro.com
                 </span>
             </button>
-        </div>
-    </div>
-
-    <!-- System Telemetry & Mission Badges -->
-    <div style="padding: 0.625rem 0.75rem; border-radius: 0.75rem; background: #18181b; color: #d4d4d8; border: 1px solid #27272a; font-family: monospace; font-size: 10px; text-align: left;">
-        <div style="display: flex; align-items: center; justify-content: space-between; color: #a1a1aa; border-bottom: 1px solid #27272a; padding-bottom: 0.375rem; margin-bottom: 0.375rem;">
-            <span style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #f4f4f5;">System Telemetry</span>
-            <span style="color: #34d399; font-weight: 600; display: inline-flex; align-items: center; gap: 0.375rem;">
-                <span style="width: 6px; height: 6px; border-radius: 9999px; background: #34d399; display: inline-block;"></span>
-                ONLINE
-            </span>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.25rem 0.5rem; color: #a1a1aa;">
-            <div>DB: <strong style="color: #f4f4f5;">PostgreSQL 16 ULID</strong></div>
-            <div>Cursor: <strong style="color: #34d399;">Keyset O(1)</strong></div>
-            <div>Shield: <strong style="color: #f4f4f5;">AI Honeypot</strong></div>
-            <div>Stack: <strong style="color: #f4f4f5;">Laravel 13 &bull; Filament 5</strong></div>
         </div>
     </div>
 

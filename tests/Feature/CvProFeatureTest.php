@@ -370,6 +370,67 @@ class CvProFeatureTest extends TestCase
         $this->assertStringContainsString('Lead Systems Architect', $html);
         $this->assertStringContainsString('<!DOCTYPE html>', $html);
     }
+
+    public function test_sosmed_promo_generator(): void
+    {
+        $response = $this->postJson('/api/cv-pro/sosmed/generate', [
+            'content' => [
+                'personal_info' => [
+                    'name' => 'Alex Pratama',
+                    'title' => 'Lead Systems Architect',
+                ],
+                'skills' => ['Laravel 13', 'Distributed Architecture', 'React 19'],
+            ],
+            'topic' => 'OpenToWork',
+            'lang' => 'id',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'card_title',
+                    'card_role',
+                    'card_headline',
+                    'skills_summary',
+                    'badge',
+                    'caption',
+                ],
+            ]);
+
+        $this->assertEquals('Alex Pratama', $response->json('data.card_title'));
+        $this->assertStringContainsString('#OpenToWork', $response->json('data.caption'));
+    }
+
+    public function test_interview_transcript_analyzer(): void
+    {
+        $response = $this->postJson('/api/cv-pro/transcript/analyze', [
+            'transcript' => 'Pewawancara: Bagaimana Anda memimpin tim saat downtime? Jawaban: Saya memimpin 8 orang engineer, merekayasa query keyset, dan memangkas latency hingga 65%.',
+            'content' => [
+                'personal_info' => ['name' => 'Alex Pratama'],
+            ],
+            'lang' => 'id',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'transcript_length',
+                    'overall_rating',
+                    'strengths',
+                    'improvements',
+                    'recommended_star_response' => [
+                        'situation',
+                        'task',
+                        'action',
+                        'result',
+                    ],
+                ],
+            ]);
+    }
 }
 
 

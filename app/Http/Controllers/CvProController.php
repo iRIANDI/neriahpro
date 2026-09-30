@@ -67,7 +67,7 @@ class CvProController extends Controller
             ],
             'skills' => [
                 'Laravel 13 & PHP 8.4',
-                'PostgreSQL Strict ULID',
+                'Distributed Database Systems',
                 'React 19 & Next.js',
                 'Docker & Nixpacks CI/CD',
                 'Livewire 4 & Flux UI',
@@ -86,7 +86,7 @@ class CvProController extends Controller
                 ],
                 [
                     'id' => 2,
-                    'name' => 'PostgreSQL High-Performance Database Tuning',
+                    'name' => 'High-Performance Database Tuning & Optimization',
                     'issuer' => 'EnterpriseDB',
                     'year' => '2022',
                 ],
@@ -96,9 +96,28 @@ class CvProController extends Controller
                     'id' => 1,
                     'name' => 'Project OS & PRD Generator Platform',
                     'role' => 'Principal Architect',
-                    'description' => 'Platform sintesis otomatis Product Requirements Document (PRD) dan skema ERD PostgreSQL berbasis LLM AI.',
+                    'description' => 'Platform sintesis otomatis Product Requirements Document (PRD) dan skema ERD arsitektur modern berbasis AI.',
                     'link' => 'https://neriahpro.com/blueprint',
                 ],
+            ],
+            'references' => [
+                [
+                    'id' => 1,
+                    'name' => 'Dr. Hendra Gunawan, M.T.',
+                    'title' => 'Chief Technology Officer (CTO)',
+                    'company' => 'Neriah Pro Tech Hub',
+                    'email' => 'hendra.gunawan@neriahpro.com',
+                    'phone' => '+62 811-9876-5432',
+                    'note' => 'Atasan langsung selama 3 tahun dalam proyek pengembangan sistem enterprise skala nasional.',
+                ],
+            ],
+            'section_order' => [
+                'experiences',
+                'education',
+                'skills',
+                'projects',
+                'certifications',
+                'references',
             ],
         ];
 

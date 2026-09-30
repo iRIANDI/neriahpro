@@ -91,7 +91,7 @@ class CvProDemoDataSeeder extends Seeder
             ],
             'skills' => [
                 'Laravel 13 & PHP 8.4',
-                'PostgreSQL Strict ULID',
+                'Distributed Database Systems',
                 'React 19 & Next.js',
                 'Docker & Nixpacks CI/CD',
                 'Livewire 4 & Flux UI',

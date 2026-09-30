@@ -84,7 +84,7 @@
                                     1. Vision Blueprint & Ultimate PRD
                                 </div>
                                 <div style="font-size: 0.75rem; color: #a1a1aa; line-height: 1.4; margin-top: 0.125rem;">
-                                    Sintesis PRD otomatis, diagram arsitektur ERD, skema PostgreSQL 16 Strict ULID, dan pagination keyset O(1).
+                                    Sintesis PRD otomatis, diagram arsitektur sistem, skema basis data terdistribusi, dan performa tinggi skala enterprise.
                                 </div>
                             </div>
                         </div>
@@ -125,16 +125,14 @@
                     </div>
                 </div>
 
-                <!-- Bottom Telemetry & Motto -->
-                <div style="padding-top: 1rem; border-top: 1px solid #27272a;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; font-family: monospace; font-size: 10px; color: #a1a1aa; margin-bottom: 0.75rem;">
-                        <div>PostgreSQL 16: <strong style="color: #34d399;">STRICT ULID</strong></div>
-                        <div>Pagination: <strong style="color: #34d399;">O(1) KEYSET</strong></div>
-                        <div>Defense: <strong style="color: #34d399;">AI HONEYPOT</strong></div>
-                        <div>Framework: <strong style="color: #f4f4f5;">LARAVEL 13</strong></div>
+                <!-- Bottom Security Note & Motto -->
+                <div style="padding-top: 1rem; border-top: 1px solid #27272a; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-family: monospace; font-size: 10px; color: #10b981;">
+                        <span style="width: 6px; height: 6px; border-radius: 9999px; background: #10b981; display: inline-block;"></span>
+                        256-BIT ENCRYPTION &bull; RBAC AUDITED
                     </div>
                     <div style="font-size: 11px; font-style: italic; color: #71717a; font-family: monospace;">
-                        &ldquo;Determinism over ambiguity. Scalability by design.&rdquo; &mdash; Neriah Pro Engineering
+                        &ldquo;Determinism over ambiguity. Scalability by design.&rdquo;
                     </div>
                 </div>
             </div>

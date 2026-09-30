@@ -33,10 +33,6 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogoHeight('2.25rem')
             ->login(\App\Filament\Pages\Auth\Login::class)
             ->renderHook(
-                \Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
-                fn () => view('filament.auth.login-before')
-            )
-            ->renderHook(
                 \Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
                 fn () => view('filament.auth.login-after')
             )

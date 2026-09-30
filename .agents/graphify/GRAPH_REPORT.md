@@ -113,7 +113,8 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/document/{document}/sign`: Livewire signing page (`DocumentSignature`).
 - `/lang/{locale}`: Switcher bahasa (`id` / `en`) dengan persistensi session dan cookie.
 - `/admin`: Panel admin Filament v5 dengan database notifications (PostgreSQL `jsonb` schema).
-- `/admin/login`: Customized Enterprise Login Portal (`App\Filament\Pages\Auth\Login`) dengan Vision & Mission Pillars, 1-Click Demo Credential Assistant, dan System Telemetry.
+- `/admin/login`: Customized Enterprise Login Portal (`App\Filament\Pages\Auth\Login`) dengan Vision & Mission Pillars, 1-Click Demo Credential Assistant, dan System Telemetry (Split-Screen Desktop & Responsive Portrait).
+- `/admin/settings`: Pengaturan Global (`ManageSettings.php`) dengan tab General, Midtrans, Domain Expiration, AI Integrations, dan **Frontend Feature Flags** (toggle saklar on/off untuk CV Pro, Job Hub, Keuangan Pro, Mock Interview, LinkedIn Suite, Vision Blueprint, dsb).
 - `/{slug?}`: Fallback dinamis CMS page (`PageController::show`).
 - `api/vision-blueprint`: Endpoint POST penyimpanan form Project OS dengan Honeypot anti-spam (`throttle:30,1`).
 

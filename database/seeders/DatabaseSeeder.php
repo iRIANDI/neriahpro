@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             CmsSeeder::class,
             LandingPageSeeder::class,
             WorkflowEndToEndSeeder::class,
+            CvProPlanSeeder::class,
+            CvProDemoDataSeeder::class,
         ]);
     }
 }

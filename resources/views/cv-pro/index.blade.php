@@ -58,7 +58,7 @@
     @react('GlobalNavigationIsland', ['settings' => $globalSettings['main_navigation']->value ?? null])
 
     <main class="flex-1 pt-14">
-        @react('CvProStudioIsland', ['initialData' => $initialData])
+        @react('CvProStudioIsland', ['initialData' => $initialData, 'featureFlags' => $featureFlags])
     </main>
 
     <!-- Global Footer -->

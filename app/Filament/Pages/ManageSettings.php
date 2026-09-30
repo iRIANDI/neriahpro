@@ -13,6 +13,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\Toggle;
 use App\Models\CmsGlobalSetting;
 use Filament\Notifications\Notification;
 use Filament\Actions\Action;
@@ -72,6 +73,64 @@ class ManageSettings extends Page implements HasForms
                                     ->label('Social Media Links')
                                     ->keyLabel('Platform (e.g. facebook, instagram)')
                                     ->valueLabel('URL'),
+                            ]),
+
+                        Tabs\Tab::make('Frontend Feature Flags')
+                            ->icon('heroicon-m-bolt')
+                            ->badge('Live Controls')
+                            ->schema([
+                                Section::make('Modul CV Pro Enterprise Studio')
+                                    ->description('Aktifkan atau sembunyikan fitur dan tab di antarmuka publik CV Pro secara instan.')
+                                    ->schema([
+                                        Toggle::make('feature_enable_cv_pro')
+                                            ->label('Aktifkan Modul CV Pro Studio')
+                                            ->helperText('Jika dinonaktifkan, akses publik ke /cv-pro disembunyikan.')
+                                            ->default(true),
+
+                                        Toggle::make('feature_enable_cv_pricing')
+                                            ->label('Tampilkan Paket Harga & Modal Top-Up Kuota')
+                                            ->helperText('Menampilkan tombol "Upgrade / Top-Up" dan modal paket di CV Pro.')
+                                            ->default(true),
+
+                                        Toggle::make('feature_enable_cv_job_hub')
+                                            ->label('Tampilkan Tab Job Hub (Kanban Board)')
+                                            ->helperText('Pelacakan tahapan lamaran kerja (Wishlist, Applied, Interview, Offer).')
+                                            ->default(true),
+
+                                        Toggle::make('feature_enable_cv_keuangan')
+                                            ->label('Tampilkan Tab Keuangan Pro')
+                                            ->helperText('Kalkulator gaji bersih, budget persiapan karir, dan target tabungan.')
+                                            ->default(true),
+
+                                        Toggle::make('feature_enable_cv_mock_interview')
+                                            ->label('Tampilkan Fitur Mock Interview AI')
+                                            ->helperText('Simulasi wawancara kerja interaktif dengan rekaman suara dan evaluasi STAR.')
+                                            ->default(true),
+
+                                        Toggle::make('feature_enable_cv_linkedin_suite')
+                                            ->label('Tampilkan Generator LinkedIn Personal Branding')
+                                            ->helperText('Headline, About summary, dan konten postingan LinkedIn teroptimasi.')
+                                            ->default(true),
+                                    ])->columns(2),
+
+                                Section::make('Modul Project OS & Digital Contracts')
+                                    ->description('Kendali visibilitas modul arsitektur proyek dan onboarding klien.')
+                                    ->schema([
+                                        Toggle::make('feature_enable_vision_blueprint')
+                                            ->label('Aktifkan Modul Vision Blueprint PRD')
+                                            ->helperText('Akses publik kuesioner Project OS di /blueprint.')
+                                            ->default(true),
+
+                                        Toggle::make('feature_enable_client_onboarding')
+                                            ->label('Aktifkan Form Lead Onboarding Klien')
+                                            ->helperText('Form intake cepat onboarding klien di landing page.')
+                                            ->default(true),
+
+                                        Toggle::make('feature_enable_ai_threat_shield')
+                                            ->label('Aktifkan AI Threat Shield Protection')
+                                            ->helperText('Proteksi serangan otonom AI, deteksi payload RCE, dan isolasi bot honeypot.')
+                                            ->default(true),
+                                    ])->columns(3),
                             ]),
 
                         Tabs\Tab::make('Navigation & Footer')

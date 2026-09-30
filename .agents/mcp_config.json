@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "markitdown": {
+      "command": "C:\\Users\\Iriandi\\.local\\bin\\markitdown-mcp.exe",
+      "args": []
+    }
+  }
+}

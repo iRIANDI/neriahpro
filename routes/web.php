@@ -45,6 +45,7 @@ Route::prefix('api/cv-pro')->group(function () {
     Route::post('/interview/generate', [\App\Http\Controllers\Api\CvProApiController::class, 'generateInterview'])->middleware('throttle:30,1');
     Route::post('/interview/evaluate', [\App\Http\Controllers\Api\CvProApiController::class, 'evaluateAnswer'])->middleware('throttle:30,1');
     Route::post('/outreach/generate', [\App\Http\Controllers\Api\CvProApiController::class, 'generateOutreach'])->middleware('throttle:30,1');
+    Route::post('/upload-cv', [\App\Http\Controllers\Api\CvProApiController::class, 'uploadCv'])->middleware('throttle:30,1');
 });
 
 // Fallback dynamic route for CMS pages (Must be at the very bottom)

@@ -5,8 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $page->title[app()->getLocale()] ?? $page->title['en'] ?? (is_string($page->title) ? $page->title : 'Neriah Pro // Digital Services Hub') }}</title>
-    <meta name="description" content="{{ $page->meta_description[app()->getLocale()] ?? $page->meta_description['en'] ?? (is_string($page->meta_description) ? $page->meta_description : 'Pusat arsitektur dan rekayasa perangkat lunak berskala tinggi.') }}">
+    @php
+        $pageTitle = $page->title[app()->getLocale()] ?? $page->title['en'] ?? (is_string($page->title) ? $page->title : 'Neriah Pro // Digital Services Hub');
+        $pageDesc = $page->meta_description[app()->getLocale()] ?? $page->meta_description['en'] ?? (is_string($page->meta_description) ? $page->meta_description : 'Pusat arsitektur dan rekayasa perangkat lunak berskala tinggi.');
+        $currentUrl = url()->current();
+    @endphp
+
+    <title>{{ $pageTitle }}</title>
+    <meta name="description" content="{{ $pageDesc }}">
+    <link rel="canonical" href="{{ $currentUrl }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ $currentUrl }}">
+    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:description" content="{{ $pageDesc }}">
+    <meta property="og:image" content="{{ asset('favicon.ico') }}">
+    <meta property="og:site_name" content="Neriah Pro">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:description" content="{{ $pageDesc }}">
+    <meta name="twitter:image" content="{{ asset('favicon.ico') }}">
+
+    <!-- Schema.org JSON-LD Structured Data -->
+    {!! \App\Services\Seo\SchemaOrgService::render([
+        \App\Services\Seo\SchemaOrgService::organization(),
+        \App\Services\Seo\SchemaOrgService::webSite(),
+        \App\Services\Seo\SchemaOrgService::breadcrumbs([
+            'Home' => url('/'),
+            $pageTitle => $currentUrl,
+        ])
+    ]) !!}
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">

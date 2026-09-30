@@ -62,6 +62,7 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+            'permission' => 0777,
             'replace_placeholders' => true,
         ],
 
@@ -69,7 +70,17 @@ return [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+            'permission' => 0777,
             'max_files' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/security.log'),
+            'level' => 'warning',
+            'permission' => 0777,
+            'max_files' => 30,
             'replace_placeholders' => true,
         ],
 

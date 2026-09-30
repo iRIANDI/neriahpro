@@ -7,6 +7,24 @@
 
     <title>Ultimate Tech Proposal & PRD Blueprint - Neriah Pro Hub</title>
     <meta name="description" content="Kuesioner penyusunan spesifikasi teknis dan blueprint arsitektur aplikasi terpusat untuk bisnis Anda.">
+    <link rel="canonical" href="{{ url('/blueprint') }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/blueprint') }}">
+    <meta property="og:title" content="Ultimate Tech Proposal & PRD Blueprint - Neriah Pro">
+    <meta property="og:description" content="Perumusan arsitektur perangkat lunak, PRD ultimate, dan diagram ERD komprehensif.">
+    <meta property="og:image" content="{{ asset('favicon.ico') }}">
+
+    <!-- Schema.org JSON-LD Structured Data -->
+    {!! \App\Services\Seo\SchemaOrgService::render([
+        \App\Services\Seo\SchemaOrgService::organization(),
+        \App\Services\Seo\SchemaOrgService::projectOsApplication(),
+        \App\Services\Seo\SchemaOrgService::breadcrumbs([
+            'Home' => url('/'),
+            'Project Blueprint' => url('/blueprint'),
+        ])
+    ]) !!}
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">

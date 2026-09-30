@@ -63,18 +63,20 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 | `Transaction` | [Transaction.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Transaction.php) | ULID | `HasUlids`, Midtrans Snap gateway integration, Settlement audit | `user` (belongsTo), `product` (belongsTo) |
 | `LegalPolicy` | [LegalPolicy.php](file:///c:/xampp/htdocs/neriahpro/app/Models/LegalPolicy.php) | ULID | `HasUlids`, Multilingual legal policies (`title`, `content` array) | - |
 | `ClientOnboarding` | [ClientOnboarding.php](file:///c:/xampp/htdocs/neriahpro/app/Models/ClientOnboarding.php) | ULID | `HasUlids`, Rapid lead intake & onboarding payload | - |
+| `SecurityThreatLog` | [SecurityThreatLog.php](file:///c:/xampp/htdocs/neriahpro/app/Models/SecurityThreatLog.php) | ULID | `HasUlids`, RCE/Deserialization interception, Forensic threat log, IP auto-quarantine | - |
 | `User` | [User.php](file:///c:/xampp/htdocs/neriahpro/app/Models/User.php) | ULID | `HasUlids`, `HasRoles`, Spatie Shield RBAC, FilamentUser access control | `transactions` (hasMany), `resumes` (hasMany) |
 | `Role` | [Role.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Role.php) | Default | Spatie Permission Role entity | `permissions`, `users` |
 | `Permission` | [Permission.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Permission.php) | Default | Spatie Permission Permission entity | `roles`, `users` |
 
 ---
 
-## 3. Katalog Filament v5 Resources (9 Resources)
+## 3. Katalog Filament v5 Resources (10 Resources)
 
 | Resource | Navigation Group | Fitur Utama | Schema / Tables |
 | :--- | :--- | :--- | :--- |
-| `ResumeResource` | Career & SaaS | Resume management, ATS score breakdown, Skills tags, Live view link | `ResumeForm`, `ResumesTable` |
-| `InterviewSessionResource` | Career & SaaS | Mock interview recordings, STAR analysis, Confidence score, Transcript audit | `InterviewSessionsTable`, Infolist |
+| `ResumeResource` | Career & CV Pro | Resume management, ATS score breakdown, Skills tags, Live view link | `ResumeForm`, `ResumesTable` |
+| `InterviewSessionResource` | Career & CV Pro | Mock interview recordings, STAR analysis, Confidence score, Transcript audit | `InterviewSessionsTable`, Infolist |
+| `SecurityThreatResource` | System & Security | AI-Shield threat interception dashboard, RCE monitoring, IP quarantine & unblock | `SecurityThreatsTable`, Infolist, `SecurityThreatStatsWidget` |
 | `VisionBlueprintResource` | Project Management | Discovery questionnaire, Sintesis PRD, Publikasi URL publik, Ikat Kontrak Digital | `VisionBlueprintForm`, `VisionBlueprintsTable` |
 | `DomainHostingAssetResource` | Project Management | Pencatatan domain/hosting, Expiration badge, Auto-renew, Widget analitik, Pengingat harian | `DomainHostingAssetForm`, `DomainHostingAssetsTable`, `DomainHostingStatsWidget` |
 | `DocumentResource` | Contracts & Legal | Digital contract viewer, Scope lock status, Midtrans order ID, Signature pad | `DocumentForm`, `DocumentsTable` |
@@ -113,5 +115,9 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
   Mesin pengolah ide kuesioner klien menjadi Ultimate PRD: menyusun ringkasan eksekutif, aktor sistem (RBAC), fitur MVP Fase 1, roadmap Fase 2, alur kerja (workflow), dan skema basis data ERD PostgreSQL Strict ULID.
 - **`App\Console\Commands\CheckExpiringAssetsCommand`** (`assets:check-expirations`):
   Memindai aset domain dan hosting yang mendekati batas tenggat (<= 30 hari) dan mengirimkan notifikasi peringatan database ke seluruh superadmin. Terjadwal di `routes/console.php` pukul 08:00 WIB harian.
+- **`App\Http\Middleware\AiThreatShield`**:
+  Internal firewall pendeteksi anomali serangan otonom AI & RCE: mencegat system calls (`exec`, `shell_exec`, `eval`), unsafe object deserialization (`__construct`, `__wakeup`), eksekusi Python dataset loaders, dan otomatis mengisolasi IP penyerang ke database & cache blacklist.
+- **`App\Jobs\ProcessSecureDataset`**:
+  Sandboxed job pipeline untuk ingesti data (CSV, JSON, XML): validasi MIME type absolut bebas spoofing, pencegahan XXE via penonaktifan external entity loader, serta netralisasi CSV formula injection.
 - **`App\Http\Middleware\SetAppLocale`**:
   Mendeteksi dan menetapkan bahasa aktif (`id` / `en`) secara transparan dari query string, sesi, atau cookie `neriah_locale`.

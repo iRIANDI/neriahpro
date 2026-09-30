@@ -189,4 +189,56 @@ class CvProApiController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Upload and parse CV file using Microsoft MarkItDown replica pipeline
+     * Supports: PDF, DOCX, TXT, MD, PNG, JPG, JPEG, WEBP, CSV
+     */
+    public function uploadCv(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'cv_file' => 'required|file|max:20480', // 20MB max
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File tidak valid. Maksimal 20MB.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $file = $request->file('cv_file');
+            
+            // 1. Convert file to Markdown via Microsoft MarkItDown replica service
+            $markItDownService = new \App\Services\MarkItDown\MarkItDownService();
+            $conversion = $markItDownService->convert($file);
+
+            // 2. Parse Markdown into structured CV data
+            $cvParser = new \App\Services\MarkItDown\CvMarkdownParser();
+            $parsedCv = $cvParser->parse($conversion['markdown']);
+
+            // 3. Pre-audit ATS score on the newly parsed data
+            $atsAudit = CvAiService::lintResume($parsedCv, $request->input('lang', 'id'));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Berkas CV berhasil dipindai dan dikonversi dengan Microsoft MarkItDown!',
+                'data' => [
+                    'format' => $conversion['format'],
+                    'engine' => $conversion['engine'],
+                    'metadata' => $conversion['metadata'],
+                    'markdown' => $conversion['markdown'],
+                    'parsed_content' => $parsedCv,
+                    'ats_audit' => $atsAudit,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses berkas CV: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

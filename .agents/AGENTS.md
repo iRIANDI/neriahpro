@@ -1,6 +1,13 @@
-# Ponytail & Graphify Token Conservation Rules
-- **Ponytail Decision Ladder**: Always follow [.agents/PONYTAIL.md](file:///c:/xampp/htdocs/neriahpro/.agents/PONYTAIL.md) (Rung 1: Framework Native First -> Rung 2: Reuse Existing Codebase -> Rung 3: Configuration Over Code -> Rung 4: Surgical & Minimalist Diff) to cut token waste by >50%.
-- **Graphify Architectural Knowledge Graph**: Always check [.agents/graphify/GRAPH_REPORT.md](file:///c:/xampp/htdocs/neriahpro/.agents/graphify/GRAPH_REPORT.md) before performing blind file exploration. Use it to immediately locate existing models, resources, controllers, and services.
+# Mandatory Protocol: Strict @Ponytail & @graphify Usage
+- ⚠️ **MANDATORY ON EVERY TASK & TURN**: You MUST always use and adhere strictly to `@Ponytail` and `@graphify`. Never perform blind codebase exploration or duplicate abstractions.
+- **Ponytail Decision Ladder ([.agents/PONYTAIL.md](file:///c:/xampp/htdocs/neriahpro/.agents/PONYTAIL.md))**:
+  1. *Rung 1 (Framework Native First)*: Leverage built-in Laravel 13, Filament v5, and Livewire 4 tools before adding any code.
+  2. *Rung 2 (Reuse Existing Codebase)*: Check existing services, traits, and components before creating new ones.
+  3. *Rung 3 (Configuration Over Code)*: Use Laravel configs, environment variables, and database settings.
+  4. *Rung 4 (Surgical & Minimalist Diff)*: Apply precise, targeted diffs to conserve tokens and preserve stability.
+- **Graphify Architectural Knowledge Graph ([.agents/graphify/GRAPH_REPORT.md](file:///c:/xampp/htdocs/neriahpro/.agents/graphify/GRAPH_REPORT.md))**:
+  - Always consult `GRAPH_REPORT.md` before querying files. Locate models, resources, tables, controllers, and services instantly without multi-file scanning.
+  - Keep `GRAPH_REPORT.md` synchronized whenever new models, resources, or endpoints are introduced.
 
 # Git Sync Rule
 Always automatically commit and push any changes to GitHub after completing a task.

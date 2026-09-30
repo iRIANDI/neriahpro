@@ -25,7 +25,11 @@ import {
   Check, 
   ChevronRight,
   TrendingUp,
-  Volume2
+  Volume2,
+  UploadCloud,
+  FileUp,
+  Scan,
+  X
 } from 'lucide-react';
 
 export default function CvProStudioIsland({ initialData }) {
@@ -67,6 +71,14 @@ export default function CvProStudioIsland({ initialData }) {
   const [generatedLetter, setGeneratedLetter] = useState('');
   const [generatingOutreach, setGeneratingOutreach] = useState(false);
   const [copyNotification, setCopyNotification] = useState(false);
+
+  // Microsoft MarkItDown Upload & Scan State
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState('');
+  const [markitdownResult, setMarkitdownResult] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Speech Recognition Ref
   const recognitionRef = useRef(null);
@@ -307,6 +319,60 @@ export default function CvProStudioIsland({ initialData }) {
     setTimeout(() => setCopyNotification(false), 2000);
   };
 
+  // Microsoft MarkItDown Document & Scan Processor
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError('');
+    setUploadSuccess('');
+    setMarkitdownResult(null);
+
+    const formData = new FormData();
+    formData.append('cv_file', file);
+    formData.append('lang', lang);
+
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/cv-pro/upload-cv', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': csrf || '',
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setMarkitdownResult(data.data);
+        setUploadSuccess(data.message || 'File berhasil diproses dengan Microsoft MarkItDown!');
+        
+        // Auto-populate CV Studio with parsed data
+        if (data.data.parsed_content) {
+          setContent(data.data.parsed_content);
+          if (data.data.parsed_content.personal_info?.full_name) {
+            setTitle(`CV - ${data.data.parsed_content.personal_info.full_name}`);
+          }
+        }
+        if (data.data.ats_audit) {
+          setAtsScore(data.data.ats_audit.overall_score || 80);
+          setAtsAudit(data.data.ats_audit);
+        }
+      } else {
+        setUploadError(data.message || 'Gagal memproses berkas CV.');
+      }
+    } catch (err) {
+      console.error(err);
+      setUploadError('Terjadi kesalahan koneksi saat mengunggah berkas.');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   // Add work experience item
   const addExperience = () => {
     const newItem = {
@@ -415,6 +481,16 @@ export default function CvProStudioIsland({ initialData }) {
             )}
 
             <button
+              onClick={() => setUploadModalOpen(true)}
+              className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-100 border border-zinc-700 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+              title="Unggah berkas CV atau scan fisik via Microsoft MarkItDown"
+            >
+              <UploadCloud className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden sm:inline">Scan / Upload CV</span>
+              <span className="sm:hidden">Upload</span>
+            </button>
+
+            <button
               onClick={handleSaveToCloud}
               disabled={saving}
               className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50"
@@ -447,6 +523,117 @@ export default function CvProStudioIsland({ initialData }) {
           </div>
         </div>
       </div>
+
+      {/* MARKITDOWN UPLOAD & SCAN MODAL */}
+      {uploadModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
+            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded bg-indigo-600/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <Scan className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                    Microsoft MarkItDown CV Scan & Upload Engine
+                  </h3>
+                  <p className="text-[11px] text-zinc-500">
+                    Konversi dokumen PDF, DOCX, scan fisik (PNG/JPG), dan teks menjadi format Markdown terstruktur.
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setUploadModalOpen(false)}
+                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Dropzone */}
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-lg p-8 text-center cursor-pointer transition bg-zinc-50 dark:bg-zinc-950/50 flex flex-col items-center justify-center gap-3"
+              >
+                <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-inner">
+                  {uploading ? (
+                    <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <FileUp className="w-6 h-6" />
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                    {uploading ? 'Sedang Memindai dengan MarkItDown...' : 'Pilih atau Tarik Berkas CV ke Sini'}
+                  </p>
+                  <p className="text-[11px] text-zinc-500 mt-1">
+                    Mendukung PDF, Word (DOCX), Scan Fisik (PNG, JPG, WEBP), TXT, Markdown, CSV (Maks 20MB)
+                  </p>
+                </div>
+
+                <span className="inline-block px-3 py-1 bg-zinc-200 dark:bg-zinc-800 text-[10px] font-mono text-zinc-600 dark:text-zinc-400 rounded">
+                  Pipeline: MarkItDown → Structured AST → Auto-Fill Studio
+                </span>
+              </div>
+
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileUpload} 
+                accept=".pdf,.docx,.doc,.txt,.md,.png,.jpg,.jpeg,.webp,.csv" 
+                className="hidden" 
+              />
+
+              {uploadError && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
+
+              {uploadSuccess && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 shrink-0" />
+                  <span>{uploadSuccess}</span>
+                </div>
+              )}
+
+              {/* MarkItDown Extracted Preview */}
+              {markitdownResult && (
+                <div className="mt-4 border border-zinc-200 dark:border-zinc-800 rounded bg-zinc-50 dark:bg-zinc-950 p-4">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-200 dark:border-zinc-800">
+                    <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                      <Code className="w-3.5 h-3.5" />
+                      MarkItDown Engine Output ({markitdownResult.engine})
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded uppercase">
+                      {markitdownResult.format}
+                    </span>
+                  </div>
+
+                  <pre className="text-[11px] font-mono text-zinc-700 dark:text-zinc-300 max-h-48 overflow-y-auto whitespace-pre-wrap select-all bg-white dark:bg-zinc-900 p-2.5 rounded border border-zinc-200 dark:border-zinc-800">
+                    {markitdownResult.markdown}
+                  </pre>
+
+                  <div className="mt-3 flex items-center justify-between">
+                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                      ✓ Formulir CV Studio & Skor ATS telah otomatis diperbarui.
+                    </p>
+                    <button
+                      onClick={() => setUploadModalOpen(false)}
+                      className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded"
+                    >
+                      Buka di Studio
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2. MAIN CONTAINER WITH TAB PANELS */}
       <div className="max-w-7xl mx-auto px-4 mt-6">

@@ -3,7 +3,38 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $resume->title }} - {{ $content['personal_info']['name'] ?? 'Professional CV' }} // Neriah Pro</title>
+    @php
+        $fullName = $content['personal_info']['full_name'] ?? $content['personal_info']['name'] ?? 'Kandidat Profesional';
+        $headline = $content['personal_info']['headline'] ?? $resume->target_role ?? 'Professional Talent';
+        $summary = $content['personal_info']['summary'] ?? 'Curriculum Vitae Profesional Standar ATS';
+    @endphp
+
+    <title>{{ $fullName }} - {{ $headline }} // CV Pro Neriah Pro</title>
+    <meta name="description" content="{{ Str::limit($summary, 160) }}">
+    <link rel="canonical" href="{{ $resume->public_url }}">
+
+    <!-- Open Graph / Candidate Profile -->
+    <meta property="og:type" content="profile">
+    <meta property="og:url" content="{{ $resume->public_url }}">
+    <meta property="og:title" content="{{ $fullName }} - {{ $headline }}">
+    <meta property="og:description" content="{{ Str::limit($summary, 160) }}">
+    <meta property="og:site_name" content="CV Pro by Neriah Pro">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ $fullName }} - {{ $headline }}">
+    <meta name="twitter:description" content="{{ Str::limit($summary, 160) }}">
+
+    <!-- Schema.org JSON-LD Structured Data (ProfilePage & Person) -->
+    {!! \App\Services\Seo\SchemaOrgService::render([
+        \App\Services\Seo\SchemaOrgService::organization(),
+        \App\Services\Seo\SchemaOrgService::resumeProfile($resume),
+        \App\Services\Seo\SchemaOrgService::breadcrumbs([
+            'Home' => url('/'),
+            'CV Pro' => route('cv-pro.index'),
+            $fullName => $resume->public_url,
+        ])
+    ]) !!}
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

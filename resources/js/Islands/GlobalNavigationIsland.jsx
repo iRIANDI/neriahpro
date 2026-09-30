@@ -20,7 +20,11 @@ import {
 export default function GlobalNavigationIsland({ settings, featureFlags }) {
   const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
   const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
+  const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
+  const isContractEnabled = featureFlags?.enable_digital_contract !== false;
+  const isClientOnboardingEnabled = featureFlags?.enable_client_onboarding !== false;
   const isPricingEnabled = !isMidtransStrict && (featureFlags?.enable_pricing !== false) && isCvProEnabled;
+  const hasAnyService = isBlueprintEnabled || isCvProEnabled || isContractEnabled || isClientOnboardingEnabled;
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -75,10 +79,10 @@ export default function GlobalNavigationIsland({ settings, featureFlags }) {
 
   const navLinks = [
     { label: lang === 'id' ? 'Beranda' : 'Home', href: '/' },
-    { label: 'Project OS (PRD)', href: '/blueprint', highlight: true },
+    ...(isBlueprintEnabled ? [{ label: 'Project OS (PRD)', href: '/blueprint', highlight: true }] : []),
     ...(isCvProEnabled ? [{ label: lang === 'id' ? 'Studio CV Pro' : 'CV Pro Studio', href: '/cv-pro' }] : []),
     ...(isPricingEnabled ? [{ label: lang === 'id' ? 'Paket & Harga' : 'Pricing', href: '/pricing' }] : []),
-    { label: lang === 'id' ? 'Layanan HUB' : 'Service Hub', href: '/#services' },
+    ...(hasAnyService ? [{ label: lang === 'id' ? 'Layanan HUB' : 'Service Hub', href: '/#services' }] : []),
   ];
 
   return (
@@ -96,10 +100,12 @@ export default function GlobalNavigationIsland({ settings, featureFlags }) {
                 ? 'Rancang Arsitektur & Generate PRD Proyek Anda secara Otomatis dalam 60 Detik.' 
                 : 'Synthesize Project Specs, Database ERD & PRD in under 60 seconds.'}
             </span>
-            <a href="/blueprint" className="text-emerald-400 hover:text-emerald-300 font-bold underline ml-1 flex items-center gap-0.5">
-              <span>{lang === 'id' ? 'Coba Project OS' : 'Launch Project OS'}</span>
-              <ArrowRight className="w-3 h-3 inline" />
-            </a>
+            {isBlueprintEnabled && (
+              <a href="/blueprint" className="text-emerald-400 hover:text-emerald-300 font-bold underline ml-1 flex items-center gap-0.5">
+                <span>{lang === 'id' ? 'Coba Project OS' : 'Launch Project OS'}</span>
+                <ArrowRight className="w-3 h-3 inline" />
+              </a>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -161,61 +167,79 @@ export default function GlobalNavigationIsland({ settings, featureFlags }) {
               {lang === 'id' ? 'Beranda' : 'Home'}
             </a>
 
-            {/* Dropdown: Layanan HUB */}
-            <div 
-              className="relative"
-              onMouseEnter={() => setServicesDropdownOpen(true)}
-              onMouseLeave={() => setServicesDropdownOpen(false)}
-            >
-              <button className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition py-2">
-                <span>{lang === 'id' ? 'Layanan HUB' : 'Services Hub'}</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
+            {/* Dropdown: Layanan HUB (Only visible if at least one service is enabled) */}
+            {hasAnyService && (
+              <div 
+                className="relative"
+                onMouseEnter={() => setServicesDropdownOpen(true)}
+                onMouseLeave={() => setServicesDropdownOpen(false)}
+              >
+                <button className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition py-2">
+                  <span>{lang === 'id' ? 'Layanan HUB' : 'Services Hub'}</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
 
-              <AnimatePresence>
-                {servicesDropdownOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 w-72 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-xl p-3 space-y-1 text-left"
-                  >
-                    <a href="/blueprint" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="font-bold text-zinc-900 dark:text-white text-xs">Project OS (PRD)</span>
-                        <span className="px-1 py-0.2 bg-emerald-500 text-black text-[9px] font-bold">ACTIVE</span>
-                      </div>
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
-                        {lang === 'id' ? 'Generator PRD & Skema ERD Otomatis' : 'Automated PRD & ERD Schema'}
-                      </p>
-                    </a>
+                <AnimatePresence>
+                  {servicesDropdownOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 5 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full left-0 w-72 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-xl p-3 space-y-1 text-left"
+                    >
+                      {isBlueprintEnabled && (
+                        <a href="/blueprint" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="font-bold text-zinc-900 dark:text-white text-xs">Project OS (PRD)</span>
+                            <span className="px-1 py-0.2 bg-emerald-500 text-black text-[9px] font-bold">ACTIVE</span>
+                          </div>
+                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
+                            {lang === 'id' ? 'Generator PRD & Skema ERD Otomatis' : 'Automated PRD & ERD Schema'}
+                          </p>
+                        </a>
+                      )}
 
-                    {isCvProEnabled && (
-                      <a href="/cv-pro" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-bold text-zinc-900 dark:text-white text-xs">CV Generator</span>
-                          <span className="px-1 py-0.2 bg-purple-500 text-white text-[9px] font-bold">PRO STUDIO</span>
-                        </div>
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
-                          {lang === 'id' ? 'Studio CV Visual & Portofolio Klien' : 'Visual Resume & Portfolio Studio'}
-                        </p>
-                      </a>
-                    )}
+                      {isCvProEnabled && (
+                        <a href="/cv-pro" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="font-bold text-zinc-900 dark:text-white text-xs">CV Generator</span>
+                            <span className="px-1 py-0.2 bg-purple-500 text-white text-[9px] font-bold">PRO STUDIO</span>
+                          </div>
+                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
+                            {lang === 'id' ? 'Studio CV Visual & Portofolio Klien' : 'Visual Resume & Portfolio Studio'}
+                          </p>
+                        </a>
+                      )}
 
-                    <a href="#services" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="font-bold text-zinc-900 dark:text-white text-xs">Digital Contract</span>
-                        <span className="px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[9px] font-bold">E-SIGN</span>
-                      </div>
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
-                        {lang === 'id' ? 'Tanda Tangan Elektronik & Penguncian Scope' : 'Legal E-Signature & Scope Freeze'}
-                      </p>
-                    </a>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                      {isContractEnabled && (
+                        <a href="/blueprint#contract" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="font-bold text-zinc-900 dark:text-white text-xs">Digital Contract</span>
+                            <span className="px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[9px] font-bold">E-SIGN</span>
+                          </div>
+                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
+                            {lang === 'id' ? 'Tanda Tangan Elektronik & Penguncian Scope' : 'Legal E-Signature & Scope Freeze'}
+                          </p>
+                        </a>
+                      )}
+
+                      {isClientOnboardingEnabled && (
+                        <a href="/#onboarding" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="font-bold text-zinc-900 dark:text-white text-xs">Rapid Monolith</span>
+                            <span className="px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[9px] font-bold">ENTERPRISE</span>
+                          </div>
+                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
+                            {lang === 'id' ? 'Arsitektur High-Throughput & VPS Dedicated' : 'High-Throughput Architecture & VPS'}
+                          </p>
+                        </a>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             <a href="#architecture" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
               {lang === 'id' ? 'Standar Rekayasa' : 'Engineering'}
@@ -228,13 +252,23 @@ export default function GlobalNavigationIsland({ settings, featureFlags }) {
 
           {/* Action CTAs */}
           <div className="hidden sm:flex items-center gap-3">
-            <a
-              href="/blueprint"
-              className="bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black font-mono text-xs uppercase tracking-widest font-black py-2.5 px-5 rounded-none transition flex items-center gap-1.5 shadow-none"
-            >
-              <span>{lang === 'id' ? 'Mulai Blueprint' : 'Launch Blueprint'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
+            {isBlueprintEnabled ? (
+              <a
+                href="/blueprint"
+                className="bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black font-mono text-xs uppercase tracking-widest font-black py-2.5 px-5 rounded-none transition flex items-center gap-1.5 shadow-none"
+              >
+                <span>{lang === 'id' ? 'Mulai Blueprint' : 'Launch Blueprint'}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            ) : (
+              <a
+                href="#services"
+                className="bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black font-mono text-xs uppercase tracking-widest font-black py-2.5 px-5 rounded-none transition flex items-center gap-1.5 shadow-none"
+              >
+                <span>{lang === 'id' ? 'Eksplorasi Layanan' : 'Explore Services'}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -259,29 +293,52 @@ export default function GlobalNavigationIsland({ settings, featureFlags }) {
               <a href="/" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
                 Beranda
               </a>
-              <a href="/blueprint" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                Project OS (PRD Generator) &rarr;
-              </a>
+              {isBlueprintEnabled && (
+                <a href="/blueprint" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
+                  Project OS (PRD Generator) &rarr;
+                </a>
+              )}
               {isCvProEnabled && (
                 <a href="/cv-pro" className="block py-2 text-purple-600 dark:text-purple-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
                   CV Pro Studio &rarr;
                 </a>
               )}
-              <a href="#services" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                Layanan Digital HUB
-              </a>
+              {isContractEnabled && (
+                <a href="/blueprint#contract" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
+                  Digital Contract (E-Sign) &rarr;
+                </a>
+              )}
+              {isClientOnboardingEnabled && (
+                <a href="/#onboarding" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
+                  Enterprise Monolith &rarr;
+                </a>
+              )}
+              {hasAnyService && (
+                <a href="#services" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
+                  Layanan Digital HUB
+                </a>
+              )}
               <a href="#architecture" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
                 Standar Arsitektur Enterprise
               </a>
               <a href="/admin/login" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold">
                 Login Administrator
               </a>
-              <a 
-                href="/blueprint" 
-                className="w-full bg-emerald-500 text-black font-black py-3 text-center block rounded-none uppercase"
-              >
-                Buat Blueprint Proyek Sekarang &rarr;
-              </a>
+              {isBlueprintEnabled ? (
+                <a 
+                  href="/blueprint" 
+                  className="w-full bg-emerald-500 text-black font-black py-3 text-center block rounded-none uppercase"
+                >
+                  Buat Blueprint Proyek Sekarang &rarr;
+                </a>
+              ) : (
+                <a 
+                  href="#services" 
+                  className="w-full bg-emerald-500 text-black font-black py-3 text-center block rounded-none uppercase"
+                >
+                  Jelajahi Layanan &rarr;
+                </a>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

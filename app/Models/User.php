@@ -59,4 +59,9 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasOne(UserCvQuota::class);
     }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin') || $this->email === 'yoseph.iriandi.tambunan@gmail.com';
+    }
 }

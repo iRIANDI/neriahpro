@@ -68,7 +68,8 @@
             'enable_linkedin_suite' => (bool) ($globalSettings['feature_enable_cv_linkedin_suite']->value ?? true),
             'enable_vision_blueprint' => (bool) ($globalSettings['feature_enable_vision_blueprint']->value ?? true),
             'enable_client_onboarding' => (bool) ($globalSettings['feature_enable_client_onboarding']->value ?? true),
-            'midtrans_mode' => (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? false),
+            'enable_digital_contract' => (bool) ($globalSettings['feature_enable_digital_contract']->value ?? true),
+            'midtrans_mode' => (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? true),
         ];
     @endphp
 
@@ -102,7 +103,7 @@
                     $type = $plugin->plugin_type ?? $plugin->type ?? '';
                     if($type == 'hero_section') $pluginName = 'HeroIsland';
                     if($type == 'feature_grid' || $type == 'product_grid') $pluginName = 'ProductGridIsland';
-                    if($type == 'onboarding_form') $pluginName = 'ClientOnboardingIsland';
+                    if($type == 'onboarding_form' && $featureFlags['enable_client_onboarding']) $pluginName = 'ClientOnboardingIsland';
                     if($type == 'cv_pricing_table' || $type == 'pricing_section') {
                         // Hide pricing table completely if CV Pro is disabled or in Midtrans strict mode
                         if (!$featureFlags['midtrans_mode'] && $featureFlags['enable_cv_pro'] && $featureFlags['enable_pricing']) {

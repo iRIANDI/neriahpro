@@ -11,7 +11,14 @@ import {
   Database
 } from 'lucide-react';
 
-export default function HeroIsland({ headline, subheadline, cta_text, cta_link }) {
+export default function HeroIsland({ headline, subheadline, cta_text, cta_link, featureFlags }) {
+  const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
+  const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
+  const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
+  const isContractEnabled = featureFlags?.enable_digital_contract !== false;
+  const isClientOnboardingEnabled = featureFlags?.enable_client_onboarding !== false;
+  const hasAnyPillar = isBlueprintEnabled || isCvProEnabled || isContractEnabled || isClientOnboardingEnabled;
+
   const [quickProjectName, setQuickProjectName] = useState('');
   const [quickProblem, setQuickProblem] = useState('');
 
@@ -48,62 +55,83 @@ export default function HeroIsland({ headline, subheadline, cta_text, cta_link }
         </p>
 
         {/* INTERACTIVE DISCOVERY SIMULATOR (HIGH RETENTION WIDGET) */}
-        <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 p-6 sm:p-8 mb-12 rounded-none shadow-none max-w-4xl">
-          <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-bold mb-4">
-            <Terminal className="w-4 h-4" />
-            <span>INTERACTIVE DISCOVERY SIMULATOR // GENERATE PRD LIVE</span>
+        {isBlueprintEnabled && (
+          <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 p-6 sm:p-8 mb-12 rounded-none shadow-none max-w-4xl">
+            <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-bold mb-4">
+              <Terminal className="w-4 h-4" />
+              <span>INTERACTIVE DISCOVERY SIMULATOR // GENERATE PRD LIVE</span>
+            </div>
+
+            <form onSubmit={handleQuickSubmit} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div className="sm:col-span-5">
+                <input
+                  type="text"
+                  placeholder="Nama Proyek (Misal: Sistem Logistik Express)"
+                  value={quickProjectName}
+                  onChange={(e) => setQuickProjectName(e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-xs font-mono rounded-none focus:border-emerald-500 outline-none"
+                />
+              </div>
+              <div className="sm:col-span-4">
+                <input
+                  type="text"
+                  placeholder="Masalah Utama (Misal: Rekap manual lambat)"
+                  value={quickProblem}
+                  onChange={(e) => setQuickProblem(e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-xs font-mono rounded-none focus:border-emerald-500 outline-none"
+                />
+              </div>
+              <div className="sm:col-span-3">
+                <button
+                  type="submit"
+                  className="w-full h-full bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black font-mono text-xs font-black uppercase tracking-wider py-3 px-4 rounded-none transition flex items-center justify-center gap-2"
+                >
+                  <span>Sintesis PRD</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </form>
+
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-3 font-mono">
+              &bull; Gratis & instan: Menghasilkan skema tabel ERD, rincian MVP vs Roadmap, dan estimasi sprint.
+            </p>
           </div>
-
-          <form onSubmit={handleQuickSubmit} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <div className="sm:col-span-5">
-              <input
-                type="text"
-                placeholder="Nama Proyek (Misal: Sistem Logistik Express)"
-                value={quickProjectName}
-                onChange={(e) => setQuickProjectName(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-xs font-mono rounded-none focus:border-emerald-500 outline-none"
-              />
-            </div>
-            <div className="sm:col-span-4">
-              <input
-                type="text"
-                placeholder="Masalah Utama (Misal: Rekap manual lambat)"
-                value={quickProblem}
-                onChange={(e) => setQuickProblem(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-xs font-mono rounded-none focus:border-emerald-500 outline-none"
-              />
-            </div>
-            <div className="sm:col-span-3">
-              <button
-                type="submit"
-                className="w-full h-full bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black font-mono text-xs font-black uppercase tracking-wider py-3 px-4 rounded-none transition flex items-center justify-center gap-2"
-              >
-                <span>Sintesis PRD</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </form>
-
-          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-3 font-mono">
-            &bull; Gratis & instan: Menghasilkan skema tabel ERD, rincian MVP vs Roadmap, dan estimasi sprint.
-          </p>
-        </div>
+        )}
 
         {/* Dual Actions */}
         <div className="flex flex-wrap items-center gap-4 mb-16 font-mono text-xs uppercase font-bold tracking-wider">
-          <a
-            href="/blueprint"
-            className="bg-emerald-600 hover:bg-emerald-500 text-black font-black py-4 px-8 rounded-none transition flex items-center gap-2"
-          >
-            <span>Mulai Blueprint Lengkap</span>
-            <ArrowRight className="w-4 h-4" />
-          </a>
-          <a
-            href="#services"
-            className="border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 py-4 px-8 rounded-none transition"
-          >
-            Jelajahi 4 Pilar Layanan &darr;
-          </a>
+          {isBlueprintEnabled ? (
+            <a
+              href="/blueprint"
+              className="bg-emerald-600 hover:bg-emerald-500 text-black font-black py-4 px-8 rounded-none transition flex items-center gap-2"
+            >
+              <span>Mulai Blueprint Lengkap</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          ) : (
+            <a
+              href={hasAnyPillar ? "#services" : "#architecture"}
+              className="bg-emerald-600 hover:bg-emerald-500 text-black font-black py-4 px-8 rounded-none transition flex items-center gap-2"
+            >
+              <span>Konsultasi Arsitektur</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          )}
+          {hasAnyPillar ? (
+            <a
+              href="#services"
+              className="border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 py-4 px-8 rounded-none transition"
+            >
+              Jelajahi Pilar Layanan &darr;
+            </a>
+          ) : (
+            <a
+              href="#architecture"
+              className="border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 py-4 px-8 rounded-none transition"
+            >
+              Standar Rekayasa &darr;
+            </a>
+          )}
         </div>
 
         {/* Architecture Precision Trust Metrics */}

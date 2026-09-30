@@ -38,14 +38,21 @@
         </div>
     </div>
 
+    @php
+        $blueprintSetting = \App\Models\CmsGlobalSetting::where('key', 'feature_enable_vision_blueprint')->first();
+        $isBlueprintActive = $blueprintSetting ? (bool) $blueprintSetting->value : true;
+    @endphp
+
     <!-- Quick Navigation Links -->
     <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-family: monospace; color: #71717a; padding: 0 0.25rem;" class="dark:text-zinc-400">
         <a href="/" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;" class="hover:text-amber-500">
             <span>&larr; Beranda</span>
         </a>
-        <a href="/blueprint" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;" class="hover:text-amber-500">
-            <span>Project Blueprint &rarr;</span>
-        </a>
+        @if($isBlueprintActive)
+            <a href="/blueprint" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;" class="hover:text-amber-500">
+                <span>Project Blueprint &rarr;</span>
+            </a>
+        @endif
     </div>
 </div>
 

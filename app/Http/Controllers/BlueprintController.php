@@ -15,6 +15,11 @@ class BlueprintController extends Controller
     public function create(): View
     {
         $globalSettings = CmsGlobalSetting::all()->keyBy('key');
+        $isBlueprintEnabled = (bool) ($globalSettings['feature_enable_vision_blueprint']->value ?? true);
+
+        if (! $isBlueprintEnabled && ! auth()->user()?->isSuperAdmin()) {
+            abort(404);
+        }
 
         return view('blueprint.create', [
             'globalSettings' => $globalSettings,
@@ -26,6 +31,13 @@ class BlueprintController extends Controller
      */
     public function show(string $slug): View
     {
+        $globalSettings = CmsGlobalSetting::all()->keyBy('key');
+        $isBlueprintEnabled = (bool) ($globalSettings['feature_enable_vision_blueprint']->value ?? true);
+
+        if (! $isBlueprintEnabled && ! auth()->user()?->isSuperAdmin()) {
+            abort(404);
+        }
+
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
 
         // Ensure PRD content is populated
@@ -33,8 +45,6 @@ class BlueprintController extends Controller
             $blueprint->generateAndSavePrd();
             $blueprint->refresh();
         }
-
-        $globalSettings = CmsGlobalSetting::all()->keyBy('key');
 
         return view('blueprint.show', [
             'blueprint' => $blueprint,

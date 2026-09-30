@@ -82,8 +82,13 @@ class CmsSeeder extends Seeder
         );
 
         CmsGlobalSetting::updateOrCreate(
+            ['key' => 'feature_enable_digital_contract'],
+            ['value' => true]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
             ['key' => 'midtrans_compliance_strict_mode'],
-            ['value' => false]
+            ['value' => true]
         );
     }
 }

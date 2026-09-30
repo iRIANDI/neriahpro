@@ -3,7 +3,12 @@ import { Layers, ShieldCheck, Terminal, ArrowUpRight, MessageCircle } from 'luci
 
 export default function FooterIsland({ settings, featureFlags, whatsappNumber = '628123456789' }) {
   const currentYear = new Date().getFullYear();
-  const isCvProEnabled = !Boolean(featureFlags?.midtrans_mode) && (featureFlags?.enable_cv_pro !== false);
+  const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
+  const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
+  const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
+  const isContractEnabled = featureFlags?.enable_digital_contract !== false;
+  const isClientOnboardingEnabled = featureFlags?.enable_client_onboarding !== false;
+  const hasAnyPillar = isBlueprintEnabled || isCvProEnabled || isContractEnabled || isClientOnboardingEnabled;
 
   return (
     <footer className="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border-t border-zinc-200 dark:border-zinc-800 pt-16 pb-12 transition-colors font-sans">
@@ -29,39 +34,47 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
           </div>
 
           {/* 4 Pillars Services Hub */}
-          <div className="md:col-span-3">
-            <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-              Pilar Layanan
-            </h4>
-            <ul className="space-y-2.5 font-mono text-xs">
-              <li>
-                <a href="/blueprint" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                  <span>Project OS & Blueprint</span>
-                  <ArrowUpRight className="w-3 h-3 text-zinc-400" />
-                </a>
-              </li>
-              {isCvProEnabled && (
-                <li>
-                  <a href="/cv-pro" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                    <span>CV & Portfolio Studio</span>
-                    <ArrowUpRight className="w-3 h-3 text-zinc-400" />
-                  </a>
-                </li>
-              )}
-              <li>
-                <a href="/blueprint#contract" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                  <span>Kontrak Digital & E-Sign</span>
-                  <ArrowUpRight className="w-3 h-3 text-zinc-400" />
-                </a>
-              </li>
-              <li>
-                <a href="#onboarding" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                  <span>Enterprise Rapid Monolith</span>
-                  <ArrowUpRight className="w-3 h-3 text-zinc-400" />
-                </a>
-              </li>
-            </ul>
-          </div>
+          {hasAnyPillar && (
+            <div className="md:col-span-3">
+              <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
+                Pilar Layanan
+              </h4>
+              <ul className="space-y-2.5 font-mono text-xs">
+                {isBlueprintEnabled && (
+                  <li>
+                    <a href="/blueprint" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                      <span>Project OS & Blueprint</span>
+                      <ArrowUpRight className="w-3 h-3 text-zinc-400" />
+                    </a>
+                  </li>
+                )}
+                {isCvProEnabled && (
+                  <li>
+                    <a href="/cv-pro" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                      <span>CV & Portfolio Studio</span>
+                      <ArrowUpRight className="w-3 h-3 text-zinc-400" />
+                    </a>
+                  </li>
+                )}
+                {isContractEnabled && (
+                  <li>
+                    <a href="/blueprint#contract" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                      <span>Kontrak Digital & E-Sign</span>
+                      <ArrowUpRight className="w-3 h-3 text-zinc-400" />
+                    </a>
+                  </li>
+                )}
+                {isClientOnboardingEnabled && (
+                  <li>
+                    <a href="#onboarding" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                      <span>Enterprise Rapid Monolith</span>
+                      <ArrowUpRight className="w-3 h-3 text-zinc-400" />
+                    </a>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
 
           {/* Technical Architecture Standards */}
           <div className="md:col-span-2">

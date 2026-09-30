@@ -153,8 +153,15 @@ class CvProController extends Controller
      */
     public function show(string $slug): View
     {
-        $resume = Resume::where('slug', $slug)->firstOrFail();
         $globalSettings = CmsGlobalSetting::all()->keyBy('key');
+        $isCvProEnabled = (bool) ($globalSettings['feature_enable_cv_pro']->value ?? true);
+        $isMidtransStrict = (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? false);
+
+        if ((! $isCvProEnabled || $isMidtransStrict) && ! auth()->user()?->isSuperAdmin()) {
+            abort(404);
+        }
+
+        $resume = Resume::where('slug', $slug)->firstOrFail();
 
         return view('cv-pro.show', [
             'resume' => $resume,

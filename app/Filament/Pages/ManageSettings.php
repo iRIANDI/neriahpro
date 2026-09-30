@@ -146,11 +146,16 @@ class ManageSettings extends Page implements HasForms
                                             ->helperText('Form intake cepat onboarding klien di landing page.')
                                             ->default(true),
 
+                                        Toggle::make('feature_enable_digital_contract')
+                                            ->label('Aktifkan Modul Kontrak Digital & E-Sign')
+                                            ->helperText('Menampilkan fitur surat kontrak kerja digital dan penandatanganan elektronik.')
+                                            ->default(true),
+
                                         Toggle::make('feature_enable_ai_threat_shield')
                                             ->label('Aktifkan AI Threat Shield Protection')
                                             ->helperText('Proteksi serangan otonom AI, deteksi payload RCE, dan isolasi bot honeypot.')
                                             ->default(true),
-                                    ])->columns(3),
+                                    ])->columns(2),
 
                                 Section::make('Mode Verifikasi Midtrans (Project OS Scope Freeze)')
                                     ->description('Mode isolasi khusus untuk membatasi sistem hanya pada modul Project OS saat inspeksi/audit Midtrans berlangsung.')

@@ -15,7 +15,11 @@ import {
 } from 'lucide-react';
 
 export default function ProductGridIsland({ title, featureFlags }) {
-  const isCvProEnabled = !Boolean(featureFlags?.midtrans_mode) && (featureFlags?.enable_cv_pro !== false);
+  const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
+  const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
+  const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
+  const isContractEnabled = featureFlags?.enable_digital_contract !== false;
+  const isClientOnboardingEnabled = featureFlags?.enable_client_onboarding !== false;
 
   const pillars = [
     {
@@ -88,6 +92,22 @@ export default function ProductGridIsland({ title, featureFlags }) {
     }
   ];
 
+  const activePillars = pillars.filter(pillar => {
+    if (pillar.id === 'project-os') return isBlueprintEnabled;
+    if (pillar.id === 'cv-studio') return isCvProEnabled;
+    if (pillar.id === 'legal-contracts') return isContractEnabled;
+    if (pillar.id === 'rapid-monolith') return isClientOnboardingEnabled;
+    return true;
+  });
+
+  if (activePillars.length === 0) {
+    return null;
+  }
+
+  const dynamicTitle = title 
+    ? title.replace(/\b4\b/g, activePillars.length) 
+    : `${activePillars.length} Pilar Layanan Digital Hub.`;
+
   return (
     <section id="services" className="py-24 px-4 sm:px-6 max-w-7xl mx-auto bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors font-sans">
       
@@ -95,19 +115,19 @@ export default function ProductGridIsland({ title, featureFlags }) {
       <div className="border-b border-zinc-200 dark:border-zinc-800 pb-8 mb-16">
         <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold mb-2">
           <Layers className="w-4 h-4" />
-          <span>NERIAH PRO // FOUR PILLARS ARSENAL</span>
+          <span>NERIAH PRO // {activePillars.length === 1 ? 'SERVICES ARSENAL' : `${activePillars.length} PILLARS ARSENAL`}</span>
         </div>
         <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-zinc-900 dark:text-white">
-          {title || "4 Pilar Layanan Digital Hub."}
+          {dynamicTitle}
         </h2>
         <p className="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base mt-2 max-w-2xl font-sans">
           Ekosistem terintegrasi untuk mewujudkan proyek teknologi Anda dari ide mentah, perancangan arsitektur, hingga peluncuran sistem enterprise.
         </p>
       </div>
 
-      {/* Grid: 4 Core Pillars */}
+      {/* Grid: Active Pillars */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {pillars.filter(pillar => pillar.id !== 'cv-studio' || isCvProEnabled).map((pillar) => (
+        {activePillars.map((pillar) => (
           <div 
             key={pillar.id}
             className={`border p-8 rounded-none transition-all duration-200 flex flex-col justify-between ${

@@ -99,12 +99,15 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 ## 4. Routing & Endpoints Map
 
-- `/cv-pro`: Full-stack interactive Studio CV Pro SaaS (`CvProStudioIsland` with Editor, Job Hub Kanban, Keuangan Pro, ATS Audit, Mock Interview, LinkedIn Suite).
+- `/cv-pro`: Full-stack interactive Studio CV Pro SaaS (`CvProStudioIsland` with Editor, Job Hub Kanban, Keuangan Pro, ATS Audit, Mock Interview, LinkedIn Suite, Real-time Voice Copilot, Web Portfolio Generator).
 - `/cv/{slug}`: Public ATS printable resume preview & print view (`CvProController::show`).
+- `/pricing`: Halaman publik kelas harga CV Pro, paket langganan (Starter, Pro Career, Ultimate Executive, VIP Sprint), top-up a la carte, rincian biaya API, dan FAQ interaktif (`CvPricingIsland`).
 - `/api/cv-pro/save`: Auto-save & sync resume state (POST).
 - `/api/cv-pro/lint`: ATS quality auditor & metric detector (POST).
 - `/api/cv-pro/tailor`: Tailor CV specifically to target Job Description (POST).
 - `/api/cv-pro/linkedin`: LinkedIn Personal Branding Suite (Headlines, About, Skills, Post ideas) (POST).
+- `/api/cv-pro/realtime-copilot`: Asisten Wawancara Real-Time (Live Voice Copilot) contekkan STAR & kata kunci emas (POST).
+- `/api/cv-pro/portfolio/generate`: AI Web Portfolio Generator instan (HTML responsive website preview & download) (POST).
 - `/api/cv-pro/ai-helper`: Quick AI Helper for summary, bullet enhancer/condenser, and skill suggest (POST).
 - `/api/cv-pro/pricing`: Dynamic pricing plans, a la carte top-ups, and financial margin economics (GET).
 - `/api/cv-pro/quota`: Real-time user quota balance & entitlements (GET).

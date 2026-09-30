@@ -1,29 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  FileText, 
-  Sparkles, 
-  Mic, 
-  MicOff, 
-  Mail, 
-  Download, 
-  Eye, 
-  CheckCircle, 
-  AlertTriangle, 
-  Plus, 
-  Trash2, 
-  Copy, 
-  Save, 
-  Share2, 
-  RotateCcw, 
-  Briefcase, 
-  GraduationCap, 
-  Award, 
-  Code, 
-  Layout, 
-  Type, 
-  Palette, 
-  Check, 
+import {
+  FileText,
+  Sparkles,
+  Mic,
+  MicOff,
+  Mail,
+  Download,
+  Eye,
+  CheckCircle,
+  AlertTriangle,
+  Plus,
+  Trash2,
+  Copy,
+  Save,
+  Share2,
+  RotateCcw,
+  Briefcase,
+  GraduationCap,
+  Award,
+  Code,
+  Layout,
+  Type,
+  Palette,
+  Check,
   ChevronRight,
+  ChevronDown,
   TrendingUp,
   Volume2,
   UploadCloud,
@@ -47,10 +48,758 @@ import {
   Square,
   Headphones,
   Globe,
-  Zap
+  Zap,
+  MessageSquare,
+  ExternalLink,
+  Monitor,
+  Smartphone,
+  Sun,
+  Moon,
+  FolderGit2,
+  Users,
+  User
 } from 'lucide-react';
 
 export default function CvProStudioIsland({ initialData, featureFlags, currentUser }) {
+
+  // Preview Mode: 'cv' (Dokumen A4 Cetak) | 'portfolio' (Web Portfolio Live)
+  const [previewMode, setPreviewMode] = useState('cv');
+  const [previewDevice, setPreviewDevice] = useState('desktop');
+
+  // Accordion State with localStorage persistence
+  const [accordionState, setAccordionState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cv_pro_accordion_state');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      style: true,
+      web_portfolio: false,
+      avatar: false,
+      reorder: false,
+      personal: true,
+      experience: true,
+      education: false,
+      skills: false,
+      projects: false,
+      certifications: false,
+      references: false,
+    };
+  });
+
+  const toggleAccordion = (sectionKey) => {
+    setAccordionState((prev) => {
+      const next = { ...prev, [sectionKey]: !prev[sectionKey] };
+      try {
+        localStorage.setItem('cv_pro_accordion_state', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  const setAllAccordions = (open = true) => {
+    setAccordionState((prev) => {
+      const next = Object.keys(prev).reduce((acc, k) => {
+        acc[k] = open;
+        return acc;
+      }, {});
+      try {
+        localStorage.setItem('cv_pro_accordion_state', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  // Web Portfolio Customization States (10 Granular Controls)
+  const [wpNavVariant, setWpNavVariant] = useState('floating_pill'); // 'minimal' | 'floating_pill' | 'brutalist' | 'glassmorphic' | 'sidebar'
+  const [wpNavBg, setWpNavBg] = useState('#09090b');
+  const [wpNavText, setWpNavText] = useState('#ffffff');
+  const [wpNavFont, setWpNavFont] = useState('Inter');
+
+  const [wpFooterVariant, setWpFooterVariant] = useState('social_hub'); // 'simple_clean' | 'multi_column' | 'social_hub' | 'brutalist'
+  const [wpFooterBg, setWpFooterBg] = useState('#09090b');
+  const [wpFooterText, setWpFooterText] = useState('#94a3b8');
+
+  const [wpTitleFont, setWpTitleFont] = useState('Inter');
+  const [wpTitleSize, setWpTitleSize] = useState('text-3xl sm:text-5xl');
+  const [wpSubtitleSize, setWpSubtitleSize] = useState('text-base sm:text-lg');
+  const [wpBodySize, setWpBodySize] = useState('text-xs sm:text-sm');
+
+  const [wpBulletType, setWpBulletType] = useState('check'); // 'check' | 'disc' | 'diamond' | 'arrow' | 'square' | 'dash'
+  const [wpBulletColor, setWpBulletColor] = useState('#10b981');
+
+  const [wpCardStyle, setWpCardStyle] = useState('subtle_border'); // 'modern_flat' | 'subtle_border' | 'glassmorphic' | 'neo_brutalist' | 'gradient_glow'
+  const [wpCardRadius, setWpCardRadius] = useState('rounded-xl'); // 'rounded-none' | 'rounded-lg' | 'rounded-xl' | 'rounded-2xl'
+  const [wpCardBorderColor, setWpCardBorderColor] = useState('#3f3f46');
+
+  const [wpSpyStyle, setWpSpyStyle] = useState('glowing_pill'); // 'glowing_pill' | 'underline_runner' | 'active_dot' | 'gradient_bar'
+  const [wpSpyColor, setWpSpyColor] = useState('#6366f1');
+
+  const [wpPhone, setWpPhone] = useState(content?.personal_info?.phone || '628123456789');
+  const [wpCtaText, setWpCtaText] = useState('Hubungi via WhatsApp');
+  const [wpMessage, setWpMessage] = useState(
+    `Halo ${content?.personal_info?.name || 'Kandidat'}, saya melihat web portfolio Anda dan tertarik mendiskusikan peluang karir.`
+  );
+
+  const [wpLayout, setWpLayout] = useState('bento_grid'); // 'bento_grid' | 'split_hero' | 'developer_terminal' | 'showcase_cards' | 'editorial_narrative'
+  const [wpTheme, setWpTheme] = useState('dark'); // 'dark' | 'light'
+
+  // Smart AI Job Category Matcher State
+  const [targetJobRole, setTargetJobRole] = useState('Lead Systems Architect');
+  const [jobMatchReason, setJobMatchReason] = useState('');
+
+  // Accordion Header Component Helper
+  const renderAccordionHeader = (key, title, icon, badge, extra = null) => {
+    const isOpen = accordionState[key];
+    return (
+      <div
+        onClick={() => toggleAccordion(key)}
+        className="p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between cursor-pointer select-none hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition group shadow-2xs"
+      >
+        <div className="flex items-center gap-2.5">
+          <span className="p-1 rounded bg-zinc-100 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition">
+            {icon}
+          </span>
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+            {title}
+          </span>
+          {badge && (
+            <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded">
+              {badge}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {extra}
+          <button
+            type="button"
+            onClick={() => toggleAccordion(key)}
+            className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
+            title={isOpen ? 'Tutup Panel' : 'Buka Panel'}
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Print PDF Helper
+  const handlePrintPdf = () => {
+    if (previewMode !== 'cv') {
+      setPreviewMode('cv');
+    }
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  };
+
+  // Smart AI Job Category Matcher Handler
+  const handleSmartJobMatch = () => {
+    if (!checkAiAccessOrShowUpgrade(lang === 'id' ? 'Sistem Cerdas Penentu Variasi Portfolio Loker' : 'Smart Portfolio Role Matcher')) return;
+
+    const query = (targetJobRole || '').toLowerCase();
+    let recommended = {
+      layout: 'bento_grid',
+      nav: 'floating_pill',
+      footer: 'social_hub',
+      titleFont: 'Inter',
+      bullet: 'check',
+      bulletColor: '#10b981',
+      cardStyle: 'subtle_border',
+      spyStyle: 'glowing_pill',
+      spyColor: '#6366f1',
+      theme: 'dark',
+      reason: 'Konfigurasi seimbang direkomendasikan untuk posisi profesional modern serbaguna.',
+    };
+
+    if (query.includes('dev') || query.includes('software') || query.includes('engineer') || query.includes('backend') || query.includes('architect') || query.includes('system') || query.includes('cloud') || query.includes('tech') || query.includes('fullstack')) {
+      recommended = {
+        layout: 'developer_terminal',
+        nav: 'brutalist',
+        footer: 'brutalist',
+        titleFont: 'JetBrains Mono',
+        bullet: 'arrow',
+        bulletColor: '#10b981',
+        cardStyle: 'neo_brutalist',
+        spyStyle: 'gradient_bar',
+        spyColor: '#10b981',
+        theme: 'dark',
+        reason: 'Rekomendasi Developer & Engineering: Estetika terminal hacker, bullet panah CLI, tipografi monospace presisi tinggi, dan skema warna emerald cyberpunk.',
+      };
+    } else if (query.includes('design') || query.includes('ui') || query.includes('ux') || query.includes('creative') || query.includes('art') || query.includes('product') || query.includes('frontend')) {
+      recommended = {
+        layout: 'bento_grid',
+        nav: 'glassmorphic',
+        footer: 'social_hub',
+        titleFont: 'Outfit',
+        bullet: 'diamond',
+        bulletColor: '#ec4899',
+        cardStyle: 'glassmorphic',
+        spyStyle: 'glowing_pill',
+        spyColor: '#ec4899',
+        theme: 'dark',
+        reason: 'Rekomendasi Creative & UI/UX: Bento Grid interaktif, efek glassmorphism modern, font display Outfit dinamis, dan aksen pink neon.',
+      };
+    } else if (query.includes('exec') || query.includes('director') || query.includes('manager') || query.includes('vp') || query.includes('chief') || query.includes('lead') || query.includes('head') || query.includes('corporate') || query.includes('bank') || query.includes('finance') || query.includes('invest')) {
+      recommended = {
+        layout: 'split_hero',
+        nav: 'minimal',
+        footer: 'multi_column',
+        titleFont: 'Playfair Display',
+        bullet: 'check',
+        bulletColor: '#d97706',
+        cardStyle: 'modern_flat',
+        spyStyle: 'underline_runner',
+        spyColor: '#d97706',
+        theme: 'light',
+        reason: 'Rekomendasi Eksekutif & Korporat: Split Hero elegan dengan tipografi serif berwibawa, layout multi-kolom formal, dan palet amber emas kemewahan bisnis.',
+      };
+    }
+
+    setWpLayout(recommended.layout);
+    setWpNavVariant(recommended.nav);
+    setWpFooterVariant(recommended.footer);
+    setWpTitleFont(recommended.titleFont);
+    setWpBulletType(recommended.bullet);
+    setWpBulletColor(recommended.bulletColor);
+    setWpCardStyle(recommended.cardStyle);
+    setWpSpyStyle(recommended.spyStyle);
+    setWpSpyColor(recommended.spyColor);
+    setWpTheme(recommended.theme);
+    setJobMatchReason(recommended.reason);
+    setPreviewMode('portfolio');
+  };
+
+
+  // Render Portfolio Bullet Point based on wpBulletType & wpBulletColor
+  const renderPortfolioBullet = () => {
+    switch (wpBulletType) {
+      case 'check':
+        return <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: wpBulletColor }} />;
+      case 'arrow':
+        return <span className="font-bold shrink-0 mt-0.5 text-sm" style={{ color: wpBulletColor }}>&rarr;</span>;
+      case 'diamond':
+        return <span className="shrink-0 mt-0.5 text-xs" style={{ color: wpBulletColor }}>&#9670;</span>;
+      case 'square':
+        return <span className="shrink-0 mt-0.5 text-xs" style={{ color: wpBulletColor }}>&#9632;</span>;
+      case 'dash':
+        return <span className="font-bold shrink-0 mt-0.5 text-sm" style={{ color: wpBulletColor }}>&mdash;</span>;
+      case 'disc':
+      default:
+        return <span className="shrink-0 mt-0.5 text-sm leading-none" style={{ color: wpBulletColor }}>&bull;</span>;
+    }
+  };
+
+  // Helper for Card CSS Classes
+  const getCardClasses = (customPadding = 'p-5 sm:p-6') => {
+    const radius = wpCardRadius;
+    switch (wpCardStyle) {
+      case 'modern_flat':
+        return `${customPadding} ${radius} bg-zinc-100 dark:bg-zinc-900 border-0 transition-all`;
+      case 'glassmorphic':
+        return `${customPadding} ${radius} backdrop-blur-xl bg-white/40 dark:bg-zinc-900/40 border border-white/30 dark:border-zinc-800 shadow-lg transition-all`;
+      case 'neo_brutalist':
+        return `${customPadding} ${radius} bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.9)] transition-all`;
+      case 'gradient_glow':
+        return `${customPadding} ${radius} bg-gradient-to-br from-indigo-950/20 via-zinc-900/80 to-purple-950/20 border border-indigo-500/40 shadow-[0_0_15px_rgba(99,102,241,0.2)] transition-all`;
+      case 'subtle_border':
+      default:
+        return `${customPadding} ${radius} bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs transition-all`;
+    }
+  };
+
+  // 1. Navigation Island Component
+  const renderWebPortfolioNavbar = () => {
+    const links = [
+      { id: 'about', label: 'Tentang' },
+      { id: 'experience', label: 'Pengalaman' },
+      { id: 'projects', label: 'Proyek' },
+      { id: 'skills', label: 'Keahlian' },
+      { id: 'contact', label: 'Kontak' },
+    ];
+
+    const getSpyClasses = (isFirst) => {
+      if (!isFirst) return 'text-zinc-400 hover:text-zinc-200';
+      switch (wpSpyStyle) {
+        case 'glowing_pill':
+          return `px-2.5 py-1 rounded-full text-white font-bold shadow-xs`;
+        case 'underline_runner':
+          return `border-b-2 font-bold text-white`;
+        case 'active_dot':
+          return `font-bold text-white flex items-center gap-1.5`;
+        default:
+          return `font-bold text-white`;
+      }
+    };
+
+    if (wpNavVariant === 'floating_pill') {
+      return (
+        <header className="sticky top-3 z-30 px-4">
+          <div
+            className="max-w-2xl mx-auto px-5 py-2.5 rounded-full shadow-xl border flex items-center justify-between backdrop-blur-md transition-all"
+            style={{ backgroundColor: `${wpNavBg}e6`, borderColor: wpSpyColor, fontFamily: `'${wpNavFont}', sans-serif` }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: wpSpyColor }} />
+              <span className="font-bold text-xs tracking-wider" style={{ color: wpNavText }}>
+                {content?.personal_info?.name ? content.personal_info.name.split(' ')[0] : 'PORTFOLIO'}
+              </span>
+            </div>
+            <nav className="flex items-center gap-4 text-xs font-medium">
+              {links.map((link, idx) => (
+                <span
+                  key={link.id}
+                  className={`cursor-pointer transition ${getSpyClasses(idx === 0)}`}
+                  style={idx === 0 && wpSpyStyle === 'glowing_pill' ? { backgroundColor: wpSpyColor } : idx === 0 && wpSpyStyle === 'underline_runner' ? { borderColor: wpSpyColor } : {}}
+                >
+                  {idx === 0 && wpSpyStyle === 'active_dot' && (
+                    <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: wpSpyColor }} />
+                  )}
+                  {link.label}
+                </span>
+              ))}
+            </nav>
+            {wpPhone && (
+              <a
+                href={`https://wa.me/${wpPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpMessage)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1 rounded-full text-[11px] font-bold text-white transition flex items-center gap-1 shadow-xs"
+                style={{ backgroundColor: '#10b981' }}
+              >
+                <MessageSquare className="w-3 h-3" />
+                <span>WA</span>
+              </a>
+            )}
+          </div>
+        </header>
+      );
+    }
+
+    if (wpNavVariant === 'brutalist') {
+      return (
+        <header
+          className="sticky top-0 z-30 px-6 py-3 border-b-2 border-black dark:border-white shadow-[4px_4px_0px_0px_#000] dark:shadow-[4px_4px_0px_0px_#fff] flex items-center justify-between transition-all"
+          style={{ backgroundColor: wpNavBg, fontFamily: `'${wpNavFont}', monospace` }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 bg-black text-white dark:bg-white dark:text-black font-black text-xs uppercase">
+              {content?.personal_info?.name || 'SYS.ARCH'}
+            </span>
+          </div>
+          <nav className="flex items-center gap-5 text-xs font-bold uppercase">
+            {links.map((link, idx) => (
+              <span
+                key={link.id}
+                className={`cursor-pointer ${idx === 0 ? 'underline decoration-2' : 'hover:opacity-75'}`}
+                style={{ color: wpNavText, textDecorationColor: wpSpyColor }}
+              >
+                {link.label}
+              </span>
+            ))}
+          </nav>
+          {wpPhone && (
+            <a
+              href={`https://wa.me/${wpPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpMessage)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1 bg-emerald-500 text-black font-black text-xs uppercase border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_#000] flex items-center gap-1"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Direct WA</span>
+            </a>
+          )}
+        </header>
+      );
+    }
+
+    // Default: Minimal & Glassmorphic
+    return (
+      <header
+        className={`sticky top-0 z-30 px-6 py-3.5 border-b flex items-center justify-between transition-all ${
+          wpNavVariant === 'glassmorphic'
+            ? 'backdrop-blur-xl bg-white/20 dark:bg-zinc-950/40 border-white/20 dark:border-zinc-800'
+            : 'border-zinc-200 dark:border-zinc-800'
+        }`}
+        style={{ backgroundColor: wpNavVariant === 'glassmorphic' ? undefined : wpNavBg, fontFamily: `'${wpNavFont}', sans-serif` }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs text-white" style={{ backgroundColor: wpSpyColor }}>
+            {content?.personal_info?.name ? content.personal_info.name.charAt(0) : 'N'}
+          </div>
+          <span className="font-bold text-sm tracking-tight" style={{ color: wpNavText }}>
+            {content?.personal_info?.name || 'My Web Portfolio'}
+          </span>
+        </div>
+        <nav className="hidden sm:flex items-center gap-5 text-xs font-medium">
+          {links.map((link, idx) => (
+            <span
+              key={link.id}
+              className={`cursor-pointer transition ${idx === 0 ? 'font-bold' : 'opacity-70 hover:opacity-100'}`}
+              style={{ color: idx === 0 ? wpSpyColor : wpNavText }}
+            >
+              {link.label}
+            </span>
+          ))}
+        </nav>
+        {wpPhone && (
+          <a
+            href={`https://wa.me/${wpPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpMessage)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition flex items-center gap-1.5 shadow-xs"
+            style={{ backgroundColor: '#10b981' }}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>{wpCtaText || 'Hubungi WA'}</span>
+          </a>
+        )}
+      </header>
+    );
+  };
+
+  // 2. Hero Section Component
+  const renderWebPortfolioHero = () => {
+    const p = content?.personal_info || {};
+    const photoUrl = avatarConfig.customUrl || p.photo_url || tempImageSrc;
+    const shapeClass =
+      avatarConfig.shape === 'blob'
+        ? 'rounded-[30%_70%_70%_30%/30%_30%_70%_70%]'
+        : avatarConfig.shape === 'square'
+        ? 'rounded-none'
+        : avatarConfig.shape === 'rounded'
+        ? 'rounded-2xl'
+        : 'rounded-full';
+
+    return (
+      <section className="px-6 py-10 sm:py-16 max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 justify-between">
+        <div className="flex-1 space-y-4 text-center md:text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono border" style={{ borderColor: `${wpSpyColor}60`, color: wpSpyColor }}>
+            <span className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: wpSpyColor }} />
+            <span>TERSEDIA UNTUK PELUANG KARIR & KONSULTASI</span>
+          </div>
+
+          <h1 className={`font-black tracking-tight ${wpTitleSize}`} style={{ fontFamily: `'${wpTitleFont}', sans-serif` }}>
+            {p.name || 'Alex Pratama, S.Kom'}
+          </h1>
+
+          <p className={`font-medium text-zinc-500 dark:text-zinc-400 ${wpSubtitleSize}`}>
+            {p.title || 'Senior Full Stack & Systems Architect'}
+          </p>
+
+          <p className={`text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-2xl ${wpBodySize}`}>
+            {content?.summary ||
+              'Arsitek perangkat lunak berpengalaman dalam merancang platform berkinerja tinggi, sistem terdistribusi, dan otomasi cerdas skala enterprise.'}
+          </p>
+
+          {/* Quick Badges & Direct WhatsApp Redirect Button */}
+          <div className="pt-2 flex flex-wrap items-center gap-3 justify-center md:justify-start text-xs font-mono">
+            {p.location && (
+              <span className="px-2.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                📍 {p.location}
+              </span>
+            )}
+            {p.email && (
+              <span className="px-2.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                ✉️ {p.email}
+              </span>
+            )}
+            {p.linkedin && (
+              <span className="px-2.5 py-1 rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                🔗 LinkedIn
+              </span>
+            )}
+          </div>
+
+          {/* WhatsApp Direct CTA Button (Control 7) */}
+          <div className="pt-3 flex items-center gap-3 justify-center md:justify-start">
+            <a
+              href={wpPhone ? `https://wa.me/${wpPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpMessage)}` : '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl transition shadow-lg flex items-center gap-2 hover:scale-105 active:scale-95"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>{wpCtaText || 'Hubungi via WhatsApp'}</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </a>
+            <button
+              type="button"
+              onClick={handlePrintPdf}
+              className="px-4 py-2.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-bold text-xs sm:text-sm rounded-xl transition flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              <span>Unduh CV A4</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Profile Avatar with Configured Shape */}
+        {avatarConfig.showPhoto && photoUrl && (
+          <div className="relative shrink-0">
+            <div
+              className="absolute -inset-1.5 rounded-full opacity-60 blur-lg transition duration-500"
+              style={{ background: `linear-gradient(45deg, ${wpSpyColor}, #ec4899)` }}
+            />
+            <img
+              src={photoUrl}
+              alt={p.name || 'Profile'}
+              className={`relative w-40 h-40 sm:w-52 sm:h-52 object-cover border-4 border-white dark:border-zinc-900 shadow-2xl ${shapeClass}`}
+            />
+          </div>
+        )}
+      </section>
+    );
+  };
+
+  // 3. Main Content based on wpLayout
+  const renderWebPortfolioLayoutContent = () => {
+    const experiences = content?.experience || [];
+    const skillsList = content?.skills || [];
+    const projectsList = content?.projects || [];
+    const educationList = content?.education || [];
+
+    // Layout 1: Developer Terminal Mode
+    if (wpLayout === 'developer_terminal') {
+      return (
+        <div className="space-y-6 font-mono text-xs">
+          <div className="bg-black text-emerald-400 p-5 rounded-xl border border-zinc-800 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800 text-zinc-500">
+              <span className="text-zinc-400">bash — alex@neriahpro-os:~</span>
+              <span className="text-[10px] text-emerald-500 font-bold">STATUS: 200 OK</span>
+            </div>
+            <div>
+              <p className="text-zinc-400">$ whoami</p>
+              <p className="text-white font-bold text-sm pt-1">{content?.personal_info?.name} // {content?.personal_info?.title}</p>
+            </div>
+            <div>
+              <p className="text-zinc-400">$ cat skills.json</p>
+              <div className="flex flex-wrap gap-1.5 pt-2">
+                {skillsList.map((sk, idx) => (
+                  <span key={idx} className="px-2 py-0.5 bg-zinc-900 text-emerald-300 border border-emerald-900/60 rounded">
+                    "{sk.name || sk}"
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-zinc-400">$ git log --oneline --experience</p>
+              <div className="space-y-2 pt-2">
+                {experiences.map((exp, idx) => (
+                  <div key={idx} className="pl-3 border-l-2 border-emerald-600/60">
+                    <div className="text-white font-bold">{exp.role} @ {exp.company} ({exp.period})</div>
+                    <ul className="text-zinc-400 space-y-1 pt-1">
+                      {(exp.bullets || []).map((b, bIdx) => (
+                        <li key={bIdx} className="flex items-start gap-2">
+                          {renderPortfolioBullet()}
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Layout 2: Split Hero Mode
+    if (wpLayout === 'split_hero') {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          {/* Left Column (Sticky Sidebar) */}
+          <div className="md:col-span-5 space-y-6 md:sticky md:top-20">
+            <div className={getCardClasses('p-6')}>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 font-mono mb-3">Tentang Saya</h3>
+              <p className={`text-zinc-600 dark:text-zinc-300 leading-relaxed ${wpBodySize}`}>
+                {content?.summary || 'Profesional berdedikasi tinggi siap menciptakan dampak positif bagi organisasi.'}
+              </p>
+            </div>
+            <div className={getCardClasses('p-6')}>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 font-mono mb-3">Keahlian Utama</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {skillsList.map((sk, idx) => (
+                  <span key={idx} className="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs rounded-md font-medium">
+                    {sk.name || sk}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column (Timeline) */}
+          <div className="md:col-span-7 space-y-6">
+            <div className={getCardClasses('p-6')}>
+              <h3 className="text-base font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-indigo-500" />
+                <span>Pengalaman Profesional</span>
+              </h3>
+              <div className="space-y-6">
+                {experiences.map((exp, idx) => (
+                  <div key={idx} className="border-l-2 pl-4 space-y-1.5" style={{ borderColor: wpSpyColor }}>
+                    <div className="flex justify-between items-baseline">
+                      <h4 className="font-bold text-sm text-zinc-900 dark:text-white">{exp.role}</h4>
+                      <span className="text-[11px] font-mono text-zinc-400">{exp.period}</span>
+                    </div>
+                    <div className="text-xs font-medium text-zinc-500">{exp.company} &bull; {exp.location}</div>
+                    <ul className={`text-zinc-600 dark:text-zinc-300 space-y-1 pt-1.5 ${wpBodySize}`}>
+                      {(exp.bullets || []).map((b, bIdx) => (
+                        <li key={bIdx} className="flex items-start gap-2">
+                          {renderPortfolioBullet()}
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Default Layout: Bento Grid Modern
+    return (
+      <div className="space-y-8">
+        {/* Bento Grid Top: Experience (2 cols) & Skills (1 col) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className={`md:col-span-2 ${getCardClasses('p-6')} space-y-5`}>
+            <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
+              <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-indigo-500" />
+                <span>Pengalaman Kerja Terpilih</span>
+              </h3>
+              <span className="text-[10px] font-mono text-zinc-400 font-bold">{experiences.length} PERUSAHAAN</span>
+            </div>
+            <div className="space-y-5">
+              {experiences.map((exp, idx) => (
+                <div key={idx} className="space-y-1.5 pb-4 border-b border-zinc-100 dark:border-zinc-800/60 last:border-0">
+                  <div className="flex justify-between items-baseline">
+                    <span className="font-bold text-sm text-zinc-900 dark:text-white">{exp.role}</span>
+                    <span className="text-[11px] font-mono text-zinc-400">{exp.period}</span>
+                  </div>
+                  <div className="text-xs text-zinc-500 font-medium">{exp.company} &bull; {exp.location}</div>
+                  <ul className={`text-zinc-600 dark:text-zinc-300 space-y-1 pt-1 ${wpBodySize}`}>
+                    {(exp.bullets || []).map((b, bIdx) => (
+                      <li key={bIdx} className="flex items-start gap-2">
+                        {renderPortfolioBullet()}
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={`${getCardClasses('p-6')} space-y-4 flex flex-col justify-between`}>
+            <div className="space-y-3">
+              <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <Code className="w-4 h-4 text-purple-500" />
+                <span>Keahlian Teknis</span>
+              </h3>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {skillsList.map((sk, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2.5 py-1 rounded-md text-xs font-mono font-medium transition"
+                    style={{ backgroundColor: `${wpSpyColor}15`, color: wpSpyColor, borderColor: `${wpSpyColor}40`, borderWidth: 1 }}
+                  >
+                    {sk.name || sk}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+              <span className="text-[11px] font-mono font-bold uppercase text-zinc-400 block">Pendidikan</span>
+              {educationList.slice(0, 2).map((edu, idx) => (
+                <div key={idx} className="text-xs">
+                  <div className="font-bold text-zinc-900 dark:text-white">{edu.degree}</div>
+                  <div className="text-zinc-500">{edu.school} ({edu.year})</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bento Grid Bottom: Projects Showcase */}
+        {projectsList.length > 0 && (
+          <div className={`${getCardClasses('p-6')} space-y-4`}>
+            <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
+              <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
+                <FolderGit2 className="w-4 h-4 text-emerald-500" />
+                <span>Portofolio Proyek Terpilih</span>
+              </h3>
+              <span className="text-[10px] font-mono text-zinc-400 font-bold">{projectsList.length} PROYEK</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
+              {projectsList.map((proj, idx) => (
+                <div key={idx} className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-xs text-zinc-900 dark:text-white">{proj.name || proj.title}</h4>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">{proj.description}</p>
+                  </div>
+                  {proj.link && (
+                    <a
+                      href={proj.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1 pt-1"
+                    >
+                      <span>Lihat Detail</span>
+                      <ArrowUpRight className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // 4. Website Footer Component
+  const renderWebPortfolioFooter = () => {
+    return (
+      <footer
+        className="mt-12 py-8 px-6 border-t border-zinc-200 dark:border-zinc-800 transition-all text-xs"
+        style={{ backgroundColor: wpFooterBg, color: wpFooterText }}
+      >
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">{content?.personal_info?.name || 'Alex Pratama'}</span>
+            <span>&bull;</span>
+            <span>{content?.personal_info?.title || 'Systems Architect'}</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {wpPhone && (
+              <a
+                href={`https://wa.me/${wpPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpMessage)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-500 hover:underline flex items-center gap-1 font-bold"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>WhatsApp ({wpPhone})</span>
+              </a>
+            )}
+            <span>&copy; {new Date().getFullYear()} NeriahPro Island OS.</span>
+          </div>
+        </div>
+      </footer>
+    );
+  };
+
+
+
   // Navigation Tabs: 'editor' | 'job_hub' | 'finance' | 'ats_audit' | 'mock_interview' | 'outreach'
   const [activeTab, setActiveTab] = useState('editor');
 
@@ -1856,8 +2605,16 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
             {/* Left Column: Form Editor (5 cols) */}
             <div className="lg:col-span-5 space-y-6">
               
-              {/* Template & Styling Control Card */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm">
+                            {/* Template & Styling Control Card */}
+              <div className="border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                {renderAccordionHeader('style', 'Gaya & Format Visual (12 Preset Global)', <Palette className="w-4 h-4 text-indigo-500" />, 'AESTHETICS', (
+                  <span className="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 font-bold uppercase truncate max-w-[140px]">
+                    {template.replace(/_/g, ' ')}
+                  </span>
+                ))}
+                {accordionState.style && (
+                  <div className="bg-white dark:bg-zinc-900 p-4 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+
                 <h3 className="text-xs font-mono font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-3 flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <Palette className="w-3.5 h-3.5 text-indigo-500" />
@@ -1932,10 +2689,413 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     </div>
                   </div>
                 </div>
+              
+                  </div>
+                )}
+              </div>
+
+              {/* Card 1.5: Web Portfolio Studio Customizer Card (10 Granular Controls) */}
+              <div className="border border-indigo-200 dark:border-indigo-900/60 shadow-2xs overflow-hidden">
+                {renderAccordionHeader('web_portfolio', 'Studio Web Portfolio (10 Kontrol Desain)', <Globe className="w-4 h-4 text-purple-500" />, 'LIVE WEB', (
+                  <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold uppercase">
+                    {wpLayout.replace('_', ' ')}
+                  </span>
+                ))}
+                {accordionState.web_portfolio && (
+                  <div className="p-4 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 space-y-4 text-xs">
+                    
+                    {/* Control 10: Smart AI Job Category Matcher */}
+                    <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 border border-indigo-200 dark:border-indigo-800/80 rounded space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5 text-[11px] font-mono uppercase">
+                          <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                          <span>10. Sistem Cerdas Penentu Variasi Loker (AI Matcher)</span>
+                        </span>
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 bg-indigo-200 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 font-bold rounded">
+                          SMART PRESET
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={targetJobRole}
+                          onChange={(e) => setTargetJobRole(e.target.value)}
+                          placeholder="Ketik posisi loker tujuan (e.g. Senior Backend Engineer, UI/UX Designer, CFO)..."
+                          className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 rounded"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSmartJobMatch}
+                          className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded text-xs transition shadow-sm whitespace-nowrap"
+                        >
+                          Cari Preset Terbaik
+                        </button>
+                      </div>
+                      {jobMatchReason && (
+                        <div className="p-2 bg-white/80 dark:bg-zinc-900/80 border border-indigo-100 dark:border-indigo-900 rounded text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans">
+                          💡 <strong>Alasan Rekomendasi:</strong> {jobMatchReason}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Controls Grid */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Control 1: Navigasi Website */}
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded space-y-2">
+                        <span className="font-bold text-zinc-800 dark:text-zinc-200 block text-[11px] font-mono uppercase">
+                          1. Navigasi Website
+                        </span>
+                        <div>
+                          <label className="text-[10px] text-zinc-500 block mb-0.5">Varian Navigasi</label>
+                          <select
+                            value={wpNavVariant}
+                            onChange={(e) => setWpNavVariant(e.target.value)}
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs rounded"
+                          >
+                            <option value="floating_pill">1. Floating Pill Island (Mengambang)</option>
+                            <option value="minimal">2. Minimalist Header</option>
+                            <option value="brutalist">3. Brutalist Sharp Bar</option>
+                            <option value="glassmorphic">4. Glassmorphism Blur</option>
+                            <option value="sidebar">5. Modern Desktop Strip</option>
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <div>
+                            <label className="text-[10px] text-zinc-500 block mb-0.5">Font Nav</label>
+                            <select
+                              value={wpNavFont}
+                              onChange={(e) => setWpNavFont(e.target.value)}
+                              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-1.5 py-1 text-[11px] rounded"
+                            >
+                              <option value="Inter">Inter</option>
+                              <option value="Outfit">Outfit</option>
+                              <option value="JetBrains Mono">Mono</option>
+                              <option value="Playfair Display">Serif</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-zinc-500 block mb-0.5">Warna Nav</label>
+                            <div className="flex items-center gap-1 pt-0.5">
+                              {['#09090b', '#ffffff', '#18181b', '#4f46e5', '#059669'].map((c) => (
+                                <button
+                                  key={c}
+                                  type="button"
+                                  onClick={() => setWpNavBg(c)}
+                                  className={`w-4 h-4 rounded-full border ${wpNavBg === c ? 'scale-125 border-indigo-500 shadow-xs' : 'border-zinc-400'}`}
+                                  style={{ backgroundColor: c }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Control 2: Footer Website */}
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded space-y-2">
+                        <span className="font-bold text-zinc-800 dark:text-zinc-200 block text-[11px] font-mono uppercase">
+                          2. Footer Website
+                        </span>
+                        <div>
+                          <label className="text-[10px] text-zinc-500 block mb-0.5">Varian Footer</label>
+                          <select
+                            value={wpFooterVariant}
+                            onChange={(e) => setWpFooterVariant(e.target.value)}
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs rounded"
+                          >
+                            <option value="social_hub">1. Social Hub & Direct Contact</option>
+                            <option value="simple_clean">2. Simple Clean One-Liner</option>
+                            <option value="multi_column">3. Multi-Column Enterprise</option>
+                            <option value="brutalist">4. Brutalist Big Brand</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-zinc-500 block mb-0.5">Warna Footer</label>
+                          <div className="flex items-center gap-1.5 pt-0.5">
+                            {['#09090b', '#18181b', '#ffffff', '#0f172a', '#1e1b4b'].map((c) => (
+                              <button
+                                key={c}
+                                type="button"
+                                onClick={() => setWpFooterBg(c)}
+                                className={`w-4 h-4 rounded-full border ${wpFooterBg === c ? 'scale-125 border-indigo-500 shadow-xs' : 'border-zinc-400'}`}
+                                style={{ backgroundColor: c }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Control 3: Tipografi & Skala Font */}
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded space-y-2">
+                        <span className="font-bold text-zinc-800 dark:text-zinc-200 block text-[11px] font-mono uppercase">
+                          3. Tipografi & Ukuran
+                        </span>
+                        <div>
+                          <label className="text-[10px] text-zinc-500 block mb-0.5">Font Judul</label>
+                          <select
+                            value={wpTitleFont}
+                            onChange={(e) => setWpTitleFont(e.target.value)}
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs rounded"
+                          >
+                            <option value="Inter">Inter (Clean Modern Sans)</option>
+                            <option value="Outfit">Outfit (Display Geometric)</option>
+                            <option value="Playfair Display">Playfair Display (Executive Serif)</option>
+                            <option value="JetBrains Mono">JetBrains Mono (Developer)</option>
+                            <option value="Plus Jakarta Sans">Plus Jakarta Sans (Corporate)</option>
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <div>
+                            <label className="text-[10px] text-zinc-500 block mb-0.5">Skala Judul</label>
+                            <select
+                              value={wpTitleSize}
+                              onChange={(e) => setWpTitleSize(e.target.value)}
+                              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-1.5 py-1 text-[11px] rounded"
+                            >
+                              <option value="text-3xl sm:text-5xl">Besar (5xl)</option>
+                              <option value="text-4xl sm:text-6xl">Sangat Besar (6xl)</option>
+                              <option value="text-2xl sm:text-4xl">Sedang (4xl)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-zinc-500 block mb-0.5">Skala Isi</label>
+                            <select
+                              value={wpBodySize}
+                              onChange={(e) => setWpBodySize(e.target.value)}
+                              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-1.5 py-1 text-[11px] rounded"
+                            >
+                              <option value="text-xs sm:text-sm">Standar (sm)</option>
+                              <option value="text-sm sm:text-base">Nyaman (base)</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Control 4: Bullet Point (Jenis & Warna) */}
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded space-y-2">
+                        <span className="font-bold text-zinc-800 dark:text-zinc-200 block text-[11px] font-mono uppercase">
+                          4. Bullet Point
+                        </span>
+                        <div>
+                          <label className="text-[10px] text-zinc-500 block mb-0.5">Bentuk Bullet</label>
+                          <select
+                            value={wpBulletType}
+                            onChange={(e) => setWpBulletType(e.target.value)}
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs rounded"
+                          >
+                            <option value="check">✓ Checkmark Modern</option>
+                            <option value="arrow">➜ Panah Terminal</option>
+                            <option value="diamond">◆ Berlian Geometris</option>
+                            <option value="disc">• Titik Bulat (Disc)</option>
+                            <option value="square">■ Kotak Sharp</option>
+                            <option value="dash">— Garis Panjang (Dash)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-zinc-500 block mb-0.5">Warna Aksen Bullet</label>
+                          <div className="flex items-center gap-1.5 pt-0.5">
+                            {['#10b981', '#6366f1', '#ec4899', '#f59e0b', '#06b6d4', '#64748b'].map((c) => (
+                              <button
+                                key={c}
+                                type="button"
+                                onClick={() => setWpBulletColor(c)}
+                                className={`w-4 h-4 rounded-full border ${wpBulletColor === c ? 'scale-125 border-zinc-950 dark:border-white shadow-xs' : 'border-transparent'}`}
+                                style={{ backgroundColor: c }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Control 5: Jenis & Gaya Card */}
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded space-y-2">
+                        <span className="font-bold text-zinc-800 dark:text-zinc-200 block text-[11px] font-mono uppercase">
+                          5. Gaya Card
+                        </span>
+                        <div>
+                          <label className="text-[10px] text-zinc-500 block mb-0.5">Efek Card</label>
+                          <select
+                            value={wpCardStyle}
+                            onChange={(e) => setWpCardStyle(e.target.value)}
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs rounded"
+                          >
+                            <option value="subtle_border">1. Subtle Border (Elegan Tipis)</option>
+                            <option value="modern_flat">2. Modern Flat Background</option>
+                            <option value="glassmorphic">3. Glassmorphism (Blur Translucent)</option>
+                            <option value="neo_brutalist">4. Neo-Brutalist (Border 2px + Shadow)</option>
+                            <option value="gradient_glow">5. Gradient Glow (Neon Border)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-zinc-500 block mb-0.5">Sudut Card (Radius)</label>
+                          <select
+                            value={wpCardRadius}
+                            onChange={(e) => setWpCardRadius(e.target.value)}
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs rounded"
+                          >
+                            <option value="rounded-none">Sharp 0px (Tajam Brutalist)</option>
+                            <option value="rounded-lg">Rounded 8px (Modern)</option>
+                            <option value="rounded-xl">Rounded 12px (Smooth)</option>
+                            <option value="rounded-2xl">Rounded 16px (Pill High)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Control 6: Scroll Spy Effect */}
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded space-y-2">
+                        <span className="font-bold text-zinc-800 dark:text-zinc-200 block text-[11px] font-mono uppercase">
+                          6. Scroll Spy Effect
+                        </span>
+                        <div>
+                          <label className="text-[10px] text-zinc-500 block mb-0.5">Gaya Pelacak Bagian</label>
+                          <select
+                            value={wpSpyStyle}
+                            onChange={(e) => setWpSpyStyle(e.target.value)}
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs rounded"
+                          >
+                            <option value="glowing_pill">1. Glowing Pill Tracker</option>
+                            <option value="underline_runner">2. Underline Runner (Garis Berjalan)</option>
+                            <option value="active_dot">3. Active Dot Indicator</option>
+                            <option value="gradient_bar">4. Gradient Progress Bar</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-zinc-500 block mb-0.5">Warna Spy Indicator</label>
+                          <div className="flex items-center gap-1.5 pt-0.5">
+                            {['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'].map((c) => (
+                              <button
+                                key={c}
+                                type="button"
+                                onClick={() => setWpSpyColor(c)}
+                                className={`w-4 h-4 rounded-full border ${wpSpyColor === c ? 'scale-125 border-zinc-950 dark:border-white shadow-xs' : 'border-transparent'}`}
+                                style={{ backgroundColor: c }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Control 7: WhatsApp Redirect Configuration */}
+                    <div className="p-3 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 rounded space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-emerald-800 dark:text-emerald-300 text-[11px] font-mono uppercase flex items-center gap-1.5">
+                          <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>7. Redirect WhatsApp Langsung</span>
+                        </span>
+                        <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                          DIRECT CONVERSION
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] text-zinc-600 dark:text-zinc-400 block mb-0.5">Nomor WhatsApp Tujuan</label>
+                          <input
+                            type="text"
+                            value={wpPhone}
+                            onChange={(e) => setWpPhone(e.target.value)}
+                            placeholder="628123456789"
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs rounded"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-zinc-600 dark:text-zinc-400 block mb-0.5">Teks Tombol CTA</label>
+                          <input
+                            type="text"
+                            value={wpCtaText}
+                            onChange={(e) => setWpCtaText(e.target.value)}
+                            placeholder="Hubungi via WhatsApp"
+                            className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs rounded"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-zinc-600 dark:text-zinc-400 block mb-0.5">Pesan Pre-filled WhatsApp</label>
+                        <textarea
+                          rows={2}
+                          value={wpMessage}
+                          onChange={(e) => setWpMessage(e.target.value)}
+                          className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs rounded"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Control 8 & 9: Layout Variasi & Theme Mode */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded space-y-1.5">
+                        <span className="font-bold text-zinc-800 dark:text-zinc-200 block text-[11px] font-mono uppercase">
+                          8. Opsi Layout Portofolio
+                        </span>
+                        <select
+                          value={wpLayout}
+                          onChange={(e) => setWpLayout(e.target.value)}
+                          className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2 py-1.5 text-xs rounded"
+                        >
+                          <option value="bento_grid">1. Bento Grid Modern (Interactive Cards)</option>
+                          <option value="split_hero">2. Executive Split Hero</option>
+                          <option value="developer_terminal">3. Developer Terminal (CLI Monospace)</option>
+                          <option value="showcase_cards">4. Creative Project Showcase</option>
+                          <option value="editorial_narrative">5. Minimalist Editorial Magazine</option>
+                        </select>
+                      </div>
+
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded space-y-1.5">
+                        <span className="font-bold text-zinc-800 dark:text-zinc-200 block text-[11px] font-mono uppercase">
+                          9. Tema Web (Dark / Light)
+                        </span>
+                        <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => setWpTheme('dark')}
+                            className={`py-1.5 px-2 rounded font-mono text-xs font-bold flex items-center justify-center gap-1.5 border transition ${
+                              wpTheme === 'dark' ? 'bg-zinc-950 text-white border-indigo-500 shadow-xs' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700'
+                            }`}
+                          >
+                            <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>Dark Theme</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setWpTheme('light')}
+                            className={`py-1.5 px-2 rounded font-mono text-xs font-bold flex items-center justify-center gap-1.5 border transition ${
+                              wpTheme === 'light' ? 'bg-white text-zinc-950 border-amber-500 shadow-xs' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700'
+                            }`}
+                          >
+                            <Sun className="w-3.5 h-3.5 text-amber-500" />
+                            <span>Light Theme</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action: Switch to Web Preview Now */}
+                    <div className="pt-2 flex justify-between items-center border-t border-zinc-200 dark:border-zinc-800">
+                      <span className="text-[11px] text-zinc-500">
+                        Perubahan di atas otomatis langsung diterapkan di pratinjau sisi kanan.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMode('portfolio')}
+                        className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded text-xs transition flex items-center gap-1.5 shadow-sm"
+                      >
+                        <Globe className="w-3.5 h-3.5" />
+                        <span>Tampilkan Web Portfolio Sisi Kanan &rarr;</span>
+                      </button>
+                    </div>
+
+                  </div>
+                )}
               </div>
 
               {/* Avatar Photo & Shape Card */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm space-y-3">
+              <div className="border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                {renderAccordionHeader('avatar', 'Foto Profil & Avatar Header', <Eye className="w-4 h-4 text-emerald-500" />, 'AVATAR', (
+                  <span className="text-[10px] font-mono text-zinc-500 font-bold">
+                    {avatarConfig.showPhoto ? 'Aktif' : 'Non-aktif'}
+                  </span>
+                ))}
+                {accordionState.avatar && (
+                  <div className="bg-white dark:bg-zinc-900 p-4 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+
                 <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
                   <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                     <Eye className="w-3.5 h-3.5 text-indigo-500" />
@@ -2021,10 +3181,17 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     </div>
                   </div>
                 </div>
+              
+                  </div>
+                )}
               </div>
 
               {/* Urutan Bagian CV (Reorder Sections Tool) */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm space-y-2">
+              <div className="border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                {renderAccordionHeader('reorder', 'Urutan Hirarki Bagian CV', <Layers className="w-4 h-4 text-amber-500" />, 'HIERARCHY')}
+                {accordionState.reorder && (
+                  <div className="bg-white dark:bg-zinc-900 p-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+
                 <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
                   <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
                     <Sliders className="w-3.5 h-3.5 text-indigo-500" />
@@ -2074,10 +3241,21 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     );
                   })}
                 </div>
+              
+                  </div>
+                )}
               </div>
 
               {/* 1. Personal Info Section */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3.5">
+              <div className="border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                {renderAccordionHeader('personal', '1. Identitas & Kontak', <User className="w-4 h-4 text-blue-500" />, 'REQUIRED', (
+                  <span className="text-[10px] font-mono text-zinc-500 truncate max-w-[120px]">
+                    {personalInfo.fullName || 'Belum Diisi'}
+                  </span>
+                ))}
+                {accordionState.personal && (
+                  <div className="bg-white dark:bg-zinc-900 p-5 border-t border-zinc-200 dark:border-zinc-800 space-y-3.5">
+
                 <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-800 pb-2 flex items-center justify-between">
                   <span>1. Identitas & Kontak</span>
                   <span className="text-[10px] text-indigo-500 font-normal">Wajib Lengkap</span>
@@ -2183,10 +3361,17 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     />
                   </div>
                 </div>
+              
+                  </div>
+                )}
               </div>
 
               {/* 2. Work Experience Section */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-4">
+              <div className="border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                {renderAccordionHeader('experience', '2. Riwayat Pengalaman Kerja', <Briefcase className="w-4 h-4 text-indigo-500" />, `${experience.length} ITEMS`)}
+                {accordionState.experience && (
+                  <div className="bg-white dark:bg-zinc-900 p-5 border-t border-zinc-200 dark:border-zinc-800 space-y-4">
+
                 <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
                   <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
                     2. Pengalaman Kerja
@@ -2330,10 +3515,17 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     </div>
                   ))}
                 </div>
+              
+                  </div>
+                )}
               </div>
 
               {/* 3. Education Section */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3">
+              <div className="border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                {renderAccordionHeader('education', '3. Riwayat Pendidikan', <GraduationCap className="w-4 h-4 text-teal-500" />, `${education.length} ITEMS`)}
+                {accordionState.education && (
+                  <div className="bg-white dark:bg-zinc-900 p-5 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+
                 <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
                   <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
                     3. Riwayat Pendidikan
@@ -2411,10 +3603,17 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     </div>
                   ))}
                 </div>
+              
+                  </div>
+                )}
               </div>
 
               {/* 4. Skills Section */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3">
+              <div className="border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                {renderAccordionHeader('skills', '4. Keahlian & Tech Stack', <Code className="w-4 h-4 text-violet-500" />, `${skills.length} ITEMS`)}
+                {accordionState.skills && (
+                  <div className="bg-white dark:bg-zinc-900 p-5 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+
                 <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
                   <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
                     4. Keahlian Teknis (ATS Skills)
@@ -2474,10 +3673,17 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     Tambah
                   </button>
                 </div>
+              
+                  </div>
+                )}
               </div>
 
               {/* 5. Projects Section */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3">
+              <div className="border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                {renderAccordionHeader('projects', '5. Portofolio Proyek Terpilih', <FolderGit2 className="w-4 h-4 text-rose-500" />, `${projects.length} ITEMS`)}
+                {accordionState.projects && (
+                  <div className="bg-white dark:bg-zinc-900 p-5 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+
                 <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
                   <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
                     5. Proyek & Portofolio Pilihan
@@ -2555,10 +3761,17 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     </div>
                   ))}
                 </div>
+              
+                  </div>
+                )}
               </div>
 
               {/* 6. Certifications Section */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3">
+              <div className="border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                {renderAccordionHeader('certifications', '6. Sertifikasi & Lisensi', <Award className="w-4 h-4 text-amber-500" />, `${certifications.length} ITEMS`)}
+                {accordionState.certifications && (
+                  <div className="bg-white dark:bg-zinc-900 p-5 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+
                 <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
                   <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
                     6. Sertifikasi & Lisensi
@@ -2625,10 +3838,17 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     </div>
                   ))}
                 </div>
+              
+                  </div>
+                )}
               </div>
 
               {/* 7. References Section */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-3">
+              <div className="border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                {renderAccordionHeader('references', '7. Kontak Referensi Profesional', <Users className="w-4 h-4 text-cyan-500" />, `${references.length} ITEMS`)}
+                {accordionState.references && (
+                  <div className="bg-white dark:bg-zinc-900 p-5 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+
                 <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
                   <h3 className="text-xs font-mono font-bold uppercase text-zinc-900 dark:text-zinc-100">
                     7. Referensi Profesional
@@ -2717,6 +3937,9 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     </div>
                   ))}
                 </div>
+              
+                  </div>
+                )}
               </div>
 
             </div>
@@ -2724,21 +3947,77 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
             {/* Right Column: Live Interactive Preview (7 cols) */}
             <div className="lg:col-span-7 sticky top-28">
               <div className="bg-zinc-200 dark:bg-zinc-900 p-2 sm:p-6 border border-zinc-300 dark:border-zinc-800 shadow-inner flex flex-col items-center">
-                <div className="w-full flex items-center justify-between pb-3 text-xs text-zinc-500 font-mono">
-                  <span>PREVIEW // TEMPLATE: {template.toUpperCase()}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-zinc-700 dark:text-zinc-300">ATS: {atsScore}%</span>
+                                {/* PREVIEW TOP BAR: MODE SWITCHER & ACTIONS */}
+                <div className="w-full flex items-center justify-between pb-3 border-b border-zinc-300 dark:border-zinc-800 mb-3">
+                  <div className="flex items-center gap-1.5 p-1 bg-zinc-300 dark:bg-zinc-800/80 rounded">
                     <button
-                      onClick={() => window.print()}
-                      className="px-2 py-0.5 bg-zinc-900 text-white rounded text-[11px] font-mono hover:bg-black"
+                      type="button"
+                      onClick={() => setPreviewMode('cv')}
+                      className={`px-3 py-1.5 rounded text-xs font-mono font-bold flex items-center gap-1.5 transition ${
+                        previewMode === 'cv'
+                          ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                      }`}
                     >
-                      Cetak / PDF
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Dokumen CV (A4 Cetak)</span>
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewMode('portfolio')}
+                      className={`px-3 py-1.5 rounded text-xs font-mono font-bold flex items-center gap-1.5 transition ${
+                        previewMode === 'portfolio'
+                          ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs'
+                          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                      }`}
+                    >
+                      <Globe className="w-3.5 h-3.5" />
+                      <span>Web Portfolio Live</span>
+                      <span className="text-[9px] px-1 py-0.2 bg-white/20 rounded font-sans uppercase">Island</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {previewMode === 'cv' ? (
+                      <>
+                        <span className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
+                          ATS: <strong className="text-emerald-600 dark:text-emerald-400">{atsScore}%</strong>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handlePrintPdf}
+                          className="px-3 py-1.5 bg-zinc-900 hover:bg-black text-white dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white rounded text-xs font-mono font-bold flex items-center gap-1.5 shadow-sm transition"
+                          title="Cetak CV format A4 presisi tinggi atau simpan sebagai PDF"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Unduh PDF / Cetak A4</span>
+                        </button>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-mono text-zinc-500">
+                          Layout: <strong className="text-purple-600 dark:text-purple-400 uppercase">{wpLayout.replace('_', ' ')}</strong>
+                        </span>
+                        {wpPhone && (
+                          <a
+                            href={`https://wa.me/${wpPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpMessage)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-mono rounded font-bold flex items-center gap-1 transition shadow-xs"
+                            title="Buka link redirect WhatsApp"
+                          >
+                            <MessageSquare className="w-3 h-3" />
+                            <span>Direct WA</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* THE PAPER CANVAS (Renders 5 Distinct Templates Dynamically) */}
-                <div
+                {/* CONDITIONAL PREVIEW: CV DOCUMENT vs LIVE WEB PORTFOLIO ISLAND */}
+                {previewMode === 'cv' ? (
+<div
                   id="cv-document-canvas"
                   className={`w-full max-w-[210mm] shadow-2xl transition-all ${template === 'tech_dark' ? 'bg-[#0f172a] text-slate-100 border border-slate-800' : 'bg-white text-zinc-900 border border-zinc-200'} ${template === 'compact_elegant' ? 'p-6 sm:p-8 text-[11px] leading-tight' : 'p-8 sm:p-12 text-xs'}`}
                   style={{ fontFamily: `'${fontFamily}', sans-serif` }}
@@ -3099,6 +4378,90 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                   )}
 
                 </div>
+                ) : (
+                  /* THE LIVE WEB PORTFOLIO ISLAND PREVIEW FRAME */
+                  <div className={`w-full transition-all duration-300 ${previewDevice === 'mobile' ? 'max-w-[420px]' : previewDevice === 'tablet' ? 'max-w-[760px]' : 'max-w-full'}`}>
+                    {/* Mock Browser Top Bar */}
+                    <div className="bg-zinc-800 dark:bg-zinc-900 text-zinc-300 px-4 py-2.5 rounded-t-xl border border-zinc-700 flex items-center justify-between shadow-md">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
+                          <span className="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+                          <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                        </div>
+                        <span className="text-[10px] font-mono text-zinc-400 pl-2">NERIAH // WEB PORTFOLIO LIVE RUNTIME</span>
+                      </div>
+
+                      {/* URL Bar */}
+                      <div className="hidden sm:flex items-center gap-1.5 bg-zinc-950/70 border border-zinc-700/80 px-3 py-1 rounded-md text-[11px] font-mono text-zinc-300 w-1/2 justify-center">
+                        <Lock className="w-3 h-3 text-emerald-400" />
+                        <span>https://portfolio.neriahpro.com/{content?.personal_info?.name ? content.personal_info.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'alex-pratama'}</span>
+                      </div>
+
+                      {/* Responsive Switcher & Theme Badge */}
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex items-center bg-zinc-900 border border-zinc-700 rounded p-0.5">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDevice('desktop')}
+                            className={`p-1 rounded ${previewDevice === 'desktop' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            title="Tampilan Desktop"
+                          >
+                            <Monitor className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDevice('mobile')}
+                            className={`p-1 rounded ${previewDevice === 'mobile' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            title="Tampilan Mobile"
+                          >
+                            <Smartphone className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setWpTheme(wpTheme === 'dark' ? 'light' : 'dark')}
+                          className="p-1.5 text-zinc-400 hover:text-amber-400 transition"
+                          title="Toggle Dark / Light Theme"
+                        >
+                          {wpTheme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-400" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Live Website Canvas */}
+                    <div
+                      className={`border-x border-b border-zinc-300 dark:border-zinc-800 rounded-b-xl overflow-hidden shadow-2xl transition-colors duration-300 ${
+                        wpTheme === 'dark' ? 'bg-[#09090b] text-zinc-100' : 'bg-slate-50 text-zinc-900'
+                      }`}
+                      style={{ fontFamily: `'${wpTitleFont}', sans-serif` }}
+                    >
+                      {/* 1. Website Navigation Island */}
+                      {renderWebPortfolioNavbar()}
+
+                      {/* Scroll Spy Indicator Bar (if gradient_bar) */}
+                      {wpSpyStyle === 'gradient_bar' && (
+                        <div
+                          className="w-full h-1 sticky top-0 z-30 transition-all"
+                          style={{
+                            background: `linear-gradient(90deg, ${wpSpyColor} 0%, #ec4899 50%, #f59e0b 100%)`,
+                          }}
+                        />
+                      )}
+
+                      {/* 2. Hero Section */}
+                      {renderWebPortfolioHero()}
+
+                      {/* 3. Main Content based on wpLayout */}
+                      <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-8">
+                        {renderWebPortfolioLayoutContent()}
+                      </div>
+
+                      {/* 4. Website Footer */}
+                      {renderWebPortfolioFooter()}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

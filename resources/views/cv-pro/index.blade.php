@@ -55,7 +55,10 @@
 <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- Global Navigation -->
-    @react('GlobalNavigationIsland', ['settings' => $globalSettings['main_navigation']->value ?? null])
+    @react('GlobalNavigationIsland', [
+        'settings' => $globalSettings['main_navigation']->value ?? null,
+        'featureFlags' => $featureFlags,
+    ])
 
     <main class="flex-1 pt-14">
         @php
@@ -70,7 +73,10 @@
     </main>
 
     <!-- Global Footer -->
-    @react('FooterIsland', ['settings' => $globalSettings['footer_navigation']->value ?? null])
+    @react('FooterIsland', [
+        'settings' => $globalSettings['footer_navigation']->value ?? null,
+        'featureFlags' => $featureFlags,
+    ])
 
 </body>
 </html>

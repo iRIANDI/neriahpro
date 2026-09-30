@@ -43,11 +43,8 @@
         <a href="/" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;" class="hover:text-amber-500">
             <span>&larr; Beranda</span>
         </a>
-        <a href="/cv-pro" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;" class="hover:text-amber-500">
-            <span>CV Pro Studio &rarr;</span>
-        </a>
         <a href="/blueprint" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;" class="hover:text-amber-500">
-            <span>Blueprint &rarr;</span>
+            <span>Project Blueprint &rarr;</span>
         </a>
     </div>
 </div>

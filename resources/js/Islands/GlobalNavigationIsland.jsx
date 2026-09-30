@@ -17,7 +17,11 @@ import {
   Globe
 } from 'lucide-react';
 
-export default function GlobalNavigationIsland({ settings }) {
+export default function GlobalNavigationIsland({ settings, featureFlags }) {
+  const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
+  const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
+  const isPricingEnabled = !isMidtransStrict && (featureFlags?.enable_pricing !== false) && isCvProEnabled;
+
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
@@ -72,8 +76,8 @@ export default function GlobalNavigationIsland({ settings }) {
   const navLinks = [
     { label: lang === 'id' ? 'Beranda' : 'Home', href: '/' },
     { label: 'Project OS (PRD)', href: '/blueprint', highlight: true },
-    { label: lang === 'id' ? 'Studio CV Pro' : 'CV Pro Studio', href: '/cv-pro' },
-    { label: lang === 'id' ? 'Paket & Harga' : 'Pricing', href: '/pricing' },
+    ...(isCvProEnabled ? [{ label: lang === 'id' ? 'Studio CV Pro' : 'CV Pro Studio', href: '/cv-pro' }] : []),
+    ...(isPricingEnabled ? [{ label: lang === 'id' ? 'Paket & Harga' : 'Pricing', href: '/pricing' }] : []),
     { label: lang === 'id' ? 'Layanan HUB' : 'Service Hub', href: '/#services' },
   ];
 
@@ -187,15 +191,17 @@ export default function GlobalNavigationIsland({ settings }) {
                       </p>
                     </a>
 
-                    <a href="#services" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="font-bold text-zinc-900 dark:text-white text-xs">CV Generator</span>
-                        <span className="px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[9px] font-bold">CANVA STYLE</span>
-                      </div>
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
-                        {lang === 'id' ? 'Studio CV Visual & Portofolio Klien' : 'Visual Resume & Portfolio Studio'}
-                      </p>
-                    </a>
+                    {isCvProEnabled && (
+                      <a href="/cv-pro" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="font-bold text-zinc-900 dark:text-white text-xs">CV Generator</span>
+                          <span className="px-1 py-0.2 bg-purple-500 text-white text-[9px] font-bold">PRO STUDIO</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
+                          {lang === 'id' ? 'Studio CV Visual & Portofolio Klien' : 'Visual Resume & Portfolio Studio'}
+                        </p>
+                      </a>
+                    )}
 
                     <a href="#services" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
                       <div className="flex items-center justify-between mb-0.5">
@@ -256,11 +262,16 @@ export default function GlobalNavigationIsland({ settings }) {
               <a href="/blueprint" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
                 Project OS (PRD Generator) &rarr;
               </a>
+              {isCvProEnabled && (
+                <a href="/cv-pro" className="block py-2 text-purple-600 dark:text-purple-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
+                  CV Pro Studio &rarr;
+                </a>
+              )}
               <a href="#services" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
                 Layanan Digital HUB
               </a>
               <a href="#architecture" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                Standar Arsitektur (PostgreSQL ULID)
+                Standar Arsitektur Enterprise
               </a>
               <a href="/admin/login" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold">
                 Login Administrator

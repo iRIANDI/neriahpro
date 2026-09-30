@@ -110,15 +110,15 @@
                         <div style="padding: 0.75rem 0.875rem; border-radius: 0.625rem; background: rgba(39, 39, 42, 0.6); border: 1px solid #3f3f46; display: flex; align-items: flex-start; gap: 0.75rem;">
                             <div style="padding: 0.375rem; border-radius: 0.375rem; background: rgba(245, 158, 11, 0.2); color: #fbbf24; flex-shrink: 0; margin-top: 0.125rem;">
                                 <svg width="16" height="16" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; display: block;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
                                 </svg>
                             </div>
                             <div>
                                 <div style="font-size: 0.8125rem; font-weight: 700; color: #f4f4f5; font-family: monospace;">
-                                    3. CV Pro Studio & AI Career Suite
+                                    3. Enterprise Architecture & Sprint Delivery
                                 </div>
                                 <div style="font-size: 0.75rem; color: #a1a1aa; line-height: 1.4; margin-top: 0.125rem;">
-                                    Microsoft MarkItDown multi-format scanner, ATS score linter, mock interview suara formula STAR, dan LinkedIn branding pack.
+                                    Sistem orkestrasi sprint deliverables, audit standar clean code, dan automated acceptance testing.
                                 </div>
                             </div>
                         </div>

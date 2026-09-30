@@ -16,6 +16,17 @@ class CvProController extends Controller
     {
         $globalSettings = CmsGlobalSetting::all()->keyBy('key');
 
+        $isCvProEnabled = (bool) ($globalSettings['feature_enable_cv_pro']->value ?? true);
+        $isMidtransMode = (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? false);
+
+        if (! $isCvProEnabled || $isMidtransMode) {
+            $user = auth()->user();
+            $isSuperAdmin = $user && ($user->hasRole('super_admin') || $user->email === 'yoseph.iriandi.tambunan@gmail.com');
+            if (! $isSuperAdmin) {
+                abort(404);
+            }
+        }
+
         // Initial default resume data for instant interactive editing
         $initialData = [
             'personal_info' => [

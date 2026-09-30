@@ -14,7 +14,9 @@ import {
   Database
 } from 'lucide-react';
 
-export default function ProductGridIsland({ title }) {
+export default function ProductGridIsland({ title, featureFlags }) {
+  const isCvProEnabled = !Boolean(featureFlags?.midtrans_mode) && (featureFlags?.enable_cv_pro !== false);
+
   const pillars = [
     {
       id: "project-os",
@@ -105,7 +107,7 @@ export default function ProductGridIsland({ title }) {
 
       {/* Grid: 4 Core Pillars */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {pillars.map((pillar) => (
+        {pillars.filter(pillar => pillar.id !== 'cv-studio' || isCvProEnabled).map((pillar) => (
           <div 
             key={pillar.id}
             className={`border p-8 rounded-none transition-all duration-200 flex flex-col justify-between ${

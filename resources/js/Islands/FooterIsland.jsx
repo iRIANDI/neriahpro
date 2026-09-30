@@ -1,8 +1,9 @@
 import React from 'react';
 import { Layers, ShieldCheck, Terminal, ArrowUpRight, MessageCircle } from 'lucide-react';
 
-export default function FooterIsland({ settings, whatsappNumber = '628123456789' }) {
+export default function FooterIsland({ settings, featureFlags, whatsappNumber = '628123456789' }) {
   const currentYear = new Date().getFullYear();
+  const isCvProEnabled = !Boolean(featureFlags?.midtrans_mode) && (featureFlags?.enable_cv_pro !== false);
 
   return (
     <footer className="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border-t border-zinc-200 dark:border-zinc-800 pt-16 pb-12 transition-colors font-sans">
@@ -39,12 +40,14 @@ export default function FooterIsland({ settings, whatsappNumber = '628123456789'
                   <ArrowUpRight className="w-3 h-3 text-zinc-400" />
                 </a>
               </li>
-              <li>
-                <a href="/cv-pro" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                  <span>CV & Portfolio Studio</span>
-                  <ArrowUpRight className="w-3 h-3 text-zinc-400" />
-                </a>
-              </li>
+              {isCvProEnabled && (
+                <li>
+                  <a href="/cv-pro" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                    <span>CV & Portfolio Studio</span>
+                    <ArrowUpRight className="w-3 h-3 text-zinc-400" />
+                  </a>
+                </li>
+              )}
               <li>
                 <a href="/blueprint#contract" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
                   <span>Kontrak Digital & E-Sign</span>

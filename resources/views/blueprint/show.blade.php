@@ -426,9 +426,18 @@
                 </div>
 
                 <!-- Action Buttons: Sign Contract & Pay DP -->
+                @php
+                    $officialWhatsApp = \Illuminate\Support\Facades\Cache::remember('official_whatsapp_number', 3600, function() {
+                        try {
+                            return \App\Models\CmsGlobalSetting::where('key', 'company_whatsapp')->value('value') ?: '628123456789';
+                        } catch (\Throwable $e) {
+                            return '628123456789';
+                        }
+                    });
+                @endphp
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <a 
-                        href="https://wa.me/628123456789?text={{ urlencode('Halo Neriah Pro, saya menyetujui Ultimate PRD untuk proyek: ' . $blueprint->nama_bisnis . '. Mohon panduan tanda tangan kontrak digital dan pembayaran DP via Midtrans.') }}" 
+                        href="https://wa.me/{{ $officialWhatsApp }}?text={{ urlencode('Halo Neriah Pro, saya menyetujui Ultimate PRD untuk proyek: ' . $blueprint->nama_bisnis . '. Mohon panduan tanda tangan kontrak digital dan pembayaran DP via Midtrans.') }}" 
                         target="_blank" 
                         class="bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-widest py-4 px-6 text-center rounded-none transition flex items-center justify-center gap-2"
                     >
@@ -437,7 +446,7 @@
                     </a>
 
                     <a 
-                        href="https://wa.me/628123456789?text={{ urlencode('Halo Neriah Pro, saya ingin meminta Invoice DP Midtrans untuk proyek: ' . $blueprint->nama_bisnis) }}" 
+                        href="https://wa.me/{{ $officialWhatsApp }}?text={{ urlencode('Halo Neriah Pro, saya ingin meminta Invoice DP Midtrans untuk proyek: ' . $blueprint->nama_bisnis) }}" 
                         target="_blank" 
                         class="bg-zinc-800 hover:bg-zinc-700 text-white font-mono font-bold text-xs uppercase tracking-widest py-4 px-6 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2"
                     >

@@ -16,6 +16,8 @@ use Filament\Tables\Table;
 
 class LegalPolicyResource extends Resource
 {
+    use \App\Filament\Traits\RestrictedToSuperAdmin;
+
     protected static ?string $model = LegalPolicy::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';

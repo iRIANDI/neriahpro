@@ -33,5 +33,12 @@ class CmsSeeder extends Seeder
                 'value' => 'UTC',
             ]
         );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'company_whatsapp'],
+            [
+                'value' => '628123456789',
+            ]
+        );
     }
 }

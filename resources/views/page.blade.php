@@ -89,14 +89,19 @@
                 @endphp
                 
                 @if($pluginName)
-                    @react($pluginName, (array) ($plugin->content_data ?? $plugin->data ?? []))
+                    @react($pluginName, array_merge((array) ($plugin->content_data ?? $plugin->data ?? []), [
+                        'whatsappNumber' => $globalSettings['company_whatsapp']->value ?? '628123456789'
+                    ]))
                 @endif
             @endif
         @endforeach
     </main>
 
     <!-- Global Footer -->
-    @react('FooterIsland', ['settings' => $globalSettings['footer_links']->value ?? null])
+    @react('FooterIsland', [
+        'settings' => $globalSettings['footer_links']->value ?? null,
+        'whatsappNumber' => $globalSettings['company_whatsapp']->value ?? '628123456789'
+    ])
 
 </body>
 </html>

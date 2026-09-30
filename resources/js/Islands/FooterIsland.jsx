@@ -1,7 +1,7 @@
 import React from 'react';
 import { Layers, ShieldCheck, Terminal, ArrowUpRight, MessageCircle } from 'lucide-react';
 
-export default function FooterIsland({ settings }) {
+export default function FooterIsland({ settings, whatsappNumber = '628123456789' }) {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -40,19 +40,19 @@ export default function FooterIsland({ settings }) {
                 </a>
               </li>
               <li>
-                <a href="https://wa.me/628123456789?text=Halo%20Neriah%20Pro,%20saya%20tertarik%20dengan%20Canva%20Style%20CV%20Studio" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                <a href="/cv-pro" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
                   <span>CV & Portfolio Studio</span>
                   <ArrowUpRight className="w-3 h-3 text-zinc-400" />
                 </a>
               </li>
               <li>
-                <a href="https://wa.me/628123456789?text=Halo%20Neriah%20Pro,%20saya%20tertarik%20dengan%20Digital%20Contract%20dan%20Scope%20Lock" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                <a href="/blueprint#contract" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
                   <span>Kontrak Digital & E-Sign</span>
                   <ArrowUpRight className="w-3 h-3 text-zinc-400" />
                 </a>
               </li>
               <li>
-                <a href="https://wa.me/628123456789?text=Halo%20Neriah%20Pro,%20saya%20butuh%20pengembangan%20Enterprise%20Rapid%20Monolith" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                <a href="#onboarding" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
                   <span>Enterprise Rapid Monolith</span>
                   <ArrowUpRight className="w-3 h-3 text-zinc-400" />
                 </a>
@@ -92,7 +92,7 @@ export default function FooterIsland({ settings }) {
             </h4>
             <div className="space-y-3 font-mono text-xs">
               <a
-                href="https://wa.me/628123456789?text=Halo%20Neriah%20Pro,%20saya%20ingin%20konsultasi%20proyek%20teknologi"
+                href={`https://wa.me/${whatsappNumber}?text=Halo%20Neriah%20Pro,%20saya%20ingin%20konsultasi%20proyek%20teknologi`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-3 py-2 rounded-none transition w-full justify-center"

@@ -88,6 +88,12 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 | `ProductResource` | Commerce & Billing | Layanan digital, Dual-currency input, Fitur list, Infolist preview | `ProductForm`, `ProductsTable`, `ProductInfolist` |
 | `TransactionResource` | Commerce & Billing | Midtrans status settlement, Total IDR, Payment timestamp | `TransactionsTable`, `TransactionInfolist` |
 | `LegalPolicyResource` | Contracts & Legal | Syarat ketentuan, Kebijakan privasi multibahasa | `LegalPolicyForm`, `LegalPoliciesTable` |
+| `EmailCampaignResource` | Marketing & Klien | Promosi email dan blast penawaran proyek | `EmailCampaignForm`, `EmailCampaignsTable` |
+
+> 🛡️ **Role & Scope Isolation (Midtrans Merchant Compliance)**:
+> - **Super Admin (`yoseph.iriandi.tambunan@gmail.com`)**: Akses $100\%$ tanpa batas ke seluruh 12 Resource, Spatie Shield RBAC, dan Global Settings.
+> - **Midtrans Reviewer (`reviewer.midtrans@neriahpro.com` / `midtrans_reviewer`)**: Diisolasi secara ketat via trait `RestrictedToSuperAdmin` hanya dapat melihat ekosistem **Project OS** (`VisionBlueprintResource`, `DocumentResource`, `DomainHostingAssetResource`). Seluruh modul sekunder (Career & CV Pro, Commerce, CMS, Security, RBAC Shield) otomatis disembunyikan.
+> - **Compliance Banner**: `ProjectOsComplianceWidget` aktif di dashboard utama `/admin` untuk memberikan keterangan resmi kepada reviewer Midtrans bahwa platform ini beroperasi membedah ide klien menjadi PRD/ERD spesifikasi lengkap agar AI tidak berasumsi 100% sebelum penagihan Down Payment (DP) Midtrans.
 
 ---
 

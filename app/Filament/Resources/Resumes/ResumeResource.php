@@ -16,6 +16,8 @@ use Filament\Tables\Table;
 
 class ResumeResource extends Resource
 {
+    use \App\Filament\Traits\RestrictedToSuperAdmin;
+
     protected static ?string $model = Resume::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';

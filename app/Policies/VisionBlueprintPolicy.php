@@ -12,6 +12,19 @@ class VisionBlueprintPolicy
 {
     use HandlesAuthorization;
     
+    public function before(AuthUser $authUser, string $ability): ?bool
+    {
+        if ($authUser->email === 'yoseph.iriandi.tambunan@gmail.com' || $authUser->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($authUser->hasRole('midtrans_reviewer') || $authUser->email === 'reviewer.midtrans@neriahpro.com') {
+            return in_array($ability, ['viewAny', 'view', 'create', 'update']);
+        }
+
+        return null;
+    }
+    
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:VisionBlueprint');

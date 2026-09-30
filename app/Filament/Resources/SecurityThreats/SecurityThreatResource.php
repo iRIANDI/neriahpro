@@ -13,6 +13,8 @@ use Filament\Tables\Table;
 
 class SecurityThreatResource extends Resource
 {
+    use \App\Filament\Traits\RestrictedToSuperAdmin;
+
     protected static ?string $model = SecurityThreatLog::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-exclamation';

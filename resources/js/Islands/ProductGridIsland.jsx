@@ -36,7 +36,7 @@ export default function ProductGridIsland({ title }) {
     {
       id: "cv-studio",
       title: "Canva-Style CV & Portfolio Studio",
-      tag: "VISUAL WYSIWYG",
+      tag: "AI & ATS READY",
       badgeColor: "bg-zinc-800 text-zinc-200",
       desc: "Studio pembuat resume dan portofolio profesional interaktif bergaya Canva dengan drag-and-drop layer dan format ATS-ready internasional.",
       features: [
@@ -46,8 +46,8 @@ export default function ProductGridIsland({ title }) {
         "Simpan Profil & Sinkronisasi Cloud",
         "Integrasi Link Portofolio Publik"
       ],
-      ctaText: "Konsultasi Studio CV",
-      ctaLink: "https://wa.me/628123456789?text=Halo%20Neriah%20Pro,%20saya%20tertarik%20dengan%20layanan%20CV%20Generator",
+      ctaText: "Buka Studio CV Pro",
+      ctaLink: "/cv-pro",
       isPrimary: false
     },
     {
@@ -64,7 +64,7 @@ export default function ProductGridIsland({ title }) {
         "Rekam Jejak Audit IP Address Legal"
       ],
       ctaText: "Pelajari Kontrak Digital",
-      ctaLink: "https://wa.me/628123456789?text=Halo%20Neriah%20Pro,%20saya%20ingin%20tahu%20lebih%20lanjut%20tentang%20Kontrak%20Digital%20dan%20Scope%20Lock",
+      ctaLink: "/blueprint#contract",
       isPrimary: false
     },
     {
@@ -80,8 +80,8 @@ export default function ProductGridIsland({ title }) {
         "Frontend Island Architecture (React + Livewire)",
         "Dedicated Docker / Nixpacks VPS Environment"
       ],
-      ctaText: "Diskusi Arsitektur Sistem",
-      ctaLink: "https://wa.me/628123456789?text=Halo%20Neriah%20Pro,%20saya%20ingin%20konsultasi%20pembuatan%20aplikasi%20skala%20tinggi",
+      ctaText: "Konsultasi & Onboarding",
+      ctaLink: "#onboarding",
       isPrimary: false
     }
   ];

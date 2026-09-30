@@ -30,6 +30,20 @@ class ManageSettings extends Page implements HasForms
 
     protected string $view = 'filament.pages.manage-settings';
 
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->hasRole('midtrans_reviewer') || $user->email === 'reviewer.midtrans@neriahpro.com') {
+            return false;
+        }
+
+        return $user->hasRole('super_admin') || $user->email === 'yoseph.iriandi.tambunan@gmail.com';
+    }
+
     public ?array $data = [];
 
     public function mount(): void
@@ -47,6 +61,12 @@ class ManageSettings extends Page implements HasForms
                         Tabs\Tab::make('General Setup')
                             ->icon('heroicon-m-adjustments-horizontal')
                             ->schema([
+                                TextInput::make('company_whatsapp')
+                                    ->label('Nomor WhatsApp Resmi (CS & Konsultasi Proyek)')
+                                    ->helperText('Nomor WhatsApp resmi tanpa tanda + (contoh: 628123456789). Otomatis memperbarui tombol Chat WhatsApp di seluruh website.')
+                                    ->default('628123456789')
+                                    ->required(),
+
                                 Select::make('app_timezone')
                                     ->label('Master Timezone (UTC Offset)')
                                     ->options([
@@ -131,6 +151,15 @@ class ManageSettings extends Page implements HasForms
                                             ->helperText('Proteksi serangan otonom AI, deteksi payload RCE, dan isolasi bot honeypot.')
                                             ->default(true),
                                     ])->columns(3),
+
+                                Section::make('Mode Verifikasi Midtrans (Project OS Scope Freeze)')
+                                    ->description('Mode isolasi khusus untuk membatasi sistem hanya pada modul Project OS saat inspeksi/audit Midtrans berlangsung.')
+                                    ->schema([
+                                        Toggle::make('midtrans_compliance_strict_mode')
+                                            ->label('Aktifkan Strict Mode Audit Midtrans')
+                                            ->helperText('Jika diaktifkan, modul non-Project OS (CV Pro, dsb) akan dibatasi sehingga tim inspeksi Midtrans hanya memverifikasi modul Project OS & PRD Generator.')
+                                            ->default(false),
+                                    ]),
                             ]),
 
                         Tabs\Tab::make('Navigation & Footer')

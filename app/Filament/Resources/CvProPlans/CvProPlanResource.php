@@ -15,6 +15,8 @@ use Filament\Tables\Table;
 
 class CvProPlanResource extends Resource
 {
+    use \App\Filament\Traits\RestrictedToSuperAdmin;
+
     protected static ?string $model = CvProPlan::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';

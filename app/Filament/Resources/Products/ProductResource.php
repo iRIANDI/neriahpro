@@ -18,6 +18,8 @@ use Filament\Tables\Table;
 
 class ProductResource extends Resource
 {
+    use \App\Filament\Traits\RestrictedToSuperAdmin;
+
     protected static ?string $model = Product::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cube';

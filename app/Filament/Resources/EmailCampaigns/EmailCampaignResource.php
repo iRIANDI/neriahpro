@@ -16,6 +16,8 @@ use Filament\Tables\Table;
 
 class EmailCampaignResource extends Resource
 {
+    use \App\Filament\Traits\RestrictedToSuperAdmin;
+
     protected static ?string $model = EmailCampaign::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-megaphone';

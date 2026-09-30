@@ -32,6 +32,8 @@ use Illuminate\Support\Str;
 
 class CmsPageResource extends Resource
 {
+    use \App\Filament\Traits\RestrictedToSuperAdmin;
+
     protected static ?string $model = CmsPage::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-window';

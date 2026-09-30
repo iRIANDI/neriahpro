@@ -14,6 +14,8 @@ use Filament\Tables\Table;
 
 class InterviewSessionResource extends Resource
 {
+    use \App\Filament\Traits\RestrictedToSuperAdmin;
+
     protected static ?string $model = InterviewSession::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-microphone';

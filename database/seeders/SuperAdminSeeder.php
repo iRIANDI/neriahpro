@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Role;
+use App\Models\Permission;
 
 class SuperAdminSeeder extends Seeder
 {
@@ -14,9 +15,10 @@ class SuperAdminSeeder extends Seeder
      */
     public function run(): void
     {
-        $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $reviewerRole = Role::firstOrCreate(['name' => 'midtrans_reviewer', 'guard_name' => 'web']);
 
-        // 1. Primary Superadmin
+        // 1. Primary Superadmin (Full Access to Everything)
         $admin = User::updateOrCreate(
             ['email' => 'yoseph.iriandi.tambunan@gmail.com'],
             [
@@ -27,10 +29,10 @@ class SuperAdminSeeder extends Seeder
         );
 
         if (!$admin->hasRole('super_admin')) {
-            $admin->assignRole($role);
+            $admin->assignRole($superAdminRole);
         }
 
-        // 2. Dedicated Midtrans QA / Reviewer Dummy Account
+        // 2. Dedicated Midtrans QA / Reviewer Dummy Account (Restricted Strictly to Project OS)
         $reviewer = User::updateOrCreate(
             ['email' => 'reviewer.midtrans@neriahpro.com'],
             [
@@ -40,8 +42,27 @@ class SuperAdminSeeder extends Seeder
             ]
         );
 
-        if (!$reviewer->hasRole('super_admin')) {
-            $reviewer->assignRole($role);
+        // Ensure reviewer does NOT have super_admin and ONLY has midtrans_reviewer
+        if ($reviewer->hasRole('super_admin')) {
+            $reviewer->removeRole('super_admin');
+        }
+        if (!$reviewer->hasRole('midtrans_reviewer')) {
+            $reviewer->assignRole($reviewerRole);
+        }
+
+        // Assign Project OS permissions to midtrans_reviewer
+        $projectOsPermissions = [
+            'ViewAny:VisionBlueprint',
+            'View:VisionBlueprint',
+            'Create:VisionBlueprint',
+            'Update:VisionBlueprint',
+        ];
+
+        foreach ($projectOsPermissions as $permName) {
+            $perm = Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
+            if (!$reviewerRole->hasPermissionTo($perm)) {
+                $reviewerRole->givePermissionTo($perm);
+            }
         }
     }
 }

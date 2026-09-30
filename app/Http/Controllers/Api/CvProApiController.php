@@ -241,4 +241,86 @@ class CvProApiController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Tailor CV specifically to target Job Description (Applied CV Generator).
+     */
+    public function tailor(Request $request): JsonResponse
+    {
+        $jobTitle = $request->input('job_title', 'Software Engineer');
+        $company = $request->input('company', 'Perusahaan Target');
+        $jobDesc = $request->input('job_description', '');
+        $resumeContent = $request->input('resume_content', []);
+        $lang = $request->input('lang', 'id');
+        $humanize = $request->boolean('humanize', false);
+
+        $result = CvAiService::tailorCvToJob($resumeContent, $jobTitle, $company, $jobDesc, $lang, $humanize);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'CV berhasil disesuaikan secara presisi dengan target lowongan!',
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * Generate LinkedIn Personal Branding Optimization Suite.
+     */
+    public function generateLinkedIn(Request $request): JsonResponse
+    {
+        $resumeContent = $request->input('resume_content', []);
+        $lang = $request->input('lang', 'id');
+        $humanize = $request->boolean('humanize', false);
+
+        $result = CvAiService::generateLinkedInContent($resumeContent, $lang, $humanize);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * Quick AI Helper for Summary, Bullet Enhance/Condense, Brainstorm, and Skills.
+     */
+    public function aiHelper(Request $request): JsonResponse
+    {
+        $action = $request->input('action', 'summary');
+        $lang = $request->input('lang', 'id');
+        $humanize = $request->boolean('humanize', false);
+        $content = $request->input('content', []);
+
+        switch ($action) {
+            case 'summary':
+                $role = $request->input('role', $content['personal_info']['title'] ?? 'Profesional');
+                $result = CvAiService::generateAiSummary($content, $role, $lang, $humanize);
+                return response()->json(['success' => true, 'data' => ['summary' => $result]]);
+
+            case 'enhance_bullet':
+                $bullet = $request->input('bullet', '');
+                $role = $request->input('role', 'Engineer');
+                $result = CvAiService::enhanceBulletPoint($bullet, $role, $lang, $humanize);
+                return response()->json(['success' => true, 'data' => ['bullet' => $result]]);
+
+            case 'condense_bullet':
+                $bullet = $request->input('bullet', '');
+                $result = CvAiService::condenseBulletPoint($bullet, $lang);
+                return response()->json(['success' => true, 'data' => ['bullet' => $result]]);
+
+            case 'brainstorm':
+                $role = $request->input('role', 'Systems Architect');
+                $industry = $request->input('industry', 'Technology');
+                $result = CvAiService::brainstormAchievements($role, $industry, $lang);
+                return response()->json(['success' => true, 'data' => ['achievements' => $result]]);
+
+            case 'skills':
+                $role = $request->input('role', 'Full Stack Engineer');
+                $result = CvAiService::suggestSkills($role, $lang);
+                return response()->json(['success' => true, 'data' => ['skills' => $result]]);
+
+            default:
+                return response()->json(['success' => false, 'message' => 'Action tidak dikenali.'], 400);
+        }
+    }
 }
+

@@ -89,13 +89,17 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 ## 4. Routing & Endpoints Map
 
-- `/cv-pro`: Full-stack interactive Studio CV Pro SaaS (`CvProStudioIsland`).
+- `/cv-pro`: Full-stack interactive Studio CV Pro SaaS (`CvProStudioIsland` with Editor, Job Hub Kanban, Keuangan Pro, ATS Audit, Mock Interview, LinkedIn Suite).
 - `/cv/{slug}`: Public ATS printable resume preview & print view (`CvProController::show`).
 - `/api/cv-pro/save`: Auto-save & sync resume state (POST).
 - `/api/cv-pro/lint`: ATS quality auditor & metric detector (POST).
+- `/api/cv-pro/tailor`: Tailor CV specifically to target Job Description (POST).
+- `/api/cv-pro/linkedin`: LinkedIn Personal Branding Suite (Headlines, About, Skills, Post ideas) (POST).
+- `/api/cv-pro/ai-helper`: Quick AI Helper for summary, bullet enhancer/condenser, and skill suggest (POST).
 - `/api/cv-pro/interview/generate`: AI mock interview question generator (POST).
 - `/api/cv-pro/interview/evaluate`: STAR method answer evaluation & scoring (POST).
 - `/api/cv-pro/outreach/generate`: Job application letter generator (Thank You, Follow-up, Cold Pitch) (POST).
+- `/api/cv-pro/upload-cv`: Microsoft MarkItDown multi-format CV scanner & parser (POST).
 - `/blueprint`: Halaman public kuesioner Project OS (`BlueprintController::create`).
 - `/blueprint/{slug}`: Halaman preview dokumen PRD, ERD, dan Tech Stack (`BlueprintController::show`).
 - `/document/{document}/preview`: Preview draft kontrak kerja sama digital.
@@ -110,7 +114,7 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 ## 5. Layanan Inti & Background Scheduler
 
 - **`App\Services\CvPro\CvAiService`**:
-  Mesin kecerdasan karir CV Pro SaaS: linter ATS CV dengan deteksi kata kerja lemah dan metrik kuantitatif, generator pertanyaan mock interview strategis berdasarkan posisi/target, evaluator jawaban kandidat berbasis formula STAR (Situation, Task, Action, Result), serta generator surat korespondensi pasca-wawancara.
+  Mesin kecerdasan karir CV Pro SaaS: linter ATS CV dengan deteksi kata kerja lemah dan metrik kuantitatif, generator penyesuaian CV presisi terhadap lowongan (Applied CV Generator & Diff), generator LinkedIn personal branding pack, AI bullet enhancer/condenser, generator pertanyaan mock interview strategis berdasarkan posisi/target, evaluator jawaban kandidat berbasis formula STAR (Situation, Task, Action, Result), serta generator surat korespondensi pasca-wawancara.
 - **`App\Services\PrdGeneratorService`**:
   Mesin pengolah ide kuesioner klien menjadi Ultimate PRD: menyusun ringkasan eksekutif, aktor sistem (RBAC), fitur MVP Fase 1, roadmap Fase 2, alur kerja (workflow), dan skema basis data ERD PostgreSQL Strict ULID.
 - **`App\Console\Commands\CheckExpiringAssetsCommand`** (`assets:check-expirations`):

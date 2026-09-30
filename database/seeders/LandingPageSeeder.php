@@ -56,7 +56,37 @@ class LandingPageSeeder extends Seeder
 
         $homePage->plugins = $plugins;
         $homePage->save();
+
+        // 2. Dedicated Pricing Page (/pricing)
+        $pricingPage = CmsPage::firstOrNew(['slug' => 'pricing']);
+        $pricingPage->title = [
+            'en' => 'Pricing & Plans // CV Pro Studio & AI Career Suite',
+            'id' => 'Pilihan Paket & Kelas Harga // CV Pro Studio & AI Career'
+        ];
+        $pricingPage->meta_description = [
+            'en' => 'Choose your CV Pro plan. Free manual CV creation & PDF download, or unlock AI CV tailoring, mock interview simulator, and LinkedIn branding.',
+            'id' => 'Pilih paket CV Pro Anda. Buat CV manual dan download PDF gratis selamanya, atau buka otomatisasi AI penyesuaian loker dan simulasi wawancara.'
+        ];
+        $pricingPage->is_published = true;
+        $pricingPage->plugins = [
+            [
+                'type' => 'cv_pricing_table',
+                'is_active' => true,
+                'data' => [
+                    'headline' => 'INVESTASI KARIR IMPIAN // PILIHAN KELAS & KUOTA CV PRO',
+                    'subheadline' => 'Pilih paket yang sesuai dengan akselerasi karir Anda. Pengunjung gratis tetap dapat mengisi form secara manual dan mengunduh PDF secara cuma-cuma.',
+                ]
+            ],
+            [
+                'type' => 'feature_grid',
+                'is_active' => true,
+                'data' => [
+                    'title' => 'Ekosistem Layanan Digital Terintegrasi.'
+                ]
+            ]
+        ];
+        $pricingPage->save();
         
-        $this->command->info('Landing Page seeded successfully with 4 Pillars Hub data!');
+        $this->command->info('Landing Page & Pricing Page seeded successfully with 4 Pillars & CV Pro Pricing Hub data!');
     }
 }

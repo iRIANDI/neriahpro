@@ -545,6 +545,246 @@ class CvAiService
     }
 
     /**
+     * Generate real-time STAR cheat sheet for voice interview copilot.
+     */
+    public static function generateRealtimeCheatSheet(string $spokenText, array $resumeContent, string $lang = 'id'): array
+    {
+        $skills = array_slice($resumeContent['skills'] ?? ['Problem Solving', 'Engineering', 'Architecture'], 0, 5);
+        $skillsStr = implode(', ', $skills);
+        $experiences = $resumeContent['experiences'] ?? [];
+        $recentRole = $experiences[0]['role'] ?? ($resumeContent['personal_info']['title'] ?? 'Profesional');
+        $recentCompany = $experiences[0]['company'] ?? 'Perusahaan';
+
+        $textLower = strtolower($spokenText);
+
+        if (str_contains($textLower, 'tantangan') || str_contains($textLower, 'sulit') || str_contains($textLower, 'challenge') || str_contains($textLower, 'problem')) {
+            $category = $lang === 'id' ? 'Tantangan Teknis & Pemecahan Masalah (STAR)' : 'Technical Challenge & Problem Solving (STAR)';
+            $situation = $lang === 'id' 
+                ? "Saat menjabat sebagai {$recentRole} di {$recentCompany}, tim menghadapi bottleneck skalabilitas dan query latensi tinggi."
+                : "While serving as {$recentRole} at {$recentCompany}, the platform encountered severe scaling bottlenecks and high database latency.";
+            $task = $lang === 'id'
+                ? "Memimpin rekayasa ulang arsitektur sistem dan menstabilkan performa platform dalam waktu 30 hari tanpa downtime."
+                : "Lead the architectural refactoring to stabilize system throughput within 30 days zero-downtime.";
+            $action = $lang === 'id'
+                ? "Mengimplementasikan query keystone O(1), Redis caching tier, dan Postgres connection pooling menggunakan {$skillsStr}."
+                : "Implemented keyset O(1) pagination, multi-tier Redis caching, and Postgres tuning leveraging {$skillsStr}.";
+            $result = $lang === 'id'
+                ? "Latensi query berkurang 65%, throughput melonjak 300%, dan beban CPU database berkurang 40%."
+                : "Query latency dropped by 65%, throughput surged 300%, and database CPU utilization decreased by 40%.";
+            $keywords = ['O(1) Scalability', 'Zero-Downtime', 'Micro-monolith', 'Throughput Optimization'];
+        } elseif (str_contains($textLower, 'konflik') || str_contains($textLower, 'beda pendapat') || str_contains($textLower, 'conflict') || str_contains($textLower, 'pressure') || str_contains($textLower, 'deadline')) {
+            $category = $lang === 'id' ? 'Manajemen Tekanan & Resolusi Kolaboratif' : 'Pressure Management & Conflict Resolution';
+            $situation = $lang === 'id'
+                ? "Terjadi perbedaan prioritas antara tim rekayasa dan manajemen produk terkait percepatan jadwal peluncuran."
+                : "Encountered diverging priorities between engineering and product stakeholders regarding aggressive release timelines.";
+            $task = $lang === 'id'
+                ? "Menyelaraskan target bisnis dengan batasan teknis tanpa mengorbankan stabilitas dan kualitas arsitektur sistem."
+                : "Align business deliverables with architectural constraints without compromising software reliability.";
+            $action = $lang === 'id'
+                ? "Membuat pemetaan trade-off berbasis data metrik, memecah delivery ke modul MVP terarah, dan mengalokasikan sprint cadangan."
+                : "Conducted data-driven trade-off workshops, phased deliveries into modular MVPs, and allocated sprint buffers.";
+            $result = $lang === 'id'
+                ? "Fitur utama meluncur tepat waktu dengan zero defect kritikal dan kepuasan pemangku kepentingan meningkat drastis."
+                : "Core features launched right on target with zero critical regressions and restored stakeholder trust.";
+            $keywords = ['Data-Driven Alignment', 'Scope Negotiation', 'Empathetic Communication', 'Risk Mitigation'];
+        } else {
+            $category = $lang === 'id' ? 'Nilai Tambah & Pengalaman Profesional Utama' : 'Core Value Proposition & Professional Track Record';
+            $situation = $lang === 'id'
+                ? "Kebutuhan platform enterprise modern akan sistem yang tangguh, adaptif, dan siap berkembang pesat."
+                : "Modern enterprise demands resilient architectures that scale smoothly alongside exponential business growth.";
+            $task = $lang === 'id'
+                ? "Memastikan seluruh eksekusi kode dan keputusan teknis memberikan dampak langsung terhadap efisiensi operasional bisnis."
+                : "Ensure all engineering executions directly compound operational efficiency and bottom-line velocity.";
+            $action = $lang === 'id'
+                ? "Memadukan keahlian teknis ({$skillsStr}) dengan kedisiplinan agile dan dokumentasi PRD spesifikasi arsitektur yang terstruktur."
+                : "Synthesized cutting-edge software practices ({$skillsStr}) with structured architectural documentation and disciplined sprints.";
+            $result = $lang === 'id'
+                ? "Mempercepat time-to-market sebesar 40% dan menghemat pengeluaran infrastruktur hingga puluhan juta rupiah."
+                : "Accelerated release velocity by 40% while trimming annual infrastructure overhead significantly.";
+            $keywords = ['Value Delivery', 'Architectural Rigor', 'Operational Excellence', 'High Velocity'];
+        }
+
+        return [
+            'category' => $category,
+            'detected_input' => $spokenText ?: 'Pertanyaan Wawancara Umum',
+            'cheat_sheet' => [
+                'situation' => $situation,
+                'task' => $task,
+                'action' => $action,
+                'result' => $result,
+            ],
+            'power_keywords' => $keywords,
+            'pacing_tip' => $lang === 'id'
+                ? 'Tarik napas tenang, berikan jeda 2 detik sebelum menjawab, dan tatap pewawancara dengan percaya diri.'
+                : 'Pause 2 seconds before answering, maintain confident eye contact, and speak at a steady pace.',
+        ];
+    }
+
+    /**
+     * Generate complete standalone personal web portfolio HTML from resume content.
+     */
+    public static function generateWebPortfolio(array $resumeContent, string $theme = 'dark', string $lang = 'id'): array
+    {
+        $personal = $resumeContent['personal_info'] ?? [];
+        $name = htmlspecialchars($personal['name'] ?? 'Profesional');
+        $title = htmlspecialchars($personal['title'] ?? 'Software Engineer & Specialist');
+        $summary = htmlspecialchars($personal['summary'] ?? 'Experienced specialist building high performance systems.');
+        $email = htmlspecialchars($personal['email'] ?? 'contact@neriahpro.com');
+        $phone = htmlspecialchars($personal['phone'] ?? '+62 812-3456-7890');
+        $location = htmlspecialchars($personal['location'] ?? 'Jakarta, Indonesia');
+        $linkedin = htmlspecialchars($personal['linkedin'] ?? '');
+        $website = htmlspecialchars($personal['website'] ?? '');
+
+        $experiences = $resumeContent['experiences'] ?? [];
+        $skills = $resumeContent['skills'] ?? ['System Architecture', 'Modern Cloud', 'Problem Solving'];
+        $projects = $resumeContent['projects'] ?? [];
+        $education = $resumeContent['education'] ?? [];
+
+        $isDark = $theme === 'dark';
+        $bgClass = $isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900';
+        $cardBg = $isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200';
+        $subtext = $isDark ? 'text-slate-400' : 'text-slate-600';
+
+        // Render Experience HTML
+        $expHtml = '';
+        foreach ($experiences as $exp) {
+            $company = htmlspecialchars($exp['company'] ?? '');
+            $role = htmlspecialchars($exp['role'] ?? '');
+            $period = htmlspecialchars($exp['period'] ?? '');
+            $loc = htmlspecialchars($exp['location'] ?? '');
+            $bulletsHtml = '';
+            foreach ($exp['bullets'] ?? [] as $b) {
+                $bulletsHtml .= '<li class="flex items-start gap-2 ' . $subtext . '"><span class="text-indigo-500 font-bold">▹</span><span>' . htmlspecialchars($b) . '</span></li>';
+            }
+            $expHtml .= <<<HTML
+            <div class="p-6 rounded-2xl border {$cardBg} shadow-sm mb-6 transition hover:border-indigo-500/50">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-2">
+                    <h3 class="text-xl font-bold text-indigo-400">{$role}</h3>
+                    <span class="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 w-fit mt-1 md:mt-0">{$period}</span>
+                </div>
+                <div class="text-sm font-semibold {$subtext} mb-4">{$company} • {$loc}</div>
+                <ul class="space-y-2 text-sm leading-relaxed">
+                    {$bulletsHtml}
+                </ul>
+            </div>
+HTML;
+        }
+
+        // Render Skills Badges
+        $skillsHtml = '';
+        foreach ($skills as $s) {
+            $skillsHtml .= '<span class="px-4 py-2 rounded-xl text-sm font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 transition hover:bg-indigo-500/20">' . htmlspecialchars($s) . '</span>';
+        }
+
+        // Render Projects HTML
+        $projHtml = '';
+        foreach ($projects as $proj) {
+            $pName = htmlspecialchars($proj['name'] ?? '');
+            $pRole = htmlspecialchars($proj['role'] ?? '');
+            $pDesc = htmlspecialchars($proj['description'] ?? '');
+            $pLink = htmlspecialchars($proj['link'] ?? '#');
+            $projHtml .= <<<HTML
+            <div class="p-6 rounded-2xl border {$cardBg} shadow-sm transition hover:-translate-y-1 hover:border-indigo-500/50 flex flex-col justify-between">
+                <div>
+                    <h4 class="text-lg font-bold text-slate-100 mb-1">{$pName}</h4>
+                    <div class="text-xs font-medium text-indigo-400 mb-3">{$pRole}</div>
+                    <p class="text-sm {$subtext} leading-relaxed mb-4">{$pDesc}</p>
+                </div>
+                <a href="{$pLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-400 hover:text-indigo-300">
+                    Kunjungi Proyek →
+                </a>
+            </div>
+HTML;
+        }
+
+        $fullHtml = <<<HTML
+<!DOCTYPE html>
+<html lang="{$lang}" class="scroll-smooth">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{$name} — {$title}</title>
+    <meta name="description" content="Personal Portfolio of {$name} - {$title}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="{$bgClass} antialiased min-h-screen">
+    <nav class="sticky top-0 z-50 backdrop-blur-md bg-opacity-80 {$bgClass} border-b border-indigo-500/20 px-6 py-4">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <a href="#hero" class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent">{$name}</a>
+            <div class="space-x-6 text-sm font-medium hidden sm:flex">
+                <a href="#about" class="hover:text-indigo-400 transition">Tentang</a>
+                <a href="#experience" class="hover:text-indigo-400 transition">Pengalaman</a>
+                <a href="#skills" class="hover:text-indigo-400 transition">Keahlian</a>
+                <a href="#contact" class="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white transition">Hubungi</a>
+            </div>
+        </div>
+    </nav>
+
+    <header id="hero" class="max-w-4xl mx-auto px-6 py-24 text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 mb-6">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Tersedia untuk Peluang & Proyek Baru
+        </div>
+        <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight mb-6">
+            Halo, saya <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">{$name}</span>
+        </h1>
+        <p class="text-xl sm:text-2xl text-slate-400 font-medium mb-6">{$title}</p>
+        <p class="text-base {$subtext} max-w-2xl mx-auto leading-relaxed mb-10">{$summary}</p>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="mailto:{$email}" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-600/30 transition">Kirim Email</a>
+            <a href="#experience" class="px-6 py-3 rounded-xl border border-slate-700 hover:border-slate-500 font-semibold transition">Lihat Pengalaman</a>
+        </div>
+    </header>
+
+    <section id="experience" class="max-w-4xl mx-auto px-6 py-16">
+        <h2 class="text-2xl font-bold tracking-tight mb-8 flex items-center gap-3">
+            <span class="w-8 h-1 bg-indigo-500 rounded-full"></span>
+            Pengalaman Profesional
+        </h2>
+        <div>{$expHtml}</div>
+    </section>
+
+    <section id="skills" class="max-w-4xl mx-auto px-6 py-16">
+        <h2 class="text-2xl font-bold tracking-tight mb-8 flex items-center gap-3">
+            <span class="w-8 h-1 bg-indigo-500 rounded-full"></span>
+            Keahlian & Teknologi
+        </h2>
+        <div class="flex flex-wrap gap-3">{$skillsHtml}</div>
+    </section>
+
+    <section id="projects" class="max-w-4xl mx-auto px-6 py-16">
+        <h2 class="text-2xl font-bold tracking-tight mb-8 flex items-center gap-3">
+            <span class="w-8 h-1 bg-indigo-500 rounded-full"></span>
+            Karya & Portofolio Pilihan
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">{$projHtml}</div>
+    </section>
+
+    <footer id="contact" class="border-t border-slate-800 py-16 text-center max-w-4xl mx-auto px-6">
+        <h3 class="text-2xl font-bold mb-4">Mari Berkolaborasi</h3>
+        <p class="text-sm {$subtext} max-w-md mx-auto mb-6">Tertarik mendiskusikan peluang karir, konsultasi arsitektur, atau proyek baru? Silakan hubungi saya langsung.</p>
+        <div class="inline-flex flex-wrap justify-center gap-4 text-sm font-semibold">
+            <a href="mailto:{$email}" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition">Email: {$email}</a>
+            <span class="px-5 py-2.5 rounded-xl border border-slate-800 text-slate-400">Telp: {$phone}</span>
+        </div>
+        <div class="text-xs text-slate-500 mt-12">© 2026 {$name}. Dibuat secara otomatis dengan Neriah Pro CV Pro Studio.</div>
+    </footer>
+</body>
+</html>
+HTML;
+
+        return [
+            'html' => $fullHtml,
+            'title' => "{$name} - {$title}",
+            'theme' => $theme,
+        ];
+    }
+
+    /**
      * Suggest high-demand skills for a target role.
      */
     public static function suggestSkills(string $role, string $lang = 'id'): array
@@ -562,4 +802,5 @@ class CvAiService
         return ['Problem Solving', 'Strategic Planning', 'Cross-Functional Leadership', 'Data-Driven Decision Making', 'Process Optimization'];
     }
 }
+
 

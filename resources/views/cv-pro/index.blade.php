@@ -58,7 +58,15 @@
     @react('GlobalNavigationIsland', ['settings' => $globalSettings['main_navigation']->value ?? null])
 
     <main class="flex-1 pt-14">
-        @react('CvProStudioIsland', ['initialData' => $initialData, 'featureFlags' => $featureFlags])
+        @php
+            $currentUser = auth()->user() ? [
+                'id' => auth()->user()->id,
+                'name' => auth()->user()->name,
+                'email' => auth()->user()->email,
+                'is_super_admin' => auth()->user()->hasRole('super_admin') || auth()->user()->email === 'yoseph.iriandi.tambunan@gmail.com',
+            ] : null;
+        @endphp
+        @react('CvProStudioIsland', ['initialData' => $initialData, 'featureFlags' => $featureFlags, 'currentUser' => $currentUser])
     </main>
 
     <!-- Global Footer -->

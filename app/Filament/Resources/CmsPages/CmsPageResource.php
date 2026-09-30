@@ -225,6 +225,29 @@ class CmsPageResource extends Resource
                                                 Textarea::make('html_content')->rows(5),
                                             ])->columns(1)->columnSpan(['default' => 12, 'md' => 12]),
                                         ])->columns(12),
+
+                                    Builder\Block::make('cv_pricing_table')
+                                        ->label('💎 CV Pro Pricing Table (React Island)')
+                                        ->icon('heroicon-m-banknotes')
+                                        ->schema([
+                                            $getCopyDropdown('cv_pricing_table'),
+                                            TextInput::make('anchor_id')
+                                                ->label('Anchor ID')
+                                                ->prefix('#')
+                                                ->default('pricing')
+                                                ->columnSpan(['default' => 12, 'md' => 6]),
+                                            Toggle::make('is_active')
+                                                ->default(true)
+                                                ->required()
+                                                ->columnSpan(['default' => 12, 'md' => 6]),
+                                            Group::make()->schema([
+                                                TextInput::make('headline')
+                                                    ->default('INVESTASI KARIR IMPIAN // PILIHAN KELAS & KUOTA CV PRO')
+                                                    ->required(),
+                                                TextInput::make('subheadline')
+                                                    ->default('Pilih paket yang sesuai dengan akselerasi karir Anda. Pengunjung gratis tetap dapat mengisi form manual dan unduh PDF sepuasnya.'),
+                                            ])->columns(1)->columnSpan(['default' => 12, 'md' => 12]),
+                                        ])->columns(12),
                                 ])
                                 ->collapsible()
                                 ->collapsed()

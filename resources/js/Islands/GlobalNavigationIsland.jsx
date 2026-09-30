@@ -72,8 +72,9 @@ export default function GlobalNavigationIsland({ settings }) {
   const navLinks = [
     { label: lang === 'id' ? 'Beranda' : 'Home', href: '/' },
     { label: 'Project OS (PRD)', href: '/blueprint', highlight: true },
-    { label: lang === 'id' ? 'Layanan HUB' : 'Service Hub', href: '#services' },
-    { label: lang === 'id' ? 'Arsitektur' : 'Architecture', href: '#architecture' },
+    { label: lang === 'id' ? 'Studio CV Pro' : 'CV Pro Studio', href: '/cv-pro' },
+    { label: lang === 'id' ? 'Paket & Harga' : 'Pricing', href: '/pricing' },
+    { label: lang === 'id' ? 'Layanan HUB' : 'Service Hub', href: '/#services' },
   ];
 
   return (

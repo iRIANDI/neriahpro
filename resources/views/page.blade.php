@@ -84,8 +84,9 @@
                     $pluginName = '';
                     $type = $plugin->plugin_type ?? $plugin->type ?? '';
                     if($type == 'hero_section') $pluginName = 'HeroIsland';
-                    if($type == 'feature_grid') $pluginName = 'ProductGridIsland';
+                    if($type == 'feature_grid' || $type == 'product_grid') $pluginName = 'ProductGridIsland';
                     if($type == 'onboarding_form') $pluginName = 'ClientOnboardingIsland';
+                    if($type == 'cv_pricing_table' || $type == 'pricing_section') $pluginName = 'CvPricingIsland';
                 @endphp
                 
                 @if($pluginName)

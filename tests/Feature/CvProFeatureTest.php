@@ -311,5 +311,65 @@ class CvProFeatureTest extends TestCase
         $resSkills->assertStatus(200);
         $this->assertNotEmpty($resSkills->json('data.skills'));
     }
+
+    public function test_realtime_voice_copilot(): void
+    {
+        $response = $this->postJson('/api/cv-pro/realtime-copilot', [
+            'spoken_text' => 'Bagaimana Anda menghadapi tantangan bottleneck query dan skalabilitas database?',
+            'resume_content' => [
+                'skills' => ['Laravel 13', 'PostgreSQL', 'Redis'],
+                'experiences' => [
+                    [
+                        'company' => 'Neriah Pro Enterprise',
+                        'role' => 'Lead Systems Architect',
+                    ],
+                ],
+            ],
+            'lang' => 'id',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $this->assertNotEmpty($response->json('data.cheat_sheet.situation'));
+        $this->assertNotEmpty($response->json('data.cheat_sheet.task'));
+        $this->assertNotEmpty($response->json('data.cheat_sheet.action'));
+        $this->assertNotEmpty($response->json('data.cheat_sheet.result'));
+        $this->assertNotEmpty($response->json('data.power_keywords'));
+    }
+
+    public function test_web_portfolio_generator(): void
+    {
+        $response = $this->postJson('/api/cv-pro/portfolio/generate', [
+            'resume_content' => [
+                'personal_info' => [
+                    'name' => 'Alex Pratama',
+                    'title' => 'Lead Systems Architect',
+                    'summary' => 'Experienced software engineer.',
+                ],
+                'skills' => ['Laravel 13', 'PostgreSQL', 'React 19'],
+                'experiences' => [
+                    [
+                        'company' => 'Neriah Pro Enterprise',
+                        'role' => 'Lead Systems Architect',
+                        'period' => '2023 - Sekarang',
+                        'location' => 'Jakarta / Remote',
+                        'bullets' => ['Mengarsitektur sistem micro-monolith ber-throughput tinggi.'],
+                    ],
+                ],
+            ],
+            'theme' => 'dark',
+            'lang' => 'id',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $html = $response->json('data.html');
+        $this->assertStringContainsString('Alex Pratama', $html);
+        $this->assertStringContainsString('Lead Systems Architect', $html);
+        $this->assertStringContainsString('<!DOCTYPE html>', $html);
+    }
 }
+
 

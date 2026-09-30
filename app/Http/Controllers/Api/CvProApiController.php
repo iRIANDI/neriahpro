@@ -324,6 +324,41 @@ class CvProApiController extends Controller
     }
 
     /**
+     * Real-time STAR Voice Copilot for live interview guidance.
+     */
+    public function realtimeCopilot(Request $request): JsonResponse
+    {
+        $spokenText = $request->input('spoken_text', '');
+        $resumeContent = $request->input('resume_content', []);
+        $lang = $request->input('lang', 'id');
+
+        $result = CvAiService::generateRealtimeCheatSheet($spokenText, $resumeContent, $lang);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * AI Web Portfolio Generator.
+     */
+    public function generatePortfolio(Request $request): JsonResponse
+    {
+        $resumeContent = $request->input('resume_content', []);
+        $theme = $request->input('theme', 'dark');
+        $lang = $request->input('lang', 'id');
+
+        $result = CvAiService::generateWebPortfolio($resumeContent, $theme, $lang);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+
+    /**
      * Get dynamic pricing tiers, a la carte top-ups, and financial margins.
      */
     public function pricing(Request $request): JsonResponse

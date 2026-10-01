@@ -128,7 +128,35 @@ class PrdGeneratorService
                 'notes' => 'Akan dihubungkan melalui service providers terisolasi dengan fallback retry mechanism.',
             ],
             'architecture_evaluation' => self::evaluateArchitecture($businessName, $masalah, $mvpItems, $alurKerja, $extraContext),
-            'velocity_pricing_options' => self::generateVelocityPricingOptions($targetWaktu),
+            'velocity_pricing_options' => self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null),
+            'governance_and_sla' => [
+                'title' => 'Tata Kelola, Standar Kualitas & SLA Serah Terima (Strict Governance & Handoff)',
+                'definition_of_done' => [
+                    'Seluruh fitur MVP Fase 1 berjalan sesuai spesifikasi di server Staging & Production.',
+                    'Lolos audit keamanan dasar (CSRF token, sanitasi input XSS, proteksi SQL Injection, & HTTPS SSL).',
+                    'Skema basis data relasional PostgreSQL dengan Primary Key ULID terverifikasi.',
+                    'Dasbor admin Filament v5 dapat diakses oleh peran Superadmin / Staff yang ditunjuk.',
+                    'Sesi pelatihan administrasi singkat dan serah terima kredensial resmi sistem.',
+                ],
+                'browser_device_matrix' => [
+                    'supported' => 'Google Chrome, Apple Safari, Mozilla Firefox, Microsoft Edge (rilis 2 tahun terakhir); iOS Safari 15+; Android Chrome 100+.',
+                    'unsupported' => 'Internet Explorer 11, Opera Mini data-saving mode, UC Browser legacy rendering engine, dan peramban ponsel non-standar.',
+                ],
+                'warranty_policy' => [
+                    'duration' => '30 Hari Kalender Sejak Tanggal Peluncuran (Go-Live)',
+                    'coverage' => 'Perbaikan bug, error sistem, atau ketidaksesuaian fungsi dari ruang lingkup MVP Fase 1 tanpa biaya tambahan.',
+                    'exclusions' => 'Permintaan desain baru, penambahan field/tabel baru di luar PRD, atau kerusakan akibat modifikasi pihak ketiga di luar tim Neriah Pro.',
+                ],
+                'content_handoff_clause' => [
+                    'rule' => 'Klien wajib menyerahkan aset konten resmi (teks, logo, foto) maksimal 7 hari kerja sejak approval blueprint.',
+                    'fallback' => 'Apabila terjadi keterlambatan dari pihak klien, tim pengembang berhak menggunakan dummy/placeholder text standar industri agar timeline rilis dan jadwal serah terima tidak tertunda.',
+                ],
+                'recurring_cost_transparency' => [
+                    'domain' => 'Rp 150.000 - Rp 250.000 / tahun (Dibayarkan langsung ke registrar domain resmi)',
+                    'hosting_starter' => 'Rp 50.000 - Rp 150.000 / bulan (Untuk paket non-profit/komunitas pada cloud server efisien)',
+                    'hosting_enterprise' => 'Rp 350.000 - Rp 1.500.000 / bulan (Dedicated VPS Nixpacks & Docker untuk high-traffic scale)',
+                ],
+            ],
             'action_plan' => [
                 ['phase' => 'Fase 0: Blueprint & Skema Approval', 'duration' => 'Hari ke 1-3', 'status' => 'Active'],
                 ['phase' => 'Fase 1: Database Migration & Admin Filament CRUD', 'duration' => 'Pekan 1', 'status' => 'Pending'],
@@ -530,8 +558,82 @@ class PrdGeneratorService
     /**
      * Generate tiered velocity pricing options with AI accelerator costs and mathematical formula.
      */
-    public static function generateVelocityPricingOptions(string $targetWaktu): array
+    public static function generateVelocityPricingOptions(string $targetWaktu, ?string $budgetRange = null): array
     {
+        $isCommunityBudget = $budgetRange && (
+            str_contains(strtolower($budgetRange), '5.000.000') ||
+            str_contains(strtolower($budgetRange), '15.000.000') ||
+            str_contains(strtolower($budgetRange), 'komunitas') ||
+            str_contains(strtolower($budgetRange), 'church') ||
+            str_contains(strtolower($budgetRange), 'gereja') ||
+            str_contains(strtolower($budgetRange), 'non-profit')
+        );
+
+        if ($isCommunityBudget) {
+            return [
+                [
+                    'id' => 'community_starter',
+                    'name' => 'Community / Gereja Lean Starter',
+                    'duration' => '7 Hari Kerja',
+                    'badge' => 'LEAN_STARTER // NON-PROFIT',
+                    'speed_multiplier' => '1.0x (Pondasi Siap Pakai)',
+                    'contract_amount' => 5000000.00,
+                    'dp_amount' => 2500000.00,
+                    'pelunasan_amount' => 2500000.00,
+                    'ai_quota_spec' => 'Pre-Built Modular Monolith Blueprint Engine',
+                    'squad_allocation' => '1 Dedicated Fullstack Specialist + Template Deployer',
+                    'cost_formula' => 'Base Community Modular Setup (Rp 5.000.000) - Subsidi Efisiensi Neriah OS',
+                    'ai_swarm_specs' => [
+                        'Arsitektur: Pre-built Lean Monolith CMS (Laravel 13 & Filament v5)',
+                        'Modul: Profil Gereja/Organisasi, Jadwal Ibadah/Kegiatan, Form Doa/Kontak, & Donasi QRIS',
+                        'Infrastruktur: Setup Sub-Instance / Shared Cloud Kilat hemat biaya (< Rp 100rb/bln)',
+                        'Handoff: Pelatihan Admin Sekretariat & Panduan Pengelolaan Mandiri',
+                    ],
+                    'description' => 'Paket bersubsidi khusus untuk institusi non-profit, gereja, yayasan amal, atau komunitas sosial dengan alokasi modal terbatas. Menyediakan website responsif lengkap dengan portal admin warta jemaat dan penerimaan donasi QRIS.',
+                ],
+                [
+                    'id' => 'community_plus',
+                    'name' => 'Community Plus (WhatsApp Alert & Attendance)',
+                    'duration' => '14 Hari Kerja',
+                    'badge' => 'RECOMMENDED // COMMUNITY',
+                    'speed_multiplier' => '1.5x (Fitur Notifikasi Lengkap)',
+                    'contract_amount' => 10000000.00,
+                    'dp_amount' => 5000000.00,
+                    'pelunasan_amount' => 5000000.00,
+                    'ai_quota_spec' => 'AI Assisted WhatsApp Notification & Media Archival',
+                    'squad_allocation' => '1 Fullstack Engineer + Integration Specialist',
+                    'cost_formula' => 'Base Starter (Rp 5M) + Integrasi WhatsApp Gateway & Absensi (Rp 5M)',
+                    'ai_swarm_specs' => [
+                        'Seluruh fitur paket Community Starter',
+                        'Integrasi WhatsApp API untuk broadcast warta & pengingat jadwal ibadah otomatis',
+                        'Sistem Presensi / Absensi QR Code untuk relawan dan pelayan komunitas',
+                        'Arsip Khotbah & Dokumen Warta (Audio MP3 & PDF Download)',
+                    ],
+                    'description' => 'Tingkat lanjutan untuk komunitas atau gereja yang ingin menjaga keterlibatan jemaat secara proaktif melalui pengingat WhatsApp otomatis dan sistem presensi.',
+                ],
+                [
+                    'id' => 'community_enterprise',
+                    'name' => 'Multi-Branch Foundation / Sinode Cluster',
+                    'duration' => '21 Hari Kerja',
+                    'badge' => 'MULTI_POS // ADVANCED',
+                    'speed_multiplier' => '2.0x (Skala Cabang / Yayasan)',
+                    'contract_amount' => 15000000.00,
+                    'dp_amount' => 7500000.00,
+                    'pelunasan_amount' => 7500000.00,
+                    'ai_quota_spec' => 'Multi-Tenant RBAC & Multi-Location Data Sync',
+                    'squad_allocation' => 'Lead Architect + Fullstack Squad',
+                    'cost_formula' => 'Base Community (Rp 5M) + Multi-Branch Management & Dedicated DB (Rp 10M)',
+                    'ai_swarm_specs' => [
+                        'Seluruh fitur Community Plus',
+                        'Multi-Branch RBAC: Hak akses khusus per cabang gereja / pos pelayanan',
+                        'Rekapitulasi Keuangan & Donasi per Cabang Wilayah',
+                        'Dedicated VPS Hosting Configuration & Cloudflare CDN Setup',
+                    ],
+                    'description' => 'Dikhususkan untuk yayasan atau gereja dengan beberapa pos wilayah / cabang pelayanan yang memerlukan pelaporan terpusat dan pemisahan hak akses per wilayah.',
+                ],
+            ];
+        }
+
         return [
             [
                 'id' => 'standard',

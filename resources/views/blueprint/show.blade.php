@@ -66,6 +66,24 @@
             }
         });
     </script>
+@php
+    $pricingTiers = $prd['velocity_pricing_options'] ?? \App\Services\PrdGeneratorService::generateVelocityPricingOptions(
+        $blueprint->target_waktu ?? '30 Hari Kerja',
+        $blueprint->user_metadata['kisaran_budget'] ?? null
+    );
+    $alpineTiers = [];
+    foreach ($pricingTiers as $t) {
+        $alpineTiers[$t['id']] = [
+            'contract' => (float)$t['contract_amount'],
+            'dp' => (float)$t['dp_amount'],
+            'days' => $t['duration'],
+            'name' => $t['name'],
+        ];
+    }
+    $defaultSelectedTier = array_key_exists('fast_track', $alpineTiers) 
+        ? 'fast_track' 
+        : (array_key_exists('community_starter', $alpineTiers) ? 'community_starter' : array_key_first($alpineTiers));
+@endphp
 </head>
 <body x-data="{ 
     userMenuOpen: false, 
@@ -73,12 +91,8 @@
     flowTab: 'visual', 
     erdTab: 'visual', 
     erdLang: 'id',
-    selectedTier: 'fast_track',
-    tierAmounts: {
-        standard: { contract: 50000000, dp: 25000000, days: '30 Hari', name: 'Standard Velocity (30 Hari)' },
-        fast_track: { contract: 75000000, dp: 37500000, days: '14 Hari', name: 'Fast-Track (14 Hari) // Gemini Ultra Accelerator' },
-        hyper_sprint: { contract: 100000000, dp: 50000000, days: '7 Hari', name: 'Hyper-Sprint (7 Hari) // 24/7 War Room' }
-    }
+    selectedTier: '{{ $defaultSelectedTier }}',
+    tierAmounts: {{ json_encode($alpineTiers) }}
 }" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- Header Navigation Bar (Sharp Precision Theme) -->
@@ -165,7 +179,7 @@
                                     <span>CART BELANJA & ESCROW</span>
                                 </a>
                             </div>
-                            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                            <form method="POST" action="{{ Route::has('logout') ? route('logout') : url('/logout') }}" class="m-0">
                                 @csrf
                                 <button type="submit" class="w-full text-left flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition">
                                     <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
@@ -175,7 +189,7 @@
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" class="px-3 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none transition flex items-center gap-1">
+                    <a href="{{ Route::has('login') ? route('login') : url('/login') }}" class="px-3 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none transition flex items-center gap-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
                         LOGIN
                     </a>
@@ -1074,124 +1088,67 @@ erDiagram
                     </p>
                 </div>
 
-                <!-- 3 Comparative Velocity Pricing Cards -->
+                <!-- Dynamic Comparative Velocity & Budget Pricing Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 font-mono">
-                    <!-- Standard (30 Days) -->
-                    <div 
-                        @click="selectedTier = 'standard'"
-                        :class="selectedTier === 'standard' ? 'border-2 border-emerald-500 bg-emerald-500/5 dark:bg-emerald-950/20 shadow-md' : 'border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-zinc-400'"
-                        class="p-5 cursor-pointer transition relative flex flex-col justify-between"
-                    >
-                        <div>
-                            <div class="flex items-center justify-between gap-1 mb-2">
-                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold">1.0X PACE</span>
-                                <span x-show="selectedTier === 'standard'" class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            </div>
-                            <h3 class="text-base font-black uppercase text-zinc-900 dark:text-zinc-100">Standard Velocity</h3>
-                            <div class="text-xl font-black text-zinc-900 dark:text-zinc-100 my-2">
-                                Rp 50.000.000
-                            </div>
-                            <div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-2">
-                                Termin DP 50%: Rp 25.000.000
-                            </div>
-                            <div class="text-[10px] text-zinc-500 dark:text-zinc-400 mb-3 bg-zinc-100 dark:bg-zinc-900 p-2 border border-zinc-200 dark:border-zinc-800">
-                                <strong>Formula:</strong> Base (50M) + AI Dasar (0)
-                            </div>
-                            <ul class="space-y-1.5 text-[11px] text-zinc-600 dark:text-zinc-400 mb-4 border-t border-zinc-200 dark:border-zinc-800 pt-3">
-                                <li>&bull; Durasi: <strong>30 Hari Kerja</strong></li>
-                                <li>&bull; Alokasi: 1 Lead Fullstack Engineer</li>
-                                <li>&bull; AI Engine: Gemini Pro standard reasoning</li>
-                                <li>&bull; Siklus: 5 Sprint reguler terencana</li>
-                            </ul>
-                        </div>
-                        <button 
-                            type="button" 
-                            :class="selectedTier === 'standard' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'"
-                            class="w-full py-2 text-xs uppercase tracking-wider transition"
+                    @foreach($pricingTiers as $tierItem)
+                        @php
+                            $isFastTrackOrRecommended = str_contains($tierItem['id'], 'fast_track') || str_contains($tierItem['id'], 'community_plus') || str_contains($tierItem['id'], 'community_starter');
+                            $isEmergencyOrEnterprise = str_contains($tierItem['id'], 'hyper_sprint') || str_contains($tierItem['id'], 'community_enterprise');
+                        @endphp
+                        <div 
+                            @click="selectedTier = '{{ $tierItem['id'] }}'"
+                            :class="selectedTier === '{{ $tierItem['id'] }}' 
+                                ? '{{ $isEmergencyOrEnterprise ? 'border-2 border-amber-500 bg-amber-500/10 dark:bg-amber-950/30 shadow-lg' : 'border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/30 shadow-lg' }}' 
+                                : 'border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-zinc-400'"
+                            class="p-5 cursor-pointer transition relative flex flex-col justify-between"
                         >
-                            <span x-text="selectedTier === 'standard' ? '&check; PAKET TERPILIH' : 'PILIH STANDARD'"></span>
-                        </button>
-                    </div>
+                            @if(str_contains($tierItem['id'], 'fast_track') || str_contains($tierItem['id'], 'community_plus'))
+                                <div class="absolute -top-3 right-4 px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-black uppercase tracking-wider">
+                                    ⚡ RECOMMENDED
+                                </div>
+                            @elseif($isEmergencyOrEnterprise)
+                                <div class="absolute -top-3 right-4 px-2 py-0.5 bg-amber-500 text-black text-[9px] font-black uppercase tracking-wider">
+                                    🔥 TOP TIER
+                                </div>
+                            @endif
 
-                    <!-- Fast-Track (14 Days) - Recommended -->
-                    <div 
-                        @click="selectedTier = 'fast_track'"
-                        :class="selectedTier === 'fast_track' ? 'border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/30 shadow-lg' : 'border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-zinc-400'"
-                        class="p-5 cursor-pointer transition relative flex flex-col justify-between"
-                    >
-                        <div class="absolute -top-3 right-4 px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-black uppercase tracking-wider">
-                            ⚡ RECOMMENDED // 2X SPEED
+                            <div>
+                                <div class="flex items-center justify-between gap-1 mb-2">
+                                    <span class="text-[9px] uppercase px-1.5 py-0.5 {{ $isEmergencyOrEnterprise ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40' : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40' }} font-bold">
+                                        {{ $tierItem['badge'] }}
+                                    </span>
+                                    <span x-show="selectedTier === '{{ $tierItem['id'] }}'" class="w-2 h-2 rounded-full {{ $isEmergencyOrEnterprise ? 'bg-amber-500' : 'bg-emerald-500' }}"></span>
+                                </div>
+                                <h3 class="text-base font-black uppercase text-zinc-900 dark:text-zinc-100">{{ $tierItem['name'] }}</h3>
+                                <div class="text-xl font-black {{ $isEmergencyOrEnterprise ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400' }} my-2">
+                                    Rp {{ number_format($tierItem['contract_amount'], 0, ',', '.') }}
+                                </div>
+                                <div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-2">
+                                    Termin DP 50%: Rp {{ number_format($tierItem['dp_amount'], 0, ',', '.') }}
+                                </div>
+                                <div class="text-[10px] text-zinc-700 dark:text-zinc-300 mb-3 bg-zinc-100 dark:bg-zinc-900 p-2 border border-zinc-200 dark:border-zinc-800">
+                                    <strong>Formula:</strong> {{ $tierItem['cost_formula'] }}
+                                </div>
+                                <ul class="space-y-1.5 text-[11px] text-zinc-600 dark:text-zinc-400 mb-4 border-t border-zinc-200 dark:border-zinc-800 pt-3">
+                                    <li>&bull; Durasi: <strong>{{ $tierItem['duration'] }}</strong> ({{ $tierItem['speed_multiplier'] }})</li>
+                                    <li>&bull; Alokasi: {{ $tierItem['squad_allocation'] }}</li>
+                                    <li>&bull; Engine: {{ $tierItem['ai_quota_spec'] }}</li>
+                                    @foreach($tierItem['ai_swarm_specs'] ?? [] as $spec)
+                                        <li>&bull; {{ $spec }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            <button 
+                                type="button" 
+                                :class="selectedTier === '{{ $tierItem['id'] }}' 
+                                    ? '{{ $isEmergencyOrEnterprise ? 'bg-amber-500 text-black font-bold' : 'bg-emerald-500 text-black font-bold' }}' 
+                                    : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'"
+                                class="w-full py-2 text-xs uppercase tracking-wider transition"
+                            >
+                                <span x-text="selectedTier === '{{ $tierItem['id'] }}' ? '&check; PAKET TERPILIH' : 'PILIH PAKET'"></span>
+                            </button>
                         </div>
-                        <div>
-                            <div class="flex items-center justify-between gap-1 mb-2">
-                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 font-bold">2.14X AKSELERASI</span>
-                                <span x-show="selectedTier === 'fast_track'" class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            </div>
-                            <h3 class="text-base font-black uppercase text-zinc-900 dark:text-zinc-100">Fast-Track Sprint</h3>
-                            <div class="text-xl font-black text-emerald-600 dark:text-emerald-400 my-2">
-                                Rp 75.000.000
-                            </div>
-                            <div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-2">
-                                Termin DP 50%: Rp 37.500.000
-                            </div>
-                            <div class="text-[10px] text-zinc-700 dark:text-zinc-300 mb-3 bg-emerald-500/10 p-2 border border-emerald-500/30">
-                                <strong>Formula:</strong> Base (50M) + Swarm AI (15M) + Dual Squad (10M)
-                            </div>
-                            <ul class="space-y-1.5 text-[11px] text-zinc-700 dark:text-zinc-300 mb-4 border-t border-zinc-200 dark:border-zinc-800 pt-3">
-                                <li>&bull; Durasi: <strong>14 Hari Kerja (Pangkas 53%)</strong></li>
-                                <li>&bull; Alokasi: 2 Dedicated Senior Engineers</li>
-                                <li>&bull; <strong>Gemini Ultra 4-Agent Swarm:</strong> Schema Architect, CRUD Builder, Test Synthesizer, Island UI Weaver</li>
-                                <li>&bull; Review arsitektur harian & integrasi kilat</li>
-                            </ul>
-                        </div>
-                        <button 
-                            type="button" 
-                            :class="selectedTier === 'fast_track' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'"
-                            class="w-full py-2 text-xs uppercase tracking-wider transition"
-                        >
-                            <span x-text="selectedTier === 'fast_track' ? '&check; PAKET TERPILIH' : 'PILIH FAST-TRACK'"></span>
-                        </button>
-                    </div>
-
-                    <!-- Hyper-Sprint (7 Days) -->
-                    <div 
-                        @click="selectedTier = 'hyper_sprint'"
-                        :class="selectedTier === 'hyper_sprint' ? 'border-2 border-amber-500 bg-amber-500/10 dark:bg-amber-950/30 shadow-lg' : 'border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-zinc-400'"
-                        class="p-5 cursor-pointer transition relative flex flex-col justify-between"
-                    >
-                        <div class="absolute -top-3 right-4 px-2 py-0.5 bg-amber-500 text-black text-[9px] font-black uppercase tracking-wider">
-                            🔥 4X SPEED // 1 PEKAN
-                        </div>
-                        <div>
-                            <div class="flex items-center justify-between gap-1 mb-2">
-                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40 font-bold">4.28X EMERGENCY</span>
-                                <span x-show="selectedTier === 'hyper_sprint'" class="w-2 h-2 rounded-full bg-amber-500"></span>
-                            </div>
-                            <h3 class="text-base font-black uppercase text-zinc-900 dark:text-zinc-100">Hyper-Sprint War Room</h3>
-                            <div class="text-xl font-black text-amber-600 dark:text-amber-400 my-2">
-                                Rp 100.000.000
-                            </div>
-                            <div class="text-xs text-amber-600 dark:text-amber-400 font-bold mb-2">
-                                Termin DP 50%: Rp 50.000.000
-                            </div>
-                            <div class="text-[10px] text-amber-800 dark:text-amber-300 mb-3 bg-amber-500/10 p-2 border border-amber-500/30">
-                                <strong>Formula:</strong> Base (50M) + Uncapped AI (30M) + War Room Tri-Shift (20M)
-                            </div>
-                            <ul class="space-y-1.5 text-[11px] text-zinc-700 dark:text-zinc-300 mb-4 border-t border-zinc-200 dark:border-zinc-800 pt-3">
-                                <li>&bull; Durasi: <strong>7 Hari Kerja (Selesai 1 Pekan)</strong></li>
-                                <li>&bull; Alokasi: Tri-Engineer War Room (24/7 Shift)</li>
-                                <li>&bull; <strong>Gemini Ultra 8-Agent Swarm Cluster:</strong> Inferensi uncapped dengan 2M context window</li>
-                                <li>&bull; Dedicated emergency war room line</li>
-                            </ul>
-                        </div>
-                        <button 
-                            type="button" 
-                            :class="selectedTier === 'hyper_sprint' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'"
-                            class="w-full py-2 text-xs uppercase tracking-wider transition"
-                        >
-                            <span x-text="selectedTier === 'hyper_sprint' ? '&check; PAKET TERPILIH' : 'PILIH HYPER-SPRINT'"></span>
-                        </button>
-                    </div>
+                    @endforeach
                 </div>
 
             <!-- SECTION 08: TIMELINE & GANTT MILESTONE (ALIGNED TO VELOCITY) -->
@@ -1245,15 +1202,106 @@ erDiagram
                 </div>
             </section>
 
-            <!-- SECTION 09: SCOPE FREEZE, DIGITAL CONTRACT & DP MIDTRANS (CRUCIAL) -->
+            <!-- SECTION 09: STANDAR TATA KELOLA, KUALITAS & SLA SERAH TERIMA (GOVERNANCE & SLA) -->
+            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">09</span>
+                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Tata Kelola, Kualitas & SLA Serah Terima</h2>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
+                        ENTERPRISE SERVICE LEVEL AGREEMENT
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs mb-6">
+                    <!-- 1. Definition of Done (DoD) -->
+                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="w-2 h-2 bg-emerald-500"></span>
+                            <h3 class="font-bold uppercase text-zinc-900 dark:text-zinc-100 text-xs">1. Kriteria Penyelesaian Resmi (Definition of Done)</h3>
+                        </div>
+                        <ul class="space-y-2 text-zinc-600 dark:text-zinc-400 text-[11px]">
+                            @foreach($prd['governance_and_sla']['definition_of_done'] ?? [
+                                'Seluruh fitur MVP Fase 1 berjalan sesuai spesifikasi di server Staging & Production.',
+                                'Lolos audit keamanan dasar (CSRF token, sanitasi input XSS, proteksi SQL Injection, & HTTPS SSL).',
+                                'Skema basis data relasional PostgreSQL dengan Primary Key ULID terverifikasi.',
+                                'Dasbor admin Filament v5 dapat diakses oleh peran Superadmin / Staff yang ditunjuk.',
+                                'Sesi pelatihan administrasi singkat dan serah terima kredensial resmi sistem.'
+                            ] as $dod)
+                                <li class="flex items-start gap-2">
+                                    <span class="text-emerald-500 font-bold">&check;</span>
+                                    <span>{{ $dod }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    <!-- 2. Browser & Device Support Matrix -->
+                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="w-2 h-2 bg-emerald-500"></span>
+                            <h3 class="font-bold uppercase text-zinc-900 dark:text-zinc-100 text-xs">2. Matriks Dukungan Browser & Perangkat</h3>
+                        </div>
+                        <div class="space-y-3 text-[11px]">
+                            <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300">
+                                <strong class="block mb-1">&check; PERANGKAT & BROWSER DIDUKUNG RESMI:</strong>
+                                {{ $prd['governance_and_sla']['browser_device_matrix']['supported'] ?? 'Google Chrome, Apple Safari, Mozilla Firefox, Microsoft Edge (rilis 2 tahun terakhir); iOS Safari 15+; Android Chrome 100+.' }}
+                            </div>
+                            <div class="p-2.5 bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300">
+                                <strong class="block mb-1">&times; PERAMBAN DI LUAR RUANG LINGKUP (EXCLUDED):</strong>
+                                {{ $prd['governance_and_sla']['browser_device_matrix']['unsupported'] ?? 'Internet Explorer 11, Opera Mini data-saving mode, UC Browser legacy rendering engine, dan peramban ponsel non-standar.' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
+                    <!-- 3. Warranty & Bug-Fix Period -->
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                        <span class="text-[9px] uppercase px-1.5 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold block w-fit mb-2">
+                            GARANSI PENUH 30 HARI
+                        </span>
+                        <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Garansi Perbaikan Bug</h4>
+                        <p class="text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                            Gratis perbaikan terhadap bug, error, atau ketidaksesuaian fungsi MVP Fase 1 selama 30 hari kalender setelah Go-Live.
+                        </p>
+                    </div>
+
+                    <!-- 4. Content Bottleneck Protocol -->
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                        <span class="text-[9px] uppercase px-1.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold block w-fit mb-2">
+                            BATAS MATERI 7 HARI
+                        </span>
+                        <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Klausul Konten Klien</h4>
+                        <p class="text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                            Jika materi teks/foto belum diberikan dalam 7 hari kerja, developer berhak menggunakan dummy/placeholder demi menjaga ketepatan waktu rilis.
+                        </p>
+                    </div>
+
+                    <!-- 5. Third-Party Recurring Transparency -->
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                        <span class="text-[9px] uppercase px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold block w-fit mb-2">
+                            BIAYA BERULANG JUJUR
+                        </span>
+                        <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Estimasi Pihak Ketiga</h4>
+                        <p class="text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                            Domain tahunan (Rp 150rb-250rb/thn) & hosting (Rp 50rb-150rb/bln) dibayarkan langsung ke penyedia cloud resmi tanpa markup tersembunyi.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 10: SCOPE FREEZE, DIGITAL CONTRACT & DP MIDTRANS (CRUCIAL) -->
             <section class="bg-zinc-900 text-white border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none no-print">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6 mb-6">
                     <div>
                         <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-widest bg-emerald-500 text-black inline-block mb-2 rounded-none">
                             LEGAL & PAYMENT PROTOCOL
                         </span>
-                        <h3 class="text-xl sm:text-2xl font-black uppercase tracking-tight">
-                            Kunci Scope Proyek & Pembayaran DP
+                        <h3 class="text-xl sm:text-2xl font-black uppercase tracking-tight flex items-center gap-2">
+                            <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs inline-flex items-center justify-center rounded-none">10</span>
+                            <span>Kunci Scope Proyek & Pembayaran DP</span>
                         </h3>
                         <p class="text-zinc-400 text-xs mt-1 font-sans">
                             Pengerjaan proyek resmi dimulai setelah penandatanganan kontrak digital dan konfirmasi DP via Midtrans Escrow.

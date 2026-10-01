@@ -36,6 +36,18 @@ Route::post('/cart/clear', [\App\Http\Controllers\CartController::class, 'clear'
 
 Route::get('/invite/{slug}', \App\Livewire\ClientInviteForm::class)->name('invite');
 
+// Authentication Aliases for Standard Web Routes
+Route::get('/login', function () {
+    return redirect()->to('/admin/login');
+})->name('login');
+
+Route::post('/logout', function (\Illuminate\Http\Request $request) {
+    \Illuminate\Support\Facades\Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect()->to('/');
+})->name('logout');
+
 Route::get('/lang/{locale}', function (string $locale) {
     if (in_array($locale, ['id', 'en'])) {
         session(['locale' => $locale]);

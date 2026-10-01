@@ -99,6 +99,7 @@ const TRANSLATIONS = {
     ],
     budgetLabel: "Kisaran Alokasi Budget Klien (Investasi Sistem)",
     budgetOptions: [
+      "Rp 5.000.000 - Rp 15.000.000 (Komunitas / Non-Profit / Gereja - Lean Modular Starter)",
       "< Rp 50.000.000 (Bootstrapped / Validasi Ide - 100% Lean Monolith)",
       "Rp 50.000.000 - Rp 100.000.000 (Growth Production - Modern Monolith + pgvector AI)",
       "> Rp 100.000.000 (High-Speed / Multi-Squad Ready)"
@@ -192,6 +193,7 @@ const TRANSLATIONS = {
     ],
     budgetLabel: "Client Budget Range (System Investment Plan)",
     budgetOptions: [
+      "Rp 5,000,000 - Rp 15,000,000 (Community / Non-Profit / Church - Lean Modular Starter)",
       "< Rp 50,000,000 (Bootstrapped / Idea Validation - 100% Lean Monolith)",
       "Rp 50,000,000 - Rp 100,000,000 (Growth Production - Modern Monolith + pgvector AI)",
       "> Rp 100,000,000 (High-Speed / Multi-Squad Ready)"

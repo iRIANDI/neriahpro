@@ -76,6 +76,34 @@ const TRANSLATIONS = {
     targetWaktuPh: "Misal: Akhir Bulan Ini, ASAP...",
     daysSuffix: "Hari Kerja",
 
+    blockE: "E. Skala, Batasan Negatif & Kepatuhan (Ultimate Scope Lock)",
+    skalaLabel: "Target Skala Pengguna / Bulan (Volume Trafik)",
+    skalaOptions: [
+      "0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)",
+      "100.000 - 5.000.000 Pengguna / Bulan (Horizontal Scaled Monolith)",
+      "> 50.000.000 Pengguna Global Lintas Benua (Decoupled Microservices)"
+    ],
+    jangkauanLabel: "Jangkauan Pasar & Lokalisasi Geografis",
+    jangkauanOptions: [
+      "Domestik Indonesia (IDR, Zona WIB/WITA/WIT)",
+      "Regional Asia Tenggara (Multi-Currency IDR/SGD/MYR, Bilingual ID/EN)",
+      "Global Multi-Benua (Multi-Currency USD/EUR, Multi-Language, GDPR/CCPA)"
+    ],
+    outOfScopeLabel: "Batasan Negatif (Fitur yang EKSPLISIT TIDAK DIBUAT di Fase 1)",
+    outOfScopePh: "Tuliskan apa saja yang TIDAK termasuk dalam MVP Fase 1 ini agar terhindar dari scope creep. Misal: 1. Tidak ada aplikasi native iOS/Android (fokus Web Responsive PWA), 2. Tidak ada multi-gudang luar negeri, 3. Tidak ada integrasi printer thermal fisik Bluetooth di tahap awal...",
+    kepatuhanLabel: "Standar Kepatuhan Keamanan & Regulasi",
+    kepatuhanOptions: [
+      "Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)",
+      "Data Pribadi Sensitif & Kepatuhan UU PDP (Enkripsi At-Rest & In-Transit, Audit Trail)",
+      "Standar Finansial & Pembayaran Ketat (PCI-DSS Scoped, Escrow Isolation)"
+    ],
+    budgetLabel: "Kisaran Alokasi Budget Klien (Investasi Sistem)",
+    budgetOptions: [
+      "< Rp 50.000.000 (Bootstrapped / Validasi Ide - 100% Lean Monolith)",
+      "Rp 50.000.000 - Rp 100.000.000 (Growth Production - Modern Monolith + pgvector AI)",
+      "> Rp 100.000.000 (High-Speed / Multi-Squad Ready)"
+    ],
+
     scopeLockNotice: "Perhatian: Fitur yang disetujui dalam kuesioner ini akan dikunci dalam kontrak resmi. Penambahan fitur baru di luar ruang lingkup ini akan diakomodasi melalui Change Request (CR) / Addendum terpisah.",
 
     submitBtn: "Kunci Blueprint & Generate Ultimate PRD",
@@ -140,6 +168,34 @@ const TRANSLATIONS = {
     targetWaktuLabel: "Target Launch Deadline",
     targetWaktuPh: "e.g. End of this month, Q4, ASAP...",
     daysSuffix: "Working Days",
+
+    blockE: "E. Scale Reach, Strict Boundaries & Compliance (Scope Lock)",
+    skalaLabel: "Target Monthly Active Users (Scale Reach)",
+    skalaOptions: [
+      "0 - 100,000 Users / Month (Dedicated VPS Monolith)",
+      "100,000 - 5,000,000 Users / Month (Horizontal Scaled Monolith)",
+      "> 50,000,000 Global Multi-Continent Users (Decoupled Microservices)"
+    ],
+    jangkauanLabel: "Market Reach & Geographic Localization",
+    jangkauanOptions: [
+      "Domestic Indonesia (IDR, WIB/WITA/WIT, PDP Act Compliance)",
+      "Southeast Asia Regional (Multi-Currency IDR/SGD/MYR, Bilingual ID/EN)",
+      "Global Multi-Continent (Multi-Currency USD/EUR, Multi-Language, GDPR/CCPA)"
+    ],
+    outOfScopeLabel: "Explicit Out-of-Scope (Features Strictly Excluded from Phase 1)",
+    outOfScopePh: "CRITICAL: Explicitly specify what will NOT be built in Phase 1 MVP to avoid scope creep. e.g.: 1. No native iOS/Android apps (focused on Responsive Web PWA), 2. No multi-warehouse international customs calculation, 3. No physical Bluetooth thermal printer integration in initial release.",
+    kepatuhanLabel: "Security Compliance & Regulatory Standards",
+    kepatuhanOptions: [
+      "Standard Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)",
+      "Sensitive Personal Data & PDP Act (At-Rest & In-Transit Encryption, Audit Trail)",
+      "Strict Financial & Payment Standards (PCI-DSS Scoped, Escrow Isolation)"
+    ],
+    budgetLabel: "Client Budget Range (System Investment Plan)",
+    budgetOptions: [
+      "< Rp 50,000,000 (Bootstrapped / Idea Validation - 100% Lean Monolith)",
+      "Rp 50,000,000 - Rp 100,000,000 (Growth Production - Modern Monolith + pgvector AI)",
+      "> Rp 100,000,000 (High-Speed / Multi-Squad Ready)"
+    ],
 
     scopeLockNotice: "Notice: The scope approved in this questionnaire will be locked into a formal digital contract. Any feature requests outside this document will be handled through a formal Change Request (CR) / Addendum.",
 
@@ -223,6 +279,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     kesiapanAset: initialData.kesiapanAset || 'Sedang Disiapkan',
     durasiHari: initialData.durasiHari || '30',
     targetWaktu: initialData.targetWaktu || '30 Hari Kerja',
+    skalaPengguna: initialData.skalaPengguna || '0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)',
+    jangkauanPasar: initialData.jangkauanPasar || 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
+    outOfScope: initialData.outOfScope || '',
+    kepatuhanKeamanan: initialData.kepatuhanKeamanan || 'Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)',
+    kisaranBudget: initialData.kisaranBudget || 'Rp 50.000.000 - Rp 100.000.000 (Growth Production - Modern Monolith + pgvector AI)',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -261,6 +322,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       referensi_desain: formData.referensiDesain,
       kesiapan_aset: formData.kesiapanAset,
       target_waktu: `${formData.durasiHari} ${t.daysSuffix} (${formData.targetWaktu})`,
+      skala_pengguna: formData.skalaPengguna,
+      jangkauan_pasar: formData.jangkauanPasar,
+      out_of_scope: formData.outOfScope,
+      kepatuhan_keamanan: formData.kepatuhanKeamanan,
+      kisaran_budget: formData.kisaranBudget,
       service_options: ['Web Architecture', 'Rapid Monolith System', 'PostgreSQL ULID', 'Midtrans DP Ready'],
     };
 
@@ -734,6 +800,108 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       {t.daysSuffix}
                     </span>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* BLOK E: SKALA, BATASAN NEGATIF & KEPATUHAN (ULTIMATE SCOPE LOCK) */}
+          <div className="bg-zinc-50 dark:bg-zinc-950 p-6 border-2 border-emerald-500/40 dark:border-emerald-500/30 rounded-none">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-mono uppercase tracking-widest text-zinc-900 dark:text-zinc-100 font-bold flex items-center gap-2">
+                <span className="w-2 h-2 bg-emerald-500"></span>
+                {t.blockE}
+              </h3>
+              <span className="text-[10px] font-mono px-2 py-0.5 bg-emerald-500 text-black font-bold">
+                ANTI-SCOPE CREEP
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>
+                    {t.skalaLabel} <span className="text-emerald-500">*</span>
+                    <HelperTooltip content="Pilih estimasi volume pengunjung untuk menentukan apakah arsitektur Monolith cukup atau butuh kluster terpisah." />
+                  </label>
+                  <select
+                    name="skalaPengguna"
+                    value={formData.skalaPengguna}
+                    onChange={handleChange}
+                    className={inputClass}
+                  >
+                    {t.skalaOptions.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    {t.jangkauanLabel} <span className="text-emerald-500">*</span>
+                    <HelperTooltip content="Menentukan kebutuhan multi-currency, multi-bahasa, dan lokasi server (latency proximity)." />
+                  </label>
+                  <select
+                    name="jangkauanPasar"
+                    value={formData.jangkauanPasar}
+                    onChange={handleChange}
+                    className={inputClass}
+                  >
+                    {t.jangkauanOptions.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className={labelClass}>
+                  {t.outOfScopeLabel} <span className="text-rose-500">*</span>
+                  <HelperTooltip content="Kunci batas ruang lingkup! Fitur yang ditulis di sini secara eksplisit TIDAK akan dikerjakan di Fase 1 untuk menjamin deadline tercapai." />
+                </label>
+                <textarea
+                  name="outOfScope"
+                  rows={3}
+                  value={formData.outOfScope}
+                  onChange={handleChange}
+                  placeholder={t.outOfScopePh}
+                  className={`${inputClass} border-rose-300 dark:border-rose-900/40 focus:border-rose-500`}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>
+                    {t.kepatuhanLabel}
+                    <HelperTooltip content="Standar audit kepatuhan enkripsi dan penyimpanan data (UU PDP / PCI-DSS)." />
+                  </label>
+                  <select
+                    name="kepatuhanKeamanan"
+                    value={formData.kepatuhanKeamanan}
+                    onChange={handleChange}
+                    className={inputClass}
+                  >
+                    {t.kepatuhanOptions.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelClass}>
+                    {t.budgetLabel} <span className="text-emerald-500">*</span>
+                    <HelperTooltip content="Memandu rekomendasi arsitektur agar tidak terjadi pemborosan dana untuk server microservices yang belum diperlukan." />
+                  </label>
+                  <select
+                    name="kisaranBudget"
+                    value={formData.kisaranBudget}
+                    onChange={handleChange}
+                    className={inputClass}
+                  >
+                    {t.budgetOptions.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>

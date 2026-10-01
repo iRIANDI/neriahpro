@@ -43,6 +43,11 @@ class VisionBlueprintController extends Controller
             'kesiapan_aset' => 'nullable|string',
             'target_waktu' => 'nullable|string',
             'service_options' => 'nullable|array',
+            'skala_pengguna' => 'nullable|string|max:255',
+            'jangkauan_pasar' => 'nullable|string|max:255',
+            'out_of_scope' => 'nullable|string',
+            'kepatuhan_keamanan' => 'nullable|string|max:255',
+            'kisaran_budget' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -58,6 +63,11 @@ class VisionBlueprintController extends Controller
             'referer' => $request->header('referer'),
             'accept_language' => $request->header('accept-language'),
             'submitted_at' => now()->toIso8601String(),
+            'skala_pengguna' => $request->input('skala_pengguna'),
+            'jangkauan_pasar' => $request->input('jangkauan_pasar'),
+            'out_of_scope' => $request->input('out_of_scope'),
+            'kepatuhan_keamanan' => $request->input('kepatuhan_keamanan'),
+            'kisaran_budget' => $request->input('kisaran_budget'),
         ];
 
         // 4. Save to Database & Generate PRD

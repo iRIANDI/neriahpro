@@ -55,6 +55,16 @@ class PrdGeneratorService
         // Generate tailored ERD Database Schema with strict ULID standards
         $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems);
 
+        // Extract ultimate blueprint context from metadata
+        $metadata = $blueprint->user_metadata ?? [];
+        $extraContext = [
+            'skala_pengguna' => $metadata['skala_pengguna'] ?? '0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)',
+            'jangkauan_pasar' => $metadata['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
+            'out_of_scope' => $metadata['out_of_scope'] ?? null,
+            'kepatuhan_keamanan' => $metadata['kepatuhan_keamanan'] ?? 'Standar Web Application & OWASP Top 10',
+            'kisaran_budget' => $metadata['kisaran_budget'] ?? 'Rp 50.000.000 - Rp 100.000.000 (Growth Production)',
+        ];
+
         return [
             'meta' => [
                 'project_name' => $businessName,
@@ -70,6 +80,10 @@ class PrdGeneratorService
                 'design_inspiration' => $referensiDesain,
                 'asset_readiness' => $kesiapanAset,
                 'target_timeline' => $targetWaktu,
+                'target_scale' => $extraContext['skala_pengguna'],
+                'market_reach' => $extraContext['jangkauan_pasar'],
+                'compliance_level' => $extraContext['kepatuhan_keamanan'],
+                'budget_range' => $extraContext['kisaran_budget'],
                 'architecture_philosophy' => 'Untuk menjamin efisiensi biaya server, ketahanan jangka panjang, dan kecepatan peluncuran (Rapid Time-to-Market), sistem ini dirancang menggunakan arsitektur Modern Monolith (Laravel 13 & Filament PHP). Seluruh tabel bisnis menggunakan Primary Key ULID untuk skalabilitas terdistribusi dan kompatibilitas penuh PostgreSQL.',
             ],
             'system_actors' => $actorItems,
@@ -113,7 +127,7 @@ class PrdGeneratorService
                 'requested' => $integrasi,
                 'notes' => 'Akan dihubungkan melalui service providers terisolasi dengan fallback retry mechanism.',
             ],
-            'architecture_evaluation' => self::evaluateArchitecture($businessName, $masalah, $mvpItems, $alurKerja),
+            'architecture_evaluation' => self::evaluateArchitecture($businessName, $masalah, $mvpItems, $alurKerja, $extraContext),
             'velocity_pricing_options' => self::generateVelocityPricingOptions($targetWaktu),
             'action_plan' => [
                 ['phase' => 'Fase 0: Blueprint & Skema Approval', 'duration' => 'Hari ke 1-3', 'status' => 'Active'],
@@ -334,8 +348,29 @@ class PrdGeneratorService
     /**
      * Evaluate hosting, architecture pattern, and AI database requirements.
      */
-    public static function evaluateArchitecture(string $businessName, string $masalah, array $mvpItems, string $alurKerja): array
+    public static function evaluateArchitecture(string $businessName, string $masalah, array $mvpItems, string $alurKerja, array $extraContext = []): array
     {
+        // Parse dynamic out of scope items from client input
+        $customOutScope = [];
+        if (!empty($extraContext['out_of_scope'])) {
+            $lines = preg_split('/[\r\n]+/', trim($extraContext['out_of_scope']));
+            foreach ($lines as $l) {
+                $l = trim($l, " \t\n\r\0\x0B-•*1234567890.)");
+                if (!empty($l)) {
+                    $customOutScope[] = $l;
+                }
+            }
+        }
+        $outOfScopeList = array_merge(
+            $customOutScope,
+            [
+                'Aplikasi native Android/iOS terpisah (Sistem Fase 1 disediakan dalam arsitektur Web Mobile-First / PWA).',
+                'Integrasi kustom dengan sistem ERP legacy internal yang belum memiliki open RESTful API terdokumentasi.',
+                'Fitur multi-warehouse internasional lintas benua dengan kalkulasi bea cukai dinamis.',
+                'Seluruh penambahan fitur baru di luar daftar ini dikunci secara hukum dan akan diakomodasikan melalui Change Request (CR) / Addendum terpisah.',
+            ]
+        );
+
         return [
             'hosting_evaluation' => [
                 'verdict' => 'Dedicated VPS (Mandatory Enterprise Standard)',
@@ -373,7 +408,7 @@ class PrdGeneratorService
                     'title' => 'Modern Monolith Architecture',
                     'reasons' => [
                         'Eliminasi Network Latency: Komunikasi antar modul berjalan intra-process O(1) tanpa overhead HTTP network antar-microservices.',
-                        'Pangkas Biaya Infrastruktur 60%: Satu kesatuan container deployment menghemat anggaran server staging & produksi dibanding kluster microservices.',
+                        'Pangkas Biaya Infrastruktur 60-70%: Satu kesatuan container deployment menghemat anggaran server staging & produksi dibanding kluster microservices.',
                         'Rapid Time-to-Market (3x Lebih Cepat): Skema database, API internal, dan Admin Dasbor Filament v5 langsung sinkron tanpa duplikasi skema.',
                         'Konsistensi Transaksi ACID: Menjamin integritas data tanpa kerumitan distributed transaction (2-Phase Commit / Saga Pattern) yang rawan data loss.',
                         'Island Architecture Frontend: Memberikan fluiditas interaksi 60fps setara SPA dengan stabilitas dan kecepatan SEO Server-Side Rendering.',
@@ -383,11 +418,92 @@ class PrdGeneratorService
                     'status' => 'NOT RECOMMENDED (OVERKILL UNTUK FASE 1)',
                     'title' => 'Decoupled / Microservices Pattern',
                     'reasons' => [
-                        'Hanya diperlukan jika tim pengembang berjumlah lebih dari 10-15 engineer yang bekerja di repositori terpisah.',
+                        'Hanya diperlukan jika tim pengembang berjumlah lebih dari 15-20 engineer yang bekerja di repositori terpisah.',
                         'Menambah biaya operasional server terpisah (Backend API server + Frontend Next.js node cluster terpisah).',
                         'Meningkatkan latensi round-trip HTTP dan beban autentikasi token JWT di setiap request interaksi.',
                     ],
                 ],
+            ],
+            'global_scale_analysis' => [
+                'title' => 'Analisis Potensi Skala Jangkauan Pengguna Dunia (Global Reach Matrix)',
+                'summary' => 'Modern Monolith mampu melayani 99.5% startup dan enterprise global hingga 5-10 juta Monthly Active Users (MAU) sebelum membutuhkan pemisahan microservices.',
+                'tiers' => [
+                    [
+                        'scale' => '0 - 100.000 Pengguna / Bulan',
+                        'architecture' => 'Single Dedicated VPS Monolith (4 vCPU / 8GB RAM)',
+                        'status' => 'SANGAT EFISIEN',
+                        'verdict' => 'Response time sub-50ms. Biaya server sangat hemat (< Rp 500.000/bln). Zero DevOps maintenance.',
+                    ],
+                    [
+                        'scale' => '100.000 - 5.000.000 Pengguna / Bulan',
+                        'architecture' => 'Horizontal Scaled Monolith (Stateless Nodes + Managed Postgres + Redis)',
+                        'status' => 'ENTERPRISE PRODUCTION',
+                        'verdict' => 'Terbukti pada raksasa dunia (Shopify, GitHub, Basecamp). Bebas latensi antar-service, skalabilitas horizontal instan via load balancer.',
+                    ],
+                    [
+                        'scale' => '50.000.000+ Pengguna Global Lintas Benua',
+                        'architecture' => 'Decoupled Multi-Region Microservices Mesh',
+                        'status' => 'ROADMAP FASE 3',
+                        'verdict' => 'Hanya relevan jika ada regulasi data residency lokal terpisah (GDPR Eropa vs US vs Asia) dan tim multi-divisi >50 engineer.',
+                    ],
+                ],
+            ],
+            'budget_tco_analysis' => [
+                'title' => 'Analisis Anggaran Klien & Efisiensi Modal (TCO Comparison)',
+                'client_budget_declared' => $extraContext['kisaran_budget'] ?? 'Rp 50.000.000 - Rp 100.000.000',
+                'monolith_tco' => [
+                    'title' => 'Modern Monolith (Efisiensi Modal 90%)',
+                    'monthly_cost' => 'Rp 350.000 - Rp 1.500.000 / bulan',
+                    'devops_headcount' => '0 FTE (Automated Nixpacks CI/CD)',
+                    'capital_efficiency' => '90% anggaran klien dialokasikan murni untuk fitur bisnis & akuisisi pengguna.',
+                ],
+                'decoupled_tco' => [
+                    'title' => 'Decoupled Microservices (Beban Modal Tinggi)',
+                    'monthly_cost' => 'Rp 8.000.000 - Rp 25.000.000+ / bulan',
+                    'devops_headcount' => '1-2 Dedicated DevOps Engineers (Rp 20-40 jt/bln)',
+                    'capital_efficiency' => '60% anggaran tersedot hanya untuk biaya operasional kluster Kubernetes, API Gateway, dan distributed tracing.',
+                ],
+            ],
+            'decoupling_threshold_triggers' => [
+                'title' => '4 Faktor Penentu Mutlak Kapan Sistem Wajib Decoupled (The Decoupling Threshold)',
+                'subtitle' => 'Jangan pernah memecah sistem menjadi microservices kecuali 1 atau lebih pemicu mutlak berikut terpenuhi:',
+                'triggers' => [
+                    [
+                        'number' => '01',
+                        'title' => "Conway's Law & Skala Organisasi Tim (>15-20 Engineer)",
+                        'desc' => 'Ketika jumlah tim pengembang internal sudah melebihi 15-20 orang dalam beberapa squad bisnis mandiri (misal Tim Checkout, Tim Logistik, Tim Fraud) yang sering mengalami antrean merge git dan bottleneck rilis bersama.',
+                    ],
+                    [
+                        'number' => '02',
+                        'title' => 'Beban Komputasi Asimetris Ekstrim (Asymmetric Compute Bottleneck)',
+                        'desc' => 'Ketika terdapat satu modul komputasi yang sangat berat (seperti video rendering 4K real-time, training model AI lokal, atau high-frequency stock stream) yang jika digabung akan membekukan thread web server utama.',
+                    ],
+                    [
+                        'number' => '03',
+                        'title' => 'Kepatuhan Regulasi Ketat & Blast-Radius Containment',
+                        'desc' => 'Ketika modul pembayaran kartu kredit harus tersertifikasi PCI-DSS Level 1 dan terisolasi di private network terpisah agar audit kepatuhan tidak mencakup seluruh kode aplikasi bisnis.',
+                    ],
+                    [
+                        'number' => '04',
+                        'title' => 'Kebutuhan Mutlak Polyglot Technology Stack',
+                        'desc' => 'Ketika ada modul spesifik yang mutlak harus ditulis dalam bahasa pemrograman lain dengan performa mikro-detik (misal Rust/C++ untuk engine kalkulasi matematika, atau Python untuk ekosistem PyTorch).',
+                    ],
+                ],
+            ],
+            'scope_boundaries' => [
+                'title' => 'Matriks Batasan Ruang Lingkup (Strict Scope Lock & Anti-Feature Creep)',
+                'client_scale' => $extraContext['skala_pengguna'] ?? '0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)',
+                'client_market' => $extraContext['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
+                'client_compliance' => $extraContext['kepatuhan_keamanan'] ?? 'Standar Web Application & OWASP Top 10',
+                'client_budget' => $extraContext['kisaran_budget'] ?? 'Rp 50.000.000 - Rp 100.000.000 (Growth Production)',
+                'in_scope' => [
+                    'Spesifikasi fitur inti MVP Fase 1 yang tertera dalam dokumen PRD ini.',
+                    'Skema basis data relasional PostgreSQL dengan Primary Key ULID standar enterprise.',
+                    'Pusat kendali operasional (Admin Panel) berbasis Filament PHP v5 dengan RBAC Shield.',
+                    'Frontend Island Architecture (React 19) dengan interaktivitas fluid 60fps.',
+                    'Integrasi gerbang pembayaran otomatis (Midtrans Escrow) & audit logging transaksi.',
+                ],
+                'out_of_scope' => $outOfScopeList,
             ],
             'ai_database_blueprint' => [
                 'engine' => 'PostgreSQL 16+ with pgvector & Strict ULID standard',
@@ -412,7 +528,7 @@ class PrdGeneratorService
     }
 
     /**
-     * Generate tiered velocity pricing options with AI accelerator costs.
+     * Generate tiered velocity pricing options with AI accelerator costs and mathematical formula.
      */
     public static function generateVelocityPricingOptions(string $targetWaktu): array
     {
@@ -426,34 +542,54 @@ class PrdGeneratorService
                 'contract_amount' => 50000000.00,
                 'dp_amount' => 25000000.00,
                 'pelunasan_amount' => 25000000.00,
-                'ai_quota_spec' => 'Gemini Pro standard reasoning assistant',
+                'ai_quota_spec' => 'Gemini Pro standard single-thread reasoning assistant',
                 'squad_allocation' => '1 Lead Fullstack Engineer + QA Reviewer',
-                'description' => 'Pengerjaan reguler terencana dengan siklus sprint standar 30 hari kerja. Pilihan ideal untuk validasi konsep tanpa urgensi waktu ketat.',
+                'cost_formula' => 'Base Engineering Fee (Rp 50.000.000) + Kuota AI Dasar (Rp 0)',
+                'ai_swarm_specs' => [
+                    'Concurrency: 1 AI Agent Session',
+                    'Context Window: Standar 128k Tokens',
+                    'Alokasi Komputasi: Normal Non-Priority Queue',
+                ],
+                'description' => 'Pengerjaan reguler terencana dengan siklus 5 sprint standar (30 hari kerja). Pilihan ideal untuk validasi konsep tanpa urgensi waktu ketat.',
             ],
             [
                 'id' => 'fast_track',
                 'name' => 'Fast-Track Sprint (Gemini Ultra Accelerator)',
                 'duration' => '14 Hari Kerja',
                 'badge' => '2X_SPEED // RECOMMENDED',
-                'speed_multiplier' => '2.0x (Pangkas 50% Waktu)',
+                'speed_multiplier' => '2.14x (Pangkas 53% Waktu)',
                 'contract_amount' => 75000000.00,
                 'dp_amount' => 37500000.00,
                 'pelunasan_amount' => 37500000.00,
-                'ai_quota_spec' => 'Gemini Ultra High-Reasoning AI Tokens + Deep Architecture Automation',
+                'ai_quota_spec' => 'Gemini Ultra 4-Agent Parallel Swarm + High-Reasoning Token Pipeline',
                 'squad_allocation' => '2 Dedicated Senior Engineers + AI Agentic Pair Programming',
-                'description' => 'Akselerasi peluncuran 2x lebih cepat (selesai dalam 2 pekan). Biaya tambahan mencakup alokasi kuota komputasi cloud Gemini Ultra untuk auto-generating boilerplate, automated unit test, dan dual-engineer parallel sprint.',
+                'cost_formula' => 'Base Fee (Rp 50M) + Sewa Swarm AI Ultra Cloud (Rp 15M) + Dual Senior Squad Concurrency (Rp 10M)',
+                'ai_swarm_specs' => [
+                    'Concurrency: 4 Parallel AI Agents (Schema Architect, CRUD Builder, Test Synthesizer, Island UI Weaver)',
+                    'Context Window: High-Context Reasoning 1M Tokens',
+                    'Alokasi Komputasi: Priority Cloud Inference (Zero-Queue)',
+                    'Automated Task: Auto-generating boilerplate, automated unit testing, & architecture sanity verification',
+                ],
+                'description' => 'Akselerasi peluncuran 2x lebih cepat (selesai 2 pekan). Biaya tambahan mencakup alokasi sewa kapasitas cloud Swarm AI Gemini Ultra untuk auto-generating boilerplate, automated unit test, dan dual-engineer parallel sprint.',
             ],
             [
                 'id' => 'hyper_sprint',
-                'name' => 'Hyper-Sprint Emergency (24/7 Squad)',
+                'name' => 'Hyper-Sprint Emergency (24/7 War Room)',
                 'duration' => '7 Hari Kerja',
                 'badge' => '4X_SPEED // EMERGENCY',
-                'speed_multiplier' => '4.0x (Rilis 1 Pekan)',
+                'speed_multiplier' => '4.28x (Rilis 1 Pekan Kalender)',
                 'contract_amount' => 100000000.00,
                 'dp_amount' => 50000000.00,
                 'pelunasan_amount' => 50000000.00,
-                'ai_quota_spec' => 'Gemini Ultra Max-Context Window + 24/7 High-Capacity Inference',
+                'ai_quota_spec' => 'Gemini Ultra 8-Agent Swarm Cluster + 2M Max Context Uncapped TPS',
                 'squad_allocation' => 'Dedicated Tri-Engineer War Room (24/7 Shift Rotation)',
+                'cost_formula' => 'Base Fee (Rp 50M) + Sewa Dedicated AI Cluster Uncapped (Rp 30M) + War Room Tri-Shift 24/7 (Rp 20M)',
+                'ai_swarm_specs' => [
+                    'Concurrency: 8 Parallel AI Subagents + Continuous Self-Healing Code Pipeline',
+                    'Context Window: Maximum 2M Tokens Full-Repository Context',
+                    'Alokasi Komputasi: Dedicated Uncapped Instance (Maximum Throughput)',
+                    'Automated Task: Real-time multi-agent refactoring, continuous bug-sweeping, & instantaneous deployment sync',
+                ],
                 'description' => 'Peluncuran darurat dalam 1 pekan kalender. Prioritas tertinggi dengan war-room engineering 24 jam non-stop dan kuota inferensi Gemini Ultra tak terbatas untuk integrasi kilat.',
             ],
         ];

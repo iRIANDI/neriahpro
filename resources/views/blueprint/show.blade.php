@@ -738,7 +738,8 @@ erDiagram
                     $blueprint->nama_bisnis ?? $blueprint->client_name,
                     $blueprint->masalah_utama ?? '',
                     $prd['features']['mvp_phase1'] ?? [],
-                    $blueprint->alur_kerja ?? ''
+                    $blueprint->alur_kerja ?? '',
+                    $blueprint->user_metadata ?? []
                 );
             @endphp
             <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
@@ -750,6 +751,29 @@ erDiagram
                     <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
                         HIGH INTEGRITY ARCHITECTURE
                     </span>
+                </div>
+
+                <!-- Client Architectural Parameters Summary -->
+                <div class="mb-8 p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs">
+                    <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-2">PARAMETER PENILAIAN DARI KUESIONER KLIEN:</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px]">
+                        <div class="p-2.5 bg-zinc-900 border border-zinc-800">
+                            <span class="text-zinc-500 text-[10px] block">TARGET SKALA / TRAFIK</span>
+                            <strong class="text-zinc-200">{{ $archEval['scope_boundaries']['client_scale'] ?? ($blueprint->user_metadata['skala_pengguna'] ?? '0 - 100k User / Bulan') }}</strong>
+                        </div>
+                        <div class="p-2.5 bg-zinc-900 border border-zinc-800">
+                            <span class="text-zinc-500 text-[10px] block">JANGKAUAN PASAR</span>
+                            <strong class="text-zinc-200">{{ $archEval['scope_boundaries']['client_market'] ?? ($blueprint->user_metadata['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR)') }}</strong>
+                        </div>
+                        <div class="p-2.5 bg-zinc-900 border border-zinc-800">
+                            <span class="text-zinc-500 text-[10px] block">STANDAR KEPATUHAN</span>
+                            <strong class="text-zinc-200">{{ $archEval['scope_boundaries']['client_compliance'] ?? ($blueprint->user_metadata['kepatuhan_keamanan'] ?? 'OWASP Top 10 & Enkripsi') }}</strong>
+                        </div>
+                        <div class="p-2.5 bg-zinc-900 border border-zinc-800">
+                            <span class="text-zinc-500 text-[10px] block">RENCANA ANGGARAN KLIEN</span>
+                            <strong class="text-emerald-400">{{ $archEval['scope_boundaries']['client_budget'] ?? ($blueprint->user_metadata['kisaran_budget'] ?? 'Rp 50M - Rp 100M') }}</strong>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 1. Shared Hosting vs Dedicated VPS Assessment -->
@@ -833,10 +857,11 @@ erDiagram
                                 <span class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-bold">REKOMENDASI FASE 1</span>
                             </div>
                             <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                <li>&bull; <strong>Zero Network Latency:</strong> Menghilangkan latensi hop HTTP antar-service yang membebani response time.</li>
-                                <li>&bull; <strong>Efisiensi Biaya 60%:</strong> Satu kluster terpadu tanpa biaya sewa ganda (API server + Next.js node cluster).</li>
+                                <li>&bull; <strong>Zero Network Latency:</strong> Komunikasi antar modul berjalan intra-process O(1) tanpa overhead HTTP network antar-microservices.</li>
+                                <li>&bull; <strong>Pangkas Biaya Infrastruktur 60-70%:</strong> Satu kesatuan container deployment menghemat anggaran server staging & produksi dibanding kluster microservices.</li>
                                 <li>&bull; <strong>ACID Strict Integrity:</strong> Integritas transaksi finansial tanpa rumitnya distributed 2-phase commit.</li>
                                 <li>&bull; <strong>Rapid Time-to-Market:</strong> Sinkronisasi instan antara model bisnis Eloquent dan dashboard Filament.</li>
+                                <li>&bull; <strong>Island Architecture Frontend:</strong> Memberikan fluiditas interaksi 60fps setara SPA dengan stabilitas dan kecepatan SEO Server-Side Rendering.</li>
                             </ul>
                         </div>
 
@@ -847,20 +872,129 @@ erDiagram
                                 <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[9px] font-bold">FASE ROADMAP LANJUTAN</span>
                             </div>
                             <ul class="space-y-1.5 text-zinc-500 text-[11px]">
-                                <li>&bull; Hanya dianjurkan jika tim rekayasa sudah berkembang menjadi lebih dari 10-15 developer di repositori terpisah.</li>
-                                <li>&bull; Menambah kompleksitas otentikasi JWT token refresh lintas domain dan potensi network partition failures.</li>
+                                <li>&bull; Hanya dianjurkan jika tim rekayasa sudah berkembang menjadi lebih dari 15-20 developer di repositori terpisah.</li>
+                                <li>&bull; Menambah biaya operasional server terpisah (Backend API server + Frontend Next.js node cluster terpisah).</li>
+                                <li>&bull; Meningkatkan latensi round-trip HTTP dan beban autentikasi token JWT di setiap request interaksi.</li>
                                 <li>&bull; Membutuhkan orkestrasi Kubernetes kompleks yang tidak efisien untuk peluncuran perdana (MVP).</li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
-                <!-- 3. AI-Ready PostgreSQL Database Blueprint -->
+                <!-- 3. Global Scale Analysis (Matrix) -->
+                <div class="mb-8">
+                    <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500"></span>
+                        3. Analisis Skala Jangkauan Pengguna Dunia (Global Reach Matrix)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono text-xs">
+                        @foreach($archEval['global_scale_analysis']['tiers'] ?? [] as $scaleTier)
+                            <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold block w-fit mb-2">
+                                    {{ $scaleTier['status'] }}
+                                </span>
+                                <h4 class="font-black text-sm text-zinc-900 dark:text-zinc-100 mb-1">{{ $scaleTier['scale'] }}</h4>
+                                <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mb-2">{{ $scaleTier['architecture'] }}</div>
+                                <p class="text-[10px] text-zinc-500 dark:text-zinc-400 leading-normal">{{ $scaleTier['verdict'] }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- 4. Budget & TCO Efficiency Analysis -->
+                <div class="mb-8">
+                    <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500"></span>
+                        4. Analisis Anggaran Klien & Efisiensi Modal (TCO Comparison)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                        <div class="p-5 bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500">
+                            <span class="text-[9px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block mb-1">EFISIENSI MODAL TINGGI (90%)</span>
+                            <h4 class="font-black text-base text-zinc-900 dark:text-zinc-100 mb-2">Modern Monolith Standard</h4>
+                            <div class="space-y-1.5 text-[11px] text-zinc-700 dark:text-zinc-300">
+                                <div>&bull; Biaya Server Bulanan: <strong>Rp 350.000 - Rp 1.500.000 / bln</strong></div>
+                                <div>&bull; DevOps Headcount: <strong>0 FTE (Automated Nixpacks CI/CD)</strong></div>
+                                <div class="pt-2 border-t border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
+                                    90% anggaran klien dialokasikan murni untuk fitur bisnis & akuisisi pengguna, bukan untuk beban overhead infrastruktur.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                            <span class="text-[9px] uppercase font-bold text-zinc-400 block mb-1">OVERHEAD MODAL TINGGI (CAPITAL HEAVY)</span>
+                            <h4 class="font-black text-base text-zinc-700 dark:text-zinc-300 mb-2">Decoupled Microservices</h4>
+                            <div class="space-y-1.5 text-[11px] text-zinc-500">
+                                <div>&bull; Biaya Kluster Cloud: <strong>Rp 8.000.000 - Rp 25.000.000+ / bln</strong></div>
+                                <div>&bull; DevOps Headcount: <strong>1-2 Dedicated DevOps Engineers (Rp 20-40 jt/bln)</strong></div>
+                                <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                                    60% anggaran tersedot hanya untuk memelihara kluster Kubernetes, API Gateway, Service Mesh, dan distributed tracing.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. The 4 Decoupling Triggers (Warning / Criteria checklist) -->
+                <div class="mb-8 p-5 bg-zinc-950 border-2 border-amber-500/70 text-zinc-200 font-mono text-xs">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="w-3 h-3 bg-amber-500"></span>
+                        <h4 class="font-black text-sm uppercase text-amber-400">4 Faktor Penentu Mutlak Kapan Sistem Wajib Decoupled</h4>
+                    </div>
+                    <p class="text-zinc-400 text-xs mb-4 font-sans">
+                        Sistem tidak boleh dipecah menjadi microservices kecuali satu atau lebih pemicu mutlak berikut terpenuhi:
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+                        @foreach($archEval['decoupling_threshold_triggers']['triggers'] ?? [] as $trigger)
+                            <div class="p-3 bg-zinc-900 border border-zinc-800">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="px-1.5 py-0.2 bg-amber-500 text-black font-black text-[9px]">{{ $trigger['number'] }}</span>
+                                    <span class="font-bold text-white text-xs">{{ $trigger['title'] }}</span>
+                                </div>
+                                <p class="text-zinc-400 text-[10px] leading-relaxed">{{ $trigger['desc'] }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- 6. Strict Scope Lock Boundaries (In-Scope vs Strict Out-of-Scope) -->
+                <div class="mb-8">
+                    <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500"></span>
+                        6. Matriks Batasan Ruang Lingkup (Strict Scope Lock & Anti-Feature Creep)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                        <div class="p-5 bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/40">
+                            <span class="text-[9px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block mb-2">&check; IN-SCOPE (FASE 1 - MVP DIJAMIN KONTRAK)</span>
+                            <ul class="space-y-1.5 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                @foreach($archEval['scope_boundaries']['in_scope'] ?? [] as $inScope)
+                                    <li class="flex items-start gap-2">
+                                        <span class="text-emerald-500 font-bold">&bull;</span>
+                                        <span>{{ $inScope }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+
+                        <div class="p-5 bg-rose-500/5 dark:bg-rose-950/20 border border-rose-500/40">
+                            <span class="text-[9px] uppercase font-bold text-rose-600 dark:text-rose-400 block mb-2">&times; STRICT OUT-OF-SCOPE (DIKUNCI DARI KONTRAK UTAMA)</span>
+                            <ul class="space-y-1.5 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                @foreach($archEval['scope_boundaries']['out_of_scope'] ?? [] as $outScope)
+                                    <li class="flex items-start gap-2">
+                                        <span class="text-rose-500 font-bold">&times;</span>
+                                        <span>{{ $outScope }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. AI-Ready PostgreSQL Database Blueprint -->
                 <div class="mb-8 p-5 bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3 mb-4">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-emerald-500"></span>
-                            <span class="font-bold uppercase text-sm text-white">Basis Data PostgreSQL 16+ (pgvector & Strict ULID)</span>
+                            <span class="font-bold uppercase text-sm text-white">7. Basis Data PostgreSQL 16+ (pgvector & Strict ULID)</span>
                         </div>
                         <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold">
                             AI-READY DATABASE ENGINE
@@ -891,11 +1025,11 @@ erDiagram
                     </div>
                 </div>
 
-                <!-- 4. Recommended Tools Grid -->
+                <!-- 8. Recommended Tools Grid -->
                 <div>
                     <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
                         <span class="w-2 h-2 bg-emerald-500"></span>
-                        4. Rekomendasi Stack & Tools Rekayasa Perangkat Lunak
+                        8. Rekomendasi Stack & Tools Rekayasa Perangkat Lunak
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 font-mono text-xs">
                         @foreach($archEval['recommended_tools'] ?? [] as $tool)
@@ -918,12 +1052,26 @@ erDiagram
                             <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Opsi Velocity & Akselerasi AI Gemini Ultra</h2>
                         </div>
                         <p class="text-zinc-500 dark:text-zinc-400 text-xs font-mono">
-                            Pilih kecepatan penyelesaian sistem. Kecepatan akselerasi melibatkan alokasi komputasi cloud AI Gemini Ultra dan paralel engineering squad.
+                            Pilih kecepatan penyelesaian sistem. Kecepatan akselerasi melibatkan alokasi komputasi cloud Swarm AI Gemini Ultra dan paralel engineering squad.
                         </p>
                     </div>
                     <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 border border-emerald-300 dark:border-emerald-800 self-start sm:self-auto">
                         PILIH PAKET UNTUK KONTRAK
                     </span>
+                </div>
+
+                <!-- Mathematical Cost Formula Breakdown Banner -->
+                <div class="mb-6 p-4 bg-zinc-950 border border-zinc-800 text-zinc-300 font-mono text-xs">
+                    <div class="flex items-center justify-between gap-2 border-b border-zinc-800 pb-2 mb-3">
+                        <strong class="uppercase text-emerald-400 font-bold tracking-wider">FORMULA LEVEL BIAYA AKSELERASI SWARM AI:</strong>
+                        <span class="text-[10px] text-zinc-400">TRANSPARENT PRICING MODEL</span>
+                    </div>
+                    <div class="p-3 bg-zinc-900 border border-zinc-800 font-mono text-center text-xs sm:text-sm text-emerald-400 font-bold mb-3 overflow-x-auto">
+                        Total Investasi = Base Engineering Fee + (&Delta; Velocity Factor &times; Sewa Swarm AI Ultra Cloud) + Dedicated Concurrency Squad
+                    </div>
+                    <p class="text-zinc-400 text-[11px] leading-relaxed font-sans">
+                        Pengerjaan kilat tidak sekadar menambah jam kerja manusia, melainkan mengalokasikan <strong>Swarm AI Agent Parallel Workers (Gemini Ultra)</strong> dengan kuota inferensi jutaan token per menit untuk auto-synthesize skema database, unit test otomatis, dan refactoring real-time tanpa antrean cloud.
+                    </p>
                 </div>
 
                 <!-- 3 Comparative Velocity Pricing Cards -->
@@ -943,14 +1091,17 @@ erDiagram
                             <div class="text-xl font-black text-zinc-900 dark:text-zinc-100 my-2">
                                 Rp 50.000.000
                             </div>
-                            <div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-3">
+                            <div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-2">
                                 Termin DP 50%: Rp 25.000.000
+                            </div>
+                            <div class="text-[10px] text-zinc-500 dark:text-zinc-400 mb-3 bg-zinc-100 dark:bg-zinc-900 p-2 border border-zinc-200 dark:border-zinc-800">
+                                <strong>Formula:</strong> Base (50M) + AI Dasar (0)
                             </div>
                             <ul class="space-y-1.5 text-[11px] text-zinc-600 dark:text-zinc-400 mb-4 border-t border-zinc-200 dark:border-zinc-800 pt-3">
                                 <li>&bull; Durasi: <strong>30 Hari Kerja</strong></li>
                                 <li>&bull; Alokasi: 1 Lead Fullstack Engineer</li>
                                 <li>&bull; AI Engine: Gemini Pro standard reasoning</li>
-                                <li>&bull; Siklus: 5 Sprint reguler terjadwal</li>
+                                <li>&bull; Siklus: 5 Sprint reguler terencana</li>
                             </ul>
                         </div>
                         <button 
@@ -973,20 +1124,23 @@ erDiagram
                         </div>
                         <div>
                             <div class="flex items-center justify-between gap-1 mb-2">
-                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 font-bold">2.0X AKSELERASI</span>
+                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 font-bold">2.14X AKSELERASI</span>
                                 <span x-show="selectedTier === 'fast_track'" class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             </div>
                             <h3 class="text-base font-black uppercase text-zinc-900 dark:text-zinc-100">Fast-Track Sprint</h3>
                             <div class="text-xl font-black text-emerald-600 dark:text-emerald-400 my-2">
                                 Rp 75.000.000
                             </div>
-                            <div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-3">
+                            <div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-2">
                                 Termin DP 50%: Rp 37.500.000
                             </div>
+                            <div class="text-[10px] text-zinc-700 dark:text-zinc-300 mb-3 bg-emerald-500/10 p-2 border border-emerald-500/30">
+                                <strong>Formula:</strong> Base (50M) + Swarm AI (15M) + Dual Squad (10M)
+                            </div>
                             <ul class="space-y-1.5 text-[11px] text-zinc-700 dark:text-zinc-300 mb-4 border-t border-zinc-200 dark:border-zinc-800 pt-3">
-                                <li>&bull; Durasi: <strong>14 Hari Kerja (Pangkas 50%)</strong></li>
+                                <li>&bull; Durasi: <strong>14 Hari Kerja (Pangkas 53%)</strong></li>
                                 <li>&bull; Alokasi: 2 Dedicated Senior Engineers</li>
-                                <li>&bull; <strong>Gemini Ultra AI Accelerator:</strong> Kuota compute inference tinggi untuk auto-synthesize boilerplate & unit testing</li>
+                                <li>&bull; <strong>Gemini Ultra 4-Agent Swarm:</strong> Schema Architect, CRUD Builder, Test Synthesizer, Island UI Weaver</li>
                                 <li>&bull; Review arsitektur harian & integrasi kilat</li>
                             </ul>
                         </div>
@@ -1010,21 +1164,24 @@ erDiagram
                         </div>
                         <div>
                             <div class="flex items-center justify-between gap-1 mb-2">
-                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40 font-bold">EMERGENCY PACE</span>
+                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40 font-bold">4.28X EMERGENCY</span>
                                 <span x-show="selectedTier === 'hyper_sprint'" class="w-2 h-2 rounded-full bg-amber-500"></span>
                             </div>
                             <h3 class="text-base font-black uppercase text-zinc-900 dark:text-zinc-100">Hyper-Sprint War Room</h3>
                             <div class="text-xl font-black text-amber-600 dark:text-amber-400 my-2">
                                 Rp 100.000.000
                             </div>
-                            <div class="text-xs text-amber-600 dark:text-amber-400 font-bold mb-3">
+                            <div class="text-xs text-amber-600 dark:text-amber-400 font-bold mb-2">
                                 Termin DP 50%: Rp 50.000.000
+                            </div>
+                            <div class="text-[10px] text-amber-800 dark:text-amber-300 mb-3 bg-amber-500/10 p-2 border border-amber-500/30">
+                                <strong>Formula:</strong> Base (50M) + Uncapped AI (30M) + War Room Tri-Shift (20M)
                             </div>
                             <ul class="space-y-1.5 text-[11px] text-zinc-700 dark:text-zinc-300 mb-4 border-t border-zinc-200 dark:border-zinc-800 pt-3">
                                 <li>&bull; Durasi: <strong>7 Hari Kerja (Selesai 1 Pekan)</strong></li>
                                 <li>&bull; Alokasi: Tri-Engineer War Room (24/7 Shift)</li>
-                                <li>&bull; <strong>Gemini Ultra Max-Context:</strong> Inferensi tanpa batas untuk auto-scaffolding & parallel bug sweeping</li>
-                                <li>&bull; Dedicated emergency support line</li>
+                                <li>&bull; <strong>Gemini Ultra 8-Agent Swarm Cluster:</strong> Inferensi uncapped dengan 2M context window</li>
+                                <li>&bull; Dedicated emergency war room line</li>
                             </ul>
                         </div>
                         <button 
@@ -1036,13 +1193,6 @@ erDiagram
                         </button>
                     </div>
                 </div>
-
-                <!-- AI Compute Fee Justification Explanation -->
-                <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-mono leading-relaxed">
-                    <strong class="text-zinc-900 dark:text-zinc-100 block mb-1 uppercase font-bold">&bull; Mengapa Ada Penyesuaian Harga pada Akselerasi Fast-Track & Hyper-Sprint?</strong>
-                    Penyelesaian dalam 7-14 hari kerja membutuhkan pengalihan komputasi cloud model **Gemini Ultra (High-Reasoning)** dengan jendela konteks jutaan token untuk menghasilkan skema database, unit test otomatis, dan refactoring real-time secara instan, serta pengerahan multi-engineer senior secara simultan tanpa antrean.
-                </div>
-            </section>
 
             <!-- SECTION 08: TIMELINE & GANTT MILESTONE (ALIGNED TO VELOCITY) -->
             <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">

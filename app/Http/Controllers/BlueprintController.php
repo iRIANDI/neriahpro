@@ -42,8 +42,8 @@ class BlueprintController extends Controller
 
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
 
-        // Ensure PRD content is populated or regenerate if requested or missing new evaluation schema
-        if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['architecture_evaluation']) || request()->has('regenerate')) {
+        // Ensure PRD content is populated or regenerate if requested or missing new evaluation schema or engineering specs
+        if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['engineering_specs']) || request()->has('regenerate')) {
             $blueprint->generateAndSavePrd();
             $blueprint->refresh();
         }
@@ -178,23 +178,28 @@ class BlueprintController extends Controller
     public function downloadMd(string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
-        $prd = $blueprint->prd_content;
+        $prd = $blueprint->prd_content ?? [];
         
-        $md = "# Ultimate PRD: " . ($blueprint->nama_bisnis ?: $blueprint->client_name) . "\n\n";
-        
-        $md .= "## 1. Executive Technical Discovery\n";
-        $md .= "**Masalah Utama:** " . ($blueprint->masalah_utama ?? ($prd['executive_summary']['problem_statement'] ?? '-')) . "\n\n";
-        $md .= "**Tujuan Utama:** " . ($blueprint->tujuan_utama ?? ($prd['executive_summary']['success_metrics'] ?? '-')) . "\n\n";
-        
-        $md .= "## 2. Fitur MVP (Fase 1)\n";
-        foreach ($prd['features']['mvp_phase1'] ?? [] as $fitur) {
-            $md .= "- **" . ($fitur['title'] ?? '') . "**: " . ($fitur['desc'] ?? '') . "\n";
-        }
-        $md .= "\n";
+        $md = \App\Services\PrdGeneratorService::toMarkdown($blueprint, $prd);
         
         return response($md, 200, [
-            'Content-Type' => 'text/markdown',
+            'Content-Type' => 'text/markdown; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="PRD_' . $blueprint->slug . '.md"'
+        ]);
+    }
+
+    /**
+     * Get Raw PRD Markdown for AI Code Agent clipboard copy
+     */
+    public function rawMd(string $slug)
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $prd = $blueprint->prd_content ?? [];
+        
+        $md = \App\Services\PrdGeneratorService::toMarkdown($blueprint, $prd);
+        
+        return response($md, 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
         ]);
     }
 }

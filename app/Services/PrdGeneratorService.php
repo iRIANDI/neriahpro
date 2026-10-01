@@ -49,6 +49,10 @@ class PrdGeneratorService
         // Parse Phase 2 Features
         $phase2Items = self::parseItems($fiturTambahan);
 
+        // Generate Deep Granular Engineering Specs for MVP & Phase 2
+        $detailedMvpSpecs = self::generateDetailedFeatureSpecs($mvpItems, $businessName, $actorItems, 'mvp');
+        $detailedPhase2Specs = self::generateDetailedFeatureSpecs($phase2Items, $businessName, $actorItems, 'phase2');
+
         // Parse Workflow Stages
         $workflowStages = self::parseWorkflow($alurKerja);
 
@@ -88,8 +92,15 @@ class PrdGeneratorService
             ],
             'system_actors' => $actorItems,
             'features' => [
-                'mvp_phase1' => $mvpItems,
-                'phase2_roadmap' => $phase2Items,
+                'mvp_phase1' => $detailedMvpSpecs,
+                'phase2_roadmap' => $detailedPhase2Specs,
+            ],
+            'engineering_specs' => [
+                'mvp_specs' => $detailedMvpSpecs,
+                'phase2_specs' => $detailedPhase2Specs,
+                'anti_ai_slop_guidelines' => self::getAntiAiSlopDesignSystem(),
+                'backend_scalability_manifesto' => self::getBackendScalabilityManifesto(),
+                'agent_handoff_protocol' => self::getAgentHandoffProtocol($businessName),
             ],
             'workflow' => $workflowStages,
             'erd_schema' => [
@@ -173,6 +184,9 @@ class PrdGeneratorService
     protected static function parseItems(string $text): array
     {
         $lines = preg_split('/[\r\n]+/', trim($text));
+        if (count($lines) === 1 && str_contains($lines[0], ',')) {
+            $lines = explode(',', $lines[0]);
+        }
         $items = [];
 
         foreach ($lines as $line) {
@@ -1037,4 +1051,854 @@ class PrdGeneratorService
             ],
         ];
     }
+
+    /**
+     * Generate granular engineering specifications for each feature.
+     */
+    protected static function generateDetailedFeatureSpecs(array $rawItems, string $businessName, array $actorItems, string $tier = 'mvp'): array
+    {
+        $specs = [];
+        $index = 1;
+        $prefix = ($tier === 'mvp') ? 'MVP' : 'ROADMAP';
+
+        $primaryActor = $actorItems[0]['name'] ?? 'Superadmin';
+        $clientActor = $actorItems[count($actorItems) - 1]['name'] ?? 'Pengguna / Klien';
+
+        foreach ($rawItems as $item) {
+            $title = $item['title'] ?? ('Fitur ' . $index);
+            $desc = $item['desc'] ?? 'Spesifikasi fungsional inti untuk operasional sistem.';
+            $slug = Str::slug($title);
+            $cleanSlug = strtoupper(substr(str_replace('-', '_', $slug), 0, 14));
+            $featureId = sprintf('FEAT-%s-%02d-%s', $prefix, $index, $cleanSlug);
+
+            $analysis = self::analyzeFeatureDomain($title, $desc, $businessName, $clientActor, $primaryActor, $index, $prefix);
+
+            $specs[] = [
+                'id' => $featureId,
+                'index' => $index,
+                'tier' => $tier,
+                'title' => $title,
+                'desc' => $desc,
+                'category' => $analysis['category'],
+                'category_label' => $analysis['category_label'],
+                'user_story' => $analysis['user_story'],
+                'acceptance_criteria' => $analysis['acceptance_criteria'],
+                'frontend' => $analysis['frontend'],
+                'backend' => $analysis['backend'],
+                'integration' => $analysis['integration'],
+                'code_agent_directive' => $analysis['code_agent_directive'],
+            ];
+
+            $index++;
+        }
+
+        return $specs;
+    }
+
+    /**
+     * Intelligently analyze feature domain and extract concrete engineering tasks.
+     */
+    protected static function analyzeFeatureDomain(string $title, string $desc, string $businessName, string $clientActor, string $primaryActor, int $index, string $prefix): array
+    {
+        $lower = strtolower($title . ' ' . $desc);
+        $titleSlug = Str::slug($title);
+        $modelName = Str::studly(Str::singular(explode('-', $titleSlug)[0] ?? 'Record'));
+        if (in_array(strtolower($modelName), ['fitur', 'manajemen', 'sistem', 'data'])) {
+            $modelName = 'BusinessRecord';
+        }
+
+        // Domain 1: AUTH & RBAC
+        if (str_contains($lower, 'autentikasi') || str_contains($lower, 'login') || str_contains($lower, 'rbac') || str_contains($lower, 'user') || str_contains($lower, 'pengguna')) {
+            return [
+                'category' => 'SECURITY_RBAC',
+                'category_label' => 'Otentikasi & Keamanan Akses',
+                'user_story' => "Sebagai {$primaryActor} atau {$clientActor}, saya ingin dapat mengautentikasi diri secara aman dengan sesi terisolasi dan izin akses berbasis peran (RBAC), sehingga data sensitif organisasi terlindungi dari akses ilegal.",
+                'acceptance_criteria' => [
+                    [
+                        'scenario' => 'Login Berhasil dengan Kredensial Valid',
+                        'given' => "Pengguna telah terdaftar di database dengan peran yang sah ({$primaryActor} atau {$clientActor}).",
+                        'when' => 'Pengguna memasukkan email dan kata sandi yang sesuai pada form login.',
+                        'then' => 'Sistem mengautentikasi sesi, meregenerasi Session ID untuk mencegah session fixation, dan mengarahkan pengguna ke dasbor sesuai peran.',
+                    ],
+                    [
+                        'scenario' => 'Blokir Akses Ilegal (RBAC Boundary)',
+                        'given' => "Pengguna terautentikasi dengan peran {$clientActor}.",
+                        'when' => 'Pengguna mencoba mengakses URL atau endpoint khusus milik Superadmin.',
+                        'then' => 'Sistem menolak request dengan status HTTP 403 Forbidden, menampilkan halaman error yang ramah, dan mencatat log audit percobaan akses.',
+                    ],
+                    [
+                        'scenario' => 'Proteksi Brute-Force Rate Limiting',
+                        'given' => 'Form login menerima permintaan percobaan otentikasi bertubi-tubi.',
+                        'when' => 'Terjadi 5 kali kegagalan login dalam kurun waktu 1 menit dari IP yang sama.',
+                        'then' => 'Sistem mengunci sementara proses login selama 60 detik dengan respons HTTP 429 Too Many Requests.',
+                    ],
+                ],
+                'frontend' => [
+                    'design_tokens' => 'Form auth high-contrast (bukan template abu-abu hambar), surface zinc-900 di dark mode / crisp white di light mode, focus-ring emerald-500 dengan transition-all duration-200.',
+                    'states' => 'Loading pulse bar pada tombol submit saat auth diproses, error banner inline dengan warna rose-500, auto-focus pada field email.',
+                    'components' => ['LoginForm.blade.php', 'PasswordInputToggle.js', 'AuthToastNotifier.js'],
+                    'tasks' => [
+                        'Desain formulir otentikasi responsif dengan WCAG AAA contrast ratio.',
+                        'Implementasikan toggle visibilitas kata sandi (eye icon SVG fluid).',
+                        'Integrasikan notifikasi toast floating saat login gagal tanpa dialog modal native.',
+                    ],
+                ],
+                'backend' => [
+                    'model_and_migration' => 'Tabel `users` dengan `->ulid("id")->primary()`, kolom `role`, `status`, `remember_token`, timestamps.',
+                    'scalability_guardrail' => 'Index pada kolom `email`, password hashing Argon2id / Bcrypt 12 rounds, keyset cursor pagination untuk listing user.',
+                    'tasks' => [
+                        'Buat migration tabel `users` dengan Primary Key ULID standar PostgreSQL.',
+                        'Implementasikan Form Request `LoginRequest` dengan validasi email ketat dan sanitasi string.',
+                        'Terapkan middleware `CheckRole` atau Filament Shield Policy untuk isolasi hak akses.',
+                    ],
+                ],
+                'integration' => [
+                    'endpoint' => 'POST /api/v1/auth/login & POST /logout',
+                    'middleware' => ['web', 'throttle:5,1'],
+                    'request_schema' => '{"email": "admin@' . Str::slug($businessName) . '.com", "password": "SecurePassword123!", "remember": true}',
+                    'response_schema' => '{"success": true, "user": {"id": "01J...ULID", "name": "Admin", "role": "superadmin"}, "redirect_url": "/admin"}',
+                    'tasks' => [
+                        'Daftarkan route auth dengan pembatasan laju (throttling 5 request/menit).',
+                        'Pastikan token CSRF divalidasi pada setiap request mutasi.',
+                    ],
+                ],
+                'code_agent_directive' => self::buildAgentPrompt(
+                    sprintf('FEAT-%s-%02d-AUTH_RBAC', $prefix, $index),
+                    $title,
+                    $businessName,
+                    "Implementasikan modul Otentikasi & RBAC dengan Laravel 13, Filament v5, dan PostgreSQL Strict ULID.",
+                    ['app/Models/User.php', 'database/migrations/xxxx_create_users_table.php', 'app/Http/Requests/Auth/LoginRequest.php', 'resources/views/auth/login.blade.php'],
+                    "php artisan test --filter=AuthenticationTest"
+                ),
+            ];
+        }
+
+        // Domain 2: KATALOG / LISTING / PENCARIAN / FILTER
+        if (str_contains($lower, 'katalog') || str_contains($lower, 'filter') || str_contains($lower, 'cari') || str_contains($lower, 'search') || str_contains($lower, 'produk') || str_contains($lower, 'properti') || str_contains($lower, 'daftar')) {
+            return [
+                'category' => 'DISCOVERY_CATALOG',
+                'category_label' => 'Katalog & Pencarian O(1)',
+                'user_story' => "Sebagai {$clientActor}, saya ingin menelusuri katalog data {$businessName} dengan filter dinamis dan pencarian instan, sehingga saya dapat menemukan informasi yang paling cocok dengan kebutuhan saya dalam waktu singkat.",
+                'acceptance_criteria' => [
+                    [
+                        'scenario' => 'Filter Reaktif Sub-100ms Tanpa Reload Halaman Penuh',
+                        'given' => 'Katalog memiliki data yang siap ditampilkan.',
+                        'when' => 'Pengguna memilih parameter filter (kategori, kisaran harga, atau lokasi).',
+                        'then' => 'Daftar item diperbarui secara reaktif dalam waktu <100ms dengan mempertahankan posisi scroll dan riwayat URL query string.',
+                    ],
+                    [
+                        'scenario' => 'Ketersediaan Skeleton Loader dan Empty State',
+                        'given' => 'Pencarian dilakukan dengan kata kunci spesifik.',
+                        'when' => 'Data sedang diunduh dari server ATAU tidak ada hasil yang cocok.',
+                        'then' => 'Sistem menampilkan Skeleton Loader shimmer (anti layout-shift) saat loading, atau Empty State empatik dengan tombol Reset Filter jika data nihil.',
+                    ],
+                    [
+                        'scenario' => 'Stabilitas Paginasi Keyset Cursor O(1)',
+                        'given' => 'Katalog menampung puluhan ribu data.',
+                        'when' => 'Pengguna melakukan navigasi halaman selanjutnya (Load More).',
+                        'then' => 'Sistem menggunakan cursorPaginate() berbasis pointer ID ULID sehingga performa query database tetap O(1) konstan tanpa beban memory leak.',
+                    ],
+                ],
+                'frontend' => [
+                    'design_tokens' => 'Grid asimetris modern (1 kolom mobile, 2 kolom tablet, 3-4 kolom desktop), aspect-ratio 16:9/4:3 gambar dengan object-cover (anti squish), badge kategori HSL berkarakter.',
+                    'states' => 'Skeleton cards beranimasi shimmer saat fetch data, hover card lift effect (hover:-translate-y-1 hover:shadow-lg transition-all duration-300), empty state dengan tombol Reset.',
+                    'components' => ['CatalogGrid.blade.php', 'CatalogCard.blade.php', 'CatalogFilterBar.blade.php', 'SkeletonCard.blade.php'],
+                    'tasks' => [
+                        'Bangun komponen grid katalog yang mobile-first dan responsif.',
+                        'Implementasikan filter drawer interaktif dengan binding URL query string.',
+                        'Sediakan skeleton loader shimmer untuk mencegah cumulative layout shift (CLS = 0).',
+                    ],
+                ],
+                'backend' => [
+                    'model_and_migration' => "Tabel `catalog_items` dengan `->ulid('id')->primary()`, indexes compound `[status, created_at]`, foreignUlid, soft-deletes.",
+                    'scalability_guardrail' => "Hindari standard paginate() (OFFSET). Wajib gunakan cursorPaginate() dengan ->orderBy('id', 'desc') untuk stabilitas kursor O(1).",
+                    'tasks' => [
+                        'Buat migration tabel katalog dengan ULID primary key dan indeks pada kolom-kolom filter.',
+                        'Implementasikan Query Scope `scopeFilter()` di Model untuk menangani parameter pencarian secara efisien.',
+                        'Pastikan eager loading `with(...)` diterapkan untuk mematikan ancaman N+1 query problem.',
+                    ],
+                ],
+                'integration' => [
+                    'endpoint' => 'GET /api/v1/catalog?cursor=...&category=...&q=...',
+                    'middleware' => ['web', 'throttle:60,1'],
+                    'request_schema' => '{"q": "Jakarta", "category_id": "01J...", "min_price": 50000000, "cursor": "eyJpZCI..."}',
+                    'response_schema' => '{"data": [{"id": "01J...", "title": "Unit A", "price": 150000000}], "next_cursor": "eyJpZCI...", "has_more": true}',
+                    'tasks' => [
+                        'Daftarkan endpoint API / Livewire Action dengan response JSON terformat.',
+                        'Integrasikan ETag dan HTTP Cache-Control (max-age=60) untuk optimasi bandwidth.',
+                    ],
+                ],
+                'code_agent_directive' => self::buildAgentPrompt(
+                    sprintf('FEAT-%s-%02d-CATALOG_FILTER', $prefix, $index),
+                    $title,
+                    $businessName,
+                    "Bangun modul Katalog & Filter Data Interaktif dengan Keyset Cursor Pagination O(1) dan UI Anti-AI-Slop.",
+                    ['app/Models/CatalogItem.php', 'database/migrations/xxxx_create_catalog_items_table.php', 'app/Http/Controllers/CatalogController.php', 'resources/views/catalog/index.blade.php'],
+                    "php artisan test --filter=CatalogFilterTest"
+                ),
+            ];
+        }
+
+        // Domain 3: INTAKE / FORMULIR / PESANAN / RESERVASI / TRANSAKSI / DOA
+        if (str_contains($lower, 'form') || str_contains($lower, 'intake') || str_contains($lower, 'reservasi') || str_contains($lower, 'pesan') || str_contains($lower, 'transaksi') || str_contains($lower, 'doa') || str_contains($lower, 'warta') || str_contains($lower, 'konsultasi')) {
+            return [
+                'category' => 'DATA_INTAKE_TRANSACTION',
+                'category_label' => 'Formulir Intake & Transaksi Terverifikasi',
+                'user_story' => "Sebagai {$clientActor}, saya ingin mengisi formulir intake/reservasi dengan alur yang terpandu dan validasi instan, sehingga permintaan saya tercatat akurat dan langsung mendapatkan konfirmasi resmi.",
+                'acceptance_criteria' => [
+                    [
+                        'scenario' => 'Validasi Data Masukan Secara Real-Time',
+                        'given' => 'Pengguna sedang mengisi kolom nomor telepon, email, dan data wajib.',
+                        'when' => 'Pengguna mengetik format yang keliru (misal menginput angka 0 di awal nomor WhatsApp ber-country code).',
+                        'then' => 'Sistem otomatis memfilter atau menampilkan petunjuk inline ramah sebelum formulir dikirim.',
+                    ],
+                    [
+                        'scenario' => 'Pencegahan Double-Submit via Idempotency Key',
+                        'given' => 'Formulir siap dikirim dengan payload valid.',
+                        'when' => 'Pengguna menekan tombol submit berkali-kali karena koneksi internet lambat.',
+                        'then' => 'Sistem memproses request pertama dengan token idempotency unik, mendisabled tombol, dan mengabaikan request duplikat tanpa error.',
+                    ],
+                    [
+                        'scenario' => 'Pencatatan Transaksi & Penerbitan Kode Referensi',
+                        'given' => 'Data formulir berhasil lolos validasi server-side.',
+                        'when' => 'Transaksi disimpan ke database.',
+                        'then' => 'Sistem membungkus operasi dalam DB::transaction, menghasilkan kode referensi unik, mencatat IP & timestamp audit trail, serta mendispatch event background notifikasi.',
+                    ],
+                ],
+                'frontend' => [
+                    'design_tokens' => 'Floating input labels, selector kode negara bendera interaktif, step progress bar indikatif, validasi error inline dengan aksen rose-500, focus ring emerald-500.',
+                    'states' => 'Tombol kirim memiliki state loading spinner micro, konfirmasi sukses menggunakan modal modern backdrop-blur atau redirect halaman terima kasih ber-QR code.',
+                    'components' => ['IntakeForm.blade.php', 'PhoneCountryCodePicker.blade.php', 'StepProgressBar.blade.php'],
+                    'tasks' => [
+                        'Buat form intake multi-langkah yang nyaman diakses lewat smartphone.',
+                        'Pasang filter anti angka 0 di awal untuk nomor telepon setelah country code.',
+                        'Tampilkan feedback konfirmasi menggunakan floating Toast sistem, bukan alert native.',
+                    ],
+                ],
+                'backend' => [
+                    'model_and_migration' => "Tabel `transactions` / `intakes` dengan `->ulid('id')->primary()`, `reference_code` unique, `status` enum, audit metadata JSONB.",
+                    'scalability_guardrail' => 'Gunakan DB::transaction untuk integritas data ACID, dispatch event asinkron agar response time HTTP tetap <80ms.',
+                    'tasks' => [
+                        'Migration tabel intake dengan Primary Key ULID dan foreign keys tervalidasi.',
+                        'Form Request `StoreIntakeRequest` dengan sanitasi anti-XSS dan rules ketat.',
+                        'Action class `CreateIntakeAction` yang menangani logika bisnis secara terisolasi.',
+                    ],
+                ],
+                'integration' => [
+                    'endpoint' => 'POST /api/v1/intake',
+                    'middleware' => ['web', 'throttle:15,1'],
+                    'request_schema' => '{"name": "Budi Santoso", "country_code": "62", "phone": "81234567890", "notes": "Pengajuan minat unit A"}',
+                    'response_schema' => '{"success": true, "reference_code": "NPRO-TRX-2026-9812", "message": "Pendaftaran berhasil dicatat."}',
+                    'tasks' => [
+                        'Daftarkan endpoint API intake dengan header `X-Idempotency-Key`.',
+                        'Hubungkan submission dengan queue worker untuk pengiriman notifikasi instan.',
+                    ],
+                ],
+                'code_agent_directive' => self::buildAgentPrompt(
+                    sprintf('FEAT-%s-%02d-DATA_INTAKE', $prefix, $index),
+                    $title,
+                    $businessName,
+                    "Bangun modul Formulir Intake & Transaksi dengan validasi server-side ketat, idempotency guard, dan UI modern.",
+                    ['app/Models/Intake.php', 'database/migrations/xxxx_create_intakes_table.php', 'app/Http/Requests/StoreIntakeRequest.php', 'app/Actions/CreateIntakeAction.php'],
+                    "php artisan test --filter=IntakeSubmissionTest"
+                ),
+            ];
+        }
+
+        // Domain 4: DASBOR / ADMIN / GOVERNANCE / FILAMENT
+        if (str_contains($lower, 'dasbor') || str_contains($lower, 'admin') || str_contains($lower, 'rekap') || str_contains($lower, 'kelola') || str_contains($lower, 'approval')) {
+            return [
+                'category' => 'GOVERNANCE_OPERATIONS',
+                'category_label' => 'Dasbor Operasional & Tata Kelola',
+                'user_story' => "Sebagai {$primaryActor}, saya ingin memantau KPI bisnis, meninjau data masuk, dan memproses status approval dalam satu panel kendali terpusat, sehingga operasional harian berjalan tanpa hambatan.",
+                'acceptance_criteria' => [
+                    [
+                        'scenario' => 'Pemuatan Dasbor Agregasi Cepat (<150ms)',
+                        'given' => 'Database memiliki puluhan ribu catatan transaksi.',
+                        'when' => 'Admin membuka halaman utama dasbor operasional.',
+                        'then' => 'Widget ringkasan metrik menampilkan data agregasi dari cache Redis / query terindeks tanpa menyebabkan slow query pada server.',
+                    ],
+                    [
+                        'scenario' => 'Tabel Administrasi dengan Filter Cepat & Inline Actions',
+                        'given' => 'Admin sedang mengelola antrean permohonan masuk.',
+                        'when' => 'Admin memfilter berdasarkan status (Pending, Disetujui, Ditolak).',
+                        'then' => 'Tabel Filament v5 menampilkan data relevan secara instan dengan aksi persetujuan (Approve/Reject) langsung dari baris tabel.',
+                    ],
+                    [
+                        'scenario' => 'Audit Trail Pencatatan Setiap Aksi Perubahan',
+                        'given' => 'Data penting mengalami perubahan status oleh staf admin.',
+                        'when' => 'Perubahan disimpan ke sistem.',
+                        'then' => 'Sistem mencatat identitas admin, alamat IP, timestamp waktu, dan diff nilai sebelum/sesudah di tabel audit trail.',
+                    ],
+                ],
+                'frontend' => [
+                    'design_tokens' => 'Antarmuka Filament v5 Enterprise dengan dark mode onyx / light mode crisp, widget card dengan indikator pertumbuhan tren persentase, status badge bersahabat.',
+                    'states' => 'Skeleton table rows saat data berpindah halaman, modal dialog konfirmasi yang elegan untuk aksi destruktif (tanpa window.confirm).',
+                    'components' => ['AdminResourceTable.php', 'StatsOverviewWidget.php', 'ActionConfirmationModal.blade.php'],
+                    'tasks' => [
+                        'Konfigurasi Filament v5 Resource lengkap dengan form input dan kolom tabel.',
+                        'Tambahkan widget kartu statistik metrik utama (Total Data, Pending, Disetujui).',
+                        'Terapkan custom badge semantik untuk indikasi status yang mudah terbaca.',
+                    ],
+                ],
+                'backend' => [
+                    'model_and_migration' => "Filament Resource Class `App\Filament\Resources\...Resource.php` dengan implementasi method form Schema v5.",
+                    'scalability_guardrail' => "Wajib menggunakan signature `form(\Filament\Schemas\Schema \$form): \Filament\Schemas\Schema` (Filament v5). Terapkan eager loading relasi untuk mencegah N+1.",
+                    'tasks' => [
+                        'Buat Filament Resource dengan schema form dan table builder standar Filament v5.',
+                        'Pasang Policy autorisasi hak akses berbasis peran pada Model terkait.',
+                        'Optimasi query tabel admin dengan indeks kolom status dan created_at.',
+                    ],
+                ],
+                'integration' => [
+                    'endpoint' => 'GET /admin/resources & POST /admin/resources/action',
+                    'middleware' => ['web', 'auth:web'],
+                    'request_schema' => '{"action": "approve", "record_id": "01J...ULID", "reason": "Dokumen lengkap"}',
+                    'response_schema' => '{"success": true, "message": "Status berhasil diperbarui."}',
+                    'tasks' => [
+                        'Integrasikan audit trail observer pada model untuk mencatat aktivitas admin.',
+                        'Hubungkan trigger approval dengan background job dispatch notifikasi.',
+                    ],
+                ],
+                'code_agent_directive' => self::buildAgentPrompt(
+                    sprintf('FEAT-%s-%02d-ADMIN_OPS', $prefix, $index),
+                    $title,
+                    $businessName,
+                    "Implementasikan Dasbor Administrasi Filament v5 dengan schema form aman dan tabel filter instan.",
+                    ['app/Filament/Resources/RecordResource.php', 'app/Filament/Widgets/StatsOverview.php', 'app/Policies/RecordPolicy.php'],
+                    "php artisan test --filter=AdminPanelAccessTest"
+                ),
+            ];
+        }
+
+        // Domain 5: EKSPOR / LAPORAN / PDF / EXCEL
+        if (str_contains($lower, 'ekspor') || str_contains($lower, 'laporan') || str_contains($lower, 'pdf') || str_contains($lower, 'excel') || str_contains($lower, 'cetak')) {
+            return [
+                'category' => 'REPORTING_EXPORT',
+                'category_label' => 'Pelaporan & Ekspor Data (PDF / Excel)',
+                'user_story' => "Sebagai {$primaryActor}, saya ingin mengunduh laporan rekapitulasi data dalam format PDF dan Excel terformat rapi, sehingga saya dapat menyajikan data resmi ke pemangku kepentingan tanpa perlu merapikan dokumen manual.",
+                'acceptance_criteria' => [
+                    [
+                        'scenario' => 'Ekspor Excel Tanpa Kehabisan Memori Server (Chunking)',
+                        'given' => 'Terdapat ribuan baris data yang diekspor.',
+                        'when' => 'Admin menekan tombol Ekspor Excel.',
+                        'then' => 'Sistem men-streaming data menggunakan generator chunk (cursor), menghasilkan file .XLSX dengan header beku (freeze panes) dalam <3 detik tanpa lonjakan RAM.',
+                    ],
+                    [
+                        'scenario' => 'Cetak Dokumen PDF Terstandarisasi',
+                        'given' => 'Admin atau pengguna mencetak tanda bukti atau rangkuman laporan.',
+                        'when' => 'File PDF diunduh.',
+                        'then' => 'Tata letak mematuhi standar A4 cetak rapi, dilengkapi kop resmi, nomor halaman dinamis, dan verifikasi cryptographic hash atau QR code.',
+                    ],
+                ],
+                'frontend' => [
+                    'design_tokens' => 'Modal pemilih filter tanggal (Date Range Picker), dropdown format (Excel XLSX, PDF Dokumen) dengan icon representatif, download progress feedback.',
+                    'states' => 'Tombol unduh beralih ke state animasi progress saat file disintesis, toast notifikasi sukses saat file mulai terunduh.',
+                    'components' => ['ExportReportModal.blade.php', 'ReportFormatSelector.blade.php'],
+                    'tasks' => [
+                        'Buat modal dialog interaktif untuk memilih periode dan kolom ekspor.',
+                        'Sediakan tombol unduh cepat dengan indikator visual proses unduhan.',
+                    ],
+                ],
+                'backend' => [
+                    'model_and_migration' => "Service class `App\Services\ReportExportService.php` dengan engine streaming (FastExcel / DomPDF).",
+                    'scalability_guardrail' => 'Dilarang memuat seluruh koleksi ke memory array ($query->get()). Wajib gunakan $query->cursor() untuk membatasi konsumsi RAM <32MB.',
+                    'tasks' => [
+                        'Implementasikan export handler dengan streaming response langsung ke browser.',
+                        'Desain template Blade khusus PDF (`resources/views/pdf/report.blade.php`) dengan styling ramah DomPDF.',
+                    ],
+                ],
+                'integration' => [
+                    'endpoint' => 'GET /admin/reports/export?format=xlsx&start_date=2026-01-01&end_date=2026-12-31',
+                    'middleware' => ['web', 'auth:web'],
+                    'request_schema' => 'Query parameters: format (xlsx|pdf), start_date, end_date, status',
+                    'response_schema' => 'Binary file stream with Content-Disposition attachment',
+                    'tasks' => [
+                        'Daftarkan route download laporan dengan proteksi otorisasi admin.',
+                    ],
+                ],
+                'code_agent_directive' => self::buildAgentPrompt(
+                    sprintf('FEAT-%s-%02d-EXPORT_REPORT', $prefix, $index),
+                    $title,
+                    $businessName,
+                    "Bangun fitur Ekspor Laporan PDF & Excel hemat memori menggunakan streaming cursor.",
+                    ['app/Services/ReportExportService.php', 'app/Http/Controllers/ReportExportController.php', 'resources/views/pdf/report.blade.php'],
+                    "php artisan test --filter=ReportExportTest"
+                ),
+            ];
+        }
+
+        // Domain 6: NOTIFIKASI & WHATSAPP GATEWAY
+        if (str_contains($lower, 'notifikasi') || str_contains($lower, 'whatsapp') || str_contains($lower, 'gateway') || str_contains($lower, 'email') || str_contains($lower, 'wa')) {
+            return [
+                'category' => 'COMMUNICATION_DISPATCH',
+                'category_label' => 'Notifikasi WhatsApp & Gateway Terotomasi',
+                'user_story' => "Sebagai {$clientActor} dan {$primaryActor}, saya ingin menerima notifikasi status real-time via WhatsApp dan Email setiap kali ada aktivitas transaksi penting, sehingga seluruh pihak mendapatkan konfirmasi instan tanpa koordinasi manual.",
+                'acceptance_criteria' => [
+                    [
+                        'scenario' => 'Pengiriman Notifikasi WhatsApp via Background Queue',
+                        'given' => 'Terjadi event pemicu (misal formulir baru atau update status).',
+                        'when' => 'Event didispatch oleh sistem.',
+                        'then' => 'Pesan WhatsApp dikirimkan melalui background queue job dalam <5 detik tanpa memperlambat respon halaman web bagi pengguna.',
+                    ],
+                    [
+                        'scenario' => 'Ketahanan Terhadap API Gateway Downtime (Retry Backoff)',
+                        'given' => 'API provider WhatsApp mengalami network timeout atau error sementara.',
+                        'when' => 'Job pengiriman notifikasi dieksekusi.',
+                        'then' => 'Sistem otomatis mencoba ulang (retry 3x dengan jeda bertingkat) dan mencatat status di log sistem tanpa merusak data transaksi utama.',
+                    ],
+                ],
+                'frontend' => [
+                    'design_tokens' => 'Badge status notifikasi terkirim (Warna emerald untuk Terkirim, amber untuk Dalam Antrean, rose untuk Gagal kirim), preview template pesan.',
+                    'states' => 'Indikator live sync status pesan di tabel admin.',
+                    'components' => ['WhatsAppPreviewModal.blade.php', 'DeliveryStatusBadge.blade.php'],
+                    'tasks' => [
+                        'Tampilkan riwayat pengiriman notifikasi di panel admin.',
+                        'Sediakan tombol kirim ulang pesan (Resend WhatsApp) jika terjadi kegagalan transmisi.',
+                    ],
+                ],
+                'backend' => [
+                    'model_and_migration' => "Tabel `notification_logs` dengan `->ulid('id')->primary()`, target_phone, message_body, status, error_details, timestamps.",
+                    'scalability_guardrail' => 'Wajib menggunakan Laravel Queues (ShouldQueue) pada Redis/Database connection. Dilarang melakukan synchronous HTTP call di controller.',
+                    'tasks' => [
+                        'Buat Service class `WhatsAppGatewayService` dengan format nomor E.164 otomatis.',
+                        'Buat Job class `SendWhatsAppNotificationJob` yang mengimplementasikan `ShouldQueue`.',
+                    ],
+                ],
+                'integration' => [
+                    'endpoint' => 'POST /api/webhooks/whatsapp/delivery-report',
+                    'middleware' => ['api'],
+                    'request_schema' => '{"message_id": "WA-12345", "status": "DELIVERED", "timestamp": 1790866000}',
+                    'response_schema' => '{"success": true}',
+                    'tasks' => [
+                        'Daftarkan webhook listener untuk menerima status laporan pengiriman (DLR) dari gateway WhatsApp.',
+                    ],
+                ],
+                'code_agent_directive' => self::buildAgentPrompt(
+                    sprintf('FEAT-%s-%02d-WA_NOTIF', $prefix, $index),
+                    $title,
+                    $businessName,
+                    "Bangun sistem Notifikasi WhatsApp asinkron dengan Queue Jobs dan mekanisme retry cerdas.",
+                    ['app/Services/WhatsAppGatewayService.php', 'app/Jobs/SendWhatsAppNotificationJob.php', 'database/migrations/xxxx_create_notification_logs_table.php'],
+                    "php artisan test --filter=WhatsAppNotificationTest"
+                ),
+            ];
+        }
+
+        // Domain 7: GENERAL BUSINESS CORE SPECIFICATION
+        $cleanSlug = strtoupper(substr(str_replace('-', '_', $titleSlug), 0, 14));
+        return [
+            'category' => 'CORE_FEATURE',
+            'category_label' => 'Modul Inti Bisnis',
+            'user_story' => "Sebagai {$clientActor}, saya ingin menggunakan fitur {$title} pada sistem {$businessName}, sehingga {$desc}.",
+            'acceptance_criteria' => [
+                [
+                    'scenario' => 'Eksekusi Fungsional Utama Berjalan Normal',
+                    'given' => "Pengguna memiliki hak akses terhadap modul {$title}.",
+                    'when' => 'Pengguna menjalankan alur utama fitur sesuai petunjuk sistem.',
+                    'then' => 'Sistem memproses data secara akurat, menyimpan hasil dengan integritas ACID, dan memperbarui status tampilan secara reaktif.',
+                ],
+                [
+                    'scenario' => 'Penanganan Error dan Validasi Input',
+                    'given' => 'Data yang diberikan tidak memenuhi syarat spesifikasi.',
+                    'when' => 'Data dikirimkan ke server.',
+                    'then' => 'Sistem mengembalikan pesan peringatan yang jelas dan mencegah penyimpanan data yang rusak.',
+                ],
+            ],
+            'frontend' => [
+                'design_tokens' => 'Desain komponen berkarakter dengan tipografi tajam, margin konsisten, transisi interaksi halus, dan kompatibilitas dark/light mode.',
+                'states' => 'Loading skeleton saat proses komputasi berlangsung, feedback aksi menggunakan sistem Toast, bukan dialog alert native.',
+                'components' => [$modelName . 'Component.blade.php', $modelName . 'Card.blade.php'],
+                'tasks' => [
+                    "Bangun antarmuka pengguna untuk fitur {$title} dengan prinsip Anti-AI-Slop.",
+                    'Pastikan pengalaman navigasi mulus di perangkat seluler maupun desktop.',
+                ],
+            ],
+            'backend' => [
+                'model_and_migration' => "Tabel `" . Str::snake(Str::plural($modelName)) . "` dengan `->ulid('id')->primary()`, proper indexation, soft deletes.",
+                'scalability_guardrail' => 'Terapkan Keyset Cursor Pagination O(1) untuk seluruh endpoint listing data.',
+                'tasks' => [
+                    "Migration tabel untuk fitur {$title} dengan Primary Key ULID standar PostgreSQL.",
+                    "Service atau Action class untuk merangkum logika bisnis secara independen.",
+                ],
+            ],
+            'integration' => [
+                'endpoint' => '/api/v1/' . Str::kebab(Str::plural($modelName)),
+                'middleware' => ['web'],
+                'request_schema' => '{"title": "Sample Record", "status": "active"}',
+                'response_schema' => '{"success": true, "data": {"id": "01J...", "title": "Sample Record"}}',
+                'tasks' => [
+                    'Daftarkan endpoint RESTful atau Livewire Handler dengan kontrak data ketat.',
+                ],
+            ],
+            'code_agent_directive' => self::buildAgentPrompt(
+                sprintf('FEAT-%s-%02d-%s', $prefix, $index, $cleanSlug),
+                $title,
+                $businessName,
+                "Implementasikan modul {$title} sesuai spesifikasi arsitektur Laravel 13, Filament v5, dan PostgreSQL ULID.",
+                ['app/Models/' . $modelName . '.php', 'app/Actions/' . $modelName . 'Action.php'],
+                "php artisan test --filter=" . $modelName . "Test"
+            ),
+        ];
+    }
+
+    /**
+     * Build an exact copy-pasteable prompt template for AI Coding Agents.
+     */
+    protected static function buildAgentPrompt(string $featureId, string $title, string $businessName, string $mission, array $targetFiles, string $verifyCommand): string
+    {
+        $filesStr = implode("\n- ", $targetFiles);
+        return <<<PROMPT
+### AI CODE AGENT MISSION // SPEC-DRIVEN DIRECTIVE
+**Feature ID**: `{$featureId}`
+**Feature Title**: {$title}
+**Project Scope**: {$businessName}
+
+#### Context & Architectural Guardrails:
+1. **Framework & Engine**: Laravel 13, Filament v5, Livewire 4, PostgreSQL 16+.
+2. **Primary Key Standard**: ALWAYS use ULID (`->ulid('id')->primary()`) on business tables. NEVER use AUTO_INCREMENT, ->id(), or ->uuid().
+3. **Pagination Rule**: ALWAYS use Keyset Cursor Pagination (`cursorPaginate()`) with `->orderBy('id', 'asc')`. NEVER use offset `paginate()`.
+4. **Anti-AI-Slop UI Rule**: High-contrast typography pairing, loading skeletons for asynchronous state, floating toast feedback (ZERO native alert() or confirm() dialogs).
+5. **Filament v5 Form Rule**: Always use `\Filament\Schemas\Schema` method signature for `form()`.
+
+#### Target Files to Create / Modify:
+- {$filesStr}
+
+#### Mission Description:
+{$mission}
+
+#### Verification & Quality Gate:
+Execute the following verification command and ensure exit code 0 before marking the task complete:
+```bash
+{$verifyCommand}
+```
+PROMPT;
+    }
+
+    /**
+     * Anti-AI-Slop Frontend Design System Guide.
+     */
+    public static function getAntiAiSlopDesignSystem(): array
+    {
+        return [
+            'philosophy' => [
+                'title' => 'Filosofi Desain Anti-AI-Slop',
+                'description' => 'Menolak estetika generik template AI (kartu ungu/biru gradien tanpa makna, typography tanpa hirarki kontras, ketiadaan micro-state, dan dialog browser native window.alert/confirm yang merusak kredibilitas profesional). Setiap elemen antarmuka dibangun dengan tujuan fungsional, ritme visual terukur, dan performa fluid 60fps.',
+            ],
+            'typography' => [
+                'title' => 'Kurasi Tipografi & Skala Kontras',
+                'display' => 'Plus Jakarta Sans / Outfit (Font Display berbobot tebal, geometris modern, tracking -0.02em untuk heading)',
+                'body' => 'Inter / DM Sans (Font body ramah baca, 14-16px, line-height 1.6, batas panjang baris 65-75ch)',
+                'mono' => 'Geist Mono / JetBrains Mono (Untuk data teknis, ID ULID, nominal uang, status badge, dan parameter API)',
+            ],
+            'color_tokens' => [
+                'title' => 'Palet Warna HSL & Surface Hierarchy',
+                'dark_mode' => 'Base: #09090b (zinc-950), Cards: #18181b (zinc-900), Border: #27272a (zinc-800)',
+                'light_mode' => 'Base: #ffffff, Cards: #f4f4f5 (zinc-100), Border: #e4e4e7 (zinc-200)',
+                'semantic_accents' => [
+                    'emerald' => 'Status Aktif, Sukses, Verifikasi (Emerald-500)',
+                    'amber' => 'Status Pending, Peringatan, Sprint Akselerasi (Amber-500)',
+                    'rose' => 'Status Ditolak, Error, Aksi Destruktif (Rose-500)',
+                    'cyan' => 'Status Discovery, Filter, Query Metadata (Cyan-500)',
+                ],
+            ],
+            'component_primitives' => [
+                'primitives' => 'Headless primitives (Radix UI / Flux UI / Alpine.js) untuk menjamin aksesibilitas WAI-ARIA penuh tanpa bloating bundle JS.',
+                'states' => 'Setiap komponen input dan tombol wajib memiliki 5 status visual: default, hover, focus-visible, loading (micro-spinner/pulse), disabled.',
+                'skeletons' => 'Skeleton loader shimmer effect beranimasi pulse dengan ukuran proporsional untuk mencegah Cumulative Layout Shift (CLS = 0).',
+                'empty_states' => 'Empty state empatik dengan ilustrasi vektor minimalis, headline informatif, dan tombol aksi pemulihan langsung (bukan teks "Data Kosong" hambar).',
+                'dialog_and_toasts' => '100% melarang window.alert() dan window.confirm(). Wajib menggunakan centralized floating Toast notification system dan backdrop-blur Tailwind dialog modals.',
+            ],
+        ];
+    }
+
+    /**
+     * Backend Scalability Manifesto.
+     */
+    public static function getBackendScalabilityManifesto(): array
+    {
+        return [
+            'primary_keys' => [
+                'rule' => 'Strict ULID Primary Keys (VARCHAR 26)',
+                'explanation' => 'Seluruh tabel bisnis wajib menggunakan ->ulid("id")->primary(). Mencegah sequence lock contention di PostgreSQL, ramah partisi database terdistribusi, dan aman dari tebakan ID sekuensial oleh scraper luar.',
+            ],
+            'pagination' => [
+                'rule' => 'Keyset Cursor-Based Pagination O(1)',
+                'explanation' => 'NEVER use offset-based paginate(). Always use cursorPaginate() with explicit keyset pointers (->orderBy("id", "asc")). Menjamin query tetap berkecepatan sub-10ms meskipun tabel mencapai jutaan baris data.',
+            ],
+            'modern_php' => [
+                'rule' => 'PHP 8.4/8.5 Standards & Property Hooks',
+                'explanation' => 'Memanfaatkan Property Hooks, First-Class Callables, Typed DTOs, dan Form Requests untuk menjamin integritas tipe data dan mencegah type-juggling bugs.',
+            ],
+            'concurrency' => [
+                'rule' => 'Redis-Backed Queue Workers & Idempotency Keys',
+                'explanation' => 'Seluruh pemrosesan asinkron (notifikasi WhatsApp, email, ekspor laporan, integrasi payment gateway) didelegasikan ke Redis Queue Workers dengan retry backoff 3x dan header X-Idempotency-Key.',
+            ],
+        ];
+    }
+
+    /**
+     * AI Code Agent Handoff Protocol (Zero Context-Rot Strategy).
+     */
+    public static function getAgentHandoffProtocol(string $businessName): array
+    {
+        return [
+            'title' => 'Protokol Handoff AI Code Agent (Anti Context-Rot)',
+            'objective' => "Menjamin AI Code Agent (Cursor Composer, Claude Code, GitHub Copilot, Antigravity, Aider) mengimplementasikan fitur {$businessName} secara presisi tanpa halusinasi, amnesia arsitektur, atau modifikasi file yang tidak diinginkan.",
+            'rules' => [
+                [
+                    'rule' => '1. Vertical Slice Prompting (1 Prompt = 1 Fitur Vertikal)',
+                    'desc' => 'Jangan pernah memasukkan seluruh PRD ke dalam satu prompt raksasa. Jalankan pengerjaan per modul vertikal (Database -> Model -> Action -> UI -> Test) menggunakan directive prompt khusus yang telah disediakan di tiap kartu fitur.',
+                ],
+                [
+                    'rule' => '2. Explicit Bounded File Context',
+                    'desc' => 'Cantumkan target file yang boleh dibuat atau dimodifikasi secara spesifik. Larang agen mengedit file global di luar batas modul.',
+                ],
+                [
+                    'rule' => '3. Machine-Readable Acceptance Contracts',
+                    'desc' => 'Gunakan skenario Gherkin (Given-When-Then) dan schema request/response JSON yang tercantum di PRD sebagai patokan kebenaran mutlak. Agen tidak boleh menebak payload.',
+                ],
+                [
+                    'rule' => '4. Automated Verification Quality Gate',
+                    'desc' => 'Wajibkan agen menjalankan perintah verifikasi terminal otomatis (cth: php artisan test --filter=... dan npm run build) dan memastikan exit code 0 sebelum menandai task selesai.',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Convert entire Vision Blueprint PRD into a complete, professional Markdown document.
+     */
+    public static function toMarkdown(VisionBlueprint $blueprint, array $prd): string
+    {
+        $meta = $prd['meta'] ?? [];
+        $exec = $prd['executive_summary'] ?? [];
+        $actors = $prd['system_actors'] ?? [];
+        $mvpFeatures = $prd['features']['mvp_phase1'] ?? [];
+        $phase2Features = $prd['features']['phase2_roadmap'] ?? [];
+        $workflow = $prd['workflow'] ?? [];
+        $erd = $prd['erd_schema']['tables'] ?? [];
+        $tech = $prd['tech_stack'] ?? [];
+        $governance = $prd['governance_and_sla'] ?? [];
+        $pricing = $prd['velocity_pricing_options'] ?? [];
+        $slop = self::getAntiAiSlopDesignSystem();
+        $scalability = self::getBackendScalabilityManifesto();
+        $handoff = self::getAgentHandoffProtocol($blueprint->nama_bisnis ?: $blueprint->client_name);
+
+        $projectName = $blueprint->nama_bisnis ?: ($blueprint->client_name . "'s Project");
+        $specId = strtoupper(substr($blueprint->id, 0, 10));
+
+        $md = "# ULTIMATE PRODUCT REQUIREMENTS DOCUMENT (PRD) & SYSTEM BLUEPRINT\n";
+        $md .= "## {$projectName}\n\n";
+
+        $md .= "> **SPEC_ID**: `{$specId}`  \n";
+        $md .= "> **Client PIC**: {$blueprint->client_name} ({$blueprint->email})  \n";
+        $md .= "> **Generated**: " . ($meta['generated_at'] ?? now()->toIso8601String()) . "  \n";
+        $md .= "> **Target Timeline**: " . ($blueprint->target_waktu ?? '30 Hari Kerja') . "  \n";
+        $md .= "> **Architecture Standard**: Modern Monolith (Laravel 13 + Filament v5 + PostgreSQL Strict ULID)\n\n";
+
+        $md .= "---\n\n";
+
+        // 1. Executive Discovery
+        $md .= "## 1. Executive Technical Discovery & Problem Statement\n\n";
+        $md .= "- **Masalah Utama**: " . ($exec['problem_statement'] ?? $blueprint->masalah_utama) . "\n";
+        $md .= "- **Tujuan / Success Metrics**: " . ($exec['success_metrics'] ?? $blueprint->tujuan_utama) . "\n";
+        $md .= "- **Target Audiens**: " . ($exec['target_audience'] ?? $blueprint->target_audiens) . "\n";
+        $md .= "- **Target Skala**: " . ($exec['target_scale'] ?? '0 - 100.000 Pengguna / Bulan') . "\n";
+        $md .= "- **Jangkauan Pasar**: " . ($exec['market_reach'] ?? 'Domestik Indonesia') . "\n";
+        $md .= "- **Filosofi Arsitektur**: " . ($exec['architecture_philosophy'] ?? '') . "\n\n";
+
+        // 2. System Actors
+        $md .= "## 2. Aktor Sistem & Matriks Hak Akses (RBAC)\n\n";
+        $md .= "| Aktor | Peran & Batasan Tanggung Jawab |\n";
+        $md .= "|---|---|\n";
+        foreach ($actors as $actor) {
+            $md .= "| **" . ($actor['name'] ?? 'Aktor') . "** | " . ($actor['role'] ?? '-') . " |\n";
+        }
+        $md .= "\n";
+
+        // 3. Feature Breakdown
+        $md .= "## 3. Spesifikasi Rinci Fitur & Task Breakdown (Engineering Specs)\n\n";
+        
+        $md .= "### A. Fitur Wajib (Fase 1 - MVP Peluncuran)\n\n";
+        foreach ($mvpFeatures as $f) {
+            $fid = $f['id'] ?? 'FEAT-MVP';
+            $ftitle = $f['title'] ?? 'Fitur MVP';
+            $fcat = $f['category_label'] ?? ($f['category'] ?? 'CORE');
+            $md .= "#### [{$fid}] {$ftitle}\n";
+            $md .= "**Kategori**: `{$fcat}`  \n";
+            $md .= "**Deskripsi**: " . ($f['desc'] ?? '-') . "  \n";
+            $md .= "**User Story**: *" . ($f['user_story'] ?? '-') . "*\n\n";
+
+            if (!empty($f['acceptance_criteria'])) {
+                $md .= "**Acceptance Criteria (Gherkin Format)**:\n";
+                foreach ($f['acceptance_criteria'] as $ac) {
+                    $md .= "- **Skenario: " . ($ac['scenario'] ?? 'Skenario') . "**\n";
+                    $md .= "  - **Given**: " . ($ac['given'] ?? '-') . "\n";
+                    $md .= "  - **When**: " . ($ac['when'] ?? '-') . "\n";
+                    $md .= "  - **Then**: " . ($ac['then'] ?? '-') . "\n";
+                }
+                $md .= "\n";
+            }
+
+            if (!empty($f['frontend'])) {
+                $fe = $f['frontend'];
+                $md .= "**Frontend Tasks (Anti-AI-Slop Specs)**:\n";
+                $md .= "- **Design Tokens**: " . ($fe['design_tokens'] ?? '-') . "\n";
+                $md .= "- **States**: " . ($fe['states'] ?? '-') . "\n";
+                if (!empty($fe['tasks'])) {
+                    $md .= "- **Task Checklist**:\n";
+                    foreach ($fe['tasks'] as $t) {
+                        $md .= "  - [ ] {$t}\n";
+                    }
+                }
+                $md .= "\n";
+            }
+
+            if (!empty($f['backend'])) {
+                $be = $f['backend'];
+                $md .= "**Backend Tasks (Scalability & Models)**:\n";
+                $md .= "- **Model & Migration**: " . ($be['model_and_migration'] ?? '-') . "\n";
+                $md .= "- **Scalability Guardrail**: " . ($be['scalability_guardrail'] ?? '-') . "\n";
+                if (!empty($be['tasks'])) {
+                    $md .= "- **Task Checklist**:\n";
+                    foreach ($be['tasks'] as $t) {
+                        $md .= "  - [ ] {$t}\n";
+                    }
+                }
+                $md .= "\n";
+            }
+
+            if (!empty($f['integration'])) {
+                $in = $f['integration'];
+                $md .= "**API & Integration Contract**:\n";
+                $md .= "- **Endpoint**: `{$in['endpoint']}`\n";
+                $md .= "- **Request Payload**:\n```json\n" . ($in['request_schema'] ?? '{}') . "\n```\n";
+                $md .= "- **Response Payload**:\n```json\n" . ($in['response_schema'] ?? '{}') . "\n```\n\n";
+            }
+
+            if (!empty($f['code_agent_directive'])) {
+                $md .= "<details><summary>🤖 <strong>Prompt Handoff AI Code Agent ({$fid})</strong></summary>\n\n";
+                $md .= "```markdown\n" . $f['code_agent_directive'] . "\n```\n";
+                $md .= "</details>\n\n";
+            }
+
+            $md .= "---\n\n";
+        }
+
+        if (!empty($phase2Features)) {
+            $md .= "### B. Fitur Tambahan (Fase 2 - Roadmap Masa Depan)\n\n";
+            foreach ($phase2Features as $f) {
+                $fid = $f['id'] ?? 'FEAT-ROADMAP';
+                $ftitle = $f['title'] ?? 'Fitur Roadmap';
+                $md .= "#### [{$fid}] {$ftitle}\n";
+                $md .= "- **Deskripsi**: " . ($f['desc'] ?? '-') . "\n";
+                $md .= "- **User Story**: *" . ($f['user_story'] ?? '-') . "*\n\n";
+            }
+        }
+
+        // 4. User Flow
+        $md .= "## 4. Alur Kerja Pengguna (User Flow) & Mermaid Pipeline\n\n";
+        $md .= "```mermaid\nflowchart TD\n";
+        $wIdx = 1;
+        $prevNode = null;
+        foreach ($workflow as $w) {
+            $nodeId = "S" . $wIdx;
+            $actionClean = addslashes($w['action'] ?? ('Step ' . $wIdx));
+            $md .= "    {$nodeId}[\"{$wIdx}: {$actionClean}\"]\n";
+            if ($prevNode) {
+                $md .= "    {$prevNode} --> {$nodeId}\n";
+            }
+            $prevNode = $nodeId;
+            $wIdx++;
+        }
+        $md .= "```\n\n";
+
+        // 5. Database ERD
+        $md .= "## 5. Skema Basis Data (PostgreSQL Strict ULID) & Mermaid ERD\n\n";
+        $md .= "```mermaid\nerDiagram\n";
+        $md .= "    users ||--o{ domain_records : \"manages\"\n";
+        $md .= "    users ||--o{ activity_logs : \"triggers\"\n";
+        $md .= "    users ||--o{ system_notifications : \"receives\"\n";
+        $md .= "```\n\n";
+
+        foreach ($erd as $table) {
+            $tname = $table['name'] ?? 'table';
+            $tdesc = $table['description'] ?? '';
+            $md .= "### Tabel: `{$tname}`\n";
+            $md .= "_{$tdesc}_\n\n";
+            $md .= "| Kolom | Tipe Data | Indeks | Nullable | Keterangan |\n";
+            $md .= "|---|---|---|---|---|\n";
+            foreach ($table['columns'] ?? [] as $col) {
+                $cname = $col['name'] ?? '';
+                $ctype = $col['type'] ?? '';
+                $cindex = $col['index'] ?? 'NONE';
+                $cnull = ($col['nullable'] ?? false) ? 'YES' : 'NO';
+                $cnotes = $col['notes'] ?? '';
+                $md .= "| `{$cname}` | `{$ctype}` | `{$cindex}` | {$cnull} | {$cnotes} |\n";
+            }
+            $md .= "\n";
+        }
+
+        // 6. Technology Stack & Architecture Decision
+        $md .= "## 6. Keputusan Arsitektur & Rekomendasi Stack (Modern Monolith)\n\n";
+        $md .= "| Lapisan | Teknologi | Peran & Justifikasi Arsitektur |\n";
+        $md .= "|---|---|---|\n";
+        foreach ($tech as $layer => $info) {
+            $md .= "| **" . ucfirst(str_replace('_', ' ', $layer)) . "** | " . ($info['name'] ?? '') . " | " . ($info['role'] ?? '') . " |\n";
+        }
+        $md .= "\n";
+
+        // 7. Anti-AI-Slop Frontend Design System
+        $md .= "## 7. Panduan Rekayasa Frontend: Desain Sistem Anti-AI-Slop\n\n";
+        $md .= "### " . $slop['philosophy']['title'] . "\n";
+        $md .= $slop['philosophy']['description'] . "\n\n";
+        $md .= "- **Display Typography**: " . $slop['typography']['display'] . "\n";
+        $md .= "- **Body Typography**: " . $slop['typography']['body'] . "\n";
+        $md .= "- **Monospaced Data**: " . $slop['typography']['mono'] . "\n";
+        $md .= "- **Dark Surface**: " . $slop['color_tokens']['dark_mode'] . "\n";
+        $md .= "- **Light Surface**: " . $slop['color_tokens']['light_mode'] . "\n";
+        $md .= "- **State Primitives**: " . $slop['component_primitives']['states'] . "\n";
+        $md .= "- **Skeleton Loaders**: " . $slop['component_primitives']['skeletons'] . "\n";
+        $md .= "- **Zero Native Dialogs**: " . $slop['component_primitives']['dialog_and_toasts'] . "\n\n";
+
+        // 8. Backend Scalability Manifesto
+        $md .= "## 8. Manifesto Skalabilitas Backend & Standar PostgreSQL\n\n";
+        foreach ($scalability as $item) {
+            $md .= "### " . $item['rule'] . "\n";
+            $md .= $item['explanation'] . "\n\n";
+        }
+
+        // 9. AI Agent Handoff Protocol
+        $md .= "## 9. Protokol Handoff AI Code Agent (Anti Context-Rot)\n\n";
+        $md .= "> " . $handoff['objective'] . "\n\n";
+        foreach ($handoff['rules'] as $r) {
+            $md .= "### " . $r['rule'] . "\n";
+            $md .= $r['desc'] . "\n\n";
+        }
+
+        // 10. Governance & DoD
+        $md .= "## 10. Tata Kelola, Kualitas & Definition of Done (DoD)\n\n";
+        foreach ($governance['definition_of_done'] ?? [] as $dod) {
+            $md .= "- [x] {$dod}\n";
+        }
+        $md .= "\n";
+
+        // 11. Velocity Pricing
+        $md .= "## 11. Opsi Akselerasi Peluncuran (Velocity Pricing Continuum)\n\n";
+        $md .= "| Opsi Paket | Estimasi Durasi | Nilai Investasi | Termin DP (50%) | Alokasi Squad & Engine |\n";
+        $md .= "|---|---|---|---|---|\n";
+        foreach ($pricing as $p) {
+            $pname = $p['name'] ?? '';
+            $pduration = $p['duration'] ?? '';
+            $pamount = 'Rp ' . number_format($p['contract_amount'] ?? 0, 0, ',', '.');
+            $pdp = 'Rp ' . number_format($p['dp_amount'] ?? 0, 0, ',', '.');
+            $psquad = $p['squad_allocation'] ?? ($p['ai_quota_spec'] ?? '-');
+            $md .= "| **{$pname}** | {$pduration} | {$pamount} | {$pdp} | {$psquad} |\n";
+        }
+        $md .= "\n";
+
+        return $md;
+    }
 }
+

@@ -118,6 +118,9 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/api/cv-pro/upload-cv`: Microsoft MarkItDown multi-format CV scanner & parser (POST).
 - `/blueprint`: Halaman public kuesioner Project OS (`BlueprintController::create`).
 - `/blueprint/{slug}`: Halaman preview dokumen PRD, ERD, dan Tech Stack (`BlueprintController::show`).
+- `/blueprint/{slug}/raw-md`: Endpoint raw Markdown PRD Ultimate untuk 1-click clipboard prompt AI Code Agent (`BlueprintController::rawMd`).
+- `/blueprint/{slug}/download/md`: Endpoint unduh dokumen spesifikasi PRD Ultimate format Markdown (`BlueprintController::downloadMd`).
+- `/blueprint/{slug}/download/pdf`: Endpoint unduh dokumen PRD format PDF (`BlueprintController::downloadPdf`).
 - `/blueprint/{slug}/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Blueprint DP (`BlueprintController::getSnapToken`).
 - `/cart`: Halaman Cart pembayaran & penguncian kontrak proyek dengan Anti-Ghost Hold 24 jam countdown (`CartController::index`).
 - `/cart/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Cart DP checkout multi-item (`CartController::getSnapToken`).
@@ -134,6 +137,8 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 ## 5. Layanan Inti & Background Scheduler
 
+- **`App\Services\PrdGeneratorService`**:
+  Mesin sintesis PRD Ultimate & Technical Architecture: mendekomposisi kebutuhan bisnis menjadi vertical slices terstruktur (Frontend Anti-AI-Slop, Backend Keyset O(1) & ULID, API Contracts, dan AI Code Agent Prompt Directives), visualisasi diagram alur kerja Mermaid Flowchart, skema relasional Mermaid ERD PostgreSQL, evaluasi infrastruktur (Hosting Ladder & Scale Matrix), serta generator dokumen Markdown (.md) komprehensif.
 - **`App\Services\MidtransSnapService`**:
   Layanan integrasi Midtrans Snap API: memproses pembuatan Snap Token transaksi secara aman via HTTP Basic Auth ke endpoint Midtrans Sandbox/Production, mendukung modal prompt interaktif in-page (Snap popup `window.snap.pay`) tanpa redirect 404, serta menangani audit log kegagalan gateway.
 - **`App\Services\CvPro\CvAiService`**:

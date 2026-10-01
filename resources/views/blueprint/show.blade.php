@@ -258,6 +258,10 @@ x-init="
                 <a href="{{ route('blueprint.download-md', $blueprint->slug) }}" class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition">
                     <span>MD</span>
                 </a>
+                <button type="button" onclick="copyFullPrdMarkdown(this)" class="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 flex items-center gap-1.5 transition" title="Salin Dokumen PRD Ultimate Lengkap untuk AI Code Agent">
+                    <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    <span>PROMPT AGENT</span>
+                </button>
 
                 <a href="{{ route('blueprint.show', $blueprint->slug) }}?regenerate=1" class="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono uppercase font-bold border border-amber-500/30 transition flex items-center gap-1" title="Sintesis Ulang PRD">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
@@ -483,48 +487,439 @@ x-init="
                 </div>
             </section>
 
-            <!-- SECTION 3: SPESIFIKASI FITUR (MVP VS ROADMAP) -->
+            <!-- SECTION 3: SPESIFIKASI REKAYASA FITUR (DEEP VERTICAL SLICES & AGENT DIRECTIVE) -->
             <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
-                <div class="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                    <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">03</span>
-                    <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Spesifikasi Fitur (MVP vs Fase 2)</h2>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-6">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">03</span>
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Spesifikasi Rekayasa Fitur & Agent Task Matrix</h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Dekomposisi vertikal per fitur: Frontend Anti-AI-Slop, Backend Keyset O(1) &amp; ULID, API Contracts, dan Agent Directive Prompt.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 no-print">
+                        <button type="button" onclick="copyFullPrdMarkdown(this)" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono font-bold border border-emerald-500/30 flex items-center gap-1.5 transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            <span>SALIN SEMUA PROMPT AGENT</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-4">
+                <!-- High-Level MVP Scope Summary -->
+                <div class="grid md:grid-cols-2 gap-4 mb-8">
                     <!-- MVP Phase 1 -->
-                    <div class="border border-emerald-500/40 bg-emerald-500/5 p-5 rounded-none">
-                        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold uppercase tracking-wider mb-4">
-                            <span class="w-2 h-2 bg-emerald-500 inline-block"></span>
-                            <h3>Fitur Wajib (Fase 1 - MVP Peluncuran)</h3>
+                    <div class="border border-emerald-500/40 bg-emerald-500/5 p-4 rounded-none">
+                        <div class="flex items-center justify-between gap-2 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold uppercase tracking-wider mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 bg-emerald-500 inline-block"></span>
+                                <h3>Fitur Wajib (Fase 1 - MVP Peluncuran)</h3>
+                            </div>
+                            <span class="px-1.5 py-0.5 bg-emerald-500 text-black text-[10px] font-bold">{{ count($prd['features']['mvp_phase1'] ?? []) }} FITUR</span>
                         </div>
-                        <ul class="space-y-2.5">
+                        <ul class="space-y-2">
                             @foreach($prd['features']['mvp_phase1'] ?? [] as $fitur)
-                                <li class="text-xs bg-white dark:bg-zinc-900 p-3 border border-emerald-500/20 rounded-none">
+                                <li class="text-xs bg-white dark:bg-zinc-900 p-2.5 border border-emerald-500/20 rounded-none">
                                     <div class="font-bold text-zinc-900 dark:text-zinc-100">{{ $fitur['title'] ?? '-' }}</div>
-                                    <div class="text-zinc-500 dark:text-zinc-400 mt-0.5 font-sans">{{ $fitur['desc'] ?? '' }}</div>
+                                    <div class="text-zinc-500 dark:text-zinc-400 mt-0.5 font-sans text-[11px]">{{ $fitur['desc'] ?? '' }}</div>
                                 </li>
                             @endforeach
                         </ul>
                     </div>
 
                     <!-- Phase 2 Roadmap -->
-                    <div class="border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-5 rounded-none">
-                        <div class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 font-mono text-xs font-bold uppercase tracking-wider mb-4">
-                            <span class="w-2 h-2 bg-zinc-400 inline-block"></span>
-                            <h3>Fitur Tambahan (Fase 2 - Roadmap)</h3>
+                    <div class="border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-4 rounded-none">
+                        <div class="flex items-center justify-between gap-2 text-zinc-600 dark:text-zinc-400 font-mono text-xs font-bold uppercase tracking-wider mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 bg-zinc-400 inline-block"></span>
+                                <h3>Fitur Tambahan (Fase 2 - Roadmap)</h3>
+                            </div>
+                            <span class="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-bold">{{ count($prd['features']['phase2_roadmap'] ?? []) }} FITUR</span>
                         </div>
                         @if(empty($prd['features']['phase2_roadmap']))
-                            <p class="text-xs text-zinc-400 italic font-mono">Belum ada fitur susulan. Fokus 100% pada rilis Fase 1 MVP.</p>
+                            <p class="text-xs text-zinc-400 italic font-mono p-3">Belum ada fitur susulan. Fokus 100% pada rilis Fase 1 MVP.</p>
                         @else
-                            <ul class="space-y-2.5">
+                            <ul class="space-y-2">
                                 @foreach($prd['features']['phase2_roadmap'] as $fitur)
-                                    <li class="text-xs bg-white dark:bg-zinc-900 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                                    <li class="text-xs bg-white dark:bg-zinc-900 p-2.5 border border-zinc-200 dark:border-zinc-800 rounded-none">
                                         <div class="font-bold text-zinc-900 dark:text-zinc-100">{{ $fitur['title'] ?? '-' }}</div>
-                                        <div class="text-zinc-500 dark:text-zinc-400 mt-0.5 font-sans">{{ $fitur['desc'] ?? '' }}</div>
+                                        <div class="text-zinc-500 dark:text-zinc-400 mt-0.5 font-sans text-[11px]">{{ $fitur['desc'] ?? '' }}</div>
                                     </li>
                                 @endforeach
                             </ul>
                         @endif
+                    </div>
+                </div>
+
+                <!-- Deep Vertical Slice Engineering Hub -->
+                @php
+                    $mvpEngineeringSpecs = $prd['features']['mvp_phase1'] ?? ($prd['engineering_specs']['mvp_specs'] ?? []);
+                @endphp
+                @if(!empty($mvpEngineeringSpecs))
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            <span>DEKOMPOSISI VERTIKAL PER FITUR (SIAP OVER KE AI CODE AGENT)</span>
+                        </div>
+
+                        @foreach($mvpEngineeringSpecs as $specIdx => $spec)
+                            <div 
+                                x-data="{ specTab: &apos;gherkin&apos;, expanded: true }" 
+                                class="bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-none transition"
+                            >
+                                <!-- Feature Spec Header Bar -->
+                                <div class="p-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div class="flex items-start sm:items-center gap-3">
+                                        <span class="px-2 py-0.5 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs uppercase tracking-wider">
+                                            {{ $spec['feature_id'] ?? ($spec['id'] ?? 'FEAT-SPEC') }}
+                                        </span>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <h3 class="font-black text-sm text-zinc-900 dark:text-white uppercase tracking-tight">{{ $spec['title'] ?? 'Spesifikasi Fitur' }}</h3>
+                                                <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-[10px] font-mono text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                                                    {{ $spec['category'] ?? 'CORE DOMAIN' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 no-print self-end sm:self-auto">
+                                        <button 
+                                            type="button" 
+                                            onclick="copyFeaturePrompt(this, 'prompt-code-{{ $specIdx }}')" 
+                                            class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono font-bold border border-emerald-500/30 flex items-center gap-1 transition"
+                                            title="Salin Prompt Directive Khusus Fitur Ini"
+                                        >
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                            <span>SALIN PROMPT FITUR</span>
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            @click="expanded = !expanded" 
+                                            class="p-1 text-zinc-400 hover:text-zinc-200"
+                                            title="Buka / Tutup Detail"
+                                        >
+                                            <svg class="w-4 h-4 transition-transform" :class="expanded ? &apos;rotate-180&apos; : &apos;&apos;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Spec Tab Body -->
+                                <div x-show="expanded" class="p-4 sm:p-5">
+                                    <!-- User Story Pill -->
+                                    <div class="p-3 bg-zinc-100 dark:bg-zinc-900 border-l-4 border-emerald-500 font-mono text-xs text-zinc-800 dark:text-zinc-200 mb-4">
+                                        <span class="text-emerald-600 dark:text-emerald-400 font-bold block mb-0.5">USER STORY:</span>
+                                        &quot;{{ $spec['user_story'] ?? '' }}&quot;
+                                    </div>
+
+                                    <!-- Navigation Sub-Tabs -->
+                                    <div class="flex flex-wrap items-center gap-1 font-mono text-xs border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-4 no-print">
+                                        <button 
+                                            @click="specTab = &apos;gherkin&apos;" 
+                                            :class="specTab === &apos;gherkin&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition"
+                                        >
+                                            1. GHERKIN &amp; ACCEPTANCE CRITERIA
+                                        </button>
+                                        <button 
+                                            @click="specTab = &apos;frontend&apos;" 
+                                            :class="specTab === &apos;frontend&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition"
+                                        >
+                                            2. FRONTEND (ANTI-AI-SLOP)
+                                        </button>
+                                        <button 
+                                            @click="specTab = &apos;backend&apos;" 
+                                            :class="specTab === &apos;backend&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition"
+                                        >
+                                            3. BACKEND (KEYSET &amp; ULID)
+                                        </button>
+                                        <button 
+                                            @click="specTab = &apos;integration&apos;" 
+                                            :class="specTab === &apos;integration&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition"
+                                        >
+                                            4. API &amp; KONTRAK
+                                        </button>
+                                        <button 
+                                            @click="specTab = &apos;prompt&apos;" 
+                                            :class="specTab === &apos;prompt&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition"
+                                        >
+                                            5. PROMPT AGENT DIRECTIVE
+                                        </button>
+                                    </div>
+
+                                    <!-- Tab 1: Gherkin -->
+                                    <div x-show="specTab === &apos;gherkin&apos;" class="space-y-3 font-mono text-xs">
+                                        @foreach($spec['acceptance_criteria'] ?? [] as $ac)
+                                            <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                                <div class="font-bold text-zinc-900 dark:text-white mb-2 flex items-center gap-1.5">
+                                                    <span class="w-1.5 h-1.5 bg-emerald-500 inline-block"></span>
+                                                    <span>{{ $ac['rule'] ?? 'Skenario Validasi' }}</span>
+                                                </div>
+                                                <div class="pl-3 space-y-1 text-zinc-600 dark:text-zinc-400 text-[11px] leading-relaxed">
+                                                    <div><strong class="text-emerald-500">GIVEN:</strong> {{ $ac['given'] ?? '-' }}</div>
+                                                    <div><strong class="text-sky-500">WHEN:</strong> {{ $ac['when'] ?? '-' }}</div>
+                                                    <div><strong class="text-amber-500">THEN:</strong> {{ $ac['then'] ?? '-' }}</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+
+                                    <!-- Tab 2: Frontend Tasks -->
+                                    @php
+                                        $feData = $spec['frontend'] ?? [];
+                                        $feComponents = is_array($feData['components'] ?? null) ? implode(', ', $feData['components']) : ($feData['components'] ?? 'Blade / Alpine');
+                                    @endphp
+                                    <div x-show="specTab === &apos;frontend&apos;" class="space-y-3 font-mono text-xs">
+                                        <div class="p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                                            <div class="flex items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                                                <strong class="text-zinc-900 dark:text-white uppercase">KOMPONEN &amp; TAMPILAN ANTARMUKA</strong>
+                                                <span class="text-[10px] px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold border border-zinc-200 dark:border-zinc-700">
+                                                    {{ $feComponents }}
+                                                </span>
+                                            </div>
+                                            <div class="space-y-1.5">
+                                                <span class="text-zinc-400 text-[10px] block font-bold">DAFTAR TASK FRONTEND:</span>
+                                                <ul class="space-y-1 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                                    @foreach((array)($feData['tasks'] ?? []) as $feTask)
+                                                        <li class="flex items-start gap-1.5">
+                                                            <span class="text-emerald-500 font-bold">&bull;</span>
+                                                            <span>{{ $feTask }}</span>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] pt-1 border-t border-zinc-100 dark:border-zinc-800">
+                                                <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                                    <span class="text-zinc-400 text-[10px] block font-bold mb-0.5">STATE KELENGKAPAN (UI STATES):</span>
+                                                    <span class="text-zinc-700 dark:text-zinc-300">{{ $feData['states'] ?? 'Default, Loading Skeleton, Empty State, Error Toast' }}</span>
+                                                </div>
+                                                <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                                    <span class="text-emerald-500 text-[10px] block font-bold mb-0.5">ANTI-AI-SLOP DIRECTIVE:</span>
+                                                    <span class="text-zinc-700 dark:text-zinc-300">{{ $feData['anti_ai_slop'] ?? 'Palet Zinc monokrom dengan aksen tajam. Dilarang window.alert() / prompt().' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tab 3: Backend Tasks -->
+                                    @php
+                                        $beData = $spec['backend'] ?? [];
+                                        $beTargets = is_array($beData['target_files'] ?? null) ? implode(', ', $beData['target_files']) : ($beData['target_files'] ?? 'app/Models, app/Actions');
+                                    @endphp
+                                    <div x-show="specTab === &apos;backend&apos;" class="space-y-3 font-mono text-xs">
+                                        <div class="p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                                            <div class="flex items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                                                <strong class="text-zinc-900 dark:text-white uppercase">LOGIKA BISNIS &amp; PERSISTENSI DATA</strong>
+                                                <span class="text-[10px] px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-sky-600 dark:text-sky-400 font-bold border border-zinc-200 dark:border-zinc-700">
+                                                    {{ $beTargets }}
+                                                </span>
+                                            </div>
+                                            <div class="space-y-1.5">
+                                                <span class="text-zinc-400 text-[10px] block font-bold">DAFTAR TASK BACKEND:</span>
+                                                <ul class="space-y-1 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                                    @foreach((array)($beData['tasks'] ?? []) as $beTask)
+                                                        <li class="flex items-start gap-1.5">
+                                                            <span class="text-sky-500 font-bold">&bull;</span>
+                                                            <span>{{ $beTask }}</span>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] pt-1 border-t border-zinc-100 dark:border-zinc-800">
+                                                <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                                    <span class="text-amber-500 text-[10px] block font-bold mb-0.5">STANDAR DATABASE (STRICT ULID):</span>
+                                                    <span class="text-zinc-700 dark:text-zinc-300">{{ $beData['ulid_migration_rules'] ?? 'Wajib gunakan ->ulid("id")->primary() (VARCHAR(26)). Dilarang AUTO_INCREMENT.' }}</span>
+                                                </div>
+                                                <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                                    <span class="text-emerald-500 text-[10px] block font-bold mb-0.5">QUERY STRATEGY O(1):</span>
+                                                    <span class="text-zinc-700 dark:text-zinc-300">{{ $beData['query_strategy'] ?? 'Keyset Cursor Pagination cursorPaginate() dengan ->orderBy("id", "asc").' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tab 4: API & Integration Tasks -->
+                                    @php
+                                        $intData = $spec['integration'] ?? [];
+                                        $intMiddleware = is_array($intData['middleware'] ?? null) ? implode(', ', $intData['middleware']) : ($intData['middleware'] ?? 'web');
+                                    @endphp
+                                    <div x-show="specTab === &apos;integration&apos;" class="space-y-3 font-mono text-xs">
+                                        <div class="p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                                            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="px-2 py-0.5 bg-emerald-500 text-black font-bold text-[10px]">POST</span>
+                                                    <span class="font-bold text-zinc-900 dark:text-white">{{ $intData['endpoint'] ?? '/api/v1/resource' }}</span>
+                                                </div>
+                                                <span class="text-[10px] text-zinc-400">MIDDLEWARE: <strong class="text-zinc-200">{{ $intMiddleware }}</strong></span>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <span class="text-zinc-400 text-[10px] block font-bold">TASK INTEGRASI:</span>
+                                                <ul class="space-y-1 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                                    @foreach((array)($intData['tasks'] ?? []) as $intTask)
+                                                        <li class="flex items-start gap-1.5">
+                                                            <span class="text-emerald-500 font-bold">&check;</span>
+                                                            <span>{{ $intTask }}</span>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] pt-1 border-t border-zinc-100 dark:border-zinc-800">
+                                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                                    <div class="text-[10px] text-zinc-400 font-bold mb-1">REQUEST SCHEMA:</div>
+                                                    <pre class="bg-black/60 p-2 text-[10px] text-zinc-300 overflow-x-auto select-all leading-tight">{{ $intData['request_schema'] ?? '{}' }}</pre>
+                                                </div>
+                                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                                    <div class="text-[10px] text-emerald-400 font-bold mb-1">RESPONSE SUCCESS (200/201):</div>
+                                                    <pre class="bg-black/60 p-2 text-[10px] text-zinc-300 overflow-x-auto select-all leading-tight">{{ $intData['response_schema'] ?? '{}' }}</pre>
+                                                </div>
+                                            </div>
+                                            <div class="text-[10px] text-zinc-500 dark:text-zinc-400 pt-1">
+                                                IDEMPOTENCY POLICY: <span class="text-zinc-700 dark:text-zinc-300 font-bold">X-Idempotency-Key Header Mandatory</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tab 5: AI Code Agent Directive Prompt -->
+                                    <div x-show="specTab === &apos;prompt&apos;" class="space-y-3 font-mono text-xs">
+                                        <div class="p-4 bg-zinc-950 border border-zinc-800 space-y-2">
+                                            <div class="flex items-center justify-between text-zinc-400 border-b border-zinc-800 pb-2">
+                                                <span class="text-emerald-400 font-bold uppercase text-[11px]">Prompt Directive Siap Di-Paste ke Cursor Composer / Claude Code / Antigravity:</span>
+                                                <button 
+                                                    type="button" 
+                                                    onclick="copyFeaturePrompt(this, 'prompt-code-{{ $specIdx }}')" 
+                                                    class="px-2 py-0.5 bg-emerald-500 text-black font-bold text-[10px] hover:bg-emerald-400 transition"
+                                                >
+                                                    SALIN PROMPT
+                                                </button>
+                                            </div>
+                                            <pre id="prompt-code-{{ $specIdx }}" class="bg-black p-3 text-[11px] text-emerald-300/90 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap">{{ $spec['code_agent_directive'] ?? ($spec['agent_directive_prompt'] ?? '') }}</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </section>
+
+            <!-- SECTION 3.5: PANDUAN REKAYASA & REKOMENDASI TOOLS MODERN (ANTI-AI-SLOP & SCALABILITY) -->
+            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">&para;</span>
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Panduan Rekayasa &amp; Rekomendasi Tools Modern</h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Prinsip rekayasa anti-AI-slop, bulletproof database scalability, dan protokol handoff anti context-rot.</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
+                        ANTI AI-SLOP CERTIFIED
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 font-mono text-xs">
+                    <!-- 1. Frontend Anti-AI-Slop -->
+                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold uppercase">
+                                <span class="w-2.5 h-2.5 bg-emerald-500"></span>
+                                <h3>1. FRONTEND: ANTI AI-SLOP UI/UX</h3>
+                            </div>
+                            <p class="font-sans text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                AI slop menghasilkan web generik bertabur warna ungu/cyan gradien murahan, ketiadaan state loading/empty, dan popup <code>alert()</code> kampungan yang merusak reputasi profesional.
+                            </p>
+                            <ul class="space-y-2 text-[11px] text-zinc-700 dark:text-zinc-300">
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-emerald-500 font-bold">&check;</span>
+                                    <span><strong>Palet Kurasi:</strong> Base Zinc/Slate monokrom dengan aksen tajam Emerald (Success), Amber (Warning), Rose (Danger). Zero generic pastel.</span>
+                                </li>
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-emerald-500 font-bold">&check;</span>
+                                    <span><strong>Zero Native Popups:</strong> Dilarang keras <code>alert()</code> atau <code>confirm()</code>. Gunakan Floating Toast &amp; Modal Backdrop Blur.</span>
+                                </li>
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-emerald-500 font-bold">&check;</span>
+                                    <span><strong>State Completeness:</strong> Wajib memiliki Skeleton Loader saat fetch data, Empty State dengan ilustrasi/ajakan aksi, dan inline error form validation.</span>
+                                </li>
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-emerald-500 font-bold">&check;</span>
+                                    <span><strong>Tipografi Tajam:</strong> Inter / Outfit untuk body text, JetBrains Mono untuk metrik finansial dan data teknis.</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-500">
+                            <strong>TOOLS REKOMENDASI:</strong> Tailwind CSS v4 / Vanilla CSS, Alpine.js / Livewire 4, Lucide Icons, Headless UI.
+                        </div>
+                    </div>
+
+                    <!-- 2. Backend Scalability Manifesto -->
+                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 text-sky-600 dark:text-sky-400 font-bold uppercase">
+                                <span class="w-2.5 h-2.5 bg-sky-500"></span>
+                                <h3>2. BACKEND: ENTERPRISE SCALABILITY</h3>
+                            </div>
+                            <p class="font-sans text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                Menjamin aplikasi mampu menampung jutaan baris data tanpa degradasi performa menggunakan pola algoritma kompleksitas O(1).
+                            </p>
+                            <ul class="space-y-2 text-[11px] text-zinc-700 dark:text-zinc-300">
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-sky-500 font-bold">&check;</span>
+                                    <span><strong>Strict ULID Primary Keys:</strong> Gunakan <code>ulid(&apos;id&apos;)</code> (VARCHAR(26)). Hindari AUTO_INCREMENT dan UUID v4 standar agar kompatibel 100% dengan PostgreSQL dan B-Tree Indexing.</span>
+                                </li>
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-sky-500 font-bold">&check;</span>
+                                    <span><strong>Keyset Cursor Pagination O(1):</strong> Hindari <code>paginate()</code> (OFFSET). Wajib gunakan <code>cursorPaginate()</code> dengan pointer <code>orderBy(&apos;id&apos;, &apos;asc&apos;)</code>.</span>
+                                </li>
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-sky-500 font-bold">&check;</span>
+                                    <span><strong>Atomic Transactions &amp; Action Classes:</strong> Enkapsulasi logika mutasi data dalam Single Action Class di dalam <code>DB::transaction()</code>.</span>
+                                </li>
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-sky-500 font-bold">&check;</span>
+                                    <span><strong>Redis Queue Resiliency:</strong> Proses email, notifikasi, dan kalkulasi berat via background queue dengan fallback gracefully ke driver database.</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-500">
+                            <strong>TOOLS REKOMENDASI:</strong> Laravel 13 (PHP 8.4/8.5), Filament v5, PostgreSQL 16+, Redis + Predis, Pest PHP.
+                        </div>
+                    </div>
+
+                    <!-- 3. Agent Handoff & Anti Context-Rot Protocol -->
+                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold uppercase">
+                                <span class="w-2.5 h-2.5 bg-amber-500"></span>
+                                <h3>3. INTEGRASI: ANTI CONTEXT-ROT PROTOCOL</h3>
+                            </div>
+                            <p class="font-sans text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                Mencegah fenomena <em>Context Rot</em> (AI Agent amnesia/halusinasi saat disuapi PRD raksasa sekaligus) dengan metode Vertical Slice Prompting.
+                            </p>
+                            <ul class="space-y-2 text-[11px] text-zinc-700 dark:text-zinc-300">
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-amber-500 font-bold">&check;</span>
+                                    <span><strong>One-Feature-At-A-Time:</strong> Jangan berikan seluruh dokumen PRD ke prompt AI. Salin satu per satu directive fitur dari Tab 5 di atas.</span>
+                                </li>
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-amber-500 font-bold">&check;</span>
+                                    <span><strong>Bounded File Scoping:</strong> Batasi jangkauan file target pada prompt (misal hanya 1 migration, 1 model, 1 component) untuk mencegah AI mengedit file lain tanpa izin.</span>
+                                </li>
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-amber-500 font-bold">&check;</span>
+                                    <span><strong>Terminal Verification Loop:</strong> Wajibkan AI menjalankan verifikasi terminal otomatis (<code>php artisan test --filter=...</code>) sebelum mengakhiri task.</span>
+                                </li>
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-amber-500 font-bold">&check;</span>
+                                    <span><strong>Git Surgical Sync:</strong> Lakukan commit per vertical slice agar rollback mudah jika terjadi regresi.</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-500">
+                            <strong>TOOLS REKOMENDASI:</strong> Cursor Composer, Claude Code, GitHub Copilot, Antigravity IDE, Aider.
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1867,6 +2262,63 @@ x-init="
     </footer>
 
     <script>
+        window.copyFullPrdMarkdown = async function(btnEl) {
+            const orig = btnEl ? btnEl.innerHTML : '';
+            if (btnEl) btnEl.innerHTML = '<span class="text-emerald-400 font-bold animate-pulse">Mengambil MD...</span>';
+            try {
+                const res = await fetch("{{ route('blueprint.raw-md', $blueprint->slug) }}");
+                if (!res.ok) throw new Error('Gagal mengunduh teks markdown');
+                const text = await res.text();
+                await navigator.clipboard.writeText(text);
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'success',
+                        title: 'PRD ULTIMATE DISALIN!',
+                        message: 'Spesifikasi PRD lengkap beserta seluruh prompt agent berhasil disalin ke clipboard.'
+                    });
+                }
+                if (btnEl) {
+                    btnEl.innerHTML = '<span class="text-emerald-400 font-bold">✓ TERSALIN!</span>';
+                    setTimeout(() => { btnEl.innerHTML = orig; }, 2500);
+                }
+            } catch (err) {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'GAGAL MENYALIN',
+                        message: err.message || 'Tidak dapat menyalin konten ke clipboard.'
+                    });
+                }
+                if (btnEl) btnEl.innerHTML = orig;
+            }
+        };
+
+        window.copyFeaturePrompt = function(btnEl, codeId) {
+            const el = document.getElementById(codeId);
+            if (!el) return;
+            const code = el.innerText || el.textContent;
+            navigator.clipboard.writeText(code.trim()).then(() => {
+                const orig = btnEl.innerHTML;
+                btnEl.innerHTML = '<span class="text-emerald-400 font-bold">✓ PROMPT DISALIN!</span>';
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'success',
+                        title: 'PROMPT FITUR DISALIN',
+                        message: 'Prompt agent untuk fitur ini siap di-paste ke Cursor Composer / Claude Code / Antigravity.'
+                    });
+                }
+                setTimeout(() => { btnEl.innerHTML = orig; }, 2200);
+            }).catch(err => {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'GAGAL MENYALIN',
+                        message: 'Browser memblokir akses clipboard.'
+                    });
+                }
+            });
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             const timerEl = document.getElementById('nav-cart-timer');
             if (timerEl) {

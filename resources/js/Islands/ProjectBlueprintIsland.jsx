@@ -153,6 +153,15 @@ const TRANSLATIONS = {
   }
 };
 
+const HelperTooltip = ({ content }) => (
+  <div className="group relative inline-block ml-2 cursor-help align-middle">
+    <AlertCircle className="w-4 h-4 text-zinc-400 hover:text-emerald-500 transition-colors" />
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-zinc-900 dark:bg-black text-white text-xs opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 font-sans shadow-lg text-left border border-zinc-700">
+      <span className="font-bold text-emerald-400">Insight:</span> {content}
+    </div>
+  </div>
+);
+
 export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialData = {} }) {
   const [lang, setLang] = useState('id');
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -535,6 +544,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div>
                 <label className={labelClass}>
                   {t.masalahLabel} <span className="text-rose-500">*</span>
+                  <HelperTooltip content="Jelaskan kendala manual yang paling membuang waktu Anda saat ini." />
                 </label>
                 <textarea
                   name="masalahUtama"
@@ -549,6 +559,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div>
                 <label className={labelClass}>
                   {t.tujuanLabel} <span className="text-rose-500">*</span>
+                  <HelperTooltip content="Contoh: Otomatisasi data real-time, cetak invoice otomatis dalam PDF." />
                 </label>
                 <textarea
                   name="tujuanUtama"
@@ -572,6 +583,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div>
                 <label className={labelClass}>
                   {t.audiensLabel} <span className="text-rose-500">*</span>
+                  <HelperTooltip content="Siapa yang akan menggunakan aplikasi ini? Misalnya: B2B Klien, Publik, atau Karyawan Internal." />
                 </label>
                 <input
                   type="text"
@@ -586,6 +598,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div>
                 <label className={labelClass}>
                   {t.aktorLabel} <span className="text-rose-500">*</span>
+                  <HelperTooltip content="Sebutkan tipe user (Role). Contoh: Super Admin, Kasir, Manager, dan Pelanggan." />
                 </label>
                 <textarea
                   name="aktorSistem"
@@ -609,6 +622,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div>
                 <label className={labelClass}>
                   {t.fiturWajibLabel} <span className="text-rose-500">*</span>
+                  <HelperTooltip content="Daftar fitur mutlak untuk Peluncuran Tahap 1 (MVP). Jangan masukkan fitur 'nice-to-have' di sini." />
                 </label>
                 <textarea
                   name="fiturWajib"
@@ -623,6 +637,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div>
                 <label className={labelClass}>
                   {t.fiturTambahanLabel}
+                  <HelperTooltip content="Fitur yang bagus ada tapi bisa ditunda ke Fase 2 setelah MVP rilis." />
                 </label>
                 <textarea
                   name="fiturTambahan"
@@ -636,6 +651,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div>
                 <label className={labelClass}>
                   {t.alurKerjaLabel} <span className="text-rose-500">*</span>
+                  <HelperTooltip content="Jelaskan 1-3 langkah utama user dari masuk aplikasi hingga selesai melakukan transaksi/tugas." />
                 </label>
                 <textarea
                   name="alurKerja"

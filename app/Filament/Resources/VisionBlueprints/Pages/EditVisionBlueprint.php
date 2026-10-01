@@ -14,6 +14,18 @@ class EditVisionBlueprint extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            \Filament\Actions\Action::make('regenerate')
+                ->label('Regenerate PRD')
+                ->color('warning')
+                ->icon('heroicon-o-arrow-path')
+                ->requiresConfirmation()
+                ->action(function ($record) {
+                    $record->generateAndSavePrd();
+                    \Filament\Notifications\Notification::make()
+                        ->title('PRD Berhasil Digenerate Ulang')
+                        ->success()
+                        ->send();
+                }),
             ViewAction::make(),
             DeleteAction::make(),
         ];

@@ -93,7 +93,8 @@
         @react('ProjectBlueprintIsland', [
             'csrfToken' => csrf_token(),
             'submitUrl' => url('/api/vision-blueprint'),
-            'initialData' => []
+            'initialData' => [],
+            'countries' => config('countries', []),
         ])
     </main>
 

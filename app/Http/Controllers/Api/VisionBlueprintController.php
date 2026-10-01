@@ -70,7 +70,29 @@ class VisionBlueprintController extends Controller
             'kisaran_budget' => $request->input('kisaran_budget'),
         ];
 
-        // 4. Save to Database & Generate PRD
+        // 4. Normalize phone number (Anti-0 and Country Code Protocol)
+        $rawPhone = $request->input('phone');
+        $countryCode = $request->input('country_code', '+62');
+        $phoneDigits = $request->input('phone_digits');
+        $normalizedPhone = null;
+
+        if (!empty($phoneDigits)) {
+            $cleanDigits = ltrim(preg_replace('/\D/', '', $phoneDigits), '0');
+            $code = str_starts_with($countryCode, '+') ? $countryCode : ('+' . $countryCode);
+            $normalizedPhone = $cleanDigits ? ($code . $cleanDigits) : null;
+        } elseif (!empty($rawPhone)) {
+            $digits = preg_replace('/\D/', '', $rawPhone);
+            if (str_starts_with($digits, '620')) {
+                $digits = '62' . substr($digits, 3);
+            } elseif (str_starts_with($digits, '0')) {
+                $digits = ltrim($digits, '0');
+                $codeDigits = preg_replace('/\D/', '', $countryCode) ?: '62';
+                $digits = $codeDigits . $digits;
+            }
+            $normalizedPhone = $digits ? ('+' . $digits) : null;
+        }
+
+        // 5. Save to Database & Generate PRD
         try {
             $clientName = $request->filled('client_name') ? $request->client_name : $request->nama_bisnis;
             $email = $request->filled('email') ? $request->email : 'lead@' . \Illuminate\Support\Str::slug($request->nama_bisnis) . '.com';
@@ -79,7 +101,7 @@ class VisionBlueprintController extends Controller
                 'client_name' => $clientName,
                 'nama_bisnis' => $request->nama_bisnis,
                 'email' => $email,
-                'phone' => $request->phone,
+                'phone' => $normalizedPhone,
                 'masalah_utama' => $request->masalah_utama,
                 'tujuan_utama' => $request->tujuan_utama,
                 'target_audiens' => $request->target_audiens,

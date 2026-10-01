@@ -264,7 +264,7 @@ class WorkflowEndToEndSeeder extends Seeder
                 'contract_amount' => 50000000.00,
                 'dp_amount' => 25000000.00,
                 'midtrans_order_id' => 'NPRO-DP-APEX-001',
-                'midtrans_payment_url' => 'https://app.sandbox.midtrans.com/snap/v2/vtweb/demo-neriahpro-dp',
+                'midtrans_payment_url' => null,
                 'signer_name' => 'Alexander Wijaya',
                 'signer_email' => 'alexander@apexlogistics.co.id',
                 'signer_ip_address' => '182.253.51.197',

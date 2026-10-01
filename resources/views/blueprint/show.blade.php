@@ -51,7 +51,54 @@
     <!-- Alpine.js & Mermaid UMD Bundle -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <!-- Midtrans Snap JS (In-Page Popup Modal) -->
+    <script src="{{ config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/snap.js') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
     <script>
+        window.payBlueprintSnap = async function(tier, onStart, onFinish) {
+            if (onStart) onStart();
+            try {
+                const res = await fetch('{{ route('blueprint.snap-token', $blueprint->slug) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ tier: tier })
+                });
+                const data = await res.json();
+                if (!data.success || !data.token) {
+                    throw new Error(data.message || 'Gagal memproses sesi Snap Midtrans.');
+                }
+                if (window.snap && window.snap.pay) {
+                    window.snap.pay(data.token, {
+                        onSuccess: function(result) {
+                            alert('Pembayaran DP berhasil dikonfirmasi oleh Midtrans!');
+                            window.location.reload();
+                        },
+                        onPending: function(result) {
+                            alert('Menunggu penyelesaian pembayaran.');
+                            window.location.reload();
+                        },
+                        onError: function(result) {
+                            alert('Pembayaran dibatalkan atau gagal.');
+                            if (onFinish) onFinish();
+                        },
+                        onClose: function() {
+                            if (onFinish) onFinish();
+                        }
+                    });
+                } else if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert('Snap script belum selesai dimuat. Silakan periksa koneksi internet Anda.');
+                    if (onFinish) onFinish();
+                }
+            } catch (err) {
+                alert('Kesalahan Pembayaran: ' + err.message);
+                if (onFinish) onFinish();
+            }
+        };
         // Initialize Mermaid with startOnLoad: false to prevent 0-width rendering in hidden tabs
         if (window.mermaid) {
             try {
@@ -138,7 +185,8 @@
     erdTab: 'visual', 
     erdLang: 'id',
     selectedTier: '{{ $defaultSelectedTier }}',
-    tierAmounts: {{ json_encode($alpineTiers) }}
+    tierAmounts: {{ json_encode($alpineTiers) }},
+    isPayingSnap: false
 }" 
 x-init="
     $watch('flowTab', val => {
@@ -1741,14 +1789,15 @@ x-init="
 
             <!-- Actions -->
             <div class="space-y-2">
-                <a 
-                    href="https://app.sandbox.midtrans.com/snap/v2/vtweb/demo-neriahpro-dp" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider py-3.5 px-4 text-center block transition shadow-lg"
+                <button 
+                    type="button" 
+                    @click="isPayingSnap = true; window.payBlueprintSnap(selectedTier, () => { isPayingSnap = true }, () => { isPayingSnap = false })"
+                    :disabled="isPayingSnap"
+                    class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider py-3.5 px-4 text-center block transition shadow-lg cursor-pointer disabled:opacity-50"
                 >
-                    Bayar Sekarang via Midtrans Snap &rarr;
-                </a>
+                    <span x-show="!isPayingSnap">Bayar Sekarang via Midtrans Snap &rarr;</span>
+                    <span x-show="isPayingSnap" class="inline-block animate-pulse">Membuat Sesi Snap...</span>
+                </button>
                 
                 <form method="POST" action="{{ route('cart.add', $blueprint->slug) }}" class="m-0">
                     @csrf

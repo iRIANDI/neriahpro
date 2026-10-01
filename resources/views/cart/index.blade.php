@@ -10,6 +10,9 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Midtrans Snap JS (In-Page Popup Modal) -->
+    <script src="{{ config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/snap.js') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
+
     <script>
         if (localStorage.getItem('neriah_theme') === 'dark' || (!localStorage.getItem('neriah_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -218,14 +221,14 @@
                     </div>
 
                     <div class="space-y-3">
-                        <a 
-                            href="https://app.sandbox.midtrans.com/snap/v2/vtweb/demo-neriahpro-dp"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-widest py-3.5 px-4 text-center block transition"
+                        <button 
+                            type="button"
+                            id="btn-pay-snap"
+                            onclick="payWithSnap()"
+                            class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-widest py-3.5 px-4 text-center block transition cursor-pointer disabled:opacity-50 shadow-md"
                         >
-                            Bayar DP Sekarang (Midtrans) &rarr;
-                        </a>
+                            Bayar DP Sekarang (Midtrans Snap) &rarr;
+                        </button>
                         <p class="text-[10px] text-zinc-400 text-center font-mono">
                             Escrow diamankan & diverifikasi otomatis oleh Midtrans webhook.
                         </p>
@@ -297,6 +300,65 @@
             updateCountdowns();
             setInterval(updateCountdowns, 1000);
         });
+
+        async function payWithSnap() {
+            const btn = document.getElementById('btn-pay-snap');
+            if (!btn) return;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="inline-block animate-pulse">MEMBUAT SESI SNAP...</span>';
+
+            try {
+                const response = await fetch('{{ route('cart.snap-token') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+
+                if (!data.success || !data.token) {
+                    throw new Error(data.message || 'Gagal memperoleh Snap Token dari Midtrans.');
+                }
+
+                if (window.snap && window.snap.pay) {
+                    window.snap.pay(data.token, {
+                        onSuccess: function(result) {
+                            alert('Pembayaran DP berhasil dikonfirmasi! Pesanan Anda telah tercatat di escrow.');
+                            window.location.reload();
+                        },
+                        onPending: function(result) {
+                            alert('Menunggu penyelesaian pembayaran. Silakan transfer sesuai instruksi pada layar.');
+                            window.location.reload();
+                        },
+                        onError: function(result) {
+                            alert('Pembayaran gagal atau dibatalkan.');
+                            btn.disabled = false;
+                            btn.innerHTML = originalText;
+                        },
+                        onClose: function() {
+                            btn.disabled = false;
+                            btn.innerHTML = originalText;
+                        }
+                    });
+                } else {
+                    if (data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        alert('Snap modal script gagal dimuat. Silakan periksa koneksi Anda.');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }
+                }
+            } catch (err) {
+                alert('Kesalahan Pembayaran: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
     </script>
 </body>
 </html>

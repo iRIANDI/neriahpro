@@ -114,6 +114,35 @@ class VisionBlueprint extends Model
             ],
         ];
 
+        $orderId = $overrides['midtrans_order_id'] ?? ('NPRO-DP-' . strtoupper(Str::random(8)));
+        $paymentUrl = $overrides['midtrans_payment_url'] ?? null;
+
+        if (!$paymentUrl && class_exists(\App\Services\MidtransSnapService::class)) {
+            $snapRes = \App\Services\MidtransSnapService::createSnapToken([
+                'transaction_details' => [
+                    'order_id' => $orderId,
+                    'gross_amount' => (int) $dpAmount,
+                ],
+                'customer_details' => [
+                    'first_name' => $this->client_name ?: ($this->nama_bisnis ?: 'Client'),
+                    'email' => $this->email ?: 'client@neriahpro.com',
+                    'phone' => $this->phone ?: '08123456789',
+                ],
+                'item_details' => [
+                    [
+                        'id' => 'DP-CONTRACT',
+                        'price' => (int) $dpAmount,
+                        'quantity' => 1,
+                        'name' => substr('DP Kontrak: ' . ($this->nama_bisnis ?: 'Proyek'), 0, 50),
+                    ]
+                ],
+            ]);
+
+            if ($snapRes['success'] ?? false) {
+                $paymentUrl = $snapRes['redirect_url'];
+            }
+        }
+
         $document = Document::create([
             'title' => 'Perjanjian Kerja Sama Pengembangan Sistem - ' . ($this->nama_bisnis ?: $this->client_name),
             'document_type' => 'contract',
@@ -123,8 +152,8 @@ class VisionBlueprint extends Model
             'scope_locked' => true,
             'contract_amount' => $contractAmount,
             'dp_amount' => $dpAmount,
-            'midtrans_order_id' => $overrides['midtrans_order_id'] ?? ('NPRO-DP-' . strtoupper(Str::random(8))),
-            'midtrans_payment_url' => $overrides['midtrans_payment_url'] ?? 'https://app.sandbox.midtrans.com/snap/v2/vtweb/demo-neriahpro-dp',
+            'midtrans_order_id' => $orderId,
+            'midtrans_payment_url' => $paymentUrl,
             'signer_name' => $this->client_name ?: $this->nama_bisnis,
             'signer_email' => $this->email,
             'signer_ip_address' => $overrides['signer_ip_address'] ?? null,

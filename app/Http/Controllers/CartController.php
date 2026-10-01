@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\VisionBlueprint;
 use App\Models\Document;
+use App\Services\MidtransSnapService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -211,5 +212,86 @@ class CartController extends Controller
     {
         session()->forget('neriah_cart');
         return redirect()->route('cart.index')->with('success', 'Cart berhasil dikosongkan.');
+    }
+
+    /**
+     * Get Midtrans Snap Token for all items in Cart (Termin DP 50%).
+     */
+    public function getSnapToken(Request $request): JsonResponse
+    {
+        $cart = session()->get('neriah_cart', []);
+        
+        if (empty($cart)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cart belanja kosong. Silakan tambahkan proyek terlebih dahulu.',
+            ], 400);
+        }
+
+        $totalDp = 0;
+        $itemDetails = [];
+        $firstClientName = null;
+        $firstEmail = null;
+        $firstPhone = null;
+
+        foreach ($cart as $slug => $item) {
+            $contractAmount = (float) ($item['contract_amount'] ?? 50000000);
+            $dpAmount = (int) ($item['dp_amount'] ?? ($contractAmount * 0.50));
+            $totalDp += $dpAmount;
+
+            $blueprint = VisionBlueprint::where('slug', $slug)->first();
+            if ($blueprint && !$firstClientName) {
+                $firstClientName = $blueprint->client_name ?: $blueprint->nama_bisnis;
+                $firstEmail = $blueprint->email;
+                $firstPhone = $blueprint->phone;
+            }
+
+            $itemDetails[] = [
+                'id' => substr('CART-' . strtoupper(Str::slug($slug)), 0, 50),
+                'price' => $dpAmount,
+                'quantity' => 1,
+                'name' => substr('DP: ' . ($item['nama_bisnis'] ?? $slug), 0, 50),
+            ];
+        }
+
+        if ($totalDp <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Total tagihan DP tidak valid.',
+            ], 400);
+        }
+
+        $orderId = 'NP-CART-' . strtoupper(Str::random(6)) . '-' . time();
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => (int) $totalDp,
+            ],
+            'customer_details' => [
+                'first_name' => $firstClientName ?: 'Client Neriah Pro',
+                'email' => $firstEmail ?: 'client@neriahpro.com',
+                'phone' => $firstPhone ?: '08123456789',
+            ],
+            'item_details' => $itemDetails,
+        ];
+
+        $snapResponse = MidtransSnapService::createSnapToken($params);
+
+        if (!$snapResponse['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $snapResponse['error'] ?? 'Gagal membuat sesi transaksi Midtrans.',
+            ], $snapResponse['status_code'] ?? 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'token' => $snapResponse['token'],
+            'redirect_url' => $snapResponse['redirect_url'],
+            'order_id' => $orderId,
+            'gross_amount' => $totalDp,
+            'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
+        ]);
     }
 }

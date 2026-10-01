@@ -39,7 +39,8 @@ const TRANSLATIONS = {
     emailLabel: "Email Resmi",
     emailPh: "budi@perusahaan.com",
     phoneLabel: "WhatsApp / No. Telepon",
-    phonePh: "+62 812-3456-7890",
+    phonePh: "812-3456-7890",
+    phoneNote: "Nomor WhatsApp tanpa angka 0 di awal.",
 
     blockA: "A. Konteks Bisnis & Tolak Ukur",
     namaBisnisLabel: "Nama Proyek / Bisnis",
@@ -133,7 +134,8 @@ const TRANSLATIONS = {
     emailLabel: "Official Email Address",
     emailPh: "john@company.com",
     phoneLabel: "Phone / WhatsApp",
-    phonePh: "+1 234-567-8900",
+    phonePh: "812-3456-7890",
+    phoneNote: "Phone digits without leading 0.",
 
     blockA: "A. Business Context & Success Metrics",
     namaBisnisLabel: "Project / Business Name",
@@ -220,9 +222,20 @@ const HelperTooltip = ({ content }) => (
   </div>
 );
 
-export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialData = {} }) {
+export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialData = {}, countries = [] }) {
   const [lang, setLang] = useState('id');
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Robust Country list with fallback
+  const countryList = (countries && Array.isArray(countries) && countries.length > 0)
+    ? countries
+    : [
+        { name: 'Indonesia', code: '+62', emoji: '🇮🇩', iso: 'ID' },
+        { name: 'Malaysia', code: '+60', emoji: '🇲🇾', iso: 'MY' },
+        { name: 'Singapore', code: '+65', emoji: '🇸🇬', iso: 'SG' },
+        { name: 'United States', code: '+1', emoji: '🇺🇸', iso: 'US' },
+        { name: 'Australia', code: '+61', emoji: '🇦🇺', iso: 'AU' },
+      ];
 
   useEffect(() => {
     // Detect system or stored theme
@@ -288,6 +301,68 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     kisaranBudget: initialData.kisaranBudget || 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
   });
 
+  // Country Code and Phone Digits (Anti-Leading Zero Protocol)
+  const [selectedCountryCode, setSelectedCountryCode] = useState(() => {
+    if (initialData.country_code) return initialData.country_code;
+    return '+62';
+  });
+
+  const [phoneDigits, setPhoneDigits] = useState(() => {
+    if (initialData.phone) {
+      let d = String(initialData.phone).replace(/\D/g, '');
+      if (d.startsWith('62')) d = d.substring(2);
+      return d.replace(/^0+/, '');
+    }
+    return '';
+  });
+
+  const handleCountryCodeChange = (e) => {
+    const code = e.target.value;
+    setSelectedCountryCode(code);
+    setFormData((prev) => ({
+      ...prev,
+      phone: phoneDigits ? `${code}${phoneDigits}` : '',
+    }));
+  };
+
+  const handlePhoneKeyDown = (e) => {
+    // Prohibit typing '0' if input is empty or cursor at index 0
+    if (e.key === '0' && (e.target.value === '' || e.target.selectionStart === 0)) {
+      e.preventDefault();
+    }
+  };
+
+  const handlePhoneChange = (e) => {
+    let raw = e.target.value;
+    // Strip non-digits
+    let digits = raw.replace(/\D/g, '');
+    // Strictly strip any leading zeros (e.g. 0812 -> 812)
+    digits = digits.replace(/^0+/, '');
+
+    setPhoneDigits(digits);
+    setFormData((prev) => ({
+      ...prev,
+      phone: digits ? `${selectedCountryCode}${digits}` : '',
+    }));
+  };
+
+  const handlePhonePaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData ? e.clipboardData.getData('text') : '';
+    let digits = pasted.replace(/\D/g, '');
+    // If pasted with country code e.g. 62812..., strip 62
+    if (selectedCountryCode === '+62' && digits.startsWith('62')) {
+      digits = digits.substring(2);
+    }
+    digits = digits.replace(/^0+/, '');
+
+    setPhoneDigits(digits);
+    setFormData((prev) => ({
+      ...prev,
+      phone: digits ? `${selectedCountryCode}${digits}` : '',
+    }));
+  };
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [successData, setSuccessData] = useState(null);
@@ -312,7 +387,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       nama_bisnis: formData.namaBisnis,
       client_name: formData.clientName || formData.namaBisnis,
       email: formData.email,
-      phone: formData.phone,
+      phone: phoneDigits ? `${selectedCountryCode}${phoneDigits}` : (formData.phone || ''),
+      country_code: selectedCountryCode,
+      phone_digits: phoneDigits,
       masalah_utama: formData.masalahUtama,
       tujuan_utama: formData.tujuanUtama,
       target_audiens: formData.targetAudiens,
@@ -576,15 +653,38 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 />
               </div>
               <div>
-                <label className={labelClass}>{t.phoneLabel}</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder={t.phonePh}
-                  className={inputClass}
-                />
+                <label className={labelClass}>
+                  {t.phoneLabel} <span className="text-emerald-500 font-mono text-[10px] font-semibold">({selectedCountryCode})</span>
+                </label>
+                <div className="flex items-stretch border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus-within:border-emerald-500 transition-colors">
+                  <select
+                    value={selectedCountryCode}
+                    onChange={handleCountryCodeChange}
+                    className="w-28 sm:w-32 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs font-mono px-2 py-2.5 border-r border-zinc-300 dark:border-zinc-700 rounded-none focus:outline-none cursor-pointer"
+                    title="Pilih Kode Negara"
+                  >
+                    {countryList.map((c, idx) => (
+                      <option key={`${c.iso || c.code}-${idx}`} value={c.code}>
+                        {c.emoji || '🌐'} {c.code} ({c.name})
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="tel"
+                    name="phoneDigits"
+                    value={phoneDigits}
+                    onKeyDown={handlePhoneKeyDown}
+                    onChange={handlePhoneChange}
+                    onPaste={handlePhonePaste}
+                    placeholder={t.phonePh}
+                    className="flex-1 bg-transparent text-zinc-900 dark:text-zinc-100 font-mono text-xs px-3 py-2.5 rounded-none focus:outline-none placeholder-zinc-400"
+                    autoComplete="tel-national"
+                  />
+                </div>
+                <p className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ {selectedCountryCode}</span>
+                  <span>{t.phoneNote}</span>
+                </p>
               </div>
             </div>
           </div>

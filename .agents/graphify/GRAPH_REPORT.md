@@ -118,6 +118,9 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/api/cv-pro/upload-cv`: Microsoft MarkItDown multi-format CV scanner & parser (POST).
 - `/blueprint`: Halaman public kuesioner Project OS (`BlueprintController::create`).
 - `/blueprint/{slug}`: Halaman preview dokumen PRD, ERD, dan Tech Stack (`BlueprintController::show`).
+- `/blueprint/{slug}/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Blueprint DP (`BlueprintController::getSnapToken`).
+- `/cart`: Halaman Cart pembayaran & penguncian kontrak proyek dengan Anti-Ghost Hold 24 jam countdown (`CartController::index`).
+- `/cart/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Cart DP checkout multi-item (`CartController::getSnapToken`).
 - `/document/{document}/preview`: Preview draft kontrak kerja sama digital.
 - `/document/{document}/sign`: Livewire signing page (`DocumentSignature`).
 - `/lang/{locale}`: Switcher bahasa (`id` / `en`) dengan persistensi session dan cookie.
@@ -125,12 +128,14 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/admin/login`: Customized Enterprise Login Portal (`App\Filament\Pages\Auth\Login`) dengan Vision & Mission Pillars, 1-Click Demo Credential Assistant, dan System Telemetry (Split-Screen Desktop & Responsive Portrait).
 - `/admin/settings`: Pengaturan Global (`ManageSettings.php`) dengan tab General, Midtrans, Domain Expiration, AI Integrations, dan **Frontend Feature Flags** (toggle saklar on/off untuk CV Pro, Job Hub, Keuangan Pro, Mock Interview, LinkedIn Suite, Vision Blueprint, dsb).
 - `/{slug?}`: Fallback dinamis CMS page (`PageController::show`).
-- `api/vision-blueprint`: Endpoint POST penyimpanan form Project OS dengan Honeypot anti-spam (`throttle:30,1`).
+- `api/vision-blueprint`: Endpoint POST penyimpanan form Project OS dengan Honeypot anti-spam (`throttle:30,1`), normalisasi nomor WhatsApp internasional dengan selector kode negara dari `config/countries.php`, dan filter anti-awalan 0.
 
 ---
 
 ## 5. Layanan Inti & Background Scheduler
 
+- **`App\Services\MidtransSnapService`**:
+  Layanan integrasi Midtrans Snap API: memproses pembuatan Snap Token transaksi secara aman via HTTP Basic Auth ke endpoint Midtrans Sandbox/Production, mendukung modal prompt interaktif in-page (Snap popup `window.snap.pay`) tanpa redirect 404, serta menangani audit log kegagalan gateway.
 - **`App\Services\CvPro\CvAiService`**:
   Mesin kecerdasan karir CV Pro SaaS: linter ATS CV dengan deteksi kata kerja lemah dan metrik kuantitatif, generator penyesuaian CV presisi terhadap lowongan (Applied CV Generator & Diff), generator LinkedIn personal branding pack, AI bullet enhancer/condenser, generator pertanyaan mock interview strategis berdasarkan posisi/target, evaluator jawaban kandidat berbasis formula STAR (Situation, Task, Action, Result), serta generator surat korespondensi pasca-wawancara.
 - **`App\Services\CvPro\CvPricingService`**:

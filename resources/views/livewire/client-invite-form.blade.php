@@ -24,10 +24,31 @@
                     </div>
                 </div>
 
-                <!-- Phone Number (Editable) -->
+                <!-- Phone Number with Country Code & Anti-0 Filter -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone / WhatsApp <span class="text-red-500">*</span></label>
-                    <input type="tel" wire:model="phone" required class="w-full bg-white border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg text-gray-900 py-3 px-4 shadow-sm transition duration-200" placeholder="+62 812-3456-7890">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Phone / WhatsApp <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-200 focus-within:border-blue-500 shadow-sm transition">
+                        <select wire:model.live="country_code" class="bg-gray-100 text-gray-800 text-xs px-3 py-3 border-r border-gray-300 focus:outline-none">
+                            @foreach($countries as $c)
+                                <option value="{{ $c['code'] }}">{{ $c['emoji'] ?? '🌐' }} {{ $c['code'] }} ({{ $c['name'] }})</option>
+                            @endforeach
+                        </select>
+                        <input 
+                            type="tel" 
+                            wire:model="phone_digits" 
+                            required 
+                            x-data
+                            x-on:keydown="if (($el.value === '' || $el.selectionStart === 0) && $event.key === '0') { $event.preventDefault(); }"
+                            x-on:input="$el.value = $el.value.replace(/\D/g, '').replace(/^0+/, '')"
+                            class="w-full bg-white text-gray-900 py-3 px-4 focus:outline-none text-sm font-mono" 
+                            placeholder="812-3456-7890 (tanpa angka 0 di awal)"
+                        >
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Awalan angka 0 otomatis difilter karena kode negara ({{ $country_code }}) telah dipilih.
+                    </p>
                 </div>
 
                 <!-- Service Options (Cards) -->

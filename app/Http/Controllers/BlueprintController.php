@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\VisionBlueprint;
 use App\Models\CmsGlobalSetting;
+use App\Services\MidtransSnapService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 
 class BlueprintController extends Controller
 {
@@ -84,6 +86,71 @@ class BlueprintController extends Controller
         }
 
         return redirect()->route('document.sign', ['document' => $document->id]);
+    }
+
+    /**
+     * Get Midtrans Snap Token for this blueprint proposal (Termin DP 50%).
+     */
+    public function getSnapToken(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        
+        $tier = $request->input('tier', 'standard');
+        
+        // Calculate contract and DP amount based on tier
+        $contractAmount = match ($tier) {
+            'fast_track' => 75000000.00,
+            'hyper_sprint' => 100000000.00,
+            default => 50000000.00,
+        };
+
+        // DP is 50%
+        $dpAmount = (int) ($contractAmount * 0.50);
+        
+        $orderId = 'NP-BP-' . strtoupper(substr($blueprint->id, 0, 8)) . '-' . time();
+        $tierLabel = match ($tier) {
+            'fast_track' => 'Fast-Track Velocity',
+            'hyper_sprint' => 'Hyper-Sprint Delivery',
+            default => 'Standard Velocity',
+        };
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => $dpAmount,
+            ],
+            'customer_details' => [
+                'first_name' => $blueprint->client_name ?: ($blueprint->nama_bisnis ?: 'Client'),
+                'email' => $blueprint->email ?: 'client@neriahpro.com',
+                'phone' => $blueprint->phone ?: '08123456789',
+            ],
+            'item_details' => [
+                [
+                    'id' => 'DP-' . strtoupper($tier),
+                    'price' => $dpAmount,
+                    'quantity' => 1,
+                    'name' => substr('DP (50%) - ' . ($blueprint->nama_bisnis ?: 'Proyek') . ' (' . $tierLabel . ')', 0, 50),
+                ]
+            ],
+        ];
+
+        $snapResponse = MidtransSnapService::createSnapToken($params);
+
+        if (!$snapResponse['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $snapResponse['error'] ?? 'Gagal membuat sesi transaksi Midtrans.',
+            ], $snapResponse['status_code'] ?? 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'token' => $snapResponse['token'],
+            'redirect_url' => $snapResponse['redirect_url'],
+            'order_id' => $orderId,
+            'gross_amount' => $dpAmount,
+            'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
+        ]);
     }
 
     /**

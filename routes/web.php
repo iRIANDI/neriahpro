@@ -24,6 +24,7 @@ Route::get('/document/{document}/sign', \App\Livewire\DocumentSignature::class)
 Route::get('/blueprint', [BlueprintController::class, 'create'])->name('blueprint.create');
 Route::get('/blueprint/{slug}', [BlueprintController::class, 'show'])->name('blueprint.show');
 Route::post('/blueprint/{slug}/generate-contract', [BlueprintController::class, 'generateContract'])->name('blueprint.generate-contract');
+Route::post('/blueprint/{slug}/snap-token', [BlueprintController::class, 'getSnapToken'])->name('blueprint.snap-token');
 Route::get('/blueprint/{slug}/download/pdf', [BlueprintController::class, 'downloadPdf'])->name('blueprint.download-pdf');
 Route::get('/blueprint/{slug}/download/md', [BlueprintController::class, 'downloadMd'])->name('blueprint.download-md');
 
@@ -33,6 +34,7 @@ Route::get('/api/cart', [\App\Http\Controllers\CartController::class, 'apiCart']
 Route::post('/cart/add/{slug}', [\App\Http\Controllers\CartController::class, 'add'])->name('cart.add');
 Route::post('/cart/remove/{slug}', [\App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove');
 Route::post('/cart/clear', [\App\Http\Controllers\CartController::class, 'clear'])->name('cart.clear');
+Route::post('/cart/snap-token', [\App\Http\Controllers\CartController::class, 'getSnapToken'])->name('cart.snap-token');
 
 Route::get('/invite/{slug}', \App\Livewire\ClientInviteForm::class)->name('invite');
 

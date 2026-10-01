@@ -14,10 +14,13 @@ import {
   X,
   Lock,
   Zap,
-  Globe
+  Globe,
+  ShoppingCart,
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 
-export default function GlobalNavigationIsland({ settings, featureFlags }) {
+export default function GlobalNavigationIsland({ settings, featureFlags, cartData }) {
   const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
   const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
   const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
@@ -29,7 +32,55 @@ export default function GlobalNavigationIsland({ settings, featureFlags }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+  const [cartDropdownOpen, setCartDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Cart state & Real-time Anti-Ghost Hold countdown
+  const [cartState, setCartState] = useState({
+    count: 0,
+    items: [],
+    min_remaining_seconds: 86400
+  });
+  const [remainingSeconds, setRemainingSeconds] = useState(86400);
+
+  useEffect(() => {
+    // Fetch live cart state
+    fetch('/api/cart')
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          setCartState(data);
+          if (data.min_remaining_seconds !== null && data.min_remaining_seconds !== undefined) {
+            setRemainingSeconds(data.min_remaining_seconds);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // 1-second interval countdown for anti-ghost hold
+  useEffect(() => {
+    if (cartState.count === 0 || remainingSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setRemainingSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cartState.count, remainingSeconds]);
+
+  const formatCountdown = (secs) => {
+    if (!secs || secs <= 0) return '00:00:00';
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = Math.floor(secs % 60);
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
   const [lang, setLang] = useState(() => {
     if (typeof window !== 'undefined') {
       const match = document.cookie.match(new RegExp('(^| )neriah_locale=([^;]+)'));
@@ -252,6 +303,97 @@ export default function GlobalNavigationIsland({ settings, featureFlags }) {
 
           {/* Action CTAs */}
           <div className="hidden sm:flex items-center gap-3">
+            {/* Cart Button with Anti-Ghost Hold Countdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setCartDropdownOpen(true)}
+              onMouseLeave={() => setCartDropdownOpen(false)}
+            >
+              <a
+                href="/cart"
+                className="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 py-2.5 px-3 rounded-none font-mono text-xs font-bold flex items-center gap-2 transition"
+              >
+                <div className="relative">
+                  <ShoppingCart className="w-4 h-4 text-emerald-500" />
+                  {cartState.count > 0 && (
+                    <span className="absolute -top-2.5 -right-2.5 bg-emerald-500 text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-none animate-pulse">
+                      {cartState.count}
+                    </span>
+                  )}
+                </div>
+                <span>CART</span>
+                {cartState.count > 0 && remainingSeconds > 0 && (
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold flex items-center gap-0.5 bg-amber-500/10 px-1 py-0.5 border border-amber-500/30">
+                    <Clock className="w-2.5 h-2.5" />
+                    <span>{formatCountdown(remainingSeconds)}</span>
+                  </span>
+                )}
+              </a>
+
+              {/* Cart Dropdown Preview Board */}
+              <AnimatePresence>
+                {cartDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full right-0 mt-1 w-80 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-emerald-500 shadow-2xl p-4 z-50 text-left font-mono"
+                  >
+                    <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-2">
+                      <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
+                        ANTI-GHOST HOLD CART
+                      </span>
+                      {cartState.count > 0 && (
+                        <span className="text-[10px] font-bold text-amber-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          <span>{formatCountdown(remainingSeconds)}</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {cartState.count === 0 ? (
+                      <div className="py-4 text-center text-xs text-zinc-500 font-sans">
+                        <p>Cart saat ini masih kosong.</p>
+                        <a href="/blueprint" className="text-emerald-500 font-bold font-mono underline mt-1.5 inline-block">
+                          Rancang Blueprint Proyek &rarr;
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="p-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 text-[10px] text-amber-800 dark:text-amber-300 leading-tight">
+                          <div className="font-bold flex items-center gap-1 mb-0.5">
+                            <AlertCircle className="w-3 h-3 text-amber-500" />
+                            <span>SLOT RESERVED (ANTI-GHOST HOLD)</span>
+                          </div>
+                          Slot pengerjaan & alokasi AI Ultra di-hold selama timer berjalan.
+                        </div>
+
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {cartState.items.map((item, idx) => (
+                            <div key={idx} className="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs">
+                              <div className="font-bold text-zinc-900 dark:text-white truncate">{item.title}</div>
+                              <div className="flex items-center justify-between text-[10px] text-zinc-500 mt-1">
+                                <span className="text-emerald-500 font-bold">{item.tier_name}</span>
+                                <span>DP: Rp {new Intl.NumberFormat('id-ID').format(item.dp_amount)}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <a
+                          href="/cart"
+                          className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider py-2.5 text-center block transition"
+                        >
+                          Buka Cart & Bayar DP &rarr;
+                        </a>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {isBlueprintEnabled ? (
               <a
                 href="/blueprint"
@@ -274,8 +416,11 @@ export default function GlobalNavigationIsland({ settings, featureFlags }) {
           {/* Mobile Menu Button */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 rounded-none"
+            className="md:hidden p-2 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 rounded-none flex items-center gap-1.5"
           >
+            {cartState.count > 0 && (
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            )}
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
@@ -290,6 +435,19 @@ export default function GlobalNavigationIsland({ settings, featureFlags }) {
               exit={{ height: 0, opacity: 0 }}
               className="md:hidden border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 space-y-3 font-mono text-xs uppercase"
             >
+              {/* Mobile Cart Link with Countdown */}
+              <a href="/cart" className="flex items-center justify-between py-2 text-zinc-900 dark:text-zinc-100 font-bold border-b border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-900 p-2">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4 text-emerald-500" />
+                  <span>Cart Belanja ({cartState.count})</span>
+                </div>
+                {cartState.count > 0 && (
+                  <span className="text-[10px] text-amber-500 font-bold flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    <span>{formatCountdown(remainingSeconds)}</span>
+                  </span>
+                )}
+              </a>
               <a href="/" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
                 Beranda
               </a>

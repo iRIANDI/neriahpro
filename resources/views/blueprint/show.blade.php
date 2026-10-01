@@ -67,7 +67,19 @@
         });
     </script>
 </head>
-<body x-data="{ userMenuOpen: false, paymentModalOpen: false, flowTab: 'visual', erdTab: 'visual', erdLang: 'id' }" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
+<body x-data="{ 
+    userMenuOpen: false, 
+    paymentModalOpen: false, 
+    flowTab: 'visual', 
+    erdTab: 'visual', 
+    erdLang: 'id',
+    selectedTier: 'fast_track',
+    tierAmounts: {
+        standard: { contract: 50000000, dp: 25000000, days: '30 Hari', name: 'Standard Velocity (30 Hari)' },
+        fast_track: { contract: 75000000, dp: 37500000, days: '14 Hari', name: 'Fast-Track (14 Hari) // Gemini Ultra Accelerator' },
+        hyper_sprint: { contract: 100000000, dp: 50000000, days: '7 Hari', name: 'Hyper-Sprint (7 Hari) // 24/7 War Room' }
+    }
+}" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- Header Navigation Bar (Sharp Precision Theme) -->
     <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-3 px-6 sticky top-0 z-50 no-print transition-colors">
@@ -100,15 +112,28 @@
                 <div class="h-6 w-px bg-zinc-300 dark:bg-zinc-700 mx-1 hidden sm:block"></div>
 
                 @php
-                    $cartCount = count(session('neriah_cart', []));
+                    $rawCart = session('neriah_cart', []);
+                    $cartCount = count($rawCart);
+                    $minRemaining = null;
+                    $now = now()->timestamp;
+                    foreach ($rawCart as $c) {
+                        $exp = $c['expires_at'] ?? ($c['added_at'] + (24 * 3600));
+                        $rem = max(0, $exp - $now);
+                        if ($rem > 0 && ($minRemaining === null || $rem < $minRemaining)) {
+                            $minRemaining = $rem;
+                        }
+                    }
                 @endphp
 
-                <!-- Cart Navigation Button -->
+                <!-- Cart Navigation Button with Anti-Ghost Hold Timer -->
                 <a href="{{ route('cart.index') }}" class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition">
                     <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     <span>CART</span>
                     @if($cartCount > 0)
                         <span class="px-1.5 py-0.2 bg-emerald-500 text-black text-[10px] font-bold">{{ $cartCount }}</span>
+                        @if($minRemaining)
+                            <span class="text-[10px] text-amber-500 font-bold hidden sm:inline" id="nav-cart-timer" data-rem="{{ $minRemaining }}">⏱️ {{ gmdate('H:i:s', $minRemaining) }}</span>
+                        @endif
                     @endif
                 </a>
 
@@ -707,27 +732,327 @@ erDiagram
                 </div>
             </section>
 
-            <!-- SECTION 6: TIMELINE & GANTT MILESTONE (ALIGNED TO WORKING DAYS) -->
+            <!-- SECTION 06: EVALUASI ARSITEKTUR & REKOMENDASI INFRASTRUKTUR (HOSTING, POLA SISTEM & AI DATABASE) -->
             @php
-                preg_match('/(\d+)/', $blueprint->target_waktu ?? '30', $matches);
-                $totalDays = !empty($matches[1]) ? (int)$matches[1] : 30;
-                if ($totalDays < 5) $totalDays = 5;
-
-                $s1End = max(2, (int) round($totalDays * 0.16));
-                $s2End = max($s1End + 1, (int) round($totalDays * 0.55));
-                $s3End = max($s2End + 1, (int) round($totalDays * 0.78));
-                $s4End = max($s3End + 1, (int) round($totalDays * 0.90));
-                $s5Start = $s4End + 1;
-                if ($s5Start > $totalDays) $s5Start = $totalDays;
+                $archEval = $prd['architecture_evaluation'] ?? \App\Services\PrdGeneratorService::evaluateArchitecture(
+                    $blueprint->nama_bisnis ?? $blueprint->client_name,
+                    $blueprint->masalah_utama ?? '',
+                    $prd['features']['mvp_phase1'] ?? [],
+                    $blueprint->alur_kerja ?? ''
+                );
             @endphp
+            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
+                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Evaluasi Arsitektur & Infrastruktur (AI Database Ready)</h2>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
+                        HIGH INTEGRITY ARCHITECTURE
+                    </span>
+                </div>
+
+                <!-- 1. Shared Hosting vs Dedicated VPS Assessment -->
+                <div class="mb-8">
+                    <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500"></span>
+                        1. Analisis Bobot & Kelayakan Lingkungan Hosting: Shared Host vs Dedicated VPS
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Shared Hosting (Rejected) -->
+                        <div class="p-5 bg-rose-500/5 dark:bg-rose-950/20 border-2 border-rose-500/40 font-mono text-xs">
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="font-black uppercase text-rose-600 dark:text-rose-400 text-sm">Shared Hosting</span>
+                                <span class="px-2 py-0.5 bg-rose-500 text-white text-[9px] font-bold uppercase">DISQUALIFIED (DITOLAK)</span>
+                            </div>
+                            <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs mb-3">
+                                Shared hosting tidak memenuhi standar integritas sistem AI dan basis data berskala tinggi karena limitasi mendasar:
+                            </p>
+                            <ul class="space-y-2 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                <li class="flex items-start gap-2">
+                                    <span class="text-rose-500 font-bold">&times;</span>
+                                    <span><strong>Ketiadaan pgvector:</strong> Tidak mendukung ekstensi C-level <code class="bg-rose-100 dark:bg-rose-900/40 px-1">pgvector</code> untuk pencarian semantik vektor AI.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-rose-500 font-bold">&times;</span>
+                                    <span><strong>PHP Execution Timeout:</strong> Dibatasi 30-60 detik yang akan membunuh koneksi saat LLM AI melakukan deep-reasoning streaming.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-rose-500 font-bold">&times;</span>
+                                    <span><strong>Tidak Ada Queue Supervisor:</strong> Ketiadaan daemon Redis worker persistent untuk memproses job asynchronous di latar belakang.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-rose-500 font-bold">&times;</span>
+                                    <span><strong>Noisy Neighbors Risk:</strong> Throttling CPU tak terprediksi akibat lonjakan trafik website lain dalam satu server bersama.</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Dedicated VPS (Recommended) -->
+                        <div class="p-5 bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500 font-mono text-xs">
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="font-black uppercase text-emerald-600 dark:text-emerald-400 text-sm">Dedicated VPS (Docker / Nixpacks)</span>
+                                <span class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-bold uppercase">MANDATORY (WAJIB)</span>
+                            </div>
+                            <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs mb-3">
+                                Menjamin stabilitas eksekusi AI dan isolasi komputasi penuh dengan rasio performa-harga optimal:
+                            </p>
+                            <ul class="space-y-2 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                <li class="flex items-start gap-2">
+                                    <span class="text-emerald-500 font-bold">&check;</span>
+                                    <span><strong>PostgreSQL 16+ & pgvector Native:</strong> Vector embeddings tersimpan co-located langsung di dalam engine database relasional.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-emerald-500 font-bold">&check;</span>
+                                    <span><strong>Dedicated Resource Isolation:</strong> 100% alokasi vCPU, RAM, dan NVMe storage bebas interferensi pihak luar.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-emerald-500 font-bold">&check;</span>
+                                    <span><strong>Persistent Redis Supervisor:</strong> Antrean background task AI agent & notifikasi berjalan kontinyu 24/7.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-emerald-500 font-bold">&check;</span>
+                                    <span><strong>Zero-Downtime Deployment:</strong> Pipeline Nixpacks & reverse-proxy Nginx HTTP/2 dengan auto-healing SSL.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Monolith vs Decoupled Assessment -->
+                <div class="mb-8">
+                    <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500"></span>
+                        2. Penilaian Pola Arsitektur: Modern Monolith vs Decoupled (Microservices)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Modern Monolith -->
+                        <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-emerald-500/60 font-mono text-xs">
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="font-bold uppercase text-zinc-900 dark:text-zinc-100">Modern Monolith (Laravel 13 + Filament v5)</span>
+                                <span class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-bold">REKOMENDASI FASE 1</span>
+                            </div>
+                            <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 text-[11px]">
+                                <li>&bull; <strong>Zero Network Latency:</strong> Menghilangkan latensi hop HTTP antar-service yang membebani response time.</li>
+                                <li>&bull; <strong>Efisiensi Biaya 60%:</strong> Satu kluster terpadu tanpa biaya sewa ganda (API server + Next.js node cluster).</li>
+                                <li>&bull; <strong>ACID Strict Integrity:</strong> Integritas transaksi finansial tanpa rumitnya distributed 2-phase commit.</li>
+                                <li>&bull; <strong>Rapid Time-to-Market:</strong> Sinkronisasi instan antara model bisnis Eloquent dan dashboard Filament.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Decoupled -->
+                        <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="font-bold uppercase text-zinc-700 dark:text-zinc-300">Decoupled / Microservices Cluster</span>
+                                <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[9px] font-bold">FASE ROADMAP LANJUTAN</span>
+                            </div>
+                            <ul class="space-y-1.5 text-zinc-500 text-[11px]">
+                                <li>&bull; Hanya dianjurkan jika tim rekayasa sudah berkembang menjadi lebih dari 10-15 developer di repositori terpisah.</li>
+                                <li>&bull; Menambah kompleksitas otentikasi JWT token refresh lintas domain dan potensi network partition failures.</li>
+                                <li>&bull; Membutuhkan orkestrasi Kubernetes kompleks yang tidak efisien untuk peluncuran perdana (MVP).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. AI-Ready PostgreSQL Database Blueprint -->
+                <div class="mb-8 p-5 bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 bg-emerald-500"></span>
+                            <span class="font-bold uppercase text-sm text-white">Basis Data PostgreSQL 16+ (pgvector & Strict ULID)</span>
+                        </div>
+                        <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold">
+                            AI-READY DATABASE ENGINE
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px] leading-relaxed">
+                        <div class="space-y-2">
+                            <div>
+                                <strong class="text-emerald-400 block mb-0.5">&bull; Ekstensi pgvector Co-Location:</strong>
+                                Vector embeddings (1536-dim / 3072-dim) disimpan berdampingan langsung dengan data transaksi dan pengguna tanpa memerlukan SaaS database vektor terpisah seperti Pinecone atau Milvus.
+                            </div>
+                            <div>
+                                <strong class="text-emerald-400 block mb-0.5">&bull; Indeks HNSW (Hierarchical Navigable Small World):</strong>
+                                Pencarian kedekatan semantik vektor dengan kompleksitas sub-millisecond O(log N) untuk RAG (Retrieval-Augmented Generation) berkecepatan tinggi.
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div>
+                                <strong class="text-emerald-400 block mb-0.5">&bull; Strict ULID Primary Key Standard:</strong>
+                                Format string 26-karakter bebas sequence lock yang menjamin pembagian partisi terdistribusi dan keystone cursor pagination O(1) tanpa degradasi performa.
+                            </div>
+                            <div>
+                                <strong class="text-emerald-400 block mb-0.5">&bull; Dynamic JSONB Indexing:</strong>
+                                Mendukung penyimpanan context window percakapan agen AI Gemini Ultra serta fleksibilitas metadata dokumen.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Recommended Tools Grid -->
+                <div>
+                    <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500"></span>
+                        4. Rekomendasi Stack & Tools Rekayasa Perangkat Lunak
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 font-mono text-xs">
+                        @foreach($archEval['recommended_tools'] ?? [] as $tool)
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-[9px] uppercase tracking-wider text-zinc-400 block mb-0.5">{{ $tool['category'] }}</span>
+                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">{{ $tool['name'] }}</h4>
+                                <p class="text-[10px] text-zinc-500 dark:text-zinc-400 leading-normal">{{ $tool['desc'] }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 07: OPSI VELOCITY PENGERJAAN & AKSESORIS AI GEMINI ULTRA (PRICING & SPRINT SELECTION) -->
+            <section class="bg-white dark:bg-zinc-900 border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">07</span>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Opsi Velocity & Akselerasi AI Gemini Ultra</h2>
+                        </div>
+                        <p class="text-zinc-500 dark:text-zinc-400 text-xs font-mono">
+                            Pilih kecepatan penyelesaian sistem. Kecepatan akselerasi melibatkan alokasi komputasi cloud AI Gemini Ultra dan paralel engineering squad.
+                        </p>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 border border-emerald-300 dark:border-emerald-800 self-start sm:self-auto">
+                        PILIH PAKET UNTUK KONTRAK
+                    </span>
+                </div>
+
+                <!-- 3 Comparative Velocity Pricing Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 font-mono">
+                    <!-- Standard (30 Days) -->
+                    <div 
+                        @click="selectedTier = 'standard'"
+                        :class="selectedTier === 'standard' ? 'border-2 border-emerald-500 bg-emerald-500/5 dark:bg-emerald-950/20 shadow-md' : 'border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-zinc-400'"
+                        class="p-5 cursor-pointer transition relative flex flex-col justify-between"
+                    >
+                        <div>
+                            <div class="flex items-center justify-between gap-1 mb-2">
+                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold">1.0X PACE</span>
+                                <span x-show="selectedTier === 'standard'" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            </div>
+                            <h3 class="text-base font-black uppercase text-zinc-900 dark:text-zinc-100">Standard Velocity</h3>
+                            <div class="text-xl font-black text-zinc-900 dark:text-zinc-100 my-2">
+                                Rp 50.000.000
+                            </div>
+                            <div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-3">
+                                Termin DP 50%: Rp 25.000.000
+                            </div>
+                            <ul class="space-y-1.5 text-[11px] text-zinc-600 dark:text-zinc-400 mb-4 border-t border-zinc-200 dark:border-zinc-800 pt-3">
+                                <li>&bull; Durasi: <strong>30 Hari Kerja</strong></li>
+                                <li>&bull; Alokasi: 1 Lead Fullstack Engineer</li>
+                                <li>&bull; AI Engine: Gemini Pro standard reasoning</li>
+                                <li>&bull; Siklus: 5 Sprint reguler terjadwal</li>
+                            </ul>
+                        </div>
+                        <button 
+                            type="button" 
+                            :class="selectedTier === 'standard' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'"
+                            class="w-full py-2 text-xs uppercase tracking-wider transition"
+                        >
+                            <span x-text="selectedTier === 'standard' ? '&check; PAKET TERPILIH' : 'PILIH STANDARD'"></span>
+                        </button>
+                    </div>
+
+                    <!-- Fast-Track (14 Days) - Recommended -->
+                    <div 
+                        @click="selectedTier = 'fast_track'"
+                        :class="selectedTier === 'fast_track' ? 'border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/30 shadow-lg' : 'border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-zinc-400'"
+                        class="p-5 cursor-pointer transition relative flex flex-col justify-between"
+                    >
+                        <div class="absolute -top-3 right-4 px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-black uppercase tracking-wider">
+                            ⚡ RECOMMENDED // 2X SPEED
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between gap-1 mb-2">
+                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 font-bold">2.0X AKSELERASI</span>
+                                <span x-show="selectedTier === 'fast_track'" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            </div>
+                            <h3 class="text-base font-black uppercase text-zinc-900 dark:text-zinc-100">Fast-Track Sprint</h3>
+                            <div class="text-xl font-black text-emerald-600 dark:text-emerald-400 my-2">
+                                Rp 75.000.000
+                            </div>
+                            <div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-3">
+                                Termin DP 50%: Rp 37.500.000
+                            </div>
+                            <ul class="space-y-1.5 text-[11px] text-zinc-700 dark:text-zinc-300 mb-4 border-t border-zinc-200 dark:border-zinc-800 pt-3">
+                                <li>&bull; Durasi: <strong>14 Hari Kerja (Pangkas 50%)</strong></li>
+                                <li>&bull; Alokasi: 2 Dedicated Senior Engineers</li>
+                                <li>&bull; <strong>Gemini Ultra AI Accelerator:</strong> Kuota compute inference tinggi untuk auto-synthesize boilerplate & unit testing</li>
+                                <li>&bull; Review arsitektur harian & integrasi kilat</li>
+                            </ul>
+                        </div>
+                        <button 
+                            type="button" 
+                            :class="selectedTier === 'fast_track' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'"
+                            class="w-full py-2 text-xs uppercase tracking-wider transition"
+                        >
+                            <span x-text="selectedTier === 'fast_track' ? '&check; PAKET TERPILIH' : 'PILIH FAST-TRACK'"></span>
+                        </button>
+                    </div>
+
+                    <!-- Hyper-Sprint (7 Days) -->
+                    <div 
+                        @click="selectedTier = 'hyper_sprint'"
+                        :class="selectedTier === 'hyper_sprint' ? 'border-2 border-amber-500 bg-amber-500/10 dark:bg-amber-950/30 shadow-lg' : 'border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-zinc-400'"
+                        class="p-5 cursor-pointer transition relative flex flex-col justify-between"
+                    >
+                        <div class="absolute -top-3 right-4 px-2 py-0.5 bg-amber-500 text-black text-[9px] font-black uppercase tracking-wider">
+                            🔥 4X SPEED // 1 PEKAN
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between gap-1 mb-2">
+                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40 font-bold">EMERGENCY PACE</span>
+                                <span x-show="selectedTier === 'hyper_sprint'" class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            </div>
+                            <h3 class="text-base font-black uppercase text-zinc-900 dark:text-zinc-100">Hyper-Sprint War Room</h3>
+                            <div class="text-xl font-black text-amber-600 dark:text-amber-400 my-2">
+                                Rp 100.000.000
+                            </div>
+                            <div class="text-xs text-amber-600 dark:text-amber-400 font-bold mb-3">
+                                Termin DP 50%: Rp 50.000.000
+                            </div>
+                            <ul class="space-y-1.5 text-[11px] text-zinc-700 dark:text-zinc-300 mb-4 border-t border-zinc-200 dark:border-zinc-800 pt-3">
+                                <li>&bull; Durasi: <strong>7 Hari Kerja (Selesai 1 Pekan)</strong></li>
+                                <li>&bull; Alokasi: Tri-Engineer War Room (24/7 Shift)</li>
+                                <li>&bull; <strong>Gemini Ultra Max-Context:</strong> Inferensi tanpa batas untuk auto-scaffolding & parallel bug sweeping</li>
+                                <li>&bull; Dedicated emergency support line</li>
+                            </ul>
+                        </div>
+                        <button 
+                            type="button" 
+                            :class="selectedTier === 'hyper_sprint' ? 'bg-amber-500 text-black font-bold' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'"
+                            class="w-full py-2 text-xs uppercase tracking-wider transition"
+                        >
+                            <span x-text="selectedTier === 'hyper_sprint' ? '&check; PAKET TERPILIH' : 'PILIH HYPER-SPRINT'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI Compute Fee Justification Explanation -->
+                <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-mono leading-relaxed">
+                    <strong class="text-zinc-900 dark:text-zinc-100 block mb-1 uppercase font-bold">&bull; Mengapa Ada Penyesuaian Harga pada Akselerasi Fast-Track & Hyper-Sprint?</strong>
+                    Penyelesaian dalam 7-14 hari kerja membutuhkan pengalihan komputasi cloud model **Gemini Ultra (High-Reasoning)** dengan jendela konteks jutaan token untuk menghasilkan skema database, unit test otomatis, dan refactoring real-time secara instan, serta pengerahan multi-engineer senior secara simultan tanpa antrean.
+                </div>
+            </section>
+
+            <!-- SECTION 08: TIMELINE & GANTT MILESTONE (ALIGNED TO VELOCITY) -->
             <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
                 <div class="flex items-center justify-between gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
-                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Timeline & Milestone Proyek (Aligned)</h2>
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">08</span>
+                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Timeline & Milestone Proyek (Velocity Aligned)</h2>
                     </div>
                     <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
-                        Total Alokasi: {{ $totalDays }} Hari Kerja
+                        Target: <span x-text="tierAmounts[selectedTier].days"></span>
                     </span>
                 </div>
 
@@ -735,42 +1060,42 @@ erDiagram
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-emerald-500"></span>
-                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 1: Architecture & Database ERD Setup</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 1: Architecture, pgvector Setup & ULID Database Migrations</span>
                         </div>
-                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">Hari 1 - {{ $s1End }}</span>
+                        <span class="text-emerald-600 dark:text-emerald-400 font-bold" x-text="selectedTier === 'hyper_sprint' ? 'Hari 1 - 2' : (selectedTier === 'fast_track' ? 'Hari 1 - 3' : 'Hari 1 - 5')">Hari 1 - 3</span>
                     </div>
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-zinc-400"></span>
-                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 2: Core MVP Logic & Filament Admin CRUD</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 2: Core Business Logic & Filament Admin v5 Engine</span>
                         </div>
-                        <span class="text-zinc-500">Hari {{ $s1End + 1 }} - {{ $s2End }}</span>
+                        <span class="text-zinc-500" x-text="selectedTier === 'hyper_sprint' ? 'Hari 3 - 4' : (selectedTier === 'fast_track' ? 'Hari 4 - 7' : 'Hari 6 - 16')">Hari 4 - 7</span>
                     </div>
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-zinc-400"></span>
-                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 3: Frontend User Flow & API Integrasi</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 3: Frontend Island UI (React 19) & User Flow Pipeline</span>
                         </div>
-                        <span class="text-zinc-500">Hari {{ $s2End + 1 }} - {{ $s3End }}</span>
+                        <span class="text-zinc-500" x-text="selectedTier === 'hyper_sprint' ? 'Hari 5' : (selectedTier === 'fast_track' ? 'Hari 8 - 10' : 'Hari 17 - 23')">Hari 8 - 10</span>
                     </div>
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-zinc-400"></span>
-                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 4: Security Audit, Stress Test & UAT</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 4: AI Vector Integration, Security Audit & Stress Test</span>
                         </div>
-                        <span class="text-zinc-500">Hari {{ $s3End + 1 }} - {{ $s4End }}</span>
+                        <span class="text-zinc-500" x-text="selectedTier === 'hyper_sprint' ? 'Hari 6' : (selectedTier === 'fast_track' ? 'Hari 11 - 12' : 'Hari 24 - 27')">Hari 11 - 12</span>
                     </div>
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-zinc-400"></span>
-                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 5: Production Deployment & Serah Terima</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 5: Production Dedicated VPS Deployment & UAT Handover</span>
                         </div>
-                        <span class="text-zinc-500">Hari {{ $s5Start }} - {{ $totalDays }}</span>
+                        <span class="text-zinc-500" x-text="selectedTier === 'hyper_sprint' ? 'Hari 7' : (selectedTier === 'fast_track' ? 'Hari 13 - 14' : 'Hari 28 - 30')">Hari 13 - 14</span>
                     </div>
                 </div>
             </section>
 
-            <!-- SECTION 7: SCOPE FREEZE, DIGITAL CONTRACT & DP MIDTRANS (CRUCIAL) -->
+            <!-- SECTION 09: SCOPE FREEZE, DIGITAL CONTRACT & DP MIDTRANS (CRUCIAL) -->
             <section class="bg-zinc-900 text-white border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none no-print">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6 mb-6">
                     <div>
@@ -781,12 +1106,13 @@ erDiagram
                             Kunci Scope Proyek & Pembayaran DP
                         </h3>
                         <p class="text-zinc-400 text-xs mt-1 font-sans">
-                            Pengerjaan proyek resmi dimulai setelah penandatanganan kontrak digital dan konfirmasi DP via Midtrans.
+                            Pengerjaan proyek resmi dimulai setelah penandatanganan kontrak digital dan konfirmasi DP via Midtrans Escrow.
                         </p>
                     </div>
                     <div class="text-left sm:text-right font-mono">
-                        <span class="text-zinc-400 text-xs block">TERMIN PEMBAYARAN</span>
-                        <span class="text-xl font-black text-emerald-400">DP 50% &bull; Pelunasan 50%</span>
+                        <span class="text-zinc-400 text-xs block">TERMIN TERPILIH: <span class="text-white font-bold" x-text="tierAmounts[selectedTier].name"></span></span>
+                        <span class="text-xl font-black text-emerald-400" x-text="'DP (50%): Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
+                        <span class="text-[10px] text-zinc-400 block" x-text="'Total Kontrak: Rp ' + tierAmounts[selectedTier].contract.toLocaleString('id-ID')"></span>
                     </div>
                 </div>
 
@@ -800,6 +1126,7 @@ erDiagram
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <form method="POST" action="{{ route('blueprint.generate-contract', $blueprint->slug) }}" class="m-0">
                         @csrf
+                        <input type="hidden" name="tier" :value="selectedTier">
                         <button 
                             type="submit"
                             class="w-full h-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none transition flex items-center justify-center gap-2"
@@ -810,7 +1137,7 @@ erDiagram
                     </form>
 
                     <button 
-                        type="button"
+                        type="button" 
                         @click="paymentModalOpen = true"
                         class="w-full h-full bg-zinc-800 hover:bg-zinc-700 text-white font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2"
                     >
@@ -820,6 +1147,7 @@ erDiagram
 
                     <form method="POST" action="{{ route('cart.add', $blueprint->slug) }}" class="m-0">
                         @csrf
+                        <input type="hidden" name="tier" :value="selectedTier">
                         <button 
                             type="submit"
                             class="w-full h-full bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2"
@@ -869,8 +1197,12 @@ erDiagram
             <!-- Invoice Summary Card -->
             <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 mb-4 space-y-2">
                 <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
-                    <span>Estimasi Investasi Proyek</span>
-                    <span class="font-bold text-zinc-900 dark:text-zinc-100">Rp 50.000.000</span>
+                    <span>Opsi Velocity Terpilih</span>
+                    <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="tierAmounts[selectedTier].name"></span>
+                </div>
+                <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
+                    <span>Nilai Total Kontrak</span>
+                    <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="'Rp ' + tierAmounts[selectedTier].contract.toLocaleString('id-ID')"></span>
                 </div>
                 <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
                     <span>Termin DP (Uang Muka)</span>
@@ -878,7 +1210,7 @@ erDiagram
                 </div>
                 <div class="border-t border-zinc-200 dark:border-zinc-800 pt-2 flex justify-between items-baseline">
                     <span class="font-bold uppercase text-zinc-900 dark:text-zinc-100">Total Tagihan DP</span>
-                    <span class="text-lg font-black text-emerald-600 dark:text-emerald-400">Rp 25.000.000</span>
+                    <span class="text-lg font-black text-emerald-600 dark:text-emerald-400" x-text="'Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
                 </div>
                 <div class="text-[10px] text-zinc-400 pt-1">
                     ORDER ID: NPRO-DP-{{ strtoupper(substr($blueprint->id, 0, 8)) }}
@@ -911,6 +1243,7 @@ erDiagram
                 
                 <form method="POST" action="{{ route('cart.add', $blueprint->slug) }}" class="m-0">
                     @csrf
+                    <input type="hidden" name="tier" :value="selectedTier">
                     <button 
                         type="submit" 
                         class="w-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider py-2.5 px-4 text-center block transition border border-zinc-300 dark:border-zinc-700"
@@ -930,5 +1263,32 @@ erDiagram
         </div>
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const timerEl = document.getElementById('nav-cart-timer');
+            if (timerEl) {
+                let remaining = parseInt(timerEl.getAttribute('data-rem'), 10);
+                if (!isNaN(remaining) && remaining > 0) {
+                    setInterval(function() {
+                        remaining--;
+                        if (remaining <= 0) {
+                            timerEl.textContent = '⏱️ EXPIRED';
+                            timerEl.classList.remove('text-amber-500');
+                            timerEl.classList.add('text-rose-500');
+                        } else {
+                            const h = Math.floor(remaining / 3600);
+                            const m = Math.floor((remaining % 3600) / 60);
+                            const s = Math.floor(remaining % 60);
+                            timerEl.textContent = '⏱️ ' + [
+                                h.toString().padStart(2, '0'),
+                                m.toString().padStart(2, '0'),
+                                s.toString().padStart(2, '0')
+                            ].join(':');
+                        }
+                    }, 1000);
+                }
+            }
+        });
+    </script>
 </body>
 </html>

@@ -29,6 +29,7 @@ Route::get('/blueprint/{slug}/download/md', [BlueprintController::class, 'downlo
 
 // Cart & Project Escrow Checkout Routes
 Route::get('/cart', [\App\Http\Controllers\CartController::class, 'index'])->name('cart.index');
+Route::get('/api/cart', [\App\Http\Controllers\CartController::class, 'apiCart'])->name('api.cart');
 Route::post('/cart/add/{slug}', [\App\Http\Controllers\CartController::class, 'add'])->name('cart.add');
 Route::post('/cart/remove/{slug}', [\App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove');
 Route::post('/cart/clear', [\App\Http\Controllers\CartController::class, 'clear'])->name('cart.clear');

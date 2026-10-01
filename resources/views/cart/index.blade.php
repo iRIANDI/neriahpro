@@ -80,11 +80,36 @@
             </div>
         @endif
 
+        @if(session('warning'))
+            <div class="mb-6 p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-mono flex items-center gap-2">
+                <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <span>{{ session('warning') }}</span>
+            </div>
+        @endif
+
+        @if(count($items) > 0)
+            <!-- Anti-Ghost Hold Realtime Countdown Banner -->
+            <div class="mb-6 p-4 bg-amber-500/10 dark:bg-amber-500/5 border-2 border-amber-500 text-amber-900 dark:text-amber-300 font-mono text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3" id="ghost-hold-banner">
+                <div class="flex items-center gap-3">
+                    <span class="w-3 h-3 rounded-full bg-amber-500 animate-ping"></span>
+                    <div>
+                        <strong class="uppercase font-bold tracking-wide block sm:inline">ANTI-GHOST HOLD PROTOCOL:</strong>
+                        <span class="text-zinc-700 dark:text-zinc-300">Reservasi slot engineering dikunci maksimal 24 jam untuk mencegah penahanan kuota tanpa kepastian.</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 font-mono font-bold bg-amber-500 text-black px-3 py-1.5 whitespace-nowrap self-start sm:self-auto">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>SISA RESERVASI:</span>
+                    <span id="cart-master-countdown" class="text-sm">--:--:--</span>
+                </div>
+            </div>
+        @endif
+
         @if(empty($items))
             <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-12 text-center">
                 <svg class="w-12 h-12 mx-auto text-zinc-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 <h3 class="text-base font-bold uppercase font-mono text-zinc-900 dark:text-zinc-100 mb-1">Cart Masih Kosong</h3>
-                <p class="text-zinc-500 text-xs font-sans mb-6">Belum ada spesifikasi Blueprint proyek yang ditambahkan ke cart belanja.</p>
+                <p class="text-zinc-500 text-xs font-sans mb-6">Belum ada spesifikasi Blueprint proyek yang ditambahkan ke cart belanja atau masa reservasi 24 jam telah kedaluwarsa.</p>
                 <a href="/blueprint" class="inline-block px-5 py-2.5 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs uppercase tracking-wider transition">
                     Mulai Buat PRD Baru
                 </a>
@@ -94,12 +119,29 @@
                 <!-- Cart Items List (Col Span 2) -->
                 <div class="lg:col-span-2 space-y-4">
                     @foreach($items as $item)
-                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5">
+                        @php
+                            $tierKey = $item['tier'] ?? 'standard';
+                            $tierLabel = 'Standard (30 Hari)';
+                            $tierBadge = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300';
+                            if ($tierKey === 'fast_track') {
+                                $tierLabel = '⚡ Fast-Track (14 Hari) &bull; Gemini Ultra AI Accelerator';
+                                $tierBadge = 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40';
+                            } elseif ($tierKey === 'hyper_sprint') {
+                                $tierLabel = '🔥 Hyper-Sprint (7 Hari) &bull; 24/7 War Room Squad';
+                                $tierBadge = 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40';
+                            }
+                        @endphp
+                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 item-row" data-expires="{{ $item['expires_at'] }}">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-3">
                                 <div>
-                                    <span class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                                        ID: {{ strtoupper(substr($item['blueprint']->id, 0, 8)) }}
-                                    </span>
+                                    <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                                        <span class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                                            ID: {{ strtoupper(substr($item['blueprint']->id, 0, 8)) }}
+                                        </span>
+                                        <span class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 font-bold {{ $tierBadge }}">
+                                            {!! $tierLabel !!}
+                                        </span>
+                                    </div>
                                     <h3 class="text-lg font-black uppercase text-zinc-900 dark:text-zinc-100 mt-1">
                                         {{ $item['title'] }}
                                     </h3>
@@ -115,13 +157,20 @@
                             </div>
 
                             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 text-xs font-mono">
-                                <a href="{{ route('blueprint.show', $item['slug']) }}" class="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold">
-                                    <span>&larr; Lihat Dokumen PRD</span>
-                                </a>
+                                <div class="flex items-center gap-3">
+                                    <a href="{{ route('blueprint.show', $item['slug']) }}" class="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold">
+                                        <span>&larr; Lihat Dokumen PRD</span>
+                                    </a>
+                                    <span class="text-[10px] text-zinc-400 flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <span>Exp: <span class="item-countdown font-bold text-zinc-700 dark:text-zinc-300">--:--:--</span></span>
+                                    </span>
+                                </div>
 
                                 <div class="flex items-center gap-2">
                                     <form method="POST" action="{{ route('blueprint.generate-contract', $item['slug']) }}" class="m-0">
                                         @csrf
+                                        <input type="hidden" name="tier" value="{{ $tierKey }}">
                                         <button type="submit" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold uppercase text-[11px] transition">
                                             Tanda Tangan Kontrak
                                         </button>
@@ -194,5 +243,60 @@
         </div>
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            function formatTime(seconds) {
+                if (seconds <= 0) return 'EXPIRED (00:00:00)';
+                const h = Math.floor(seconds / 3600);
+                const m = Math.floor((seconds % 3600) / 60);
+                const s = Math.floor(seconds % 60);
+                return [
+                    h.toString().padStart(2, '0'),
+                    m.toString().padStart(2, '0'),
+                    s.toString().padStart(2, '0')
+                ].join(':');
+            }
+
+            function updateCountdowns() {
+                const now = Math.floor(Date.now() / 1000);
+                let minRemaining = null;
+                const rows = document.querySelectorAll('.item-row');
+
+                rows.forEach(function(row) {
+                    const exp = parseInt(row.getAttribute('data-expires'), 10);
+                    if (!isNaN(exp)) {
+                        const rem = exp - now;
+                        const labelEl = row.querySelector('.item-countdown');
+                        if (labelEl) {
+                            labelEl.textContent = formatTime(rem);
+                            if (rem <= 0) {
+                                labelEl.classList.add('text-rose-500');
+                            }
+                        }
+                        if (rem > 0 && (minRemaining === null || rem < minRemaining)) {
+                            minRemaining = rem;
+                        }
+                    }
+                });
+
+                const masterEl = document.getElementById('cart-master-countdown');
+                if (masterEl) {
+                    if (minRemaining !== null) {
+                        masterEl.textContent = formatTime(minRemaining);
+                    } else if (rows.length > 0) {
+                        masterEl.textContent = 'EXPIRED (RELEASED)';
+                        masterEl.classList.add('text-rose-400');
+                        // Auto-refresh once after expiry to allow server-side cleanup
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 2500);
+                    }
+                }
+            }
+
+            updateCountdowns();
+            setInterval(updateCountdowns, 1000);
+        });
+    </script>
 </body>
 </html>

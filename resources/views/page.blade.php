@@ -71,12 +71,42 @@
             'enable_digital_contract' => (bool) ($globalSettings['feature_enable_digital_contract']->value ?? true),
             'midtrans_mode' => (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? true),
         ];
+
+        // Anti-Ghost Hold Cart Data with countdown
+        $rawCart = session('neriah_cart', []);
+        $cartItems = [];
+        $minRemaining = null;
+        $now = now()->timestamp;
+        foreach ($rawCart as $slug => $c) {
+            $exp = $c['expires_at'] ?? ($c['added_at'] + (24 * 3600));
+            $rem = max(0, $exp - $now);
+            if ($rem > 0) {
+                $cartItems[] = [
+                    'slug' => $slug,
+                    'title' => $c['title'] ?? 'Blueprint Project',
+                    'contract_amount' => $c['contract_amount'] ?? 50000000,
+                    'dp_amount' => $c['dp_amount'] ?? 25000000,
+                    'tier' => $c['tier'] ?? 'standard',
+                    'expires_at' => $exp,
+                    'remaining_seconds' => $rem,
+                ];
+                if ($minRemaining === null || $rem < $minRemaining) {
+                    $minRemaining = $rem;
+                }
+            }
+        }
+        $cartData = [
+            'count' => count($cartItems),
+            'items' => $cartItems,
+            'min_remaining_seconds' => $minRemaining,
+        ];
     @endphp
 
     <!-- Global Navigation -->
     @react('GlobalNavigationIsland', [
         'settings' => $globalSettings['main_navigation']->value ?? null,
         'featureFlags' => $featureFlags,
+        'cartData' => $cartData,
     ])
 
     <!-- Breadcrumb (Dynamic, hidden on home) -->

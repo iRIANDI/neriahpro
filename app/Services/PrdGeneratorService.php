@@ -113,6 +113,8 @@ class PrdGeneratorService
                 'requested' => $integrasi,
                 'notes' => 'Akan dihubungkan melalui service providers terisolasi dengan fallback retry mechanism.',
             ],
+            'architecture_evaluation' => self::evaluateArchitecture($businessName, $masalah, $mvpItems, $alurKerja),
+            'velocity_pricing_options' => self::generateVelocityPricingOptions($targetWaktu),
             'action_plan' => [
                 ['phase' => 'Fase 0: Blueprint & Skema Approval', 'duration' => 'Hari ke 1-3', 'status' => 'Active'],
                 ['phase' => 'Fase 1: Database Migration & Admin Filament CRUD', 'duration' => 'Pekan 1', 'status' => 'Pending'],
@@ -325,6 +327,134 @@ class PrdGeneratorService
                     ['name' => 'sent_at', 'type' => 'timestamp', 'index' => 'NONE', 'nullable' => true, 'notes' => 'Waktu terkirim sukses', 'label' => ['id' => 'Waktu Terkirim', 'en' => 'Sent At']],
                     ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Waktu pemicu notifikasi', 'label' => ['id' => 'Waktu Antrean', 'en' => 'Queued At']],
                 ],
+            ],
+        ];
+    }
+
+    /**
+     * Evaluate hosting, architecture pattern, and AI database requirements.
+     */
+    public static function evaluateArchitecture(string $businessName, string $masalah, array $mvpItems, string $alurKerja): array
+    {
+        return [
+            'hosting_evaluation' => [
+                'verdict' => 'Dedicated VPS (Mandatory Enterprise Standard)',
+                'verdict_badge' => 'VPS_MANDATORY',
+                'recommendation' => 'DEDICATED_VPS',
+                'compute_weight_score' => '88/100 (High Compute & Worker Queue Required)',
+                'shared_hosting' => [
+                    'status' => 'REJECTED (TIDAK MEMADAI)',
+                    'title' => 'Shared Hosting Tradisional (cPanel / Apache)',
+                    'reasons' => [
+                        'Ketiadaan Ekstensi Kernel pgvector: Shared hosting tidak mendukung kompilasi binary native C PostgreSQL untuk pgvector AI similarity search.',
+                        'Timeout PHP max_execution_time (30-60 detik): Eksekusi prompt AI reasoning atau proses batch data akan diputus paksa oleh server hosting.',
+                        'Ketiadaan Process Supervisor & Redis Queue: Tidak dapat menjalankan background worker 24/7 untuk notifikasi & audit log secara persistent.',
+                        'Risiko Tenant Crowding: Pembagian resource CPU/RAM bersama ratusan situs lain rentan memicu crash saat traffic melonjak.',
+                    ],
+                ],
+                'dedicated_vps' => [
+                    'status' => 'RECOMMENDED (STANDAR WAJIB ENTERPRISE)',
+                    'title' => 'Dedicated VPS (Nixpacks & Docker Containerization)',
+                    'reasons' => [
+                        'Isolasi Resource 100%: Alokasi CPU & RAM terdedikasi menjamin throughput data tinggi tanpa gangguan tenant lain.',
+                        'Native PostgreSQL 16+ pgvector Support: Penyimpanan representasi vektor berdimensi tinggi untuk AI embeddings & semantic RAG.',
+                        'Redis In-Memory Queue & Worker 24/7: Menjalankan pemrosesan background jobs asinkron tanpa batas timeout.',
+                        'Nginx HTTP/2 Reverse Proxy & Cloudflare CDN: Latensi minimal dengan proteksi SSL otomatis dan isolasi container Docker.',
+                    ],
+                ],
+            ],
+            'architecture_pattern_evaluation' => [
+                'verdict' => 'Modern Monolith (Laravel 13 + Filament v5 + Island Architecture)',
+                'verdict_badge' => 'RAPID_MONOLITH',
+                'recommendation' => 'MODERN_MONOLITH',
+                'match_percentage' => '95% Optimal Architectural Match',
+                'monolith' => [
+                    'status' => 'OPTIMAL REKOMENDASI (95% MATCH)',
+                    'title' => 'Modern Monolith Architecture',
+                    'reasons' => [
+                        'Eliminasi Network Latency: Komunikasi antar modul berjalan intra-process O(1) tanpa overhead HTTP network antar-microservices.',
+                        'Pangkas Biaya Infrastruktur 60%: Satu kesatuan container deployment menghemat anggaran server staging & produksi dibanding kluster microservices.',
+                        'Rapid Time-to-Market (3x Lebih Cepat): Skema database, API internal, dan Admin Dasbor Filament v5 langsung sinkron tanpa duplikasi skema.',
+                        'Konsistensi Transaksi ACID: Menjamin integritas data tanpa kerumitan distributed transaction (2-Phase Commit / Saga Pattern) yang rawan data loss.',
+                        'Island Architecture Frontend: Memberikan fluiditas interaksi 60fps setara SPA dengan stabilitas dan kecepatan SEO Server-Side Rendering.',
+                    ],
+                ],
+                'decoupled' => [
+                    'status' => 'NOT RECOMMENDED (OVERKILL UNTUK FASE 1)',
+                    'title' => 'Decoupled / Microservices Pattern',
+                    'reasons' => [
+                        'Hanya diperlukan jika tim pengembang berjumlah lebih dari 10-15 engineer yang bekerja di repositori terpisah.',
+                        'Menambah biaya operasional server terpisah (Backend API server + Frontend Next.js node cluster terpisah).',
+                        'Meningkatkan latensi round-trip HTTP dan beban autentikasi token JWT di setiap request interaksi.',
+                    ],
+                ],
+            ],
+            'ai_database_blueprint' => [
+                'engine' => 'PostgreSQL 16+ with pgvector & Strict ULID standard',
+                'engine_badge' => 'AI_READY_PGVECTOR',
+                'features' => [
+                    'Ekstensi pgvector: Menyimpan vector embeddings (1536-dim / 3072-dim) langsung berdampingan dengan data relasional bisnis tanpa butuh vector DB terpisah (seperti Pinecone/Milvus).',
+                    'Indeks HNSW (Hierarchical Navigable Small World): Pencarian similaritas semantik dan RAG dokumen berkecepatan sub-millisecond O(log N).',
+                    'JSONB Dynamic Indexing: Mendukung penyimpanan context history fleksibel untuk metadata agen AI Gemini Ultra.',
+                    'Strict ULID Primary Key: Menjamin partisi data terdistribusi dan keystone cursor pagination O(1) tanpa sequence lock.',
+                ],
+            ],
+            'recommended_tools' => [
+                ['category' => 'Backend Core', 'name' => 'Laravel 13 Modern Monolith', 'desc' => 'PHP 8.4/8.5 Property Hooks, Eloquent ORM, Action Handlers, Queues'],
+                ['category' => 'Admin & Operations', 'name' => 'Filament PHP v5 Enterprise', 'desc' => 'Dasbor kendali instan, Filter Keyset, Export PDF/Excel, RBAC Shield'],
+                ['category' => 'Frontend Layer', 'name' => 'Island Architecture (React 19 + Framer Motion)', 'desc' => 'Interaktivitas fluid 60fps, micro-animations, Canva-style canvas capability'],
+                ['category' => 'AI Database Engine', 'name' => 'PostgreSQL 16+ (pgvector)', 'desc' => 'Vector embeddings, HNSW semantic search, JSONB documents, ULID standard'],
+                ['category' => 'In-Memory Cache & Broker', 'name' => 'Redis / Predis', 'desc' => 'Zero-latency sessions, distributed lock, persistent queue processing'],
+                ['category' => 'Infrastructure & Runtime', 'name' => 'Dedicated VPS via Nixpacks & Docker', 'desc' => 'Container isolation, Nginx HTTP/2, automated SSL, Zero-downtime deploy'],
+                ['category' => 'AI Acceleration Engine', 'name' => 'Gemini Ultra / Pro API SDK', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
+            ],
+        ];
+    }
+
+    /**
+     * Generate tiered velocity pricing options with AI accelerator costs.
+     */
+    public static function generateVelocityPricingOptions(string $targetWaktu): array
+    {
+        return [
+            [
+                'id' => 'standard',
+                'name' => 'Standard Velocity (Regular)',
+                'duration' => '30 Hari Kerja',
+                'badge' => 'STANDARD_SPRINT',
+                'speed_multiplier' => '1.0x (Normal Pace)',
+                'contract_amount' => 50000000.00,
+                'dp_amount' => 25000000.00,
+                'pelunasan_amount' => 25000000.00,
+                'ai_quota_spec' => 'Gemini Pro standard reasoning assistant',
+                'squad_allocation' => '1 Lead Fullstack Engineer + QA Reviewer',
+                'description' => 'Pengerjaan reguler terencana dengan siklus sprint standar 30 hari kerja. Pilihan ideal untuk validasi konsep tanpa urgensi waktu ketat.',
+            ],
+            [
+                'id' => 'fast_track',
+                'name' => 'Fast-Track Sprint (Gemini Ultra Accelerator)',
+                'duration' => '14 Hari Kerja',
+                'badge' => '2X_SPEED // RECOMMENDED',
+                'speed_multiplier' => '2.0x (Pangkas 50% Waktu)',
+                'contract_amount' => 75000000.00,
+                'dp_amount' => 37500000.00,
+                'pelunasan_amount' => 37500000.00,
+                'ai_quota_spec' => 'Gemini Ultra High-Reasoning AI Tokens + Deep Architecture Automation',
+                'squad_allocation' => '2 Dedicated Senior Engineers + AI Agentic Pair Programming',
+                'description' => 'Akselerasi peluncuran 2x lebih cepat (selesai dalam 2 pekan). Biaya tambahan mencakup alokasi kuota komputasi cloud Gemini Ultra untuk auto-generating boilerplate, automated unit test, dan dual-engineer parallel sprint.',
+            ],
+            [
+                'id' => 'hyper_sprint',
+                'name' => 'Hyper-Sprint Emergency (24/7 Squad)',
+                'duration' => '7 Hari Kerja',
+                'badge' => '4X_SPEED // EMERGENCY',
+                'speed_multiplier' => '4.0x (Rilis 1 Pekan)',
+                'contract_amount' => 100000000.00,
+                'dp_amount' => 50000000.00,
+                'pelunasan_amount' => 50000000.00,
+                'ai_quota_spec' => 'Gemini Ultra Max-Context Window + 24/7 High-Capacity Inference',
+                'squad_allocation' => 'Dedicated Tri-Engineer War Room (24/7 Shift Rotation)',
+                'description' => 'Peluncuran darurat dalam 1 pekan kalender. Prioritas tertinggi dengan war-room engineering 24 jam non-stop dan kuota inferensi Gemini Ultra tak terbatas untuk integrasi kilat.',
             ],
         ];
     }

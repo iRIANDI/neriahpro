@@ -40,8 +40,8 @@ class BlueprintController extends Controller
 
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
 
-        // Ensure PRD content is populated or regenerate if requested
-        if (empty($blueprint->prd_content) || request()->has('regenerate')) {
+        // Ensure PRD content is populated or regenerate if requested or missing new evaluation schema
+        if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['architecture_evaluation']) || request()->has('regenerate')) {
             $blueprint->generateAndSavePrd();
             $blueprint->refresh();
         }
@@ -60,9 +60,27 @@ class BlueprintController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         
+        $tier = request('tier', 'standard');
+        $overrides = [];
+        if ($tier === 'fast_track') {
+            $overrides['contract_amount'] = 75000000.00;
+            $overrides['dp_amount'] = 37500000.00;
+        } elseif ($tier === 'hyper_sprint') {
+            $overrides['contract_amount'] = 100000000.00;
+            $overrides['dp_amount'] = 50000000.00;
+        } else {
+            $overrides['contract_amount'] = 50000000.00;
+            $overrides['dp_amount'] = 25000000.00;
+        }
+
         $document = $blueprint->documents()->where('document_type', 'contract')->first();
         if (!$document) {
-            $document = $blueprint->convertToDigitalContract();
+            $document = $blueprint->convertToDigitalContract($overrides);
+        } else {
+            $document->update([
+                'contract_amount' => $overrides['contract_amount'],
+                'dp_amount' => $overrides['dp_amount'],
+            ]);
         }
 
         return redirect()->route('document.sign', ['document' => $document->id]);

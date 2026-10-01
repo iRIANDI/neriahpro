@@ -76,23 +76,29 @@
         $rawCart = session('neriah_cart', []);
         $cartItems = [];
         $minRemaining = null;
-        $now = now()->timestamp;
+        $now = \Illuminate\Support\Carbon::now();
         foreach ($rawCart as $slug => $c) {
-            $exp = $c['expires_at'] ?? ($c['added_at'] + (24 * 3600));
-            $rem = max(0, $exp - $now);
-            if ($rem > 0) {
-                $cartItems[] = [
-                    'slug' => $slug,
-                    'title' => $c['title'] ?? 'Blueprint Project',
-                    'contract_amount' => $c['contract_amount'] ?? 50000000,
-                    'dp_amount' => $c['dp_amount'] ?? 25000000,
-                    'tier' => $c['tier'] ?? 'standard',
-                    'expires_at' => $exp,
-                    'remaining_seconds' => $rem,
-                ];
-                if ($minRemaining === null || $rem < $minRemaining) {
-                    $minRemaining = $rem;
+            try {
+                $exp = isset($c['expires_at'])
+                    ? \Illuminate\Support\Carbon::parse($c['expires_at'])
+                    : (isset($c['added_at']) ? \Illuminate\Support\Carbon::parse($c['added_at'])->addHours(24) : $now->copy()->addHours(24));
+                $rem = max(0, (int) $now->diffInSeconds($exp, false));
+                if ($rem > 0) {
+                    $cartItems[] = [
+                        'slug' => $slug,
+                        'title' => $c['title'] ?? 'Blueprint Project',
+                        'contract_amount' => $c['contract_amount'] ?? 50000000,
+                        'dp_amount' => $c['dp_amount'] ?? 25000000,
+                        'tier' => $c['tier'] ?? 'standard',
+                        'expires_at' => $exp->toIso8601String(),
+                        'remaining_seconds' => $rem,
+                    ];
+                    if ($minRemaining === null || $rem < $minRemaining) {
+                        $minRemaining = $rem;
+                    }
                 }
+            } catch (\Throwable $e) {
+                // ignore malformed entry
             }
         }
         $cartData = [

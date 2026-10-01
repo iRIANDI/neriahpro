@@ -259,7 +259,7 @@ x-init="
                     <span>MD</span>
                 </a>
 
-                <a href="{{ route('blueprint.show', $blueprint->slug) }}?regenerate=1" onclick="return confirm('Sintesis ulang PRD & Diagram Arsitektur dari kuesioner awal?')" class="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono uppercase font-bold border border-amber-500/30 transition flex items-center gap-1" title="Sintesis Ulang PRD">
+                <a href="{{ route('blueprint.show', $blueprint->slug) }}?regenerate=1" class="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono uppercase font-bold border border-amber-500/30 transition flex items-center gap-1" title="Sintesis Ulang PRD">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <span class="hidden md:inline">REGENERATE</span>
                 </a>
@@ -270,12 +270,18 @@ x-init="
                     $rawCart = session('neriah_cart', []);
                     $cartCount = count($rawCart);
                     $minRemaining = null;
-                    $now = now()->timestamp;
+                    $now = \Illuminate\Support\Carbon::now();
                     foreach ($rawCart as $c) {
-                        $exp = $c['expires_at'] ?? ($c['added_at'] + (24 * 3600));
-                        $rem = max(0, $exp - $now);
-                        if ($rem > 0 && ($minRemaining === null || $rem < $minRemaining)) {
-                            $minRemaining = $rem;
+                        try {
+                            $exp = isset($c['expires_at'])
+                                ? \Illuminate\Support\Carbon::parse($c['expires_at'])
+                                : (isset($c['added_at']) ? \Illuminate\Support\Carbon::parse($c['added_at'])->addHours(24) : $now->copy()->addHours(24));
+                            $rem = max(0, (int) $now->diffInSeconds($exp, false));
+                            if ($rem > 0 && ($minRemaining === null || $rem < $minRemaining)) {
+                                $minRemaining = $rem;
+                            }
+                        } catch (\Throwable $e) {
+                            // ignore malformed entry
                         }
                     }
                 @endphp

@@ -87,7 +87,7 @@
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                     <span>Download PDF / Cetak</span>
                 </button>
-                <button onclick="navigator.clipboard.writeText(window.location.href); alert('Tautan berhasil disalin!')" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold transition border border-zinc-700">
+                <button onclick="navigator.clipboard.writeText(window.location.href); (window.showToast ? window.showToast({ type: 'success', title: 'TAUTAN DISALIN', message: 'Tautan portofolio telah disalin ke clipboard.' }) : null)" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold transition border border-zinc-700">
                     Salin Link
                 </button>
                 <a href="/cv-pro" class="hidden sm:inline-block px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-emerald-400 font-bold transition border border-zinc-700">

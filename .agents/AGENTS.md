@@ -22,6 +22,7 @@ This project uses Laravel 13, Filament v5, Flux UI, and Livewire 4. Ensure all s
 - `Page::$navigationIcon` must be exactly `string | \BackedEnum | null`.
 - `Page::$navigationGroup` must be exactly `string | \UnitEnum | null`.
 - Action namespaces use `\Filament\Actions\...` instead of `\Filament\Tables\Actions\...` for specific actions.
+- **Filament v5 Form & Schema Rule**: In Livewire components using `InteractsWithForms` (or Filament Pages implementing `HasForms`), the method signature for `form()` MUST use `\Filament\Schemas\Schema` (i.e. `public function form(\Filament\Schemas\Schema $form): \Filament\Schemas\Schema`), NEVER `\Filament\Forms\Form`. Using `Form` will throw a fatal `TypeError: Argument #1 ($form) must be of type Filament\Forms\Form, Filament\Schemas\Schema given`.
 
 # Mandatory Rule: Database Primary Keys (Enterprise Scalability & PostgreSQL Compatibility)
 For enterprise-grade scalability capable of handling millions of records without performance degradation, ALWAYS prioritize O(1) time complexity algorithms.
@@ -40,6 +41,12 @@ After completing any task, you MUST always suggest which deployment script numbe
 4. Install Plugin/Package Baru: Jika ada penambahan package via composer atau upgrade filament. (`./deploy.sh 4`)
 5. Dump Autoload: Jika ada perubahan nama class, folder, atau restrukturisasi namespace/file PHP. (`./deploy.sh 5`)
 6. Build Assets Frontend: Jika ada perubahan pada custom CSS, konfigurasi Tailwind, Vite, atau instalasi NPM package baru. (`./deploy.sh 6`)
+
+# Mandatory Rule: Strict Ban on Native JavaScript Dialogs (No "Modal Kampungan")
+- 🚫 **ZERO TOLERANCE FOR NATIVE DIALOGS**: NEVER use native browser popups (`window.alert()`, `alert()`, `window.confirm()`, `confirm()`, `window.prompt()`, `prompt()`) anywhere across the frontend (Blade, React, Vue, Alpine, or raw JavaScript). Native browser dialogs look cheap/unprofessional ("modal kampungan"), freeze the UI thread, and degrade client credibility.
+- ✨ **MANDATORY TOAST & MODERN MODAL PROTOCOL**:
+  - Always use the centralized floating Toast notification system: `window.showToast({ type: 'success'|'error'|'warning'|'info', title: '...', message: '...' })`.
+  - For interactive confirmations or data entry, use curated Tailwind + Alpine.js dialogs with backdrop-blur, smooth transition animations, and dark/light mode fidelity.
 
 # AlpineJS HTML Escaping Rule
 When writing inline javascript within AlpineJS attributes (such as `x-data="..."`), NEVER use raw double quotes (") or single quotes (') inside string literals as it can break the HTML attribute parsing. ALWAYS encode them into HTML entities:

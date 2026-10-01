@@ -43,7 +43,13 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.privacy_consent_agreed) {
-      alert("Harap setujui komitmen kerahasiaan dan privasi data.");
+      if (window.showToast) {
+        window.showToast({
+          type: 'warning',
+          title: 'PERSETUJUAN DIBUTUHKAN',
+          message: 'Harap setujui komitmen kerahasiaan dan privasi data sebelum melanjutkan.'
+        });
+      }
       return;
     }
     
@@ -61,13 +67,32 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
       
       if (response.ok) {
         setIsSuccess(true);
+        if (window.showToast) {
+          window.showToast({
+            type: 'success',
+            title: 'DATA TERKIRIM',
+            message: 'Informasi onboarding Anda telah berhasil disimpan.'
+          });
+        }
       } else {
         console.error("Submission failed.");
-        alert("Gagal mengirim data. Silakan coba lagi atau hubungi via WhatsApp.");
+        if (window.showToast) {
+          window.showToast({
+            type: 'error',
+            title: 'PENGIRIMAN GAGAL',
+            message: 'Gagal mengirim data. Silakan coba lagi atau hubungi via WhatsApp.'
+          });
+        }
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kendala jaringan.");
+      if (window.showToast) {
+        window.showToast({
+          type: 'error',
+          title: 'KENDALA JARINGAN',
+          message: 'Terjadi kendala jaringan saat menghubungi server.'
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }

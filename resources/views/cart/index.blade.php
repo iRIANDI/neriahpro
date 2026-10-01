@@ -327,19 +327,46 @@
                 if (window.snap && window.snap.pay) {
                     window.snap.pay(data.token, {
                         onSuccess: function(result) {
-                            alert('Pembayaran DP berhasil dikonfirmasi! Pesanan Anda telah tercatat di escrow.');
-                            window.location.reload();
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: 'PEMBAYARAN DP DIKONFIRMASI',
+                                    message: 'Transaksi berhasil diverifikasi oleh Midtrans Escrow! Memperbarui status...',
+                                    duration: 3500
+                                });
+                            }
+                            setTimeout(function() { window.location.reload(); }, 1800);
                         },
                         onPending: function(result) {
-                            alert('Menunggu penyelesaian pembayaran. Silakan transfer sesuai instruksi pada layar.');
-                            window.location.reload();
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'warning',
+                                    title: 'MENUNGGU PEMBAYARAN',
+                                    message: 'Tagihan berhasil dibuat. Silakan selesaikan pembayaran sesuai instruksi Midtrans.',
+                                    duration: 5000
+                                });
+                            }
+                            setTimeout(function() { window.location.reload(); }, 2200);
                         },
                         onError: function(result) {
-                            alert('Pembayaran gagal atau dibatalkan.');
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'error',
+                                    title: 'PEMBAYARAN DIBATALKAN',
+                                    message: 'Transaksi tidak dapat diselesaikan atau dibatalkan oleh pengguna.'
+                                });
+                            }
                             btn.disabled = false;
                             btn.innerHTML = originalText;
                         },
                         onClose: function() {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'info',
+                                    title: 'PROMPT DITUTUP',
+                                    message: 'Modal pembayaran ditutup. Klik tombol kembali jika Anda ingin melanjutkan transaksi.'
+                                });
+                            }
                             btn.disabled = false;
                             btn.innerHTML = originalText;
                         }
@@ -348,13 +375,25 @@
                     if (data.redirect_url) {
                         window.location.href = data.redirect_url;
                     } else {
-                        alert('Snap modal script gagal dimuat. Silakan periksa koneksi Anda.');
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: 'KONEKSI SNAP MIDTRANS',
+                                message: 'Script Snap gagal dimuat. Silakan periksa koneksi internet Anda.'
+                            });
+                        }
                         btn.disabled = false;
                         btn.innerHTML = originalText;
                     }
                 }
             } catch (err) {
-                alert('Kesalahan Pembayaran: ' + err.message);
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'KENDALA TRANSAKSI',
+                        message: err.message || 'Terjadi kesalahan saat memproses sesi pembayaran.'
+                    });
+                }
                 btn.disabled = false;
                 btn.innerHTML = originalText;
             }

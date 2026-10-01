@@ -6,9 +6,9 @@ use Livewire\Component;
 use App\Models\Document;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
 use Saade\FilamentAutograph\Forms\Components\SignaturePad;
-use Filament\Forms\Components\Section;
 
 class DocumentSignature extends Component implements HasForms
 {
@@ -28,7 +28,7 @@ class DocumentSignature extends Component implements HasForms
         }
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $form): Schema
     {
         return $form
             ->schema([
@@ -67,6 +67,6 @@ class DocumentSignature extends Component implements HasForms
     public function render()
     {
         return view('livewire.document-signature')
-            ->layout('layouts.app', ['title' => 'Tanda Tangan Dokumen']);
+            ->layout('components.layouts.app', ['title' => 'Tanda Tangan Dokumen']);
     }
 }

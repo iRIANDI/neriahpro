@@ -73,29 +73,68 @@
                 if (window.snap && window.snap.pay) {
                     window.snap.pay(data.token, {
                         onSuccess: function(result) {
-                            alert('Pembayaran DP berhasil dikonfirmasi oleh Midtrans!');
-                            window.location.reload();
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: 'PEMBAYARAN DP BERHASIL',
+                                    message: 'Pembayaran DP berhasil dikonfirmasi oleh Midtrans! Memperbarui proposal...',
+                                    duration: 3500
+                                });
+                            }
+                            setTimeout(function() { window.location.reload(); }, 1800);
                         },
                         onPending: function(result) {
-                            alert('Menunggu penyelesaian pembayaran.');
-                            window.location.reload();
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'warning',
+                                    title: 'MENUNGGU PEMBAYARAN',
+                                    message: 'Instruksi pembayaran telah dibuat. Silakan transfer sesuai rincian pada prompt.',
+                                    duration: 5000
+                                });
+                            }
+                            setTimeout(function() { window.location.reload(); }, 2200);
                         },
                         onError: function(result) {
-                            alert('Pembayaran dibatalkan atau gagal.');
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'error',
+                                    title: 'PEMBAYARAN DIBATALKAN',
+                                    message: 'Sesi transaksi dibatalkan atau ditolak oleh payment provider.'
+                                });
+                            }
                             if (onFinish) onFinish();
                         },
                         onClose: function() {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'info',
+                                    title: 'PROMPT DITUTUP',
+                                    message: 'Prompt pembayaran ditutup. Anda dapat menekan tombol bayar kembali untuk melanjutkan.'
+                                });
+                            }
                             if (onFinish) onFinish();
                         }
                     });
                 } else if (data.redirect_url) {
                     window.location.href = data.redirect_url;
                 } else {
-                    alert('Snap script belum selesai dimuat. Silakan periksa koneksi internet Anda.');
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'error',
+                            title: 'KONEKSI SNAP MIDTRANS',
+                            message: 'Snap script belum selesai dimuat. Silakan periksa koneksi internet Anda.'
+                        });
+                    }
                     if (onFinish) onFinish();
                 }
             } catch (err) {
-                alert('Kesalahan Pembayaran: ' + err.message);
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'KENDALA PEMBAYARAN',
+                        message: err.message || 'Terjadi kesalahan sistem saat menghubungi gateway Midtrans.'
+                    });
+                }
                 if (onFinish) onFinish();
             }
         };

@@ -52,24 +52,71 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.mermaid) {
-                try {
-                    mermaid.initialize({
-                        startOnLoad: true,
-                        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'neutral',
-                        securityLevel: 'loose'
-                    });
-                } catch(e) {
-                    console.warn('Mermaid init warning:', e);
-                }
+        // Initialize Mermaid with startOnLoad: false to prevent 0-width rendering in hidden tabs
+        if (window.mermaid) {
+            try {
+                mermaid.initialize({
+                    startOnLoad: false,
+                    theme: document.documentElement.classList.contains('dark') ? 'dark' : 'neutral',
+                    securityLevel: 'loose',
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
+                });
+            } catch(e) {
+                console.warn('Mermaid pre-init notice:', e);
             }
-        });
+        }
+
+        window.renderMermaidDiagram = async function(containerId, sourceId) {
+            const container = document.getElementById(containerId);
+            const source = document.getElementById(sourceId);
+            if (!container || !source || !window.mermaid) return;
+
+            // If already rendered with an SVG, no need to re-render
+            if (container.querySelector('svg')) return;
+
+            try {
+                const isDark = document.documentElement.classList.contains('dark');
+                mermaid.initialize({
+                    startOnLoad: false,
+                    theme: isDark ? 'dark' : 'neutral',
+                    securityLevel: 'loose',
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
+                });
+
+                const id = 'render-' + containerId + '-' + Math.floor(Math.random() * 100000);
+                const code = source.textContent.trim();
+                const { svg } = await mermaid.render(id, code);
+                container.innerHTML = svg;
+            } catch (err) {
+                console.warn('Mermaid rendering notice for ' + containerId + ':', err);
+                container.innerHTML = `
+                    <div class="p-4 bg-zinc-900 border border-zinc-700 text-xs font-mono space-y-2 text-left w-full">
+                        <div class="flex items-center justify-between text-zinc-400 border-b border-zinc-800 pb-2">
+                            <span class="font-bold uppercase text-emerald-400">Kode Sumber Diagram Mermaid:</span>
+                            <span class="text-[10px] text-zinc-500">Render fallback aktif</span>
+                        </div>
+                        <pre class="bg-black/60 p-3 text-[11px] text-zinc-300 overflow-x-auto select-all leading-relaxed">${source.textContent.trim()}</pre>
+                    </div>
+                `;
+            }
+        };
+
+        window.copyMermaidCode = function(sourceId, btnEl) {
+            const source = document.getElementById(sourceId);
+            if (!source) return;
+            navigator.clipboard.writeText(source.textContent.trim()).then(() => {
+                const orig = btnEl.innerHTML;
+                btnEl.innerHTML = '<span class="text-emerald-400 font-bold">✓ KODE DISALIN!</span>';
+                setTimeout(() => { btnEl.innerHTML = orig; }, 2000);
+            });
+        };
     </script>
 @php
     $pricingTiers = $prd['velocity_pricing_options'] ?? \App\Services\PrdGeneratorService::generateVelocityPricingOptions(
         $blueprint->target_waktu ?? '30 Hari Kerja',
-        $blueprint->user_metadata['kisaran_budget'] ?? null
+        $blueprint->user_metadata['kisaran_budget'] ?? null,
+        $blueprint->nama_bisnis ?? $blueprint->client_name,
+        $blueprint->masalah_utama ?? ''
     );
     $alpineTiers = [];
     foreach ($pricingTiers as $t) {
@@ -80,9 +127,8 @@
             'name' => $t['name'],
         ];
     }
-    $defaultSelectedTier = array_key_exists('fast_track', $alpineTiers) 
-        ? 'fast_track' 
-        : (array_key_exists('community_starter', $alpineTiers) ? 'community_starter' : array_key_first($alpineTiers));
+    $tierKeys = array_keys($alpineTiers);
+    $defaultSelectedTier = count($tierKeys) >= 2 ? $tierKeys[1] : ($tierKeys[0] ?? '');
 @endphp
 </head>
 <body x-data="{ 
@@ -93,7 +139,15 @@
     erdLang: 'id',
     selectedTier: '{{ $defaultSelectedTier }}',
     tierAmounts: {{ json_encode($alpineTiers) }}
-}" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
+}" 
+x-init="
+    $watch('flowTab', val => {
+        if (val === 'mermaid') $nextTick(() => window.renderMermaidDiagram('mermaid-flow-target', 'mermaid-flow-source'));
+    });
+    $watch('erdTab', val => {
+        if (val === 'mermaid') $nextTick(() => window.renderMermaidDiagram('mermaid-erd-target', 'mermaid-erd-source'));
+    });
+" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- Header Navigation Bar (Sharp Precision Theme) -->
     <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-3 px-6 sticky top-0 z-50 no-print transition-colors">
@@ -249,7 +303,7 @@
                             {{ $blueprint->nama_bisnis ?: $blueprint->client_name }}
                         </h1>
                         <p class="text-zinc-500 dark:text-zinc-400 text-xs mt-1 font-mono">
-                            PREPARED BY NERIAH PRO TECH HUB // SYNCHRONIZED: {{ $blueprint->updated_at->format('Y-m-d H:i') }} UTC
+                            PREPARED BY NERIAH PRO TECH HUB // SYNCHRONIZED: {{ $blueprint->updated_at?->format('Y-m-d H:i') ?? now()->format('Y-m-d H:i') }} UTC
                         </p>
                     </div>
 
@@ -439,7 +493,7 @@
                             <span>VISUAL PIPELINE</span>
                         </button>
                         <button 
-                            @click="flowTab = 'mermaid'" 
+                            @click="flowTab = 'mermaid'; $nextTick(() => window.renderMermaidDiagram('mermaid-flow-target', 'mermaid-flow-source'))" 
                             :class="flowTab === 'mermaid' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
                             class="px-3 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                         >
@@ -506,16 +560,38 @@
 
                 <!-- 2. Mermaid Flowchart View (Code & Native Mermaid SVG) -->
                 <div x-show="flowTab === 'mermaid'" x-cloak class="mb-6">
-                    <div class="overflow-x-auto bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none">
-                        <pre class="mermaid text-center">
-graph LR
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <span class="text-zinc-500 font-bold uppercase">ALUR KERJA MERMAID (FLOWCHART LR)</span>
+                            <button 
+                                type="button"
+                                onclick="window.copyMermaidCode('mermaid-flow-source', this)"
+                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
+                            >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                <span>SALIN KODE MERMAID</span>
+                            </button>
+                        </div>
+
+                        <script type="text/plain" id="mermaid-flow-source">flowchart LR
 @foreach($rawWorkflows as $index => $flow)
-    S{{ $index + 1 }}["{{ $index + 1 }}. {{ addslashes(str_replace(['"', "'", "\n", "\r"], ' ', Str::limit($flow['action'] ?? '-', 40))) }}"]
+@php
+    $safeText = preg_replace('/[^a-zA-Z0-9\s_\-.,]/', '', $flow['action'] ?? 'Step');
+    $safeText = trim(preg_replace('/\s+/', ' ', Str::limit($safeText, 35)));
+@endphp
+    S{{ $index + 1 }}["{{ $index + 1 }}. {{ $safeText }}"]
     @if(!$loop->last)
     S{{ $index + 1 }} --> S{{ $index + 2 }}
     @endif
 @endforeach
-                        </pre>
+                        </script>
+
+                        <div id="mermaid-flow-target" class="overflow-x-auto min-h-[140px] flex items-center justify-center p-2 text-center">
+                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span>Memuat visualisasi alur kerja Mermaid...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -582,7 +658,7 @@ graph LR
                             <span>TOPOLOGY</span>
                         </button>
                         <button 
-                            @click="erdTab = 'mermaid'" 
+                            @click="erdTab = 'mermaid'; $nextTick(() => window.renderMermaidDiagram('mermaid-erd-target', 'mermaid-erd-source'))" 
                             :class="erdTab === 'mermaid' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
                             class="px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1"
                         >
@@ -600,6 +676,59 @@ graph LR
                     </div>
                 </div>
 
+                @php
+                    $rawTables = $prd['erd_schema']['tables'] ?? [];
+                    $sanitizedTables = [];
+                    foreach ($rawTables as $t) {
+                        $cleanTName = strtoupper(preg_replace('/[^a-zA-Z0-9_]/', '_', $t['name'] ?? 'ENTITY'));
+                        $cleanTName = trim($cleanTName, '_');
+                        if (empty($cleanTName)) $cleanTName = 'SYSTEM_RECORD';
+                        
+                        $cleanCols = [];
+                        foreach ($t['columns'] ?? [] as $c) {
+                            $colName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $c['name'] ?? 'col'));
+                            $colName = trim($colName, '_');
+                            if (empty($colName)) continue;
+
+                            $rawType = strtolower($c['type'] ?? 'string');
+                            if (str_contains($rawType, 'ulid')) {
+                                $colType = 'string';
+                            } elseif (str_contains($rawType, 'int')) {
+                                $colType = 'int';
+                            } elseif (str_contains($rawType, 'bool')) {
+                                $colType = 'boolean';
+                            } elseif (str_contains($rawType, 'json')) {
+                                $colType = 'jsonb';
+                            } elseif (str_contains($rawType, 'time') || str_contains($rawType, 'date')) {
+                                $colType = 'timestamp';
+                            } else {
+                                $colType = 'string';
+                            }
+
+                            $keyAttr = '';
+                            if (($c['index'] ?? '') === 'PRIMARY' || $colName === 'id') {
+                                $keyAttr = 'PK';
+                            } elseif (str_contains(strtolower($c['type'] ?? ''), 'foreign') || str_ends_with($colName, '_id')) {
+                                $keyAttr = 'FK';
+                            } elseif (($c['index'] ?? '') === 'UNIQUE') {
+                                $keyAttr = 'UK';
+                            }
+                            $cleanCols[] = [
+                                'name' => $colName,
+                                'type' => $colType,
+                                'key' => $keyAttr,
+                            ];
+                        }
+                        $sanitizedTables[] = [
+                            'name' => $cleanTName,
+                            'raw_name' => $t['name'],
+                            'columns' => $cleanCols,
+                        ];
+                    }
+                    $domainTableClean = $sanitizedTables[1]['name'] ?? 'PROJECT_RECORDS';
+                    $domainTableRaw = $rawTables[1]['name'] ?? 'project_records';
+                @endphp
+
                 <!-- 1. Interactive Visual ERD Topology (Connected Entity Relationship Cards) -->
                 <div x-show="erdTab === 'visual'" class="mb-6">
                     <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
@@ -610,9 +739,9 @@ graph LR
                                 <span class="text-zinc-300 text-[11px]">Strict PostgreSQL Foreign Key Cardinalities</span>
                             </div>
                             <div class="flex flex-wrap items-center gap-4 text-[11px] text-zinc-400">
-                                <div><strong class="text-emerald-400">users (1)</strong> &bull;--&lt; <strong>sistem_katalog_rumah (N)</strong></div>
+                                <div><strong class="text-emerald-400">users (1)</strong> &bull;--&lt; <strong>{{ $domainTableRaw }} (N)</strong></div>
                                 <div><strong class="text-emerald-400">users (1)</strong> &bull;--&lt; <strong>activity_logs (N)</strong></div>
-                                <div><strong class="text-emerald-400">sistem_katalog_rumah (1)</strong> &bull;--&lt; <strong>system_notifications (N)</strong></div>
+                                <div><strong class="text-emerald-400">{{ $domainTableRaw }} (1)</strong> &bull;--&lt; <strong>system_notifications (N)</strong></div>
                             </div>
                         </div>
 
@@ -638,7 +767,7 @@ graph LR
                                     <!-- Columns Attributes List -->
                                     <div class="divide-y divide-zinc-800/80">
                                         @foreach($table['columns'] ?? [] as $col)
-                                            <div class="px-3.5 py-2 flex items-center justify-between gap-2 hover:bg-zinc-800/40 transition">
+                                             <div class="px-3.5 py-2 flex items-center justify-between gap-2 hover:bg-zinc-800/40 transition">
                                                 <div class="flex items-center gap-2 min-w-0">
                                                     @if($col['index'] === 'PRIMARY')
                                                         <span class="px-1.5 py-0.2 bg-emerald-500 text-black font-black text-[9px]">PK</span>
@@ -668,24 +797,42 @@ graph LR
                     </div>
                 </div>
 
-                <!-- 2. Mermaid ERD Diagram View -->
+                <!-- 2. Mermaid ERD Diagram View (Safe Render with Dynamic Relations) -->
                 <div x-show="erdTab === 'mermaid'" x-cloak class="mb-6">
-                    <div class="overflow-x-auto bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none">
-                        <pre class="mermaid text-center">
-erDiagram
-    USERS ||--o{ SISTEM_KATALOG_RUMAH : "creates / owns"
-    USERS ||--o{ ACTIVITY_LOGS : "logs actions"
-    USERS ||--o{ SYSTEM_NOTIFICATIONS : "receives"
-    SISTEM_KATALOG_RUMAH ||--o{ SYSTEM_NOTIFICATIONS : "triggers"
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <span class="text-zinc-500 font-bold uppercase">SKEMA BASIS DATA MERMAID (POSTGRESQL STRICT ERD)</span>
+                            <button 
+                                type="button"
+                                onclick="window.copyMermaidCode('mermaid-erd-source', this)"
+                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
+                            >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                <span>SALIN KODE MERMAID ERD</span>
+                            </button>
+                        </div>
 
-@foreach($prd['erd_schema']['tables'] ?? [] as $table)
-    {{ strtoupper($table['name']) }} {
-        @foreach($table['columns'] ?? [] as $col)
-        string {{ str_replace(['-', ' '], '_', $col['name']) }}
-        @endforeach
+                        <script type="text/plain" id="mermaid-erd-source">erDiagram
+    USERS ||--o{ {{ $domainTableClean }} : "manages"
+    USERS ||--o{ ACTIVITY_LOGS : "logs"
+    USERS ||--o{ SYSTEM_NOTIFICATIONS : "receives"
+    {{ $domainTableClean }} ||--o{ SYSTEM_NOTIFICATIONS : "triggers"
+
+@foreach($sanitizedTables as $st)
+    {{ $st['name'] }} {
+@foreach($st['columns'] as $c)
+        {{ $c['type'] }} {{ $c['name'] }} {{ $c['key'] }}
+@endforeach
     }
 @endforeach
-                        </pre>
+                        </script>
+
+                        <div id="mermaid-erd-target" class="overflow-x-auto min-h-[260px] flex items-center justify-center p-2 text-center">
+                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span>Memuat skema relasi database Mermaid...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -790,68 +937,67 @@ erDiagram
                     </div>
                 </div>
 
-                <!-- 1. Shared Hosting vs Dedicated VPS Assessment -->
+                <!-- 1. Evaluasi Lingkungan Hosting: Tangga Solusi Bertahap (Hosting Ladder) -->
+                @php
+                    $isLeanVerdict = str_contains($archEval['hosting_evaluation']['verdict'] ?? '', 'CLOUD STARTER');
+                    $cloudStarter = $archEval['hosting_evaluation']['cloud_starter'] ?? [];
+                    $dedicatedVps = $archEval['hosting_evaluation']['dedicated_vps'] ?? [];
+                @endphp
                 <div class="mb-8">
-                    <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-emerald-500"></span>
-                        1. Analisis Bobot & Kelayakan Lingkungan Hosting: Shared Host vs Dedicated VPS
-                    </h3>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-emerald-500"></span>
+                            1. Evaluasi Lingkungan Hosting: Tangga Solusi Bertahap (Hosting Ladder)
+                        </h3>
+                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase border {{ $isLeanVerdict ? 'bg-sky-500/10 text-sky-400 border-sky-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' }}">
+                            {{ $archEval['hosting_evaluation']['verdict'] ?? 'REKOMENDASI: ADAPTIF' }}
+                        </span>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Shared Hosting (Rejected) -->
-                        <div class="p-5 bg-rose-500/5 dark:bg-rose-950/20 border-2 border-rose-500/40 font-mono text-xs">
+                        <!-- Cloud Starter / Shared Efisien -->
+                        <div class="p-5 {{ $isLeanVerdict ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500' : 'bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800' }} font-mono text-xs">
                             <div class="flex items-center justify-between gap-2 mb-3">
-                                <span class="font-black uppercase text-rose-600 dark:text-rose-400 text-sm">Shared Hosting</span>
-                                <span class="px-2 py-0.5 bg-rose-500 text-white text-[9px] font-bold uppercase">DISQUALIFIED (DITOLAK)</span>
+                                <span class="font-black uppercase {{ $isLeanVerdict ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300' }} text-sm">
+                                    {{ $cloudStarter['title'] ?? 'Cloud Starter / Shared Efisien (< Rp 100.000 / bln)' }}
+                                </span>
+                                <span class="px-2 py-0.5 text-[9px] font-bold uppercase {{ $isLeanVerdict ? 'bg-emerald-500 text-black' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }}">
+                                    {{ $isLeanVerdict ? 'PILIHAN CERDAS FASE 1' : 'OPSI VALIDASI LEAN' }}
+                                </span>
                             </div>
                             <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs mb-3">
-                                Shared hosting tidak memenuhi standar integritas sistem AI dan basis data berskala tinggi karena limitasi mendasar:
+                                Pilihan ekonomis untuk menjaga modal usaha tetap aman di tahap peluncuran awal:
                             </p>
                             <ul class="space-y-2 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                                <li class="flex items-start gap-2">
-                                    <span class="text-rose-500 font-bold">&times;</span>
-                                    <span><strong>Ketiadaan pgvector:</strong> Tidak mendukung ekstensi C-level <code class="bg-rose-100 dark:bg-rose-900/40 px-1">pgvector</code> untuk pencarian semantik vektor AI.</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <span class="text-rose-500 font-bold">&times;</span>
-                                    <span><strong>PHP Execution Timeout:</strong> Dibatasi 30-60 detik yang akan membunuh koneksi saat LLM AI melakukan deep-reasoning streaming.</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <span class="text-rose-500 font-bold">&times;</span>
-                                    <span><strong>Tidak Ada Queue Supervisor:</strong> Ketiadaan daemon Redis worker persistent untuk memproses job asynchronous di latar belakang.</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <span class="text-rose-500 font-bold">&times;</span>
-                                    <span><strong>Noisy Neighbors Risk:</strong> Throttling CPU tak terprediksi akibat lonjakan trafik website lain dalam satu server bersama.</span>
-                                </li>
+                                @foreach($cloudStarter['reasons'] ?? [] as $reason)
+                                    <li class="flex items-start gap-2">
+                                        <span class="{{ $isLeanVerdict ? 'text-emerald-500' : 'text-zinc-400' }} font-bold">&check;</span>
+                                        <span>{{ $reason }}</span>
+                                    </li>
+                                @endforeach
                             </ul>
                         </div>
 
-                        <!-- Dedicated VPS (Recommended) -->
-                        <div class="p-5 bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500 font-mono text-xs">
+                        <!-- Dedicated VPS -->
+                        <div class="p-5 {{ !$isLeanVerdict ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500' : 'bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800' }} font-mono text-xs">
                             <div class="flex items-center justify-between gap-2 mb-3">
-                                <span class="font-black uppercase text-emerald-600 dark:text-emerald-400 text-sm">Dedicated VPS (Docker / Nixpacks)</span>
-                                <span class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-bold uppercase">MANDATORY (WAJIB)</span>
+                                <span class="font-black uppercase {{ !$isLeanVerdict ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300' }} text-sm">
+                                    {{ $dedicatedVps['title'] ?? 'Dedicated VPS Container (Nixpacks & Docker)' }}
+                                </span>
+                                <span class="px-2 py-0.5 text-[9px] font-bold uppercase {{ !$isLeanVerdict ? 'bg-emerald-500 text-black' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }}">
+                                    {{ !$isLeanVerdict ? 'REKOMENDASI SCALE-UP' : 'UPGRADE FASE 2' }}
+                                </span>
                             </div>
                             <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs mb-3">
-                                Menjamin stabilitas eksekusi AI dan isolasi komputasi penuh dengan rasio performa-harga optimal:
+                                Menjamin kecepatan respons sub-detik, isolasi komputasi penuh, dan kesiapan AI:
                             </p>
                             <ul class="space-y-2 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                                <li class="flex items-start gap-2">
-                                    <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>PostgreSQL 16+ & pgvector Native:</strong> Vector embeddings tersimpan co-located langsung di dalam engine database relasional.</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>Dedicated Resource Isolation:</strong> 100% alokasi vCPU, RAM, dan NVMe storage bebas interferensi pihak luar.</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>Persistent Redis Supervisor:</strong> Antrean background task AI agent & notifikasi berjalan kontinyu 24/7.</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>Zero-Downtime Deployment:</strong> Pipeline Nixpacks & reverse-proxy Nginx HTTP/2 dengan auto-healing SSL.</span>
-                                </li>
+                                @foreach($dedicatedVps['reasons'] ?? [] as $reason)
+                                    <li class="flex items-start gap-2">
+                                        <span class="{{ !$isLeanVerdict ? 'text-emerald-500' : 'text-zinc-400' }} font-bold">&check;</span>
+                                        <span>{{ $reason }}</span>
+                                    </li>
+                                @endforeach
                             </ul>
                         </div>
                     </div>
@@ -1055,6 +1201,177 @@ erDiagram
                         @endforeach
                     </div>
                 </div>
+
+                <!-- 9. Panduan Edukatif Hulu ke Hilir: Do's & Don'ts Proyek -->
+                @php
+                    $stratGuidance = $archEval['strategic_guidance'] ?? [];
+                @endphp
+                @if(!empty($stratGuidance))
+                    <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                                <span class="w-2 h-2 bg-emerald-500"></span>
+                                9. Panduan Edukatif Hulu ke Hilir: Do's & Don'ts Rekayasa Sistem
+                            </h3>
+                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
+                                EDUKATIF & REALISTIS
+                            </span>
+                        </div>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
+                            {{ $stratGuidance['subtitle'] ?? 'Edukasi komprehensif bagi pemangku kepentingan agar investasi teknologi tepat sasaran, efisien, dan bebas risiko scope creep.' }}
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- DO'S (Prinsip Sukses) -->
+                            <div class="p-5 bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500/50 font-mono text-xs">
+                                <div class="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-emerald-500/30">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 bg-emerald-500 inline-block"></span>
+                                        <span class="font-black uppercase text-emerald-600 dark:text-emerald-400 text-sm">DO'S (LAKUKAN) - 5 PRINSIP SUKSES</span>
+                                    </div>
+                                    <span class="text-[9px] uppercase px-1.5 py-0.2 bg-emerald-500 text-black font-bold">BEST PRACTICE</span>
+                                </div>
+                                <div class="space-y-3">
+                                    @foreach($stratGuidance['dos'] ?? [] as $do)
+                                        <div class="p-2.5 bg-white dark:bg-zinc-900 border border-emerald-500/20">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                                    {{ $do['tag'] }}
+                                                </span>
+                                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs">{{ $do['title'] }}</h4>
+                                            </div>
+                                            <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">{{ $do['desc'] }}</p>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- DON'TS (Jebakan Pemborosan) -->
+                            <div class="p-5 bg-rose-500/5 dark:bg-rose-950/20 border-2 border-rose-500/50 font-mono text-xs">
+                                <div class="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-rose-500/30">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 bg-rose-500 inline-block"></span>
+                                        <span class="font-black uppercase text-rose-600 dark:text-rose-400 text-sm">DON'TS (HINDARI) - 4 JEBAKAN RISIKO</span>
+                                    </div>
+                                    <span class="text-[9px] uppercase px-1.5 py-0.2 bg-rose-500 text-white font-bold">AVOID WASTE</span>
+                                </div>
+                                <div class="space-y-3">
+                                    @foreach($stratGuidance['donts'] ?? [] as $dont)
+                                        <div class="p-2.5 bg-white dark:bg-zinc-900 border border-rose-500/20">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="text-[9px] font-bold px-1.5 py-0.2 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                                                    {{ $dont['tag'] }}
+                                                </span>
+                                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs">{{ $dont['title'] }}</h4>
+                                            </div>
+                                            <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">{{ $dont['desc'] }}</p>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 10. Matriks Evaluasi Pro's & Con's (Trade-Off 3 Dimensi) -->
+                    <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                                <span class="w-2 h-2 bg-emerald-500"></span>
+                                10. Matriks Evaluasi Pro's & Con's (Trade-Off 3 Dimensi Arsitektur)
+                            </h3>
+                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                TRANSPARAN & TERCERAHKAN
+                            </span>
+                        </div>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
+                            Transparansi kelebihan dan kekurangan setiap keputusan teknologi agar klien memahami konsekuensi bisnis dan teknis sejak awal.
+                        </p>
+
+                        <div class="space-y-6">
+                            @foreach($stratGuidance['pros_and_cons'] ?? [] as $pc)
+                                <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none font-mono text-xs">
+                                    <div class="flex items-center gap-2 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                                        <span class="w-2 h-2 bg-emerald-500"></span>
+                                        <span class="text-zinc-400 text-[10px] uppercase">DIMENSI:</span>
+                                        <h4 class="font-black text-sm uppercase text-zinc-900 dark:text-zinc-100">{{ $pc['dimension'] }}</h4>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                                        <!-- Option A -->
+                                        <div class="p-4 bg-white dark:bg-zinc-900 border border-emerald-500/40">
+                                            <div class="flex items-center justify-between gap-2 mb-2 pb-1 border-b border-zinc-100 dark:border-zinc-800">
+                                                <h5 class="font-bold text-xs text-emerald-600 dark:text-emerald-400 uppercase">{{ $pc['option_a']['name'] }}</h5>
+                                                <span class="text-[9px] px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">OPSI A</span>
+                                            </div>
+                                            <div class="space-y-2 text-[11px] font-sans">
+                                                <div>
+                                                    <span class="text-emerald-600 dark:text-emerald-400 font-mono font-bold text-[10px] block mb-1">KELEBIHAN (PRO'S):</span>
+                                                    <ul class="space-y-1 text-zinc-600 dark:text-zinc-300">
+                                                        @foreach($pc['option_a']['pros'] as $pro)
+                                                            <li class="flex items-start gap-1.5">
+                                                                <span class="text-emerald-500 font-bold">&check;</span>
+                                                                <span>{{ $pro }}</span>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                                <div class="pt-1.5 border-t border-zinc-100 dark:border-zinc-800">
+                                                    <span class="text-amber-600 dark:text-amber-400 font-mono font-bold text-[10px] block mb-1">KETERBATASAN (CON'S):</span>
+                                                    <ul class="space-y-1 text-zinc-500 dark:text-zinc-400">
+                                                        @foreach($pc['option_a']['cons'] as $con)
+                                                            <li class="flex items-start gap-1.5">
+                                                                <span class="text-amber-500 font-bold">&bull;</span>
+                                                                <span>{{ $con }}</span>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3 p-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/30 text-[10px] font-mono text-emerald-700 dark:text-emerald-300">
+                                                {{ $pc['option_a']['verdict'] }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Option B -->
+                                        <div class="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                            <div class="flex items-center justify-between gap-2 mb-2 pb-1 border-b border-zinc-100 dark:border-zinc-800">
+                                                <h5 class="font-bold text-xs text-zinc-700 dark:text-zinc-300 uppercase">{{ $pc['option_b']['name'] }}</h5>
+                                                <span class="text-[9px] px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold">OPSI B</span>
+                                            </div>
+                                            <div class="space-y-2 text-[11px] font-sans">
+                                                <div>
+                                                    <span class="text-emerald-600 dark:text-emerald-400 font-mono font-bold text-[10px] block mb-1">KELEBIHAN (PRO'S):</span>
+                                                    <ul class="space-y-1 text-zinc-600 dark:text-zinc-300">
+                                                        @foreach($pc['option_b']['pros'] as $pro)
+                                                            <li class="flex items-start gap-1.5">
+                                                                <span class="text-emerald-500 font-bold">&check;</span>
+                                                                <span>{{ $pro }}</span>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                                <div class="pt-1.5 border-t border-zinc-100 dark:border-zinc-800">
+                                                    <span class="text-rose-600 dark:text-rose-400 font-mono font-bold text-[10px] block mb-1">KETERBATASAN (CON'S):</span>
+                                                    <ul class="space-y-1 text-zinc-500 dark:text-zinc-400">
+                                                        @foreach($pc['option_b']['cons'] as $con)
+                                                            <li class="flex items-start gap-1.5">
+                                                                <span class="text-rose-500 font-bold">&times;</span>
+                                                                <span>{{ $con }}</span>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3 p-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-[10px] font-mono text-zinc-600 dark:text-zinc-400">
+                                                {{ $pc['option_b']['verdict'] }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </section>
 
             <!-- SECTION 07: OPSI VELOCITY PENGERJAAN & AKSESORIS AI GEMINI ULTRA (PRICING & SPRINT SELECTION) -->
@@ -1092,23 +1409,24 @@ erDiagram
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 font-mono">
                     @foreach($pricingTiers as $tierItem)
                         @php
-                            $isFastTrackOrRecommended = str_contains($tierItem['id'], 'fast_track') || str_contains($tierItem['id'], 'community_plus') || str_contains($tierItem['id'], 'community_starter');
-                            $isEmergencyOrEnterprise = str_contains($tierItem['id'], 'hyper_sprint') || str_contains($tierItem['id'], 'community_enterprise');
+                            $isMiddleRecommended = ($loop->iteration === 2);
+                            $isHighSpeed = ($loop->iteration === 3);
+                            $isEmergencyOrEnterprise = $isHighSpeed;
                         @endphp
                         <div 
                             @click="selectedTier = '{{ $tierItem['id'] }}'"
                             :class="selectedTier === '{{ $tierItem['id'] }}' 
-                                ? '{{ $isEmergencyOrEnterprise ? 'border-2 border-amber-500 bg-amber-500/10 dark:bg-amber-950/30 shadow-lg' : 'border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/30 shadow-lg' }}' 
+                                ? '{{ $isHighSpeed ? 'border-2 border-amber-500 bg-amber-500/10 dark:bg-amber-950/30 shadow-lg' : 'border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/30 shadow-lg' }}' 
                                 : 'border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-zinc-400'"
                             class="p-5 cursor-pointer transition relative flex flex-col justify-between"
                         >
-                            @if(str_contains($tierItem['id'], 'fast_track') || str_contains($tierItem['id'], 'community_plus'))
+                            @if($isMiddleRecommended)
                                 <div class="absolute -top-3 right-4 px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-black uppercase tracking-wider">
                                     ⚡ RECOMMENDED
                                 </div>
-                            @elseif($isEmergencyOrEnterprise)
+                            @elseif($isHighSpeed)
                                 <div class="absolute -top-3 right-4 px-2 py-0.5 bg-amber-500 text-black text-[9px] font-black uppercase tracking-wider">
-                                    🔥 TOP TIER
+                                    🚀 TOP SPEED // SPRINT
                                 </div>
                             @endif
 
@@ -1159,7 +1477,7 @@ erDiagram
                         <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Timeline & Milestone Proyek (Velocity Aligned)</h2>
                     </div>
                     <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
-                        Target: <span x-text="tierAmounts[selectedTier].days"></span>
+                        Target: <span x-text="tierAmounts[selectedTier]?.days || '-'"></span>
                     </span>
                 </div>
 
@@ -1167,37 +1485,30 @@ erDiagram
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-emerald-500"></span>
-                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 1: Architecture, pgvector Setup & ULID Database Migrations</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 1: Architecture Blueprint, PostgreSQL Schema & ULID Migration</span>
                         </div>
-                        <span class="text-emerald-600 dark:text-emerald-400 font-bold" x-text="selectedTier === 'hyper_sprint' ? 'Hari 1 - 2' : (selectedTier === 'fast_track' ? 'Hari 1 - 3' : 'Hari 1 - 5')">Hari 1 - 3</span>
+                        <span class="text-emerald-600 dark:text-emerald-400 font-bold" x-text="'Hari 1 - ' + Math.max(2, Math.round(parseInt(tierAmounts[selectedTier]?.days || 14) * 0.25))"></span>
                     </div>
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-zinc-400"></span>
                             <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 2: Core Business Logic & Filament Admin v5 Engine</span>
                         </div>
-                        <span class="text-zinc-500" x-text="selectedTier === 'hyper_sprint' ? 'Hari 3 - 4' : (selectedTier === 'fast_track' ? 'Hari 4 - 7' : 'Hari 6 - 16')">Hari 4 - 7</span>
+                        <span class="text-zinc-500" x-text="'Hari ' + (Math.max(2, Math.round(parseInt(tierAmounts[selectedTier]?.days || 14) * 0.25)) + 1) + ' - ' + Math.round(parseInt(tierAmounts[selectedTier]?.days || 14) * 0.60)"></span>
                     </div>
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-zinc-400"></span>
                             <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 3: Frontend Island UI (React 19) & User Flow Pipeline</span>
                         </div>
-                        <span class="text-zinc-500" x-text="selectedTier === 'hyper_sprint' ? 'Hari 5' : (selectedTier === 'fast_track' ? 'Hari 8 - 10' : 'Hari 17 - 23')">Hari 8 - 10</span>
+                        <span class="text-zinc-500" x-text="'Hari ' + (Math.round(parseInt(tierAmounts[selectedTier]?.days || 14) * 0.60) + 1) + ' - ' + Math.round(parseInt(tierAmounts[selectedTier]?.days || 14) * 0.85)"></span>
                     </div>
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <div class="flex items-center gap-3">
                             <span class="w-2 h-2 bg-zinc-400"></span>
-                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 4: AI Vector Integration, Security Audit & Stress Test</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 4: End-to-End Testing, Security Audit & Production Handover</span>
                         </div>
-                        <span class="text-zinc-500" x-text="selectedTier === 'hyper_sprint' ? 'Hari 6' : (selectedTier === 'fast_track' ? 'Hari 11 - 12' : 'Hari 24 - 27')">Hari 11 - 12</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                        <div class="flex items-center gap-3">
-                            <span class="w-2 h-2 bg-zinc-400"></span>
-                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Sprint 5: Production Dedicated VPS Deployment & UAT Handover</span>
-                        </div>
-                        <span class="text-zinc-500" x-text="selectedTier === 'hyper_sprint' ? 'Hari 7' : (selectedTier === 'fast_track' ? 'Hari 13 - 14' : 'Hari 28 - 30')">Hari 13 - 14</span>
+                        <span class="text-emerald-500 font-bold" x-text="'Hari ' + (Math.round(parseInt(tierAmounts[selectedTier]?.days || 14) * 0.85) + 1) + ' - ' + (tierAmounts[selectedTier]?.days || 'Selesai')"></span>
                     </div>
                 </div>
             </section>

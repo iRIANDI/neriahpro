@@ -99,10 +99,10 @@ const TRANSLATIONS = {
     ],
     budgetLabel: "Kisaran Alokasi Budget Klien (Investasi Sistem)",
     budgetOptions: [
-      "Rp 5.000.000 - Rp 15.000.000 (Komunitas / Non-Profit / Gereja - Lean Modular Starter)",
-      "< Rp 50.000.000 (Bootstrapped / Validasi Ide - 100% Lean Monolith)",
-      "Rp 50.000.000 - Rp 100.000.000 (Growth Production - Modern Monolith + pgvector AI)",
-      "> Rp 100.000.000 (High-Speed / Multi-Squad Ready)"
+      "Rp 5.000.000 - Rp 15.000.000 (Starter / UMKM / Komunitas / Personal - Lean Modular Web)",
+      "Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)",
+      "Rp 35.000.000 - Rp 75.000.000 (Scale-Up / Platform Komersial - Modern Monolith High-Concurrency)",
+      "> Rp 75.000.000 (Enterprise / AI-Augmented / Priority Swarm Ready)"
     ],
 
     scopeLockNotice: "Perhatian: Fitur yang disetujui dalam kuesioner ini akan dikunci dalam kontrak resmi. Penambahan fitur baru di luar ruang lingkup ini akan diakomodasi melalui Change Request (CR) / Addendum terpisah.",
@@ -193,10 +193,10 @@ const TRANSLATIONS = {
     ],
     budgetLabel: "Client Budget Range (System Investment Plan)",
     budgetOptions: [
-      "Rp 5,000,000 - Rp 15,000,000 (Community / Non-Profit / Church - Lean Modular Starter)",
-      "< Rp 50,000,000 (Bootstrapped / Idea Validation - 100% Lean Monolith)",
-      "Rp 50,000,000 - Rp 100,000,000 (Growth Production - Modern Monolith + pgvector AI)",
-      "> Rp 100,000,000 (High-Speed / Multi-Squad Ready)"
+      "Rp 5,000,000 - Rp 15,000,000 (Starter / SME / Community / Personal - Lean Modular Web)",
+      "Rp 15,000,000 - Rp 35,000,000 (Growth / Custom Business Portal - Multi-Role & Gateway)",
+      "Rp 35,000,000 - Rp 75,000,000 (Scale-Up / Commercial Platform - Modern Monolith High-Concurrency)",
+      "> Rp 75,000,000 (Enterprise / AI-Augmented / Priority Swarm Ready)"
     ],
 
     scopeLockNotice: "Notice: The scope approved in this questionnaire will be locked into a formal digital contract. Any feature requests outside this document will be handled through a formal Change Request (CR) / Addendum.",
@@ -285,7 +285,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     jangkauanPasar: initialData.jangkauanPasar || 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
     outOfScope: initialData.outOfScope || '',
     kepatuhanKeamanan: initialData.kepatuhanKeamanan || 'Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)',
-    kisaranBudget: initialData.kisaranBudget || 'Rp 50.000.000 - Rp 100.000.000 (Growth Production - Modern Monolith + pgvector AI)',
+    kisaranBudget: initialData.kisaranBudget || 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);

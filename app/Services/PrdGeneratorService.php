@@ -128,7 +128,7 @@ class PrdGeneratorService
                 'notes' => 'Akan dihubungkan melalui service providers terisolasi dengan fallback retry mechanism.',
             ],
             'architecture_evaluation' => self::evaluateArchitecture($businessName, $masalah, $mvpItems, $alurKerja, $extraContext),
-            'velocity_pricing_options' => self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null),
+            'velocity_pricing_options' => self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null, $businessName, $masalah),
             'governance_and_sla' => [
                 'title' => 'Tata Kelola, Standar Kualitas & SLA Serah Terima (Strict Governance & Handoff)',
                 'definition_of_done' => [
@@ -307,8 +307,10 @@ class PrdGeneratorService
     protected static function generateErdSchema(string $businessName, array $mvpItems, array $actorItems): array
     {
         $domainSlug = Str::slug($businessName, '_');
+        $domainSlug = preg_replace('/[^a-zA-Z0-9_]/', '_', $domainSlug);
+        $domainSlug = trim($domainSlug, '_');
         if (empty($domainSlug)) {
-            $domainSlug = 'project_records';
+            $domainSlug = 'domain_records';
         }
 
         return [
@@ -399,28 +401,37 @@ class PrdGeneratorService
             ]
         );
 
+        $budgetDeclared = $extraContext['kisaran_budget'] ?? '';
+        $rawDeclared = strtolower($budgetDeclared);
+        $isLeanBudget = str_contains($rawDeclared, '5.000.000 - rp 15.000.000') ||
+                        (str_contains($rawDeclared, '5.000.000') && !str_contains($rawDeclared, '35.000.000') && !str_contains($rawDeclared, '75.000.000')) ||
+                        str_contains($rawDeclared, 'starter') ||
+                        str_contains($rawDeclared, 'komunitas') ||
+                        str_contains(strtolower($businessName), 'gereja');
+
         return [
             'hosting_evaluation' => [
-                'verdict' => 'Dedicated VPS (Mandatory Enterprise Standard)',
-                'verdict_badge' => 'VPS_MANDATORY',
-                'recommendation' => 'DEDICATED_VPS',
-                'compute_weight_score' => '88/100 (High Compute & Worker Queue Required)',
+                'verdict' => $isLeanBudget 
+                    ? 'Cloud Starter / Micro VPS (Fase 1) & Seamless VPS Scale-Up (Fase 2)' 
+                    : 'Dedicated VPS (Nixpacks & Docker Containerization)',
+                'verdict_badge' => $isLeanBudget ? 'LEAN_CLOUD_STARTER' : 'VPS_DEDICATED',
+                'recommendation' => $isLeanBudget ? 'CLOUD_STARTER_LEAN' : 'DEDICATED_VPS',
+                'compute_weight_score' => $isLeanBudget ? '70/100 (Lean Operational Footprint)' : '92/100 (High-Throughput Enterprise)',
                 'shared_hosting' => [
-                    'status' => 'REJECTED (TIDAK MEMADAI)',
-                    'title' => 'Shared Hosting Tradisional (cPanel / Apache)',
+                    'status' => $isLeanBudget ? 'RECOMMENDED FOR LEAN PHASE 1 (HEMAT BIAYA)' : 'SUFFICIENT FOR STATICS / LIMITED FOR AI',
+                    'title' => 'Cloud Starter / Shared Hosting Efisien (< Rp 100.000 / bln)',
                     'reasons' => [
-                        'Ketiadaan Ekstensi Kernel pgvector: Shared hosting tidak mendukung kompilasi binary native C PostgreSQL untuk pgvector AI similarity search.',
-                        'Timeout PHP max_execution_time (30-60 detik): Eksekusi prompt AI reasoning atau proses batch data akan diputus paksa oleh server hosting.',
-                        'Ketiadaan Process Supervisor & Redis Queue: Tidak dapat menjalankan background worker 24/7 untuk notifikasi & audit log secara persistent.',
-                        'Risiko Tenant Crowding: Pembagian resource CPU/RAM bersama ratusan situs lain rentan memicu crash saat traffic melonjak.',
+                        'Pilihan Cerdas Tahap Awal: Sangat efisien untuk validasi pasar, website profil bisnis, katalog UMKM, atau organisasi komunitas tanpa beban sewa server besar.',
+                        'Zero DevOps Overhead: Konfigurasi instan dan ramah pemula, langsung aktif dengan proteksi SSL gratis.',
+                        'Catatan Skalabilitas: Untuk pemrosesan AI berbobot tinggi atau background worker 24/7, sistem dapat di-upgrade ke Dedicated VPS dengan 1-klik tanpa ganti struktur kode.',
                     ],
                 ],
                 'dedicated_vps' => [
-                    'status' => 'RECOMMENDED (STANDAR WAJIB ENTERPRISE)',
-                    'title' => 'Dedicated VPS (Nixpacks & Docker Containerization)',
+                    'status' => 'HIGH-PERFORMANCE / SCALE-UP READY (Rp 350.000+ / bln)',
+                    'title' => 'Dedicated VPS Container (Nixpacks & Docker)',
                     'reasons' => [
                         'Isolasi Resource 100%: Alokasi CPU & RAM terdedikasi menjamin throughput data tinggi tanpa gangguan tenant lain.',
-                        'Native PostgreSQL 16+ pgvector Support: Penyimpanan representasi vektor berdimensi tinggi untuk AI embeddings & semantic RAG.',
+                        'Native PostgreSQL 16+ pgvector Support: Penyimpanan representasi vektor berdimensi tinggi untuk AI embeddings & semantic search.',
                         'Redis In-Memory Queue & Worker 24/7: Menjalankan pemrosesan background jobs asinkron tanpa batas timeout.',
                         'Nginx HTTP/2 Reverse Proxy & Cloudflare CDN: Latensi minimal dengan proteksi SSL otomatis dan isolasi container Docker.',
                     ],
@@ -430,13 +441,13 @@ class PrdGeneratorService
                 'verdict' => 'Modern Monolith (Laravel 13 + Filament v5 + Island Architecture)',
                 'verdict_badge' => 'RAPID_MONOLITH',
                 'recommendation' => 'MODERN_MONOLITH',
-                'match_percentage' => '95% Optimal Architectural Match',
+                'match_percentage' => '96% Optimal Architectural Match',
                 'monolith' => [
-                    'status' => 'OPTIMAL REKOMENDASI (95% MATCH)',
+                    'status' => 'OPTIMAL REKOMENDASI (96% MATCH)',
                     'title' => 'Modern Monolith Architecture',
                     'reasons' => [
                         'Eliminasi Network Latency: Komunikasi antar modul berjalan intra-process O(1) tanpa overhead HTTP network antar-microservices.',
-                        'Pangkas Biaya Infrastruktur 60-70%: Satu kesatuan container deployment menghemat anggaran server staging & produksi dibanding kluster microservices.',
+                        'Pangkas Biaya Infrastruktur 60-80%: Satu kesatuan container deployment menghemat anggaran server staging & produksi dibanding kluster microservices.',
                         'Rapid Time-to-Market (3x Lebih Cepat): Skema database, API internal, dan Admin Dasbor Filament v5 langsung sinkron tanpa duplikasi skema.',
                         'Konsistensi Transaksi ACID: Menjamin integritas data tanpa kerumitan distributed transaction (2-Phase Commit / Saga Pattern) yang rawan data loss.',
                         'Island Architecture Frontend: Memberikan fluiditas interaksi 60fps setara SPA dengan stabilitas dan kecepatan SEO Server-Side Rendering.',
@@ -452,15 +463,115 @@ class PrdGeneratorService
                     ],
                 ],
             ],
+            'strategic_guidance' => [
+                'title' => 'Panduan Edukatif Hulu ke Hilir: Do\'s & Don\'ts serta Pro\'s & Con\'s',
+                'subtitle' => 'Edukasi komprehensif bagi pemangku kepentingan agar investasi teknologi tepat sasaran, efisien, dan bebas risiko scope creep.',
+                'dos' => [
+                    [
+                        'tag' => 'HULU // STRATEGI',
+                        'title' => 'Mulai dari Web Mobile-First / PWA Terlebih Dahulu',
+                        'desc' => 'Menghemat 70-80% modal awal dibanding langsung membangun native iOS/Android di App Store. Web responsif langsung dapat diakses lewat tautan WhatsApp tanpa hambatan install.',
+                    ],
+                    [
+                        'tag' => 'HULU // ARSITEKTUR',
+                        'title' => 'Gunakan Modern Monolith untuk Merilis MVP Cepat',
+                        'desc' => 'Framework terpadu (Laravel 13 & Filament v5) memangkas waktu pembuatan admin dari berbulan-bulan menjadi 5-10 hari dengan biaya server paling hemat.',
+                    ],
+                    [
+                        'tag' => 'TENGAH // SCOPE LOCK',
+                        'title' => 'Kunci 3-5 Fitur Inti yang Menyelesaikan Masalah Kritis',
+                        'desc' => 'Fokuskan energi peluncuran pada alur kerja utama pengguna. Fitur tambahan di luar fungsi krusial dijadwalkan pada Fase 2 setelah ada data penggunaan nyata.',
+                    ],
+                    [
+                        'tag' => 'HILIR // OPERASIONAL',
+                        'title' => 'Otomatisasi Kanal Komunikasi (WhatsApp & Pembayaran Digital)',
+                        'desc' => 'Integrasikan QRIS dan notifikasi WhatsApp instan untuk mengurangi beban kerja manual tim administrasi hingga 90%.',
+                    ],
+                    [
+                        'tag' => 'HILIR // BIAYA',
+                        'title' => 'Transparansi Biaya Rutin Domain & Hosting Sejak Awal',
+                        'desc' => 'Pahami biaya perpanjangan domain tahunan dan server bulanan agar operasional sistem berjalan tanpa kendala arus kas tak terduga.',
+                    ],
+                ],
+                'donts' => [
+                    [
+                        'tag' => 'HULU // OVERKILL',
+                        'title' => 'Jangan Memaksakan Microservices di Awal',
+                        'desc' => 'Microservices pada tahap awal hanya menambah kerumitan latensi, bug terdistribusi, dan membakar puluhan juta rupiah untuk sewa kluster cloud yang kosong.',
+                    ],
+                    [
+                        'tag' => 'HULU // BIAYA',
+                        'title' => 'Jangan Membeli Server Kelas Enterprise Terlalu Dini',
+                        'desc' => 'Gunakan cloud starter hemat (< Rp 100rb/bln) saat validasi ide. Upgrade ke Dedicated VPS dapat dilakukan kapan saja hanya dalam hitungan menit tanpa migrasi ulang.',
+                    ],
+                    [
+                        'tag' => 'TENGAH // SCOPE CREEP',
+                        'title' => 'Jangan Menambah Fitur Baru di Tengah Sprint Pengerjaan',
+                        'desc' => 'Penambahan ide dadakan tanpa evaluasi tertulis akan merusak timeline peluncuran dan memperbesar risiko kegagalan proyek.',
+                    ],
+                    [
+                        'tag' => 'HILIR // ASUMSI',
+                        'title' => 'Jangan Menunda Peluncuran Menunggu Kesempurnaan',
+                        'desc' => 'Aplikasi terbaik adalah aplikasi yang hidup dan dipakai oleh pengguna nyata. Rilis cepat, dapatkan masukan, dan lakukan iterasi terarah.',
+                    ],
+                ],
+                'pros_and_cons' => [
+                    [
+                        'dimension' => 'Pola Arsitektur Sistem',
+                        'option_a' => [
+                            'name' => 'Modern Monolith (Laravel 13 + Filament)',
+                            'pros' => ['Paling cepat rilis (3x)', 'Biaya server hemat 70%', 'Integritas data transaksi ACID terjamin', '1 tim pengembang terpadu'],
+                            'cons' => ['Perlu disiplin pemisahan modul agar kode tetap rapi saat skala membesar'],
+                            'verdict' => 'PILIHAN EMAS: Direkomendasikan untuk 98% proyek dari UMKM hingga platform skala jutaan pengguna.',
+                        ],
+                        'option_b' => [
+                            'name' => 'Decoupled Microservices / Multi-Repo',
+                            'pros' => ['Deploy independen per divisi besar (>20 engineer)', 'Isolasi kegagalan per service'],
+                            'cons' => ['Biaya server membengkak 5x-10x', 'Latensi jaringan antar-API', 'Sangat rumit untuk debugging & testing'],
+                            'verdict' => 'TUNDA KE FASE 3: Hanya diperlukan jika tim pengembang sudah >20 orang dan trafik >50 juta user/bulan.',
+                        ],
+                    ],
+                    [
+                        'dimension' => 'Infrastruktur Hosting & Server',
+                        'option_a' => [
+                            'name' => 'Cloud Starter / Shared Efisien',
+                            'pros' => ['Sangat terjangkau (< Rp 100rb/bln)', 'Setup instan tanpa pusing DevOps', 'Cukup untuk web profil, katalog, & warta'],
+                            'cons' => ['Resource komputasi dibagi dengan penyewa lain', 'Terbatas untuk worker AI continuous'],
+                            'verdict' => 'IDEAL FASE 1: Solusi paling rasional untuk UMKM, komunitas, dan proyek validasi modal minim.',
+                        ],
+                        'option_b' => [
+                            'name' => 'Dedicated VPS (Nixpacks & Docker)',
+                            'pros' => ['100% isolasi performa', 'Mendukung database AI pgvector', 'Queue worker 24/7 tanpa timeout', 'Zero-downtime deploy'],
+                            'cons' => ['Biaya bulanan mulai Rp 350rb/bln', 'Memerlukan manajemen container terkelola'],
+                            'verdict' => 'STANDAR SCALE-UP: Wajib untuk sistem transaksi bisnis harian, multi-cabang, atau integrasi AI cerdas.',
+                        ],
+                    ],
+                    [
+                        'dimension' => 'Engine Basis Data (Database)',
+                        'option_a' => [
+                            'name' => 'PostgreSQL Relasional Strict ULID',
+                            'pros' => ['Performa query O(1) kilat', 'Integritas referensial kuat', 'Skalabilitas tanpa batas berkat ID ULID terdistribusi'],
+                            'cons' => ['Pencarian berbasis teks kata persis (belum memahami konteks semantik makna kalimat)'],
+                            'verdict' => 'FONDASI UTAMA: Standar mutlak untuk menyimpan data bisnis, keuangan, dan pengguna.',
+                        ],
+                        'option_b' => [
+                            'name' => 'PostgreSQL + pgvector (AI-Augmented)',
+                            'pros' => ['Mendukung pencarian semantik makna', 'Rekomendasi cerdas berbasis vector embeddings', 'Co-located tanpa biaya vendor vector DB terpisah'],
+                            'cons' => ['Membutuhkan kapasitas RAM server sedikit lebih besar untuk indeks vektor'],
+                            'verdict' => 'NILAI TAMBAH CERDAS: Diaktifkan untuk fitur asisten AI, pencarian katalog pintar, atau pencocokan otomatis.',
+                        ],
+                    ],
+                ],
+            ],
             'global_scale_analysis' => [
                 'title' => 'Analisis Potensi Skala Jangkauan Pengguna Dunia (Global Reach Matrix)',
                 'summary' => 'Modern Monolith mampu melayani 99.5% startup dan enterprise global hingga 5-10 juta Monthly Active Users (MAU) sebelum membutuhkan pemisahan microservices.',
                 'tiers' => [
                     [
                         'scale' => '0 - 100.000 Pengguna / Bulan',
-                        'architecture' => 'Single Dedicated VPS Monolith (4 vCPU / 8GB RAM)',
+                        'architecture' => 'Single Dedicated VPS Monolith (4 vCPU / 8GB RAM) / Cloud Starter',
                         'status' => 'SANGAT EFISIEN',
-                        'verdict' => 'Response time sub-50ms. Biaya server sangat hemat (< Rp 500.000/bln). Zero DevOps maintenance.',
+                        'verdict' => 'Response time sub-50ms. Biaya server sangat hemat. Zero DevOps maintenance.',
                     ],
                     [
                         'scale' => '100.000 - 5.000.000 Pengguna / Bulan',
@@ -478,10 +589,10 @@ class PrdGeneratorService
             ],
             'budget_tco_analysis' => [
                 'title' => 'Analisis Anggaran Klien & Efisiensi Modal (TCO Comparison)',
-                'client_budget_declared' => $extraContext['kisaran_budget'] ?? 'Rp 50.000.000 - Rp 100.000.000',
+                'client_budget_declared' => $extraContext['kisaran_budget'] ?? 'Rp 15.000.000 - Rp 35.000.000',
                 'monolith_tco' => [
                     'title' => 'Modern Monolith (Efisiensi Modal 90%)',
-                    'monthly_cost' => 'Rp 350.000 - Rp 1.500.000 / bulan',
+                    'monthly_cost' => $isLeanBudget ? '< Rp 100.000 - Rp 250.000 / bulan' : 'Rp 350.000 - Rp 1.500.000 / bulan',
                     'devops_headcount' => '0 FTE (Automated Nixpacks CI/CD)',
                     'capital_efficiency' => '90% anggaran klien dialokasikan murni untuk fitur bisnis & akuisisi pengguna.',
                 ],
@@ -523,7 +634,7 @@ class PrdGeneratorService
                 'client_scale' => $extraContext['skala_pengguna'] ?? '0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)',
                 'client_market' => $extraContext['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
                 'client_compliance' => $extraContext['kepatuhan_keamanan'] ?? 'Standar Web Application & OWASP Top 10',
-                'client_budget' => $extraContext['kisaran_budget'] ?? 'Rp 50.000.000 - Rp 100.000.000 (Growth Production)',
+                'client_budget' => $extraContext['kisaran_budget'] ?? 'Rp 15.000.000 - Rp 35.000.000 (Growth Production)',
                 'in_scope' => [
                     'Spesifikasi fitur inti MVP Fase 1 yang tertera dalam dokumen PRD ini.',
                     'Skema basis data relasional PostgreSQL dengan Primary Key ULID standar enterprise.',
@@ -556,143 +667,373 @@ class PrdGeneratorService
     }
 
     /**
-     * Generate tiered velocity pricing options with AI accelerator costs and mathematical formula.
+     * Generate tiered velocity pricing options with dynamic agnostic continuum from UMKM to Enterprise.
      */
-    public static function generateVelocityPricingOptions(string $targetWaktu, ?string $budgetRange = null): array
+    public static function generateVelocityPricingOptions(string $targetWaktu, ?string $budgetRange = null, string $businessName = '', string $masalah = ''): array
     {
-        $isCommunityBudget = $budgetRange && (
-            str_contains(strtolower($budgetRange), '5.000.000') ||
-            str_contains(strtolower($budgetRange), '15.000.000') ||
-            str_contains(strtolower($budgetRange), 'komunitas') ||
-            str_contains(strtolower($budgetRange), 'church') ||
-            str_contains(strtolower($budgetRange), 'gereja') ||
-            str_contains(strtolower($budgetRange), 'non-profit')
+        $rawBudget = strtolower($budgetRange ?? '');
+        $combinedText = strtolower($businessName . ' ' . $masalah . ' ' . $rawBudget);
+
+        $isChurch = str_contains($combinedText, 'gereja') || str_contains($combinedText, 'jemaat') || str_contains($combinedText, 'ibadah');
+
+        // Detect budget bracket with unambiguous priority
+        $isTierEnterprise = str_contains($rawBudget, '> 75') ||
+                            str_contains($rawBudget, '> rp 75') ||
+                            str_contains($rawBudget, '100.000.000') ||
+                            str_contains($rawBudget, 'enterprise');
+
+        $isTierScale = !$isTierEnterprise && (
+            str_contains($rawBudget, '35.000.000 - rp 75.000.000') ||
+            str_contains($rawBudget, '40.000.000') ||
+            str_contains($rawBudget, '50.000.000') ||
+            str_contains($rawBudget, '60.000.000') ||
+            str_contains($rawBudget, '75.000.000') ||
+            str_contains($rawBudget, 'scale')
         );
 
-        if ($isCommunityBudget) {
+        $isTierGrowth = !$isTierEnterprise && !$isTierScale && (
+            str_contains($rawBudget, '15.000.000 - rp 35.000.000') ||
+            str_contains($rawBudget, '20.000.000') ||
+            str_contains($rawBudget, '25.000.000') ||
+            str_contains($rawBudget, '30.000.000') ||
+            str_contains($rawBudget, 'growth')
+        );
+
+        $isTierStarter = !$isTierEnterprise && !$isTierScale && !$isTierGrowth && (
+            str_contains($rawBudget, '5.000.000 - rp 15.000.000') ||
+            str_contains($rawBudget, '5.000.000') ||
+            str_contains($rawBudget, '10.000.000') ||
+            str_contains($rawBudget, '12.000.000') ||
+            str_contains($rawBudget, 'starter') ||
+            str_contains($rawBudget, 'umkm') ||
+            str_contains($rawBudget, 'komunitas') ||
+            $isChurch
+        );
+
+        // 1. TIER STARTER / LEAN (Rp 5M - Rp 15M)
+        if ($isTierStarter) {
+            $starterModules = $isChurch 
+                ? 'Profil Gereja/Organisasi, Jadwal Ibadah & Kegiatan, Form Warta/Doa, dan Donasi Persembahan QRIS'
+                : 'Profil Bisnis/Katalog Produk, Form Pemesanan/Reservasi Langsung, WhatsApp Direct CTA, dan Pembayaran QRIS';
+            
+            $plusModules = $isChurch
+                ? 'Integrasi broadcast WhatsApp warta jemaat, sistem presensi relawan QR Code, dan arsip dokumen/khotbah'
+                : 'Notifikasi WhatsApp transaksi otomatis ke klien & admin, konfirmasi pembayaran otomatis, dan rekaman order';
+
             return [
                 [
-                    'id' => 'community_starter',
-                    'name' => 'Community / Gereja Lean Starter',
-                    'duration' => '7 Hari Kerja',
-                    'badge' => 'LEAN_STARTER // NON-PROFIT',
+                    'id' => 'starter_lean',
+                    'name' => 'Starter Lean MVP (Pondasi Cepat Rilis)',
+                    'duration' => '5 - 7 Hari Kerja',
+                    'badge' => 'LEAN_STARTER // REALISTIC_MVP',
                     'speed_multiplier' => '1.0x (Pondasi Siap Pakai)',
                     'contract_amount' => 5000000.00,
                     'dp_amount' => 2500000.00,
                     'pelunasan_amount' => 2500000.00,
                     'ai_quota_spec' => 'Pre-Built Modular Monolith Blueprint Engine',
                     'squad_allocation' => '1 Dedicated Fullstack Specialist + Template Deployer',
-                    'cost_formula' => 'Base Community Modular Setup (Rp 5.000.000) - Subsidi Efisiensi Neriah OS',
+                    'cost_formula' => 'Base Modular Setup (Rp 5.000.000) - Efisiensi Arsitektur Neriah OS',
                     'ai_swarm_specs' => [
-                        'Arsitektur: Pre-built Lean Monolith CMS (Laravel 13 & Filament v5)',
-                        'Modul: Profil Gereja/Organisasi, Jadwal Ibadah/Kegiatan, Form Doa/Kontak, & Donasi QRIS',
-                        'Infrastruktur: Setup Sub-Instance / Shared Cloud Kilat hemat biaya (< Rp 100rb/bln)',
-                        'Handoff: Pelatihan Admin Sekretariat & Panduan Pengelolaan Mandiri',
+                        'Arsitektur: Pre-built Lean Monolith Web Portal (Laravel 13 & Filament v5)',
+                        'Modul Fungsional: ' . $starterModules,
+                        'Infrastruktur: Setup Cloud Starter hemat biaya (< Rp 100rb/bln) atau Micro VPS',
+                        'Handoff: Panduan video operasional mandiri & serah terima kredensial resmi',
                     ],
-                    'description' => 'Paket bersubsidi khusus untuk institusi non-profit, gereja, yayasan amal, atau komunitas sosial dengan alokasi modal terbatas. Menyediakan website responsif lengkap dengan portal admin warta jemaat dan penerimaan donasi QRIS.',
+                    'description' => 'Solusi ideal dan ramah anggaran bagi UMKM, profesional perorangan, atau komunitas yang ingin memiliki website modern fungsional dalam waktu singkat tanpa beban biaya bulanan server yang tinggi.',
                 ],
                 [
-                    'id' => 'community_plus',
-                    'name' => 'Community Plus (WhatsApp Alert & Attendance)',
-                    'duration' => '14 Hari Kerja',
-                    'badge' => 'RECOMMENDED // COMMUNITY',
-                    'speed_multiplier' => '1.5x (Fitur Notifikasi Lengkap)',
+                    'id' => 'starter_plus',
+                    'name' => 'Growth Extended (WhatsApp Gateway & Pembayaran)',
+                    'duration' => '10 Hari Kerja',
+                    'badge' => 'RECOMMENDED // BEST_VALUE',
+                    'speed_multiplier' => '1.5x (Otomatisasi Penuh)',
                     'contract_amount' => 10000000.00,
                     'dp_amount' => 5000000.00,
                     'pelunasan_amount' => 5000000.00,
-                    'ai_quota_spec' => 'AI Assisted WhatsApp Notification & Media Archival',
+                    'ai_quota_spec' => 'WhatsApp Gateway API & Transactional Queue Integration',
                     'squad_allocation' => '1 Fullstack Engineer + Integration Specialist',
-                    'cost_formula' => 'Base Starter (Rp 5M) + Integrasi WhatsApp Gateway & Absensi (Rp 5M)',
+                    'cost_formula' => 'Base Starter (Rp 5M) + Integrasi Gateway Pembayaran & Notifikasi WA (Rp 5M)',
                     'ai_swarm_specs' => [
-                        'Seluruh fitur paket Community Starter',
-                        'Integrasi WhatsApp API untuk broadcast warta & pengingat jadwal ibadah otomatis',
-                        'Sistem Presensi / Absensi QR Code untuk relawan dan pelayan komunitas',
-                        'Arsip Khotbah & Dokumen Warta (Audio MP3 & PDF Download)',
+                        'Seluruh fitur paket Starter Lean MVP',
+                        'Modul Lanjutan: ' . $plusModules,
+                        'Payment Gateway: Midtrans Snap (QRIS, Virtual Account BCA/Mandiri/BRI)',
+                        'Export Data: Rekapitulasi laporan dalam format Microsoft Excel & PDF terformat',
                     ],
-                    'description' => 'Tingkat lanjutan untuk komunitas atau gereja yang ingin menjaga keterlibatan jemaat secara proaktif melalui pengingat WhatsApp otomatis dan sistem presensi.',
+                    'description' => 'Paket terpopuler untuk bisnis atau organisasi yang ingin mengotomatiskan alur konfirmasi dan penerimaan transaksi digital secara profesional.',
                 ],
                 [
-                    'id' => 'community_enterprise',
-                    'name' => 'Multi-Branch Foundation / Sinode Cluster',
-                    'duration' => '21 Hari Kerja',
-                    'badge' => 'MULTI_POS // ADVANCED',
-                    'speed_multiplier' => '2.0x (Skala Cabang / Yayasan)',
+                    'id' => 'starter_pro',
+                    'name' => 'Professional Custom Hub (Multi-Role & Dedicated DB)',
+                    'duration' => '14 Hari Kerja',
+                    'badge' => 'ADVANCED // MULTI_ROLE',
+                    'speed_multiplier' => '2.0x (Skala Kustom)',
                     'contract_amount' => 15000000.00,
                     'dp_amount' => 7500000.00,
                     'pelunasan_amount' => 7500000.00,
-                    'ai_quota_spec' => 'Multi-Tenant RBAC & Multi-Location Data Sync',
-                    'squad_allocation' => 'Lead Architect + Fullstack Squad',
-                    'cost_formula' => 'Base Community (Rp 5M) + Multi-Branch Management & Dedicated DB (Rp 10M)',
+                    'ai_quota_spec' => 'Multi-Role RBAC & Isolated PostgreSQL Database',
+                    'squad_allocation' => 'Lead Architect + Fullstack Engineer',
+                    'cost_formula' => 'Base Starter (Rp 5M) + Multi-Role Hak Akses & Dedicated Database (Rp 10M)',
                     'ai_swarm_specs' => [
-                        'Seluruh fitur Community Plus',
-                        'Multi-Branch RBAC: Hak akses khusus per cabang gereja / pos pelayanan',
-                        'Rekapitulasi Keuangan & Donasi per Cabang Wilayah',
-                        'Dedicated VPS Hosting Configuration & Cloudflare CDN Setup',
+                        'Seluruh fitur paket Growth Extended',
+                        'Multi-Role RBAC: Hak akses terpisah untuk Superadmin, Staff Operasional, dan Klien/Publik',
+                        'Isolasi Basis Data: PostgreSQL relasional strict ULID terdedikasi',
+                        'Cloudflare CDN & Automated Daily Database Backup',
                     ],
-                    'description' => 'Dikhususkan untuk yayasan atau gereja dengan beberapa pos wilayah / cabang pelayanan yang memerlukan pelaporan terpusat dan pemisahan hak akses per wilayah.',
+                    'description' => 'Tingkat komprehensif bagi entitas bisnis atau organisasi yang memerlukan pemisahan hak akses staf serta keamanan basis data terisolasi.',
                 ],
             ];
         }
 
+        // 2. TIER GROWTH (Rp 15M - Rp 35M)
+        if ($isTierGrowth) {
+            return [
+                [
+                    'id' => 'growth_core',
+                    'name' => 'Business Core Solution (Custom Workflow)',
+                    'duration' => '10 Hari Kerja',
+                    'badge' => 'BUSINESS_CORE',
+                    'speed_multiplier' => '1.0x (Pace Terencana)',
+                    'contract_amount' => 17500000.00,
+                    'dp_amount' => 8750000.00,
+                    'pelunasan_amount' => 8750000.00,
+                    'ai_quota_spec' => 'Custom Filament v5 Operations Suite & Automated Invoicing',
+                    'squad_allocation' => '1 Lead Fullstack Engineer + QA Reviewer',
+                    'cost_formula' => 'Base Architecture (Rp 12.5M) + Custom Workflow & Invoicing (Rp 5M)',
+                    'ai_swarm_specs' => [
+                        'Arsitektur: Modern Monolith (Laravel 13 & Filament v5 Enterprise)',
+                        'Manajemen Workflow Bisnis Kustom dengan Status Pipeline & Approval',
+                        'Invoice Otomatis Terbit dengan QR Code Verifikasi Dokumen',
+                        'Basis Data: PostgreSQL 16+ dengan Primary Key ULID terisolasi',
+                    ],
+                    'description' => 'Dirancang untuk digitalisasi operasional bisnis spesifik (seperti klinik, logistik cabang tunggal, rental, atau agensi) yang ingin membuang pencatatan kertas dan spreadsheet manual.',
+                ],
+                [
+                    'id' => 'growth_pro',
+                    'name' => 'Business Operations Pro (Automated Gateway & SLA)',
+                    'duration' => '14 Hari Kerja',
+                    'badge' => 'RECOMMENDED // BUSINESS_PRO',
+                    'speed_multiplier' => '1.5x (Akselerasi Terpadu)',
+                    'contract_amount' => 25000000.00,
+                    'dp_amount' => 12500000.00,
+                    'pelunasan_amount' => 12500000.00,
+                    'ai_quota_spec' => 'Midtrans Payment Escrow, WhatsApp Gateway & Background Redis Workers',
+                    'squad_allocation' => '2 Fullstack Specialists (Frontend Island + Backend Architect)',
+                    'cost_formula' => 'Base Core (Rp 17.5M) + Integrasi Gateway Lengkap & Dedicated VPS Setup (Rp 7.5M)',
+                    'ai_swarm_specs' => [
+                        'Seluruh kapabilitas Business Core Solution',
+                        'Dedicated VPS Nixpacks & Docker setup dengan Nginx HTTP/2 reverse proxy',
+                        'Integrasi Payment Gateway Midtrans (Kartu Kredit, QRIS, Virtual Account)',
+                        'Background Worker Redis 24/7 untuk notifikasi & rekapitulasi real-time',
+                    ],
+                    'description' => 'Paket rekomendasi utama untuk perusahaan yang membutuhkan keandalan transaksi tinggi, dashboard operasional lengkap, dan deployment VPS terisolasi.',
+                ],
+                [
+                    'id' => 'growth_sprint',
+                    'name' => 'High-Velocity Accelerated Sprint',
+                    'duration' => '7 - 10 Hari Kerja',
+                    'badge' => 'FAST_TRACK // SPRINT',
+                    'speed_multiplier' => '2.0x (Pangkas 40% Waktu Rilis)',
+                    'contract_amount' => 35000000.00,
+                    'dp_amount' => 17500000.00,
+                    'pelunasan_amount' => 17500000.00,
+                    'ai_quota_spec' => 'Gemini Pro Swarm Assistance + Parallel Engineering Shifts',
+                    'squad_allocation' => 'Lead Architect + 2 Senior Fullstack Engineers',
+                    'cost_formula' => 'Base Pro (Rp 25M) + AI Pair Programming Acceleration & Priority Concurrency (Rp 10M)',
+                    'ai_swarm_specs' => [
+                        'Seluruh kapabilitas Business Operations Pro',
+                        'Prioritas Eksekusi Paralel (Frontend & Backend dikerjakan serentak)',
+                        'Automated Unit & Feature Test Suite untuk pencegahan regresi',
+                        'SLA Responsif: Dukungan prioritas 60 hari kalender pasca peluncuran',
+                    ],
+                    'description' => 'Peluncuran kilat untuk bisnis dengan deadline mendesak, memastikan sistem siap beroperasi penuh dalam 7-10 hari kerja tanpa kompromi kualitas kode.',
+                ],
+            ];
+        }
+
+        // 3. TIER SCALE-UP (Rp 35M - Rp 75M)
+        if ($isTierScale) {
+            return [
+                [
+                    'id' => 'scale_standard',
+                    'name' => 'Standard High-Concurrency Monolith',
+                    'duration' => '21 Hari Kerja',
+                    'badge' => 'SCALE_STANDARD',
+                    'speed_multiplier' => '1.0x (Normal Pace)',
+                    'contract_amount' => 45000000.00,
+                    'dp_amount' => 22500000.00,
+                    'pelunasan_amount' => 22500000.00,
+                    'ai_quota_spec' => 'PostgreSQL 16+ pgvector Ready + Redis Cluster Architecture',
+                    'squad_allocation' => 'Lead System Architect + Senior Engineer + QA Specialist',
+                    'cost_formula' => 'Base Enterprise Engineering (Rp 45.000.000)',
+                    'ai_swarm_specs' => [
+                        'Arsitektur: Modern Monolith dengan Keyset Cursor Pagination O(1)',
+                        'Kapasitas Beban: Siap melayani 100.000 - 1.000.000 transaksi / bulan',
+                        'Dedicated VPS Docker Environment dengan Zero-Downtime Deployment',
+                    ],
+                    'description' => 'Fondasi enterprise untuk platform komersial yang membutuhkan integritas transaksi finansial ketat dan kesiapan skala jutaan baris data.',
+                ],
+                [
+                    'id' => 'scale_fast',
+                    'name' => 'Fast-Track Sprint (Gemini Ultra Accelerator)',
+                    'duration' => '14 Hari Kerja',
+                    'badge' => '2X_SPEED // RECOMMENDED',
+                    'speed_multiplier' => '1.5x (Rilis 2 Pekan)',
+                    'contract_amount' => 60000000.00,
+                    'dp_amount' => 30000000.00,
+                    'pelunasan_amount' => 30000000.00,
+                    'ai_quota_spec' => 'Gemini Ultra 4-Agent Parallel Swarm + High-Reasoning Token Pipeline',
+                    'squad_allocation' => '2 Dedicated Senior Engineers + AI Agentic Pair Programming',
+                    'cost_formula' => 'Base Fee (Rp 45M) + Sewa Swarm AI Ultra Cloud (Rp 15M)',
+                    'ai_swarm_specs' => [
+                        'Concurrency: 4 Parallel AI Agents untuk boilerplate, migration, test synthesis',
+                        'Context Window: High-Context Reasoning 1M Tokens',
+                        'Prioritas Cloud Inference Zero-Queue',
+                    ],
+                    'description' => 'Akselerasi peluncuran 2 pekan dengan bantuan kluster komputasi Gemini Ultra untuk mempercepat integrasi kompleks dan verifikasi arsitektur.',
+                ],
+                [
+                    'id' => 'scale_priority',
+                    'name' => 'Priority Enterprise Delivery (War Room)',
+                    'duration' => '10 Hari Kerja',
+                    'badge' => 'PRIORITY // HIGH_SPEED',
+                    'speed_multiplier' => '2.1x (Rilis 10 Hari)',
+                    'contract_amount' => 75000000.00,
+                    'dp_amount' => 37500000.00,
+                    'pelunasan_amount' => 37500000.00,
+                    'ai_quota_spec' => 'Gemini Ultra 6-Agent Swarm + Continuous Integration Pipeline',
+                    'squad_allocation' => '3 Senior Engineers (Dedicated War Room)',
+                    'cost_formula' => 'Base Fee (Rp 45M) + AI Ultra Swarm (Rp 15M) + Dedicated War Room Squad (Rp 15M)',
+                    'ai_swarm_specs' => [
+                        'War-Room Engineering intensif dengan pemantauan deployment real-time',
+                        'Throughput inferensi maksimum untuk sintesis kode tanpa antrean',
+                    ],
+                    'description' => 'Pengerjaan prioritas tinggi dengan alokasi skuad penuh untuk mengejar momentum peluncuran bisnis strategis.',
+                ],
+            ];
+        }
+
+        // 4. TIER ENTERPRISE (> Rp 75M+)
+        if ($isTierEnterprise) {
+            return [
+                [
+                    'id' => 'enterprise_standard',
+                    'name' => 'Enterprise Scaled Platform (Regular)',
+                    'duration' => '21 Hari Kerja',
+                    'badge' => 'ENTERPRISE_REGULAR',
+                    'speed_multiplier' => '1.0x (Pace Enterprise)',
+                    'contract_amount' => 75000000.00,
+                    'dp_amount' => 37500000.00,
+                    'pelunasan_amount' => 37500000.00,
+                    'ai_quota_spec' => 'Full AI Database Vector Engine (pgvector) + Multi-Tenant RBAC',
+                    'squad_allocation' => 'Principal Architect + 2 Senior Engineers + Security Auditor',
+                    'cost_formula' => 'Base Enterprise Platform Fee (Rp 75.000.000)',
+                    'ai_swarm_specs' => [
+                        'pgvector Semantic Search & AI RAG Integration',
+                        'High-Availability PostgreSQL Cluster & Read Replicas Ready',
+                        'Kepatuhan Standar UU PDP & OWASP Top 10 Enterprise Audit Trail',
+                    ],
+                    'description' => 'Platform enterprise berskala penuh dengan kapabilitas pencarian AI semantik, keamanan data audit-trail mendalam, dan arsitektur berdaya tahan tinggi.',
+                ],
+                [
+                    'id' => 'enterprise_fast',
+                    'name' => 'Gemini Ultra Swarm Parallel Sprint',
+                    'duration' => '14 Hari Kerja',
+                    'badge' => 'RECOMMENDED // ULTRA_SWARM',
+                    'speed_multiplier' => '1.5x (Akselerasi 2 Pekan)',
+                    'contract_amount' => 100000000.00,
+                    'dp_amount' => 50000000.00,
+                    'pelunasan_amount' => 50000000.00,
+                    'ai_quota_spec' => 'Gemini Ultra 8-Agent Swarm Cluster + 2M Max Context Uncapped TPS',
+                    'squad_allocation' => 'Lead Architect + 3 Dedicated Senior Engineers + AI Agentic Pair',
+                    'cost_formula' => 'Base Enterprise (Rp 75M) + Sewa Swarm AI Ultra Cluster (Rp 25M)',
+                    'ai_swarm_specs' => [
+                        '8 Parallel AI Subagents untuk refactoring real-time dan automatic code auditing',
+                        'Context Window: Maximum 2M Tokens Full-Repository Context',
+                        'Alokasi Komputasi Priority Uncapped',
+                    ],
+                    'description' => 'Kombinasi tenaga ahli senior dan kluster AI agent Gemini Ultra untuk meluncurkan sistem enterprise berstandar industri dalam 14 hari kerja.',
+                ],
+                [
+                    'id' => 'enterprise_hyper',
+                    'name' => 'Hyper-Sprint Emergency (24/7 War Room)',
+                    'duration' => '7 Hari Kalender',
+                    'badge' => 'EMERGENCY // 24_7_WAR_ROOM',
+                    'speed_multiplier' => '3.0x (Rilis 1 Pekan Kalender)',
+                    'contract_amount' => 125000000.00,
+                    'dp_amount' => 62500000.00,
+                    'pelunasan_amount' => 62500000.00,
+                    'ai_quota_spec' => 'Gemini Ultra Uncapped Swarm + Dedicated 24/7 Engineering Shift',
+                    'squad_allocation' => 'Dedicated Tri-Engineer War Room (24/7 Shift Rotation)',
+                    'cost_formula' => 'Base Enterprise (Rp 75M) + Swarm AI Ultra Uncapped (Rp 30M) + War Room Tri-Shift 24/7 (Rp 20M)',
+                    'ai_swarm_specs' => [
+                        'Rotasi engineer 24 jam non-stop dengan deployment synchronization kontinyu',
+                        'SLA Uptime & Respons Darurat 99.9% dengan dedicated DevOps on-call',
+                    ],
+                    'description' => 'Peluncuran darurat dalam 1 pekan kalender untuk kebutuhan bisnis dengan urgensi kritis absolut.',
+                ],
+            ];
+        }
+
+        // DEFAULT BALANCED CONTINUUM (If budget unspecified)
         return [
             [
-                'id' => 'standard',
-                'name' => 'Standard Velocity (Regular)',
-                'duration' => '30 Hari Kerja',
-                'badge' => 'STANDARD_SPRINT',
-                'speed_multiplier' => '1.0x (Normal Pace)',
+                'id' => 'starter_lean',
+                'name' => 'Starter Lean MVP (Pondasi Cepat Rilis)',
+                'duration' => '7 Hari Kerja',
+                'badge' => 'LEAN_STARTER // REALISTIC_MVP',
+                'speed_multiplier' => '1.0x (Pace Standar)',
+                'contract_amount' => 7500000.00,
+                'dp_amount' => 3750000.00,
+                'pelunasan_amount' => 3750000.00,
+                'ai_quota_spec' => 'Pre-Built Modular Monolith Blueprint Engine',
+                'squad_allocation' => '1 Dedicated Fullstack Specialist',
+                'cost_formula' => 'Base Modular Setup (Rp 7.500.000)',
+                'ai_swarm_specs' => [
+                    'Arsitektur: Pre-built Lean Monolith Web Portal (Laravel 13 & Filament v5)',
+                    'Modul: Profil Bisnis/Katalog, Form Pemesanan, Notifikasi WhatsApp, & QRIS',
+                    'Infrastruktur: Setup Cloud Starter hemat biaya (< Rp 100rb/bln)',
+                    'Handoff: Panduan video operasional mandiri & serah terima kredensial',
+                ],
+                'description' => 'Titik mulai yang sangat ramah dan realistis bagi UMKM atau komunitas untuk memiliki sistem digital profesional tanpa hambatan modal besar.',
+            ],
+            [
+                'id' => 'growth_pro',
+                'name' => 'Business Operations Pro (Custom Portal & VPS)',
+                'duration' => '14 Hari Kerja',
+                'badge' => 'RECOMMENDED // BEST_BALANCE',
+                'speed_multiplier' => '1.5x (Akselerasi Terencana)',
+                'contract_amount' => 25000000.00,
+                'dp_amount' => 12500000.00,
+                'pelunasan_amount' => 12500000.00,
+                'ai_quota_spec' => 'Midtrans Payment Gateway, Multi-Role RBAC & Redis Worker',
+                'squad_allocation' => 'Lead Architect + Senior Fullstack Specialist',
+                'cost_formula' => 'Base Professional (Rp 17.5M) + Dedicated VPS & Payment Gateway (Rp 7.5M)',
+                'ai_swarm_specs' => [
+                    'Arsitektur Modern Monolith dengan isolasi basis data PostgreSQL ULID',
+                    'Dashboard Filament v5 dengan filter instan dan ekspor laporan otomatis',
+                    'Integrasi Payment Gateway Midtrans (QRIS, Kartu Kredit, Virtual Account)',
+                    'Dedicated VPS Container via Nixpacks & Docker',
+                ],
+                'description' => 'Keseimbangan terbaik antara kelengkapan fitur bisnis kustom, performa server terisolasi, dan nilai investasi yang proporsional.',
+            ],
+            [
+                'id' => 'scale_fast',
+                'name' => 'Enterprise High-Speed Sprint (Gemini Ultra)',
+                'duration' => '21 Hari Kerja',
+                'badge' => 'SCALE_UP // HIGH_SPEED',
+                'speed_multiplier' => '2.0x (Skala Komersial)',
                 'contract_amount' => 50000000.00,
                 'dp_amount' => 25000000.00,
                 'pelunasan_amount' => 25000000.00,
-                'ai_quota_spec' => 'Gemini Pro standard single-thread reasoning assistant',
-                'squad_allocation' => '1 Lead Fullstack Engineer + QA Reviewer',
-                'cost_formula' => 'Base Engineering Fee (Rp 50.000.000) + Kuota AI Dasar (Rp 0)',
+                'ai_quota_spec' => 'PostgreSQL 16+ pgvector AI Ready + Gemini Swarm Acceleration',
+                'squad_allocation' => 'Principal Architect + 2 Senior Engineers',
+                'cost_formula' => 'Base Enterprise (Rp 35M) + AI Ultra Swarm & Concurrency (Rp 15M)',
                 'ai_swarm_specs' => [
-                    'Concurrency: 1 AI Agent Session',
-                    'Context Window: Standar 128k Tokens',
-                    'Alokasi Komputasi: Normal Non-Priority Queue',
+                    'Arsitektur High-Concurrency berskala jutaan data dengan keyset pagination O(1)',
+                    'Integrasi pgvector AI database untuk pencarian semantik cerdas',
+                    'SLA Prioritas & Garansi Pemeliharaan Penuh 60 Hari',
                 ],
-                'description' => 'Pengerjaan reguler terencana dengan siklus 5 sprint standar (30 hari kerja). Pilihan ideal untuk validasi konsep tanpa urgensi waktu ketat.',
-            ],
-            [
-                'id' => 'fast_track',
-                'name' => 'Fast-Track Sprint (Gemini Ultra Accelerator)',
-                'duration' => '14 Hari Kerja',
-                'badge' => '2X_SPEED // RECOMMENDED',
-                'speed_multiplier' => '2.14x (Pangkas 53% Waktu)',
-                'contract_amount' => 75000000.00,
-                'dp_amount' => 37500000.00,
-                'pelunasan_amount' => 37500000.00,
-                'ai_quota_spec' => 'Gemini Ultra 4-Agent Parallel Swarm + High-Reasoning Token Pipeline',
-                'squad_allocation' => '2 Dedicated Senior Engineers + AI Agentic Pair Programming',
-                'cost_formula' => 'Base Fee (Rp 50M) + Sewa Swarm AI Ultra Cloud (Rp 15M) + Dual Senior Squad Concurrency (Rp 10M)',
-                'ai_swarm_specs' => [
-                    'Concurrency: 4 Parallel AI Agents (Schema Architect, CRUD Builder, Test Synthesizer, Island UI Weaver)',
-                    'Context Window: High-Context Reasoning 1M Tokens',
-                    'Alokasi Komputasi: Priority Cloud Inference (Zero-Queue)',
-                    'Automated Task: Auto-generating boilerplate, automated unit testing, & architecture sanity verification',
-                ],
-                'description' => 'Akselerasi peluncuran 2x lebih cepat (selesai 2 pekan). Biaya tambahan mencakup alokasi sewa kapasitas cloud Swarm AI Gemini Ultra untuk auto-generating boilerplate, automated unit test, dan dual-engineer parallel sprint.',
-            ],
-            [
-                'id' => 'hyper_sprint',
-                'name' => 'Hyper-Sprint Emergency (24/7 War Room)',
-                'duration' => '7 Hari Kerja',
-                'badge' => '4X_SPEED // EMERGENCY',
-                'speed_multiplier' => '4.28x (Rilis 1 Pekan Kalender)',
-                'contract_amount' => 100000000.00,
-                'dp_amount' => 50000000.00,
-                'pelunasan_amount' => 50000000.00,
-                'ai_quota_spec' => 'Gemini Ultra 8-Agent Swarm Cluster + 2M Max Context Uncapped TPS',
-                'squad_allocation' => 'Dedicated Tri-Engineer War Room (24/7 Shift Rotation)',
-                'cost_formula' => 'Base Fee (Rp 50M) + Sewa Dedicated AI Cluster Uncapped (Rp 30M) + War Room Tri-Shift 24/7 (Rp 20M)',
-                'ai_swarm_specs' => [
-                    'Concurrency: 8 Parallel AI Subagents + Continuous Self-Healing Code Pipeline',
-                    'Context Window: Maximum 2M Tokens Full-Repository Context',
-                    'Alokasi Komputasi: Dedicated Uncapped Instance (Maximum Throughput)',
-                    'Automated Task: Real-time multi-agent refactoring, continuous bug-sweeping, & instantaneous deployment sync',
-                ],
-                'description' => 'Peluncuran darurat dalam 1 pekan kalender. Prioritas tertinggi dengan war-room engineering 24 jam non-stop dan kuota inferensi Gemini Ultra tak terbatas untuk integrasi kilat.',
+                'description' => 'Solusi berdaya tahan tinggi bagi entitas bisnis yang siap bersaing di pasar komersial dengan volume transaksi masif.',
             ],
         ];
     }

@@ -40,7 +40,7 @@ class ProductForm
                                             ->placeholder('Contoh: Enterprise Rapid Monolith')
                                             ->required()
                                             ->maxLength(255),
-                                        RichEditor::make('description.id')
+                                        \App\Support\FilamentRichEditor::make('description.id', 'products')
                                             ->label('Deskripsi Layanan (ID)')
                                             ->columnSpanFull(),
                                     ]),
@@ -54,7 +54,7 @@ class ProductForm
                                             ->placeholder('e.g. Enterprise Rapid Monolith')
                                             ->required()
                                             ->maxLength(255),
-                                        RichEditor::make('description.en')
+                                        \App\Support\FilamentRichEditor::make('description.en', 'products')
                                             ->label('Service Description (EN)')
                                             ->columnSpanFull(),
                                     ]),

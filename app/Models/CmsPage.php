@@ -30,13 +30,17 @@ class CmsPage extends Model
     {
         static::saved(function (CmsPage $page) {
             \Illuminate\Support\Facades\Cache::forget("cms_page_{$page->slug}");
+            \Illuminate\Support\Facades\Cache::forget("cms_page_data_{$page->slug}");
             \Illuminate\Support\Facades\Cache::forget('cms_page_home');
+            \Illuminate\Support\Facades\Cache::forget('cms_page_data_home');
             \Illuminate\Support\Facades\Cache::forget('cms_pages_all');
         });
 
         static::deleted(function (CmsPage $page) {
             \Illuminate\Support\Facades\Cache::forget("cms_page_{$page->slug}");
+            \Illuminate\Support\Facades\Cache::forget("cms_page_data_{$page->slug}");
             \Illuminate\Support\Facades\Cache::forget('cms_page_home');
+            \Illuminate\Support\Facades\Cache::forget('cms_page_data_home');
             \Illuminate\Support\Facades\Cache::forget('cms_pages_all');
         });
     }

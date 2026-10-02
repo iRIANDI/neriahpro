@@ -92,9 +92,19 @@ After completing any task, you MUST always suggest which deployment script numbe
 # Mandatory Rule: Local FontAwesome Icons (Zero CDN Latency)
 - 🎨 **LOCAL FONTAWESOME LIBRARY**: Representative icons for navigation, footer, global alert, and plugins MUST use local SVGs (`config/fontawesome.php` and `\App\Support\FontAwesome::svg('name')`) to prevent third-party CDN latency, blocking, or offline broken layouts.
 
-# Mandatory Rule: Project OS Developer AI Cockpit & Visual Timeline Sync
-- ⏱️ **VISUAL SPRINT TIMELINE**: The client-facing PRD view must render an interactive visual timeline synchronized with the signed contract duration (total days, elapsed days, remaining days, 5 milestone stages).
-- 🧭 **DEV COCKPIT PLAYBOOK**: Include step-by-step developer playbook (Fase 1 Produksi Vertikal -> Fase 2 Quality Testing Gate -> Fase 3 Delivery & Scope Lock) with a one-click copyable Master Orchestration Prompt for IDE AI agents.
+# Mandatory Rule: Curator Picker & Shallow Storage Hierarchy (Server Inodes & RAM Optimization)
+- 🖼️ **CURATOR PICKER MANDATORY**: Every image input in Filament v5 backend admin MUST use Curator Picker (`\Awcodes\Curator\Components\Forms\CuratorPicker` or `\App\Support\FilamentCuratorHelper::picker('name')`).
+- 📁 **SHALLOW DIRECTORY MAP (MAX 1-2 LEVELS)**: Every image upload MUST specify a shallow directory mapping (e.g. `->directory('products')`, `->directory('branding')`, `->directory('media')`). NEVER use deep recursive folder paths (such as `uploads/YYYY/MM/DD/user/id/...`) because deep directory nesting exhausts Linux filesystem inodes, degrades OS filesystem traversal, and spikes RAM consumption when scanning directories.
+
+# Mandatory Rule: Full-Featured Rich Text Editor with Curator Media Insertion
+- 📝 **FULL-FEATURED TOOLBAR MANDATORY**: Any textarea accepting paragraphs or long descriptive copy MUST use a standardized full-featured Rich Text Editor (`\App\Support\FilamentRichEditor::make('content', 'shallow_dir')`).
+- 🛠️ **ALL TOOLBAR BUTTONS ENABLED**: Must explicitly enable `['attachFiles', 'blockquote', 'bold', 'bulletList', 'codeBlock', 'h2', 'h3', 'italic', 'link', 'orderedList', 'redo', 'strike', 'underline', 'undo']`.
+- 🖼️ **INTEGRATED MEDIA INSERTION**: Must support direct media insertion using shallow public directory attachments (`fileAttachmentsDisk('public')`, `fileAttachmentsDirectory('shallow_dir')`).
+
+# Mandatory Rule: Eloquent Cache Serialization Guard (Incomplete Class Prevention)
+- 🚫 **NEVER CACHE RAW ELOQUENT INSTANCES**: In `Cache::rememberForever()`, NEVER serialize raw Eloquent model instances across worker processes or sessions. Serializing Eloquent models in cache causes fatal `ErrorException: The script tried to access a property on an incomplete object (__PHP_Incomplete_Class)` if loaded before autoloader or across separate execution lifecycles.
+- ⚡ **CACHE PRIMITIVE ATTRIBUTES ARRAY**: ALWAYS store raw attribute arrays (`$record ? $record->getAttributes() : null`) or JSON, and reconstitute the model via `(new Model)->newFromBuilder($cachedAttributes)`.
+- 🛡️ **DEFENSIVE VIEW GUARD**: Views accessing cached models must always guard against `__PHP_Incomplete_Class` and self-heal from database if invalid.
 
 # AlpineJS HTML Escaping Rule
 When writing inline javascript within AlpineJS attributes (such as `x-data="..."`), NEVER use raw double quotes (") or single quotes (') inside string literals as it can break the HTML attribute parsing. ALWAYS encode them into HTML entities:

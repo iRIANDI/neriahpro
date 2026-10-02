@@ -2,14 +2,20 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Terminal, Layers } from 'lucide-react';
 
-const steps = [
-  { id: 'intro', title: 'Identitas Proyek', desc: 'Siapa Anda dan apa nama entitas Anda?' },
-  { id: 'vision', title: 'Visi & Target Masalah', desc: 'Apa masalah mendesak yang diselesaikan?' },
-  { id: 'budget', title: 'Alokasi & Timeline', desc: 'Berapa estimasi investasi & target rilis?' },
-  { id: 'consent', title: 'Protokol Keamanan Data', desc: 'Finalisasi dan persetujuan pengolahan ide' }
-];
+export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLocale }) {
+  const isEn = currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
 
-export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
+  const steps = isEn ? [
+    { id: 'intro', title: 'Project Identity', desc: 'Who are you and what is your organization name?' },
+    { id: 'vision', title: 'Vision & Problem Statement', desc: 'What urgent problem are you looking to solve?' },
+    { id: 'budget', title: 'Budget & Timeline', desc: 'Estimated investment range and launch target?' },
+    { id: 'consent', title: 'Data Security Protocol', desc: 'Final review and idea processing authorization' }
+  ] : [
+    { id: 'intro', title: 'Identitas Proyek', desc: 'Siapa Anda dan apa nama entitas Anda?' },
+    { id: 'vision', title: 'Visi & Target Masalah', desc: 'Apa masalah mendesak yang diselesaikan?' },
+    { id: 'budget', title: 'Alokasi & Timeline', desc: 'Berapa estimasi investasi & target rilis?' },
+    { id: 'consent', title: 'Protokol Keamanan Data', desc: 'Finalisasi dan persetujuan pengolahan ide' }
+  ];
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
@@ -46,8 +52,10 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
       if (window.showToast) {
         window.showToast({
           type: 'warning',
-          title: 'PERSETUJUAN DIBUTUHKAN',
-          message: 'Harap setujui komitmen kerahasiaan dan privasi data sebelum melanjutkan.'
+          title: isEn ? 'CONSENT REQUIRED' : 'PERSETUJUAN DIBUTUHKAN',
+          message: isEn 
+            ? 'Please agree to the confidentiality and privacy protocol before proceeding.'
+            : 'Harap setujui komitmen kerahasiaan dan privasi data sebelum melanjutkan.'
         });
       }
       return;
@@ -70,8 +78,10 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
         if (window.showToast) {
           window.showToast({
             type: 'success',
-            title: 'DATA TERKIRIM',
-            message: 'Informasi onboarding Anda telah berhasil disimpan.'
+            title: isEn ? 'DATA RECEIVED' : 'DATA TERKIRIM',
+            message: isEn 
+              ? 'Your onboarding brief has been securely encrypted and stored.'
+              : 'Informasi onboarding Anda telah berhasil disimpan.'
           });
         }
       } else {
@@ -79,8 +89,10 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
         if (window.showToast) {
           window.showToast({
             type: 'error',
-            title: 'PENGIRIMAN GAGAL',
-            message: 'Gagal mengirim data. Silakan coba lagi atau hubungi via WhatsApp.'
+            title: isEn ? 'SUBMISSION FAILED' : 'PENGIRIMAN GAGAL',
+            message: isEn 
+              ? 'Failed to send data. Please retry or contact via WhatsApp.'
+              : 'Gagal mengirim data. Silakan coba lagi atau hubungi via WhatsApp.'
           });
         }
       }
@@ -89,8 +101,10 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
       if (window.showToast) {
         window.showToast({
           type: 'error',
-          title: 'KENDALA JARINGAN',
-          message: 'Terjadi kendala jaringan saat menghubungi server.'
+          title: isEn ? 'NETWORK ERROR' : 'KENDALA JARINGAN',
+          message: isEn 
+            ? 'Network disruption detected while connecting to server.'
+            : 'Terjadi kendala jaringan saat menghubungi server.'
         });
       }
     } finally {
@@ -109,23 +123,25 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
             INITIALIZATION COMPLETE // DATA ENCRYPTED
           </span>
           <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight mb-4">
-            Ide & Kebutuhan Berhasil Diterima.
+            {isEn ? 'Project Vision & Brief Successfully Received.' : 'Ide & Kebutuhan Berhasil Diterima.'}
           </h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed mb-8 font-sans">
-            Data Anda telah diamankan dengan enkripsi enterprise dan arsitektur database terdistribusi. Tim teknis Neriah Pro akan menyusun draf proposal arsitektur awal dalam 1x24 jam kerja.
+            {isEn 
+              ? 'Your brief has been secured with enterprise encryption and distributed database architecture. Neriah Pro engineering team will formulate the initial architecture draft within 1 business day.'
+              : 'Data Anda telah diamankan dengan enkripsi enterprise dan arsitektur database terdistribusi. Tim teknis Neriah Pro akan menyusun draf proposal arsitektur awal dalam 1x24 jam kerja.'}
           </p>
           <div className="flex flex-wrap justify-center gap-4 font-mono text-xs uppercase font-bold">
             <a
               href="/blueprint"
               className="bg-emerald-600 hover:bg-emerald-500 text-black px-6 py-3.5 rounded-none transition flex items-center gap-2"
             >
-              <span>Buka PRD Blueprint Generator &rarr;</span>
+              <span>{isEn ? 'Launch PRD Blueprint Generator →' : 'Buka PRD Blueprint Generator →'}</span>
             </a>
             <a
               href="/"
               className="border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-6 py-3.5 rounded-none transition"
             >
-              Kembali ke Beranda
+              {isEn ? 'Back to Home' : 'Kembali ke Beranda'}
             </a>
           </div>
         </div>
@@ -142,7 +158,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
           <div>
             <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold mb-1">
               <Terminal className="w-4 h-4" />
-              <span>ONBOARDING ENGINE // TAHAP {currentStep + 1} DARI {steps.length}</span>
+              <span>{isEn ? `ONBOARDING ENGINE // STAGE ${currentStep + 1} OF ${steps.length}` : `ONBOARDING ENGINE // TAHAP ${currentStep + 1} DARI ${steps.length}`}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
               {steps[currentStep].title}
@@ -185,7 +201,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
               <div className="space-y-6">
                 <div>
                   <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
-                    Nama Lengkap PIC *
+                    {isEn ? 'Full Name of PIC *' : 'Nama Lengkap PIC *'}
                   </label>
                   <input 
                     type="text" 
@@ -193,12 +209,12 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
                     value={formData.name} 
                     onChange={handleChange} 
                     className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none" 
-                    placeholder="Contoh: Alexander Wijaya" 
+                    placeholder={isEn ? "e.g. Alexander Wijaya" : "Contoh: Alexander Wijaya"} 
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
-                    Alamat Email Kerja *
+                    {isEn ? 'Work Email Address *' : 'Alamat Email Kerja *'}
                   </label>
                   <input 
                     type="email" 
@@ -206,12 +222,12 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
                     value={formData.email} 
                     onChange={handleChange} 
                     className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none" 
-                    placeholder="alexander@perusahaan.co.id" 
+                    placeholder="alexander@company.com" 
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
-                    Nama Badan Usaha / Brand (Opsional)
+                    {isEn ? 'Company Name / Brand (Optional)' : 'Nama Badan Usaha / Brand (Opsional)'}
                   </label>
                   <input 
                     type="text" 
@@ -219,7 +235,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
                     value={formData.company_name} 
                     onChange={handleChange} 
                     className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none" 
-                    placeholder="PT. Inovasi Solusi Bersama" 
+                    placeholder={isEn ? "e.g. Apex Global Solutions Inc." : "PT. Inovasi Solusi Bersama"} 
                   />
                 </div>
               </div>
@@ -229,7 +245,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
               <div className="space-y-6">
                 <div>
                   <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
-                    Uraikan Masalah atau Ide Aplikasi yang Ingin Dibuat *
+                    {isEn ? 'Describe the Problem or Software Idea You Want to Build *' : 'Uraikan Masalah atau Ide Aplikasi yang Ingin Dibuat *'}
                   </label>
                   <textarea 
                     name="vision" 
@@ -237,10 +253,10 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
                     onChange={handleChange} 
                     rows="6" 
                     className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none resize-none leading-relaxed" 
-                    placeholder="Jelaskan kebutuhan Anda: Misal kami membutuhkan platform logistik multi-cabang dengan tracking armada real-time, invoice otomatis, dan hak akses bertingkat..." 
+                    placeholder={isEn ? "Describe your requirements: e.g. We need a multi-branch logistics platform with real-time fleet tracking, automated invoicing, and role-based permissions..." : "Jelaskan kebutuhan Anda: Misal kami membutuhkan platform logistik multi-cabang dengan tracking armada real-time, invoice otomatis, dan hak akses bertingkat..."} 
                   />
                   <p className="text-xs font-mono text-zinc-500 mt-2">
-                    &bull; Catatan: Jangan sertakan kata sandi atau data kredensial rahasia.
+                    &bull; {isEn ? 'Note: Never include passwords or confidential API credentials.' : 'Catatan: Jangan sertakan kata sandi atau data kredensial rahasia.'}
                   </p>
                 </div>
               </div>
@@ -249,15 +265,20 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
             {currentStep === 2 && (
               <div className="space-y-6">
                 <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-3">
-                  Pilih Rentang Estimasi Investasi Proyek *
+                  {isEn ? 'Select Estimated Project Investment Range *' : 'Pilih Rentang Estimasi Investasi Proyek *'}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
+                  {(isEn ? [
+                    { id: '<$1,000', desc: 'Lightweight MVP / Rapid Prototyping' },
+                    { id: '$1,000 - $3,500', desc: 'Standard Operational Business System' },
+                    { id: '$3,500 - $10,000', desc: 'Full-Scale Enterprise Monolith' },
+                    { id: '>$10,000', desc: 'Custom Distributed / High Throughput' }
+                  ] : [
                     { id: '<Rp 15 Juta', desc: 'MVP Ringan / Prototyping Cepat' },
                     { id: 'Rp 15 - 50 Juta', desc: 'Sistem Bisnis Operasional Standar' },
                     { id: 'Rp 50 - 150 Juta', desc: 'Enterprise Monolith Skala Penuh' },
                     { id: '> Rp 150 Juta', desc: 'Custom Distributed / High Throughput' }
-                  ].map(range => (
+                  ]).map(range => (
                     <button 
                       key={range.id} 
                       type="button"
@@ -281,10 +302,12 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
                 <div className="bg-zinc-50 dark:bg-zinc-950 p-6 border border-zinc-200 dark:border-zinc-800 rounded-none">
                   <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold uppercase mb-2">
                     <ShieldCheck className="w-4 h-4" />
-                    <span>KOMITMEN KERAHASIAAN & DATA PRIVACY</span>
+                    <span>{isEn ? 'CONFIDENTIALITY COMMITMENT & DATA PRIVACY' : 'KOMITMEN KERAHASIAAN & DATA PRIVACY'}</span>
                   </div>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6 font-sans">
-                    Seluruh ide, deskripsi proses bisnis, dan rincian arsitektur yang Anda bagikan dilindungi dengan standar kerahasiaan ketat. Neriah Pro tidak akan pernah membagikan atau menjual data Anda kepada pihak ketiga.
+                    {isEn 
+                      ? 'All concepts, business process outlines, and architectural details you share are protected by strict non-disclosure standards. Neriah Pro never shares or sells client data to third parties.'
+                      : 'Seluruh ide, deskripsi proses bisnis, dan rincian arsitektur yang Anda bagikan dilindungi dengan standar kerahasiaan ketat. Neriah Pro tidak akan pernah membagikan atau menjual data Anda kepada pihak ketiga.'}
                   </p>
                   
                   <label className="flex items-start gap-3 cursor-pointer select-none">
@@ -296,7 +319,9 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
                       className="w-4 h-4 mt-0.5 accent-emerald-500 rounded-none cursor-pointer" 
                     />
                     <span className="text-xs font-sans text-zinc-700 dark:text-zinc-300">
-                      Saya menyetujui pemrosesan data ide dan spesifikasi teknis ini untuk keperluan penyusunan blueprint Neriah Pro.
+                      {isEn 
+                        ? 'I authorize the processing of this project brief and technical specs for Neriah Pro architecture blueprint generation.'
+                        : 'Saya menyetujui pemrosesan data ide dan spesifikasi teknis ini untuk keperluan penyusunan blueprint Neriah Pro.'}
                     </span>
                   </label>
                 </div>
@@ -318,7 +343,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
             }`}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Kembali</span>
+            <span>{isEn ? 'Back' : 'Kembali'}</span>
           </button>
           
           {currentStep < steps.length - 1 ? (
@@ -327,7 +352,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
               onClick={nextStep}
               className="bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black px-6 py-2.5 rounded-none transition flex items-center gap-2"
             >
-              <span>Lanjut</span>
+              <span>{isEn ? 'Next' : 'Lanjut'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : (
@@ -341,7 +366,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl }) {
                   : 'bg-emerald-600 hover:bg-emerald-500 text-black font-black'
               }`}
             >
-              <span>{isSubmitting ? 'Mengamankan...' : 'Kirim Kebutuhan'}</span>
+              <span>{isSubmitting ? (isEn ? 'Securing...' : 'Mengamankan...') : (isEn ? 'Submit Brief' : 'Kirim Kebutuhan')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}

@@ -14,12 +14,14 @@ import {
   Database
 } from 'lucide-react';
 
-export default function ProductGridIsland({ title, featureFlags }) {
+export default function ProductGridIsland({ title, featureFlags, currentLocale }) {
   const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
   const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
   const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
   const isContractEnabled = featureFlags?.enable_digital_contract !== false;
   const isClientOnboardingEnabled = featureFlags?.enable_client_onboarding !== false;
+
+  const isEn = currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
 
   const pillars = [
     {
@@ -27,15 +29,23 @@ export default function ProductGridIsland({ title, featureFlags }) {
       title: "Project OS & PRD Generator",
       tag: "ACTIVE & LIVE",
       badgeColor: "bg-emerald-500 text-black",
-      desc: "Platform otomatisasi sintesis ide bisnis menjadi Product Requirements Document (PRD), skema ERD PostgreSQL, alur kerja bertahap, dan penguncian kontrak kerja.",
-      features: [
+      desc: isEn 
+        ? "Automated platform synthesizing business concepts into comprehensive PRD blueprints, distributed PostgreSQL ERD schemas, sprint milestones, and contract scope lock."
+        : "Platform otomatisasi sintesis ide bisnis menjadi Product Requirements Document (PRD), skema ERD PostgreSQL, alur kerja bertahap, dan penguncian kontrak kerja.",
+      features: isEn ? [
+        "4-Block Discovery Intake Form",
+        "Automated Strict ULID ERD Schemas",
+        "MVP vs Phase 2 Scope Separation",
+        "Aligned Sprint & Milestone Estimates",
+        "Scope Lock & Midtrans DP Settlement"
+      ] : [
         "Formulir Kuesioner Discovery 4 Blok",
         "Skema ERD Otomatis Standar ULID",
         "Pemisahan Scope MVP vs Roadmap Fase 2",
         "Estimasi Sprint & Aligned Timeline",
         "Kunci Scope Kontrak & Pembayaran DP Midtrans"
       ],
-      ctaText: "Mulai Rancang Blueprint",
+      ctaText: isEn ? "Design Blueprint Now" : "Mulai Rancang Blueprint",
       ctaLink: "/blueprint",
       isPrimary: true
     },
@@ -44,15 +54,23 @@ export default function ProductGridIsland({ title, featureFlags }) {
       title: "Canva-Style CV & Portfolio Studio",
       tag: "AI & ATS READY",
       badgeColor: "bg-zinc-800 text-zinc-200",
-      desc: "Studio pembuat resume dan portofolio profesional interaktif bergaya Canva dengan drag-and-drop layer dan format ATS-ready internasional.",
-      features: [
+      desc: isEn 
+        ? "Interactive Canva-style professional resume and portfolio builder with drag-and-drop layers and international ATS-ready formats."
+        : "Studio pembuat resume dan portofolio profesional interaktif bergaya Canva dengan drag-and-drop layer dan format ATS-ready internasional.",
+      features: isEn ? [
+        "Drag & Drop Visual Canvas",
+        "Crisp Minimalist Engineering Design",
+        "High-Resolution Automated PDF Export",
+        "Cloud Profile Sync & Versioning",
+        "Public Shareable Portfolio Link"
+      ] : [
         "Kanvas Visual Drag & Drop",
         "Desain Minimalis Presisi & Sharp",
         "Ekspor PDF Otomatis High-Res",
         "Simpan Profil & Sinkronisasi Cloud",
         "Integrasi Link Portofolio Publik"
       ],
-      ctaText: "Buka Studio CV Pro",
+      ctaText: isEn ? "Open CV Pro Studio" : "Buka Studio CV Pro",
       ctaLink: "/cv-pro",
       isPrimary: false
     },
@@ -61,15 +79,23 @@ export default function ProductGridIsland({ title, featureFlags }) {
       title: "Digital Contract & Legal E-Signature",
       tag: "CRYPTOGRAPHIC SHA-256",
       badgeColor: "bg-zinc-800 text-zinc-200",
-      desc: "Modul pembuatan surat perjanjian kerja sama resmi dan penandatanganan digital sah untuk mengunci ruang lingkup pekerjaan sebelum proyek dimulai.",
-      features: [
+      desc: isEn 
+        ? "Official agreement synthesis and touchscreen/mouse legal digital signature module to lock project scopes before sprint kickoff."
+        : "Modul pembuatan surat perjanjian kerja sama resmi dan penandatanganan digital sah untuk mengunci ruang lingkup pekerjaan sebelum proyek dimulai.",
+      features: isEn ? [
+        "Touchscreen & Mouse Signature Capture",
+        "SHA-256 Cryptographic Hash & UTC Timestamp",
+        "Scope Freeze & Anti-Revision Protocol",
+        "Independent Addendum & Change Request Mechanism",
+        "Legal IP Address Audit Trail Logging"
+      ] : [
         "Perekaman Tanda Tangan Touchscreen & Mouse",
         "Enkripsi Hash SHA-256 & UTC Timestamp",
         "Protokol Scope Freeze / Penguncian Fitur",
         "Mekanisme Change Request (CR) Terpisah",
         "Rekam Jejak Audit IP Address Legal"
       ],
-      ctaText: "Pelajari Kontrak Digital",
+      ctaText: isEn ? "Explore Digital Contract" : "Pelajari Kontrak Digital",
       ctaLink: "/blueprint#contract",
       isPrimary: false
     },
@@ -78,15 +104,23 @@ export default function ProductGridIsland({ title, featureFlags }) {
       title: "Enterprise Rapid Monolith Development",
       tag: "ENTERPRISE SCALABILITY",
       badgeColor: "bg-zinc-800 text-zinc-200",
-      desc: "Jasa rekayasa perangkat lunak berskala tinggi menggunakan stack Modern Monolith (Laravel 13, Filament v5, PostgreSQL ULID, dan Redis) di atas Dedicated VPS.",
-      features: [
+      desc: isEn 
+        ? "High-scale software engineering service powered by the Modern Monolith stack (Laravel 13, Filament v5, PostgreSQL ULID, Redis) on dedicated VPS."
+        : "Jasa rekayasa perangkat lunak berskala tinggi menggunakan stack Modern Monolith (Laravel 13, Filament v5, PostgreSQL ULID, dan Redis) di atas Dedicated VPS.",
+      features: isEn ? [
+        "High-Speed Robust Monolith Backend",
+        "Filament PHP v5 Enterprise Admin Panel",
+        "Zero-Lag Keyset Cursor Pagination O(1)",
+        "Frontend Island Architecture (React + Livewire)",
+        "Dedicated Docker / Nixpacks VPS Environment"
+      ] : [
         "Backend Monolith Tangguh & Cepat Rilis",
         "Pusat Kendali Dasbor Filament PHP v5",
         "Algoritma Paginasi Keyset O(1) Tanpa Lemot",
         "Frontend Island Architecture (React + Livewire)",
         "Dedicated Docker / Nixpacks VPS Environment"
       ],
-      ctaText: "Konsultasi & Onboarding",
+      ctaText: isEn ? "Consultation & Onboarding" : "Konsultasi & Onboarding",
       ctaLink: "#onboarding",
       isPrimary: false
     }
@@ -105,8 +139,8 @@ export default function ProductGridIsland({ title, featureFlags }) {
   }
 
   const dynamicTitle = title 
-    ? title.replace(/\b4\b/g, activePillars.length) 
-    : `${activePillars.length} Pilar Layanan Digital Hub.`;
+    ? (typeof title === 'string' ? title.replace(/\b4\b/g, activePillars.length) : (isEn ? `${activePillars.length} Pillars of Our Digital Hub.` : `${activePillars.length} Pilar Layanan Digital Hub.`))
+    : (isEn ? `${activePillars.length} Pillars of Our Digital Hub.` : `${activePillars.length} Pilar Layanan Digital Hub.`);
 
   return (
     <section id="services" className="py-24 px-4 sm:px-6 max-w-7xl mx-auto bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors font-sans">

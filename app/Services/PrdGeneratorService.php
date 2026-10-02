@@ -1822,6 +1822,8 @@ class PrdGeneratorService
 9. **Anti-AI Malware Security Suite**: Modern multi-layered defense (Honeypot bot traps, CSP, rate limiting) with educational feedback for visitors.
 10. **Admin AI Agentic Engine**: Knowledge base, RAG (Retrieval-Augmented Generation), and native tool calling to prevent hallucination and empower executive decision-making.
 11. **Filament v5 Form Rule**: Always use `\Filament\Schemas\Schema` method signature for `form()`.
+12. **Filament v5 Curator Image Standard**: Every image upload input in Filament v5 MUST use Curator Picker and specify a shallow directory mapping (maximum 1-2 levels, e.g. ->directory('products') or ->directory('branding')). Deep recursive directory nesting is strictly forbidden to optimize Linux OS filesystem inodes and eliminate RAM overhead during folder scans.
+13. **Full-Featured Rich Text Standard**: Every textarea for lengthy descriptions/articles MUST use a standardized full-featured Rich Text Editor class (e.g. `\App\Support\FilamentRichEditor::make(...)`) with all toolbar capabilities enabled (H1-H6, formatting, lists, tables, links, code) AND integrated Curator media picker for image insertions.
 
 #### Target Files to Create / Modify:
 - {$filesStr}
@@ -1951,6 +1953,14 @@ PROMPT;
             'admin_ai_agentic_suite' => [
                 'rule' => 'Fitur AI Agentic Cerdas di Backend Admin (RAG, Knowledge Base & Tools Calling)',
                 'explanation' => 'Backend admin wajib dilengkapi mesin AI Agentic yang mengintegrasikan Knowledge Base terstruktur, Retrieval-Augmented Generation (RAG) untuk mencegah halusinasi, dan Native Tool Calling (database query inspection, system health audit, automated reporting) guna membantu admin dalam pengambilan keputusan strategis.',
+            ],
+            'curator_image_picker_and_shallow_directory' => [
+                'rule' => 'Standard Input Gambar Curator Picker & Optimalisasi Direktori Dangkal (Shallow Storage Inodes & RAM)',
+                'explanation' => 'Seluruh input gambar di backend admin Filament v5 WAJIB menggunakan Curator Picker dan menentukan map folder direktori penyimpanan (directory("...")) yang dangkal/shallow (maksimal 1-2 level kedalaman folder, cth: directory("products") atau directory("branding")). Dilarang keras membuat struktur folder bersarang terlalu dalam (deep nested directory seperti tahun/bulan/hari/user/id/...) karena memicu overhead inode filesystem OS Linux server, menghabiskan RAM saat traversal scanning, dan memperlambat pemrosesan pencarian media.',
+            ],
+            'full_featured_rich_text_with_curator' => [
+                'rule' => 'Standard Rich Text Lengkap & Integrasi Gambar Curator Picker',
+                'explanation' => 'Setiap textarea yang menginput kalimat atau uraian panjang wajib menggunakan Rich Text Editor dengan class terpusat (App\Support\FilamentRichEditor) yang memunculkan seluruh fitur toolbar lengkap (H1-H6, bold, italic, underline, strike, bullet & ordered lists, blockquote, code block, alignment, link, tables) dan terintegrasi dengan upload media gambar yang aman dan optimal.',
             ],
         ];
     }

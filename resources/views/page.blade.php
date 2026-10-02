@@ -6,10 +6,33 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php
-        $pageTitle = $page->title[app()->getLocale()] ?? $page->title['en'] ?? (is_string($page->title) ? $page->title : 'Digital Services Hub');
+        // Self-healing guard against incomplete class deserialization
+        if (!is_object($page) || $page instanceof \__PHP_Incomplete_Class) {
+            $page = \App\Models\CmsPage::where('slug', 'home')->where('is_published', true)->first() ?: (object)[
+                'title' => ['en' => 'Digital Services Hub', 'id' => 'Pusat Rekayasa Digital'],
+                'meta_description' => ['en' => 'High-retention digital architecture platform.', 'id' => 'Pusat arsitektur dan rekayasa perangkat lunak.'],
+                'slug' => 'home',
+                'plugins' => []
+            ];
+        }
+
+        $pageTitle = 'Digital Services Hub';
+        if (is_array($page->title)) {
+            $pageTitle = $page->title[app()->getLocale()] ?? $page->title['en'] ?? $page->title['id'] ?? 'Digital Services Hub';
+        } elseif (is_string($page->title)) {
+            $pageTitle = $page->title;
+        }
+
         $siteDomain = 'neriahpro.com';
         $fullTabTitle = "{$siteDomain} - {$pageTitle}";
-        $pageDesc = $page->meta_description[app()->getLocale()] ?? $page->meta_description['en'] ?? (is_string($page->meta_description) ? $page->meta_description : 'Pusat arsitektur dan rekayasa perangkat lunak berskala tinggi.');
+
+        $pageDesc = 'Pusat arsitektur dan rekayasa perangkat lunak berskala tinggi.';
+        if (is_array($page->meta_description)) {
+            $pageDesc = $page->meta_description[app()->getLocale()] ?? $page->meta_description['en'] ?? $page->meta_description['id'] ?? $pageDesc;
+        } elseif (is_string($page->meta_description)) {
+            $pageDesc = $page->meta_description;
+        }
+
         $currentUrl = url()->current();
     @endphp
 
@@ -148,12 +171,24 @@
                             $pluginName = 'CvPricingIsland';
                         }
                     }
+                    // Resolve multilingual fields for current active locale
+                    $locale = app()->getLocale();
+                    $rawContent = (array) ($plugin->content_data ?? $plugin->data ?? []);
+                    $pluginData = [];
+                    foreach ($rawContent as $k => $v) {
+                        if (is_array($v) && (isset($v['id']) || isset($v['en']))) {
+                            $pluginData[$k] = $v[$locale] ?? $v['en'] ?? $v['id'] ?? '';
+                        } else {
+                            $pluginData[$k] = $v;
+                        }
+                    }
                 @endphp
                 
                 @if($pluginName)
-                    @react($pluginName, array_merge((array) ($plugin->content_data ?? $plugin->data ?? []), [
+                    @react($pluginName, array_merge($pluginData, [
                         'whatsappNumber' => $globalSettings['company_whatsapp']->value ?? '628123456789',
                         'featureFlags' => $featureFlags,
+                        'currentLocale' => $locale,
                     ]))
                 @endif
             @endif

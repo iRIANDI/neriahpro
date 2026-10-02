@@ -41,7 +41,7 @@ class LegalPolicyForm
                                             ->placeholder('Contoh: Syarat dan Ketentuan Layanan')
                                             ->required()
                                             ->maxLength(255),
-                                        RichEditor::make('content.id')
+                                        \App\Support\FilamentRichEditor::make('content.id', 'policies')
                                             ->label('Isi Kebijakan Lengkap (ID)')
                                             ->required()
                                             ->columnSpanFull(),
@@ -56,7 +56,7 @@ class LegalPolicyForm
                                             ->placeholder('e.g. Terms and Conditions of Service')
                                             ->required()
                                             ->maxLength(255),
-                                        RichEditor::make('content.en')
+                                        \App\Support\FilamentRichEditor::make('content.en', 'policies')
                                             ->label('Full Policy Content (EN)')
                                             ->required()
                                             ->columnSpanFull(),

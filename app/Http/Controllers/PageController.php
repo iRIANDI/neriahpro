@@ -37,7 +37,18 @@ class PageController extends Controller
             // Table might not exist or connection issue, ignore safely
         }
 
-        $page = \Illuminate\Support\Facades\Cache::rememberForever("cms_page_{$slug}", function () use ($slug) {
+        // Clean up any stale legacy incomplete class cache
+        try {
+            $legacy = \Illuminate\Support\Facades\Cache::get("cms_page_{$slug}");
+            if ($legacy instanceof \__PHP_Incomplete_Class) {
+                \Illuminate\Support\Facades\Cache::forget("cms_page_{$slug}");
+            }
+        } catch (\Throwable) {
+            \Illuminate\Support\Facades\Cache::forget("cms_page_{$slug}");
+        }
+
+        // Cache raw attribute arrays to prevent __PHP_Incomplete_Class deserialization
+        $pageAttributes = \Illuminate\Support\Facades\Cache::rememberForever("cms_page_data_{$slug}", function () use ($slug) {
             $record = CmsPage::where('slug', $slug)->where('is_published', true)->first();
 
             // Auto-seed default landing page if missing on fresh deployment
@@ -53,8 +64,19 @@ class PageController extends Controller
                 }
             }
 
-            return $record;
+            return $record ? $record->getAttributes() : null;
         });
+
+        $page = null;
+        if (is_array($pageAttributes)) {
+            $page = (new CmsPage)->newFromBuilder($pageAttributes);
+        } elseif (! $pageAttributes) {
+            // Check directly from DB if cache was empty/stale
+            $page = CmsPage::where('slug', $slug)->where('is_published', true)->first();
+            if ($page) {
+                \Illuminate\Support\Facades\Cache::forever("cms_page_data_{$slug}", $page->getAttributes());
+            }
+        }
 
         if (! $page) {
             abort(404);

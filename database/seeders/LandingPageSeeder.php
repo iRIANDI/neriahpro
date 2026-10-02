@@ -31,9 +31,18 @@ class LandingPageSeeder extends Seeder
                 'type' => 'hero_section',
                 'is_active' => true,
                 'data' => [
-                    'headline' => 'PUSAT ARSITEKTUR & REKAYASA DIGITAL UNTUK PROYEK BERSKALA TINGGI.',
-                    'subheadline' => 'Ubah visi bisnis Anda menjadi Product Requirements Document (PRD) lengkap, skema basis data ERD PostgreSQL Strict ULID, alur kerja bertahap, dan penguncian kontrak kerja sama dalam hitungan menit.',
-                    'cta_text' => 'Mulai Blueprint Lengkap',
+                    'headline' => [
+                        'id' => 'PUSAT ARSITEKTUR & REKAYASA DIGITAL UNTUK PROYEK BERSKALA TINGGI.',
+                        'en' => 'DIGITAL ARCHITECTURE & ENTERPRISE SOFTWARE HUB FOR HIGH-SCALE PROJECTS.'
+                    ],
+                    'subheadline' => [
+                        'id' => 'Ubah visi bisnis Anda menjadi Product Requirements Document (PRD) lengkap, skema basis data ERD PostgreSQL Strict ULID, alur kerja bertahap, dan penguncian kontrak kerja sama dalam hitungan menit.',
+                        'en' => 'Transform your business vision into comprehensive Product Requirements Documents (PRDs), distributed PostgreSQL Strict ULID schemas, sprint milestones, and locked contracts in minutes.'
+                    ],
+                    'cta_text' => [
+                        'id' => 'Mulai Blueprint Lengkap',
+                        'en' => 'Launch Architecture Blueprint'
+                    ],
                     'cta_link' => '/blueprint'
                 ]
             ],
@@ -41,15 +50,24 @@ class LandingPageSeeder extends Seeder
                 'type' => 'feature_grid',
                 'is_active' => true,
                 'data' => [
-                    'title' => '4 Pilar Layanan Digital Hub.'
+                    'title' => [
+                        'id' => '4 Pilar Layanan Digital Hub.',
+                        'en' => '4 Pillars of Our Digital Hub.'
+                    ]
                 ]
             ],
             [
                 'type' => 'onboarding_form',
                 'is_active' => true,
                 'data' => [
-                    'title' => 'Onboarding Engine & Discovery',
-                    'description' => 'Sampaikan ide dan spesifikasi aplikasi Anda secara rahasia dan terenkripsi.'
+                    'title' => [
+                        'id' => 'Onboarding Engine & Discovery',
+                        'en' => 'Onboarding Engine & Discovery'
+                    ],
+                    'description' => [
+                        'id' => 'Sampaikan ide dan spesifikasi aplikasi Anda secara rahasia dan terenkripsi.',
+                        'en' => 'Submit your application ideas and system specifications securely with end-to-end encryption.'
+                    ]
                 ]
             ]
         ];
@@ -73,15 +91,24 @@ class LandingPageSeeder extends Seeder
                 'type' => 'cv_pricing_table',
                 'is_active' => true,
                 'data' => [
-                    'headline' => 'INVESTASI KARIR IMPIAN // PILIHAN KELAS & KUOTA CV PRO',
-                    'subheadline' => 'Pilih paket yang sesuai dengan akselerasi karir Anda. Pengunjung gratis tetap dapat mengisi form secara manual dan mengunduh PDF secara cuma-cuma.',
+                    'headline' => [
+                        'id' => 'INVESTASI KARIR IMPIAN // PILIHAN KELAS & KUOTA CV PRO',
+                        'en' => 'CAREER ACCELERATION INVESTMENT // CV PRO TIERS & QUOTA'
+                    ],
+                    'subheadline' => [
+                        'id' => 'Pilih paket yang sesuai dengan akselerasi karir Anda. Pengunjung gratis tetap dapat mengisi form secara manual dan mengunduh PDF secara cuma-cuma.',
+                        'en' => 'Select the tier tailored to your career trajectory. Free tier includes full manual resume creation and complimentary PDF export.'
+                    ],
                 ]
             ],
             [
                 'type' => 'feature_grid',
                 'is_active' => true,
                 'data' => [
-                    'title' => 'Ekosistem Layanan Digital Terintegrasi.'
+                    'title' => [
+                        'id' => 'Ekosistem Layanan Digital Terintegrasi.',
+                        'en' => 'Integrated Digital Services Ecosystem.'
+                    ]
                 ]
             ]
         ];

@@ -15,6 +15,38 @@ class EmailCampaignForm
     {
         return $schema
             ->components([
+                Section::make('Identitas Pengirim & Routing Balasan (Reply-To)')
+                    ->description('Tentukan nama & email pengirim kustom serta email tujuan ketika penerima membalas.')
+                    ->schema([
+                        TextInput::make('sender_name')
+                            ->label('Nama Pengirim (Display Name)')
+                            ->placeholder('e.g. Yoseph Iriandi / Neriah Pro')
+                            ->default('Yoseph Iriandi - Neriah Pro')
+                            ->required()
+                            ->maxLength(255),
+
+                        TextInput::make('sender_email')
+                            ->label('Email Pengirim (Sender Address)')
+                            ->placeholder('e.g. yoseph@neriahpro.com')
+                            ->default('yoseph@neriahpro.com')
+                            ->email()
+                            ->required()
+                            ->helperText('Bebas menggunakan nama alamat email apapun pada domain resmi neriahpro.com.'),
+
+                        TextInput::make('reply_to_email')
+                            ->label('Email Tujuan Balasan (Reply-To Header)')
+                            ->placeholder('e.g. yoseph.iriandi.tambunan@gmail.com')
+                            ->default('yoseph.iriandi.tambunan@gmail.com')
+                            ->email()
+                            ->required()
+                            ->helperText('PENTING: Ketika penerima menekan "Reply/Balas", email akan langsung terkirim ke Gmail pribadi ini.'),
+
+                        TextInput::make('reply_to_name')
+                            ->label('Nama Penerima Balasan')
+                            ->default('Yoseph Iriandi')
+                            ->maxLength(255),
+                    ])->columns(2),
+
                 Section::make('Informasi Kampanye Promosi')
                     ->description('Tentukan judul internal, audiens target, dan subjek email penawaran.')
                     ->schema([
@@ -27,14 +59,34 @@ class EmailCampaignForm
                         Select::make('target_audience')
                             ->label('Target Segmen Klien')
                             ->options([
-                                'all' => 'Semua Klien Terdaftar (Leads, Blueprint & CV Pro)',
+                                'all' => 'Semua Klien Terdaftar (CRM Leads, Blueprint & CV Pro)',
+                                'lead_contacts' => 'Database Kontak CRM / Leads Perusahaan',
+                                'manual_recipient' => 'Kirim ke 1 Penerima Spesifik (Kustom)',
                                 'onboarding_clients' => 'Klien Leads Onboarding Saja',
                                 'blueprint_clients' => 'Klien Project OS Blueprint',
                                 'cv_users' => 'Pengguna & Kandidat CV Pro',
                             ])
                             ->default('all')
+                            ->live()
                             ->required()
-                            ->helperText('Sistem akan otomatis menghapus duplikasi alamat email saat pengiriman.'),
+                            ->helperText('Pilih audiens tujuan atau pilih 1 penerima manual untuk pengiriman langsung.'),
+
+                        TextInput::make('custom_recipient_email')
+                            ->label('Email Penerima Kustom')
+                            ->placeholder('calon.klien@perusahaan.com')
+                            ->email()
+                            ->visible(fn ($get) => $get('target_audience') === 'manual_recipient')
+                            ->required(fn ($get) => $get('target_audience') === 'manual_recipient'),
+
+                        TextInput::make('custom_recipient_name')
+                            ->label('Nama Penerima Kustom')
+                            ->placeholder('Bpk. Budi Santoso')
+                            ->visible(fn ($get) => $get('target_audience') === 'manual_recipient'),
+
+                        TextInput::make('custom_company_name')
+                            ->label('Nama Perusahaan Penerima')
+                            ->placeholder('PT Teknologi Nusantara Maju')
+                            ->visible(fn ($get) => $get('target_audience') === 'manual_recipient'),
 
                         TextInput::make('subject')
                             ->label('Subjek Email')

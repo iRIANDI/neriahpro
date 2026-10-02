@@ -1801,8 +1801,20 @@ class PrdGeneratorService
 1. **Framework & Engine**: Laravel 13, Filament v5, Livewire 4, PostgreSQL 16+.
 2. **Primary Key Standard**: ALWAYS use ULID (`->ulid('id')->primary()`) on business tables. NEVER use AUTO_INCREMENT, ->id(), or ->uuid().
 3. **Pagination Rule**: ALWAYS use Keyset Cursor Pagination (`cursorPaginate()`) with `->orderBy('id', 'asc')`. NEVER use offset `paginate()`.
-4. **Anti-AI-Slop UI Rule**: High-contrast typography pairing, loading skeletons for asynchronous state, floating toast feedback (ZERO native alert() or confirm() dialogs).
-5. **Filament v5 Form Rule**: Always use `\Filament\Schemas\Schema` method signature for `form()`.
+4. **Anti-AI-Slop & Precision UI**:
+   - **Zero Native Dialogs**: Strict ban on `window.alert()`, `confirm()`, and `prompt()`. ALWAYS use centralized floating Toast (`window.showToast`) and curated Tailwind backdrop-blur modals.
+   - **Subtle Round Corners**: Use thin, crisp borders/corners (`rounded-xs`, `rounded-sm`, max `rounded-md`). STRICTLY AVOID capsule/pill shapes (`rounded-full`).
+   - **Interactive & 3D**: High-contrast typography pairing, loading skeletons, Framer Motion or Three.js 60fps micro-animations, avoiding generic AI slop.
+5. **Decoupled CMS Architecture**:
+   - **Modular Page Plugins**: Page features are built as configurable, educational, and user-friendly plugins.
+   - **Isolated Global Layout**: Top/sidebar navigation, footer, and global alerts MUST be decoupled outside page plugins so they can be adjusted independently.
+6. **Bulletproof Scalability (Millions of Records & Viewers)**:
+   - Cache forever (`Cache::rememberForever()`) on Redis/memory for CMS pages, global settings, and Schema.org.
+   - Automatic Event-Driven Reset: Invalidate caches immediately on model `saved` and `deleted` hooks.
+7. **SEO Optimization Standard**: Tab browser titles MUST follow `[NAMA DOMAIN - NAMA PAGE]` alongside comprehensive Schema.org JSON-LD structured data.
+8. **Anti-AI Malware Security Suite**: Modern multi-layered defense (Honeypot bot traps, CSP, rate limiting) with educational feedback for visitors.
+9. **Admin AI Agentic Engine**: Knowledge base, RAG (Retrieval-Augmented Generation), and native tool calling to prevent hallucination and empower executive decision-making.
+10. **Filament v5 Form Rule**: Always use `\Filament\Schemas\Schema` method signature for `form()`.
 
 #### Target Files to Create / Modify:
 - {$filesStr}
@@ -1825,8 +1837,12 @@ PROMPT;
     {
         return [
             'philosophy' => [
-                'title' => 'Filosofi Desain Anti-AI-Slop',
+                'title' => 'Filosofi Desain Anti-AI-Slop & Precision UI/UX',
                 'description' => 'Menolak estetika generik template AI (kartu ungu/biru gradien tanpa makna, typography tanpa hirarki kontras, ketiadaan micro-state, dan dialog browser native window.alert/confirm yang merusak kredibilitas profesional). Setiap elemen antarmuka dibangun dengan tujuan fungsional, ritme visual terukur, dan performa fluid 60fps.',
+            ],
+            'subtle_corners' => [
+                'title' => 'Sudut Tipis & Presisi (Strict Ban on Capsule/Pill Shapes)',
+                'description' => 'Gunakan round corner tipis dan presisi (rounded-none, rounded-xs, rounded-sm, max rounded-md). Dilarang keras menggunakan border-radius ekstrem atau efek kapsul (rounded-full / pill buttons) yang menimbulkan kesan murahan ("AI slop") dan membuang area klik fungsional.',
             ],
             'typography' => [
                 'title' => 'Kurasi Tipografi & Skala Kontras',
@@ -1844,6 +1860,18 @@ PROMPT;
                     'rose' => 'Status Ditolak, Error, Aksi Destruktif (Rose-500)',
                     'cyan' => 'Status Discovery, Filter, Query Metadata (Cyan-500)',
                 ],
+            ],
+            'interactive_and_3d' => [
+                'title' => 'Web Design Interaktif, Intuitif & Elemen 3D Edukatif',
+                'description' => 'Frontpage & landing page wajib interaktif dan intuitif, memanfaatkan canvas/WebGL/Three.js 3D teroptimasi jika relevan, micro-animations 60fps dengan Framer Motion / Alpine.js, dan skema warna curated non-generik yang memukau pengguna pada pandangan pertama.',
+            ],
+            'cms_plugins_and_isolated_layout' => [
+                'title' => 'Arsitektur CMS Modular Berbasis Plugin & Layout Terisolasi',
+                'description' => 'Setiap section pada frontpage dan sub-page dibangun sebagai plugin independen yang dapat diatur via admin panel. Navigasi global (topbar, sidebar), footer, dan global alert WAJIB terpisah di luar plugin page agar konsisten dan dapat disesuaikan secara sentral.',
+            ],
+            'educational_plugin_ux' => [
+                'title' => 'Prinsip Desain Plugin: Edukatif & User-Friendly',
+                'description' => 'Setiap plugin tidak boleh sekadar menampilkan teks statis, melainkan menyajikan informasi kontekstual, panduan alur interaktif, tooltip penjelasan istilah, dan onboarding intuitif yang mendidik pengguna.',
             ],
             'component_primitives' => [
                 'primitives' => 'Headless primitives (Radix UI / Flux UI / Alpine.js) untuk menjamin aksesibilitas WAI-ARIA penuh tanpa bloating bundle JS.',
@@ -1877,11 +1905,28 @@ PROMPT;
                 'rule' => 'Redis-Backed Queue Workers & Idempotency Keys',
                 'explanation' => 'Seluruh pemrosesan asinkron (notifikasi WhatsApp, email, ekspor laporan, integrasi payment gateway) didelegasikan ke Redis Queue Workers dengan retry backoff 3x dan header X-Idempotency-Key.',
             ],
+            'cms_page_forever_cache' => [
+                'rule' => 'CMS Page Bulletproof Cache Forever (Million Viewers Resilience)',
+                'explanation' => 'Setiap landing page dan sub-page yang dirender oleh CMS wajib memanfaatkan Cache::rememberForever() berbasis Redis/file cache untuk melayani jutaan hit dengan latensi sub-1ms (O(1)). Cache otomatis di-flush menggunakan Eloquent Model Observer (booted: saved & deleted) pada CmsPage dan CmsGlobalSetting begitu terjadi perubahan data.',
+            ],
             'schema_org_and_cache' => [
-                'rule' => 'Mandatory Schema.org Structured Data & Cache::rememberForever()',
-                'explanation' => 'Setiap entitas publik wajib mengekspos Schema.org JSON-LD (Organization, WebSite, SoftwareApplication, Product, Breadcrumbs). Seluruh data Schema.org WAJIB di-cache menggunakan Cache::rememberForever() untuk latensi sub-1ms (O(1)), dan WAJIB memiliki Event-Driven Invalidation (static::saved / static::deleted pada Eloquent Model) untuk mereset cache secara otomatis begitu ada perubahan data.',
+                'rule' => 'Mandatory Schema.org Structured Data & Admin Backend Adjustments',
+                'explanation' => 'Setiap entitas publik wajib mengekspos Schema.org JSON-LD (Organization, WebSite, SoftwareApplication, Product, Breadcrumbs). Disediakan modul backend admin untuk mengkustomisasi payload Schema.org. Seluruh data Schema.org WAJIB di-cache menggunakan Cache::rememberForever() dan otomatis di-reset saat ada perubahan data di admin.',
+            ],
+            'seo_page_title_format' => [
+                'rule' => 'Optimasi SEO Tab Browser [NAMA DOMAIN - NAMA PAGE]',
+                'explanation' => 'Setiap halaman wajib mengimplementasikan struktur judul browser standar industri: [NAMA DOMAIN - NAMA PAGE] (e.g. "neriahpro.com - Layanan Arsitektur Perangkat Lunak"), dilengkapi meta tags Open Graph, Twitter Cards, canonical URL, dan Schema.org JSON-LD.',
+            ],
+            'anti_ai_malware_security' => [
+                'rule' => 'Pertahanan Berlapis Anti-AI Malware & Bot Scraping Edukatif',
+                'explanation' => 'Implementasi standar keamanan siber terlengkap untuk menangkal AI Malware, Honeypot traps untuk automated AI scrapers, rate-limiting adaptif, Content Security Policy (CSP) ketat, validasi tanda tangan HMAC, serta edukasi keamanan interaktif bagi pengunjung website.',
+            ],
+            'admin_ai_agentic_suite' => [
+                'rule' => 'Fitur AI Agentic Cerdas di Backend Admin (RAG, Knowledge Base & Tools Calling)',
+                'explanation' => 'Backend admin wajib dilengkapi mesin AI Agentic yang mengintegrasikan Knowledge Base terstruktur, Retrieval-Augmented Generation (RAG) untuk mencegah halusinasi, dan Native Tool Calling (database query inspection, system health audit, automated reporting) guna membantu admin dalam pengambilan keputusan strategis.',
             ],
         ];
+    }      ];
     }
 
     /**
@@ -2122,8 +2167,12 @@ PROMPT;
         $md .= "- **Display Typography**: " . $slop['typography']['display'] . "\n";
         $md .= "- **Body Typography**: " . $slop['typography']['body'] . "\n";
         $md .= "- **Monospaced Data**: " . $slop['typography']['mono'] . "\n";
+        $md .= "- **Subtle Corners**: " . ($slop['subtle_corners']['description'] ?? 'Sudut tipis rounded-sm/md, dilarang efek kapsul rounded-full.') . "\n";
         $md .= "- **Dark Surface**: " . $slop['color_tokens']['dark_mode'] . "\n";
         $md .= "- **Light Surface**: " . $slop['color_tokens']['light_mode'] . "\n";
+        $md .= "- **Interactive & 3D**: " . ($slop['interactive_and_3d']['description'] ?? 'Micro-animations 60fps & WebGL/Canvas interaktif.') . "\n";
+        $md .= "- **Modular CMS Plugins**: " . ($slop['cms_plugins_and_isolated_layout']['description'] ?? 'Fitur berbasis plugin dengan navigasi/footer global terisolasi.') . "\n";
+        $md .= "- **Educational UX**: " . ($slop['educational_plugin_ux']['description'] ?? 'Komponen informatif dan membimbing pengguna.') . "\n";
         $md .= "- **State Primitives**: " . $slop['component_primitives']['states'] . "\n";
         $md .= "- **Skeleton Loaders**: " . $slop['component_primitives']['skeletons'] . "\n";
         $md .= "- **Zero Native Dialogs**: " . $slop['component_primitives']['dialog_and_toasts'] . "\n\n";

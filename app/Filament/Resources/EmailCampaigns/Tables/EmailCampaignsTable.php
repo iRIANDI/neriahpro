@@ -31,17 +31,26 @@ class EmailCampaignsTable
                     ->weight('bold')
                     ->description(fn (EmailCampaign $record): string => 'Subjek: ' . $record->subject),
 
+                TextColumn::make('sender_email')
+                    ->label('Pengirim & Balasan')
+                    ->state(fn (EmailCampaign $record): string => ($record->sender_email ?: 'support@neriahpro.com'))
+                    ->description(fn (EmailCampaign $record): string => 'Balas ke: ' . ($record->reply_to_email ?: 'yoseph.iriandi.tambunan@gmail.com'))
+                    ->searchable(),
+
                 TextColumn::make('target_audience')
                     ->label('Target Audiens')
                     ->badge()
                     ->color('info')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'all' => 'Semua Klien',
+                        'lead_contacts' => 'CRM Leads Database',
+                        'manual_recipient' => 'Penerima Kustom',
                         'onboarding_clients' => 'Leads Onboarding',
                         'blueprint_clients' => 'Project OS Blueprint',
                         'cv_users' => 'CV Pro Users',
                         default => ucfirst($state),
-                    }),
+                    })
+                    ->description(fn (EmailCampaign $record): ?string => $record->target_audience === 'manual_recipient' ? $record->custom_recipient_email : null),
 
                 TextColumn::make('status')
                     ->label('Status')
@@ -80,6 +89,8 @@ class EmailCampaignsTable
                     ->label('Filter Audiens')
                     ->options([
                         'all' => 'Semua Klien',
+                        'lead_contacts' => 'CRM Leads Database',
+                        'manual_recipient' => 'Penerima Kustom',
                         'onboarding_clients' => 'Leads Onboarding',
                         'blueprint_clients' => 'Project OS Blueprint',
                         'cv_users' => 'CV Pro Users',

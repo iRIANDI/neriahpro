@@ -48,6 +48,37 @@ After completing any task, you MUST always suggest which deployment script numbe
   - Always use the centralized floating Toast notification system: `window.showToast({ type: 'success'|'error'|'warning'|'info', title: '...', message: '...' })`.
   - For interactive confirmations or data entry, use curated Tailwind + Alpine.js dialogs with backdrop-blur, smooth transition animations, and dark/light mode fidelity.
 
+# Mandatory Rule: Subtle Round Corners (Strict Ban on Capsule/Pill Shapes)
+- 📐 **SUBTLE & THIN CORNERS**: UI/UX border radius MUST be subtle and thin (`rounded-none`, `rounded-xs`, `rounded-sm`, max `rounded-md`).
+- 🚫 **STRICT BAN ON CAPSULE/PILL BUTTONS**: NEVER use `rounded-full` or thick capsule shapes on buttons, cards, or inputs. Excessive rounding looks like generic "AI slop" templates and wastes clickable bounding areas.
+
+# Mandatory Rule: Schema.org Structured Data & Dynamic Admin Control
+- 🌐 **MANDATORY SCHEMA.ORG**: All public-facing views must emit valid Schema.org JSON-LD (Organization, WebSite, SoftwareApplication, Product, Breadcrumbs).
+- ⚙️ **ADMIN BACKEND ADJUSTMENTS**: Schema.org data must be editable via admin settings (`ManageSettings`).
+- ⚡ **CACHE FOREVER & EVENT-DRIVEN FLUSH**: All Schema.org structures must be cached via `Cache::rememberForever()` and automatically invalidated on Eloquent model `saved` and `deleted` hooks.
+
+# Mandatory Rule: Modular CMS Page Architecture & Decoupled Global Layout
+- 🧩 **MODULAR PAGE PLUGINS**: Frontpage, landing pages, and sub-pages must be composed of independent, configurable plugins (`HeroIsland`, `ProductGridIsland`, `CvPricingIsland`, `ClientOnboardingIsland`, etc.).
+- 🌐 **ISOLATED GLOBAL NAVIGATION & FOOTER**: Global navigation (topbar, sidebar), footer, and global alerts MUST NEVER be embedded inside page plugins. They must remain isolated global components driven by centralized settings so they can be modified independently.
+- 🎓 **EDUCATIONAL & INTUITIVE PLUGIN UX**: Every plugin must be informative, guiding, and user-friendly with explanatory tooltips, interactive micro-states, and contextual help rather than barren forms.
+- 🎨 **INTERACTIVE & 3D WEB DESIGN (ANTI-AI-SLOP)**: Frontpages must feature engaging, intuitive web design with 60fps micro-animations, tailored color palettes, and optional 3D/Canvas elements (Three.js/WebGL) where appropriate.
+
+# Mandatory Rule: Bulletproof Scalability (Cache Forever & Event-Driven Reset)
+- 🚀 **MILLIONS OF RECORDS & VIEWERS**: CMS pages and global configurations must leverage Redis or `Cache::rememberForever()` to guarantee O(1) response times sub-10ms.
+- 🔄 **EVENT-DRIVEN CACHE INVALIDATION**: Model observers (`booted()` on `CmsPage` and `CmsGlobalSetting`) must automatically forget page and setting caches immediately upon creation, update, or deletion.
+
+# Mandatory Rule: SEO Browser Tab Title Standard
+- 🏷️ **BROWSER TAB TITLE FORMAT**: Browser page titles must strictly follow the format: `[NAMA DOMAIN - NAMA PAGE]` (e.g. `neriahpro.com - Digital Services Hub`).
+
+# Mandatory Rule: Anti-AI Malware & Cyber Threat Defense
+- 🛡️ **ANTI-AI MALWARE SUITE**: Implement multi-layered defenses against automated AI scrapers and malware (honeypot fields, rate limiting, strict CSP, bot challenge mitigation) along with user-facing educational security transparency.
+
+# Mandatory Rule: Backend Admin AI Agentic Engine
+- 🤖 **AGENTIC DECISION INTELLIGENCE**: Backend admin features must integrate AI Agentic capabilities:
+  - Structured Knowledge Base
+  - Retrieval-Augmented Generation (RAG) to eliminate hallucinations
+  - Native Tool Calling (database querying, system diagnostics, automated task execution) to empower executive decision-making.
+
 # AlpineJS HTML Escaping Rule
 When writing inline javascript within AlpineJS attributes (such as `x-data="..."`), NEVER use raw double quotes (") or single quotes (') inside string literals as it can break the HTML attribute parsing. ALWAYS encode them into HTML entities:
 - Tanda kutip ganda (") → `&quot;`

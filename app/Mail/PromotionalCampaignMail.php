@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\EmailCampaign;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -39,7 +40,17 @@ class PromotionalCampaignMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $senderEmail = $this->campaign->sender_email ?: config('mail.from.address', 'support@neriahpro.com');
+        $senderName = $this->campaign->sender_name ?: config('mail.from.name', 'Neriah Pro');
+
+        $replyToEmail = $this->campaign->reply_to_email ?: 'yoseph.iriandi.tambunan@gmail.com';
+        $replyToName = $this->campaign->reply_to_name ?: 'Yoseph Iriandi';
+
         return new Envelope(
+            from: new Address($senderEmail, $senderName),
+            replyTo: [
+                new Address($replyToEmail, $replyToName),
+            ],
             subject: $this->campaign->subject,
         );
     }

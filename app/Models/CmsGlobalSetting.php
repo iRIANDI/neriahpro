@@ -27,6 +27,7 @@ class CmsGlobalSetting extends Model
             \Illuminate\Support\Facades\Cache::forget('seo_schema_website');
             \Illuminate\Support\Facades\Cache::forget('seo_schema_project_os');
             \Illuminate\Support\Facades\Cache::forget('seo_schema_raw');
+            \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
             \Illuminate\Support\Facades\Cache::forget('cms_global_setting_' . $setting->key);
         });
 
@@ -36,6 +37,7 @@ class CmsGlobalSetting extends Model
             \Illuminate\Support\Facades\Cache::forget('seo_schema_website');
             \Illuminate\Support\Facades\Cache::forget('seo_schema_project_os');
             \Illuminate\Support\Facades\Cache::forget('seo_schema_raw');
+            \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
             \Illuminate\Support\Facades\Cache::forget('cms_global_setting_' . $setting->key);
         });
     }

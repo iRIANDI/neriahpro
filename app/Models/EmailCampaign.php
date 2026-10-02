@@ -18,7 +18,14 @@ class EmailCampaign extends Model
         'title',
         'subject',
         'preview_text',
+        'sender_name',
+        'sender_email',
+        'reply_to_email',
+        'reply_to_name',
         'target_audience',
+        'custom_recipient_email',
+        'custom_recipient_name',
+        'custom_company_name',
         'content_html',
         'cta_label',
         'cta_url',
@@ -60,7 +67,35 @@ class EmailCampaign extends Model
     {
         $recipients = collect();
 
-        // 1. Client Onboarding Leads
+        // 1. Manual Single Recipient
+        if ($this->target_audience === 'manual_recipient' || (!empty($this->custom_recipient_email) && $this->target_audience !== 'all')) {
+            if (!empty($this->custom_recipient_email)) {
+                $recipients->push([
+                    'email' => strtolower(trim($this->custom_recipient_email)),
+                    'name' => $this->custom_recipient_name ?: ($this->custom_company_name ?: 'Klien'),
+                ]);
+            }
+            if ($this->target_audience === 'manual_recipient') {
+                return $recipients->unique('email')->values();
+            }
+        }
+
+        // 2. CRM Lead Contacts Database
+        if (in_array($this->target_audience, ['all', 'lead_contacts'])) {
+            $leads = LeadContact::query()
+                ->whereNotNull('email')
+                ->where('email', '!=', '')
+                ->get(['email', 'name', 'company_name']);
+
+            foreach ($leads as $lead) {
+                $recipients->push([
+                    'email' => strtolower(trim($lead->email)),
+                    'name' => $lead->name ?: ($lead->company_name ?: 'Partner'),
+                ]);
+            }
+        }
+
+        // 3. Client Onboarding Leads
         if (in_array($this->target_audience, ['all', 'onboarding_clients'])) {
             $onboardings = ClientOnboarding::query()
                 ->whereNotNull('contact_email')
@@ -75,7 +110,7 @@ class EmailCampaign extends Model
             }
         }
 
-        // 2. Vision Blueprint (Project OS) Clients
+        // 4. Vision Blueprint (Project OS) Clients
         if (in_array($this->target_audience, ['all', 'blueprint_clients'])) {
             $blueprints = VisionBlueprint::query()
                 ->whereNotNull('client_email')
@@ -90,7 +125,7 @@ class EmailCampaign extends Model
             }
         }
 
-        // 3. Registered Users
+        // 5. Registered Users
         if (in_array($this->target_audience, ['all', 'cv_users'])) {
             $users = User::query()
                 ->whereNotNull('email')

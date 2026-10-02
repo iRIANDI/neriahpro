@@ -6,12 +6,14 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php
-        $pageTitle = $page->title[app()->getLocale()] ?? $page->title['en'] ?? (is_string($page->title) ? $page->title : 'Neriah Pro // Digital Services Hub');
+        $pageTitle = $page->title[app()->getLocale()] ?? $page->title['en'] ?? (is_string($page->title) ? $page->title : 'Digital Services Hub');
+        $siteDomain = 'neriahpro.com';
+        $fullTabTitle = "{$siteDomain} - {$pageTitle}";
         $pageDesc = $page->meta_description[app()->getLocale()] ?? $page->meta_description['en'] ?? (is_string($page->meta_description) ? $page->meta_description : 'Pusat arsitektur dan rekayasa perangkat lunak berskala tinggi.');
         $currentUrl = url()->current();
     @endphp
 
-    <title>{{ $pageTitle }}</title>
+    <title>{{ $fullTabTitle }}</title>
     <meta name="description" content="{{ $pageDesc }}">
     <link rel="canonical" href="{{ $currentUrl }}">
 

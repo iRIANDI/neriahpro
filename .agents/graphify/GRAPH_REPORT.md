@@ -45,12 +45,14 @@ graph TD
 
 ---
 
-## 2. Katalog Domain & Entity Model (15 Models)
+## 2. Katalog Domain & Entity Model (17 Models)
 
 Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter untuk menjamin skalabilitas enterprise dan integritas PostgreSQL:
 
 | Model | Lokasi File | Primary Key | Traits / Fitur Utama | Relasi Utama |
 | :--- | :--- | :---: | :--- | :--- |
+| `LeadContact` | [LeadContact.php](file:///c:/xampp/htdocs/neriahpro/app/Models/LeadContact.php) | ULID | `HasUlids`, CRM lead contacts database, company metadata JSON, direct mail dispatcher | - |
+| `EmailCampaign` | [EmailCampaign.php](file:///c:/xampp/htdocs/neriahpro/app/Models/EmailCampaign.php) | ULID | `HasUlids`, Custom dynamic sender name/email, Reply-to Gmail routing, Audience segmentation | `creator` (belongsTo), `logs` (hasMany) |
 | `CvProPlan` | [CvProPlan.php](file:///c:/xampp/htdocs/neriahpro/app/Models/CvProPlan.php) | ULID | `HasUlids`, Dynamic pricing tiers (A, B, C) & a la carte top-up packages | `userQuotas` (hasMany), `transactions` (hasMany) |
 | `UserCvQuota` | [UserCvQuota.php](file:///c:/xampp/htdocs/neriahpro/app/Models/UserCvQuota.php) | ULID | `HasUlids`, User quota tracking (tailor, interview, audit, credits) & expiration | `user` (belongsTo), `plan` (belongsTo) |
 | `CvQuotaTransaction` | [CvQuotaTransaction.php](file:///c:/xampp/htdocs/neriahpro/app/Models/CvQuotaTransaction.php) | ULID | `HasUlids`, Quota top-up and feature consumption audit trail | `user` (belongsTo), `plan` (belongsTo), `paymentTransaction` (belongsTo) |
@@ -60,8 +62,8 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 | `VisionBlueprint` | [VisionBlueprint.php](file:///c:/xampp/htdocs/neriahpro/app/Models/VisionBlueprint.php) | ULID | `HasUlids`, Project OS discovery questionnaire, PRD synthesis, Contract converter | `documents` (morphMany), `domainHostingAssets` (hasMany) |
 | `Document` | [Document.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Document.php) | ULID | `HasUlids`, Scope Lock, Digital signature, SHA-256 hash, Midtrans DP 50% | `related` (morphTo) |
 | `DomainHostingAsset` | [DomainHostingAsset.php](file:///c:/xampp/htdocs/neriahpro/app/Models/DomainHostingAsset.php) | ULID | `HasUlids`, Domain & hosting subscription tracking, Expiration alerts, Quick renewal | `visionBlueprint` (belongsTo) |
-| `CmsPage` | [CmsPage.php](file:///c:/xampp/htdocs/neriahpro/app/Models/CmsPage.php) | ULID | `HasUlids`, Dynamic landing pages, Multilingual title/meta (`id`/`en`), React Islands | - |
-| `CmsGlobalSetting` | [CmsGlobalSetting.php](file:///c:/xampp/htdocs/neriahpro/app/Models/CmsGlobalSetting.php) | ULID | `HasUlids`, Key-value global configuration, Forever cached | - |
+| `CmsPage` | [CmsPage.php](file:///c:/xampp/htdocs/neriahpro/app/Models/CmsPage.php) | ULID | `HasUlids`, Dynamic landing pages, Multilingual title/meta (`id`/`en`), React Islands, Cache forever | - |
+| `CmsGlobalSetting` | [CmsGlobalSetting.php](file:///c:/xampp/htdocs/neriahpro/app/Models/CmsGlobalSetting.php) | ULID | `HasUlids`, Key-value global configuration, Forever cached, Auto-reset on save | - |
 | `Product` | [Product.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Product.php) | ULID | `HasUlids`, Multilingual catalog (`id`/`en`), Dual-currency (`price_idr`, `price_usd`) | - |
 | `Transaction` | [Transaction.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Transaction.php) | ULID | `HasUlids`, Midtrans Snap gateway integration, Settlement audit | `user` (belongsTo), `product` (belongsTo) |
 | `LegalPolicy` | [LegalPolicy.php](file:///c:/xampp/htdocs/neriahpro/app/Models/LegalPolicy.php) | ULID | `HasUlids`, Multilingual legal policies (`title`, `content` array) | - |
@@ -73,10 +75,12 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 ---
 
-## 3. Katalog Filament v5 Resources (10 Resources)
+## 3. Katalog Filament v5 Resources (13 Resources)
 
 | Resource | Navigation Group | Fitur Utama | Schema / Tables |
 | :--- | :--- | :--- | :--- |
+| `LeadContactResource` | Marketing & Klien | Database CRM Leads, Perusahaan, Kontak, Custom Metadata, Kirim Email Langsung | `LeadContactForm`, `LeadContactsTable` |
+| `EmailCampaignResource` | Marketing & Klien | Promosi email dan blast penawaran, Sender dinamis, Reply-to Gmail routing | `EmailCampaignForm`, `EmailCampaignsTable` |
 | `CvProPlanResource` | Career & CV Pro | Katalog paket langganan & top-up kuota ala carte, penetapan harga dinamis, kalkulator margin keuntungan AI | `CvProPlanForm`, `CvProPlansTable` |
 | `ResumeResource` | Career & CV Pro | Resume management, ATS score breakdown, Skills tags, Live view link | `ResumeForm`, `ResumesTable` |
 | `InterviewSessionResource` | Career & CV Pro | Mock interview recordings, STAR analysis, Confidence score, Transcript audit | `InterviewSessionsTable`, Infolist |
@@ -88,7 +92,6 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 | `ProductResource` | Commerce & Billing | Layanan digital, Dual-currency input, Fitur list, Infolist preview | `ProductForm`, `ProductsTable`, `ProductInfolist` |
 | `TransactionResource` | Commerce & Billing | Midtrans status settlement, Total IDR, Payment timestamp | `TransactionsTable`, `TransactionInfolist` |
 | `LegalPolicyResource` | Contracts & Legal | Syarat ketentuan, Kebijakan privasi multibahasa | `LegalPolicyForm`, `LegalPoliciesTable` |
-| `EmailCampaignResource` | Marketing & Klien | Promosi email dan blast penawaran proyek | `EmailCampaignForm`, `EmailCampaignsTable` |
 
 > 🛡️ **Role & Scope Isolation (Midtrans Merchant Compliance)**:
 > - **Super Admin (`yoseph.iriandi.tambunan@gmail.com`)**: Akses $100\%$ tanpa batas ke seluruh 12 Resource, Spatie Shield RBAC, dan Global Settings.

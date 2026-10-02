@@ -26,5 +26,18 @@ class CmsPage extends Model
         'plugins' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        static::saved(function (CmsPage $page) {
+            \Illuminate\Support\Facades\Cache::forget("cms_page_{$page->slug}");
+            \Illuminate\Support\Facades\Cache::forget('cms_page_home');
+            \Illuminate\Support\Facades\Cache::forget('cms_pages_all');
+        });
 
+        static::deleted(function (CmsPage $page) {
+            \Illuminate\Support\Facades\Cache::forget("cms_page_{$page->slug}");
+            \Illuminate\Support\Facades\Cache::forget('cms_page_home');
+            \Illuminate\Support\Facades\Cache::forget('cms_pages_all');
+        });
+    }
 }

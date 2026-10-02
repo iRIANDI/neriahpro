@@ -37,26 +37,36 @@ class PageController extends Controller
             // Table might not exist or connection issue, ignore safely
         }
 
-        $page = CmsPage::where('slug', $slug)->where('is_published', true)->first();
+        $page = \Illuminate\Support\Facades\Cache::rememberForever("cms_page_{$slug}", function () use ($slug) {
+            $record = CmsPage::where('slug', $slug)->where('is_published', true)->first();
 
-        // Auto-seed default landing page if missing on fresh deployment
-        if (! $page && $slug === 'home') {
-            try {
-                Artisan::call('db:seed', [
-                    '--class' => 'Database\\Seeders\\LandingPageSeeder',
-                    '--force' => true,
-                ]);
-                $page = CmsPage::where('slug', 'home')->first();
-            } catch (\Throwable $e) {
-                // Ignore seed error and fallback gracefully
+            // Auto-seed default landing page if missing on fresh deployment
+            if (! $record && $slug === 'home') {
+                try {
+                    Artisan::call('db:seed', [
+                        '--class' => 'Database\\Seeders\\LandingPageSeeder',
+                        '--force' => true,
+                    ]);
+                    $record = CmsPage::where('slug', 'home')->first();
+                } catch (\Throwable $e) {
+                    // Ignore seed error and fallback gracefully
+                }
             }
-        }
+
+            return $record;
+        });
 
         if (! $page) {
             abort(404);
         }
 
-        $globalSettings = CmsGlobalSetting::all()->keyBy('key');
+        $globalSettings = \Illuminate\Support\Facades\Cache::rememberForever('cms_global_settings', function () {
+            try {
+                return CmsGlobalSetting::all()->keyBy('key');
+            } catch (\Throwable) {
+                return collect();
+            }
+        });
 
         return view('page', compact('page', 'globalSettings'));
     }

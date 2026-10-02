@@ -290,6 +290,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     flowTab: 'visual', 
     erdTab: 'visual', 
     erdLang: 'id',
+    chartStudioTab: 'workflow',
+    devEducationMode: 'step_by_step',
+    selectedIdeTool: 'cursor',
     selectedTier: '{{ $defaultSelectedTier }}',
     tierAmounts: {{ json_encode($alpineTiers) }},
     isPayingSnap: false,
@@ -303,6 +306,15 @@ x-init="
     });
     $watch('erdTab', val => {
         if (val === 'mermaid') $nextTick(() => window.renderMermaidDiagram('mermaid-erd-target', 'mermaid-erd-source'));
+    });
+    $watch('chartStudioTab', val => {
+        if (val === 'workflow') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-flow-target', 'mermaid-studio-flow-source'));
+        if (val === 'erd') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-erd-target', 'mermaid-studio-erd-source'));
+        if (val === 'feature_dep') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-featdep-target', 'mermaid-studio-featdep-source'));
+        if (val === 'gantt') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-gantt-target', 'mermaid-studio-gantt-source'));
+    });
+    $nextTick(() => {
+        window.renderMermaidDiagram('mermaid-studio-flow-target', 'mermaid-studio-flow-source');
     });
 " class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
@@ -993,10 +1005,16 @@ x-init="
                                             {{ $spec['feature_id'] ?? ($spec['id'] ?? 'FEAT-SPEC') }}
                                         </span>
                                         <div>
-                                            <div class="flex items-center gap-2">
+                                            <div class="flex flex-wrap items-center gap-2">
                                                 <h3 class="font-black text-sm text-zinc-900 dark:text-white uppercase tracking-tight">{{ $spec['title'] ?? 'Spesifikasi Fitur' }}</h3>
                                                 <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-[10px] font-mono text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
                                                     {{ $spec['category'] ?? 'CORE DOMAIN' }}
+                                                </span>
+                                                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold">
+                                                    {{ $spec['complexity_label'] ?? 'Standard (3 SP)' }}
+                                                </span>
+                                                <span class="px-2 py-0.5 bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/30 text-[10px] font-mono font-bold">
+                                                    {{ $spec['sprint_phase'] ?? 'Sprint 1' }}
                                                 </span>
                                             </div>
                                         </div>
@@ -1017,7 +1035,7 @@ x-init="
                                             class="p-1 text-zinc-400 hover:text-zinc-200"
                                             title="Buka / Tutup Detail"
                                         >
-                                            <svg class="w-4 h-4 transition-transform" :class="expanded ? &apos;rotate-180&apos; : &apos;&apos;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                            <svg class="w-4 h-4 transition-transform" :class="expanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                         </button>
                                     </div>
                                 </div>
@@ -1029,6 +1047,23 @@ x-init="
                                         <span class="text-emerald-600 dark:text-emerald-400 font-bold block mb-0.5">USER STORY:</span>
                                         &quot;{{ $spec['user_story'] ?? '' }}&quot;
                                     </div>
+
+                                    @if(!empty($spec['target_files']))
+                                        <!-- Bounded Target Files for AI Agents -->
+                                        <div class="p-3 bg-zinc-100 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 font-mono text-xs mb-4">
+                                            <div class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                                <span>BOUNDED TARGET FILES (ISOLASI RUANG LINGKUP AGENT):</span>
+                                            </div>
+                                            <div class="flex flex-wrap gap-1.5">
+                                                @foreach($spec['target_files'] as $tf)
+                                                    <span class="px-2 py-0.5 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 text-[11px] border border-zinc-300 dark:border-zinc-800 select-all font-mono">
+                                                        {{ $tf }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
 
                                     <!-- Navigation Sub-Tabs -->
                                     <div class="flex flex-wrap items-center gap-1 font-mono text-xs border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-4 no-print">
@@ -1224,121 +1259,423 @@ x-init="
                 @endif
             </section>
 
-            <!-- SECTION 3.5: PANDUAN REKAYASA & REKOMENDASI TOOLS MODERN (ANTI-AI-SLOP & SCALABILITY) -->
-            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
-                <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+            <!-- SECTION 3.5: PUSAT EDUKASI DEVELOPER & PROTOKOL HANDOFF AI CODING AGENT -->
+            <section class="bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-4">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">&para;</span>
+                        <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">&para;</span>
                         <div>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Panduan Rekayasa &amp; Rekomendasi Tools Modern</h2>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Prinsip rekayasa anti-AI-slop, bulletproof database scalability, dan protokol handoff anti context-rot.</p>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Pusat Edukasi Developer: Cara Memberikan PRD ke AI Coding Agent</h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Panduan taktis membimbing AI Agent (Cursor, Claude Code, Windsurf, Devin) membaca PRD secara bertahap atau sekaligus tanpa amnesia arsitektur.</p>
                         </div>
                     </div>
                     <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
-                        ANTI AI-SLOP CERTIFIED
+                        ANTI CONTEXT-ROT PROTOCOL
                     </span>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 font-mono text-xs">
+                <!-- Education Rationale Banner -->
+                <div class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs mb-6 text-zinc-300 space-y-2">
+                    <div class="flex items-center gap-2 text-amber-400 font-bold uppercase text-xs">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>KENAPA DEVELOPER DILARANG SEMBARANGAN MELAKUKAN "PROMPT DUMPING"?</span>
+                    </div>
+                    <p class="font-sans text-xs text-zinc-400 leading-relaxed">
+                        AI Coding Agent bekerja berbasis bobot probabilitas token. Memasukkan ribuan baris dokumen PRD sekaligus ke dalam sesi percakapan aktif yang sedang mengedit kode akan memicu <strong>Context Rot &amp; Attention Drift</strong>—AI akan lupa constraint migrasi basis data, melanggar pola arsitektur, dan memodifikasi file di luar modul tanpa izin.
+                    </p>
+                </div>
+
+                <!-- Mode Selector: Single-Shot vs Step-by-Step -->
+                <div class="mb-6">
+                    <div class="flex flex-wrap items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
+                        <button 
+                            type="button"
+                            @click="devEducationMode = 'step_by_step'" 
+                            :class="devEducationMode === 'step_by_step' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                            class="px-4 py-2 font-mono text-xs font-bold border border-zinc-300 dark:border-zinc-700 flex items-center gap-2 transition"
+                        >
+                            <span>1. MODE BERTAHAP (STEP-BY-STEP VERTICAL SLICE)</span>
+                            <span class="px-1.5 py-0.5 bg-black/20 text-[9px] uppercase font-mono">RECOMMENDED</span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="devEducationMode = 'single_shot'" 
+                            :class="devEducationMode === 'single_shot' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                            class="px-4 py-2 font-mono text-xs font-bold border border-zinc-300 dark:border-zinc-700 flex items-center gap-2 transition"
+                        >
+                            <span>2. MODE KESELURUHAN (SINGLE-SHOT FULL INGESTION)</span>
+                            <span class="px-1.5 py-0.5 bg-black/20 text-[9px] uppercase font-mono">GREENFIELD ONLY</span>
+                        </button>
+                    </div>
+
+                    <!-- Mode B: Step-by-Step (Vertical Slice) Stepper -->
+                    <div x-show="devEducationMode === 'step_by_step'" class="space-y-4">
+                        <div class="p-3 bg-emerald-500/10 border-l-4 border-emerald-500 text-xs font-mono text-emerald-800 dark:text-emerald-300">
+                            <strong>CARA KERJA</strong>: Kerjakan proyek dalam 6 tahap vertikal berurutan (Sprint-by-Sprint). Jangan pindah ke tahap berikutnya sebelum tahap sebelumnya lolos automated quality gate!
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 font-mono text-xs">
+                            @foreach($prd['developer_education']['modes']['step_by_step']['steps'] ?? [] as $st)
+                                <div class="bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between hover:border-emerald-500/50 transition">
+                                    <div>
+                                        <div class="flex items-center justify-between gap-2 mb-2">
+                                            <span class="px-2 py-0.5 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold text-[10px]">
+                                                TAHAP 0{{ $st['step'] }}
+                                            </span>
+                                            <span class="text-[10px] text-zinc-400 truncate max-w-[140px]">
+                                                {{ $st['target_tool'] }}
+                                            </span>
+                                        </div>
+                                        <h3 class="font-bold text-zinc-900 dark:text-zinc-100 mb-1.5 text-xs uppercase">{{ $st['title'] }}</h3>
+                                        <p class="font-sans text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed mb-3">
+                                            {{ $st['instruction'] }}
+                                        </p>
+                                    </div>
+                                    <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800/80 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                                        &check; Lolos Verifikasi Exit Code 0
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Mode A: Single-Shot Full Ingestion -->
+                    <div x-show="devEducationMode === 'single_shot'" x-cloak class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs space-y-4">
+                        <div class="p-3 bg-amber-500/10 border-l-4 border-amber-500 text-amber-800 dark:text-amber-300">
+                            <strong>PERUNTUKAN</strong>: Gunakan mode ini HANYA saat repositori baru pertama kali dibuat (Greenfield) pada AI LLM dengan reasoning 200k+ token (Claude 3.7 Sonnet, Gemini 2.0 Pro, Devin).
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="font-bold uppercase text-zinc-900 dark:text-zinc-100 mb-2">Alur Eksekusi Single-Shot:</h4>
+                                <ol class="list-decimal list-inside space-y-1.5 text-zinc-600 dark:text-zinc-400 font-sans text-xs">
+                                    <li>Install fresh Laravel 13, Filament v5, &amp; PostgreSQL.</li>
+                                    <li>Salin Master Prompt AI IDE (dari tombol di atas).</li>
+                                    <li>Download file PRD format Markdown (.md) dan lampirkan ke AI.</li>
+                                    <li>Perintahkan AI membaca keseluruhan dokumen dan membuat fondasi sistem.</li>
+                                </ol>
+                            </div>
+                            <div>
+                                <h4 class="font-bold uppercase text-rose-600 dark:text-rose-400 mb-2">Batasan &amp; Risiko:</h4>
+                                <p class="font-sans text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                    Jangan gunakan Single-Shot pada proyek yang sedang berjalan (Brownfield). AI agent rentan merusak relasi model eksisting atau menulis ulang konfigurasi yang sudah stabil.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tool IDE Selector Tabs (Cursor, Claude Code, Windsurf, Devin) -->
+                <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    <div class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                        <span>PLAYBOOK PER TOOL IDE / TERMINAL (PILIH TOOL ANDA):</span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-1.5 font-mono text-xs mb-4">
+                        <button 
+                            type="button"
+                            @click="selectedIdeTool = 'cursor'" 
+                            :class="selectedIdeTool === 'cursor' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
+                            class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
+                        >
+                            <span>Cursor Composer (Cmd+I)</span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="selectedIdeTool = 'claude'" 
+                            :class="selectedIdeTool === 'claude' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
+                            class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
+                        >
+                            <span>Claude Code CLI</span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="selectedIdeTool = 'windsurf'" 
+                            :class="selectedIdeTool === 'windsurf' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
+                            class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
+                        >
+                            <span>Windsurf Cascade</span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="selectedIdeTool = 'devin'" 
+                            :class="selectedIdeTool === 'devin' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
+                            class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
+                        >
+                            <span>Devin &amp; Copilot Workspace</span>
+                        </button>
+                    </div>
+
+                    <!-- Cursor Composer Tool Guide -->
+                    <div x-show="selectedIdeTool === 'cursor'" class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
+                        <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
+                            <span class="font-bold text-emerald-400 uppercase">1. CARA MENGGUNAKAN DI CURSOR COMPOSER (Cmd+I):</span>
+                            <span class="text-[10px] text-zinc-500">Shortcut: Cmd+I (Mac) / Ctrl+I (Win)</span>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
+                            <li>Buka Cursor Composer dengan menekan <code class="text-emerald-400">Cmd+I</code>.</li>
+                            <li>Ketik simbol <code class="text-cyan-400">@</code> untuk melampirkan file yang menjadi batas target modul (lihat <em>BOUNDED TARGET FILES</em> pada kartu fitur).</li>
+                            <li>Salin <strong>PROMPT FITUR</strong> dari kartu fitur yang ingin dikerjakan di bawah, lalu tempel ke Composer.</li>
+                            <li>Tekan Enter, tinjau perubahan diff baris per baris, dan jalankan perintah verifikasi terminal <code class="text-amber-400">php artisan test --filter=...</code> sebelum menekan Accept All.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Claude Code CLI Tool Guide -->
+                    <div x-show="selectedIdeTool === 'claude'" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
+                        <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
+                            <span class="font-bold text-cyan-400 uppercase">2. CARA MENGGUNAKAN DI CLAUDE CODE CLI (claude):</span>
+                            <span class="text-[10px] text-zinc-500">Terminal Command</span>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
+                            <li>Jalankan perintah <code class="text-cyan-400">claude</code> pada terminal root direktori proyek.</li>
+                            <li>Beri perintah terpandu: <code class="text-emerald-400 select-all">claude "Baca kartu FEAT-MVP-01 pada PRD. Implementasikan migration dan model sesuai kriteria Gherkin. Jalankan php artisan test."</code></li>
+                            <li>Biarkan Claude Code membaca file, mengeksekusi diff, dan menjalankan loop pengujian terminal secara otonom.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Windsurf Cascade Tool Guide -->
+                    <div x-show="selectedIdeTool === 'windsurf'" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
+                        <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
+                            <span class="font-bold text-sky-400 uppercase">3. CARA MENGGUNAKAN DI WINDSURF CASCADE:</span>
+                            <span class="text-[10px] text-zinc-500">Flow-Based Agent</span>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
+                            <li>Buka panel Cascade di Windsurf dan aktifkan mode <strong>Agentic Write</strong>.</li>
+                            <li>Masukkan instruksi bertahap: "Implementasikan vertical slice FEAT-MVP-02. Batasi perubahan hanya pada direktori app/Http/Controllers dan resources/views."</li>
+                            <li>Pantau cascade flow hingga build sukses.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Devin & Copilot Tool Guide -->
+                    <div x-show="selectedIdeTool === 'devin'" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
+                        <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
+                            <span class="font-bold text-amber-400 uppercase">4. CARA MENGGUNAKAN DI DEVIN &amp; GITHUB COPILOT:</span>
+                            <span class="text-[10px] text-zinc-500">Autonomous Agent / Workspace</span>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
+                            <li>Buat issue/task baru dengan judul ID Fitur (cth: FEAT-MVP-01).</li>
+                            <li>Salin User Story dan seluruh tabel skenario Gherkin (Given-When-Then) ke dalam task description.</li>
+                            <li>Biarkan Devin / Copilot menyelesaikan issue dan membuka Pull Request terisolasi.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- 3 Pillars of Engineering Manifesto -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 font-mono text-xs mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-800">
                     <!-- 1. Frontend Anti-AI-Slop -->
-                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
                         <div class="space-y-3">
                             <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold uppercase">
                                 <span class="w-2.5 h-2.5 bg-emerald-500"></span>
                                 <h3>1. FRONTEND: ANTI AI-SLOP UI/UX</h3>
                             </div>
-                            <p class="font-sans text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                AI slop menghasilkan web generik bertabur warna ungu/cyan gradien murahan, ketiadaan state loading/empty, dan popup <code>alert()</code> kampungan yang merusak reputasi profesional.
-                            </p>
                             <ul class="space-y-2 text-[11px] text-zinc-700 dark:text-zinc-300">
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>Palet Kurasi:</strong> Base Zinc/Slate monokrom dengan aksen tajam Emerald (Success), Amber (Warning), Rose (Danger). Zero generic pastel.</span>
+                                    <span><strong>Palet Kurasi:</strong> Base Zinc monokrom dengan aksen tajam Emerald &amp; Amber. Zero generic pastel.</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>Zero Native Popups:</strong> Dilarang keras <code>alert()</code> atau <code>confirm()</code>. Gunakan Floating Toast &amp; Modal Backdrop Blur.</span>
+                                    <span><strong>Zero Native Popups:</strong> Dilarang keras <code>alert()</code> atau <code>confirm()</code>. Gunakan Floating Toast &amp; Modal.</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>State Completeness:</strong> Wajib memiliki Skeleton Loader saat fetch data, Empty State dengan ilustrasi/ajakan aksi, dan inline error form validation.</span>
-                                </li>
-                                <li class="flex items-start gap-1.5">
-                                    <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>Tipografi Tajam:</strong> Inter / Outfit untuk body text, JetBrains Mono untuk metrik finansial dan data teknis.</span>
+                                    <span><strong>Sudut Tipis:</strong> Border radius halus (<code>rounded-sm/md</code>), dilarang tombol kapsul <code>rounded-full</code>.</span>
                                 </li>
                             </ul>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-500">
-                            <strong>TOOLS REKOMENDASI:</strong> Tailwind CSS v4 / Vanilla CSS, Alpine.js / Livewire 4, Lucide Icons, Headless UI.
                         </div>
                     </div>
 
                     <!-- 2. Backend Scalability Manifesto -->
-                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
                         <div class="space-y-3">
                             <div class="flex items-center gap-2 text-sky-600 dark:text-sky-400 font-bold uppercase">
                                 <span class="w-2.5 h-2.5 bg-sky-500"></span>
                                 <h3>2. BACKEND: ENTERPRISE SCALABILITY</h3>
                             </div>
-                            <p class="font-sans text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                Menjamin aplikasi mampu menampung jutaan baris data tanpa degradasi performa menggunakan pola algoritma kompleksitas O(1).
-                            </p>
                             <ul class="space-y-2 text-[11px] text-zinc-700 dark:text-zinc-300">
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-sky-500 font-bold">&check;</span>
-                                    <span><strong>Strict ULID Primary Keys:</strong> Gunakan <code>ulid(&apos;id&apos;)</code> (VARCHAR(26)). Hindari AUTO_INCREMENT dan UUID v4 standar agar kompatibel 100% dengan PostgreSQL dan B-Tree Indexing.</span>
+                                    <span><strong>Strict ULID Primary Keys:</strong> Gunakan <code>ulid('id')</code> (VARCHAR(26)). Hindari AUTO_INCREMENT.</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-sky-500 font-bold">&check;</span>
-                                    <span><strong>Keyset Cursor Pagination O(1):</strong> Hindari <code>paginate()</code> (OFFSET). Wajib gunakan <code>cursorPaginate()</code> dengan pointer <code>orderBy(&apos;id&apos;, &apos;asc&apos;)</code>.</span>
+                                    <span><strong>Keyset Cursor Pagination O(1):</strong> Hindari <code>paginate()</code> OFFSET. Wajib gunakan <code>cursorPaginate()</code>.</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-sky-500 font-bold">&check;</span>
-                                    <span><strong>Atomic Transactions &amp; Action Classes:</strong> Enkapsulasi logika mutasi data dalam Single Action Class di dalam <code>DB::transaction()</code>.</span>
-                                </li>
-                                <li class="flex items-start gap-1.5">
-                                    <span class="text-sky-500 font-bold">&check;</span>
-                                    <span><strong>Redis Queue Resiliency:</strong> Proses email, notifikasi, dan kalkulasi berat via background queue dengan fallback gracefully ke driver database.</span>
+                                    <span><strong>Atomic Transactions:</strong> Enkapsulasi logika mutasi dalam Single Action Class di dalam <code>DB::transaction()</code>.</span>
                                 </li>
                             </ul>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-500">
-                            <strong>TOOLS REKOMENDASI:</strong> Laravel 13 (PHP 8.4/8.5), Filament v5, PostgreSQL 16+, Redis + Predis, Pest PHP.
                         </div>
                     </div>
 
                     <!-- 3. Agent Handoff & Anti Context-Rot Protocol -->
-                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
                         <div class="space-y-3">
                             <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold uppercase">
                                 <span class="w-2.5 h-2.5 bg-amber-500"></span>
-                                <h3>3. INTEGRASI: ANTI CONTEXT-ROT PROTOCOL</h3>
+                                <h3>3. INTEGRASI: ZERO CONTEXT-ROT</h3>
                             </div>
-                            <p class="font-sans text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                Mencegah fenomena <em>Context Rot</em> (AI Agent amnesia/halusinasi saat disuapi PRD raksasa sekaligus) dengan metode Vertical Slice Prompting.
-                            </p>
                             <ul class="space-y-2 text-[11px] text-zinc-700 dark:text-zinc-300">
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-amber-500 font-bold">&check;</span>
-                                    <span><strong>One-Feature-At-A-Time:</strong> Jangan berikan seluruh dokumen PRD ke prompt AI. Salin satu per satu directive fitur dari Tab 5 di atas.</span>
+                                    <span><strong>One-Feature-At-A-Time:</strong> Salin prompt per fitur vertikal, bukan seluruh PRD.</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-amber-500 font-bold">&check;</span>
-                                    <span><strong>Bounded File Scoping:</strong> Batasi jangkauan file target pada prompt (misal hanya 1 migration, 1 model, 1 component) untuk mencegah AI mengedit file lain tanpa izin.</span>
+                                    <span><strong>Bounded File Scoping:</strong> Batasi target file pada prompt agar AI tidak merusak file lain.</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-amber-500 font-bold">&check;</span>
-                                    <span><strong>Terminal Verification Loop:</strong> Wajibkan AI menjalankan verifikasi terminal otomatis (<code>php artisan test --filter=...</code>) sebelum mengakhiri task.</span>
-                                </li>
-                                <li class="flex items-start gap-1.5">
-                                    <span class="text-amber-500 font-bold">&check;</span>
-                                    <span><strong>Git Surgical Sync:</strong> Lakukan commit per vertical slice agar rollback mudah jika terjadi regresi.</span>
+                                    <span><strong>Terminal Verification:</strong> Wajibkan AI menjalankan tes (<code>php artisan test</code>) sebelum menandai task selesai.</span>
                                 </li>
                             </ul>
                         </div>
-                        <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-500">
-                            <strong>TOOLS REKOMENDASI:</strong> Cursor Composer, Claude Code, GitHub Copilot, Antigravity IDE, Aider.
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3.8: VIRTUAL ARCHITECTURE STUDIO (THE 4 VIRTUAL CHARTS COMMAND CENTER) -->
+            <section class="bg-white dark:bg-zinc-900 border-2 border-sky-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 bg-sky-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">&loz;</span>
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Virtual Architecture Studio (Visual Chart Center)</h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Visualisasi komprehensif diagram alur, topologi basis data, peta dependensi, dan timeline sprint standar AI Agent.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 4 Virtual Charts Switcher -->
+                    <div class="flex flex-wrap items-center gap-1 font-mono text-xs no-print">
+                        <button 
+                            type="button"
+                            @click="chartStudioTab = 'workflow'; $nextTick(() => window.renderMermaidDiagram('mermaid-studio-flow-target', 'mermaid-studio-flow-source'))" 
+                            :class="chartStudioTab === 'workflow' ? 'bg-sky-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                            class="px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1"
+                        >
+                            <span>1. WORKFLOW (ALUR)</span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="chartStudioTab = 'erd'; $nextTick(() => window.renderMermaidDiagram('mermaid-studio-erd-target', 'mermaid-studio-erd-source'))" 
+                            :class="chartStudioTab === 'erd' ? 'bg-sky-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                            class="px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1"
+                        >
+                            <span>2. ERD (DATABASE)</span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="chartStudioTab = 'feature_dep'; $nextTick(() => window.renderMermaidDiagram('mermaid-studio-featdep-target', 'mermaid-studio-featdep-source'))" 
+                            :class="chartStudioTab === 'feature_dep' ? 'bg-sky-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                            class="px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1"
+                        >
+                            <span>3. DEPENDENCY (FITUR)</span>
+                        </button>
+                        <button 
+                            type="button"
+                            @click="chartStudioTab = 'gantt'; $nextTick(() => window.renderMermaidDiagram('mermaid-studio-gantt-target', 'mermaid-studio-gantt-source'))" 
+                            :class="chartStudioTab === 'gantt' ? 'bg-sky-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                            class="px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1"
+                        >
+                            <span>4. GANTT (ROADMAP)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chart 1: Workflow State Machine -->
+                <div x-show="chartStudioTab === 'workflow'" class="space-y-4">
+                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
+                            <span class="text-sky-400 font-bold uppercase">DIAGRAM 1: ALUR KERJA SISTEM (WORKFLOW STATE MACHINE)</span>
+                            <button 
+                                type="button"
+                                onclick="window.copyMermaidCode('mermaid-studio-flow-source', this)"
+                                class="px-2.5 py-1 bg-zinc-800 hover:bg-sky-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                            >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
+                            </button>
+                        </div>
+                        <script type="text/plain" id="mermaid-studio-flow-source">{!! $prd['virtual_charts']['workflow_mermaid'] ?? '' !!}</script>
+                        <div id="mermaid-studio-flow-target" class="overflow-x-auto min-h-[160px] flex items-center justify-center p-2 text-center">
+                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-sky-500 animate-ping"></span>
+                                <span>Memuat visualisasi alur kerja Mermaid...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Database ERD Topology -->
+                <div x-show="chartStudioTab === 'erd'" x-cloak class="space-y-4">
+                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
+                            <span class="text-emerald-400 font-bold uppercase">DIAGRAM 2: SKEMA BASIS DATA RELASIONAL (POSTGRESQL STRICT ULID)</span>
+                            <button 
+                                type="button"
+                                onclick="window.copyMermaidCode('mermaid-studio-erd-source', this)"
+                                class="px-2.5 py-1 bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                            >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
+                            </button>
+                        </div>
+                        <script type="text/plain" id="mermaid-studio-erd-source">{!! $prd['virtual_charts']['erd_mermaid'] ?? '' !!}</script>
+                        <div id="mermaid-studio-erd-target" class="overflow-x-auto min-h-[220px] flex items-center justify-center p-2 text-center">
+                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span>Memuat topologi ERD Mermaid...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Feature & Entity Dependency Graph -->
+                <div x-show="chartStudioTab === 'feature_dep'" x-cloak class="space-y-4">
+                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
+                            <span class="text-amber-400 font-bold uppercase">DIAGRAM 3: PETA KETERGANTUNGAN (AKTOR &rarr; FITUR &rarr; ENTITAS BASIS DATA)</span>
+                            <button 
+                                type="button"
+                                onclick="window.copyMermaidCode('mermaid-studio-featdep-source', this)"
+                                class="px-2.5 py-1 bg-zinc-800 hover:bg-amber-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                            >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
+                            </button>
+                        </div>
+                        <script type="text/plain" id="mermaid-studio-featdep-source">{!! $prd['virtual_charts']['feature_dependency_mermaid'] ?? '' !!}</script>
+                        <div id="mermaid-studio-featdep-target" class="overflow-x-auto min-h-[180px] flex items-center justify-center p-2 text-center">
+                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                                <span>Memuat peta ketergantungan fitur Mermaid...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Sprint Delivery Roadmap (Gantt Timeline) -->
+                <div x-show="chartStudioTab === 'gantt'" x-cloak class="space-y-4">
+                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
+                            <span class="text-rose-400 font-bold uppercase">DIAGRAM 4: ROADMAP EKSEKUSI &amp; TIMELINE SPRINT (GANTT CHART)</span>
+                            <button 
+                                type="button"
+                                onclick="window.copyMermaidCode('mermaid-studio-gantt-source', this)"
+                                class="px-2.5 py-1 bg-zinc-800 hover:bg-rose-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                            >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
+                            </button>
+                        </div>
+                        <script type="text/plain" id="mermaid-studio-gantt-source">{!! $prd['virtual_charts']['sprint_gantt_mermaid'] ?? '' !!}</script>
+                        <div id="mermaid-studio-gantt-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center">
+                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                                <span>Memuat timeline roadmap Mermaid...</span>
+                            </div>
                         </div>
                     </div>
                 </div>

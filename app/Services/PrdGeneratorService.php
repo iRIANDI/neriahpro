@@ -52,6 +52,13 @@ class PrdGeneratorService
         // Generate tailored ERD Database Schema with strict ULID standards
         $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems);
 
+        // Generate Virtual Architecture Charts (Mermaid Diagrams Suite)
+        $workflowMermaid = self::generateWorkflowMermaid($workflowStages);
+        $erdMermaid = self::generateErdMermaid($erdTables);
+        $featureDepMermaid = self::generateFeatureDependencyMermaid($actorItems, $mvpItems, $erdTables);
+        $sprintGanttMermaid = self::generateSprintGanttMermaid($blueprint, $targetWaktu);
+        $developerEducation = self::getDeveloperEducationDeck($businessName);
+
         // Extract ultimate blueprint context from metadata
         $metadata = $blueprint->user_metadata ?? [];
         $extraContext = [
@@ -109,6 +116,13 @@ class PrdGeneratorService
                 'description' => 'Skema basis data dengan kompleksitas O(1) keystone pagination, UUID-agnostic ULID 26-char string primary keys, dan integritas relasi foreign key terisolasi.',
                 'tables' => $erdTables,
             ],
+            'virtual_charts' => [
+                'workflow_mermaid' => $workflowMermaid,
+                'erd_mermaid' => $erdMermaid,
+                'feature_dependency_mermaid' => $featureDepMermaid,
+                'sprint_gantt_mermaid' => $sprintGanttMermaid,
+            ],
+            'developer_education' => $developerEducation,
             'tech_stack' => [
                 'backend' => [
                     'name' => 'Laravel 13 Modern Monolith',
@@ -1324,6 +1338,30 @@ class PrdGeneratorService
 
             $analysis = self::analyzeFeatureDomain($title, $desc, $businessName, $clientActor, $primaryActor, $index, $prefix);
 
+            // Compute Story Points, Complexity Sizing, and Sprint Phase
+            $storyPoints = 3;
+            $complexityLabel = 'Standard (3 SP)';
+            $sprintPhase = 'Sprint 1 (Fondasi & CRUD)';
+
+            $cat = $analysis['category'] ?? '';
+            if (str_contains($cat, 'SECURITY') || str_contains($cat, 'PAYMENT') || str_contains($cat, 'INTEGRATION')) {
+                $storyPoints = 5;
+                $complexityLabel = 'High (5 SP)';
+                $sprintPhase = 'Sprint 2 (Integrasi & Mutasi)';
+            } elseif (str_contains($cat, 'CANVAS') || str_contains($cat, 'AI') || str_contains($cat, 'NOTIFICATION')) {
+                $storyPoints = 8;
+                $complexityLabel = 'Complex (8 SP)';
+                $sprintPhase = 'Sprint 3 (Fitur Lanjutan & Async)';
+            }
+
+            $modelName = Str::studly(Str::singular(explode('-', $slug)[0] ?? 'Record'));
+            $boundedFiles = $analysis['target_files'] ?? [
+                "app/Models/{$modelName}.php",
+                "database/migrations/xxxx_create_" . strtolower(Str::plural($modelName)) . "_table.php",
+                "app/Filament/Resources/{$modelName}Resource.php",
+                "resources/views/" . strtolower($cleanSlug) . "/index.blade.php",
+            ];
+
             $specs[] = [
                 'id' => $featureId,
                 'index' => $index,
@@ -1332,6 +1370,10 @@ class PrdGeneratorService
                 'desc' => $desc,
                 'category' => $analysis['category'],
                 'category_label' => $analysis['category_label'],
+                'story_points' => $storyPoints,
+                'complexity_label' => $complexityLabel,
+                'sprint_phase' => $sprintPhase,
+                'target_files' => $boundedFiles,
                 'user_story' => $analysis['user_story'],
                 'acceptance_criteria' => $analysis['acceptance_criteria'],
                 'frontend' => $analysis['frontend'],
@@ -1974,6 +2016,254 @@ PROMPT;
     }
 
     /**
+     * Generate Mermaid syntax for Workflow User Journey (Flowchart TD).
+     */
+    public static function generateWorkflowMermaid(array $workflowStages): string
+    {
+        $code = "flowchart TD\n";
+        $wIdx = 1;
+        $prevNode = null;
+        foreach ($workflowStages as $w) {
+            $nodeId = "S" . $wIdx;
+            $actionClean = preg_replace('/["\r\n]+/', '', $w['action'] ?? ('Step ' . $wIdx));
+            $actorClean = preg_replace('/["\r\n]+/', '', $w['actor'] ?? 'Pengguna');
+            $code .= "    {$nodeId}[\"<b>Step {$wIdx}: {$actionClean}</b><br/><small>Aktor: {$actorClean}</small>\"]\n";
+            if ($prevNode) {
+                $code .= "    {$prevNode} -->|Lanjut| {$nodeId}\n";
+            }
+            $prevNode = $nodeId;
+            $wIdx++;
+        }
+        return trim($code);
+    }
+
+    /**
+     * Generate Mermaid syntax for Database ERD Schema (erDiagram).
+     */
+    public static function generateErdMermaid(array $erdTables): string
+    {
+        $domainTable = 'project_records';
+        foreach ($erdTables as $t) {
+            $tname = $t['name'] ?? '';
+            if ($tname !== 'users' && $tname !== 'activity_logs' && $tname !== 'system_notifications') {
+                $domainTable = $tname;
+                break;
+            }
+        }
+
+        $code = "erDiagram\n";
+        $code .= "    users ||--o{ {$domainTable} : \"manages/owns\"\n";
+        $code .= "    users ||--o{ activity_logs : \"triggers\"\n";
+        $code .= "    {$domainTable} ||--o{ system_notifications : \"generates\"\n\n";
+
+        foreach ($erdTables as $table) {
+            $tname = strtoupper(preg_replace('/[^a-zA-Z0-9_]/', '_', $table['name'] ?? 'TABLE'));
+            $code .= "    {$tname} {\n";
+            foreach ($table['columns'] ?? [] as $col) {
+                $cname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? 'col'));
+                $rawType = strtolower($col['type'] ?? 'string');
+                $type = 'string';
+                if (str_contains($rawType, 'ulid')) $type = 'string';
+                elseif (str_contains($rawType, 'int')) $type = 'int';
+                elseif (str_contains($rawType, 'bool')) $type = 'boolean';
+                elseif (str_contains($rawType, 'json')) $type = 'jsonb';
+                elseif (str_contains($rawType, 'time') || str_contains($rawType, 'date')) $type = 'timestamp';
+
+                $key = '';
+                if (($col['index'] ?? '') === 'PRIMARY' || $cname === 'id') $key = 'PK';
+                elseif (str_contains(strtolower($col['type'] ?? ''), 'foreign') || str_ends_with($cname, '_id')) $key = 'FK';
+                elseif (($col['index'] ?? '') === 'UNIQUE') $key = 'UK';
+
+                $code .= "        {$type} {$cname}" . ($key ? " {$key}" : '') . "\n";
+            }
+            $code .= "    }\n";
+        }
+
+        return trim($code);
+    }
+
+    /**
+     * Generate Mermaid syntax for Feature & Entity Dependency Graph (Flowchart LR).
+     */
+    public static function generateFeatureDependencyMermaid(array $actorItems, array $mvpItems, array $erdTables): string
+    {
+        $code = "flowchart LR\n";
+        $code .= "    subgraph ACTORS [\"👥 Aktor Sistem (RBAC)\"]\n";
+        foreach (array_slice($actorItems, 0, 3) as $idx => $actor) {
+            $aId = "A" . ($idx + 1);
+            $aName = preg_replace('/["\r\n]+/', '', $actor['name'] ?? ('Actor ' . ($idx + 1)));
+            $code .= "        {$aId}[\"{$aName}\"]\n";
+        }
+        $code .= "    end\n\n";
+
+        $code .= "    subgraph FEATURES [\"⚡ Modul Fitur MVP (Fase 1)\"]\n";
+        foreach (array_slice($mvpItems, 0, 4) as $idx => $f) {
+            $fId = "F" . ($idx + 1);
+            $fTitle = preg_replace('/["\r\n]+/', '', $f['title'] ?? ('Feature ' . ($idx + 1)));
+            $code .= "        {$fId}[\"{$fTitle}\"]\n";
+        }
+        $code .= "    end\n\n";
+
+        $code .= "    subgraph DB [\"🗄️ Basis Data (PostgreSQL Strict ULID)\"]\n";
+        foreach (array_slice($erdTables, 0, 4) as $idx => $t) {
+            $tId = "T" . ($idx + 1);
+            $tName = preg_replace('/["\r\n]+/', '', $t['name'] ?? ('table_' . ($idx + 1)));
+            $code .= "        {$tId}[(\"{$tName}\")]\n";
+        }
+        $code .= "    end\n\n";
+
+        // Relasi Aktor -> Fitur
+        $code .= "    A1 --> F1\n";
+        if (count($actorItems) > 1) {
+            $code .= "    A2 --> F2\n";
+            $code .= "    A1 --> F3\n";
+        }
+        if (count($actorItems) > 2) {
+            $code .= "    A3 --> F2\n";
+            $code .= "    A3 --> F4\n";
+        } else {
+            $code .= "    A1 --> F4\n";
+        }
+
+        // Relasi Fitur -> Database
+        $code .= "    F1 --> T1\n";
+        $code .= "    F2 --> T2\n";
+        $code .= "    F3 --> T2\n";
+        $code .= "    F3 --> T3\n";
+        if (count($erdTables) > 3) {
+            $code .= "    F4 --> T4\n";
+        }
+
+        return trim($code);
+    }
+
+    /**
+     * Generate Mermaid syntax for Sprint Roadmap & Execution Timeline (Gantt Chart).
+     */
+    public static function generateSprintGanttMermaid(VisionBlueprint $blueprint, string $targetWaktu): string
+    {
+        $projectName = preg_replace('/["\r\n]+/', '', $blueprint->nama_bisnis ?: 'Proyek');
+        $code = "gantt\n";
+        $code .= "    title Roadmap Eksekusi & Sprint Delivery: {$projectName}\n";
+        $code .= "    dateFormat YYYY-MM-DD\n";
+        $code .= "    axisFormat %d %b\n\n";
+        $code .= "    section Fase 0: Blueprint & Skema\n";
+        $code .= "    Discovery PRD & Arsitektur Approval :done, p0_1, 2026-10-05, 3d\n";
+        $code .= "    Skema Basis Data ULID & RBAC Matrix  :done, p0_2, after p0_1, 2d\n\n";
+        $code .= "    section Fase 1: DB & Admin Panel\n";
+        $code .= "    PostgreSQL Migration & Model ULID   :active, p1_1, after p0_2, 3d\n";
+        $code .= "    Filament v5 CRUD & RBAC Shield      :p1_2, after p1_1, 4d\n\n";
+        $code .= "    section Fase 2: Frontend & Forms\n";
+        $code .= "    Desain Sistem Anti-AI-Slop & Layout :p2_1, after p1_2, 3d\n";
+        $code .= "    Formulir Interaktif & State Shimmer :p2_2, after p2_1, 4d\n\n";
+        $code .= "    section Fase 3: Integrasi & Queue\n";
+        $code .= "    API Contracts & Gateway Eksternal   :p3_1, after p2_2, 4d\n";
+        $code .= "    Background Jobs & Notifikasi Alert  :p3_2, after p3_1, 3d\n\n";
+        $code .= "    section Fase 4: UAT & Production\n";
+        $code .= "    Automated Quality Gate & Testing   :crit, p4_1, after p3_2, 3d\n";
+        $code .= "    Peluncuran Server Produksi (Go-Live):milestone, p4_2, after p4_1, 1d\n";
+
+        return trim($code);
+    }
+
+    /**
+     * Comprehensive Developer Education Deck & AI Agent Orchestration Masterclass.
+     */
+    public static function getDeveloperEducationDeck(string $businessName): array
+    {
+        return [
+            'title' => 'Panduan Edukasi Developer: Cara Mengoperasikan PRD ke AI Coding Agent Tanpa Context Rot',
+            'philosophy' => [
+                'summary' => 'AI Coding Agent (Claude Code, Cursor Composer, Windsurf Cascade, Devin, GitHub Copilot) bekerja dengan model probabilitas token. Semakin besar dokumen yang dimasukkan sekaligus (Prompt Dumping), semakin tinggi resiko Attention Drift, amnesia terhadap migration, dan halusinasi arsitektur.',
+                'warning' => 'DILARANG melakukan copy-paste ribuan baris PRD sekaligus ke jendela obrolan AI yang sedang mengedit kode aktif! Gunakan pendekatan terpandu di bawah ini.',
+            ],
+            'modes' => [
+                'single_shot' => [
+                    'name' => 'Mode A: Single-Shot Full Ingestion (Scaffolding Greenfield)',
+                    'badge' => 'UNTUK PROYEK BARU DARI NOL',
+                    'when_to_use' => 'Hanya digunakan saat pertama kali menginisialisasi repository baru (Greenfield) pada model dengan context window raksasa (Claude 3.7 Sonnet 200k, Gemini 2.0 Pro 2M, Devin).',
+                    'workflow' => [
+                        'Langkah 1: Jalankan setup fresh Laravel 13 & Filament v5.',
+                        'Langkah 2: Salin Master System Prompt yang mengunci aturan .agents/AGENTS.md.',
+                        'Langkah 3: Lampirkan file PRD lengkap (format Markdown) sebagai referensi knowledge base.',
+                        'Langkah 4: Perintahkan AI membuat migration awal & registrasi Filament Resource.',
+                    ],
+                    'risk' => 'TIDAK COCOK untuk proyek yang sudah memiliki kode bisnis berjalan, karena AI berisiko menimpa konfigurasi eksisting.',
+                ],
+                'step_by_step' => [
+                    'name' => 'Mode B: Step-by-Step Vertical Slice (RECOMMENDED - Zero Context-Rot)',
+                    'badge' => 'STANDAR EMAS REKAYASA ENTERPRISE',
+                    'when_to_use' => 'Wajib digunakan di Cursor Composer, Windsurf Cascade, Claude Code CLI, Aider, dan Copilot Chat untuk pengerjaan fitur per fitur tanpa bug.',
+                    'steps' => [
+                        [
+                            'step' => 1,
+                            'title' => 'Inisialisasi Guardrails & Arsitektur',
+                            'instruction' => 'Kunci aturan main (.agents/AGENTS.md atau .cursorrules): Standar Primary Key ULID PostgreSQL, Keyset Cursor Pagination O(1), Anti-AI-Slop UI, Zero Native Dialogs (wajib toast/modal), dan signature Schema Filament v5.',
+                            'target_tool' => 'Cursor (@Rules) / Claude Code CLI (/init) / Windsurf (.windsurfrules)',
+                        ],
+                        [
+                            'step' => 2,
+                            'title' => 'Skema Basis Data & Migration (ERD)',
+                            'instruction' => 'Berikan diagram Mermaid ERD dan tabel spesifik. Minta AI membuat migration Laravel 13 dengan ->ulid(\'id\')->primary() dan indeks foreign key yang terisolasi.',
+                            'target_tool' => 'Prompting ERD Mermaid spesifik',
+                        ],
+                        [
+                            'step' => 3,
+                            'title' => 'Model Eloquent, Casts & Action Handlers',
+                            'instruction' => 'Minta AI membuat Model Eloquent dengan HasUlids, casts array JSONB, serta Single-Responsibility Action Class yang dibungkus DB::transaction.',
+                            'target_tool' => 'Prompting Modul Backend',
+                        ],
+                        [
+                            'step' => 4,
+                            'title' => 'Panel Admin Filament v5 CRUD',
+                            'instruction' => 'Generate Filament v5 Resource dengan method signature Schema, form field shallow directory Curator Picker, dan tabel filter instan.',
+                            'target_tool' => 'Prompting Filament Resource',
+                        ],
+                        [
+                            'step' => 5,
+                            'title' => 'Frontend UI & Formulir Interaktif',
+                            'instruction' => 'Berikan Gherkin acceptance criteria dan design tokens Anti-AI-Slop. Minta AI membangun Blade/React Island dengan skeleton loaders, empty state, dan subtle corners (dilarang rounded-full).',
+                            'target_tool' => 'Prompting Directive Fitur',
+                        ],
+                        [
+                            'step' => 6,
+                            'title' => 'Automated Quality Gate & Testing',
+                            'instruction' => 'Wajibkan AI menjalankan verifikasi terminal otomatis (php artisan test --filter=... dan npm run build) dan memastikan exit code 0 sebelum menandai task selesai.',
+                            'target_tool' => 'Terminal Execution Loop',
+                        ],
+                    ],
+                ],
+            ],
+            'tool_guides' => [
+                'claude_code' => [
+                    'name' => 'Claude Code CLI',
+                    'icon' => 'terminal',
+                    'command' => 'claude',
+                    'usage' => 'Jalankan claude di terminal root proyek. Berikan directive per fitur menggunakan sintaks: claude "Baca kartu FEAT-MVP-01 di PRD. Implementasikan migration dan model User ULID sesuai acceptance criteria. Jalankan php artisan test."',
+                ],
+                'cursor_composer' => [
+                    'name' => 'Cursor Composer',
+                    'icon' => 'code',
+                    'command' => 'Cmd+I / Ctrl+I',
+                    'usage' => 'Buka Composer (Cmd+I). Lampirkan file bounded (@User.php @create_users_table.php). Tempelkan Prompt Directive Fitur dari PRD. Tekan Enter dan tinjau diff perubahan baris demi baris.',
+                ],
+                'windsurf' => [
+                    'name' => 'Windsurf Cascade',
+                    'icon' => 'wind',
+                    'command' => 'Cascade Flow',
+                    'usage' => 'Pilih Cascade agentic mode. Masukkan instruction: "Ikuti spesifikasi FEAT-MVP-01. Buat controller dan form request sesuai validasi Gherkin. Pastikan tidak ada alert() native."',
+                ],
+                'devin_copilot' => [
+                    'name' => 'Devin & GitHub Copilot',
+                    'icon' => 'bot',
+                    'command' => 'Copilot Workspace',
+                    'usage' => 'Buat task sprint berbasis Feature ID. Tempelkan Gherkin scenario sebagai checklist acceptance criteria. Jalankan automated test loop.',
+                ],
+            ],
+        ];
+    }
+
+    /**
      * AI Code Agent Handoff Protocol (Zero Context-Rot Strategy).
      */
     public static function getAgentHandoffProtocol(string $businessName): array
@@ -2195,6 +2485,16 @@ PROMPT;
             $md .= "\n";
         }
 
+        // 5.5 Virtual Architecture Studio: Virtual Charts Suite
+        $featureDepMermaid = self::generateFeatureDependencyMermaid($actors, $mvpFeatures, $erd);
+        $sprintGanttMermaid = self::generateSprintGanttMermaid($blueprint, $blueprint->target_waktu ?: '30 Hari Kerja');
+
+        $md .= "## 5.5 Visual Architecture Studio: Virtual Charts Suite\n\n";
+        $md .= "### A. Feature & Entity Dependency Graph (Flowchart LR)\n\n";
+        $md .= "```mermaid\n" . $featureDepMermaid . "\n```\n\n";
+        $md .= "### B. Roadmap Eksekusi & Timeline Sprint (Gantt Chart)\n\n";
+        $md .= "```mermaid\n" . $sprintGanttMermaid . "\n```\n\n";
+
         // 6. Technology Stack & Architecture Decision
         $md .= "## 6. Keputusan Arsitektur & Rekomendasi Stack (Modern Monolith)\n\n";
         $md .= "| Lapisan | Teknologi | Peran & Justifikasi Arsitektur |\n";
@@ -2232,11 +2532,39 @@ PROMPT;
             $md .= $item['explanation'] . "\n\n";
         }
 
-        // 9. AI Agent Handoff Protocol
-        $md .= "## 9. Protokol Handoff AI Code Agent (Anti Context-Rot)\n\n";
-        $md .= "> " . $handoff['objective'] . "\n\n";
+        // 9. AI Agent Handoff Protocol & Developer Education
+        $eduDeck = self::getDeveloperEducationDeck($blueprint->nama_bisnis ?: $blueprint->client_name);
+        $md .= "## 9. Panduan Edukasi Developer & Protokol Handoff AI Code Agent (Anti Context-Rot)\n\n";
+        $md .= "> " . $eduDeck['philosophy']['summary'] . "\n\n";
+        $md .= "> ⚠️ **PERINGATAN KRUSIAL**: " . $eduDeck['philosophy']['warning'] . "\n\n";
+
+        $md .= "### A. Pilihan Strategi Ingestion ke AI Agent\n\n";
+        $md .= "#### 1. " . $eduDeck['modes']['single_shot']['name'] . " (`" . $eduDeck['modes']['single_shot']['badge'] . "`)\n";
+        $md .= "- **Kapan Digunakan**: " . $eduDeck['modes']['single_shot']['when_to_use'] . "\n";
+        $md .= "- **Risiko**: " . $eduDeck['modes']['single_shot']['risk'] . "\n";
+        $md .= "- **Alur Kerja**:\n";
+        foreach ($eduDeck['modes']['single_shot']['workflow'] as $wf) {
+            $md .= "  - {$wf}\n";
+        }
+        $md .= "\n";
+
+        $md .= "#### 2. " . $eduDeck['modes']['step_by_step']['name'] . " (`" . $eduDeck['modes']['step_by_step']['badge'] . "`)\n";
+        $md .= "- **Kapan Digunakan**: " . $eduDeck['modes']['step_by_step']['when_to_use'] . "\n";
+        $md .= "- **6 Tahap Eksekusi Presisi (Sprint-by-Sprint)**:\n";
+        foreach ($eduDeck['modes']['step_by_step']['steps'] as $s) {
+            $md .= "  - **Langkah {$s['step']}: {$s['title']}** (`{$s['target_tool']}`)  \n    {$s['instruction']}\n";
+        }
+        $md .= "\n";
+
+        $md .= "### B. Playbook Per Tool IDE (Cursor, Claude Code, Windsurf, Devin)\n\n";
+        foreach ($eduDeck['tool_guides'] as $tool) {
+            $md .= "#### 🛠️ {$tool['name']} (`{$tool['command']}`)\n";
+            $md .= "{$tool['usage']}\n\n";
+        }
+
+        $md .= "### C. Protokol Aturan Mutlak Handoff\n\n";
         foreach ($handoff['rules'] as $r) {
-            $md .= "### " . $r['rule'] . "\n";
+            $md .= "#### " . $r['rule'] . "\n";
             $md .= $r['desc'] . "\n\n";
         }
 

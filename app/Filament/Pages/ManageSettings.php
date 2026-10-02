@@ -14,6 +14,7 @@ use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Textarea;
 use App\Models\CmsGlobalSetting;
 use Filament\Notifications\Notification;
 use Filament\Actions\Action;
@@ -279,6 +280,16 @@ class ManageSettings extends Page implements HasForms
                                             ])
                                             ->defaultItems(1)
                                     ]),
+
+                                Section::make('Kustom Schema.org JSON-LD (Ekstensi Fleksibel)')
+                                    ->description('Injeksi skema terstruktur tambahan secara bebas untuk kebutuhan SEO lanjutan (FAQPage, SoftwareApplication, Event, dll).')
+                                    ->schema([
+                                        Textarea::make('seo_schema.custom_json_ld')
+                                            ->label('Raw JSON-LD Object')
+                                            ->rows(5)
+                                            ->placeholder('{"@context": "https://schema.org", "@type": "SoftwareApplication", ...}')
+                                            ->helperText('Format harus berupa JSON valid tanpa tag <script>. Seluruh entri di-cache permanen (Cache::rememberForever) dan otomatis direset saat disimpan.'),
+                                    ]),
                             ]),
                     ])
                     ->columnSpan('full')
@@ -307,8 +318,16 @@ class ManageSettings extends Page implements HasForms
             );
         }
 
+        // Flush schema & global cache forever immediately
+        \Illuminate\Support\Facades\Cache::forget('app_timezone');
+        \Illuminate\Support\Facades\Cache::forget('seo_schema_organization');
+        \Illuminate\Support\Facades\Cache::forget('seo_schema_website');
+        \Illuminate\Support\Facades\Cache::forget('seo_schema_project_os');
+        \Illuminate\Support\Facades\Cache::forget('seo_schema_raw');
+
         Notification::make()
-            ->title('Saved successfully')
+            ->title('Pengaturan & Schema.org Berhasil Disimpan')
+            ->body('Cache forever telah otomatis di-reset. Seluruh mesin pencari akan menerima struktur data JSON-LD teranyar.')
             ->success()
             ->send();
     }

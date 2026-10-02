@@ -7,6 +7,17 @@
     <title>{{ $blueprint->nama_bisnis ?? $blueprint->client_name }} - Ultimate PRD & Architecture Blueprint | Neriah Pro</title>
     <meta name="description" content="Product Requirements Document (PRD) & skema arsitektur database untuk {{ $blueprint->nama_bisnis }}.">
 
+    <!-- Schema.org JSON-LD Structured Data (Mandatory & Cached Forever) -->
+    {!! \App\Services\Seo\SchemaOrgService::render([
+        \App\Services\Seo\SchemaOrgService::organization(),
+        \App\Services\Seo\SchemaOrgService::projectOsApplication(),
+        \App\Services\Seo\SchemaOrgService::breadcrumbs([
+            'Beranda' => url('/'),
+            'Project OS Blueprint' => url('/blueprint'),
+            $blueprint->nama_bisnis ?: 'Spesifikasi Sistem' => request()->url(),
+        ]),
+    ]) !!}
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700,800" rel="stylesheet" />
@@ -471,17 +482,40 @@ x-init="
                     TARGET_AUDIENCE: <span class="text-zinc-900 dark:text-zinc-100 font-bold">{{ $blueprint->target_audiens ?? ($prd['executive_summary']['target_audience'] ?? '-') }}</span>
                 </div>
 
-                <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
                     @foreach($prd['system_actors'] ?? [] as $actor)
-                        <div class="bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 rounded-none flex flex-col justify-between">
+                        @php
+                            $actorName = $actor['name'] ?? $actor['title'] ?? 'Aktor Sistem';
+                            $actorRole = $actor['role'] ?? $actor['desc'] ?? 'Akses dan fungsi interaksi standar dalam sistem.';
+                            $actorBadge = $actor['badge'] ?? 'ROLE';
+                            $permissions = $actor['permissions'] ?? [];
+                        @endphp
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-5 border border-zinc-200 dark:border-zinc-800 rounded-none flex flex-col justify-between hover:border-emerald-500/50 transition">
                             <div>
-                                <span class="inline-block px-2 py-0.5 text-xs font-mono font-bold uppercase tracking-wider bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 mb-2 rounded-none">
-                                    {{ $actor['name'] ?? 'Aktor Sistem' }}
-                                </span>
-                                <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
-                                    {{ $actor['role'] ?? '-' }}
+                                <div class="flex items-center justify-between gap-2 mb-3">
+                                    <span class="inline-block px-2.5 py-1 text-xs font-mono font-bold uppercase tracking-wider bg-zinc-900 dark:bg-zinc-800 text-white dark:text-zinc-100 rounded-none">
+                                        {{ $actorName }}
+                                    </span>
+                                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                                        {{ $actorBadge }}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed font-sans mb-4">
+                                    {{ $actorRole }}
                                 </p>
                             </div>
+                            @if(!empty($permissions))
+                                <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800/80">
+                                    <span class="text-[10px] font-mono text-zinc-400 uppercase block mb-1.5 font-bold">Otorisasi &amp; Hak Akses:</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach($permissions as $perm)
+                                            <span class="text-[9px] font-mono px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
+                                                {{ $perm }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -1003,28 +1037,38 @@ x-init="
                             <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 min-w-[700px]">
                                 @foreach($rawWorkflows as $index => $flow)
                                     <!-- Node Card -->
-                                    <div class="flex-1 bg-zinc-900 border border-zinc-700 p-4 relative group hover:border-emerald-500 transition shadow-lg">
-                                        <div class="flex items-center justify-between gap-2 mb-2 font-mono">
-                                            <div class="flex items-center gap-2">
-                                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                <span class="text-xs font-bold text-white">STEP 0{{ $flow['step'] ?? ($index + 1) }}</span>
+                                    <div class="flex-1 bg-zinc-900 border border-zinc-700 p-4 relative group hover:border-emerald-500 transition shadow-lg flex flex-col justify-between">
+                                        <div>
+                                            <div class="flex items-center justify-between gap-2 mb-2 font-mono">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                    <span class="text-xs font-bold text-white">STEP 0{{ $flow['step'] ?? ($index + 1) }}</span>
+                                                </div>
+                                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-zinc-800 text-emerald-400 border border-emerald-500/30 font-bold">
+                                                    {{ $flow['badge'] ?? 'PROCESS' }}
+                                                </span>
                                             </div>
-                                            <span class="text-[9px] uppercase px-1.5 py-0.5 bg-zinc-800 text-emerald-400 border border-emerald-500/30 font-bold">
-                                                {{ $flow['badge'] ?? 'PROCESS' }}
-                                            </span>
+
+                                            <h4 class="font-mono font-bold text-xs uppercase text-zinc-100 mb-2 leading-snug">
+                                                {{ $flow['action'] ?? '-' }}
+                                            </h4>
+
+                                            <p class="text-[11px] text-zinc-400 font-sans leading-relaxed mb-3">
+                                                {{ $flow['description'] ?? 'Tahapan validasi dan transmisi alur kerja.' }}
+                                            </p>
                                         </div>
 
-                                        <h4 class="font-mono font-bold text-xs uppercase text-zinc-100 mb-2 leading-snug line-clamp-2">
-                                            {{ $flow['action'] ?? '-' }}
-                                        </h4>
-
-                                        <p class="text-[11px] text-zinc-400 font-sans leading-relaxed mb-3">
-                                            {{ $flow['description'] ?? 'Tahapan validasi dan transmisi alur kerja.' }}
-                                        </p>
-
-                                        <div class="pt-2 border-t border-zinc-800 flex items-center justify-between text-[10px] font-mono text-zinc-400">
-                                            <span class="text-zinc-500">AKTOR:</span>
-                                            <span class="text-emerald-400 font-bold truncate max-w-[120px]">{{ $flow['actor'] ?? 'Pengguna' }}</span>
+                                        <div class="space-y-1.5 pt-2 border-t border-zinc-800 text-[10px] font-mono">
+                                            <div class="flex items-center justify-between text-zinc-400">
+                                                <span class="text-zinc-500">AKTOR:</span>
+                                                <span class="text-emerald-400 font-bold truncate max-w-[140px]">{{ $flow['actor'] ?? 'Pengguna' }}</span>
+                                            </div>
+                                            @if(!empty($flow['trigger']))
+                                                <div class="text-[10px] text-zinc-400">
+                                                    <span class="text-zinc-500 block">TRIGGER:</span>
+                                                    <span class="text-zinc-300 font-sans text-[11px]">{{ $flow['trigger'] }}</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
 
@@ -1050,7 +1094,7 @@ x-init="
                 <div x-show="flowTab === 'mermaid'" x-cloak class="mb-6">
                     <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
                         <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
-                            <span class="text-zinc-500 font-bold uppercase">ALUR KERJA MERMAID (FLOWCHART LR)</span>
+                            <span class="text-zinc-500 font-bold uppercase">ALUR KERJA MERMAID (FLOWCHART TD)</span>
                             <button 
                                 type="button"
                                 onclick="window.copyMermaidCode('mermaid-flow-source', this)"
@@ -1061,15 +1105,15 @@ x-init="
                             </button>
                         </div>
 
-                        <script type="text/plain" id="mermaid-flow-source">flowchart LR
+                        <script type="text/plain" id="mermaid-flow-source">flowchart TD
 @foreach($rawWorkflows as $index => $flow)
 @php
-    $safeText = preg_replace('/[^a-zA-Z0-9\s_\-.,]/', '', $flow['action'] ?? 'Step');
-    $safeText = trim(preg_replace('/\s+/', ' ', Str::limit($safeText, 35)));
+    $safeText = preg_replace('/["\r\n]+/', '', $flow['action'] ?? 'Step');
+    $safeActor = preg_replace('/["\r\n]+/', '', $flow['actor'] ?? 'Pengguna');
 @endphp
-    S{{ $index + 1 }}["{{ $index + 1 }}. {{ $safeText }}"]
+    S{{ $index + 1 }}["<b>Step {{ $index + 1 }}: {{ $safeText }}</b><br/><small>Aktor: {{ $safeActor }}</small>"]
     @if(!$loop->last)
-    S{{ $index + 1 }} --> S{{ $index + 2 }}
+    S{{ $index + 1 }} -->|Lanjut| S{{ $index + 2 }}
     @endif
 @endforeach
                         </script>
@@ -1084,23 +1128,47 @@ x-init="
                 </div>
 
                 <!-- Detailed Steps Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($rawWorkflows as $flow)
-                        <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 rounded-none flex flex-col justify-between">
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono font-bold flex items-center justify-center rounded-none">
-                                    {{ $flow['step'] ?? $loop->iteration }}
-                                </div>
-                                <span class="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase">
-                                    {{ $flow['badge'] ?? 'STEP' }}
-                                </span>
-                            </div>
+                        <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none flex flex-col justify-between hover:border-emerald-500/50 transition">
                             <div>
-                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1 font-mono uppercase">{{ $flow['action'] ?? '-' }}</h4>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed font-sans">{{ $flow['description'] ?? '' }}</p>
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-7 h-7 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono font-bold flex items-center justify-center rounded-none">
+                                        0{{ $flow['step'] ?? $loop->iteration }}
+                                    </div>
+                                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase">
+                                        {{ $flow['badge'] ?? 'STEP' }}
+                                    </span>
+                                </div>
+                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-sm mb-2 font-mono uppercase">{{ $flow['action'] ?? '-' }}</h4>
+                                <p class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed font-sans mb-4">{{ $flow['description'] ?? '' }}</p>
+
+                                <div class="space-y-2.5 pt-3 border-t border-zinc-200 dark:border-zinc-800 text-[11px]">
+                                    <div>
+                                        <span class="font-mono text-[10px] uppercase text-zinc-400 font-bold block">Pemicu &amp; Trigger:</span>
+                                        <span class="text-zinc-700 dark:text-zinc-300 font-sans">{{ $flow['trigger'] ?? 'Aksi langsung pengguna pada antarmuka.' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-mono text-[10px] uppercase text-zinc-400 font-bold block">Komputasi &amp; Basis Data:</span>
+                                        <span class="text-zinc-700 dark:text-zinc-300 font-sans">{{ $flow['system_process'] ?? 'Validasi request FormRequest & query database terindeks.' }}</span>
+                                    </div>
+                                    @if(!empty($flow['output_state']))
+                                        <div>
+                                            <span class="font-mono text-[10px] uppercase text-zinc-400 font-bold block">Hasil &amp; State Response:</span>
+                                            <span class="text-zinc-700 dark:text-zinc-300 font-sans">{{ $flow['output_state'] }}</span>
+                                        </div>
+                                    @endif
+                                    @if(!empty($flow['edge_case']))
+                                        <div class="bg-amber-500/5 border border-amber-500/20 p-2 text-[10px]">
+                                            <span class="font-mono uppercase text-amber-600 dark:text-amber-400 font-bold block">Mitigasi &amp; Edge Case:</span>
+                                            <span class="text-zinc-600 dark:text-zinc-300 font-sans">{{ $flow['edge_case'] }}</span>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="mt-3 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono text-zinc-400">
-                                Aktor: <span class="text-zinc-700 dark:text-zinc-300 font-bold">{{ $flow['actor'] ?? 'Pengguna' }}</span>
+                            <div class="mt-4 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono flex items-center justify-between">
+                                <span class="text-zinc-500 uppercase">AKTOR UTAMA:</span>
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold">{{ $flow['actor'] ?? 'Pengguna' }}</span>
                             </div>
                         </div>
                     @endforeach

@@ -25,15 +25,8 @@ class PrdGeneratorService
         $kesiapanAset = $blueprint->kesiapan_aset ?: 'Sedang Disiapkan';
         $targetWaktu = $blueprint->target_waktu ?: 'Fase 1 rilis dalam 3-4 pekan kerja.';
 
-        // Parse actors into structured array
-        $actorItems = self::parseItems($aktor);
-        if (empty($actorItems)) {
-            $actorItems = [
-                ['name' => 'Superadmin', 'role' => 'Akses penuh seluruh konfigurasi, audit log, dan data sistem.'],
-                ['name' => 'Staff / Operator', 'role' => 'Memproses data masuk, verifikasi berkas, dan rekap laporan.'],
-                ['name' => 'Pengguna / Klien', 'role' => 'Mengisi data transaksi/formulir dan melihat status pengerjaan.'],
-            ];
-        }
+        // Parse actors into structured array with intelligent role inference & RBAC normalization
+        $actorItems = self::parseActors($aktor, $businessName, $audiens);
 
         // Parse MVP Features
         $mvpItems = self::parseItems($fiturWajib);
@@ -53,8 +46,8 @@ class PrdGeneratorService
         $detailedMvpSpecs = self::generateDetailedFeatureSpecs($mvpItems, $businessName, $actorItems, 'mvp');
         $detailedPhase2Specs = self::generateDetailedFeatureSpecs($phase2Items, $businessName, $actorItems, 'phase2');
 
-        // Parse Workflow Stages
-        $workflowStages = self::parseWorkflow($alurKerja);
+        // Parse Workflow Stages with granular engineering decomposition
+        $workflowStages = self::parseWorkflow($alurKerja, $businessName);
 
         // Generate tailored ERD Database Schema with strict ULID standards
         $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems);
@@ -220,9 +213,171 @@ class PrdGeneratorService
     }
 
     /**
-     * Parse workflow text into sequenced step cards.
+     * Parse system actors with intelligent role inference and RBAC normalization.
      */
-    protected static function parseWorkflow(string $text): array
+    protected static function parseActors(string $text, string $businessName = '', string $audiens = ''): array
+    {
+        $rawLines = preg_split('/[\r\n;]+/', trim($text));
+        $normalizedLines = [];
+        foreach ($rawLines as $l) {
+            $l = trim($l);
+            if (empty($l)) {
+                continue;
+            }
+            if (str_contains($l, ',') && !str_contains($l, ':') && !str_contains($l, ' - ')) {
+                $parts = explode(',', $l);
+                foreach ($parts as $p) {
+                    $subParts = preg_split('/\s+(?:dan|serta|and)\s+/i', trim($p));
+                    foreach ($subParts as $sp) {
+                        $sp = trim($sp, " \t\n\r\0\x0B-•*1234567890.)");
+                        if (!empty($sp)) {
+                            $normalizedLines[] = $sp;
+                        }
+                    }
+                }
+            } else {
+                $normalizedLines[] = $l;
+            }
+        }
+
+        $actors = [];
+        $hasAdmin = false;
+
+        foreach ($normalizedLines as $line) {
+            $line = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
+            if (empty($line)) {
+                continue;
+            }
+
+            $name = '';
+            $role = '';
+
+            if (str_contains($line, ':')) {
+                [$n, $r] = explode(':', $line, 2);
+                $name = trim($n);
+                $role = trim($r);
+            } elseif (str_contains($line, ' - ')) {
+                [$n, $r] = explode(' - ', $line, 2);
+                $name = trim($n);
+                $role = trim($r);
+            } elseif (preg_match('/^(.*?)\s*\((.*?)\)$/', $line, $matches)) {
+                $name = trim($matches[1]);
+                $role = trim($matches[2]);
+            } else {
+                $name = $line;
+                $role = '';
+            }
+
+            if (empty($name)) {
+                continue;
+            }
+
+            $lower = strtolower($name . ' ' . $role);
+            if (str_contains($lower, 'admin')) {
+                $hasAdmin = true;
+            }
+
+            if (empty($role) || strlen($role) < 10) {
+                if (str_contains($lower, 'pembeli') || str_contains($lower, 'buyer') || str_contains($lower, 'konsumen') || str_contains($lower, 'pelanggan')) {
+                    $role = "Menjelajahi katalog {$businessName}, melakukan pencarian & filter spesifikasi mendalam, mengajukan penawaran/inquiry, serta menerima notifikasi status pesanan secara real-time.";
+                    $badge = 'PEMBELI / KLIEN';
+                    $permissions = ['Katalog Publik', 'Filter Pencarian', 'Ajukan Order / Inquiry', 'Riwayat Pesanan'];
+                } elseif (str_contains($lower, 'member') || str_contains($lower, 'mitra') || str_contains($lower, 'partner') || str_contains($lower, 'agen') || str_contains($lower, 'penjual')) {
+                    $role = "Mengelola profil mitra terverifikasi, mempublikasikan listing/produk, memantau analitik performa komisi, dan berinteraksi langsung dengan calon pembeli.";
+                    $badge = 'MITRA / MEMBER';
+                    $permissions = ['Manajemen Profil', 'Posting Listing / Aset', 'Dasbor Mitra', 'Chat / Inquiry Inbound'];
+                } elseif (str_contains($lower, 'superadmin') || str_contains($lower, 'owner') || str_contains($lower, 'direktur')) {
+                    $role = "Memegang kendali penuh atas konfigurasi platform {$businessName}, manajemen peran Spatie Shield RBAC, audit log forensik, dan rekonsiliasi keuangan.";
+                    $badge = 'SUPERADMIN';
+                    $permissions = ['Full Access', 'Konfigurasi Sistem', 'RBAC Shield', 'Audit Log', 'Billing Settlement'];
+                } elseif (str_contains($lower, 'staff') || str_contains($lower, 'operator') || str_contains($lower, 'admin')) {
+                    $role = "Memproses validasi berkas pengguna harian, memverifikasi kelaikan transaksi, menindaklanjuti keluhan layanan, dan mengekspor laporan berkala.";
+                    $badge = 'OPERATOR';
+                    $permissions = ['Review Data Masuk', 'Verifikasi Dokumen', 'Ekspor PDF/Excel', 'Update Status Operasional'];
+                } elseif (str_contains($lower, 'tamu') || str_contains($lower, 'guest') || str_contains($lower, 'pengunjung')) {
+                    $role = "Mengakses halaman pendaratan (landing page), mengecek informasi umum, dan melakukan registrasi akun awal.";
+                    $badge = 'GUEST / PUBLIK';
+                    $permissions = ['Akses Landing Page', 'Baca Dokumentasi', 'Registrasi Akun'];
+                } else {
+                    $role = "Pengguna terdaftar dengan hak akses interaktif terhadap modul sistem {$businessName} sesuai batasan otorisasi.";
+                    $badge = 'PENGGUNA';
+                    $permissions = ['Akses Modul Inti', 'Input Form', 'Lihat Notifikasi'];
+                }
+            } else {
+                if (str_contains($lower, 'superadmin')) {
+                    $badge = 'SUPERADMIN';
+                    $permissions = ['Full Access', 'Konfigurasi Sistem', 'RBAC Shield', 'Audit Log'];
+                } elseif (str_contains($lower, 'admin') || str_contains($lower, 'staff') || str_contains($lower, 'operator')) {
+                    $badge = 'ADMIN / STAFF';
+                    $permissions = ['Review Data', 'Verifikasi Berkas', 'Ekspor Laporan'];
+                } elseif (str_contains($lower, 'mitra') || str_contains($lower, 'member')) {
+                    $badge = 'MITRA / MEMBER';
+                    $permissions = ['Dasbor Mitra', 'Kelola Listing', 'Inquiry Inbound'];
+                } else {
+                    $badge = 'KLIEN / USER';
+                    $permissions = ['Akses Formulir', 'Lihat Status', 'Riwayat Transaksi'];
+                }
+            }
+
+            $actors[] = [
+                'name' => $name,
+                'title' => $name,
+                'role' => $role,
+                'desc' => $role,
+                'badge' => $badge,
+                'permissions' => $permissions,
+            ];
+        }
+
+        if (empty($actors)) {
+            $actors = [
+                [
+                    'name' => 'Superadmin',
+                    'title' => 'Superadmin',
+                    'role' => 'Akses penuh seluruh konfigurasi, audit log, otorisasi peran, dan data sistem.',
+                    'desc' => 'Akses penuh seluruh konfigurasi, audit log, otorisasi peran, dan data sistem.',
+                    'badge' => 'SUPERADMIN',
+                    'permissions' => ['Full Control', 'System Config', 'RBAC Shield', 'Audit Log'],
+                ],
+                [
+                    'name' => 'Staff / Operator',
+                    'title' => 'Staff / Operator',
+                    'role' => 'Memproses data masuk harian, verifikasi kelayakan berkas, dan ekspor laporan berkala.',
+                    'desc' => 'Memproses data masuk harian, verifikasi kelayakan berkas, dan ekspor laporan berkala.',
+                    'badge' => 'OPERATOR',
+                    'permissions' => ['Data Processing', 'Document Verification', 'Report Export'],
+                ],
+                [
+                    'name' => 'Pengguna / Klien',
+                    'title' => 'Pengguna / Klien',
+                    'role' => 'Mengakses fitur publik/portal, mengisi data formulir, dan melihat status riwayat transaksi.',
+                    'desc' => 'Mengakses fitur publik/portal, mengisi data formulir, dan melihat status riwayat transaksi.',
+                    'badge' => 'CLIENT',
+                    'permissions' => ['Portal Access', 'Form Submission', 'Notification Stream'],
+                ],
+            ];
+            $hasAdmin = true;
+        }
+
+        // Always ensure Superadmin is present for enterprise RBAC compliance
+        if (!$hasAdmin) {
+            array_unshift($actors, [
+                'name' => 'Superadmin Platform',
+                'title' => 'Superadmin Platform',
+                'role' => "Kendali penuh atas seluruh tata kelola {$businessName}, verifikasi akun pengguna, pengaturan modul, pemantauan transaksi, dan audit trail.",
+                'desc' => "Kendali penuh atas seluruh tata kelola {$businessName}, verifikasi akun pengguna, pengaturan modul, pemantauan transaksi, dan audit trail.",
+                'badge' => 'SUPERADMIN',
+                'permissions' => ['Akses Penuh / Root', 'Konfigurasi Global', 'RBAC Security Shield', 'Audit Forensik'],
+            ]);
+        }
+
+        return $actors;
+    }
+
+    /**
+     * Parse workflow text into sequenced step cards with deep engineering parameters.
+     */
+    protected static function parseWorkflow(string $text, string $businessName = ''): array
     {
         // 1. First attempt split by -> or => or newlines
         if (str_contains($text, '->')) {
@@ -271,44 +426,132 @@ class PrdGeneratorService
             $badge = 'INTERACTION';
             $type = 'client';
 
-            if (str_contains($lower, 'buka') || str_contains($lower, 'katalog') || str_contains($lower, 'lihat')) {
-                $actor = 'Pengguna / Klien';
+            $description = "Interaksi pengguna pada modul {$businessName} dengan transmisi data tervalidasi.";
+            $trigger = "Pengguna menjalankan aksi '{$step}' melalui antarmuka web.";
+            $systemProcess = "Controller memvalidasi request FormRequest, menjalankan query Eloquent berindeks, dan memperbarui state.";
+            $outputState = "Antarmuka diperbarui secara reaktif (HTTP 200 OK) dengan notifikasi visual.";
+            $edgeCase = "Penanganan validasi gagal dengan error state inline dan retry mechanism.";
+
+            if (str_contains($lower, 'buka') || str_contains($lower, 'katalog') || str_contains($lower, 'lihat') || str_contains($lower, 'daftar')) {
+                $actor = 'Pengguna / Pengunjung';
                 $badge = 'DISCOVERY';
                 $type = 'client';
-            } elseif (str_contains($lower, 'filter') || str_contains($lower, 'cari') || str_contains($lower, 'search')) {
+                $description = "Pengguna mengakses portal publik {$businessName}, sistem memuat katalog dinamis dengan skeleton loader, dan melakukan prefetching aset CDN.";
+                $trigger = "Pengunjung membuka URL beranda / katalog dari peramban desktop maupun ponsel.";
+                $systemProcess = "HTTP GET route memanggil Controller, membaca Cache::rememberForever() untuk konfigurasi CMS & Schema.org JSON-LD, render Blade & React Islands.";
+                $outputState = "Halaman ter-render instan (<100ms TTFB) dengan Core Web Vitals optimal (LCP < 1.2s, CLS = 0).";
+                $edgeCase = "Jika terjadi gangguan jaringan, service worker menampilkan graceful offline fallback dan tombol muat ulang.";
+            } elseif (str_contains($lower, 'filter') || str_contains($lower, 'cari') || str_contains($lower, 'search') || str_contains($lower, 'advance')) {
                 $actor = 'Sistem / Search Engine';
                 $badge = 'QUERY_FILTER';
                 $type = 'filter';
-            } elseif (str_contains($lower, 'notifikasi') || str_contains($lower, 'berlangganan') || str_contains($lower, 'alert') || str_contains($lower, 'email')) {
+                $description = "Pengguna menerapkan parameter filter lanjutan (kategori, rentang budget, spesifikasi). Sistem mengeksekusi query database terindeks secara instan.";
+                $trigger = "Input teks pada kolom pencarian atau interaksi toggle/chip filter oleh pengguna.";
+                $systemProcess = "Eksekusi Keyset Cursor Pagination O(1) dengan PostgreSQL B-Tree Indexing, debounce 300ms untuk menekan beban server.";
+                $outputState = "Daftar entitas hasil filter diperbarui secara reaktif tanpa reload halaman penuh (Full Page Refresh = 0).";
+                $edgeCase = "Jika hasil pencarian 0 record, sistem menampilkan rekomendasi cerdas dan tombol 'Reset Semua Filter'.";
+            } elseif (str_contains($lower, 'langganan') || str_contains($lower, 'berlangganan') || str_contains($lower, 'order') || str_contains($lower, 'beli') || str_contains($lower, 'transaksi')) {
+                $actor = 'Payment & Transaction Engine';
+                $badge = 'TRANSACTION';
+                $type = 'billing';
+                $description = "Pengguna memilih paket berlangganan atau mengajukan transaksi. Sistem mengunci kalkulasi harga, menerbitkan invoice ber-ULID, dan membuka gateway pembayaran.";
+                $trigger = "Klik tombol 'Berlangganan Sekarang' atau 'Checkout' oleh pengguna terautentikasi.";
+                $systemProcess = "Penerbitan ULID transaksi baru, verifikasi kuota/stok dengan ACID database transaction, handshake API ke Payment Gateway (Midtrans Snap).";
+                $outputState = "Snap payment modal terbuka di layar klien; database mencatat status PENDING_PAYMENT.";
+                $edgeCase = "Idempotency key mencegah double charge jika klien menekan tombol bayar berulang kali.";
+            } elseif (str_contains($lower, 'notifikasi') || str_contains($lower, 'email') || str_contains($lower, 'alert') || str_contains($lower, 'wa')) {
                 $actor = 'Notification Engine';
                 $badge = 'NOTIFICATION';
                 $type = 'notification';
-            } elseif (str_contains($lower, 'validasi') || str_contains($lower, 'simpan') || str_contains($lower, 'database')) {
+                $description = "Sistem mendistribusikan notifikasi status transaksi otomatis ke email profesional pengguna (Resend API) dan nomor WhatsApp.";
+                $trigger = "Event model tersimpan (OrderSettled, InquiryCreated, atau StatusUpdated).";
+                $systemProcess = "Dispatched asynchronous Job ke Redis Queue Workers, render email template responsif, fallback retry 3x dengan backoff eksponensial.";
+                $outputState = "Notifikasi terkirim ke inbox email dan nomor kontak pengguna dalam tempo <5 detik.";
+                $edgeCase = "Pencatatan kegagalan transmisi ke tabel `notification_logs` dan tombol Resend otomatis di panel admin.";
+            } elseif (str_contains($lower, 'validasi') || str_contains($lower, 'simpan') || str_contains($lower, 'database') || str_contains($lower, 'isi')) {
                 $actor = 'PostgreSQL / Laravel ORM';
                 $badge = 'DATABASE';
                 $type = 'database';
-            } elseif (str_contains($lower, 'admin') || str_contains($lower, 'verifikasi') || str_contains($lower, 'dasbor')) {
+                $description = "Penyimpanan data formulir terstruktur dengan validasi ketat, sanitasi anti-XSS, dan penguncian relasi foreign key ber-ULID.";
+                $trigger = "Pengiriman formulir via HTTP POST / Action Handler.";
+                $systemProcess = "Sanitasi payload input, hashing berkas sensitif, penyimpanan ke tabel PostgreSQL Strict dengan ULID primary key.";
+                $outputState = "Flash session atau toast notifikasi sukses muncul, audit trail log mencatat IP dan timestamp pengirim.";
+                $edgeCase = "Penolakan instan dengan HTTP 422 Unprocessable Entity dan pemetaan pesan error spesifik jika input tidak valid.";
+            } elseif (str_contains($lower, 'admin') || str_contains($lower, 'verifikasi') || str_contains($lower, 'dasbor') || str_contains($lower, 'approval')) {
                 $actor = 'Administrator / Operator';
                 $badge = 'APPROVAL';
                 $type = 'admin';
+                $description = "Pengelola meninjau dan memverifikasi data transaksi atau berkas masuk melalui panel kendali Filament v5 enterprise.";
+                $trigger = "Admin membuka antarmuka manajemen data di dashboard `/admin`.";
+                $systemProcess = "Verifikasi otorisasi Spatie Shield RBAC, evaluasi integritas dokumen, eksekusi approval dengan database lock.";
+                $outputState = "Status record diperbarui menjadi APPROVED / ACTIVE, memicu event notifikasi tahap berikutnya.";
+                $edgeCase = "Jika data ditolak, admin wajib menyertakan alasan penolakan yang otomatis diteruskan ke pengguna.";
             }
 
             $stages[] = [
                 'step' => $index++,
                 'action' => $step,
-                'description' => 'Tahapan validasi, interaksi antarmuka, dan transmisi data alur kerja sistem.',
+                'description' => $description,
                 'actor' => $actor,
                 'badge' => $badge,
                 'type' => $type,
+                'trigger' => $trigger,
+                'system_process' => $systemProcess,
+                'output_state' => $outputState,
+                'edge_case' => $edgeCase,
             ];
         }
 
         if (empty($stages)) {
             $stages = [
-                ['step' => 1, 'action' => 'Akses Portal & Registrasi', 'description' => 'Pengguna membuka aplikasi dan memasukkan kredensial / identitas.', 'actor' => 'Pengguna', 'badge' => 'AUTH', 'type' => 'client'],
-                ['step' => 2, 'action' => 'Pengisian Data / Form Transaksi', 'description' => 'Validasi sisi klien dan transmisi ke backend Laravel.', 'actor' => 'Klien / Sistem', 'badge' => 'INPUT', 'type' => 'client'],
-                ['step' => 3, 'action' => 'Verifikasi & Notifikasi Otomatis', 'description' => 'Sistem mengirimkan konfirmasi instan dan mencatat audit trail.', 'actor' => 'Notifikasi', 'badge' => 'NOTIFICATION', 'type' => 'notification'],
-                ['step' => 4, 'action' => 'Approval & Manajemen Dasbor Admin', 'description' => 'Pengelola memproses data melalui tabel Filament berkecepatan tinggi.', 'actor' => 'Admin', 'badge' => 'APPROVAL', 'type' => 'admin'],
+                [
+                    'step' => 1,
+                    'action' => 'Akses Portal & Registrasi Akun',
+                    'description' => 'Pengguna membuka aplikasi dan memasukkan kredensial identitas terotentikasi.',
+                    'actor' => 'Pengguna',
+                    'badge' => 'AUTH',
+                    'type' => 'client',
+                    'trigger' => 'Pengguna mengakses halaman login / register.',
+                    'system_process' => 'Sanitasi kredensial, verifikasi password bcrypt, penerbitan session terenkripsi.',
+                    'output_state' => 'Pengguna diarahkan ke dasbor utama dengan token sesi valid.',
+                    'edge_case' => 'Rate limiter membatasi percobaan login maksimal 5x per menit.',
+                ],
+                [
+                    'step' => 2,
+                    'action' => 'Pengisian Data / Form Transaksi',
+                    'description' => 'Validasi sisi klien dan transmisi data ke backend Laravel.',
+                    'actor' => 'Klien / Sistem',
+                    'badge' => 'INPUT',
+                    'type' => 'client',
+                    'trigger' => 'Pengguna mengisi formulir dan menekan submit.',
+                    'system_process' => 'Validasi FormRequest, sanitasi XSS, penyimpanan ACID database.',
+                    'output_state' => 'Toast sukses muncul dan record baru ber-ULID terbit.',
+                    'edge_case' => 'Penolakan HTTP 422 jika format data tidak sesuai spesifikasi.',
+                ],
+                [
+                    'step' => 3,
+                    'action' => 'Verifikasi & Notifikasi Otomatis',
+                    'description' => 'Sistem mengirimkan konfirmasi instan via email Resend dan mencatat audit trail.',
+                    'actor' => 'Notification Engine',
+                    'badge' => 'NOTIFICATION',
+                    'type' => 'notification',
+                    'trigger' => 'Event model tersimpan di database.',
+                    'system_process' => 'Queue worker memproses pengiriman email asinkron.',
+                    'output_state' => 'Email konfirmasi mendarat di inbox pengguna dalam hitungan detik.',
+                    'edge_case' => 'Retry otomatis 3x jika koneksi API gateway mengalami timeout.',
+                ],
+                [
+                    'step' => 4,
+                    'action' => 'Approval & Manajemen Dasbor Admin',
+                    'description' => 'Pengelola memproses data melalui tabel Filament berkecepatan tinggi.',
+                    'actor' => 'Admin / Operator',
+                    'badge' => 'APPROVAL',
+                    'type' => 'admin',
+                    'trigger' => 'Operator membuka panel antrean data baru.',
+                    'system_process' => 'Pengecekan RBAC, review berkas, pembaruan status transaksi.',
+                    'output_state' => 'Status berubah menjadi VERIFIED dan tercatat di audit log.',
+                    'edge_case' => 'Log audit forensik mencatat alasan penolakan jika verifikasi dibatalkan.',
+                ],
             ];
         }
 
@@ -1634,6 +1877,10 @@ PROMPT;
                 'rule' => 'Redis-Backed Queue Workers & Idempotency Keys',
                 'explanation' => 'Seluruh pemrosesan asinkron (notifikasi WhatsApp, email, ekspor laporan, integrasi payment gateway) didelegasikan ke Redis Queue Workers dengan retry backoff 3x dan header X-Idempotency-Key.',
             ],
+            'schema_org_and_cache' => [
+                'rule' => 'Mandatory Schema.org Structured Data & Cache::rememberForever()',
+                'explanation' => 'Setiap entitas publik wajib mengekspos Schema.org JSON-LD (Organization, WebSite, SoftwareApplication, Product, Breadcrumbs). Seluruh data Schema.org WAJIB di-cache menggunakan Cache::rememberForever() untuk latensi sub-1ms (O(1)), dan WAJIB memiliki Event-Driven Invalidation (static::saved / static::deleted pada Eloquent Model) untuk mereset cache secara otomatis begitu ada perubahan data.',
+            ],
         ];
     }
 
@@ -1710,10 +1957,14 @@ PROMPT;
 
         // 2. System Actors
         $md .= "## 2. Aktor Sistem & Matriks Hak Akses (RBAC)\n\n";
-        $md .= "| Aktor | Peran & Batasan Tanggung Jawab |\n";
-        $md .= "|---|---|\n";
+        $md .= "| Aktor | Peran & Batasan Tanggung Jawab | Hak Akses & Permissions |\n";
+        $md .= "|---|---|---|\n";
         foreach ($actors as $actor) {
-            $md .= "| **" . ($actor['name'] ?? 'Aktor') . "** | " . ($actor['role'] ?? '-') . " |\n";
+            $name = $actor['name'] ?? $actor['title'] ?? 'Aktor Sistem';
+            $role = $actor['role'] ?? $actor['desc'] ?? '-';
+            $badge = $actor['badge'] ?? 'ROLE';
+            $perms = !empty($actor['permissions']) ? ('`' . implode('`, `', $actor['permissions']) . '`') : 'Hak Akses Standar';
+            $md .= "| **{$name}** (`{$badge}`) | {$role} | {$perms} |\n";
         }
         $md .= "\n";
 
@@ -1805,14 +2056,29 @@ PROMPT;
         foreach ($workflow as $w) {
             $nodeId = "S" . $wIdx;
             $actionClean = addslashes($w['action'] ?? ('Step ' . $wIdx));
-            $md .= "    {$nodeId}[\"{$wIdx}: {$actionClean}\"]\n";
+            $actorClean = addslashes($w['actor'] ?? 'Sistem');
+            $md .= "    {$nodeId}[\"<b>Step {$wIdx}: {$actionClean}</b><br/>Aktor: {$actorClean}\"]\n";
             if ($prevNode) {
-                $md .= "    {$prevNode} --> {$nodeId}\n";
+                $md .= "    {$prevNode} -->|Lanjut| {$nodeId}\n";
             }
             $prevNode = $nodeId;
             $wIdx++;
         }
         $md .= "```\n\n";
+
+        $md .= "### Rincian Rekayasa Alur Bertahap (Step-by-Step Engineering Details)\n\n";
+        $md .= "| Step | Aksi Utama | Aktor | Pemicu (Trigger) | Proses Backend & Database | Respon / Output & Edge Case |\n";
+        $md .= "|---|---|---|---|---|---|\n";
+        foreach ($workflow as $w) {
+            $sNum = $w['step'] ?? 1;
+            $sAct = $w['action'] ?? '-';
+            $sActor = $w['actor'] ?? 'Pengguna';
+            $sTrig = $w['trigger'] ?? '-';
+            $sProc = $w['system_process'] ?? '-';
+            $sOut = ($w['output_state'] ?? '-') . '<br/>**Edge Case**: ' . ($w['edge_case'] ?? '-');
+            $md .= "| `0{$sNum}` | **{$sAct}** | `{$sActor}` | {$sTrig} | {$sProc} | {$sOut} |\n";
+        }
+        $md .= "\n";
 
         // 5. Database ERD
         $md .= "## 5. Skema Basis Data (PostgreSQL Strict ULID) & Mermaid ERD\n\n";

@@ -18,68 +18,122 @@ use App\Models\Resume;
 class SchemaOrgService
 {
     /**
-     * Get root Organization Schema
+     * Get root Organization Schema (Cached Forever, Dynamic via CmsGlobalSetting)
      */
     public static function organization(): array
     {
-        $siteName = 'Neriah Pro';
-        $siteUrl = url('/');
+        return \Illuminate\Support\Facades\Cache::rememberForever('seo_schema_organization', function () {
+            try {
+                $setting = CmsGlobalSetting::where('key', 'seo_schema')->first();
+                $schema = $setting?->value ?? [];
+            } catch (\Throwable) {
+                $schema = [];
+            }
 
-        return [
-            '@context' => 'https://schema.org',
-            '@type' => 'Organization',
-            '@id' => $siteUrl . '/#organization',
-            'name' => $siteName,
-            'url' => $siteUrl,
-            'logo' => [
-                '@type' => 'ImageObject',
-                'url' => asset('favicon.ico'),
-            ],
-            'description' => 'Architecting High-Performance Digital Platforms, Productized Agency Systems, and Enterprise Web Applications.',
-            'founder' => [
-                '@type' => 'Person',
-                'name' => 'Yoseph Iriandi Tambunan',
-            ],
-            'contactPoint' => [
-                [
-                    '@type' => 'ContactPoint',
-                    'contactType' => 'customer support',
-                    'email' => 'support@neriahpro.com',
-                    'availableLanguage' => ['id', 'en'],
+            $siteName = $schema['organization']['name'] ?? config('app.name', 'Neriah Pro');
+            $siteUrl = url('/');
+            $type = $schema['organization']['type'] ?? 'Organization';
+            $logoUrl = !empty($schema['organization']['logo']) ? $schema['organization']['logo'] : asset('favicon.ico');
+            $email = $schema['organization']['email'] ?? 'support@neriahpro.com';
+            $telephone = $schema['organization']['telephone'] ?? null;
+
+            $sameAsUrls = [];
+            if (!empty($schema['sameAs']) && is_array($schema['sameAs'])) {
+                foreach ($schema['sameAs'] as $item) {
+                    if (!empty($item['url'])) {
+                        $sameAsUrls[] = $item['url'];
+                    }
+                }
+            }
+            if (empty($sameAsUrls)) {
+                $sameAsUrls = ['https://github.com/iRIANDI/neriahpro'];
+            }
+
+            $addressData = null;
+            if (!empty($schema['address']['streetAddress']) || !empty($schema['address']['addressLocality'])) {
+                $addressData = [
+                    '@type' => 'PostalAddress',
+                    'streetAddress' => $schema['address']['streetAddress'] ?? '',
+                    'addressLocality' => $schema['address']['addressLocality'] ?? '',
+                    'addressRegion' => $schema['address']['addressRegion'] ?? '',
+                    'postalCode' => $schema['address']['postalCode'] ?? '',
+                    'addressCountry' => $schema['address']['addressCountry'] ?? 'ID',
+                ];
+            }
+
+            $payload = [
+                '@context' => 'https://schema.org',
+                '@type' => $type,
+                '@id' => $siteUrl . '/#organization',
+                'name' => $siteName,
+                'url' => $siteUrl,
+                'logo' => [
+                    '@type' => 'ImageObject',
+                    'url' => $logoUrl,
                 ],
-            ],
-            'sameAs' => [
-                'https://github.com/iRIANDI/neriahpro',
-            ],
-        ];
+                'description' => 'Architecting High-Performance Digital Platforms, Productized Agency Systems, and Enterprise Web Applications.',
+                'founder' => [
+                    '@type' => 'Person',
+                    'name' => 'Yoseph Iriandi Tambunan',
+                ],
+                'contactPoint' => [
+                    [
+                        '@type' => 'ContactPoint',
+                        'contactType' => 'customer support',
+                        'email' => $email,
+                        'availableLanguage' => ['id', 'en'],
+                    ],
+                ],
+                'sameAs' => $sameAsUrls,
+            ];
+
+            if ($telephone) {
+                $payload['telephone'] = $telephone;
+            }
+            if ($addressData) {
+                $payload['address'] = $addressData;
+            }
+
+            return $payload;
+        });
     }
 
     /**
-     * Get WebSite Schema with SearchAction
+     * Get WebSite Schema with SearchAction (Cached Forever)
      */
     public static function webSite(): array
     {
-        $siteUrl = url('/');
+        return \Illuminate\Support\Facades\Cache::rememberForever('seo_schema_website', function () {
+            try {
+                $setting = CmsGlobalSetting::where('key', 'seo_schema')->first();
+                $schema = $setting?->value ?? [];
+            } catch (\Throwable) {
+                $schema = [];
+            }
 
-        return [
-            '@context' => 'https://schema.org',
-            '@type' => 'WebSite',
-            '@id' => $siteUrl . '/#website',
-            'url' => $siteUrl,
-            'name' => 'Neriah Pro',
-            'publisher' => [
-                '@id' => $siteUrl . '/#organization',
-            ],
-            'inLanguage' => app()->getLocale() === 'en' ? 'en-US' : 'id-ID',
-            'potentialAction' => [
-                '@type' => 'SearchAction',
-                'target' => [
-                    '@type' => 'EntryPoint',
-                    'urlTemplate' => $siteUrl . '/?q={search_term_string}',
+            $siteName = $schema['organization']['name'] ?? config('app.name', 'Neriah Pro');
+            $siteUrl = url('/');
+
+            return [
+                '@context' => 'https://schema.org',
+                '@type' => 'WebSite',
+                '@id' => $siteUrl . '/#website',
+                'url' => $siteUrl,
+                'name' => $siteName,
+                'publisher' => [
+                    '@id' => $siteUrl . '/#organization',
                 ],
-                'query-input' => 'required name=search_term_string',
-            ],
-        ];
+                'inLanguage' => app()->getLocale() === 'en' ? 'en-US' : 'id-ID',
+                'potentialAction' => [
+                    '@type' => 'SearchAction',
+                    'target' => [
+                        '@type' => 'EntryPoint',
+                        'urlTemplate' => $siteUrl . '/?q={search_term_string}',
+                    ],
+                    'query-input' => 'required name=search_term_string',
+                ],
+            ];
+        });
     }
 
     /**
@@ -119,27 +173,50 @@ class SchemaOrgService
     }
 
     /**
-     * Get WebApplication Schema for Project OS Blueprint
+     * Get WebApplication Schema for Project OS Blueprint (Cached Forever)
      */
     public static function projectOsApplication(): array
     {
-        $appUrl = url('/blueprint');
+        return \Illuminate\Support\Facades\Cache::rememberForever('seo_schema_project_os', function () {
+            $appUrl = url('/blueprint');
 
-        return [
-            '@context' => 'https://schema.org',
-            '@type' => 'WebApplication',
-            '@id' => $appUrl . '/#blueprint',
-            'name' => 'Project OS - AI Software Architecture & PRD Blueprint Engine',
-            'url' => $appUrl,
-            'applicationCategory' => 'DeveloperApplication',
-            'operatingSystem' => 'All modern web browsers',
-            'description' => 'Sistem perumusan arsitektur perangkat lunak komprehensif, PRD ultimate, diagram ERD PostgreSQL ULID, mitigasi bot AI Honeypot, dan konversi kontrak kerja digital dengan Scope Lock.',
-            'offers' => [
-                '@type' => 'Offer',
-                'price' => '0',
-                'priceCurrency' => 'IDR',
-            ],
-        ];
+            return [
+                '@context' => 'https://schema.org',
+                '@type' => 'WebApplication',
+                '@id' => $appUrl . '/#blueprint',
+                'name' => 'Project OS - AI Software Architecture & PRD Blueprint Engine',
+                'url' => $appUrl,
+                'applicationCategory' => 'DeveloperApplication',
+                'operatingSystem' => 'All modern web browsers',
+                'description' => 'Sistem perumusan arsitektur perangkat lunak komprehensif, PRD ultimate, diagram ERD PostgreSQL ULID, mitigasi bot AI Honeypot, dan konversi kontrak kerja digital dengan Scope Lock.',
+                'offers' => [
+                    '@type' => 'Offer',
+                    'price' => '0',
+                    'priceCurrency' => 'IDR',
+                ],
+            ];
+        });
+    }
+
+    /**
+     * Get Custom Raw JSON-LD Schema from Backend Settings (Cached Forever)
+     */
+    public static function customJsonLd(): ?array
+    {
+        return \Illuminate\Support\Facades\Cache::rememberForever('seo_schema_raw', function () {
+            try {
+                $setting = CmsGlobalSetting::where('key', 'seo_schema')->first();
+                $schema = $setting?->value ?? [];
+                $raw = $schema['custom_json_ld'] ?? null;
+                if (!empty($raw) && is_string($raw)) {
+                    $decoded = json_decode($raw, true);
+                    return is_array($decoded) ? $decoded : null;
+                }
+            } catch (\Throwable) {
+                return null;
+            }
+            return null;
+        });
     }
 
     /**
@@ -230,6 +307,10 @@ class SchemaOrgService
     public static function render(array|object $schemas): string
     {
         $payload = is_array($schemas) && isset($schemas[0]) ? $schemas : [$schemas];
+        $custom = self::customJsonLd();
+        if ($custom) {
+            $payload[] = $custom;
+        }
         $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
         return "<script type=\"application/ld+json\">\n{$json}\n</script>";

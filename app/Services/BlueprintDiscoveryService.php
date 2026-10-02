@@ -190,6 +190,10 @@ class BlueprintDiscoveryService
             ? "30 Days Post-Launch Bug Warranty + Full Private GitHub Repository Handover"
             : "30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repository GitHub";
 
+        $terminPembayaran = $isEn
+            ? "Standard 50/50 Milestones: 50% Kickoff & Sprint Down Payment + 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap)"
+            : "Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)";
+
         // Extract contact clues if user typed email or phone in text
         $email = '';
         if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $corpus, $eMatch)) {
@@ -232,6 +236,7 @@ class BlueprintDiscoveryService
             'migrasiData' => $migrasiData,
             'preferensiHosting' => $preferensiHosting,
             'garansiSla' => $garansiSla,
+            'terminPembayaran' => $terminPembayaran,
         ];
 
         $proactiveSuggestions = $this->generateProactiveSuggestions($corpus, $domain, $isEn);

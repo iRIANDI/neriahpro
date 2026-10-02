@@ -52,13 +52,6 @@ class PrdGeneratorService
         // Generate tailored ERD Database Schema with strict ULID standards
         $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems);
 
-        // Generate Virtual Architecture Charts (Mermaid Diagrams Suite)
-        $workflowMermaid = self::generateWorkflowMermaid($workflowStages);
-        $erdMermaid = self::generateErdMermaid($erdTables);
-        $featureDepMermaid = self::generateFeatureDependencyMermaid($actorItems, $mvpItems, $erdTables);
-        $sprintGanttMermaid = self::generateSprintGanttMermaid($blueprint, $targetWaktu);
-        $developerEducation = self::getDeveloperEducationDeck($businessName);
-
         // Extract ultimate blueprint context from metadata
         $metadata = $blueprint->user_metadata ?? [];
         $extraContext = [
@@ -71,7 +64,16 @@ class PrdGeneratorService
             'migrasi_data' => $metadata['migrasi_data'] ?? 'Database Baru Bersih (Input Mandiri & Template CSV)',
             'preferensi_hosting' => $metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup)',
             'garansi_sla' => $metadata['garansi_sla'] ?? '30 Hari Garansi Bug Pascameluncur + Penyerahan Akses Penuh Private Repo GitHub',
+            'termin_pembayaran' => $metadata['termin_pembayaran'] ?? 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
         ];
+
+        // Generate Virtual Architecture Charts (Mermaid Diagrams Suite)
+        $workflowMermaid = self::generateWorkflowMermaid($workflowStages);
+        $erdMermaid = self::generateErdMermaid($erdTables);
+        $featureDepMermaid = self::generateFeatureDependencyMermaid($actorItems, $mvpItems, $erdTables);
+        $sprintGanttMermaid = self::generateSprintGanttMermaid($blueprint, $targetWaktu);
+        $infrastructureMermaid = self::generateInfrastructureMermaid($blueprint, $extraContext);
+        $developerEducation = self::getDeveloperEducationDeck($businessName);
 
         return [
             'meta' => [
@@ -89,6 +91,7 @@ class PrdGeneratorService
                 'legacy_data_migration' => $extraContext['migrasi_data'],
                 'hosting_infrastructure' => $extraContext['preferensi_hosting'],
                 'warranty_sla' => $extraContext['garansi_sla'],
+                'payment_milestones' => $extraContext['termin_pembayaran'],
                 'design_inspiration' => $referensiDesain,
                 'asset_readiness' => $kesiapanAset,
                 'target_timeline' => $targetWaktu,
@@ -121,6 +124,7 @@ class PrdGeneratorService
                 'erd_mermaid' => $erdMermaid,
                 'feature_dependency_mermaid' => $featureDepMermaid,
                 'sprint_gantt_mermaid' => $sprintGanttMermaid,
+                'infrastructure_mermaid' => $infrastructureMermaid,
             ],
             'developer_education' => $developerEducation,
             'tech_stack' => [
@@ -2167,6 +2171,51 @@ PROMPT;
     }
 
     /**
+     * Generate Mermaid syntax for Hosting, Security, & Infrastructure Topology (flowchart TB).
+     */
+    public static function generateInfrastructureMermaid(VisionBlueprint $blueprint, array $extraContext): string
+    {
+        $platform = preg_replace('/["\r\n]+/', '', $extraContext['target_platform'] ?? 'Modern Web & PWA');
+        $hosting = preg_replace('/["\r\n]+/', '', $extraContext['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS');
+        $migration = preg_replace('/["\r\n]+/', '', $extraContext['migrasi_data'] ?? 'Database Baru Bersih');
+        $warranty = preg_replace('/["\r\n]+/', '', $extraContext['garansi_sla'] ?? '30 Hari Garansi Bug + Repo Git');
+        $payment = preg_replace('/["\r\n]+/', '', $extraContext['termin_pembayaran'] ?? 'Termin Standar 50/50');
+
+        $code = "flowchart TB\n";
+        $code .= "    subgraph Clients[\"1. Target Platform & Aksesibilitas Perangkat\"]\n";
+        $code .= "        C1[\"{$platform}<br/><small>Aksesibilitas Browser Desktop, Tablet & PWA Mobile</small>\"]\n";
+        $code .= "    end\n\n";
+        $code .= "    subgraph EdgeLayer[\"2. Keamanan Jaringan & Reverse Proxy\"]\n";
+        $code .= "        Nginx[\"Nginx Reverse Proxy & HTTP/2<br/><small>Let's Encrypt SSL & Gzip Compression</small>\"]\n";
+        $code .= "        Waf[\"Cyber Threat Defense<br/><small>Rate Limiter, Anti-Bot & Honeypot</small>\"]\n";
+        $code .= "    end\n\n";
+        $code .= "    subgraph ServerHost[\"3. {$hosting}\"]\n";
+        $code .= "        AppMonolith[\"Laravel 13 Modern Monolith<br/><small>PHP 8.4/8.5 FPM & Filament v5 Admin Suite</small>\"]\n";
+        $code .= "        Islands[\"Reactive Frontend Islands<br/><small>Livewire 4 & Flux UI Engine</small>\"]\n";
+        $code .= "    end\n\n";
+        $code .= "    subgraph DataStorage[\"4. Basis Data & Migrasi Data Warisan\"]\n";
+        $code .= "        PgSql[(\"PostgreSQL 16 Engine<br/><small>Strict ULID PK & Keyset Cursor O(1)</small>\")]\n";
+        $code .= "        Redis[(\"Redis In-Memory Cache<br/><small>Queue Jobs, Rate Limit & Session</small>\")]\n";
+        $code .= "        DataScope[\"Strategi Data: {$migration}\"]\n";
+        $code .= "    end\n\n";
+        $code .= "    subgraph Gateways[\"5. Integrasi Pembayaran & Transaksi\"]\n";
+        $code .= "        Midtrans[\"Midtrans Snap Gateway<br/><small>{$payment}</small>\"]\n";
+        $code .= "        Notifications[\"WhatsApp & Email Alert Queue<br/><small>Idempotency Webhooks</small>\"]\n";
+        $code .= "    end\n\n";
+        $code .= "    subgraph Handover[\"6. Serah Terima Repo & Garansi SLA\"]\n";
+        $code .= "        Repo[\"Private GitHub Repository<br/><small>100% Hak Milik Source Code Klien</small>\"]\n";
+        $code .= "        SlaNote[\"Garansi Bug: {$warranty}\"]\n";
+        $code .= "    end\n\n";
+        $code .= "    Clients --> EdgeLayer\n";
+        $code .= "    EdgeLayer --> ServerHost\n";
+        $code .= "    ServerHost --> DataStorage\n";
+        $code .= "    ServerHost --> Gateways\n";
+        $code .= "    ServerHost -.-> Handover\n";
+
+        return trim($code);
+    }
+
+    /**
      * Comprehensive Developer Education Deck & AI Agent Orchestration Masterclass.
      */
     public static function getDeveloperEducationDeck(string $businessName): array
@@ -2235,6 +2284,13 @@ PROMPT;
                 ],
             ],
             'tool_guides' => [
+                'antigravity_ide' => [
+                    'name' => 'Google DeepMind Antigravity IDE',
+                    'icon' => 'sparkles',
+                    'command' => 'Antigravity IDE Agent / agy CLI',
+                    'usage' => 'Buka workspace di Antigravity IDE. Pastikan file .agents/AGENTS.md dan Ponytail Decision Ladder aktif. Berikan task terisolasi dengan bounded files. Wajibkan verifikasi terminal exit code 0 sebelum commit.',
+                    'system_prompt_template' => "Kamu bertindak sebagai Principal Software Architect di Google DeepMind Antigravity IDE. Tugas: Implementasikan {FEATURE_NAME} sesuai spesifikasi PRD. Kepatuhan Wajib: Gunakan ULID (HasUlids) untuk primary key PostgreSQL, Keyset cursor pagination O(1), anti-AI-slop UI (subtle corners rounded-none/rounded-sm), zero native dialogs (wajib toast system), dan jalankan automated quality test.",
+                ],
                 'claude_code' => [
                     'name' => 'Claude Code CLI',
                     'icon' => 'terminal',
@@ -2330,6 +2386,11 @@ PROMPT;
         $md .= "- **Masalah Utama**: " . ($exec['problem_statement'] ?? $blueprint->masalah_utama) . "\n";
         $md .= "- **Tujuan / Success Metrics**: " . ($exec['success_metrics'] ?? $blueprint->tujuan_utama) . "\n";
         $md .= "- **Target Audiens**: " . ($exec['target_audience'] ?? $blueprint->target_audiens) . "\n";
+        $md .= "- **Target Platform & Aksesibilitas**: " . ($exec['target_platform'] ?? 'Modern Web Application Responsive & PWA') . "\n";
+        $md .= "- **Status Migrasi Data Warisan**: " . ($exec['legacy_data_migration'] ?? 'Database Baru Bersih') . "\n";
+        $md .= "- **Infrastruktur Hosting & Server**: " . ($exec['hosting_infrastructure'] ?? 'Managed Dedicated Cloud VPS Neriah Pro') . "\n";
+        $md .= "- **Skema Garansi, SLA & Serah Terima Git**: " . ($exec['warranty_sla'] ?? '30 Hari Garansi Bug Pascameluncur') . "\n";
+        $md .= "- **Skema Termin Pembayaran**: " . ($exec['payment_milestones'] ?? 'Termin Standar 50/50') . "\n";
         $md .= "- **Target Skala**: " . ($exec['target_scale'] ?? '0 - 100.000 Pengguna / Bulan') . "\n";
         $md .= "- **Jangkauan Pasar**: " . ($exec['market_reach'] ?? 'Domestik Indonesia') . "\n";
         $md .= "- **Filosofi Arsitektur**: " . ($exec['architecture_philosophy'] ?? '') . "\n\n";
@@ -2488,12 +2549,22 @@ PROMPT;
         // 5.5 Virtual Architecture Studio: Virtual Charts Suite
         $featureDepMermaid = self::generateFeatureDependencyMermaid($actors, $mvpFeatures, $erd);
         $sprintGanttMermaid = self::generateSprintGanttMermaid($blueprint, $blueprint->target_waktu ?: '30 Hari Kerja');
+        $extraContext = [
+            'target_platform' => $exec['target_platform'] ?? 'Modern Web & PWA',
+            'preferensi_hosting' => $exec['hosting_infrastructure'] ?? 'Managed Dedicated Cloud VPS',
+            'migrasi_data' => $exec['legacy_data_migration'] ?? 'Database Baru Bersih',
+            'garansi_sla' => $exec['warranty_sla'] ?? '30 Hari Garansi Bug',
+            'termin_pembayaran' => $exec['payment_milestones'] ?? 'Termin Standar 50/50',
+        ];
+        $infraMermaid = self::generateInfrastructureMermaid($blueprint, $extraContext);
 
         $md .= "## 5.5 Visual Architecture Studio: Virtual Charts Suite\n\n";
         $md .= "### A. Feature & Entity Dependency Graph (Flowchart LR)\n\n";
         $md .= "```mermaid\n" . $featureDepMermaid . "\n```\n\n";
         $md .= "### B. Roadmap Eksekusi & Timeline Sprint (Gantt Chart)\n\n";
         $md .= "```mermaid\n" . $sprintGanttMermaid . "\n```\n\n";
+        $md .= "### C. Hosting, Keamanan & Topologi Infrastruktur (Flowchart TB)\n\n";
+        $md .= "```mermaid\n" . $infraMermaid . "\n```\n\n";
 
         // 6. Technology Stack & Architecture Decision
         $md .= "## 6. Keputusan Arsitektur & Rekomendasi Stack (Modern Monolith)\n\n";

@@ -55,7 +55,7 @@ const TRANSLATIONS = {
   id: {
     topBadge: "PROJECT OS // ARCHITECTURAL DISCOVERY WORKSPACE",
     headerTitle: "Blueprint Arsitektur & Kuesioner Spesifikasi Sistem",
-    headerSubtitle: "Lengkapi 25 parameter arsitektur terstruktur di bawah ini untuk menghasilkan dokumen Ultimate PRD dan skema basis data PostgreSQL Strict ULID siap bangun. Anda dapat mengisi form secara langsung atau gunakan Ruang Ide Cepat & MarkItDown di bawah untuk mengisi otomatis.",
+    headerSubtitle: "Lengkapi 26 parameter arsitektur terstruktur di bawah ini untuk menghasilkan dokumen Ultimate PRD dan skema basis data PostgreSQL Strict ULID siap bangun. Anda dapat mengisi form secara langsung atau gunakan Ruang Ide Cepat & MarkItDown di bawah untuk mengisi otomatis.",
     
     // Auto-save & Status
     autoSaveSaved: "Tersimpan Otomatis",
@@ -66,10 +66,10 @@ const TRANSLATIONS = {
 
     // Quick Idea & MarkItDown Studio
     studioToggleOpen: "Tutup Ruang Ide & Dokumen MarkItDown",
-    studioToggleClosed: "Buka Ruang Ide Cepat & Unggah Dokumen (Isi Otomatis 25 Field)",
+    studioToggleClosed: "Buka Ruang Ide Cepat & Unggah Dokumen (Isi Otomatis 26 Field)",
     studioBadge: "AI ACCELERATOR // MICROSOFT MARKITDOWN REPLICA",
     studioTitle: "Ceritakan Visi Proyek atau Lampirkan Dokumen Spesifikasi",
-    studioDesc: "Ketik ringkasan ide bisnis atau lampirkan dokumen (PDF, Word, Excel, PowerPoint, Catatan, Wireframe). Dokumen otomatis dikonversi ke format Markdown (.md) murni oleh MarkItDown secara lokal di server sebelum dibaca AI, memangkas >80% token ekstraksi biner dan otomatis mengisi 25 parameter di bawah ini.",
+    studioDesc: "Ketik ringkasan ide bisnis atau lampirkan dokumen (PDF, Word, Excel, PowerPoint, Catatan, Wireframe). Dokumen otomatis dikonversi ke format Markdown (.md) murni oleh MarkItDown secara lokal di server sebelum dibaca AI, memangkas >80% token ekstraksi biner dan otomatis mengisi 26 parameter di bawah ini.",
     
     textareaPlaceholder: "Ceritakan ide, proses bisnis, atau kebutuhan aplikasi Anda di sini...\n\nContoh: 'Saya ingin membangun sistem ekspedisi dan armada logistik antar pulau. Ada 3 level pengguna: Superadmin di kantor pusat, Koordinator Lapangan, dan Driver truk. Driver bisa scan barcode resi dan update status kirim via foto. Klien bisa lacak posisi resi real-time. Ada integrasi Midtrans untuk pembayaran invoice tempo dan notifikasi otomatis ke WhatsApp...'",
     
@@ -85,12 +85,12 @@ const TRANSLATIONS = {
     dropzoneFormats: "Dukungan Format: PDF, DOCX, XLSX, PPTX, CSV, TXT, MD, PNG, JPG (Maks. 5 berkas, @15MB)",
     markitdownNotice: "⚡ Fakta Token: Dokumen biner (PDF/Office) diekstraksi ke Markdown (.md) secara lokal di server. AI murni membaca teks bersih tanpa overhead XML/biner, menghemat >80% token AI.",
 
-    synthesizeBtn: "✨ Sintesis Ide & Isi 25 Parameter Form ↓",
+    synthesizeBtn: "✨ Sintesis Ide & Isi 26 Parameter Form ↓",
     synthesizingBtn: "Menganalisis & Mengisi Form...",
 
     step1: "Mengonversi berkas dokumen via MarkItDown ke Markdown (.md)...",
     step2: "Menganalisis domain bisnis, aktor RBAC & alur kerja...",
-    step3: "Menyusun skema arsitektur & mengisi 25 parameter blueprint...",
+    step3: "Menyusun skema arsitektur & mengisi 26 parameter blueprint...",
 
     // Proactive Guidance
     proactiveBadge: "ASISTEN PROAKTIF AI // PANDUAN KELENGKAPAN SPESIFIKASI",
@@ -117,8 +117,8 @@ const TRANSLATIONS = {
     blockE: "BLOK E: TIMELINE, SKALA, KEAMANAN & BATASAN RUANG LINGKUP",
     blockEDesc: "Kapasitas trafik, standar keamanan OWASP, kepatuhan hukum, dan proteksi dari scope creep.",
 
-    blockF: "BLOK F: ANGGARAN, GARANSI SLA & PENGESAHAN PIC",
-    blockFDesc: "Alokasi investasi, jaminan garansi bug, serah terima kode sumber, dan identitas PIC resmi.",
+    blockF: "BLOK F: ANGGARAN, GARANSI SLA, TERMIN & PENGESAHAN PIC",
+    blockFDesc: "Alokasi investasi, jaminan garansi bug, skema termin pembayaran, dan identitas PIC resmi.",
 
     // Action Buttons
     saveBtn: "Simpan",
@@ -128,7 +128,7 @@ const TRANSLATIONS = {
     lockingBtn: "Mengunci Blueprint & Menerbitkan Dokumen PRD...",
 
     successTitle: "Blueprint Berhasil Disinkronkan!",
-    successDesc: "Seluruh 25 parameter arsitektur proyek telah dikunci dan dokumen Ultimate PRD dengan skema PostgreSQL Strict ULID siap diunduh.",
+    successDesc: "Seluruh 26 parameter arsitektur proyek telah dikunci dan dokumen Ultimate PRD dengan skema PostgreSQL Strict ULID siap diunduh.",
     openPrdBtn: "Buka Dokumen Ultimate PRD",
     newProjectBtn: "Kirim Proyek Lainnya",
     daysSuffix: "Hari Kerja",
@@ -136,7 +136,7 @@ const TRANSLATIONS = {
   en: {
     topBadge: "PROJECT OS // ARCHITECTURAL DISCOVERY WORKSPACE",
     headerTitle: "Architecture Blueprint & System Specification Form",
-    headerSubtitle: "Complete the 25 structured architectural parameters below to generate the Ultimate PRD document and PostgreSQL Strict ULID schema. Fill directly or use the Quick Idea Studio & MarkItDown uploader below to auto-populate.",
+    headerSubtitle: "Complete the 26 structured architectural parameters below to generate the Ultimate PRD document and PostgreSQL Strict ULID schema. Fill directly or use the Quick Idea Studio & MarkItDown uploader below to auto-populate.",
     
     // Auto-save & Status
     autoSaveSaved: "Auto-Saved",
@@ -147,10 +147,10 @@ const TRANSLATIONS = {
 
     // Quick Idea & MarkItDown Studio
     studioToggleOpen: "Collapse Idea Studio & Documents",
-    studioToggleClosed: "Open Quick Idea Studio & Document Uploader (Auto-Fill 25 Fields)",
+    studioToggleClosed: "Open Quick Idea Studio & Document Uploader (Auto-Fill 26 Fields)",
     studioBadge: "AI ACCELERATOR // MICROSOFT MARKITDOWN REPLICA",
     studioTitle: "Describe Project Vision or Attach Specification Documents",
-    studioDesc: "Type your vision or attach documents (PDF, Word, Excel, PowerPoint, Wireframes). Documents are automatically converted into pure Markdown (.md) by MarkItDown locally on the server before AI ingestion, saving >80% tokens and auto-populating all 25 fields below.",
+    studioDesc: "Type your vision or attach documents (PDF, Word, Excel, PowerPoint, Wireframes). Documents are automatically converted into pure Markdown (.md) by MarkItDown locally on the server before AI ingestion, saving >80% tokens and auto-populating all 26 fields below.",
     
     textareaPlaceholder: "Describe your project vision, workflow, or business requirements here...\n\nExample: 'We need an inter-island freight logistics & fleet management system. 3 user roles: Superadmin at HQ, Field Dispatcher, and Truck Drivers. Drivers scan barcode waybills and update delivery status via photo. Clients track consignments in real-time. Integrated Midtrans for invoice payments and automated WhatsApp alerts...'",
     
@@ -166,12 +166,12 @@ const TRANSLATIONS = {
     dropzoneFormats: "Supported: PDF, DOCX, XLSX, PPTX, CSV, TXT, MD, PNG, JPG (Max 5 files, @15MB)",
     markitdownNotice: "⚡ Token Reality: Binary files (PDF/Office) are converted to clean Markdown (.md) locally. AI reads clean text without XML/binary bloat, slashing >80% tokens.",
 
-    synthesizeBtn: "✨ Synthesize Idea & Auto-Fill 25 Fields ↓",
+    synthesizeBtn: "✨ Synthesize Idea & Auto-Fill 26 Fields ↓",
     synthesizingBtn: "Analyzing & Populating...",
 
     step1: "Converting documents to Markdown (.md) via MarkItDown...",
     step2: "Analyzing business domain, RBAC actors & user flows...",
-    step3: "Structuring architecture & populating 25 blueprint parameters...",
+    step3: "Structuring architecture & populating 26 blueprint parameters...",
 
     // Proactive Guidance
     proactiveBadge: "PROACTIVE AI ASSISTANT // SPECIFICATION COMPLETENESS",
@@ -198,8 +198,8 @@ const TRANSLATIONS = {
     blockE: "BLOCK E: TIMELINE, SCALE, SECURITY & SCOPE BOUNDARIES",
     blockEDesc: "Traffic concurrency, OWASP security standards, legal compliance, and anti scope-creep boundaries.",
 
-    blockF: "BLOCK F: BUDGET, WARRANTY SLA & PIC VERIFICATION",
-    blockFDesc: "Investment allocation, post-launch bug warranty, source code handover, and authorized PIC.",
+    blockF: "BLOCK F: BUDGET, WARRANTY SLA, MILESTONES & PIC VERIFICATION",
+    blockFDesc: "Investment allocation, post-launch bug warranty, payment milestone terms, and authorized PIC.",
 
     // Action Buttons
     saveBtn: "Save",
@@ -209,7 +209,7 @@ const TRANSLATIONS = {
     lockingBtn: "Locking Blueprint & Issuing PRD Document...",
 
     successTitle: "Blueprint Synchronized Successfully!",
-    successDesc: "All 25 project architecture parameters have been locked into an enterprise Ultimate PRD and PostgreSQL Strict ULID schema.",
+    successDesc: "All 26 project architecture parameters have been locked into an enterprise Ultimate PRD and PostgreSQL Strict ULID schema.",
     openPrdBtn: "Open Ultimate PRD Document",
     newProjectBtn: "Submit Another Project",
     daysSuffix: "Working Days",
@@ -272,6 +272,7 @@ function calculateCompleteness(data, lang) {
     { key: 'kepatuhanKeamanan', label: isEn ? 'Security Standards' : 'Standar Keamanan', weight: 2, completed: !!data.kepatuhanKeamanan },
     { key: 'kisaranBudget', label: isEn ? 'Budget Range' : 'Kisaran Budget', weight: 2, completed: !!data.kisaranBudget },
     { key: 'garansiSla', label: isEn ? 'Warranty & Git Handover' : 'Garansi Bug & Handover Git', weight: 2, completed: !!data.garansiSla && data.garansiSla.length >= 5 },
+    { key: 'terminPembayaran', label: isEn ? 'Payment Milestones' : 'Termin Pembayaran', weight: 2, completed: !!data.terminPembayaran && data.terminPembayaran.length >= 5 },
     { key: 'clientName', label: isEn ? 'PIC Name' : 'Nama Lengkap PIC', weight: 3, completed: !!data.clientName && data.clientName.length >= 3 },
   ];
 
@@ -459,9 +460,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     outOfScope: initialData.outOfScope || '',
     kepatuhanKeamanan: initialData.kepatuhanKeamanan || 'Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)',
 
-    // BLOK F: Budget, Garansi SLA & PIC (5)
+    // BLOK F: Budget, Garansi SLA & PIC (6)
     kisaranBudget: initialData.kisaranBudget || 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
     garansiSla: initialData.garansiSla || '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
+    terminPembayaran: initialData.terminPembayaran || 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
     clientName: initialData.clientName || '',
     email: initialData.email || '',
     phone: initialData.phone || '',
@@ -549,6 +551,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           body: JSON.stringify({
             blueprint: updatedData,
             draft_id: draftIdRef.current,
+            slug: initialData?._meta?.is_editing_slug || initialData?.slug || null,
           }),
         });
 
@@ -1446,14 +1449,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             {/* Field 1: namaBisnis */}
             <div>
               <label className={labelClass}>
-                1. Nama Aplikasi / Domain Sistem *
+                {lang === 'en' ? '1. Application Name / System Domain *' : '1. Nama Aplikasi / Domain Sistem *'}
               </label>
               <input
                 type="text"
                 required
                 value={formData.namaBisnis}
                 onChange={(e) => updateField('namaBisnis', e.target.value)}
-                placeholder="Misal: TransLogistix Pro / Klinik Sehat Sentosa"
+                placeholder={lang === 'en' ? "e.g. TransLogistix Pro / Apex Health Clinic" : "Misal: TransLogistix Pro / Klinik Sehat Sentosa"}
                 className={inputClass}
               />
             </div>
@@ -1461,13 +1464,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             {/* Field 2: masalahUtama */}
             <div>
               <label className={labelClass}>
-                2. Masalah Utama & Pain Points yang Dihadapi Bisnis
+                {lang === 'en' ? '2. Core Problem & Business Pain Points' : '2. Masalah Utama & Pain Points yang Dihadapi Bisnis'}
               </label>
               <textarea
                 rows={3}
                 value={formData.masalahUtama}
                 onChange={(e) => updateField('masalahUtama', e.target.value)}
-                placeholder="Uraikan kendala operasional, inefisiensi manual, atau titik rawan kebocoran yang ingin diselesaikan dengan sistem ini..."
+                placeholder={lang === 'en' ? "Describe operational bottlenecks, manual inefficiencies, or revenue leaks to be solved..." : "Uraikan kendala operasional, inefisiensi manual, atau titik rawan kebocoran yang ingin diselesaikan dengan sistem ini..."}
                 className={inputClass}
               />
             </div>
@@ -1476,14 +1479,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
-                  3. Tolak Ukur Keberhasilan (Target KPI Bisnis)
+                  {lang === 'en' ? '3. Key Success Metrics (Business KPIs)' : '3. Tolak Ukur Keberhasilan (Target KPI Bisnis)'}
                 </label>
                 <button
                   type="button"
                   onClick={() => setActiveAddKey(activeAddKey === 'tujuanUtama' ? null : 'tujuanUtama')}
                   className="text-xs font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Tambah KPI
+                  <Plus className="w-3.5 h-3.5" /> {lang === 'en' ? 'Add KPI' : 'Tambah KPI'}
                 </button>
               </div>
 
@@ -1510,7 +1513,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     type="text"
                     value={quickInputText}
                     onChange={(e) => setQuickInputText(e.target.value)}
-                    placeholder="Misal: Rekonsiliasi keuangan memangkas waktu kerja dari 3 hari menjadi 15 menit..."
+                    placeholder={lang === 'en' ? "e.g. Cut reconciliation time from 3 days to 15 minutes..." : "Misal: Rekonsiliasi keuangan memangkas waktu kerja dari 3 hari menjadi 15 menit..."}
                     className="flex-1 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
                   />
                   <button
@@ -1518,7 +1521,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     onClick={() => handleAddListItem('tujuanUtama')}
                     className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
                   >
-                    Simpan
+                    {lang === 'en' ? 'Save' : 'Simpan'}
                   </button>
                 </div>
               )}
@@ -1544,13 +1547,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             {/* Field 4: targetAudiens */}
             <div>
               <label className={labelClass}>
-                4. Profil Target Audiens / Pengguna Akhir
+                {lang === 'en' ? '4. Target Audience / End-User Profile' : '4. Profil Target Audiens / Pengguna Akhir'}
               </label>
               <textarea
                 rows={2}
                 value={formData.targetAudiens}
                 onChange={(e) => updateField('targetAudiens', e.target.value)}
-                placeholder="Misal: Pemilik armada truk, manajer logistik perusahaan FMCG, dan staf gudang lapangan..."
+                placeholder={lang === 'en' ? "e.g. Fleet owners, logistics coordinators, and warehouse operators..." : "Misal: Pemilik armada truk, manajer logistik perusahaan FMCG, dan staf gudang lapangan..."}
                 className={inputClass}
               />
             </div>
@@ -1559,31 +1562,34 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
-                  5. Aktor Sistem & Matriks Wewenang (RBAC)
+                  {lang === 'en' ? '5. System Actors & Role Permissions (RBAC Matrix)' : '5. Aktor Sistem & Matriks Wewenang (RBAC)'}
                 </label>
                 <button
                   type="button"
                   onClick={() => setActiveAddKey(activeAddKey === 'aktorSistem' ? null : 'aktorSistem')}
                   className="text-xs font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Tambah Role
+                  <Plus className="w-3.5 h-3.5" /> {lang === 'en' ? 'Add Role' : 'Tambah Role'}
                 </button>
               </div>
 
               {/* Quick Role Preset Badges */}
               <div className="flex flex-wrap gap-1.5 mb-2.5">
-                {['+ Superadmin', '+ Supervisor / Approval', '+ Finance Staff', '+ Operator Lapangan', '+ Driver / Kurir', '+ Customer Eksternal'].map((rolePreset, idx) => (
+                {(lang === 'en'
+                  ? ['+ Superadmin', '+ Supervisor / Approval', '+ Finance Staff', '+ Field Operator', '+ Courier / Driver', '+ External Client']
+                  : ['+ Superadmin', '+ Supervisor / Approval', '+ Finance Staff', '+ Operator Lapangan', '+ Driver / Kurir', '+ Customer Eksternal']
+                ).map((rolePreset, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => {
                       const items = parseNumberedList(formData.aktorSistem);
                       const cleanRole = rolePreset.replace('+ ', '');
-                      items.push(`${cleanRole}: Akses operasional sesuai wewenang tugas`);
+                      items.push(`${cleanRole}: ${lang === 'en' ? 'Operational access per assigned duties' : 'Akses operasional sesuai wewenang tugas'}`);
                       updateField('aktorSistem', stringifyNumberedList(items));
-                      showLocalToast('success', `${cleanRole} ditambahkan ke Role!`);
+                      showLocalToast('success', `${cleanRole} ${lang === 'en' ? 'added to Roles!' : 'ditambahkan ke Role!'}`);
                     }}
-                    className="px-2 py-0.5 text-[10px] font-mono bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700"
+                    className="px-2 py-0.5 text-[10px] font-mono bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700 cursor-pointer"
                   >
                     {rolePreset}
                   </button>
@@ -1613,7 +1619,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     type="text"
                     value={quickInputText}
                     onChange={(e) => setQuickInputText(e.target.value)}
-                    placeholder="Misal: Auditor Internal: Hak akses Read-Only pada seluruh buku transaksi..."
+                    placeholder={lang === 'en' ? "e.g. Internal Auditor: Read-Only access to transaction ledgers..." : "Misal: Auditor Internal: Hak akses Read-Only pada seluruh buku transaksi..."}
                     className="flex-1 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
                   />
                   <button
@@ -1621,7 +1627,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     onClick={() => handleAddListItem('aktorSistem')}
                     className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
                   >
-                    Simpan
+                    {lang === 'en' ? 'Save' : 'Simpan'}
                   </button>
                 </div>
               )}
@@ -1630,14 +1636,24 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             {/* Field 6: targetPlatform (NEW & CRITICAL) */}
             <div>
               <label className={labelClass}>
-                6. Platform Target & Aksesibilitas Perangkat *
+                {lang === 'en'
+                  ? '6. Target Platform & Device Accessibility *'
+                  : '6. Platform Target & Aksesibilitas Perangkat *'}
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {[
-                  'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)',
-                  'Web Desktop Backoffice (Khusus Monitor & Komputer Kantor)',
-                  'Dedicated Tablet POS & Kasir (Touchscreen Optimized)',
-                  'Web + Mobile Native App Readiness (Hybrid Multi-Platform)'
+                  lang === 'en'
+                    ? 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)'
+                    : 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)',
+                  lang === 'en'
+                    ? 'Desktop-Only Backoffice & High-Density Operational Portal'
+                    : 'Web Desktop Backoffice (Khusus Monitor & Komputer Kantor)',
+                  lang === 'en'
+                    ? 'Dedicated Tablet POS & Touchscreen Counter Station'
+                    : 'Dedicated Tablet POS & Kasir (Touchscreen Optimized)',
+                  lang === 'en'
+                    ? 'Native Mobile Ready (PWA with Capacitor/React Native Bridge)'
+                    : 'Web + Mobile Native App Readiness (Hybrid Multi-Platform)'
                 ].map((plat, idx) => (
                   <button
                     key={idx}
@@ -1682,14 +1698,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
-                  7. Fitur Wajib MVP (Fase 1 - Prioritas Mutlak)
+                  {lang === 'en' ? '7. Essential MVP Features (Phase 1 - Absolute Priority)' : '7. Fitur Wajib MVP (Fase 1 - Prioritas Mutlak)'}
                 </label>
                 <button
                   type="button"
                   onClick={() => setActiveAddKey(activeAddKey === 'fiturWajib' ? null : 'fiturWajib')}
                   className="text-xs font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Tambah Fitur
+                  <Plus className="w-3.5 h-3.5" /> {lang === 'en' ? 'Add Feature' : 'Tambah Fitur'}
                 </button>
               </div>
 
@@ -1716,7 +1732,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     type="text"
                     value={quickInputText}
                     onChange={(e) => setQuickInputText(e.target.value)}
-                    placeholder="Misal: Scan Barcode Surat Jalan via Kamera Ponsel..."
+                    placeholder={lang === 'en' ? "e.g. Scan Waybill QR / Barcode via Phone Camera..." : "Misal: Scan Barcode Surat Jalan via Kamera Ponsel..."}
                     className="flex-1 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
                   />
                   <button
@@ -1724,7 +1740,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     onClick={() => handleAddListItem('fiturWajib')}
                     className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
                   >
-                    Simpan
+                    {lang === 'en' ? 'Save' : 'Simpan'}
                   </button>
                 </div>
               )}
@@ -1733,13 +1749,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             {/* Field 8: fiturTambahan (Roadmap) */}
             <div>
               <label className={labelClass}>
-                8. Fitur Tambahan (Fase 2 - Roadmap Masa Depan)
+                {lang === 'en' ? '8. Secondary Features (Phase 2 - Future Roadmap)' : '8. Fitur Tambahan (Fase 2 - Roadmap Masa Depan)'}
               </label>
               <textarea
                 rows={3}
                 value={formData.fiturTambahan}
                 onChange={(e) => updateField('fiturTambahan', e.target.value)}
-                placeholder="Fitur sekunder yang dapat ditunda setelah rilis MVP (misal: Aplikasi Mobile Native, Integrasi AI Prediktif rute armada, dll.)..."
+                placeholder={lang === 'en' ? "Secondary features that can be deferred post-MVP (e.g. Native Mobile App, AI route prediction, etc.)..." : "Fitur sekunder yang dapat ditunda setelah rilis MVP (misal: Aplikasi Mobile Native, Integrasi AI Prediktif rute armada, dll.)..."}
                 className={inputClass}
               />
             </div>
@@ -1748,14 +1764,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
-                  9. Alur Kerja Utama (User Flow Langkah demi Langkah)
+                  {lang === 'en' ? '9. Core Operational Workflow (Step-by-Step User Flow)' : '9. Alur Kerja Utama (User Flow Langkah demi Langkah)'}
                 </label>
                 <button
                   type="button"
                   onClick={() => setActiveAddKey(activeAddKey === 'alurKerja' ? null : 'alurKerja')}
                   className="text-xs font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Tambah Langkah
+                  <Plus className="w-3.5 h-3.5" /> {lang === 'en' ? 'Add Step' : 'Tambah Langkah'}
                 </button>
               </div>
 
@@ -1763,7 +1779,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 {parseNumberedList(formData.alurKerja).map((step, idx) => (
                   <div key={idx} className="group flex items-start justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs">
                     <span className="text-zinc-800 dark:text-zinc-200 font-sans leading-tight">
-                      <strong className="text-emerald-600 dark:text-emerald-400 font-mono">Langkah {idx + 1}:</strong> {step}
+                      <strong className="text-emerald-600 dark:text-emerald-400 font-mono">{lang === 'en' ? 'Step' : 'Langkah'} {idx + 1}:</strong> {step}
                     </span>
                     <button
                       type="button"
@@ -1782,7 +1798,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     type="text"
                     value={quickInputText}
                     onChange={(e) => setQuickInputText(e.target.value)}
-                    placeholder="Misal: Driver mengunggah foto kuitansi -> Sistem otomatis mencocokkan nominal invoice..."
+                    placeholder={lang === 'en' ? "e.g. Driver uploads delivery photo receipt -> System auto-matches invoice..." : "Misal: Driver mengunggah foto kuitansi -> Sistem otomatis mencocokkan nominal invoice..."}
                     className="flex-1 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
                   />
                   <button
@@ -1790,7 +1806,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     onClick={() => handleAddListItem('alurKerja')}
                     className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
                   >
-                    Simpan
+                    {lang === 'en' ? 'Save' : 'Simpan'}
                   </button>
                 </div>
               )}
@@ -1799,13 +1815,21 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             {/* Field 10: migrasiData (NEW & CRITICAL) */}
             <div>
               <label className={labelClass}>
-                10. Status Migrasi Data Warisan (Legacy Data Migration) *
+                {lang === 'en'
+                  ? '10. Legacy Data Migration Scope & Strategy *'
+                  : '10. Status Migrasi Data Warisan (Legacy Data Migration) *'}
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {[
-                  'Database Baru Bersih (Input Mandiri & Dukungan Template CSV)',
-                  'Perlu Impor & Pembersihan Data dari Spreadsheet Excel / Google Sheets',
-                  'Migrasi Skema Penuh dari Basis Data SQL Lama (MySQL / PostgreSQL)'
+                  lang === 'en'
+                    ? 'Clean Database Start (Manual Intake & CSV Template Support)'
+                    : 'Database Baru Bersih (Input Mandiri & Dukungan Template CSV)',
+                  lang === 'en'
+                    ? 'Data Cleansing & Batch Importing from Excel / Google Sheets'
+                    : 'Perlu Impor & Pembersihan Data dari Spreadsheet Excel / Google Sheets',
+                  lang === 'en'
+                    ? 'Full Schema ETL Migration from Legacy SQL (MySQL / PostgreSQL / MS SQL)'
+                    : 'Migrasi Skema Penuh dari Basis Data SQL Lama (MySQL / PostgreSQL)'
                 ].map((mig, idx) => (
                   <button
                     key={idx}
@@ -1850,14 +1874,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
-                  11. Kebutuhan Integrasi Pihak Ketiga (API & Gateway)
+                  {lang === 'en' ? '11. Third-Party Integrations (APIs & Gateways)' : '11. Kebutuhan Integrasi Pihak Ketiga (API & Gateway)'}
                 </label>
                 <button
                   type="button"
                   onClick={() => setActiveAddKey(activeAddKey === 'kebutuhanIntegrasi' ? null : 'kebutuhanIntegrasi')}
                   className="text-xs font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Tambah Integrasi
+                  <Plus className="w-3.5 h-3.5" /> {lang === 'en' ? 'Add Integration' : 'Tambah Integrasi'}
                 </button>
               </div>
 
@@ -1873,10 +1897,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       if (!items.includes(cleanPreset)) {
                         items.push(cleanPreset);
                         updateField('kebutuhanIntegrasi', stringifyCommaList(items));
-                        showLocalToast('success', `${cleanPreset} ditambahkan ke Integrasi!`);
+                        showLocalToast('success', `${cleanPreset} ${lang === 'en' ? 'added to Integrations!' : 'ditambahkan ke Integrasi!'}`);
                       }
                     }}
-                    className="px-2 py-0.5 text-[10px] font-mono bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700"
+                    className="px-2 py-0.5 text-[10px] font-mono bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700 cursor-pointer"
                   >
                     {preset}
                   </button>
@@ -1908,7 +1932,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     type="text"
                     value={quickInputText}
                     onChange={(e) => setQuickInputText(e.target.value)}
-                    placeholder="Misal: Xendit Payment Gateway..."
+                    placeholder={lang === 'en' ? "e.g. Stripe Payment Gateway..." : "Misal: Xendit Payment Gateway..."}
                     className="flex-1 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
                   />
                   <button
@@ -1916,7 +1940,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     onClick={() => handleAddListItem('kebutuhanIntegrasi')}
                     className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
                   >
-                    Simpan
+                    {lang === 'en' ? 'Save' : 'Simpan'}
                   </button>
                 </div>
               )}
@@ -1926,25 +1950,25 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>
-                  12. Referensi Desain / Benchmark UI/UX
+                  {lang === 'en' ? '12. UI/UX Design References & Brand Benchmarks' : '12. Referensi Desain / Benchmark UI/UX'}
                 </label>
                 <input
                   type="text"
                   value={formData.referensiDesain}
                   onChange={(e) => updateField('referensiDesain', e.target.value)}
-                  placeholder="Misal: Linear.app, Stripe Dashboard, Shopify Admin"
+                  placeholder={lang === 'en' ? "e.g. Linear.app, Stripe Dashboard, Shopify Admin" : "Misal: Linear.app, Stripe Dashboard, Shopify Admin"}
                   className={inputClass}
                 />
               </div>
               <div>
                 <label className={labelClass}>
-                  13. Kesiapan Aset Digital (Logo, Konten)
+                  {lang === 'en' ? '13. Digital Assets Readiness (Logo, Copywriting)' : '13. Kesiapan Aset Digital (Logo, Konten)'}
                 </label>
                 <input
                   type="text"
                   value={formData.kesiapanAset}
                   onChange={(e) => updateField('kesiapanAset', e.target.value)}
-                  placeholder="Misal: Sudah Siap / Sedang Dibuat Tim Desain"
+                  placeholder={lang === 'en' ? "e.g. Ready / In design production" : "Misal: Sudah Siap / Sedang Dibuat Tim Desain"}
                   className={inputClass}
                 />
               </div>
@@ -1953,13 +1977,21 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             {/* Field 14: preferensiHosting (NEW & CRITICAL) */}
             <div>
               <label className={labelClass}>
-                14. Preferensi Infrastruktur Hosting & Kepemilikan Server *
+                {lang === 'en'
+                  ? '14. Hosting Infrastructure & Server Ownership Preference *'
+                  : '14. Preferensi Infrastruktur Hosting & Kepemilikan Server *'}
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {[
-                  'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup Otomatis)',
-                  'Private Cloud Server Akun Klien (AWS EC2 / DigitalOcean / Google Cloud)',
-                  'On-Premise Server Lokal Milik Perusahaan (Intranet / Kantor Fisik)'
+                  lang === 'en'
+                    ? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Automated Backups)'
+                    : 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup Otomatis)',
+                  lang === 'en'
+                    ? 'Client Dedicated Cloud VPS (AWS EC2 / DigitalOcean / Google Cloud Platform)'
+                    : 'Private Cloud Server Akun Klien (AWS EC2 / DigitalOcean / Google Cloud)',
+                  lang === 'en'
+                    ? 'On-Premise Private Company Local Server (Intranet / Physical Office)'
+                    : 'On-Premise Server Lokal Milik Perusahaan (Intranet / Kantor Fisik)'
                 ].map((host, idx) => (
                   <button
                     key={idx}
@@ -2004,7 +2036,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>
-                  15. Target Durasi Pengerjaan (Hari Kerja)
+                  {lang === 'en' ? '15. Target Sprint Duration (Working Days)' : '15. Target Durasi Pengerjaan (Hari Kerja)'}
                 </label>
                 <div className="flex gap-2 mb-2">
                   {['14', '30', '45', '60'].map((d) => (
@@ -2013,15 +2045,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       type="button"
                       onClick={() => {
                         updateField('durasiHari', d);
-                        updateField('targetWaktu', `${d} Hari Kerja (Fase 1 MVP)`);
+                        updateField('targetWaktu', `${d} ${lang === 'en' ? 'Working Days (Phase 1 MVP)' : 'Hari Kerja (Fase 1 MVP)'}`);
                       }}
-                      className={`flex-1 py-1.5 text-xs font-mono font-bold border transition ${
+                      className={`flex-1 py-1.5 text-xs font-mono font-bold border transition cursor-pointer ${
                         formData.durasiHari === d
                           ? 'bg-emerald-500 text-black border-emerald-500'
                           : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
                       }`}
                     >
-                      {d} Hari
+                      {d} {lang === 'en' ? 'Days' : 'Hari'}
                     </button>
                   ))}
                 </div>
@@ -2035,13 +2067,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
               <div>
                 <label className={labelClass}>
-                  16. Target Waktu Peluncuran (Target Rilis)
+                  {lang === 'en' ? '16. Target Launch Window (Target Release)' : '16. Target Waktu Peluncuran (Target Rilis)'}
                 </label>
                 <input
                   type="text"
                   value={formData.targetWaktu}
                   onChange={(e) => updateField('targetWaktu', e.target.value)}
-                  placeholder="Misal: 30 Hari Kerja (Fase 1 MVP)"
+                  placeholder={lang === 'en' ? "e.g. 30 Working Days (Phase 1 MVP)" : "Misal: 30 Hari Kerja (Fase 1 MVP)"}
                   className={inputClass}
                 />
               </div>
@@ -2051,25 +2083,25 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>
-                  17. Estimasi Skala Trafik Pengguna
+                  {lang === 'en' ? '17. Estimated User Traffic Scale (Concurrent Users)' : '17. Estimasi Skala Trafik Pengguna'}
                 </label>
                 <input
                   type="text"
                   value={formData.skalaPengguna}
                   onChange={(e) => updateField('skalaPengguna', e.target.value)}
-                  placeholder="0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)"
+                  placeholder={lang === 'en' ? "0 - 100,000 Users / Month (Dedicated VPS Monolith)" : "0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)"}
                   className={inputClass}
                 />
               </div>
               <div>
                 <label className={labelClass}>
-                  18. Jangkauan Pasar & Zona Waktu
+                  {lang === 'en' ? '18. Market Coverage & Timezone Requirements' : '18. Jangkauan Pasar & Zona Waktu'}
                 </label>
                 <input
                   type="text"
                   value={formData.jangkauanPasar}
                   onChange={(e) => updateField('jangkauanPasar', e.target.value)}
-                  placeholder="Domestik Indonesia (IDR, Zona WIB/WITA/WIT)"
+                  placeholder={lang === 'en' ? "Domestic Indonesia (IDR, WIB/WITA/WIT Timezones)" : "Domestik Indonesia (IDR, Zona WIB/WITA/WIT)"}
                   className={inputClass}
                 />
               </div>
@@ -2079,14 +2111,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
-                  19. Batasan Negatif (Out of Scope - Anti Scope Creep)
+                  {lang === 'en' ? '19. Negative Scope Limits (Out of Scope - Anti Scope Creep)' : '19. Batasan Negatif (Out of Scope - Anti Scope Creep)'}
                 </label>
                 <button
                   type="button"
                   onClick={() => setActiveAddKey(activeAddKey === 'outOfScope' ? null : 'outOfScope')}
                   className="text-xs font-mono text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 font-bold"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Tambah Batasan
+                  <Plus className="w-3.5 h-3.5" /> {lang === 'en' ? 'Add Boundary' : 'Tambah Batasan'}
                 </button>
               </div>
 
@@ -2113,7 +2145,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     type="text"
                     value={quickInputText}
                     onChange={(e) => setQuickInputText(e.target.value)}
-                    placeholder="Misal: Tidak mencakup pengadaan hardware fisik atau biaya langganan WhatsApp API..."
+                    placeholder={lang === 'en' ? "e.g. Does not cover physical hardware procurement or WhatsApp API billing fees..." : "Misal: Tidak mencakup pengadaan hardware fisik atau biaya langganan WhatsApp API..."}
                     className="flex-1 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
                   />
                   <button
@@ -2121,7 +2153,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     onClick={() => handleAddListItem('outOfScope')}
                     className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
                   >
-                    Simpan
+                    {lang === 'en' ? 'Save' : 'Simpan'}
                   </button>
                 </div>
               )}
@@ -2130,13 +2162,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             {/* Field 20: kepatuhanKeamanan */}
             <div>
               <label className={labelClass}>
-                20. Standar Keamanan & Kepatuhan Enkripsi
+                {lang === 'en' ? '20. Security Standards & Encryption Compliance' : '20. Standar Keamanan & Kepatuhan Enkripsi'}
               </label>
               <input
                 type="text"
                 value={formData.kepatuhanKeamanan}
                 onChange={(e) => updateField('kepatuhanKeamanan', e.target.value)}
-                placeholder="Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)"
+                placeholder={lang === 'en' ? "Modern Web Application & OWASP Top 10 Standards (CSRF, XSS, HTTPS)" : "Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)"}
                 className={inputClass}
               />
             </div>
@@ -2162,13 +2194,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             {/* Field 21: kisaranBudget */}
             <div>
               <label className={labelClass}>
-                21. Alokasi Kisaran Budget Investasi *
+                {lang === 'en' ? '21. Investment Budget Allocation *' : '21. Alokasi Kisaran Budget Investasi *'}
               </label>
               <input
                 type="text"
                 value={formData.kisaranBudget}
                 onChange={(e) => updateField('kisaranBudget', e.target.value)}
-                placeholder="Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)"
+                placeholder={lang === 'en' ? "e.g. $1,000 - $3,000 USD (Growth Monolith)" : "Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)"}
                 className={inputClass}
               />
             </div>
@@ -2176,13 +2208,21 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             {/* Field 22: garansiSla (NEW & CRITICAL) */}
             <div>
               <label className={labelClass}>
-                22. Skema Garansi Pascameluncur, SLA & Serah Terima Repo Git *
+                {lang === 'en'
+                  ? '22. Post-Launch Bug Warranty, SLA & Git Repo Handover *'
+                  : '22. Skema Garansi Pascameluncur, SLA & Serah Terima Repo Git *'}
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {[
-                  '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
-                  '60 Hari Garansi Bug + Handover Repo Git + Sesi Training Staf Operasional',
-                  'Garansi 30 Hari + Kontrak Managed Maintenance Bulanan (SLA Backup & Security Patch)'
+                  lang === 'en'
+                    ? '30 Days Post-Launch Bug Warranty Free of Charge + Full Private GitHub Repository Handover'
+                    : '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
+                  lang === 'en'
+                    ? '60 Days Bug Warranty + GitHub Handover + Operational Staff Training Session'
+                    : '60 Hari Garansi Bug + Handover Repo Git + Sesi Training Staf Operasional',
+                  lang === 'en'
+                    ? '30-Day Warranty + Ongoing Monthly Managed Maintenance SLA (Automated Backups & Security Patches)'
+                    : 'Garansi 30 Hari + Kontrak Managed Maintenance Bulanan (SLA Backup & Security Patch)'
                 ].map((sla, idx) => (
                   <button
                     key={idx}
@@ -2206,6 +2246,47 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               />
             </div>
 
+            {/* Field 23: terminPembayaran (NEW & CRITICAL) */}
+            <div>
+              <label className={labelClass}>
+                {lang === 'en'
+                  ? '23. Payment Milestone Terms & Schedule *'
+                  : '23. Integrasi Skema Termin Pembayaran & Jadwal Milestone *'}
+              </label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {[
+                  lang === 'en'
+                    ? 'Standard 50/50: 50% Kickoff DP & 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap)'
+                    : 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+                  lang === 'en'
+                    ? 'Milestone 30/40/30: 30% Kickoff DP, 40% MVP Demo Completed, 30% Final Go-Live Settlement'
+                    : 'Termin Milestone 30/40/30: 30% DP Kickoff, 40% Demo MVP Selesai, 30% Pelunasan Go-Live',
+                  lang === 'en'
+                    ? '100% Full Upfront Payment (Priority Dedicated Squad Allocation)'
+                    : 'Termin Pelunasan Penuh 100% Upfront (Prioritas Utama Dedicated Squad)'
+                ].map((termin, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => updateField('terminPembayaran', termin)}
+                    className={`px-3 py-1.5 text-xs font-mono border transition ${
+                      formData.terminPembayaran === termin
+                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
+                    }`}
+                  >
+                    {termin}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={formData.terminPembayaran}
+                onChange={(e) => updateField('terminPembayaran', e.target.value)}
+                className={inputClass}
+              />
+            </div>
+
             {errorMessage && (
               <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-mono flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
@@ -2213,42 +2294,42 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </div>
             )}
 
-            {/* Fields 23, 24, 25: PIC Contact Info */}
+            {/* Fields 24, 25, 26: PIC Contact Info */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-              {/* Field 23: clientName */}
+              {/* Field 24: clientName */}
               <div>
                 <label className={labelClass}>
-                  23. Nama Lengkap PIC *
+                  {lang === 'en' ? '24. Authorized PIC Full Name *' : '24. Nama Lengkap PIC *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Misal: Budi Santoso"
+                  placeholder={lang === 'en' ? 'E.g. John Doe' : 'Misal: Budi Santoso'}
                   value={formData.clientName}
                   onChange={(e) => updateField('clientName', e.target.value)}
                   className={inputClass}
                 />
               </div>
 
-              {/* Field 24: email */}
+              {/* Field 25: email */}
               <div>
                 <label className={labelClass}>
-                  24. Email Resmi PIC *
+                  {lang === 'en' ? '25. Official PIC Email *' : '25. Email Resmi PIC *'}
                 </label>
                 <input
                   type="email"
                   required
-                  placeholder="budi@perusahaan.com"
+                  placeholder={lang === 'en' ? 'john@company.com' : 'budi@perusahaan.com'}
                   value={formData.email}
                   onChange={(e) => updateField('email', e.target.value)}
                   className={inputClass}
                 />
               </div>
 
-              {/* Field 25: phone with Country Zone Code */}
+              {/* Field 26: phone with Country Zone Code */}
               <div>
                 <label className={labelClass}>
-                  25. WhatsApp / Telepon PIC *
+                  {lang === 'en' ? '26. Authorized PIC WhatsApp / Phone *' : '26. WhatsApp / Telepon PIC *'}
                 </label>
                 <div className="flex rounded-none border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 focus-within:border-emerald-500 transition">
                   <select
@@ -2276,7 +2357,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   />
                 </div>
                 <span className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 block font-mono">
-                  Ketik digit tanpa angka 0 di depan (E.164 compliant).
+                  {lang === 'en' 
+                    ? 'Type digits without leading 0 (E.164 international standard).' 
+                    : 'Ketik digit tanpa angka 0 di depan (E.164 compliant).'}
                 </span>
               </div>
             </div>

@@ -292,13 +292,24 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     erdLang: 'id',
     chartStudioTab: 'workflow',
     devEducationMode: 'step_by_step',
-    selectedIdeTool: 'cursor',
+    selectedIdeTool: 'antigravity_ide',
     selectedTier: '{{ $defaultSelectedTier }}',
     tierAmounts: {{ json_encode($alpineTiers) }},
     isPayingSnap: false,
     devPlaybookOpen: true,
     activeDevPhase: 1,
-    copyMasterPromptSuccess: false
+    copyMasterPromptSuccess: false,
+    locale: localStorage.getItem('neriah_blueprint_lang') || '{{ app()->getLocale() === "en" ? "en" : "id" }}',
+    setLocale(l) {
+        this.locale = l;
+        try { localStorage.setItem('neriah_blueprint_lang', l); } catch(e){}
+    },
+    showAiPromptModal: false,
+    selectedPromptAgent: 'antigravity',
+    selectedPromptSprint: 'all',
+    generateAgentPrompt(agent, sprint) {
+        return window.getBlueprintAgentPrompt ? window.getBlueprintAgentPrompt(agent, sprint) : '';
+    }
 }" 
 x-init="
     $watch('flowTab', val => {
@@ -312,6 +323,7 @@ x-init="
         if (val === 'erd') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-erd-target', 'mermaid-studio-erd-source'));
         if (val === 'feature_dep') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-featdep-target', 'mermaid-studio-featdep-source'));
         if (val === 'gantt') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-gantt-target', 'mermaid-studio-gantt-source'));
+        if (val === 'infra') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-infra-target', 'mermaid-studio-infra-source'));
     });
     $nextTick(() => {
         window.renderMermaidDiagram('mermaid-studio-flow-target', 'mermaid-studio-flow-source');
@@ -326,13 +338,19 @@ x-init="
                 <span>NERIAH<span class="text-emerald-500">PRO</span> // PRD SPEC</span>
             </a>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Dual-Language Toggle Button (ID/EN) -->
+                <button @click="setLocale(locale === 'id' ? 'en' : 'id')" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5" title="Ganti Bahasa / Switch Language">
+                    <span class="w-2 h-2 rounded-none" :class="locale === 'en' ? 'bg-sky-500' : 'bg-emerald-500'"></span>
+                    <span x-text="locale === 'id' ? 'ID ➔ EN' : 'EN ➔ ID'">ID ➔ EN</span>
+                </button>
+
                 <button onclick="toggleTheme()" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono rounded-none border border-zinc-300 dark:border-zinc-700 transition">
                     THEME
                 </button>
                 <button onclick="window.print()" class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                    <span class="hidden sm:inline">Cetak</span>
+                    <span class="hidden sm:inline" x-text="locale === 'en' ? 'Print' : 'Cetak'">Cetak</span>
                 </button>
                 <a href="{{ route('blueprint.download-pdf', $blueprint->slug) }}" class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition">
                     <span>PDF</span>
@@ -340,14 +358,16 @@ x-init="
                 <a href="{{ route('blueprint.download-md', $blueprint->slug) }}" class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition">
                     <span>MD</span>
                 </a>
-                <button type="button" onclick="copyFullPrdMarkdown(this)" class="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 flex items-center gap-1.5 transition" title="Salin Dokumen PRD Ultimate Lengkap untuk AI Code Agent">
+
+                <!-- Dedicated AI AGENT HELPER Trigger -->
+                <button type="button" @click="showAiPromptModal = true" class="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 flex items-center gap-1.5 transition" title="Buka Pusat Helper Prompt AI Agent (Antigravity, Cursor, Claude Code, Windsurf)">
                     <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                     <span>PROMPT AGENT</span>
                 </button>
 
                 <a href="{{ route('blueprint.create', ['slug' => $blueprint->slug]) }}" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 transition flex items-center gap-1" title="Lengkapi / Tambah Kebutuhan di Studio">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                    <span class="hidden md:inline">LENGKAPI SPESIFIKASI</span>
+                    <span class="hidden md:inline" x-text="locale === 'en' ? 'EDIT SPEC' : 'LENGKAPI SPESIFIKASI'">LENGKAPI SPESIFIKASI</span>
                 </a>
 
                 <a href="{{ route('blueprint.show', $blueprint->slug) }}?regenerate=1" class="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono uppercase font-bold border border-amber-500/30 transition flex items-center gap-1" title="Sintesis Ulang PRD">
@@ -864,9 +884,64 @@ x-init="
                     </div>
                 </div>
 
-                <div class="bg-zinc-50 dark:bg-zinc-950 border-l-4 border-emerald-500 p-4 font-sans text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed rounded-none">
+                <div class="bg-zinc-50 dark:bg-zinc-950 border-l-4 border-emerald-500 p-4 font-sans text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed rounded-none mb-6">
                     <strong class="font-mono uppercase text-xs text-emerald-600 dark:text-emerald-400 block mb-1">Filosofi Arsitektur & Efisiensi Biaya</strong>
                     {{ $prd['executive_summary']['architecture_philosophy'] ?? 'Sistem menggunakan arsitektur Modern Monolith (Laravel 13 & Filament PHP) untuk memangkas biaya server, menjamin isolasi data, dan mempercepat peluncuran fitur hingga 3x lipat.' }}
+                </div>
+
+                <!-- 5 CRITICAL GOVERNANCE PARAMETERS GRID (ANTI-DISPUTE SHIELD) -->
+                <div class="pt-5 border-t border-zinc-200 dark:border-zinc-800">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <span x-text="locale === 'en' ? '5 Core Architectural Governance Parameters (Dispute Prevention)' : '5 Pilar Tata Kelola Arsitektur & Anti-Sengketa Klien'">5 Pilar Tata Kelola Arsitektur & Anti-Sengketa Klien</span>
+                        </span>
+                        <span class="text-[10px] font-mono px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase font-bold">
+                            CONTRACTUAL LOCK
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs font-mono">
+                        <!-- 1. Target Platform -->
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 rounded-none hover:border-emerald-500/50 transition">
+                            <span class="text-zinc-400 text-[10px] block mb-1 uppercase font-bold" x-text="locale === 'en' ? '1. Target Platform & Accessibility' : '1. Target Platform & Aksesibilitas'">1. Target Platform & Aksesibilitas</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100 block text-xs leading-snug">
+                                {{ $blueprint->target_platform ?? ($prd['executive_summary']['target_platform'] ?? 'Responsive Modern Web & PWA') }}
+                            </span>
+                        </div>
+
+                        <!-- 2. Legacy Data Migration -->
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 rounded-none hover:border-emerald-500/50 transition">
+                            <span class="text-zinc-400 text-[10px] block mb-1 uppercase font-bold" x-text="locale === 'en' ? '2. Legacy Data Migration Scope' : '2. Migrasi Data Warisan'">2. Migrasi Data Warisan</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100 block text-xs leading-snug">
+                                {{ $blueprint->migrasi_data ?? ($prd['executive_summary']['legacy_data_migration'] ?? 'Database Baru Bersih (Clean Start)') }}
+                            </span>
+                        </div>
+
+                        <!-- 3. Hosting Infrastructure -->
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 rounded-none hover:border-emerald-500/50 transition">
+                            <span class="text-zinc-400 text-[10px] block mb-1 uppercase font-bold" x-text="locale === 'en' ? '3. Server & Hosting Infrastructure' : '3. Infrastruktur Hosting & Server'">3. Infrastruktur Hosting & Server</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100 block text-xs leading-snug">
+                                {{ $blueprint->preferensi_hosting ?? ($prd['executive_summary']['hosting_infrastructure'] ?? 'Managed Cloud VPS Neriah Pro') }}
+                            </span>
+                        </div>
+
+                        <!-- 4. Warranty & SLA -->
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 rounded-none hover:border-emerald-500/50 transition">
+                            <span class="text-zinc-400 text-[10px] block mb-1 uppercase font-bold" x-text="locale === 'en' ? '4. Warranty, SLA & Git Handover' : '4. Garansi, SLA & Serah Terima Git'">4. Garansi, SLA & Serah Terima Git</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100 block text-xs leading-snug">
+                                {{ $blueprint->garansi_sla ?? ($prd['executive_summary']['warranty_sla'] ?? '30 Hari Garansi Bug + Transfer Repo Git') }}
+                            </span>
+                        </div>
+
+                        <!-- 5. Payment Milestones -->
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 rounded-none hover:border-emerald-500/50 transition sm:col-span-2 lg:col-span-2">
+                            <span class="text-zinc-400 text-[10px] block mb-1 uppercase font-bold" x-text="locale === 'en' ? '5. Payment Milestone Schedule' : '5. Skema Termin Pembayaran'">5. Skema Termin Pembayaran</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400 block text-xs leading-snug">
+                                {{ $blueprint->user_metadata['termin_pembayaran'] ?? ($prd['executive_summary']['payment_milestones'] ?? 'Termin 1 (50% DP Kickoff) + Termin 2 (50% Pelunasan setelah UAT Lolos)') }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -1581,6 +1656,14 @@ x-init="
                         >
                             <span>4. GANTT (ROADMAP)</span>
                         </button>
+                        <button 
+                            type="button"
+                            @click="chartStudioTab = 'infra'; $nextTick(() => window.renderMermaidDiagram('mermaid-studio-infra-target', 'mermaid-studio-infra-source'))" 
+                            :class="chartStudioTab === 'infra' ? 'bg-sky-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                            class="px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1"
+                        >
+                            <span>5. INFRASTRUKTUR</span>
+                        </button>
                     </div>
                 </div>
 
@@ -1675,6 +1758,30 @@ x-init="
                             <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
                                 <span>Memuat timeline roadmap Mermaid...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart 5: Infrastructure, Security & Hosting Topology -->
+                <div x-show="chartStudioTab === 'infra'" x-cloak class="space-y-4">
+                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
+                            <span class="text-violet-400 font-bold uppercase">DIAGRAM 5: TOPOLOGI INFRASTRUKTUR, KEAMANAN &amp; HOSTING</span>
+                            <button 
+                                type="button"
+                                onclick="window.copyMermaidCode('mermaid-studio-infra-source', this)"
+                                class="px-2.5 py-1 bg-zinc-800 hover:bg-violet-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                            >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
+                            </button>
+                        </div>
+                        <script type="text/plain" id="mermaid-studio-infra-source">{!! $prd['virtual_charts']['infrastructure_mermaid'] ?? '' !!}</script>
+                        <div id="mermaid-studio-infra-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center">
+                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-violet-500 animate-ping"></span>
+                                <span>Memuat topologi infrastruktur Mermaid...</span>
                             </div>
                         </div>
                     </div>
@@ -3044,6 +3151,198 @@ x-init="
         </div>
     </div>
 
+    <!-- AI AGENT INGESTION COCKPIT & PROMPT ASSISTANT MODAL (ANTIGRAVITY / CURSOR / CLAUDE / WINDSURF) -->
+    <div 
+        x-show="showAiPromptModal" 
+        x-cloak 
+        @keydown.escape.window="showAiPromptModal = false"
+        class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 no-print font-mono"
+    >
+        <div 
+            @click.outside="showAiPromptModal = false" 
+            class="bg-zinc-950 border-2 border-emerald-500/80 max-w-4xl w-full p-6 sm:p-8 rounded-none text-zinc-100 shadow-2xl relative"
+        >
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 bg-emerald-500 text-black flex items-center justify-center font-bold text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </span>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-black uppercase text-white tracking-tight flex items-center gap-2">
+                            <span>AI AGENT INGESTION COCKPIT</span>
+                            <span class="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">ORCHESTRATOR</span>
+                        </h3>
+                        <p class="text-xs text-zinc-400 font-mono mt-0.5">
+                            Pilih AI Coding Agent &amp; Tahapan Sprint untuk mengumpankan PRD secara bertahap tanpa context-rot.
+                        </p>
+                    </div>
+                </div>
+                <button @click="showAiPromptModal = false" class="text-zinc-400 hover:text-white text-xl font-bold p-1 cursor-pointer">
+                    &times;
+                </button>
+            </div>
+
+            <!-- Agent Selector Tabs -->
+            <div class="mb-5">
+                <label class="text-[11px] text-zinc-400 uppercase font-bold block mb-2">1. PILIH AI CODING AGENT TARGET:</label>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                    <button 
+                        type="button" 
+                        @click="selectedPromptAgent = 'antigravity'"
+                        :class="selectedPromptAgent === 'antigravity' ? 'bg-emerald-500 text-black font-bold border-emerald-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'"
+                        class="p-2.5 text-center border transition flex flex-col items-center gap-1 cursor-pointer"
+                    >
+                        <span class="text-[10px] uppercase tracking-wider font-mono">Antigravity IDE</span>
+                        <span class="text-[9px] opacity-75">Google DeepMind</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="selectedPromptAgent = 'cursor'"
+                        :class="selectedPromptAgent === 'cursor' ? 'bg-sky-500 text-black font-bold border-sky-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'"
+                        class="p-2.5 text-center border transition flex flex-col items-center gap-1 cursor-pointer"
+                    >
+                        <span class="text-[10px] uppercase tracking-wider font-mono">Cursor Composer</span>
+                        <span class="text-[9px] opacity-75">Cmd+I Multi-File</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="selectedPromptAgent = 'claude'"
+                        :class="selectedPromptAgent === 'claude' ? 'bg-amber-500 text-black font-bold border-amber-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'"
+                        class="p-2.5 text-center border transition flex flex-col items-center gap-1 cursor-pointer"
+                    >
+                        <span class="text-[10px] uppercase tracking-wider font-mono">Claude Code CLI</span>
+                        <span class="text-[9px] opacity-75">Terminal Autonomous</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="selectedPromptAgent = 'windsurf'"
+                        :class="selectedPromptAgent === 'windsurf' ? 'bg-purple-500 text-black font-bold border-purple-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'"
+                        class="p-2.5 text-center border transition flex flex-col items-center gap-1 cursor-pointer"
+                    >
+                        <span class="text-[10px] uppercase tracking-wider font-mono">Windsurf Cascade</span>
+                        <span class="text-[9px] opacity-75">Cascade Flow</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="selectedPromptAgent = 'devin'"
+                        :class="selectedPromptAgent === 'devin' ? 'bg-rose-500 text-black font-bold border-rose-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'"
+                        class="p-2.5 text-center border transition flex flex-col items-center gap-1 cursor-pointer"
+                    >
+                        <span class="text-[10px] uppercase tracking-wider font-mono">Devin / Copilot</span>
+                        <span class="text-[9px] opacity-75">Task-Driven</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sprint / Scope Selector -->
+            <div class="mb-5">
+                <label class="text-[11px] text-zinc-400 uppercase font-bold block mb-2">2. PILIH TAHAPAN INGESTION (BERTAHAP VS MASTER):</label>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-[11px]">
+                    <button 
+                        type="button" 
+                        @click="selectedPromptSprint = 'all'"
+                        :class="selectedPromptSprint === 'all' ? 'bg-zinc-100 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        class="p-2 border transition text-center cursor-pointer"
+                    >
+                        Master Kickoff
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="selectedPromptSprint = 'sprint1'"
+                        :class="selectedPromptSprint === 'sprint1' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        class="p-2 border transition text-center cursor-pointer"
+                    >
+                        Sprint 1: DB &amp; ULID
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="selectedPromptSprint = 'sprint2'"
+                        :class="selectedPromptSprint === 'sprint2' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        class="p-2 border transition text-center cursor-pointer"
+                    >
+                        Sprint 2: Engine
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="selectedPromptSprint = 'sprint3'"
+                        :class="selectedPromptSprint === 'sprint3' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        class="p-2 border transition text-center cursor-pointer"
+                    >
+                        Sprint 3: UI React
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="selectedPromptSprint = 'sprint4'"
+                        :class="selectedPromptSprint === 'sprint4' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        class="p-2 border transition text-center cursor-pointer"
+                    >
+                        Sprint 4: Security
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="selectedPromptSprint = 'sprint5'"
+                        :class="selectedPromptSprint === 'sprint5' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        class="p-2 border transition text-center cursor-pointer"
+                    >
+                        Sprint 5: Staging
+                    </button>
+                </div>
+            </div>
+
+            <!-- Agent Rule & Context Box -->
+            <div class="mb-4 bg-zinc-900/80 border border-zinc-800 p-4 text-xs space-y-2">
+                <div class="flex items-center justify-between text-[11px] text-zinc-400 border-b border-zinc-800/80 pb-2">
+                    <span class="font-bold uppercase text-emerald-400 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span x-text="selectedPromptAgent === 'antigravity' ? 'Panduan Khusus Antigravity IDE (Google DeepMind)' : (selectedPromptAgent === 'cursor' ? 'Panduan Khusus Cursor Composer' : (selectedPromptAgent === 'claude' ? 'Panduan Khusus Claude Code CLI' : 'Panduan Agen'))"></span>
+                    </span>
+                    <span class="font-mono text-zinc-400 text-[10px]">Anti Context-Rot Protocol</span>
+                </div>
+                <p class="text-zinc-300 text-[11px] leading-relaxed" x-show="selectedPromptAgent === 'antigravity'">
+                    <strong>Antigravity IDE Protocol:</strong> Antigravity bekerja secara otonom mengacu pada <code>.agents/AGENTS.md</code> dan <code>Ponytail Decision Ladder</code>. Prompt di bawah secara otomatis menginstruksikan Antigravity untuk menjalankan vertical slice dengan primary key ULID PostgreSQL (<code>HasUlids</code>), Keyset cursor pagination O(1), UI bebas capsule/pill shapes (subtle corners), zero native dialogs (wajib <code>window.showToast</code>), dan automated PHPUnit test verification sebelum menutup task.
+                </p>
+                <p class="text-zinc-300 text-[11px] leading-relaxed" x-show="selectedPromptAgent === 'cursor'">
+                    <strong>Cursor Composer Protocol:</strong> Buka Composer (<code>Cmd+I</code> atau <code>Ctrl+I</code>). Buat file <code>PRD.md</code> atau lampirkan dokumen via <code>@PRD.md</code>. Berikan prompt per modul vertikal agar model tidak kehabisan output tokens atau merusak file global.
+                </p>
+                <p class="text-zinc-300 text-[11px] leading-relaxed" x-show="selectedPromptAgent === 'claude'">
+                    <strong>Claude Code CLI Protocol:</strong> Buka terminal di folder root proyek dan jalankan perintah <code>claude</code>. Masukkan prompt di bawah langsung ke dalam command prompt Claude CLI. Claude Code akan mengaudit git diff secara mandiri.
+                </p>
+                <p class="text-zinc-300 text-[11px] leading-relaxed" x-show="selectedPromptAgent === 'windsurf' || selectedPromptAgent === 'devin'">
+                    <strong>Agentic Task Flow:</strong> Masukkan prompt ke agent chat window. Pastikan agen tidak membuat file di luar modul yang sedang dikerjakan.
+                </p>
+            </div>
+
+            <!-- Dynamic Prompt Textarea / Preview -->
+            <div class="mb-5 relative">
+                <div class="flex items-center justify-between mb-1.5 text-xs">
+                    <span class="text-zinc-400 text-[10px] uppercase font-bold">HASIL GENERATE PROMPT SIAP COPY:</span>
+                    <span class="text-[10px] text-emerald-400 font-mono">100% Parameterized &amp; Dispute-Proof</span>
+                </div>
+                <div class="bg-black border border-zinc-800 p-4 max-h-56 overflow-y-auto font-mono text-[11px] text-emerald-400 leading-relaxed whitespace-pre-wrap select-all" id="ai-agent-cockpit-prompt-text" x-text="generateAgentPrompt(selectedPromptAgent, selectedPromptSprint)"></div>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-800">
+                <button 
+                    type="button" 
+                    @click="showAiPromptModal = false"
+                    class="w-full sm:w-auto px-4 py-2 border border-zinc-700 hover:bg-zinc-800 text-zinc-300 text-xs uppercase font-bold transition cursor-pointer"
+                >
+                    Tutup
+                </button>
+                <button 
+                    type="button" 
+                    onclick="window.copyCockpitPrompt(this)"
+                    class="w-full sm:w-auto px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-bold transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    <span>SALIN PROMPT UNTUK <span x-text="selectedPromptAgent.toUpperCase()">AGENT</span></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Global Footer -->
     <footer class="bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 py-6 px-4 text-center text-xs border-t border-zinc-200 dark:border-zinc-800 font-mono no-print">
         <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
@@ -3099,6 +3398,122 @@ x-init="
                     });
                 }
                 setTimeout(() => { btnEl.innerHTML = orig; }, 2200);
+            }).catch(err => {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'GAGAL MENYALIN',
+                        message: 'Browser memblokir akses clipboard.'
+                    });
+                }
+            });
+        };
+
+        window.getBlueprintAgentPrompt = function(agent, sprint) {
+            const business = "{{ addslashes($blueprint->nama_bisnis ?: $blueprint->client_name) }}";
+            const platform = "{{ addslashes($blueprint->target_platform ?? ($prd['executive_summary']['target_platform'] ?? 'Responsive Modern Web & PWA')) }}";
+            const migration = "{{ addslashes($blueprint->migrasi_data ?? ($prd['executive_summary']['legacy_data_migration'] ?? 'Database Baru Bersih')) }}";
+            const hosting = "{{ addslashes($blueprint->preferensi_hosting ?? ($prd['executive_summary']['hosting_infrastructure'] ?? 'Managed Cloud VPS Neriah Pro')) }}";
+            const warranty = "{{ addslashes($blueprint->garansi_sla ?? ($prd['executive_summary']['warranty_sla'] ?? '30 Hari Garansi Bug')) }}";
+            const payment = "{{ addslashes($blueprint->user_metadata['termin_pembayaran'] ?? ($prd['executive_summary']['payment_milestones'] ?? 'Termin 1 (50% DP) + Termin 2 (50% Pelunasan)')) }}";
+            const targetWaktu = "{{ addslashes($blueprint->target_waktu ?? '30 Hari Kerja') }}";
+
+            let agentPrefix = "";
+            if (agent === 'antigravity') {
+                agentPrefix = `[ANTIGRAVITY IDE PROTOCOL - GOOGLE DEEPMIND]\n` +
+                    `Sebagai Principal Software Architect di Google DeepMind Antigravity IDE, patuhi protokol .agents/AGENTS.md dan Ponytail Decision Ladder:\n` +
+                    `- Gunakan ULID (HasUlids) untuk semua tabel PostgreSQL domain bisnis.\n` +
+                    `- Gunakan Keyset cursor pagination O(1) (cursorPaginate()). Dilarang offset pagination.\n` +
+                    `- Terapkan desain Anti-AI-Slop: subtle border-radius (rounded-none s/d rounded-sm), DILARANG rounded-full / capsule buttons.\n` +
+                    `- Larangan mutlak window.alert()/confirm(). Wajib gunakan window.showToast() atau modal Alpine/Tailwind.\n` +
+                    `- Jalankan automated tests (php artisan test) dan pastikan exit code 0 sebelum selesai.\n\n`;
+            } else if (agent === 'cursor') {
+                agentPrefix = `[CURSOR COMPOSER DIRECTIVE]\n` +
+                    `Gunakan context bounded files (@PRD.md). Terapkan perubahan baris demi baris secara presisi tanpa memodifikasi file di luar modul.\n\n`;
+            } else if (agent === 'claude') {
+                agentPrefix = `[CLAUDE CODE CLI AUTONOMOUS DIRECTIVE]\n` +
+                    `Jalankan eksekusi terminal otonom. Jangan ubah file konfigurasi global di luar scope task.\n\n`;
+            } else if (agent === 'windsurf') {
+                agentPrefix = `[WINDSURF CASCADE FLOW DIRECTIVE]\n` +
+                    `Ikuti alur Cascade agentic mode. Lakukan pengujian dan pastikan kode bersih tanpa regresi.\n\n`;
+            } else {
+                agentPrefix = `[AI CODING AGENT TASK DIRECTIVE]\n` +
+                    `Implementasikan modul berikut sesuai spesifikasi PRD dengan standar enterprise.\n\n`;
+            }
+
+            let sprintBody = "";
+            if (sprint === 'all') {
+                sprintBody = `MASTER ARCHITECTURAL KICKOFF: PROYEK ${business}\n` +
+                    `Spesifikasi Kunci Kontrak:\n` +
+                    `1. Target Platform: ${platform}\n` +
+                    `2. Migrasi Data: ${migration}\n` +
+                    `3. Infrastruktur & Hosting: ${hosting}\n` +
+                    `4. Garansi & SLA: ${warranty}\n` +
+                    `5. Skema Termin Pembayaran: ${payment}\n` +
+                    `Durasi Target: ${targetWaktu}\n\n` +
+                    `Langkah Pertama:\n` +
+                    `1. Periksa model dan migration database ULID.\n` +
+                    `2. Siapkan action handlers dan controller business logic.\n` +
+                    `3. Buat antarmuka pengguna interaktif (React Islands / Blade).\n` +
+                    `4. Jalankan pengujian php artisan test untuk memverifikasi fungsionalitas.`;
+            } else if (sprint === 'sprint1') {
+                sprintBody = `SPRINT 1 TASK: DATABASE MIGRATION & ULID MODELS (${business})\n` +
+                    `Scope:\n` +
+                    `- Buat migration PostgreSQL dengan primary key ->ulid('id')->primary().\n` +
+                    `- Tambahkan trait HasUlids pada semua Model Eloquent terkait.\n` +
+                    `- Kolom multi-bahasa wajib bertipe JSON {'id': '...', 'en': '...'} dengan cast 'array'.\n` +
+                    `- Pastikan foreign key menggunakan foreignUlid.\n` +
+                    `- Jalankan php artisan migrate dan verifikasi skema database.`;
+            } else if (sprint === 'sprint2') {
+                sprintBody = `SPRINT 2 TASK: CORE ENGINE & ACTION HANDLERS (${business})\n` +
+                    `Scope:\n` +
+                    `- Buat controller dan FormRequest dengan validasi ketat.\n` +
+                    `- Gunakan Cursor Pagination O(1) pada query daftar record.\n` +
+                    `- Simpan data dengan transaksi DB::transaction() ACID.\n` +
+                    `- Buat custom events dan listeners untuk audit trail.`;
+            } else if (sprint === 'sprint3') {
+                sprintBody = `SPRINT 3 TASK: FRONTEND UI & INTERACTIVE ISLANDS (${business})\n` +
+                    `Scope:\n` +
+                    `- Terapkan desain tajam bertema Modern Monolith (subtle border-radius rounded-none s/d rounded-sm).\n` +
+                    `- Dilarang keras menggunakan pill/capsule shapes (rounded-full).\n` +
+                    `- Sediakan dukungan multi-bahasa 2-tier (toggle ID / EN).\n` +
+                    `- Semua input telepon wajib memiliki Country Zone (+62, +65, dst).\n` +
+                    `- Format ribuan wajib menggunakan pemisah titik/koma.\n` +
+                    `- Notifikasi wajib menggunakan window.showToast, dilarang alert() native.`;
+            } else if (sprint === 'sprint4') {
+                sprintBody = `SPRINT 4 TASK: SECURITY QUALITY GATE & AUDIT (${business})\n` +
+                    `Scope:\n` +
+                    `- Pasang honeypot anti-bot pada setiap formulir intake.\n` +
+                    `- Pasang rate limiter pada endpoint sensitif.\n` +
+                    `- Tulis automated PHPUnit test untuk skenario lolos dan skenario gagal.\n` +
+                    `- Jalankan php artisan test dan pastikan semua pengujian lulus 100%.`;
+            } else if (sprint === 'sprint5') {
+                sprintBody = `SPRINT 5 TASK: STAGING VALIDATION & DEPLOYMENT PREPARATION (${business})\n` +
+                    `Scope:\n` +
+                    `- Verifikasi build frontend: npm run build.\n` +
+                    `- Verifikasi file nixpacks.toml dan konfigurasi Nginx.\n` +
+                    `- Siapkan script deployment ./deploy.sh 2 (Migrasi Aman) atau ./deploy.sh 6 (Assets).\n` +
+                    `- Lakukan UAT komprehensif sebelum serah terima kunci private repo GitHub.`;
+            }
+
+            return agentPrefix + sprintBody;
+        };
+
+        window.copyCockpitPrompt = function(btnEl) {
+            const textEl = document.getElementById('ai-agent-cockpit-prompt-text');
+            if (!textEl) return;
+            const text = textEl.innerText || textEl.textContent;
+            navigator.clipboard.writeText(text.trim()).then(() => {
+                const orig = btnEl.innerHTML;
+                btnEl.innerHTML = '<span class="text-black font-bold">✓ PROMPT DISALIN!</span>';
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'success',
+                        title: 'PROMPT AGENT TERSALIN',
+                        message: 'Prompt siap ditempelkan ke terminal atau AI IDE pilihan Anda.'
+                    });
+                }
+                setTimeout(() => { btnEl.innerHTML = orig; }, 2000);
             }).catch(err => {
                 if (window.showToast) {
                     window.showToast({

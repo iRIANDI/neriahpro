@@ -59,6 +59,7 @@ class BlueprintController extends Controller
                     'migrasiData' => $existingBp->user_metadata['migrasi_data'] ?? 'Database Baru Bersih (Input Mandiri & Dukungan Impor Template Excel/CSV)',
                     'preferensiHosting' => $existingBp->user_metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup)',
                     'garansiSla' => $existingBp->user_metadata['garansi_sla'] ?? '30 Hari Garansi Bug Pascameluncur + Penyerahan Akses Penuh Private Repo GitHub',
+                    'terminPembayaran' => $existingBp->user_metadata['termin_pembayaran'] ?? 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
                     '_meta' => [
                         'is_editing_slug' => $slug,
                         'raw_idea_text' => $existingBp->masalah_utama,
@@ -174,16 +175,59 @@ class BlueprintController extends Controller
     }
 
     /**
-     * Auto-save blueprint draft in background (Dual-Tier Persistence: Cache & Session).
+     * Auto-save blueprint draft in background (Dual-Tier Persistence: Cache & Session + Database when editing slug).
      */
     public function autoSave(Request $request): JsonResponse
     {
         $blueprint = $request->input('blueprint', []);
         $draftId = $request->input('draft_id') ?: (string) Str::ulid();
+        $persistedToDb = false;
 
         if (!empty($blueprint) && is_array($blueprint)) {
             Cache::put('blueprint_draft_' . $draftId, $blueprint, now()->addDays(7));
             session(['blueprint_draft' => $blueprint]);
+
+            // If editing an existing project slug, persist directly to PostgreSQL database
+            $slug = $blueprint['_meta']['is_editing_slug'] ?? $request->input('slug');
+            if ($slug) {
+                $record = VisionBlueprint::where('slug', $slug)->first();
+                if ($record) {
+                    $meta = $record->user_metadata ?? [];
+                    $meta['target_platform'] = $blueprint['targetPlatform'] ?? ($meta['target_platform'] ?? null);
+                    $meta['migrasi_data'] = $blueprint['migrasiData'] ?? ($meta['migrasi_data'] ?? null);
+                    $meta['preferensi_hosting'] = $blueprint['preferensiHosting'] ?? ($meta['preferensi_hosting'] ?? null);
+                    $meta['garansi_sla'] = $blueprint['garansiSla'] ?? ($meta['garansi_sla'] ?? null);
+                    $meta['termin_pembayaran'] = $blueprint['terminPembayaran'] ?? ($meta['termin_pembayaran'] ?? null);
+                    $meta['skala_pengguna'] = $blueprint['skalaPengguna'] ?? ($meta['skala_pengguna'] ?? null);
+                    $meta['jangkauan_pasar'] = $blueprint['jangkauanPasar'] ?? ($meta['jangkauan_pasar'] ?? null);
+                    $meta['out_of_scope'] = $blueprint['outOfScope'] ?? ($meta['out_of_scope'] ?? null);
+                    $meta['kepatuhan_keamanan'] = $blueprint['kepatuhanKeamanan'] ?? ($meta['kepatuhan_keamanan'] ?? null);
+                    $meta['kisaran_budget'] = $blueprint['kisaranBudget'] ?? ($meta['kisaran_budget'] ?? null);
+                    $meta['last_autosaved_at'] = now()->toIso8601String();
+
+                    $updatePayload = [
+                        'user_metadata' => $meta,
+                    ];
+                    if (!empty($blueprint['namaBisnis'])) $updatePayload['nama_bisnis'] = $blueprint['namaBisnis'];
+                    if (!empty($blueprint['clientName'])) $updatePayload['client_name'] = $blueprint['clientName'];
+                    if (!empty($blueprint['email'])) $updatePayload['email'] = $blueprint['email'];
+                    if (!empty($blueprint['phone'])) $updatePayload['phone'] = $blueprint['phone'];
+                    if (!empty($blueprint['masalahUtama'])) $updatePayload['masalah_utama'] = $blueprint['masalahUtama'];
+                    if (!empty($blueprint['tujuanUtama'])) $updatePayload['tujuan_utama'] = $blueprint['tujuanUtama'];
+                    if (!empty($blueprint['targetAudiens'])) $updatePayload['target_audiens'] = $blueprint['targetAudiens'];
+                    if (!empty($blueprint['aktorSistem'])) $updatePayload['aktor_sistem'] = $blueprint['aktorSistem'];
+                    if (!empty($blueprint['fiturWajib'])) $updatePayload['fitur_wajib'] = $blueprint['fiturWajib'];
+                    if (isset($blueprint['fiturTambahan'])) $updatePayload['fitur_tambahan'] = $blueprint['fiturTambahan'];
+                    if (!empty($blueprint['alurKerja'])) $updatePayload['alur_kerja'] = $blueprint['alurKerja'];
+                    if (isset($blueprint['kebutuhanIntegrasi'])) $updatePayload['kebutuhan_integrasi'] = $blueprint['kebutuhanIntegrasi'];
+                    if (isset($blueprint['referensiDesain'])) $updatePayload['referensi_desain'] = $blueprint['referensiDesain'];
+                    if (isset($blueprint['kesiapanAset'])) $updatePayload['kesiapan_aset'] = $blueprint['kesiapanAset'];
+                    if (isset($blueprint['targetWaktu'])) $updatePayload['target_waktu'] = $blueprint['targetWaktu'];
+
+                    $record->update($updatePayload);
+                    $persistedToDb = true;
+                }
+            }
         }
 
         $tz = config('app.timezone', 'Asia/Jakarta');
@@ -191,6 +235,7 @@ class BlueprintController extends Controller
         return response()->json([
             'success' => true,
             'draft_id' => $draftId,
+            'persisted_to_db' => $persistedToDb,
             'saved_at' => now()->timezone($tz)->format('H:i:s') . ' WIB',
         ]);
     }

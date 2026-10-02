@@ -56,6 +56,8 @@ class VisionBlueprintController extends Controller
             'preferensiHosting' => 'nullable|string|max:500',
             'garansi_sla' => 'nullable|string|max:500',
             'garansiSla' => 'nullable|string|max:500',
+            'termin_pembayaran' => 'nullable|string|max:500',
+            'terminPembayaran' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -80,6 +82,7 @@ class VisionBlueprintController extends Controller
             'migrasi_data' => $request->input('migrasi_data') ?: $request->input('migrasiData', 'Database Baru Bersih'),
             'preferensi_hosting' => $request->input('preferensi_hosting') ?: $request->input('preferensiHosting', 'Managed Dedicated Cloud VPS Neriah Pro'),
             'garansi_sla' => $request->input('garansi_sla') ?: $request->input('garansiSla', '30 Hari Garansi Bug + Handover Private Repo GitHub'),
+            'termin_pembayaran' => $request->input('termin_pembayaran') ?: $request->input('terminPembayaran', 'Termin Standar 50/50 (DP 50% & Pelunasan 50%)'),
         ];
 
         // 4. Normalize phone number (Anti-0 and Country Code Protocol)

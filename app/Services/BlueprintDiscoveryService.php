@@ -161,6 +161,35 @@ class BlueprintDiscoveryService
         $kepatuhanKeamanan = "Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)";
         $kisaranBudget = "Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)";
 
+        // 13. Critical Enterprise Architectural Parameters
+        $targetPlatform = $isEn
+            ? "Responsive Modern Web Application & PWA (Optimized for Desktop, Tablet & Mobile Browser)"
+            : "Modern Web Application Responsive & PWA (Optimal untuk Browser Desktop, Tablet & Ponsel Lapangan)";
+
+        if (preg_match('/(android|ios|playstore|app store|mobile app|native app)/i', $corpus)) {
+            $targetPlatform = $isEn
+                ? "Mobile-First Web App & PWA with Mobile App Readiness (Desktop Admin + Mobile Field PWA)"
+                : "Mobile-First Web App & PWA Siap Pasang Layar Utama Ponsel (Dasbor Admin Desktop + PWA Lapangan)";
+        }
+
+        $migrasiData = $isEn
+            ? "Clean Database Start (Form Intake & Standard CSV/Excel Master Data Import)"
+            : "Database Baru Bersih (Input Mandiri & Dukungan Impor Template Excel/CSV Master Data)";
+
+        if (preg_match('/(migrasi|data lama|excel lama|database lama|import data|impor)/i', $corpus)) {
+            $migrasiData = $isEn
+                ? "Legacy Data Migration Required (Data Cleansing & Batch Importing from Existing Excel/Spreadsheet)"
+                : "Perlu Migrasi Data Warisan (Pembersihan & Impor Data Massal dari Spreadsheet/Database Lama)";
+        }
+
+        $preferensiHosting = $isEn
+            ? "Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Automated Nightly Backups)"
+            : "Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Nginx, Backup Harian Otomatis)";
+
+        $garansiSla = $isEn
+            ? "30 Days Post-Launch Bug Warranty + Full Private GitHub Repository Handover"
+            : "30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repository GitHub";
+
         // Extract contact clues if user typed email or phone in text
         $email = '';
         if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $corpus, $eMatch)) {
@@ -199,6 +228,10 @@ class BlueprintDiscoveryService
             'outOfScope' => $outOfScope,
             'kepatuhanKeamanan' => $kepatuhanKeamanan,
             'kisaranBudget' => $kisaranBudget,
+            'targetPlatform' => $targetPlatform,
+            'migrasiData' => $migrasiData,
+            'preferensiHosting' => $preferensiHosting,
+            'garansiSla' => $garansiSla,
         ];
 
         $proactiveSuggestions = $this->generateProactiveSuggestions($corpus, $domain, $isEn);

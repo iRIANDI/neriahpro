@@ -60,6 +60,10 @@ class PrdGeneratorService
             'out_of_scope' => $metadata['out_of_scope'] ?? null,
             'kepatuhan_keamanan' => $metadata['kepatuhan_keamanan'] ?? 'Standar Web Application & OWASP Top 10',
             'kisaran_budget' => $metadata['kisaran_budget'] ?? 'Rp 50.000.000 - Rp 100.000.000 (Growth Production)',
+            'target_platform' => $metadata['target_platform'] ?? 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)',
+            'migrasi_data' => $metadata['migrasi_data'] ?? 'Database Baru Bersih (Input Mandiri & Template CSV)',
+            'preferensi_hosting' => $metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup)',
+            'garansi_sla' => $metadata['garansi_sla'] ?? '30 Hari Garansi Bug Pascameluncur + Penyerahan Akses Penuh Private Repo GitHub',
         ];
 
         return [
@@ -74,6 +78,10 @@ class PrdGeneratorService
                 'problem_statement' => $masalah,
                 'success_metrics' => $tujuan,
                 'target_audience' => $audiens,
+                'target_platform' => $extraContext['target_platform'],
+                'legacy_data_migration' => $extraContext['migrasi_data'],
+                'hosting_infrastructure' => $extraContext['preferensi_hosting'],
+                'warranty_sla' => $extraContext['garansi_sla'],
                 'design_inspiration' => $referensiDesain,
                 'asset_readiness' => $kesiapanAset,
                 'target_timeline' => $targetWaktu,

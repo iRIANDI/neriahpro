@@ -48,6 +48,14 @@ class VisionBlueprintController extends Controller
             'out_of_scope' => 'nullable|string',
             'kepatuhan_keamanan' => 'nullable|string|max:255',
             'kisaran_budget' => 'nullable|string|max:255',
+            'target_platform' => 'nullable|string|max:500',
+            'targetPlatform' => 'nullable|string|max:500',
+            'migrasi_data' => 'nullable|string|max:500',
+            'migrasiData' => 'nullable|string|max:500',
+            'preferensi_hosting' => 'nullable|string|max:500',
+            'preferensiHosting' => 'nullable|string|max:500',
+            'garansi_sla' => 'nullable|string|max:500',
+            'garansiSla' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -63,11 +71,15 @@ class VisionBlueprintController extends Controller
             'referer' => $request->header('referer'),
             'accept_language' => $request->header('accept-language'),
             'submitted_at' => now()->toIso8601String(),
-            'skala_pengguna' => $request->input('skala_pengguna'),
-            'jangkauan_pasar' => $request->input('jangkauan_pasar'),
-            'out_of_scope' => $request->input('out_of_scope'),
-            'kepatuhan_keamanan' => $request->input('kepatuhan_keamanan'),
-            'kisaran_budget' => $request->input('kisaran_budget'),
+            'skala_pengguna' => $request->input('skala_pengguna') ?: $request->input('skalaPengguna'),
+            'jangkauan_pasar' => $request->input('jangkauan_pasar') ?: $request->input('jangkauanPasar'),
+            'out_of_scope' => $request->input('out_of_scope') ?: $request->input('outOfScope'),
+            'kepatuhan_keamanan' => $request->input('kepatuhan_keamanan') ?: $request->input('kepatuhanKeamanan'),
+            'kisaran_budget' => $request->input('kisaran_budget') ?: $request->input('kisaranBudget'),
+            'target_platform' => $request->input('target_platform') ?: $request->input('targetPlatform', 'Modern Web Application Responsive & PWA'),
+            'migrasi_data' => $request->input('migrasi_data') ?: $request->input('migrasiData', 'Database Baru Bersih'),
+            'preferensi_hosting' => $request->input('preferensi_hosting') ?: $request->input('preferensiHosting', 'Managed Dedicated Cloud VPS Neriah Pro'),
+            'garansi_sla' => $request->input('garansi_sla') ?: $request->input('garansiSla', '30 Hari Garansi Bug + Handover Private Repo GitHub'),
         ];
 
         // 4. Normalize phone number (Anti-0 and Country Code Protocol)

@@ -16,6 +16,17 @@
             ];
         }
 
+        // Self-healing guard for globalSettings against incomplete class deserialization
+        if (!isset($globalSettings) || $globalSettings instanceof \__PHP_Incomplete_Class || (!is_array($globalSettings) && !($globalSettings instanceof \Illuminate\Support\Collection) && !($globalSettings instanceof \ArrayAccess))) {
+            try {
+                \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
+                \Illuminate\Support\Facades\Cache::forget('cms_global_settings_data');
+                $globalSettings = \App\Models\CmsGlobalSetting::getAllCached();
+            } catch (\Throwable $e) {
+                $globalSettings = collect();
+            }
+        }
+
         $pageTitle = 'Digital Services Hub';
         if (is_array($page->title)) {
             $pageTitle = $page->title[app()->getLocale()] ?? $page->title['en'] ?? $page->title['id'] ?? 'Digital Services Hub';
@@ -84,17 +95,30 @@
 <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased overflow-x-hidden min-h-screen transition-colors duration-200">
     
     @php
+        $getSettingVal = function($key, $default = null) use (&$globalSettings) {
+            try {
+                if (!isset($globalSettings[$key])) return $default;
+                $item = $globalSettings[$key];
+                if ($item instanceof \__PHP_Incomplete_Class) return $default;
+                if (is_object($item)) return $item->value ?? $default;
+                if (is_array($item)) return $item['value'] ?? $default;
+                return $default;
+            } catch (\Throwable) {
+                return $default;
+            }
+        };
+
         $featureFlags = [
-            'enable_cv_pro' => (bool) ($globalSettings['feature_enable_cv_pro']->value ?? true),
-            'enable_pricing' => (bool) ($globalSettings['feature_enable_cv_pricing']->value ?? true),
-            'enable_job_hub' => (bool) ($globalSettings['feature_enable_cv_job_hub']->value ?? true),
-            'enable_keuangan' => (bool) ($globalSettings['feature_enable_cv_keuangan']->value ?? true),
-            'enable_mock_interview' => (bool) ($globalSettings['feature_enable_cv_mock_interview']->value ?? true),
-            'enable_linkedin_suite' => (bool) ($globalSettings['feature_enable_cv_linkedin_suite']->value ?? true),
-            'enable_vision_blueprint' => (bool) ($globalSettings['feature_enable_vision_blueprint']->value ?? true),
-            'enable_client_onboarding' => (bool) ($globalSettings['feature_enable_client_onboarding']->value ?? true),
-            'enable_digital_contract' => (bool) ($globalSettings['feature_enable_digital_contract']->value ?? true),
-            'midtrans_mode' => (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? true),
+            'enable_cv_pro' => (bool) $getSettingVal('feature_enable_cv_pro', true),
+            'enable_pricing' => (bool) $getSettingVal('feature_enable_cv_pricing', true),
+            'enable_job_hub' => (bool) $getSettingVal('feature_enable_cv_job_hub', true),
+            'enable_keuangan' => (bool) $getSettingVal('feature_enable_cv_keuangan', true),
+            'enable_mock_interview' => (bool) $getSettingVal('feature_enable_cv_mock_interview', true),
+            'enable_linkedin_suite' => (bool) $getSettingVal('feature_enable_cv_linkedin_suite', true),
+            'enable_vision_blueprint' => (bool) $getSettingVal('feature_enable_vision_blueprint', true),
+            'enable_client_onboarding' => (bool) $getSettingVal('feature_enable_client_onboarding', true),
+            'enable_digital_contract' => (bool) $getSettingVal('feature_enable_digital_contract', true),
+            'midtrans_mode' => (bool) $getSettingVal('midtrans_compliance_strict_mode', true),
         ];
 
         // Anti-Ghost Hold Cart Data with countdown
@@ -135,7 +159,7 @@
 
     <!-- Global Navigation -->
     @react('GlobalNavigationIsland', [
-        'settings' => $globalSettings['main_navigation']->value ?? null,
+        'settings' => $getSettingVal('main_navigation', null),
         'featureFlags' => $featureFlags,
         'cartData' => $cartData,
     ])
@@ -186,7 +210,7 @@
                 
                 @if($pluginName)
                     @react($pluginName, array_merge($pluginData, [
-                        'whatsappNumber' => $globalSettings['company_whatsapp']->value ?? '628123456789',
+                        'whatsappNumber' => $getSettingVal('company_whatsapp', '628123456789'),
                         'featureFlags' => $featureFlags,
                         'currentLocale' => $locale,
                     ]))
@@ -197,9 +221,9 @@
 
     <!-- Global Footer -->
     @react('FooterIsland', [
-        'settings' => $globalSettings['footer_links']->value ?? null,
+        'settings' => $getSettingVal('footer_links', null),
         'featureFlags' => $featureFlags,
-        'whatsappNumber' => $globalSettings['company_whatsapp']->value ?? '628123456789'
+        'whatsappNumber' => $getSettingVal('company_whatsapp', '628123456789')
     ])
 
 </body>

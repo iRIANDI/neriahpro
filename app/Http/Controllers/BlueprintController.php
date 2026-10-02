@@ -5,27 +5,98 @@ namespace App\Http\Controllers;
 use App\Models\VisionBlueprint;
 use App\Models\CmsGlobalSetting;
 use App\Services\MidtransSnapService;
+use App\Services\BlueprintDiscoveryService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class BlueprintController extends Controller
 {
     /**
      * Show the public Project OS & Vision Blueprint Questionnaire form.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
-        $globalSettings = CmsGlobalSetting::all()->keyBy('key');
+        $globalSettings = CmsGlobalSetting::getAllCached();
         $isBlueprintEnabled = (bool) ($globalSettings['feature_enable_vision_blueprint']->value ?? true);
 
         if (! $isBlueprintEnabled && ! auth()->user()?->isSuperAdmin()) {
             abort(404);
         }
 
+        $draftId = $request->query('draft_id');
+        $initialData = [];
+
+        if ($draftId && Cache::has('blueprint_draft_' . $draftId)) {
+            $initialData = Cache::get('blueprint_draft_' . $draftId, []);
+        } elseif (session()->has('blueprint_draft')) {
+            $initialData = session('blueprint_draft', []);
+        }
+
         return view('blueprint.create', [
             'globalSettings' => $globalSettings,
+            'initialData' => $initialData,
         ]);
+    }
+
+    /**
+     * Analyze user's raw idea text and uploaded documents/images via MarkItDown & AI Engine.
+     */
+    public function analyzeIdea(Request $request, BlueprintDiscoveryService $discoveryService): JsonResponse
+    {
+        // 1. Honeypot Anti-Spam Check
+        if ($request->filled('_hp_check') || $request->filled('_website')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Idea processed successfully.',
+                'redirect_url' => route('blueprint.create'),
+                'data' => []
+            ], 200);
+        }
+
+        // 2. Validate inputs
+        $request->validate([
+            'idea_text' => 'nullable|string|max:30000',
+            'files.*' => 'nullable|file|max:15360|mimes:pdf,doc,docx,txt,md,rtf,csv,tsv,xlsx,pptx,png,jpg,jpeg,webp',
+            'locale' => 'nullable|string|in:id,en'
+        ]);
+
+        $rawIdeaText = $request->input('idea_text', '') ?: '';
+        $files = $request->file('files', []) ?: [];
+        if (!is_array($files)) {
+            $files = [$files];
+        }
+        $locale = $request->input('locale', app()->getLocale() ?: 'id');
+
+        try {
+            $synthesized = $discoveryService->synthesize($rawIdeaText, $files, $locale);
+
+            $draftId = (string) Str::ulid();
+            Cache::put('blueprint_draft_' . $draftId, $synthesized, now()->addHours(24));
+            session(['blueprint_draft' => $synthesized]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $locale === 'en' 
+                    ? 'Project blueprint synthesized successfully via MarkItDown & AI Engine.'
+                    : 'Ide proyek berhasil dianalisis via MarkItDown & AI Engine.',
+                'draft_id' => $draftId,
+                'redirect_url' => route('blueprint.create', ['draft_id' => $draftId]),
+                'data' => $synthesized
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses ide: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

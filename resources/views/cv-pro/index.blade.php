@@ -54,9 +54,34 @@
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
+    @php
+        if (!isset($globalSettings) || $globalSettings instanceof \__PHP_Incomplete_Class || (!is_array($globalSettings) && !($globalSettings instanceof \Illuminate\Support\Collection) && !($globalSettings instanceof \ArrayAccess))) {
+            try {
+                \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
+                \Illuminate\Support\Facades\Cache::forget('cms_global_settings_data');
+                $globalSettings = \App\Models\CmsGlobalSetting::getAllCached();
+            } catch (\Throwable $e) {
+                $globalSettings = collect();
+            }
+        }
+
+        $getSettingVal = function($key, $default = null) use (&$globalSettings) {
+            try {
+                if (!isset($globalSettings[$key])) return $default;
+                $item = $globalSettings[$key];
+                if ($item instanceof \__PHP_Incomplete_Class) return $default;
+                if (is_object($item)) return $item->value ?? $default;
+                if (is_array($item)) return $item['value'] ?? $default;
+                return $default;
+            } catch (\Throwable) {
+                return $default;
+            }
+        };
+    @endphp
+
     <!-- Global Navigation -->
     @react('GlobalNavigationIsland', [
-        'settings' => $globalSettings['main_navigation']->value ?? null,
+        'settings' => $getSettingVal('main_navigation', null),
         'featureFlags' => $featureFlags,
     ])
 
@@ -74,7 +99,7 @@
 
     <!-- Global Footer -->
     @react('FooterIsland', [
-        'settings' => $globalSettings['footer_navigation']->value ?? null,
+        'settings' => $getSettingVal('footer_navigation', null),
         'featureFlags' => $featureFlags,
     ])
 

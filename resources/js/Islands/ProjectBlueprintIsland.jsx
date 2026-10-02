@@ -614,6 +614,23 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           </p>
         </div>
 
+        {/* AI Synthesis Info Banner */}
+        {(initialData?._meta || initialData?.namaBisnis) && (
+          <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 text-zinc-900 dark:text-zinc-100 flex items-start gap-3 rounded-none">
+            <Sparkles className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-xs text-emerald-600 dark:text-emerald-400 font-mono uppercase tracking-wider mb-1">
+                {lang === 'en' ? 'AI Architectural Synthesis Active' : 'Sintesis Arsitektur AI Siap'}
+              </h4>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
+                {lang === 'en'
+                  ? 'Blueprint has been pre-structured from your raw vision and uploaded documents via MarkItDown. Review and adjust any technical parameters below before locking your PRD.'
+                  : 'Blueprint telah diisi otomatis berdasarkan analisis visi dan berkas dokumen Anda via MarkItDown. Silakan periksa, sesuaikan, dan lengkapi rincian di bawah ini sebelum mengunci PRD & Kontrak.'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {errorMessage && (
           <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 flex items-start gap-3 rounded-none text-xs font-mono">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />

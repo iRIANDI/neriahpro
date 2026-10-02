@@ -32,8 +32,8 @@ class LandingPageSeeder extends Seeder
                 'is_active' => true,
                 'data' => [
                     'headline' => [
-                        'id' => 'PUSAT ARSITEKTUR & REKAYASA DIGITAL UNTUK PROYEK BERSKALA TINGGI.',
-                        'en' => 'DIGITAL ARCHITECTURE & ENTERPRISE SOFTWARE HUB FOR HIGH-SCALE PROJECTS.'
+                        'id' => 'Pusat Arsitektur & Rekayasa Digital untuk Proyek Berskala Tinggi.',
+                        'en' => 'Digital Architecture & Enterprise Software Hub for High-Scale Projects.'
                     ],
                     'subheadline' => [
                         'id' => 'Ubah visi bisnis Anda menjadi Product Requirements Document (PRD) lengkap, skema basis data ERD PostgreSQL Strict ULID, alur kerja bertahap, dan penguncian kontrak kerja sama dalam hitungan menit.',

@@ -70,11 +70,13 @@ class PageController extends Controller
         $page = null;
         if (is_array($pageAttributes)) {
             $page = (new CmsPage)->newFromBuilder($pageAttributes);
-        } elseif (! $pageAttributes) {
-            // Check directly from DB if cache was empty/stale
-            $page = CmsPage::where('slug', $slug)->where('is_published', true)->first();
-            if ($page) {
-                \Illuminate\Support\Facades\Cache::forever("cms_page_data_{$slug}", $page->getAttributes());
+        } else {
+            // Defensive recovery if cache returned incomplete class or was empty
+            \Illuminate\Support\Facades\Cache::forget("cms_page_data_{$slug}");
+            $record = CmsPage::where('slug', $slug)->where('is_published', true)->first();
+            if ($record) {
+                $page = $record;
+                \Illuminate\Support\Facades\Cache::forever("cms_page_data_{$slug}", $record->getAttributes());
             }
         }
 
@@ -82,13 +84,7 @@ class PageController extends Controller
             abort(404);
         }
 
-        $globalSettings = \Illuminate\Support\Facades\Cache::rememberForever('cms_global_settings', function () {
-            try {
-                return CmsGlobalSetting::all()->keyBy('key');
-            } catch (\Throwable) {
-                return collect();
-            }
-        });
+        $globalSettings = CmsGlobalSetting::getAllCached();
 
         return view('page', compact('page', 'globalSettings'));
     }

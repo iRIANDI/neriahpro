@@ -14,7 +14,7 @@ class CvProController extends Controller
      */
     public function index(): View
     {
-        $globalSettings = CmsGlobalSetting::all()->keyBy('key');
+        $globalSettings = CmsGlobalSetting::getAllCached();
 
         $isCvProEnabled = (bool) ($globalSettings['feature_enable_cv_pro']->value ?? true);
         $isMidtransMode = (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? false);
@@ -153,7 +153,7 @@ class CvProController extends Controller
      */
     public function show(string $slug): View
     {
-        $globalSettings = CmsGlobalSetting::all()->keyBy('key');
+        $globalSettings = CmsGlobalSetting::getAllCached();
         $isCvProEnabled = (bool) ($globalSettings['feature_enable_cv_pro']->value ?? true);
         $isMidtransStrict = (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? false);
 

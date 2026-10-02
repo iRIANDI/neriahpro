@@ -162,7 +162,9 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
   Standar terpusat Rich Text Editor untuk Filament v5: memunculkan seluruh fitur toolbar lengkap (H1-H6, formatting, lists, tables, links, code, attachments) dengan penegakan struktur folder penyimpanan dangkal/shallow (maksimal 1-2 tingkat kedalaman) guna mengoptimalkan inode Linux dan mencegah lonjakan konsumsi RAM server saat scanning direktori.
 - **`App\Support\FilamentCuratorHelper`**:
   Standar komponen input media gambar di Filament v5: mengintegrasikan Curator Media Picker (`\Awcodes\Curator\Components\Forms\CuratorPicker`) dan FileUpload fallback dengan penegakan path folder dangkal untuk menjamin integritas server OS.
-- **`App\Http\Controllers\PageController` (Cache Incomplete Class Resiliency)**:
-  Sistem penanganan cache CMS halaman depan yang tangguh terhadap deserialisasi `__PHP_Incomplete_Class`: menyimpan raw array atribut primitif (`cms_page_data_{slug}`) alih-alih serialisasi objek Eloquent mentah, serta self-healing otomatis merekonstruksi model `CmsPage` fresh dari database jika terjadi anomali cache.
+- **`App\Services\BlueprintDiscoveryService`**:
+  Mesin analisis ide proyek dan ekstraksi dokumen multi-format (PDF, DOCX, TXT, MD, CSV, XLSX, PPTX, PNG, JPG) via Microsoft MarkItDown dan model reasoning AI untuk sintesis spesifikasi kebutuhan teknis awal sebelum kuesioner Project OS.
+- **`App\Models\CmsGlobalSetting` & `App\Http\Controllers\PageController` (Cache Incomplete Class Resiliency)**:
+  Sistem penanganan cache CMS dan global configuration yang 100% kebal terhadap error `__PHP_Incomplete_Class`: `CmsGlobalSetting::getAllCached()` dan `PageController` hanya menyimpan raw array atribut primitif (`cms_global_settings_data` & `cms_page_data_{slug}`) alih-alih serialisasi objek/koleksi Eloquent mentah. Dilengkapi self-healing otomatis di level model, controller, dan Blade view (`page.blade.php`, `cv-pro/index.blade.php`) yang mendeteksi serta me-reset cache secara transparan jika terdeteksi data korup/legacy.
 - **`App\Http\Middleware\SetAppLocale`**:
   Mendeteksi dan menetapkan bahasa aktif (`id` / `en`) secara transparan dari query string, sesi, atau cookie `neriah_locale`.

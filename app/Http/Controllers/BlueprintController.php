@@ -27,9 +27,41 @@ class BlueprintController extends Controller
         }
 
         $draftId = $request->query('draft_id');
+        $slug = $request->query('slug');
         $initialData = [];
 
-        if ($draftId && Cache::has('blueprint_draft_' . $draftId)) {
+        if ($slug) {
+            $existingBp = VisionBlueprint::where('slug', $slug)->first();
+            if ($existingBp) {
+                $initialData = [
+                    'namaBisnis' => $existingBp->nama_bisnis,
+                    'clientName' => $existingBp->client_name,
+                    'email' => $existingBp->email,
+                    'phone' => $existingBp->phone,
+                    'masalahUtama' => $existingBp->masalah_utama,
+                    'tujuanUtama' => $existingBp->tujuan_utama,
+                    'targetAudiens' => $existingBp->target_audiens,
+                    'aktorSistem' => $existingBp->aktor_sistem,
+                    'fiturWajib' => $existingBp->fitur_wajib,
+                    'fiturTambahan' => $existingBp->fitur_tambahan,
+                    'alurKerja' => $existingBp->alur_kerja,
+                    'kebutuhanIntegrasi' => $existingBp->kebutuhan_integrasi,
+                    'referensiDesain' => $existingBp->referensi_desain,
+                    'kesiapanAset' => $existingBp->kesiapan_aset,
+                    'durasiHari' => $existingBp->durasi_hari ?? '30',
+                    'targetWaktu' => $existingBp->target_waktu,
+                    'skalaPengguna' => $existingBp->skala_pengguna,
+                    'jangkauanPasar' => $existingBp->jangkauan_pasar,
+                    'outOfScope' => $existingBp->out_of_scope,
+                    'kepatuhanKeamanan' => $existingBp->kepatuhan_keamanan,
+                    'kisaranBudget' => $existingBp->kisaran_budget,
+                    '_meta' => [
+                        'is_editing_slug' => $slug,
+                        'raw_idea_text' => $existingBp->masalah_utama,
+                    ]
+                ];
+            }
+        } elseif ($draftId && Cache::has('blueprint_draft_' . $draftId)) {
             $initialData = Cache::get('blueprint_draft_' . $draftId, []);
         } elseif (session()->has('blueprint_draft')) {
             $initialData = session('blueprint_draft', []);
@@ -96,6 +128,43 @@ class BlueprintController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal memproses ide: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Proactively integrate additional requirements or ideas into the active blueprint.
+     */
+    public function supplementIdea(Request $request, BlueprintDiscoveryService $discoveryService): JsonResponse
+    {
+        $request->validate([
+            'supplement_text' => 'required|string|max:5000',
+            'blueprint' => 'required|array',
+            'locale' => 'nullable|string|in:id,en'
+        ]);
+
+        $supplementText = $request->input('supplement_text');
+        $currentBlueprint = $request->input('blueprint');
+        $locale = $request->input('locale', 'id');
+
+        try {
+            $result = $discoveryService->supplementIdea($currentBlueprint, $supplementText, $locale);
+
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'affected_fields' => $result['affected_fields'],
+                'data' => $result['data'],
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses ide tambahan: ' . $e->getMessage()
             ], 500);
         }
     }

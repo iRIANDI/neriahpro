@@ -86,5 +86,46 @@ class BlueprintDiscoveryTest extends TestCase
         $this->assertNotEmpty($data['namaBisnis']);
         $this->assertNotEmpty($data['fiturWajib']);
         $this->assertEquals(1, $data['_meta']['files_processed']);
+        $this->assertNotEmpty($data['proactive_suggestions']);
+        $this->assertArrayHasKey('completeness', $data);
+    }
+
+    public function test_can_supplement_idea_proactively()
+    {
+        $blueprint = [
+            'namaBisnis' => 'Aplikasi Logistik Ekspres',
+            'masalahUtama' => 'Pengiriman barang terlambat tanpa status resi yang akurat.',
+            'tujuanUtama' => 'Meningkatkan kepuasan pelanggan dengan tracking live.',
+            'aktorSistem' => "1. Superadmin\n2. Driver",
+            'fiturWajib' => "1. Manajemen Armada Truk\n2. Pelacakan GPS",
+            'fiturTambahan' => "1. AI Route Optimizer",
+            'alurKerja' => "1. Order dibuat\n2. Driver berangkat\n3. Barang sampai",
+            'kebutuhanIntegrasi' => 'Google Maps API',
+            'outOfScope' => 'Tidak membuat app native store',
+        ];
+
+        $response = $this->postJson('/api/blueprint/supplement-idea', [
+            'supplement_text' => 'Tolong tambahkan cetak struk kasir thermal dan notifikasi WhatsApp otomatis saat armada tiba',
+            'blueprint' => $blueprint,
+            'locale' => 'id'
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'affected_fields',
+            'data'
+        ]);
+
+        $affected = $response->json('affected_fields');
+        $this->assertContains('fiturWajib', $affected);
+        $this->assertContains('kebutuhanIntegrasi', $affected);
+
+        $data = $response->json('data');
+        $this->assertStringContainsString('WhatsApp', $data['kebutuhanIntegrasi']);
+        $this->assertStringContainsString('cetak struk', $data['fiturWajib']);
+        $this->assertArrayHasKey('completeness', $data);
     }
 }
+

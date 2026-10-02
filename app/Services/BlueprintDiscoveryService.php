@@ -177,7 +177,7 @@ class BlueprintDiscoveryService
             $clientName = trim($nameMatch[1]);
         }
 
-        return [
+        $baseData = [
             'namaBisnis' => $namaBisnis,
             'clientName' => $clientName,
             'email' => $email,
@@ -199,6 +199,15 @@ class BlueprintDiscoveryService
             'outOfScope' => $outOfScope,
             'kepatuhanKeamanan' => $kepatuhanKeamanan,
             'kisaranBudget' => $kisaranBudget,
+        ];
+
+        $proactiveSuggestions = $this->generateProactiveSuggestions($corpus, $domain, $isEn);
+        $completeness = $this->calculateCompleteness($baseData, $isEn);
+
+        return array_merge($baseData, [
+            'domain' => $domain,
+            'proactive_suggestions' => $proactiveSuggestions,
+            'completeness' => $completeness,
             '_meta' => [
                 'synthesized_by' => 'neriah_agentic_markitdown_engine',
                 'files_processed' => count($fileSummaries),
@@ -207,9 +216,10 @@ class BlueprintDiscoveryService
                 'converted_markdown' => $docsMarkdown,
                 'combined_markdown_corpus' => $corpus,
                 'raw_idea_text' => $rawText,
+                'domain' => $domain,
                 'created_at' => now()->toIso8601String(),
             ]
-        ];
+        ]);
     }
 
     protected function detectDomain(string $text): string
@@ -496,4 +506,342 @@ class BlueprintDiscoveryService
 
         return $isEn ? ($outOfScopeEn[$domain] ?? $outOfScopeEn['custom_portal']) : ($outOfScopeId[$domain] ?? $outOfScopeId['custom_portal']);
     }
+
+    /**
+     * Generate proactive, contextual suggestion chips to guide the client on potential blindspots.
+     */
+    public function generateProactiveSuggestions(string $corpus, string $domain, bool $isEn): array
+    {
+        $corpusLower = strtolower($corpus);
+
+        $allSuggestions = [
+            'whatsapp' => [
+                'id' => 'whatsapp_notif',
+                'category' => 'integration',
+                'title' => $isEn ? 'Automated WhatsApp Alerts' : 'Notifikasi WhatsApp Otomatis',
+                'desc' => $isEn ? 'Dispatch real-time transaction updates, receipts, and order statuses to user WhatsApp numbers.' : 'Kirimkan update status pesanan, resi pengiriman, dan tanda terima otomatis ke WhatsApp pengguna.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => $isEn ? 'Official WhatsApp Business Cloud API for automated customer alerts' : 'WhatsApp Cloud API untuk notifikasi transaksi & pembaruan status real-time',
+                'badge' => 'Integrasi',
+            ],
+            'payment' => [
+                'id' => 'payment_midtrans',
+                'category' => 'integration',
+                'title' => $isEn ? 'Midtrans Payment Gateway (QRIS & VA)' : 'Midtrans Payment Gateway (QRIS & VA)',
+                'desc' => $isEn ? 'Enable instant checkout via Bank Virtual Accounts (BCA/Mandiri/BRI), QRIS, and Credit Cards.' : 'Dukungan pembayaran multi-channel otomatis via Virtual Account Bank, QRIS, dan Kartu Kredit.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => $isEn ? 'Midtrans Payment Gateway (Snap API, Virtual Accounts, QRIS, Credit Card)' : 'Midtrans Payment Gateway (Snap API, QRIS, Virtual Account Bank BCA/Mandiri/BRI, Kartu Kredit)',
+                'badge' => 'Pembayaran',
+            ],
+            'excel_export' => [
+                'id' => 'excel_export',
+                'category' => 'feature',
+                'title' => $isEn ? 'Comprehensive Excel & PDF Reporting' : 'Ekspor Laporan Excel (.xlsx) & PDF',
+                'desc' => $isEn ? 'Allow managers to export audit reconciliations, financial ledgers, and operational tables to Excel.' : 'Fitur unduh laporan operasional, rekapitulasi data harian/bulanan, dan audit transaksi ke format Excel dan PDF.',
+                'target_field' => 'fiturWajib',
+                'addition' => $isEn ? 'Comprehensive Data Export Suite: One-click export of operational ledgers and metrics to Microsoft Excel (.xlsx) and printable PDF.' : 'Modul Ekspor Laporan Komprehensif: Unduh rekapitulasi operasional dan riwayat data ke format Microsoft Excel (.xlsx) dan PDF resmi siap cetak.',
+                'badge' => 'Fitur MVP',
+            ],
+            'approval_role' => [
+                'id' => 'approval_role',
+                'category' => 'actor',
+                'title' => $isEn ? 'Supervisor / Manager Approval Tier' : 'Tingkat Akses Supervisor / Approval',
+                'desc' => $isEn ? 'Prevent operational errors by requiring a manager authorization step before critical actions are executed.' : 'Cegah salah eksekusi dengan otorisasi persetujuan (approval) berjenjang oleh Supervisor atau Manajer.',
+                'target_field' => 'aktorSistem',
+                'addition' => $isEn ? 'Supervisor / Manager: Multi-tier review and authorization before high-value or critical transactions are executed.' : 'Supervisor / Manajer: Otorisasi persetujuan berjenjang sebelum transaksi bernilai tinggi atau perubahan data krusial dieksekusi.',
+                'badge' => 'Aktor & RBAC',
+            ],
+            'refund_flow' => [
+                'id' => 'refund_flow',
+                'category' => 'workflow',
+                'title' => $isEn ? 'Cancellation & Refund Workflow' : 'Alur Pembatalan & Pengembalian Dana',
+                'desc' => $isEn ? 'Establish transparent guidelines and automated steps for customer order cancellation and refund claims.' : 'Definisikan alur resmi penanganan pembatalan pesanan, verifikasi alasan, dan pencatatan pengembalian dana (refund).',
+                'target_field' => 'alurKerja',
+                'addition' => $isEn ? 'Cancellation & Refund Procedure: Client submits request with reason -> Admin inspects validity -> Automated refund ledger adjustment and notification dispatch.' : 'Alur Pembatalan & Pengembalian Dana: Klien mengajukan pembatalan dengan alasan -> Staf/Admin memverifikasi keabsahan -> Penyesuaian saldo dan pengiriman bukti refund otomatis.',
+                'badge' => 'Alur Kerja',
+            ],
+            'audit_trail' => [
+                'id' => 'audit_trail',
+                'category' => 'security',
+                'title' => $isEn ? 'Immutable Security Audit Trail' : 'Audit Trail & Rekam Jejak Keamanan',
+                'desc' => $isEn ? 'Record who created, edited, or deleted records with user ULID and timestamp to ensure high compliance.' : 'Pencatatan riwayat setiap kali data diubah atau dihapus, lengkap dengan identitas pengguna, IP, dan timestamp.',
+                'target_field' => 'kepatuhanKeamanan',
+                'addition' => $isEn ? 'Immutable Security Audit Trail: Complete forensic logging of who modified or deleted critical records with timestamps and IP records.' : 'Audit Trail & Rekam Jejak Forensik: Pencatatan otomatis setiap aksi perubahan/penghapusan data krusial lengkap dengan identitas pengguna dan timestamp.',
+                'badge' => 'Keamanan',
+            ],
+            'google_sso' => [
+                'id' => 'google_sso',
+                'category' => 'feature',
+                'title' => $isEn ? '1-Click Google Sign-In (OAuth)' : 'Login 1-Klik Google (Google SSO)',
+                'desc' => $isEn ? 'Allow users to register and sign in effortlessly using their Google account without memorizing passwords.' : 'Permudah klien dan staf masuk ke sistem dengan sekali klik menggunakan akun Google resmi tanpa menghafal password baru.',
+                'target_field' => 'fiturWajib',
+                'addition' => $isEn ? 'Single Sign-On (SSO): 1-click Google OAuth 2.0 authentication for frictionless client onboarding.' : 'Autentikasi 1-Klik Google Sign-In (OAuth 2.0) untuk mempercepat pendaftaran dan kenyamanan login pengguna.',
+                'badge' => 'Fitur MVP',
+            ],
+        ];
+
+        if ($domain === 'logistics') {
+            $allSuggestions['pod_signature'] = [
+                'id' => 'pod_signature',
+                'category' => 'feature',
+                'title' => $isEn ? 'Digital Signature on Delivery (e-POD)' : 'Tanda Tangan Digital Driver (e-POD)',
+                'desc' => $isEn ? 'Allow driver to capture recipient signature on screen upon package handover.' : 'Penerima menandatangani langsung serah terima barang di layar smartphone kurir/driver sebagai bukti sah.',
+                'target_field' => 'fiturWajib',
+                'addition' => $isEn ? 'Digital Signature & Proof of Delivery (e-POD): Recipient signs on mobile touchscreen upon parcel receipt with GPS timestamp.' : 'Tanda Tangan Digital & Bukti Serah Terima (e-POD): Penerima menandatangani langsung di layar smartphone kurir dilengkapi koordinat GPS dan foto fisik.',
+                'badge' => 'Fitur MVP',
+            ];
+        } elseif ($domain === 'clinic') {
+            $allSuggestions['satusehat'] = [
+                'id' => 'satusehat_integration',
+                'category' => 'integration',
+                'title' => $isEn ? 'SatuSehat Kemenkes (FHIR API)' : 'Integrasi SatuSehat Kemenkes (FHIR)',
+                'desc' => $isEn ? 'Synchronize patient clinical encounters with the national health data exchange.' : 'Sinkronisasi rekam medis dan data kunjungan pasien dengan platform SatuSehat Kementerian Kesehatan RI.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => $isEn ? 'SatuSehat Ministry of Health FHIR API bi-directional medical record bridging' : 'SatuSehat Kemenkes RI (FHIR Interoperability API) untuk standardisasi rekam medis nasional',
+                'badge' => 'Integrasi',
+            ];
+        } elseif ($domain === 'marketplace') {
+            $allSuggestions['courier_rates'] = [
+                'id' => 'courier_rates',
+                'category' => 'integration',
+                'title' => $isEn ? 'Automated Courier Shipping Rates' : 'Kalkulasi Ongkir Kurir Otomatis',
+                'desc' => $isEn ? 'Calculate real-time shipping costs for JNE, SiCepat, J&T based on destination sub-district.' : 'Hitung tarif ongkos kirim real-time (JNE, SiCepat, J&T) secara otomatis berdasarkan kota/kecamatan tujuan.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => $isEn ? 'Multi-courier Shipping API (JNE, SiCepat, J&T) for automated destination freight calculation' : 'API Ekspedisi Multi-Kurir (JNE, SiCepat, J&T) untuk kalkulasi ongkos kirim otomatis berdasarkan kecamatan tujuan',
+                'badge' => 'Integrasi',
+            ];
+        }
+
+        $suggestions = [];
+        foreach ($allSuggestions as $key => $item) {
+            $keyword = strtolower($item['id']);
+            if (!str_contains($corpusLower, $keyword) && count($suggestions) < 6) {
+                $suggestions[] = $item;
+            }
+        }
+
+        return $suggestions;
+    }
+
+    /**
+     * Calculate readiness and completeness score across the blueprint specifications.
+     */
+    public function calculateCompleteness(array $data, bool $isEn): array
+    {
+        $checklist = [
+            [
+                'key' => 'namaBisnis',
+                'label' => $isEn ? 'Project Name & Identity' : 'Identitas & Nama Proyek',
+                'weight' => 10,
+                'completed' => !empty($data['namaBisnis']) && mb_strlen($data['namaBisnis']) >= 3,
+                'tip' => $isEn ? 'Specify a clear project name' : 'Nama proyek telah terdefinisi dengan jelas',
+            ],
+            [
+                'key' => 'masalahUtama',
+                'label' => $isEn ? 'Core Problem & Pain Point' : 'Masalah Utama & Solusi Bisnis',
+                'weight' => 10,
+                'completed' => !empty($data['masalahUtama']) && mb_strlen($data['masalahUtama']) >= 15,
+                'tip' => $isEn ? 'Describe the core friction being solved' : 'Uraian masalah utama telah tercakup',
+            ],
+            [
+                'key' => 'tujuanUtama',
+                'label' => $isEn ? 'Success Metrics (KPIs)' : 'Tolak Ukur Sukses (KPI)',
+                'weight' => 10,
+                'completed' => !empty($data['tujuanUtama']) && mb_strlen($data['tujuanUtama']) >= 15,
+                'tip' => $isEn ? 'Define measurable outcome goals' : 'Target kuantitatif keberhasilan terdefinisi',
+            ],
+            [
+                'key' => 'aktorSistem',
+                'label' => $isEn ? 'System Actors & RBAC' : 'Pengguna & Aktor Sistem (RBAC)',
+                'weight' => 15,
+                'completed' => !empty($data['aktorSistem']) && mb_strlen($data['aktorSistem']) >= 15,
+                'tip' => $isEn ? 'List user roles and authorizations' : 'Peran pengguna dan hak akses telah terstruktur',
+            ],
+            [
+                'key' => 'fiturWajib',
+                'label' => $isEn ? 'Phase 1 MVP Features' : 'Fitur Wajib MVP (Fase 1)',
+                'weight' => 25,
+                'completed' => !empty($data['fiturWajib']) && mb_strlen($data['fiturWajib']) >= 30,
+                'tip' => $isEn ? 'Specify core operational MVP features' : 'Fitur utama fase 1 telah dirinci dengan baik',
+            ],
+            [
+                'key' => 'alurKerja',
+                'label' => $isEn ? 'Primary User Workflow' : 'Alur Kerja Utama (User Flow)',
+                'weight' => 15,
+                'completed' => !empty($data['alurKerja']) && mb_strlen($data['alurKerja']) >= 20,
+                'tip' => $isEn ? 'Sequence step-by-step user interaction' : 'Langkah alur proses dari awal hingga selesai',
+            ],
+            [
+                'key' => 'kebutuhanIntegrasi',
+                'label' => $isEn ? 'Third-Party Integrations' : 'Integrasi & Layanan Pihak Ketiga',
+                'weight' => 10,
+                'completed' => !empty($data['kebutuhanIntegrasi']) && mb_strlen($data['kebutuhanIntegrasi']) >= 5,
+                'tip' => $isEn ? 'Declare required external APIs (Payment, WhatsApp, Maps)' : 'Kebutuhan payment gateway / WhatsApp / API telah ditentukan',
+            ],
+            [
+                'key' => 'outOfScope',
+                'label' => $isEn ? 'Negative Boundary (Out of Scope)' : 'Batasan Negatif (Out of Scope)',
+                'weight' => 5,
+                'completed' => !empty($data['outOfScope']) && mb_strlen($data['outOfScope']) >= 15,
+                'tip' => $isEn ? 'Prevent scope creep with explicit boundaries' : 'Batasan yang tidak dikerjakan tertera jelas',
+            ],
+        ];
+
+        $score = 0;
+        foreach ($checklist as $item) {
+            if ($item['completed']) {
+                $score += $item['weight'];
+            }
+        }
+
+        $status = $isEn
+            ? ($score >= 90 ? 'Ready to Lock' : ($score >= 70 ? 'Substantially Complete' : 'Needs More Detail'))
+            : ($score >= 90 ? 'Sangat Siap Dikunci' : ($score >= 70 ? 'Hampir Sempurna' : 'Perlu Dilengkapi'));
+
+        return [
+            'score' => min(100, $score),
+            'status' => $status,
+            'checklist' => $checklist,
+        ];
+    }
+
+    /**
+     * Proactively integrate a client's additional idea / requirement into the appropriate blueprint field.
+     */
+    public function supplementIdea(array $currentBlueprint, string $supplementText, string $locale = 'id'): array
+    {
+        $isEn = ($locale === 'en');
+        $cleanText = trim($supplementText);
+
+        if (mb_strlen($cleanText) < 3) {
+            throw new \InvalidArgumentException($isEn 
+                ? 'Please provide a valid idea description.' 
+                : 'Mohon masukkan uraian ide atau kebutuhan yang valid.');
+        }
+
+        $textLower = strtolower($cleanText);
+        $affectedFields = [];
+        $data = $currentBlueprint;
+
+        // Classification heuristics
+        $isIntegration = str_contains($textLower, 'whatsapp') || 
+                         str_contains($textLower, 'midtrans') || 
+                         str_contains($textLower, 'payment') || 
+                         str_contains($textLower, 'qris') || 
+                         str_contains($textLower, 'api') || 
+                         str_contains($textLower, 'maps') || 
+                         str_contains($textLower, 'email') || 
+                         str_contains($textLower, 'storage') ||
+                         str_contains($textLower, 's3') ||
+                         str_contains($textLower, 'ongkir');
+
+        $hasActionVerb = str_contains($textLower, 'cetak') || 
+                         str_contains($textLower, 'tampilkan') || 
+                         str_contains($textLower, 'sistem') || 
+                         str_contains($textLower, 'fitur') || 
+                         str_contains($textLower, 'modul') || 
+                         str_contains($textLower, 'laporan') || 
+                         str_contains($textLower, 'ekspor') || 
+                         str_contains($textLower, 'upload') || 
+                         str_contains($textLower, 'scan') || 
+                         str_contains($textLower, 'notifikasi') ||
+                         str_contains($textLower, 'tambah fitur');
+
+        $isRole = (str_contains($textLower, 'role') || 
+                   str_contains($textLower, 'aktor') || 
+                   str_contains($textLower, 'tipe user') || 
+                   str_contains($textLower, 'hak akses') ||
+                   str_contains($textLower, 'tambah user') ||
+                   str_contains($textLower, 'tambah pengguna') ||
+                   str_contains($textLower, 'tambah staff')) && !$hasActionVerb;
+
+        $isWorkflow = (str_contains($textLower, 'alur') || 
+                       str_contains($textLower, 'langkah') || 
+                       str_contains($textLower, 'flow') || 
+                       str_contains($textLower, 'setelah') || 
+                       str_contains($textLower, 'kemudian') || 
+                       str_contains($textLower, 'refund') || 
+                       str_contains($textLower, 'retur') || 
+                       str_contains($textLower, 'pembatalan')) && !str_contains($textLower, 'cetak');
+
+        $isOutOfScope = str_contains($textLower, 'tidak perlu') || 
+                        str_contains($textLower, 'jangan') || 
+                        str_contains($textLower, 'exclude') || 
+                        str_contains($textLower, 'di luar') || 
+                        str_contains($textLower, 'out of scope') || 
+                        str_contains($textLower, 'bukan prioritas');
+
+        $isRoadmap = str_contains($textLower, 'fase 2') || 
+                     str_contains($textLower, 'nanti') || 
+                     str_contains($textLower, 'tahap berikutnya') || 
+                     str_contains($textLower, 'future') || 
+                     str_contains($textLower, 'roadmap');
+
+        // Apply to respective fields
+        if ($isOutOfScope) {
+            $data['outOfScope'] = $this->appendNumberedItem($data['outOfScope'] ?? '', $cleanText);
+            $affectedFields[] = 'outOfScope';
+        } elseif ($isRoadmap) {
+            $data['fiturTambahan'] = $this->appendNumberedItem($data['fiturTambahan'] ?? '', $cleanText);
+            $affectedFields[] = 'fiturTambahan';
+        } elseif ($isRole) {
+            $data['aktorSistem'] = $this->appendNumberedItem($data['aktorSistem'] ?? '', $cleanText);
+            $affectedFields[] = 'aktorSistem';
+        } elseif ($isWorkflow) {
+            $data['alurKerja'] = $this->appendNumberedItem($data['alurKerja'] ?? '', $cleanText);
+            $affectedFields[] = 'alurKerja';
+        } else {
+            // Default to MVP features
+            $data['fiturWajib'] = $this->appendNumberedItem($data['fiturWajib'] ?? '', $cleanText);
+            $affectedFields[] = 'fiturWajib';
+        }
+
+        // If it also mentions integrations, append to kebutuhanIntegrasi
+        if ($isIntegration) {
+            $existing = trim($data['kebutuhanIntegrasi'] ?? '');
+            if ($existing) {
+                $data['kebutuhanIntegrasi'] = rtrim($existing, ',.') . ', ' . $cleanText;
+            } else {
+                $data['kebutuhanIntegrasi'] = $cleanText;
+            }
+            if (!in_array('kebutuhanIntegrasi', $affectedFields)) {
+                $affectedFields[] = 'kebutuhanIntegrasi';
+            }
+        }
+
+        // Recompute completeness score
+        $data['completeness'] = $this->calculateCompleteness($data, $isEn);
+
+        $fieldNameLabelsId = [
+            'fiturWajib' => 'Fitur Wajib MVP',
+            'fiturTambahan' => 'Fitur Tambahan (Roadmap)',
+            'aktorSistem' => 'Aktor & Tingkatan Pengguna',
+            'alurKerja' => 'Alur Kerja Utama',
+            'kebutuhanIntegrasi' => 'Integrasi Pihak Ketiga',
+            'outOfScope' => 'Batasan (Out of Scope)',
+        ];
+
+        $labels = array_map(fn($f) => $fieldNameLabelsId[$f] ?? $f, $affectedFields);
+        $fieldsString = implode(' & ', $labels);
+
+        $message = $isEn
+            ? "Your supplementary requirement was intelligently placed into [{$fieldsString}]!"
+            : "Ide tambahan Anda berhasil disematkan ke bagian [{$fieldsString}]!";
+
+        return [
+            'message' => $message,
+            'affected_fields' => $affectedFields,
+            'data' => $data,
+        ];
+    }
+
+    protected function appendNumberedItem(string $existingText, string $newItem): string
+    {
+        $lines = array_values(array_filter(array_map('trim', explode("\n", trim($existingText)))));
+        $nextNum = count($lines) + 1;
+        $cleanedItem = preg_replace('/^\d+[\.\)]\s*/', '', $newItem);
+        $lines[] = "{$nextNum}. {$cleanedItem}";
+        return implode("\n", $lines);
+    }
 }
+

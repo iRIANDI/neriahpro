@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Cpu, 
@@ -31,7 +31,19 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
-  FileCheck
+  FileCheck,
+  Plus,
+  Trash2,
+  Edit2,
+  Lightbulb,
+  Send,
+  MessageSquare,
+  CreditCard,
+  Shield,
+  Activity,
+  Truck,
+  HelpCircle,
+  RefreshCw
 } from 'lucide-react';
 
 const TRANSLATIONS = {
@@ -64,6 +76,16 @@ const TRANSLATIONS = {
     step2: "Menganalisis domain bisnis, aktor RBAC & alur kerja...",
     step3: "Menyusun skema database PostgreSQL Strict ULID & rincian MVP...",
 
+    // Proactive Guidance
+    proactiveBadge: "ASISTEN PROAKTIF AI // PANDUAN KELENGKAPAN SPESIFIKASI",
+    proactiveTitle: "Tinjau Blueprint & Lengkapi Apa yang Masih Kurang",
+    proactiveDesc: "AI telah menstrukturkan ide Anda menjadi rancangan arsitektur di bawah ini. Anda dapat mengedit, menghapus, atau menambahkan kebutuhan baru pada setiap kartu. Gunakan rekomendasi cerdas atau ketik ide tambahan Anda.",
+    completenessLabel: "Skor Kesiapan Spesifikasi:",
+    suggestionsTitle: "💡 Rekomendasi Aspek Penting yang Sering Terlewatkan (Klik untuk Menambahkan):",
+    coPilotPlaceholder: "Punya ide tambahan atau ingin melengkapi sesuatu? Ketik di sini (misal: 'Tambahkan alur pembatalan pesanan dan notifikasi WA driver')...",
+    coPilotSubmitBtn: "✨ Lengkapi via AI",
+    coPilotProcessing: "AI Memproses Penempatan...",
+    
     // Result view
     resultTitle: "Hasil Sintesis Arsitektur Project OS",
     resultSubtitle: "Visi Anda telah dianalisis dan disusun menjadi rancangan arsitektur terstruktur standar Modern Monolith.",
@@ -73,12 +95,25 @@ const TRANSLATIONS = {
     copiedMd: "Tersalin!",
     downloadMd: "Unduh File .md",
     
-    cardProject: "Nama Proyek & Domain Bisnis",
-    cardProblem: "Masalah Utama & Tolak Ukur (KPI)",
-    cardActors: "Pengguna & Aktor Sistem (RBAC)",
-    cardFeatures: "Fitur Wajib MVP (Fase 1) vs Roadmap (Fase 2)",
-    cardWorkflow: "Alur Kerja Utama (User Flow)",
-    cardInfra: "Rekomendasi Arsitektur & Estimasi",
+    cardProject: "1. Identitas Proyek & Domain Bisnis",
+    cardProblem: "2. Masalah Utama & Tolak Ukur (KPI)",
+    cardActors: "3. Pengguna & Aktor Sistem (RBAC)",
+    cardFeatures: "4. Fitur Wajib MVP (Fase 1) vs Roadmap (Fase 2)",
+    cardWorkflow: "5. Alur Kerja Utama (User Flow)",
+    cardInfra: "6. Integrasi & Rekomendasi Arsitektur",
+    cardScope: "7. Batasan Negatif (Out of Scope - Anti Scope Creep)",
+
+    quickAddFeatureBtn: "+ Tambah Fitur Baru",
+    quickAddRoleBtn: "+ Tambah Role Pengguna",
+    quickAddStepBtn: "+ Tambah Langkah Alur",
+    quickAddIntegrationBtn: "+ Tambah Integrasi",
+    quickAddKpiBtn: "+ Tambah Target KPI",
+    quickAddScopeBtn: "+ Tambah Batasan",
+    inputPlaceholder: "Ketik kebutuhan baru di sini...",
+    saveBtn: "Simpan",
+    cancelBtn: "Batal",
+    editBtn: "Edit",
+    deleteBtn: "Hapus",
 
     contactTitle: "Pengesahan Kontak Penanggung Jawab Proyek (PIC)",
     clientNameLabel: "Nama Lengkap PIC",
@@ -130,6 +165,16 @@ const TRANSLATIONS = {
     step2: "Analyzing business domain, RBAC system actors & workflows...",
     step3: "Structuring PostgreSQL Strict ULID schema & Phase 1 MVP features...",
 
+    // Proactive Guidance
+    proactiveBadge: "AI PROACTIVE ASSISTANT // SPECIFICATION GUIDE",
+    proactiveTitle: "Review Blueprint & Complete Any Missing Elements",
+    proactiveDesc: "AI has structured your concept into the Blueprint below. You can directly edit, delete, or append requirements inside any card. Click smart recommendations or type extra ideas into the co-pilot prompt.",
+    completenessLabel: "Specification Readiness Score:",
+    suggestionsTitle: "💡 Smart Suggestions for Overlooked Essentials (Click to Add):",
+    coPilotPlaceholder: "Have extra ideas or want to add missing items? Type here (e.g. 'Add cashier thermal receipt printing and damaged goods refund flow')...",
+    coPilotSubmitBtn: "✨ Integrate via AI",
+    coPilotProcessing: "AI is Positioning...",
+
     // Result view
     resultTitle: "Project OS Architectural Synthesis Result",
     resultSubtitle: "Your vision has been decomposed and synthesized into a structured Modern Monolith architectural proposal.",
@@ -139,12 +184,25 @@ const TRANSLATIONS = {
     copiedMd: "Copied!",
     downloadMd: "Download .md File",
     
-    cardProject: "Project Name & Business Domain",
-    cardProblem: "Core Problem & Success Metrics (KPIs)",
-    cardActors: "Target Audience & System Actors (RBAC)",
-    cardFeatures: "Core MVP Features (Phase 1) vs Roadmap (Phase 2)",
-    cardWorkflow: "Primary User Flow",
-    cardInfra: "Architecture Specs & Estimates",
+    cardProject: "1. Project Identity & Business Domain",
+    cardProblem: "2. Core Problem & Success Metrics (KPIs)",
+    cardActors: "3. Target Audience & System Actors (RBAC)",
+    cardFeatures: "4. Core MVP Features (Phase 1) vs Roadmap (Phase 2)",
+    cardWorkflow: "5. Primary User Flow",
+    cardInfra: "6. Integrations & Architecture Specs",
+    cardScope: "7. Negative Boundary (Out of Scope)",
+
+    quickAddFeatureBtn: "+ Add New Feature",
+    quickAddRoleBtn: "+ Add User Role",
+    quickAddStepBtn: "+ Add Workflow Step",
+    quickAddIntegrationBtn: "+ Add Integration",
+    quickAddKpiBtn: "+ Add Target KPI",
+    quickAddScopeBtn: "+ Add Boundary",
+    inputPlaceholder: "Type new requirement here...",
+    saveBtn: "Save",
+    cancelBtn: "Cancel",
+    editBtn: "Edit",
+    deleteBtn: "Delete",
 
     contactTitle: "Project Manager (PIC) Contact Verification",
     clientNameLabel: "Full Name (PIC)",
@@ -168,6 +226,102 @@ const TRANSLATIONS = {
     daysSuffix: "Working Days"
   }
 };
+
+// Helper: Parse string list into array of clean strings
+function parseNumberedList(text) {
+  if (!text) return [];
+  return text
+    .split(/\n+/)
+    .map(line => line.replace(/^\d+[\.\)]\s*/, '').trim())
+    .filter(Boolean);
+}
+
+// Helper: Convert array of strings into numbered string
+function stringifyNumberedList(items) {
+  if (!items || !items.length) return '';
+  return items.map((it, idx) => `${idx + 1}. ${it}`).join('\n');
+}
+
+// Helper: Parse comma list into array
+function parseCommaList(text) {
+  if (!text) return [];
+  return text
+    .split(/,\s*/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+// Helper: Convert array to comma list
+function stringifyCommaList(items) {
+  if (!items || !items.length) return '';
+  return items.join(', ');
+}
+
+// Client-side dynamic completeness score calculator
+function calculateClientCompleteness(data, lang) {
+  const isEn = lang === 'en';
+  const checklist = [
+    {
+      key: 'namaBisnis',
+      label: isEn ? 'Project Name & Identity' : 'Identitas & Nama Proyek',
+      weight: 10,
+      completed: !!data.namaBisnis && data.namaBisnis.length >= 3,
+    },
+    {
+      key: 'masalahUtama',
+      label: isEn ? 'Core Problem' : 'Masalah Bisnis & Solusi',
+      weight: 10,
+      completed: !!data.masalahUtama && data.masalahUtama.length >= 15,
+    },
+    {
+      key: 'tujuanUtama',
+      label: isEn ? 'Success Metrics (KPIs)' : 'Tolak Ukur Sukses (KPI)',
+      weight: 10,
+      completed: !!data.tujuanUtama && data.tujuanUtama.length >= 15,
+    },
+    {
+      key: 'aktorSistem',
+      label: isEn ? 'System Actors & RBAC' : 'Pengguna & Aktor Sistem (RBAC)',
+      weight: 15,
+      completed: !!data.aktorSistem && data.aktorSistem.length >= 15,
+    },
+    {
+      key: 'fiturWajib',
+      label: isEn ? 'Phase 1 MVP Features' : 'Fitur Wajib MVP (Fase 1)',
+      weight: 25,
+      completed: !!data.fiturWajib && data.fiturWajib.length >= 25,
+    },
+    {
+      key: 'alurKerja',
+      label: isEn ? 'Primary User Workflow' : 'Alur Kerja Utama (User Flow)',
+      weight: 15,
+      completed: !!data.alurKerja && data.alurKerja.length >= 20,
+    },
+    {
+      key: 'kebutuhanIntegrasi',
+      label: isEn ? 'Third-Party Integrations' : 'Integrasi Pihak Ketiga',
+      weight: 10,
+      completed: !!data.kebutuhanIntegrasi && data.kebutuhanIntegrasi.length >= 5,
+    },
+    {
+      key: 'outOfScope',
+      label: isEn ? 'Negative Boundary (Out of Scope)' : 'Batasan Negatif (Out of Scope)',
+      weight: 5,
+      completed: !!data.outOfScope && data.outOfScope.length >= 15,
+    },
+  ];
+
+  let score = 0;
+  checklist.forEach(item => {
+    if (item.completed) score += item.weight;
+  });
+
+  const status = isEn
+    ? (score >= 90 ? 'Ready to Lock' : (score >= 70 ? 'Substantially Complete' : 'Needs More Detail'))
+    : (score >= 90 ? 'Sangat Siap Dikunci' : (score >= 70 ? 'Hampir Sempurna' : 'Perlu Dilengkapi'));
+
+  return { score: Math.min(100, score), status, checklist };
+}
 
 export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialData = {}, countries = [] }) {
   const [lang, setLang] = useState('id');
@@ -222,6 +376,88 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [showDetailsAccordion, setShowDetailsAccordion] = useState(false);
   const [showMarkdownViewer, setShowMarkdownViewer] = useState(false);
 
+  // Proactive Guidance & Co-Pilot States
+  const [proactiveSuggestions, setProactiveSuggestions] = useState(() => {
+    return initialData.proactive_suggestions || [
+      {
+        id: 'whatsapp_notif',
+        category: 'integration',
+        title: lang === 'en' ? 'Automated WhatsApp Alerts' : 'Notifikasi WhatsApp Otomatis',
+        desc: lang === 'en' ? 'Real-time dispatch alerts directly to customer WhatsApp' : 'Kirim update pesanan dan resi otomatis via WhatsApp',
+        target_field: 'kebutuhanIntegrasi',
+        addition: 'WhatsApp Cloud API untuk notifikasi transaksi & alert real-time',
+        badge: 'Integrasi',
+      },
+      {
+        id: 'payment_midtrans',
+        category: 'integration',
+        title: 'Midtrans Payment Gateway (QRIS & VA)',
+        desc: lang === 'en' ? 'Multi-channel payment with automated webhooks' : 'Pembayaran otomatis via Virtual Account Bank & QRIS',
+        target_field: 'kebutuhanIntegrasi',
+        addition: 'Midtrans Payment Gateway (Snap API, QRIS, Virtual Account BCA/Mandiri/BRI, Kartu Kredit)',
+        badge: 'Pembayaran',
+      },
+      {
+        id: 'excel_export',
+        category: 'feature',
+        title: lang === 'en' ? 'Export Excel (.xlsx) & PDF' : 'Ekspor Laporan Excel (.xlsx) & PDF',
+        desc: lang === 'en' ? 'Instant operational reconciliation export' : 'Fitur unduh laporan operasional dan rekap data ke Excel dan PDF',
+        target_field: 'fiturWajib',
+        addition: 'Modul Ekspor Laporan Komprehensif: Unduh rekapitulasi operasional dan riwayat transaksi ke format Microsoft Excel (.xlsx) dan PDF resmi.',
+        badge: 'Fitur MVP',
+      },
+      {
+        id: 'approval_role',
+        category: 'actor',
+        title: lang === 'en' ? 'Supervisor Approval Role' : 'Tingkat Akses Supervisor / Approval',
+        desc: lang === 'en' ? 'Multi-tier verification before critical execution' : 'Otorisasi persetujuan bertingkat sebelum data dieksekusi',
+        target_field: 'aktorSistem',
+        addition: 'Supervisor / Manajer: Otorisasi persetujuan berjenjang sebelum transaksi bernilai tinggi atau perubahan data krusial dieksekusi.',
+        badge: 'Aktor & RBAC',
+      },
+      {
+        id: 'refund_flow',
+        category: 'workflow',
+        title: lang === 'en' ? 'Cancellation & Refund Workflow' : 'Alur Pembatalan & Pengembalian Dana',
+        desc: lang === 'en' ? 'Automated dispute handling and ledger refund' : 'Alur resmi pembatalan pesanan dan pencatatan refund otomatis',
+        target_field: 'alurKerja',
+        addition: 'Alur Pembatalan & Pengembalian Dana: Klien mengajukan pembatalan dengan alasan -> Staf memverifikasi -> Penyesuaian saldo dan pengiriman bukti refund otomatis.',
+        badge: 'Alur Kerja',
+      },
+      {
+        id: 'google_sso',
+        category: 'feature',
+        title: lang === 'en' ? '1-Click Google Sign-In' : 'Login 1-Klik Google (Google SSO)',
+        desc: lang === 'en' ? 'Frictionless onboarding with Google accounts' : 'Login cepat dan aman dengan akun Google resmi',
+        target_field: 'fiturWajib',
+        addition: 'Autentikasi 1-Klik Google Sign-In (OAuth 2.0) untuk mempercepat pendaftaran dan kenyamanan pengguna.',
+        badge: 'Fitur MVP',
+      },
+    ];
+  });
+
+  const [appliedSuggestionIds, setAppliedSuggestionIds] = useState(new Set());
+  const [coPilotInput, setCoPilotInput] = useState('');
+  const [isCoPilotLoading, setIsCoPilotLoading] = useState(false);
+
+  // In-Card Interactive Add & Edit States
+  const [activeAddCard, setActiveAddCard] = useState(null); // 'fiturWajib', 'aktorSistem', etc.
+  const [newCardInputText, setNewCardInputText] = useState('');
+  const [editingCardKey, setEditingCardKey] = useState(null); // 'namaBisnis', etc.
+
+  // Toast Notification State
+  const [toast, setToast] = useState(null);
+
+  const showLocalToast = (type, message, title = '') => {
+    if (window.showToast) {
+      window.showToast({ type, message, title });
+    }
+    setToast({ type, message, title });
+    setTimeout(() => {
+      setToast(null);
+    }, 3500);
+  };
+
   // Anti-Spam Honeypots
   const [honeypot, setHoneypot] = useState('');
   const [honeypotWebsite, setHoneypotWebsite] = useState('');
@@ -256,6 +492,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [successData, setSuccessData] = useState(null);
+
+  // Dynamic Completeness
+  const completeness = useMemo(() => {
+    return calculateClientCompleteness(formData, lang);
+  }, [formData, lang]);
 
   useEffect(() => {
     // Theme initialization
@@ -316,7 +557,6 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
     // 1. Anti-Spam Check: Honeypot trap
     if (honeypot.trim() !== '' || honeypotWebsite.trim() !== '') {
-      // Silently mimic success to defeat spam scrapers
       setViewMode('synthesized');
       return;
     }
@@ -357,7 +597,6 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         formDataUpload.append('files[]', file);
       });
 
-      // Feedback animation timer
       const timer = setTimeout(() => {
         setAnalysisStep(t.step3);
       }, 1400);
@@ -389,6 +628,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         phone: synData.phone || prev.phone,
       }));
 
+      if (synData.proactive_suggestions && Array.isArray(synData.proactive_suggestions)) {
+        setProactiveSuggestions(synData.proactive_suggestions);
+      }
+
       if (synData.phone) {
         let d = String(synData.phone).replace(/\D/g, '');
         if (d.startsWith('62')) d = d.substring(2);
@@ -397,7 +640,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
       setConvertedMarkdown(result.converted_markdown || synData._meta?.converted_markdown || '');
       setViewMode('synthesized');
-      window.scrollTo({ top: 400, behavior: 'smooth' });
+      window.scrollTo({ top: 350, behavior: 'smooth' });
+
+      showLocalToast('success', lang === 'en' ? 'Blueprint successfully structured by AI!' : 'Blueprint berhasil disusun rapi oleh AI! Silakan tinjau dan lengkapi apa yang kurang.');
 
     } catch (err) {
       setAnalysisError(err.message || (lang === 'en' ? 'An error occurred. Please try again.' : 'Terjadi kendala. Silakan coba lagi.'));
@@ -405,6 +650,116 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       setIsAnalyzing(false);
       setAnalysisStep('');
     }
+  };
+
+  // Proactive Co-Pilot: Submit additional idea to AI
+  const handleCoPilotSubmit = async (e) => {
+    e?.preventDefault();
+    const cleanSupplement = coPilotInput.trim();
+    if (!cleanSupplement || isCoPilotLoading) return;
+
+    setIsCoPilotLoading(true);
+
+    try {
+      const token = csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      const response = await fetch('/api/blueprint/supplement-idea', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': token,
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          supplement_text: cleanSupplement,
+          blueprint: formData,
+          locale: lang,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || (lang === 'en' ? 'Failed to position addition.' : 'Gagal menempatkan ide tambahan.'));
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        ...(result.data || {})
+      }));
+
+      setCoPilotInput('');
+      showLocalToast('success', result.message || (lang === 'en' ? 'Successfully added to blueprint!' : 'Kebutuhan berhasil disematkan ke blueprint!'), 'AI CO-PILOT');
+
+    } catch (err) {
+      showLocalToast('error', err.message || 'Kendala saat menambahkan ide.', 'GAGAL');
+    } finally {
+      setIsCoPilotLoading(false);
+    }
+  };
+
+  // Apply Proactive Suggestion Chip
+  const handleApplySuggestion = (suggestion) => {
+    if (appliedSuggestionIds.has(suggestion.id)) return;
+
+    const targetField = suggestion.target_field || 'fiturWajib';
+    const addition = suggestion.addition;
+
+    setFormData(prev => {
+      let updatedValue;
+      if (targetField === 'kebutuhanIntegrasi') {
+        const existing = (prev[targetField] || '').trim();
+        updatedValue = existing ? `${existing.replace(/[,.]\s*$/, '')}, ${addition}` : addition;
+      } else {
+        const items = parseNumberedList(prev[targetField]);
+        items.push(addition);
+        updatedValue = stringifyNumberedList(items);
+      }
+      return {
+        ...prev,
+        [targetField]: updatedValue
+      };
+    });
+
+    setAppliedSuggestionIds(prev => new Set([...prev, suggestion.id]));
+    showLocalToast('success', `${suggestion.title} ${lang === 'en' ? 'added to blueprint!' : 'berhasil ditambahkan ke blueprint!'}`, 'SARAN PROAKTIF');
+  };
+
+  // In-Card: Add item to a numbered list
+  const handleAddCardItem = (fieldKey) => {
+    const text = newCardInputText.trim();
+    if (!text) return;
+
+    setFormData(prev => {
+      if (fieldKey === 'kebutuhanIntegrasi') {
+        const items = parseCommaList(prev[fieldKey]);
+        items.push(text);
+        return { ...prev, [fieldKey]: stringifyCommaList(items) };
+      } else {
+        const items = parseNumberedList(prev[fieldKey]);
+        items.push(text);
+        return { ...prev, [fieldKey]: stringifyNumberedList(items) };
+      }
+    });
+
+    setNewCardInputText('');
+    setActiveAddCard(null);
+    showLocalToast('success', lang === 'en' ? 'New item added!' : 'Item baru berhasil ditambahkan!');
+  };
+
+  // In-Card: Delete item from list
+  const handleDeleteCardItem = (fieldKey, index) => {
+    setFormData(prev => {
+      if (fieldKey === 'kebutuhanIntegrasi') {
+        const items = parseCommaList(prev[fieldKey]);
+        items.splice(index, 1);
+        return { ...prev, [fieldKey]: stringifyCommaList(items) };
+      } else {
+        const items = parseNumberedList(prev[fieldKey]);
+        items.splice(index, 1);
+        return { ...prev, [fieldKey]: stringifyNumberedList(items) };
+      }
+    });
+    showLocalToast('info', lang === 'en' ? 'Item removed' : 'Item dihapus');
   };
 
   // Copy MarkItDown Markdown
@@ -582,7 +937,42 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 font-sans">
+    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 font-sans relative">
+
+      {/* FLOATING TOAST NOTIFICATION */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={`fixed top-4 right-4 z-50 p-4 border max-w-sm rounded-none font-mono text-xs shadow-lg flex items-start gap-3 ${
+              toast.type === 'error'
+                ? 'bg-red-950 border-red-500 text-red-200'
+                : toast.type === 'warning'
+                ? 'bg-amber-950 border-amber-500 text-amber-200'
+                : 'bg-zinc-900 border-emerald-500 text-emerald-400'
+            }`}
+          >
+            {toast.type === 'error' ? (
+              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            )}
+            <div className="flex-1">
+              {toast.title && <span className="font-bold block uppercase tracking-wider mb-0.5">{toast.title}</span>}
+              <p className="font-sans text-xs text-zinc-200">{toast.message}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setToast(null)}
+              className="text-zinc-400 hover:text-white"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* TOP TOOLBAR: LANGUAGE & THEME CONTROLS */}
       <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
@@ -717,6 +1107,17 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               >
                 {t.tplRental}
               </button>
+              <button
+                type="button"
+                onClick={() => applyTemplate(
+                  lang === 'en'
+                    ? "Enterprise HR Portal with GPS attendance, candidate resume screening, multi-tier approval workflows, KPI performance evaluation, and automated payroll reporting."
+                    : "Portal HR perusahaan dengan presensi GPS, screening CV pelamar, alur persetujuan lembur/cuti berjenjang, evaluasi KPI berkala, dan rekap penggajian otomatis."
+                )}
+                className="px-2.5 py-1 text-xs font-mono bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 rounded-none transition text-left"
+              >
+                {t.tplHr}
+              </button>
             </div>
           </div>
 
@@ -750,103 +1151,89 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
-                  Uraian Ide & Kebutuhan Sistem Proyek
+                  Ide / Visi Aplikasi & Operasional Bisnis Anda *
                 </label>
                 <span className="text-[11px] font-mono text-zinc-400">
-                  {ideaText.length} / 25.000 {t.charCount}
+                  {ideaText.length} {t.charCount}
                 </span>
               </div>
+
               <textarea
-                rows={9}
+                rows={8}
                 value={ideaText}
-                onChange={(e) => setIdeaText(e.target.value)}
+                onChange={(e) => { setIdeaText(e.target.value); setAnalysisError(null); }}
                 placeholder={t.textareaPlaceholder}
-                className="w-full p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-sm focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-0 outline-none rounded-none transition font-sans leading-relaxed resize-y"
+                className="w-full p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-sm focus:border-emerald-500 focus:ring-0 outline-none rounded-none transition font-sans leading-relaxed resize-y"
               />
             </div>
 
-            {/* INTEGRATED DOCUMENT DROPZONE (MARKITDOWN POWERED) */}
-            <div className="bg-zinc-50 dark:bg-zinc-950 p-5 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-none">
-              <div className="flex items-start justify-between gap-4 mb-3">
-                <div>
-                  <h4 className="text-xs font-mono uppercase tracking-wider font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
-                    <Upload className="w-4 h-4 text-emerald-500" />
-                    {t.dropzoneTitle}
-                  </h4>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-sans">
-                    {t.dropzoneFormats}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-mono uppercase tracking-wider text-zinc-800 dark:text-zinc-200 rounded-none transition font-bold"
-                >
-                  Pilih Berkas
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx,.txt,.md,.rtf,.csv,.tsv,.xlsx,.pptx,.png,.jpg,.jpeg,.webp"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </div>
+            {/* DOCUMENT UPLOAD & MICROSOFT MARKITDOWN CONVERSION DROPZONE */}
+            <div className="border border-dashed border-zinc-300 dark:border-zinc-700 p-5 bg-zinc-50/50 dark:bg-zinc-950/50 rounded-none text-center">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.txt,.md,.rtf,.csv,.tsv,.xlsx,.pptx,.png,.jpg,.jpeg,.webp"
+                onChange={handleFileChange}
+                className="hidden"
+                id="doc-upload-input"
+              />
+              <label htmlFor="doc-upload-input" className="cursor-pointer block">
+                <Upload className="w-7 h-7 text-emerald-500 mx-auto mb-2" />
+                <h4 className="text-xs font-mono uppercase tracking-wider font-bold text-zinc-800 dark:text-zinc-200">
+                  {t.dropzoneTitle}
+                </h4>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-sans">
+                  {t.dropzoneSubtitle}
+                </p>
+                <span className="text-[10px] text-zinc-400 font-mono mt-1 block">
+                  {t.dropzoneFormats}
+                </span>
+              </label>
 
-              {/* MarkItDown Notice Badge */}
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-mono rounded-none mb-3">
-                {t.markitdownNotice}
-              </div>
-
-              {/* Attached Files List */}
+              {/* Uploaded Files Chips */}
               {attachedFiles.length > 0 && (
-                <div className="space-y-2 mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-                  <span className="text-[11px] font-mono text-zinc-500 block uppercase">
-                    Berkas Siap Dikonversi ke .md ({attachedFiles.length}/5):
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {attachedFiles.map((file, idx) => (
-                      <div
-                        key={idx}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-mono rounded-none"
+                <div className="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap gap-2 justify-center">
+                  {attachedFiles.map((file, idx) => (
+                    <div
+                      key={idx}
+                      className="px-2.5 py-1 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-mono flex items-center gap-1.5 rounded-none"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="truncate max-w-[180px]">{file.name}</span>
+                      <span className="text-[10px] text-zinc-400">({(file.size / 1024).toFixed(0)}KB)</span>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(idx)}
+                        className="text-zinc-400 hover:text-red-500 ml-1"
                       >
-                        <FileCode className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="font-bold text-zinc-800 dark:text-zinc-200 max-w-[200px] truncate">
-                          {file.name}
-                        </span>
-                        <span className="text-[10px] text-zinc-400">
-                          ({(file.size / 1024).toFixed(1)} KB)
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(idx)}
-                          className="hover:text-red-500 text-zinc-400 ml-1"
-                          title="Hapus berkas"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
+
+              <div className="mt-3 text-[11px] font-mono text-emerald-600 dark:text-emerald-400/90 text-left bg-emerald-500/5 p-2.5 border border-emerald-500/20 rounded-none flex items-start gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                <span>{t.markitdownNotice}</span>
+              </div>
             </div>
 
             {/* Error Message */}
             {analysisError && (
-              <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-mono flex items-center gap-2 rounded-none">
+              <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-mono flex items-center gap-2 rounded-none">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{analysisError}</span>
               </div>
             )}
 
-            {/* Action Button & Processing Indicator */}
-            <div className="pt-2">
+            {/* Submit Button */}
+            <div>
               <button
                 type="submit"
                 disabled={isAnalyzing}
-                className="w-full bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black font-mono text-sm font-black uppercase tracking-wider py-4 px-6 rounded-none transition flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-wider py-4 px-6 rounded-none text-center flex items-center justify-center gap-2 transition disabled:opacity-50 text-sm font-mono"
               >
                 {isAnalyzing ? (
                   <>
@@ -868,7 +1255,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       )}
 
       {/* =========================================================================
-          VIEW MODE 2: SYNTHESIZED BLUEPRINT & PRD LOCK WORKSPACE
+          VIEW MODE 2: SYNTHESIZED BLUEPRINT & PROACTIVE CO-PILOT WORKSPACE
           ========================================================================= */}
       {viewMode === 'synthesized' && (
         <div className="space-y-8">
@@ -898,6 +1285,159 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <span>{t.resetIdea}</span>
             </button>
           </div>
+
+          {/* =====================================================================
+              PROACTIVE AI ASSISTANT: COMPLETENESS GAUGE & INTELLIGENT GUIDANCE
+              ===================================================================== */}
+          <section className="bg-zinc-900 text-white border-2 border-emerald-500/40 p-6 rounded-none space-y-5">
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
+              <div>
+                <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-bold block mb-1 flex items-center gap-1.5">
+                  <Lightbulb className="w-4 h-4 text-emerald-400" />
+                  {t.proactiveBadge}
+                </span>
+                <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-white">
+                  {t.proactiveTitle}
+                </h3>
+                <p className="text-xs text-zinc-400 mt-1 font-sans leading-relaxed">
+                  {t.proactiveDesc}
+                </p>
+              </div>
+
+              {/* Completeness Meter */}
+              <div className="bg-zinc-950 border border-zinc-800 p-3 rounded-none min-w-[200px] text-right font-mono">
+                <div className="flex justify-between items-center text-xs mb-1.5">
+                  <span className="text-zinc-400 text-[11px]">KESIAPAN SPESIFIKASI:</span>
+                  <span className="font-bold text-emerald-400">{completeness.score}%</span>
+                </div>
+                <div className="w-full bg-zinc-800 h-2 rounded-none overflow-hidden mb-1">
+                  <div 
+                    className="bg-emerald-500 h-full transition-all duration-500"
+                    style={{ width: `${completeness.score}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">
+                  STATUS: {completeness.status}
+                </span>
+              </div>
+            </div>
+
+            {/* Checklist items */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+              {completeness.checklist.map((item, idx) => (
+                <div 
+                  key={idx}
+                  className={`p-2 border flex items-center gap-1.5 ${
+                    item.completed 
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' 
+                      : 'border-zinc-800 bg-zinc-950/60 text-zinc-500'
+                  }`}
+                >
+                  {item.completed ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  ) : (
+                    <span className="w-3.5 h-3.5 border border-zinc-600 rounded-none shrink-0 inline-block" />
+                  )}
+                  <span className="truncate text-[11px]">{item.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Proactive 1-Click Suggestion Chips */}
+            {proactiveSuggestions.length > 0 && (
+              <div className="pt-2">
+                <span className="block text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold mb-2">
+                  {t.suggestionsTitle}
+                </span>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {proactiveSuggestions.map((sug) => {
+                    const isAdded = appliedSuggestionIds.has(sug.id);
+                    return (
+                      <div
+                        key={sug.id}
+                        className={`p-3 border rounded-none flex items-start justify-between gap-2 transition ${
+                          isAdded 
+                            ? 'border-emerald-500 bg-emerald-500/10' 
+                            : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="px-1.5 py-0.5 text-[9px] font-mono uppercase font-bold bg-zinc-800 text-zinc-300">
+                              {sug.badge || 'Saran AI'}
+                            </span>
+                            <h5 className="text-xs font-bold text-white">
+                              {sug.title}
+                            </h5>
+                          </div>
+                          <p className="text-[11px] text-zinc-400 font-sans leading-tight">
+                            {sug.desc}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={isAdded}
+                          onClick={() => handleApplySuggestion(sug)}
+                          className={`px-2.5 py-1 text-xs font-mono uppercase font-bold rounded-none shrink-0 transition flex items-center gap-1 ${
+                            isAdded
+                              ? 'bg-emerald-500 text-black opacity-80 cursor-default'
+                              : 'bg-zinc-800 hover:bg-emerald-600 hover:text-black text-zinc-200 border border-zinc-700'
+                          }`}
+                        >
+                          {isAdded ? (
+                            <>
+                              <Check className="w-3 h-3" />
+                              <span>Ditambahkan</span>
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="w-3 h-3" />
+                              <span>+ Tambah</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Proactive AI Co-Pilot Input Bar */}
+            <div className="pt-3 border-t border-zinc-800">
+              <form onSubmit={handleCoPilotSubmit} className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={coPilotInput}
+                    onChange={(e) => setCoPilotInput(e.target.value)}
+                    placeholder={t.coPilotPlaceholder}
+                    disabled={isCoPilotLoading}
+                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 text-xs font-sans focus:border-emerald-500 outline-none rounded-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={!coPilotInput.trim() || isCoPilotLoading}
+                  className="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-bold uppercase tracking-wider rounded-none transition flex items-center justify-center gap-1.5 disabled:opacity-40 shrink-0"
+                >
+                  {isCoPilotLoading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>{t.coPilotProcessing}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{t.coPilotSubmitBtn}</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+          </section>
 
           {/* MARKITDOWN CONVERTED MARKDOWN (.MD) PANEL */}
           {convertedMarkdown && (
@@ -948,88 +1488,437 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
           )}
 
-          {/* 6 STRUCTURED BLUEPRINT ARCHITECTURE CARDS */}
+          {/* =====================================================================
+              7 INTERACTIVE BLUEPRINT CARDS WITH INLINE ADD, EDIT & DELETE
+              ===================================================================== */}
           <div className="grid md:grid-cols-2 gap-4">
             
-            {/* Card 1: Project & Domain */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-                {t.cardProject}
-              </span>
-              <h4 className="text-base font-black text-zinc-900 dark:text-zinc-100 uppercase mb-2">
-                {formData.namaBisnis || 'Nama Proyek'}
-              </h4>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
-                {formData.masalahUtama || 'Belum diuraikan.'}
-              </p>
-            </div>
+            {/* Card 1: Project Identity & Business Problem */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
+                    {t.cardProject}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setEditingCardKey(editingCardKey === 'project' ? null : 'project')}
+                    className="text-xs font-mono text-zinc-500 hover:text-emerald-500 flex items-center gap-1"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    <span>{editingCardKey === 'project' ? t.saveBtn : t.editBtn}</span>
+                  </button>
+                </div>
 
-            {/* Card 2: KPIs & Target */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-                {t.cardProblem}
-              </span>
-              <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-2">
-                Tolak Ukur Sukses Sistem (KPI)
-              </h4>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
-                {formData.tujuanUtama || 'Otomasi alur kerja terpusat dan efisiensi pelaporan.'}
-              </p>
-            </div>
-
-            {/* Card 3: Actors & Audience */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-                {t.cardActors}
-              </span>
-              <p className="text-xs text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed whitespace-pre-line">
-                {formData.aktorSistem || 'Superadmin, Operator Staff, Klien Eksternal.'}
-              </p>
-            </div>
-
-            {/* Card 4: Features Phase 1 vs 2 */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-                {t.cardFeatures}
-              </span>
-              <div className="text-xs text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed whitespace-pre-line max-h-36 overflow-y-auto">
-                {formData.fiturWajib}
+                {editingCardKey === 'project' ? (
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={formData.namaBisnis}
+                      onChange={(e) => setFormData(prev => ({ ...prev, namaBisnis: e.target.value }))}
+                      placeholder="Nama Proyek / Aplikasi"
+                      className={inputClass}
+                    />
+                    <textarea
+                      rows={3}
+                      value={formData.masalahUtama}
+                      onChange={(e) => setFormData(prev => ({ ...prev, masalahUtama: e.target.value }))}
+                      placeholder="Masalah utama yang ingin dipecahkan"
+                      className={inputClass}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <h4 className="text-base font-black text-zinc-900 dark:text-zinc-100 uppercase mb-2">
+                      {formData.namaBisnis || 'Nama Proyek'}
+                    </h4>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+                      {formData.masalahUtama || 'Belum diuraikan.'}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Card 5: Workflow */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-                {t.cardWorkflow}
-              </span>
-              <p className="text-xs text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed whitespace-pre-line">
-                {formData.alurKerja}
-              </p>
+            {/* Card 2: KPIs & Success Metrics */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
+                    {t.cardProblem}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveAddCard(activeAddCard === 'tujuanUtama' ? null : 'tujuanUtama')}
+                    className="text-xs font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>{t.quickAddKpiBtn}</span>
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 mb-3">
+                  {parseNumberedList(formData.tujuanUtama).map((kpi, idx) => (
+                    <div key={idx} className="group flex items-start justify-between gap-2 p-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 text-xs">
+                      <span className="text-zinc-800 dark:text-zinc-200 font-sans">{idx + 1}. {kpi}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCardItem('tujuanUtama', idx)}
+                        className="text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {activeAddCard === 'tujuanUtama' && (
+                  <div className="mt-2 flex gap-1.5">
+                    <input
+                      type="text"
+                      value={newCardInputText}
+                      onChange={(e) => setNewCardInputText(e.target.value)}
+                      placeholder="Misal: Penurunan komplain pelanggan hingga 80%..."
+                      className="flex-1 px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddCardItem('tujuanUtama')}
+                      className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
+                    >
+                      {t.saveBtn}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Card 6: Infrastructure & Investment */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-                {t.cardInfra}
-              </span>
-              <div className="space-y-1.5 font-mono text-xs text-zinc-700 dark:text-zinc-300">
-                <div className="flex justify-between">
-                  <span className="text-zinc-400">STACK:</span>
-                  <span className="font-bold">Modern Monolith (Laravel 13 & Filament)</span>
+            {/* Card 3: System Actors & RBAC */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
+                    {t.cardActors}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveAddCard(activeAddCard === 'aktorSistem' ? null : 'aktorSistem')}
+                    className="text-xs font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>{t.quickAddRoleBtn}</span>
+                  </button>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-400">DATABASE:</span>
-                  <span className="font-bold text-emerald-500">PostgreSQL Strict ULID (Keyset O(1))</span>
+
+                <div className="space-y-1.5 mb-3">
+                  {parseNumberedList(formData.aktorSistem).map((actor, idx) => (
+                    <div key={idx} className="group flex items-start justify-between gap-2 p-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 text-xs">
+                      <span className="text-zinc-800 dark:text-zinc-200 font-sans">{actor}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCardItem('aktorSistem', idx)}
+                        className="text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-400">TARGET WAKTU:</span>
-                  <span className="font-bold">{formData.durasiHari} {t.daysSuffix}</span>
+
+                {/* Quick Role Suggestions */}
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {['+ Finance Staff', '+ Operator Gudang', '+ Supervisor', '+ Customer Eksternal', '+ Auditor'].map((rolePreset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        const items = parseNumberedList(formData.aktorSistem);
+                        items.push(`${rolePreset.replace('+ ', '')}: Akses khusus sesuai wewenang operasional`);
+                        setFormData(prev => ({ ...prev, aktorSistem: stringifyNumberedList(items) }));
+                        showLocalToast('success', `${rolePreset} ditambahkan ke Aktor!`);
+                      }}
+                      className="px-2 py-0.5 text-[10px] font-mono bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700"
+                    >
+                      {rolePreset}
+                    </button>
+                  ))}
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-400">ESTIMASI BUDGET:</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">{formData.kisaranBudget}</span>
-                </div>
+
+                {activeAddCard === 'aktorSistem' && (
+                  <div className="mt-2 flex gap-1.5">
+                    <input
+                      type="text"
+                      value={newCardInputText}
+                      onChange={(e) => setNewCardInputText(e.target.value)}
+                      placeholder="Misal: Kasir Toko: Melayani pembayaran dan cetak kuitansi..."
+                      className="flex-1 px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddCardItem('aktorSistem')}
+                      className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
+                    >
+                      {t.saveBtn}
+                    </button>
+                  </div>
+                )}
               </div>
+            </div>
+
+            {/* Card 4: MVP Features (Phase 1) vs Roadmap (Phase 2) */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
+                    {t.cardFeatures}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveAddCard(activeAddCard === 'fiturWajib' ? null : 'fiturWajib')}
+                    className="text-xs font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>{t.quickAddFeatureBtn}</span>
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 max-h-48 overflow-y-auto mb-3 pr-1">
+                  {parseNumberedList(formData.fiturWajib).map((feat, idx) => (
+                    <div key={idx} className="group flex items-start justify-between gap-2 p-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 text-xs">
+                      <span className="text-zinc-800 dark:text-zinc-200 font-sans leading-tight">
+                        <strong className="text-emerald-600 dark:text-emerald-400">{idx + 1}.</strong> {feat}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCardItem('fiturWajib', idx)}
+                        className="text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {activeAddCard === 'fiturWajib' && (
+                  <div className="mt-2 flex gap-1.5">
+                    <input
+                      type="text"
+                      value={newCardInputText}
+                      onChange={(e) => setNewCardInputText(e.target.value)}
+                      placeholder="Misal: Cetak Struk Kasir Thermal Bluetooth..."
+                      className="flex-1 px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddCardItem('fiturWajib')}
+                      className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
+                    >
+                      {t.saveBtn}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Card 5: Primary User Workflow */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
+                    {t.cardWorkflow}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveAddCard(activeAddCard === 'alurKerja' ? null : 'alurKerja')}
+                    className="text-xs font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>{t.quickAddStepBtn}</span>
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 max-h-48 overflow-y-auto mb-3 pr-1">
+                  {parseNumberedList(formData.alurKerja).map((step, idx) => (
+                    <div key={idx} className="group flex items-start justify-between gap-2 p-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 text-xs">
+                      <span className="text-zinc-800 dark:text-zinc-200 font-sans leading-tight">
+                        <strong className="text-emerald-600 dark:text-emerald-400 font-mono">Langkah {idx + 1}:</strong> {step}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCardItem('alurKerja', idx)}
+                        className="text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {activeAddCard === 'alurKerja' && (
+                  <div className="mt-2 flex gap-1.5">
+                    <input
+                      type="text"
+                      value={newCardInputText}
+                      onChange={(e) => setNewCardInputText(e.target.value)}
+                      placeholder="Misal: Klien melakukan verifikasi OTP via WhatsApp..."
+                      className="flex-1 px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddCardItem('alurKerja')}
+                      className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
+                    >
+                      {t.saveBtn}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Card 6: Third-Party Integrations & Architecture */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
+                    {t.cardInfra}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveAddCard(activeAddCard === 'kebutuhanIntegrasi' ? null : 'kebutuhanIntegrasi')}
+                    className="text-xs font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>{t.quickAddIntegrationBtn}</span>
+                  </button>
+                </div>
+
+                {/* Integration Tags */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {parseCommaList(formData.kebutuhanIntegrasi).map((intg, idx) => (
+                    <span 
+                      key={idx}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-mono border border-zinc-300 dark:border-zinc-700"
+                    >
+                      <span>{intg}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCardItem('kebutuhanIntegrasi', idx)}
+                        className="text-zinc-400 hover:text-red-500"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+
+                {/* Preset Chips */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {['+ Midtrans Snap', '+ WhatsApp Gateway', '+ Google Maps API', '+ Cloudflare R2', '+ RajaOngkir Kurir'].map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        const items = parseCommaList(formData.kebutuhanIntegrasi);
+                        const cleanPreset = preset.replace('+ ', '');
+                        if (!items.includes(cleanPreset)) {
+                          items.push(cleanPreset);
+                          setFormData(prev => ({ ...prev, kebutuhanIntegrasi: stringifyCommaList(items) }));
+                          showLocalToast('success', `${cleanPreset} ditambahkan ke Integrasi!`);
+                        }
+                      }}
+                      className="px-2 py-0.5 text-[10px] font-mono bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 border border-zinc-200 dark:border-zinc-800"
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+
+                {activeAddCard === 'kebutuhanIntegrasi' && (
+                  <div className="mt-2 flex gap-1.5 mb-3">
+                    <input
+                      type="text"
+                      value={newCardInputText}
+                      onChange={(e) => setNewCardInputText(e.target.value)}
+                      placeholder="Misal: Mailgun Transactional Email API..."
+                      className="flex-1 px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddCardItem('kebutuhanIntegrasi')}
+                      className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
+                    >
+                      {t.saveBtn}
+                    </button>
+                  </div>
+                )}
+
+                <div className="space-y-1 pt-2 border-t border-zinc-200 dark:border-zinc-800 font-mono text-[11px] text-zinc-600 dark:text-zinc-400">
+                  <div className="flex justify-between">
+                    <span>STACK:</span>
+                    <span className="font-bold text-zinc-900 dark:text-zinc-100">Modern Monolith (Laravel 13 & Filament)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>DATABASE:</span>
+                    <span className="font-bold text-emerald-500">PostgreSQL Strict ULID (Keyset O(1))</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>ESTIMASI BUDGET:</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{formData.kisaranBudget}</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Card 7: Negative Boundary (Out of Scope - Anti Scope Creep) */}
+            <div className="md:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-amber-600 dark:text-amber-400 font-bold">
+                  {t.cardScope}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setActiveAddCard(activeAddCard === 'outOfScope' ? null : 'outOfScope')}
+                  className="text-xs font-mono text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 font-bold"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>{t.quickAddScopeBtn}</span>
+                </button>
+              </div>
+
+              <div className="space-y-1.5 mb-2">
+                {parseNumberedList(formData.outOfScope).map((scope, idx) => (
+                  <div key={idx} className="group flex items-start justify-between gap-2 p-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 text-xs">
+                    <span className="text-zinc-700 dark:text-zinc-300 font-sans leading-tight">{scope}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCardItem('outOfScope', idx)}
+                      className="text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition shrink-0"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {activeAddCard === 'outOfScope' && (
+                <div className="mt-2 flex gap-1.5">
+                  <input
+                    type="text"
+                    value={newCardInputText}
+                    onChange={(e) => setNewCardInputText(e.target.value)}
+                    placeholder="Misal: Tidak mencakup pengadaan hardware printer atau mesin POS fisik..."
+                    className="flex-1 px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddCardItem('outOfScope')}
+                    className="px-3 py-1.5 bg-emerald-600 text-black text-xs font-mono font-bold"
+                  >
+                    {t.saveBtn}
+                  </button>
+                </div>
+              )}
             </div>
 
           </div>
@@ -1266,32 +2155,59 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </div>
               <div>
                 <label className={labelClass}>{t.phoneLabel} *</label>
-                <input
-                  type="tel"
-                  required
-                  placeholder={t.phonePh}
-                  value={phoneDigits}
-                  onChange={handlePhoneDigitsChange}
-                  className={inputClass}
-                />
+                <div className="flex rounded-none border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950">
+                  <select
+                    value={selectedCountryCode}
+                    onChange={(e) => {
+                      const code = e.target.value;
+                      setSelectedCountryCode(code);
+                      setFormData(prev => ({ ...prev, phone: phoneDigits ? `${code}${phoneDigits}` : '' }));
+                    }}
+                    className="bg-transparent text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 py-2.5 pl-2 border-r border-zinc-300 dark:border-zinc-700"
+                  >
+                    {countryList.map((c) => (
+                      <option key={c.code} value={c.code} className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
+                        {c.emoji || '🌐'} {c.code}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="tel"
+                    required
+                    placeholder={t.phonePh}
+                    value={phoneDigits}
+                    onChange={handlePhoneDigitsChange}
+                    className="w-full px-3 py-2.5 bg-transparent text-zinc-900 dark:text-zinc-100 text-sm outline-none font-mono"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Nama Bisnis & Masalah */}
+            <div>
+              <label className={labelClass}>1. Nama Bisnis / Proyek *</label>
+              <input
+                type="text"
+                required
+                value={formData.namaBisnis}
+                onChange={(e) => setFormData(prev => ({ ...prev, namaBisnis: e.target.value }))}
+                className={inputClass}
+              />
+            </div>
+
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Nama Proyek / Bisnis</label>
-                <input
-                  type="text"
-                  value={formData.namaBisnis}
-                  onChange={(e) => setFormData(prev => ({ ...prev, namaBisnis: e.target.value }))}
+                <label className={labelClass}>2. Masalah Utama yang Dihadapi</label>
+                <textarea
+                  rows={3}
+                  value={formData.masalahUtama}
+                  onChange={(e) => setFormData(prev => ({ ...prev, masalahUtama: e.target.value }))}
                   className={inputClass}
                 />
               </div>
               <div>
-                <label className={labelClass}>Tujuan Utama (KPIs)</label>
-                <input
-                  type="text"
+                <label className={labelClass}>3. Tujuan Utama / KPI Sukses</label>
+                <textarea
+                  rows={3}
                   value={formData.tujuanUtama}
                   onChange={(e) => setFormData(prev => ({ ...prev, tujuanUtama: e.target.value }))}
                   className={inputClass}
@@ -1299,28 +2215,29 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </div>
             </div>
 
-            <div>
-              <label className={labelClass}>Masalah Utama yang Ingin Diselesaikan</label>
-              <textarea
-                rows={3}
-                value={formData.masalahUtama}
-                onChange={(e) => setFormData(prev => ({ ...prev, masalahUtama: e.target.value }))}
-                className={inputClass}
-              />
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>4. Target Audiens</label>
+                <textarea
+                  rows={2}
+                  value={formData.targetAudiens}
+                  onChange={(e) => setFormData(prev => ({ ...prev, targetAudiens: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>5. Aktor Sistem (Role & Akses RBAC)</label>
+                <textarea
+                  rows={2}
+                  value={formData.aktorSistem}
+                  onChange={(e) => setFormData(prev => ({ ...prev, aktorSistem: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
             </div>
 
             <div>
-              <label className={labelClass}>Aktor Sistem (RBAC)</label>
-              <textarea
-                rows={3}
-                value={formData.aktorSistem}
-                onChange={(e) => setFormData(prev => ({ ...prev, aktorSistem: e.target.value }))}
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label className={labelClass}>Fitur Wajib MVP (Fase 1)</label>
+              <label className={labelClass}>6. Fitur Wajib (Fase 1 - MVP)</label>
               <textarea
                 rows={4}
                 value={formData.fiturWajib}
@@ -1330,7 +2247,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             <div>
-              <label className={labelClass}>Fitur Tambahan (Fase 2 - Roadmap)</label>
+              <label className={labelClass}>7. Fitur Tambahan (Fase 2 - Roadmap)</label>
               <textarea
                 rows={3}
                 value={formData.fiturTambahan}
@@ -1340,7 +2257,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             <div>
-              <label className={labelClass}>Alur Kerja Utama (User Flow)</label>
+              <label className={labelClass}>8. Alur Kerja Utama (Workflow)</label>
               <textarea
                 rows={3}
                 value={formData.alurKerja}
@@ -1351,16 +2268,46 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Estimasi Durasi (Hari Kerja)</label>
+                <label className={labelClass}>9. Integrasi Pihak Ketiga</label>
                 <input
-                  type="number"
+                  type="text"
+                  value={formData.kebutuhanIntegrasi}
+                  onChange={(e) => setFormData(prev => ({ ...prev, kebutuhanIntegrasi: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>10. Referensi Desain / UI</label>
+                <input
+                  type="text"
+                  value={formData.referensiDesain}
+                  onChange={(e) => setFormData(prev => ({ ...prev, referensiDesain: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div>
+                <label className={labelClass}>11. Durasi Target (Hari Kerja)</label>
+                <input
+                  type="text"
                   value={formData.durasiHari}
                   onChange={(e) => setFormData(prev => ({ ...prev, durasiHari: e.target.value }))}
                   className={inputClass}
                 />
               </div>
               <div>
-                <label className={labelClass}>Kisaran Alokasi Budget</label>
+                <label className={labelClass}>12. Skala Pengguna</label>
+                <input
+                  type="text"
+                  value={formData.skalaPengguna}
+                  onChange={(e) => setFormData(prev => ({ ...prev, skalaPengguna: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>13. Kisaran Budget</label>
                 <input
                   type="text"
                   value={formData.kisaranBudget}
@@ -1371,9 +2318,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             <div>
-              <label className={labelClass}>Batasan Negatif (Out of Scope)</label>
+              <label className={labelClass}>14. Batasan Negatif (Out of Scope)</label>
               <textarea
-                rows={3}
+                rows={2}
                 value={formData.outOfScope}
                 onChange={(e) => setFormData(prev => ({ ...prev, outOfScope: e.target.value }))}
                 className={inputClass}
@@ -1385,9 +2332,20 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               disabled={isSubmitting}
               className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-wider py-4 px-6 rounded-none text-center flex items-center justify-center gap-2 transition disabled:opacity-50 text-sm font-mono"
             >
-              <Lock className="w-4 h-4" />
-              <span>{t.lockBtn}</span>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{t.lockingBtn}</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  <span>{t.lockBtn}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
+
           </form>
         </section>
       )}

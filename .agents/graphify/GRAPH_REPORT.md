@@ -120,6 +120,8 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/api/cv-pro/outreach/generate`: Job application letter generator (Thank You, Follow-up, Cold Pitch) (POST).
 - `/api/cv-pro/upload-cv`: Microsoft MarkItDown multi-format CV scanner & parser (POST).
 - `/blueprint`: Halaman public kuesioner Project OS (`BlueprintController::create`).
+- `/api/blueprint/analyze-idea`: Endpoint POST sintesis ide awal & ekstraksi MarkItDown (`BlueprintController::analyzeIdea`).
+- `/api/blueprint/supplement-idea`: Endpoint POST asisten AI proaktif untuk membedah dan menempatkan ide tambahan klien (`BlueprintController::supplementIdea`).
 - `/blueprint/{slug}`: Halaman preview dokumen PRD, ERD, dan Tech Stack (`BlueprintController::show`).
 - `/blueprint/{slug}/raw-md`: Endpoint raw Markdown PRD Ultimate untuk 1-click clipboard prompt AI Code Agent (`BlueprintController::rawMd`).
 - `/blueprint/{slug}/download/md`: Endpoint unduh dokumen spesifikasi PRD Ultimate format Markdown (`BlueprintController::downloadMd`).

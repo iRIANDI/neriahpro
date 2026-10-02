@@ -204,6 +204,9 @@ class BlueprintDiscoveryService
                 'files_processed' => count($fileSummaries),
                 'file_details' => $fileSummaries,
                 'has_documents' => !empty($fileSummaries),
+                'converted_markdown' => $docsMarkdown,
+                'combined_markdown_corpus' => $corpus,
+                'raw_idea_text' => $rawText,
                 'created_at' => now()->toIso8601String(),
             ]
         ];

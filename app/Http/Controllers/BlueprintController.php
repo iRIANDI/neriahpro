@@ -84,6 +84,7 @@ class BlueprintController extends Controller
                     : 'Ide proyek berhasil dianalisis via MarkItDown & AI Engine.',
                 'draft_id' => $draftId,
                 'redirect_url' => route('blueprint.create', ['draft_id' => $draftId]),
+                'converted_markdown' => $synthesized['_meta']['converted_markdown'] ?? '',
                 'data' => $synthesized
             ]);
         } catch (\InvalidArgumentException $e) {
@@ -104,7 +105,7 @@ class BlueprintController extends Controller
      */
     public function show(string $slug): View
     {
-        $globalSettings = CmsGlobalSetting::all()->keyBy('key');
+        $globalSettings = CmsGlobalSetting::getAllCached();
         $isBlueprintEnabled = (bool) ($globalSettings['feature_enable_vision_blueprint']->value ?? true);
 
         if (! $isBlueprintEnabled && ! auth()->user()?->isSuperAdmin()) {

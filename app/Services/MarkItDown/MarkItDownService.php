@@ -44,6 +44,8 @@ class MarkItDownService
         // 2. High-fidelity Pure Native PHP MarkItDown Pipeline
         $markdown = match ($extension) {
             'docx' => $this->convertDocxToMarkdown($filePath),
+            'xlsx' => $this->convertXlsxToMarkdown($filePath),
+            'pptx' => $this->convertPptxToMarkdown($filePath),
             'pdf' => $this->convertPdfToMarkdown($filePath),
             'png', 'jpg', 'jpeg', 'webp', 'bmp' => $this->convertImageScanToMarkdown($filePath, $options),
             'csv', 'tsv' => $this->convertCsvToMarkdown($filePath),
@@ -132,6 +134,130 @@ class MarkItDownService
         }
 
         return implode("\n\n", array_filter($markdownLines));
+    }
+
+    /**
+     * Convert XLSX to Markdown Table
+     */
+    protected function convertXlsxToMarkdown(string $filePath): string
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($filePath) !== true) {
+            return "# Error\nUnable to read XLSX archive.";
+        }
+
+        // 1. Read shared strings if present
+        $sharedStrings = [];
+        $sharedXml = $zip->getFromName('xl/sharedStrings.xml');
+        if ($sharedXml) {
+            $sDom = new \DOMDocument();
+            libxml_use_internal_errors(true);
+            $sDom->loadXML($sharedXml, LIBXML_NOENT | LIBXML_NOERROR | LIBXML_NOWARNING);
+            libxml_clear_errors();
+            $tNodes = $sDom->getElementsByTagName('t');
+            foreach ($tNodes as $t) {
+                $sharedStrings[] = trim($t->nodeValue);
+            }
+        }
+
+        // 2. Read first sheet
+        $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
+        $zip->close();
+
+        if (!$sheetXml) {
+            return "";
+        }
+
+        $dom = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadXML($sheetXml, LIBXML_NOENT | LIBXML_NOERROR | LIBXML_NOWARNING);
+        libxml_clear_errors();
+
+        $rows = $dom->getElementsByTagName('row');
+        $matrix = [];
+        $maxCols = 0;
+
+        foreach ($rows as $rowNode) {
+            $rowCells = [];
+            $cNodes = $rowNode->getElementsByTagName('c');
+            foreach ($cNodes as $c) {
+                $tAttr = $c->getAttribute('t');
+                $vNode = $c->getElementsByTagName('v')->item(0);
+                $val = $vNode ? trim($vNode->nodeValue) : '';
+
+                if ($tAttr === 's' && isset($sharedStrings[(int) $val])) {
+                    $val = $sharedStrings[(int) $val];
+                }
+                $rowCells[] = str_replace(["\n", "\r", "|"], [' ', ' ', '/'], $val);
+            }
+            if (!empty($rowCells)) {
+                $matrix[] = $rowCells;
+                $maxCols = max($maxCols, count($rowCells));
+            }
+        }
+
+        if (empty($matrix)) {
+            return "";
+        }
+
+        // Format into GFM Markdown table
+        $md = [];
+        $header = array_shift($matrix);
+        while (count($header) < $maxCols) {
+            $header[] = '';
+        }
+
+        $md[] = '| ' . implode(' | ', $header) . ' |';
+        $md[] = '| ' . implode(' | ', array_fill(0, $maxCols, '---')) . ' |';
+
+        foreach ($matrix as $row) {
+            while (count($row) < $maxCols) {
+                $row[] = '';
+            }
+            $md[] = '| ' . implode(' | ', $row) . ' |';
+        }
+
+        return "### [Spreadsheet Data]\n\n" . implode("\n", $md);
+    }
+
+    /**
+     * Convert PPTX slides to Markdown sections
+     */
+    protected function convertPptxToMarkdown(string $filePath): string
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($filePath) !== true) {
+            return "# Error\nUnable to read PPTX archive.";
+        }
+
+        $slides = [];
+        for ($i = 1; $i <= 50; $i++) {
+            $slideXml = $zip->getFromName("ppt/slides/slide{$i}.xml");
+            if (!$slideXml) {
+                break;
+            }
+
+            $dom = new \DOMDocument();
+            libxml_use_internal_errors(true);
+            $dom->loadXML($slideXml, LIBXML_NOENT | LIBXML_NOERROR | LIBXML_NOWARNING);
+            libxml_clear_errors();
+
+            $tNodes = $dom->getElementsByTagName('t');
+            $slideText = [];
+            foreach ($tNodes as $t) {
+                $trimmed = trim($t->nodeValue);
+                if ($trimmed !== '') {
+                    $slideText[] = $trimmed;
+                }
+            }
+
+            if (!empty($slideText)) {
+                $slides[] = "### Slide {$i}\n- " . implode("\n- ", $slideText);
+            }
+        }
+        $zip->close();
+
+        return implode("\n\n", $slides);
     }
 
     protected function parseDocxParagraph(\DOMNode $pNode, \DOMXPath $xpath): ?string

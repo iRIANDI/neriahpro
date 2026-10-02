@@ -65,7 +65,19 @@
     <!-- Midtrans Snap JS (In-Page Popup Modal) -->
     <script src="{{ config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/snap.js') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
     <script>
-        window.payBlueprintSnap = async function(tier, onStart, onFinish) {
+        window.payBlueprintSnap = async function(tier, agreeSignOff, onStart, onFinish) {
+            if (!agreeSignOff) {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'warning',
+                        title: 'PERSETUJUAN KONTRAK & SCOPE',
+                        message: 'Silakan centang persetujuan syarat spesifikasi scope dokumen sebelum melanjutkan pembayaran.',
+                        duration: 4000
+                    });
+                }
+                if (onFinish) onFinish();
+                return;
+            }
             if (onStart) onStart();
             try {
                 const res = await fetch('{{ route('blueprint.snap-token', $blueprint->slug) }}', {
@@ -75,7 +87,7 @@
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ tier: tier })
+                    body: JSON.stringify({ tier: tier, agree_sign_off: agreeSignOff })
                 });
                 const data = await res.json();
                 if (!data.success || !data.token) {
@@ -149,6 +161,61 @@
                 if (onFinish) onFinish();
             }
         };
+
+        window.validateBlueprintVoucher = async function(slug, code, onStart, onFinish) {
+            if (onStart) onStart();
+            try {
+                const res = await fetch('/blueprint/' + encodeURIComponent(slug) + '/voucher/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ code: code })
+                });
+                const data = await res.json();
+                if (!data.valid) {
+                    throw new Error(data.message || 'Kode voucher tidak valid.');
+                }
+                return data;
+            } finally {
+                if (onFinish) onFinish();
+            }
+        };
+
+        window.claimBlueprintVoucher = async function(slug, code, agreeSignOff, onStart, onFinish) {
+            if (!agreeSignOff) {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'warning',
+                        title: 'PERSETUJUAN KONTRAK & SCOPE',
+                        message: 'Silakan centang persetujuan syarat spesifikasi scope dokumen sebelum mengklaim voucher.'
+                    });
+                }
+                return null;
+            }
+            if (onStart) onStart();
+            try {
+                const res = await fetch('/blueprint/' + encodeURIComponent(slug) + '/voucher/claim', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ code: code, agree_sign_off: agreeSignOff })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    throw new Error(data.message || 'Gagal mengklaim voucher.');
+                }
+                return data;
+            } finally {
+                if (onFinish) onFinish();
+            }
+        };
+
         // Initialize Mermaid with startOnLoad: false to prevent 0-width rendering in hidden tabs
         if (window.mermaid) {
             try {
@@ -309,6 +376,52 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     selectedPromptSprint: 'all',
     generateAgentPrompt(agent, sprint) {
         return window.getBlueprintAgentPrompt ? window.getBlueprintAgentPrompt(agent, sprint) : '';
+    },
+    agreeSignOff: false,
+    voucherCode: '',
+    appliedVoucher: null,
+    isValidatingVoucher: false,
+    isClaimingVoucher: false,
+    async applyVoucher() {
+        const c = this.voucherCode.trim().toUpperCase();
+        if (!c) {
+            if (window.showToast) {
+                window.showToast({ type: 'warning', title: 'KODE VOUCHER', message: 'Silakan masukkan kode voucher terlebih dahulu.' });
+            }
+            return;
+        }
+        try {
+            const v = await window.validateBlueprintVoucher('{{ $blueprint->slug }}', c, () => { this.isValidatingVoucher = true; }, () => { this.isValidatingVoucher = false; });
+            this.appliedVoucher = v;
+            if (window.showToast) {
+                window.showToast({ type: 'success', title: 'VOUCHER VALID', message: v.message || 'Potongan voucher berhasil diaplikasikan!' });
+            }
+        } catch(err) {
+            this.appliedVoucher = null;
+            if (window.showToast) {
+                window.showToast({ type: 'error', title: 'VOUCHER TIDAK VALID', message: err.message || 'Kode voucher tidak valid.' });
+            }
+        }
+    },
+    resetVoucher() {
+        this.appliedVoucher = null;
+        this.voucherCode = '';
+    },
+    async submitClaimVoucher() {
+        if (!this.appliedVoucher || !this.voucherCode.trim()) return;
+        try {
+            const res = await window.claimBlueprintVoucher('{{ $blueprint->slug }}', this.voucherCode.trim().toUpperCase(), this.agreeSignOff, () => { this.isClaimingVoucher = true; }, () => { this.isClaimingVoucher = false; });
+            if (res && res.success) {
+                if (window.showToast) {
+                    window.showToast({ type: 'success', title: 'PELAYANAN GRATIS AKTIF', message: res.message, duration: 4000 });
+                }
+                setTimeout(() => { window.location.reload(); }, 1800);
+            }
+        } catch(err) {
+            if (window.showToast) {
+                window.showToast({ type: 'error', title: 'KLAIM GAGAL', message: err.message || 'Gagal memproses klaim voucher.' });
+            }
+        }
     }
 }" 
 x-init="
@@ -2991,30 +3104,130 @@ x-init="
 
             <!-- SECTION 10: SCOPE FREEZE, DIGITAL CONTRACT & DP MIDTRANS (CRUCIAL) -->
             <section class="bg-zinc-900 text-white border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none no-print">
+                <!-- Staging Sandbox Environment Banner (If Provisioned) -->
+                @if($blueprint->staging_url)
+                    <div class="mb-6 p-4 sm:p-5 bg-gradient-to-r from-emerald-950/80 via-zinc-950 to-zinc-950 border border-emerald-500 text-zinc-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-none bg-emerald-400 animate-pulse"></span>
+                                    <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400">
+                                        <span x-show="locale === 'en'">ACTIVE STAGING DEMO SANDBOX PROVISIONED</span>
+                                        <span x-show="locale !== 'en'">LINGKUNGAN DEMO STAGING TELAH DIAKTIFKAN</span>
+                                    </span>
+                                    @if($blueprint->is_free_grant)
+                                        <span class="px-2 py-0.5 bg-emerald-500 text-black text-[10px] font-mono font-black uppercase">
+                                            PELAYANAN GRATIS (RP 0)
+                                        </span>
+                                    @endif
+                                </div>
+                                <h4 class="text-lg font-black tracking-tight text-white font-mono">
+                                    <a href="{{ $blueprint->staging_url }}" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 underline decoration-emerald-500/50 underline-offset-4 flex items-center gap-1.5 break-all">
+                                        <span>{{ $blueprint->staging_url }}</span>
+                                        <svg class="w-4 h-4 flex-shrink-0 text-emerald-400 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    </a>
+                                </h4>
+                                <p class="text-xs text-zinc-400 font-sans">
+                                    <span x-show="locale === 'en'">Isolated deployment container ready. Sprint milestones and live feature testing can be tracked directly here.</span>
+                                    <span x-show="locale !== 'en'">Sandbox deployment terisolasi telah dialokasikan khusus. Progres sprint dan demo berkala dapat dipantau langsung di link ini.</span>
+                                </p>
+                            </div>
+                            <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 flex-shrink-0 font-mono">
+                                <a 
+                                    href="{{ $blueprint->staging_url }}" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase px-4 py-2.5 transition flex items-center gap-2 rounded-none"
+                                >
+                                    <span x-show="locale === 'en'">Open Demo &rarr;</span>
+                                    <span x-show="locale !== 'en'">Buka Staging &rarr;</span>
+                                </a>
+                                @if($blueprint->staging_provisioned_at)
+                                    <span class="text-[10px] text-zinc-500">
+                                        Aktif: {{ $blueprint->staging_provisioned_at->format('d M Y H:i') }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6 mb-6">
                     <div>
                         <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-widest bg-emerald-500 text-black inline-block mb-2 rounded-none">
-                            LEGAL & PAYMENT PROTOCOL
+                            LEGAL &amp; PAYMENT PROTOCOL
                         </span>
                         <h3 class="text-xl sm:text-2xl font-black uppercase tracking-tight flex items-center gap-2">
                             <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs inline-flex items-center justify-center rounded-none">10</span>
-                            <span>Kunci Scope Proyek & Pembayaran DP</span>
+                            <span x-show="locale === 'en'">Scope Lock, Digital Sign-Off &amp; Escrow</span>
+                            <span x-show="locale !== 'en'">Kunci Scope Proyek, Persetujuan Digital &amp; DP</span>
                         </h3>
                         <p class="text-zinc-400 text-xs mt-1 font-sans">
-                            Pengerjaan proyek resmi dimulai setelah penandatanganan kontrak digital dan konfirmasi DP via Midtrans Escrow.
+                            <span x-show="locale === 'en'">Project officially kicks off upon digital contract sign-off, cryptographic hash lock, and DP confirmation or free voucher grant.</span>
+                            <span x-show="locale !== 'en'">Pengerjaan proyek resmi dimulai setelah penandatanganan digital, penguncian hash SHA-256, dan konfirmasi DP via Midtrans atau voucher pelayanan.</span>
                         </p>
                     </div>
                     <div class="text-left sm:text-right font-mono">
                         <span class="text-zinc-400 text-xs block">TERMIN TERPILIH: <span class="text-white font-bold" x-text="tierAmounts[selectedTier].name"></span></span>
-                        <span class="text-xl font-black text-emerald-400" x-text="'DP (50%): Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
-                        <span class="text-[10px] text-zinc-400 block" x-text="'Total Kontrak: Rp ' + tierAmounts[selectedTier].contract.toLocaleString('id-ID')"></span>
+                        @if($blueprint->is_free_grant)
+                            <span class="text-xl font-black text-emerald-400">RP 0 (PELAYANAN KASIH)</span>
+                            <span class="text-[10px] text-zinc-400 block">VOUCHER: {{ $blueprint->voucher_code }}</span>
+                        @else
+                            <span class="text-xl font-black text-emerald-400" x-text="'DP (50%): Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
+                            <span class="text-[10px] text-zinc-400 block" x-text="'Total Kontrak: Rp ' + tierAmounts[selectedTier].contract.toLocaleString('id-ID')"></span>
+                        @endif
                     </div>
                 </div>
 
-                <!-- Scope Lock Policy Notice -->
-                <div class="p-4 bg-zinc-950 border border-zinc-800 text-zinc-400 text-xs font-mono leading-relaxed mb-6">
-                    <strong class="text-amber-400 block mb-1 uppercase font-bold">&bull; Batasan Ruang Lingkup & Ketentuan Tambah Fitur (Change Request)</strong>
-                    Seluruh fitur yang tertera di atas terkunci secara hukum dalam Kontrak Induk. Apabila di kemudian hari Klien menghendaki penambahan fitur baru di luar spesifikasi ini, penambahan tersebut akan diakomodasikan melalui <strong>Change Request (CR) / Addendum</strong> terpisah dengan perhitungan biaya dan tambahan hari kerja tersendiri tanpa mengganggu jadwal kontrak utama.
+                <!-- Digital Sign-Off Cryptographic Audit Trail Seal -->
+                <div class="p-4 bg-zinc-950 border border-zinc-800 text-xs font-mono mb-6 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/80 pb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <span class="font-bold text-white uppercase tracking-wider text-[11px]">
+                                SHA-256 SPECIFICATION INTEGRITY SEAL
+                            </span>
+                            @if($blueprint->signed_agreement)
+                                <span class="px-2 py-0.2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold">
+                                    SIGNED &amp; LOCKED
+                                </span>
+                            @else
+                                <span class="px-2 py-0.2 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
+                                    READY FOR SIGN-OFF
+                                </span>
+                            @endif
+                        </div>
+                        <div class="text-[10px] text-zinc-400">
+                            SINGLE SOURCE OF TRUTH (ANTI-DISPUTE)
+                        </div>
+                    </div>
+
+                    <div class="bg-zinc-900/90 p-3 border border-zinc-800 text-[11px] leading-relaxed">
+                        <div class="flex items-center justify-between text-zinc-400 mb-1">
+                            <span class="text-zinc-500 uppercase">Cryptographic Document Checksum (SHA-256):</span>
+                            <button 
+                                type="button" 
+                                @click="navigator.clipboard.writeText('{{ $blueprint->document_sha256 ?: $blueprint->calculatePrdHash() }}'); if(window.showToast) window.showToast({ type: 'success', title: 'SHA-256 DISALIN', message: 'Cryptographic hash berhasil disalin ke clipboard.' })"
+                                class="text-emerald-400 hover:text-emerald-300 text-[10px] font-bold uppercase underline"
+                            >
+                                Salin Hash
+                            </button>
+                        </div>
+                        <code class="text-emerald-400 break-all select-all font-mono text-[11px] block">
+                            {{ $blueprint->document_sha256 ?: $blueprint->calculatePrdHash() }}
+                        </code>
+                        @if($blueprint->signed_agreement && $blueprint->signed_at)
+                            <div class="mt-2 pt-2 border-t border-zinc-800/80 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-zinc-400">
+                                <span>Penandatangan: <strong class="text-zinc-200">{{ $blueprint->client_name ?: $blueprint->nama_bisnis }}</strong></span>
+                                <span>Waktu: <strong class="text-zinc-200">{{ $blueprint->signed_at->format('d M Y H:i:s T') }}</strong></span>
+                                <span>IP Audit: <strong class="text-zinc-200">{{ $blueprint->signer_ip ?: 'Recorded' }}</strong></span>
+                            </div>
+                        @endif
+                    </div>
+
+                    <p class="text-zinc-400 text-xs font-sans leading-relaxed">
+                        Seluruh fitur dan arsitektur dalam PRD ini terikat secara kriptografis. Setiap perubahan di kemudian hari wajib melalui kesepakatan Change Request (CR) / Addendum tanpa mengubah basis dokumen utama.
+                    </p>
                 </div>
 
                 <!-- Action Buttons: Sign Contract & Pay DP -->
@@ -3026,7 +3239,7 @@ x-init="
                             type="submit"
                             class="w-full h-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none transition flex items-center justify-center gap-2"
                         >
-                            <span>Tanda Tangani Kontrak & Kunci Scope</span>
+                            <span>Tanda Tangani Kontrak &amp; Kunci Scope</span>
                             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </button>
                     </form>
@@ -3036,7 +3249,7 @@ x-init="
                         @click="paymentModalOpen = true"
                         class="w-full h-full bg-zinc-800 hover:bg-zinc-700 text-white font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2"
                     >
-                        <span>Instruksi Bayar DP (Midtrans)</span>
+                        <span>Bayar DP / Klaim Voucher</span>
                         <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     </button>
 
@@ -3057,7 +3270,7 @@ x-init="
         </main>
     @endif
 
-    <!-- Interactive Midtrans Escrow Payment Modal -->
+    <!-- Interactive Midtrans Escrow & Voucher Payment Modal -->
     <div 
         x-show="paymentModalOpen" 
         x-cloak 
@@ -3065,7 +3278,7 @@ x-init="
         @keydown.escape.window="paymentModalOpen = false"
     >
         <div 
-            class="bg-white dark:bg-zinc-900 border-2 border-emerald-500 max-w-lg w-full p-6 shadow-2xl relative"
+            class="bg-white dark:bg-zinc-900 border-2 border-emerald-500 max-w-lg w-full p-6 shadow-2xl relative rounded-none"
             @click.outside="paymentModalOpen = false"
         >
             <!-- Close Button -->
@@ -3078,11 +3291,11 @@ x-init="
 
             <!-- Modal Header -->
             <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-4">
-                <span class="px-2 py-0.5 bg-emerald-500 text-black text-[10px] font-bold uppercase tracking-wider">
-                    MIDTRANS SECURE ESCROW PAYMENT
+                <span class="px-2 py-0.5 bg-emerald-500 text-black text-[10px] font-bold uppercase tracking-wider rounded-none">
+                    MIDTRANS SECURE ESCROW &amp; VOUCHER PORTAL
                 </span>
                 <h3 class="text-xl font-black uppercase text-zinc-900 dark:text-zinc-100 mt-2">
-                    Instruksi Pembayaran DP (50%)
+                    Instruksi Pembayaran DP &amp; Klaim
                 </h3>
                 <p class="text-zinc-500 dark:text-zinc-400 text-xs mt-1 font-sans">
                     Proyek: <strong>{{ $blueprint->nama_bisnis ?: $blueprint->client_name }}</strong>
@@ -3090,7 +3303,7 @@ x-init="
             </div>
 
             <!-- Invoice Summary Card -->
-            <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 mb-4 space-y-2">
+            <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 mb-4 space-y-2 rounded-none">
                 <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
                     <span>Opsi Velocity Terpilih</span>
                     <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="tierAmounts[selectedTier].name"></span>
@@ -3103,46 +3316,147 @@ x-init="
                     <span>Termin DP (Uang Muka)</span>
                     <span class="font-bold text-emerald-600 dark:text-emerald-400">50% di Muka</span>
                 </div>
+
+                <!-- Voucher Status Row (If Applied) -->
+                <template x-if="appliedVoucher">
+                    <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold border-t border-dashed border-zinc-200 dark:border-zinc-800 pt-2">
+                        <span x-text="'Potongan Voucher (' + appliedVoucher.code + ')'"></span>
+                        <span x-text="appliedVoucher.is_free_bypass ? '-100% (FREE BYPASS)' : '-' + appliedVoucher.discount_value + '%'"></span>
+                    </div>
+                </template>
+
                 <div class="border-t border-zinc-200 dark:border-zinc-800 pt-2 flex justify-between items-baseline">
                     <span class="font-bold uppercase text-zinc-900 dark:text-zinc-100">Total Tagihan DP</span>
-                    <span class="text-lg font-black text-emerald-600 dark:text-emerald-400" x-text="'Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
+                    <template x-if="appliedVoucher && appliedVoucher.is_free_bypass">
+                        <span class="text-lg font-black text-emerald-500">RP 0 (GRATIS)</span>
+                    </template>
+                    <template x-if="!appliedVoucher || !appliedVoucher.is_free_bypass">
+                        <span class="text-lg font-black text-emerald-600 dark:text-emerald-400" x-text="'Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
+                    </template>
                 </div>
-                <div class="text-[10px] text-zinc-400 pt-1">
-                    ORDER ID: NPRO-DP-{{ strtoupper(substr($blueprint->id, 0, 8)) }}
+                <div class="text-[10px] text-zinc-400 pt-1 flex justify-between">
+                    <span>ORDER ID: NPRO-DP-{{ strtoupper(substr($blueprint->id, 0, 8)) }}</span>
+                    <span>SPEC ID: {{ strtoupper(substr($blueprint->id, 0, 8)) }}</span>
                 </div>
             </div>
 
-            <!-- Payment Methods Info -->
-            <div class="space-y-2 mb-6">
+            <!-- Voucher Promo / Pelayanan Input Block -->
+            <div class="border border-dashed border-zinc-300 dark:border-zinc-700 p-3 mb-4 bg-zinc-50 dark:bg-zinc-950/60 rounded-none">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-bold text-[11px] uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                        <span>Punya Kode Promo / Voucher Pelayanan?</span>
+                    </span>
+                    <span x-show="appliedVoucher" class="text-[10px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40 rounded-none">
+                        VOUCHER AKTIF
+                    </span>
+                </div>
+                <div class="flex gap-2">
+                    <input 
+                        type="text" 
+                        x-model="voucherCode" 
+                        :disabled="appliedVoucher !== null || isValidatingVoucher"
+                        @keydown.enter.prevent="applyVoucher()"
+                        placeholder="Contoh: PELAYANAN-KASIH"
+                        class="flex-1 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2.5 py-2 text-xs font-mono uppercase focus:outline-none focus:border-emerald-500 rounded-none"
+                    />
+                    <button 
+                        type="button" 
+                        x-show="!appliedVoucher"
+                        @click="applyVoucher()"
+                        :disabled="isValidatingVoucher || !voucherCode.trim()"
+                        class="bg-zinc-800 hover:bg-zinc-700 text-white font-mono font-bold text-xs uppercase px-3 py-2 disabled:opacity-50 transition border border-zinc-600 rounded-none"
+                    >
+                        <span x-show="!isValidatingVoucher">Terapkan</span>
+                        <span x-show="isValidatingVoucher">Cek...</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        x-show="appliedVoucher" 
+                        @click="resetVoucher()"
+                        class="bg-rose-900/40 hover:bg-rose-800/60 text-rose-300 font-mono font-bold text-xs uppercase px-2.5 py-2 border border-rose-700/50 rounded-none"
+                    >
+                        Batal
+                    </button>
+                </div>
+                <template x-if="appliedVoucher">
+                    <div class="mt-2.5 p-2 bg-emerald-950/60 border border-emerald-600/60 text-emerald-300 text-[11px] font-mono leading-relaxed rounded-none">
+                        <div class="font-bold flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span x-text="appliedVoucher.code + ' BERHASIL DIGUNAKAN'"></span>
+                        </div>
+                        <div class="text-[10px] text-emerald-400 mt-0.5" x-text="appliedVoucher.description"></div>
+                        <div x-show="appliedVoucher.is_free_bypass" class="mt-1 font-bold text-emerald-200">
+                            &bull; Subsidi Pelayanan: Tagihan Menjadi Rp 0 &amp; Auto-Provision Staging Sandbox.
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Mandatory Legal Sign-Off Checkbox -->
+            <label class="flex items-start gap-2.5 p-3 bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 cursor-pointer mb-4 select-none rounded-none">
+                <input 
+                    type="checkbox" 
+                    x-model="agreeSignOff" 
+                    class="mt-0.5 rounded-none border-zinc-400 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span class="text-[11px] leading-snug text-zinc-700 dark:text-zinc-300 font-sans">
+                    <strong class="font-mono text-emerald-600 dark:text-emerald-400 block uppercase font-bold text-[10px] mb-0.5">
+                        Persetujuan Syarat &amp; Ketentuan Scope (Digital Sign-Off Lock)
+                    </strong>
+                    Dengan membayar DP atau mengklaim voucher ini, saya menyetujui spesifikasi scope di dokumen 
+                    <span class="font-mono font-bold text-zinc-900 dark:text-zinc-100">{{ strtoupper(substr($blueprint->id, 0, 10)) }}</span> 
+                    sebagai acuan tunggal pengerjaan proyek (Scope Freeze). Saya memahami bahwa fitur di luar dokumen ini memerlukan Addendum tersendiri.
+                </span>
+            </label>
+
+            <!-- Payment Methods Info (Only show if not free bypass) -->
+            <div x-show="!appliedVoucher || !appliedVoucher.is_free_bypass" class="space-y-2 mb-4">
                 <div class="text-[11px] font-bold uppercase text-zinc-700 dark:text-zinc-300">
                     Kanal Pembayaran Otomatis:
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10px]">
-                    <div class="p-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 font-bold">QRIS (GoPay/OVO)</div>
-                    <div class="p-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 font-bold">BCA VA</div>
-                    <div class="p-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 font-bold">Mandiri Bill</div>
-                    <div class="p-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 font-bold">Kartu Kredit</div>
+                    <div class="p-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 font-bold rounded-none">QRIS (GoPay/OVO)</div>
+                    <div class="p-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 font-bold rounded-none">BCA VA</div>
+                    <div class="p-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 font-bold rounded-none">Mandiri Bill</div>
+                    <div class="p-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 font-bold rounded-none">Kartu Kredit</div>
                 </div>
             </div>
 
             <!-- Actions -->
             <div class="space-y-2">
-                <button 
-                    type="button" 
-                    @click="isPayingSnap = true; window.payBlueprintSnap(selectedTier, () => { isPayingSnap = true }, () => { isPayingSnap = false })"
-                    :disabled="isPayingSnap"
-                    class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider py-3.5 px-4 text-center block transition shadow-lg cursor-pointer disabled:opacity-50"
-                >
-                    <span x-show="!isPayingSnap">Bayar Sekarang via Midtrans Snap &rarr;</span>
-                    <span x-show="isPayingSnap" class="inline-block animate-pulse">Membuat Sesi Snap...</span>
-                </button>
+                <!-- Free Voucher Bypass Claim Button -->
+                <template x-if="appliedVoucher && appliedVoucher.is_free_bypass">
+                    <button 
+                        type="button" 
+                        @click="submitClaimVoucher()"
+                        :disabled="isClaimingVoucher || !agreeSignOff"
+                        class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider py-4 px-4 text-center block transition shadow-lg cursor-pointer disabled:opacity-50 rounded-none"
+                    >
+                        <span x-show="!isClaimingVoucher">KLAIM PELAYANAN GRATIS SEKARANG (Rp 0) &rarr;</span>
+                        <span x-show="isClaimingVoucher" class="inline-block animate-pulse">Mengaktifkan Sandbox &amp; Kontrak...</span>
+                    </button>
+                </template>
+
+                <!-- Standard Midtrans Snap Payment Button -->
+                <template x-if="!appliedVoucher || !appliedVoucher.is_free_bypass">
+                    <button 
+                        type="button" 
+                        @click="isPayingSnap = true; window.payBlueprintSnap(selectedTier, agreeSignOff, () => { isPayingSnap = true }, () => { isPayingSnap = false })"
+                        :disabled="isPayingSnap || !agreeSignOff"
+                        class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider py-3.5 px-4 text-center block transition shadow-lg cursor-pointer disabled:opacity-50 rounded-none"
+                    >
+                        <span x-show="!isPayingSnap">Bayar Sekarang via Midtrans Snap &rarr;</span>
+                        <span x-show="isPayingSnap" class="inline-block animate-pulse">Membuat Sesi Snap...</span>
+                    </button>
+                </template>
                 
                 <form method="POST" action="{{ route('cart.add', $blueprint->slug) }}" class="m-0">
                     @csrf
                     <input type="hidden" name="tier" :value="selectedTier">
                     <button 
                         type="submit" 
-                        class="w-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider py-2.5 px-4 text-center block transition border border-zinc-300 dark:border-zinc-700"
+                        class="w-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider py-2.5 px-4 text-center block transition border border-zinc-300 dark:border-zinc-700 rounded-none"
                     >
                         Simpan ke Cart Belanja
                     </button>

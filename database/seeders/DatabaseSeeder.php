@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             WorkflowEndToEndSeeder::class,
             CvProPlanSeeder::class,
             CvProDemoDataSeeder::class,
+            BlueprintVoucherSeeder::class,
         ]);
     }
 }

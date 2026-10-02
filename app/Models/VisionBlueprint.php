@@ -36,6 +36,15 @@ class VisionBlueprint extends Model
         'prd_content',
         'ip_address',
         'user_metadata',
+        'voucher_code',
+        'is_free_grant',
+        'signed_agreement',
+        'signer_ip',
+        'signer_user_agent',
+        'document_sha256',
+        'signed_at',
+        'staging_url',
+        'staging_provisioned_at',
     ];
 
     protected $casts = [
@@ -43,6 +52,10 @@ class VisionBlueprint extends Model
         'user_metadata' => 'array',
         'prd_content' => 'array',
         'is_published' => 'boolean',
+        'is_free_grant' => 'boolean',
+        'signed_agreement' => 'boolean',
+        'signed_at' => 'datetime',
+        'staging_provisioned_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -184,5 +197,56 @@ class VisionBlueprint extends Model
     public function getPublicUrlAttribute(): string
     {
         return url('/blueprint/' . $this->slug);
+    }
+
+    /**
+     * Compute SHA-256 cryptographic hash of the PRD specifications.
+     */
+    public function calculatePrdHash(): string
+    {
+        $payload = [
+            'id' => $this->id,
+            'slug' => $this->slug,
+            'client_name' => $this->client_name,
+            'nama_bisnis' => $this->nama_bisnis,
+            'prd_content' => $this->prd_content,
+        ];
+
+        return hash('sha256', json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * Record client digital sign-off and lock SHA-256 hash.
+     */
+    public function recordSignOff(string $ip, ?string $userAgent = null): void
+    {
+        $this->update([
+            'signed_agreement' => true,
+            'signer_ip' => $ip,
+            'signer_user_agent' => substr((string) $userAgent, 0, 500),
+            'document_sha256' => $this->calculatePrdHash(),
+            'signed_at' => now(),
+        ]);
+    }
+
+    /**
+     * Auto-provision staging sandbox subdomain.
+     */
+    public function provisionStagingUrl(): string
+    {
+        if (!empty($this->staging_url)) {
+            return $this->staging_url;
+        }
+
+        $cleanSlug = Str::slug($this->nama_bisnis ?: $this->client_name ?: 'proyek');
+        $stagingDomain = config('app.staging_domain', 'staging.neriahpro.com');
+        $url = "https://{$cleanSlug}.{$stagingDomain}";
+
+        $this->update([
+            'staging_url' => $url,
+            'staging_provisioned_at' => now(),
+        ]);
+
+        return $url;
     }
 }

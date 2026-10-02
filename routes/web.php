@@ -28,9 +28,14 @@ Route::get('/blueprint', [BlueprintController::class, 'create'])->name('blueprin
 Route::get('/blueprint/{slug}', [BlueprintController::class, 'show'])->name('blueprint.show');
 Route::post('/blueprint/{slug}/generate-contract', [BlueprintController::class, 'generateContract'])->name('blueprint.generate-contract');
 Route::post('/blueprint/{slug}/snap-token', [BlueprintController::class, 'getSnapToken'])->name('blueprint.snap-token');
+Route::post('/blueprint/{slug}/voucher/validate', [BlueprintController::class, 'validateVoucher'])->name('blueprint.voucher.validate');
+Route::post('/blueprint/{slug}/voucher/claim', [BlueprintController::class, 'claimVoucher'])->name('blueprint.voucher.claim');
 Route::get('/blueprint/{slug}/download/pdf', [BlueprintController::class, 'downloadPdf'])->name('blueprint.download-pdf');
 Route::get('/blueprint/{slug}/download/md', [BlueprintController::class, 'downloadMd'])->name('blueprint.download-md');
 Route::get('/blueprint/{slug}/raw-md', [BlueprintController::class, 'rawMd'])->name('blueprint.raw-md');
+
+// Payment Gateway Webhooks (Midtrans DLQ Handler)
+Route::post('/api/webhook/midtrans', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('webhook.midtrans');
 
 // Cart & Project Escrow Checkout Routes
 Route::get('/cart', [\App\Http\Controllers\CartController::class, 'index'])->name('cart.index');

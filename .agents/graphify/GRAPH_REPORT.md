@@ -45,7 +45,7 @@ graph TD
 
 ---
 
-## 2. Katalog Domain & Entity Model (17 Models)
+## 2. Katalog Domain & Entity Model (19 Models)
 
 Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter untuk menjamin skalabilitas enterprise dan integritas PostgreSQL:
 
@@ -59,7 +59,9 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 | `Resume` | [Resume.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Resume.php) | ULID | `HasUlids`, Multi-template ATS CV, Score audit, Experience/Edu JSON | `user` (belongsTo), `interviewSessions` (hasMany), `outreachLetters` (hasMany) |
 | `InterviewSession` | [InterviewSession.php](file:///c:/xampp/htdocs/neriahpro/app/Models/InterviewSession.php) | ULID | `HasUlids`, Mock interview Q&A, Voice audio transcription, STAR score evaluation | `resume` (belongsTo), `user` (belongsTo) |
 | `OutreachLetter` | [OutreachLetter.php](file:///c:/xampp/htdocs/neriahpro/app/Models/OutreachLetter.php) | ULID | `HasUlids`, Thank you / follow-up / cold pitch letter generator | `resume` (belongsTo), `user` (belongsTo) |
-| `VisionBlueprint` | [VisionBlueprint.php](file:///c:/xampp/htdocs/neriahpro/app/Models/VisionBlueprint.php) | ULID | `HasUlids`, Project OS discovery questionnaire, PRD synthesis, Contract converter | `documents` (morphMany), `domainHostingAssets` (hasMany) |
+| `VisionBlueprint` | [VisionBlueprint.php](file:///c:/xampp/htdocs/neriahpro/app/Models/VisionBlueprint.php) | ULID | `HasUlids`, Project OS discovery questionnaire, PRD synthesis, Contract converter, SHA-256 seal, Staging provisioning | `documents` (morphMany), `domainHostingAssets` (hasMany) |
+| `BlueprintVoucher` | [BlueprintVoucher.php](file:///c:/xampp/htdocs/neriahpro/app/Models/BlueprintVoucher.php) | ULID | `HasUlids`, Promo & free-bypass vouchers for Ministry/Charity (Rp 0), Usage quota, Expiration | - |
+| `PaymentWebhookLog` | [PaymentWebhookLog.php](file:///c:/xampp/htdocs/neriahpro/app/Models/PaymentWebhookLog.php) | ULID | `HasUlids`, Midtrans dead-letter queue (DLQ) & raw payload audit logging, Retry resilience | - |
 | `Document` | [Document.php](file:///c:/xampp/htdocs/neriahpro/app/Models/Document.php) | ULID | `HasUlids`, Scope Lock, Digital signature, SHA-256 hash, Midtrans DP 50% | `related` (morphTo) |
 | `DomainHostingAsset` | [DomainHostingAsset.php](file:///c:/xampp/htdocs/neriahpro/app/Models/DomainHostingAsset.php) | ULID | `HasUlids`, Domain & hosting subscription tracking, Expiration alerts, Quick renewal | `visionBlueprint` (belongsTo) |
 | `CmsPage` | [CmsPage.php](file:///c:/xampp/htdocs/neriahpro/app/Models/CmsPage.php) | ULID | `HasUlids`, Dynamic landing pages, Multilingual title/meta (`id`/`en`), React Islands, Cache forever | - |
@@ -75,7 +77,7 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 ---
 
-## 3. Katalog Filament v5 Resources (13 Resources)
+## 3. Katalog Filament v5 Resources (14 Resources)
 
 | Resource | Navigation Group | Fitur Utama | Schema / Tables |
 | :--- | :--- | :--- | :--- |
@@ -86,6 +88,7 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 | `InterviewSessionResource` | Career & CV Pro | Mock interview recordings, STAR analysis, Confidence score, Transcript audit | `InterviewSessionsTable`, Infolist |
 | `SecurityThreatResource` | System & Security | AI-Shield threat interception dashboard, RCE monitoring, IP quarantine & unblock | `SecurityThreatsTable`, Infolist, `SecurityThreatStatsWidget` |
 | `VisionBlueprintResource` | Project Management | Discovery questionnaire, Sintesis PRD, Publikasi URL publik, Ikat Kontrak Digital | `VisionBlueprintForm`, `VisionBlueprintsTable` |
+| `BlueprintVoucherResource` | Project Management | Voucher kode promo & pelayanan gratis bypass 100% (Rp 0), strict RBAC khusus Yoseph | `BlueprintVoucherForm`, `BlueprintVouchersTable` |
 | `DomainHostingAssetResource` | Project Management | Pencatatan domain/hosting, Expiration badge, Auto-renew, Widget analitik, Pengingat harian | `DomainHostingAssetForm`, `DomainHostingAssetsTable`, `DomainHostingStatsWidget` |
 | `DocumentResource` | Contracts & Legal | Digital contract viewer, Scope lock status, Midtrans order ID, Signature pad | `DocumentForm`, `DocumentsTable` |
 | `CmsPageResource` | Content Management | Builder React Islands (Hero, Grid, Onboarding, HTML), Copy settings, Multilingual KeyValue | Inline Schema & Table |

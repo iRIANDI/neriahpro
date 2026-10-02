@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\VisionBlueprint;
+use App\Models\BlueprintVoucher;
+use App\Models\Document;
 use App\Models\CmsGlobalSetting;
 use App\Services\MidtransSnapService;
 use App\Services\BlueprintDiscoveryService;
@@ -355,6 +357,11 @@ class BlueprintController extends Controller
             ], $snapResponse['status_code'] ?? 500);
         }
 
+        // Record digital sign-off and SHA-256 integrity hash if agreed
+        if ($request->boolean('agree_sign_off')) {
+            $blueprint->recordSignOff($request->ip(), $request->userAgent());
+        }
+
         return response()->json([
             'success' => true,
             'token' => $snapResponse['token'],
@@ -362,6 +369,118 @@ class BlueprintController extends Controller
             'order_id' => $orderId,
             'gross_amount' => $dpAmount,
             'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
+            'document_sha256' => $blueprint->document_sha256 ?: $blueprint->calculatePrdHash(),
+        ]);
+    }
+
+    /**
+     * Validate a promo voucher code for a blueprint proposal.
+     */
+    public function validateVoucher(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+
+        $code = strtoupper(trim((string) $request->input('code')));
+        if (empty($code)) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Silakan masukkan kode voucher.',
+            ], 422);
+        }
+
+        $voucher = BlueprintVoucher::where('code', $code)->first();
+
+        if (!$voucher || !$voucher->isValid()) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Kode voucher tidak valid, kuota telah habis, atau sudah kedaluwarsa.',
+            ], 422);
+        }
+
+        $isFreeBypass = $voucher->discount_type === 'free_bypass' 
+            || ($voucher->discount_type === 'percent' && (float) $voucher->discount_value >= 100);
+
+        return response()->json([
+            'valid' => true,
+            'code' => $voucher->code,
+            'discount_type' => $voucher->discount_type,
+            'discount_value' => (float) $voucher->discount_value,
+            'description' => $voucher->description,
+            'is_free_bypass' => $isFreeBypass,
+            'message' => 'Voucher valid! ' . ($voucher->description ?: 'Potongan biaya berhasil diterapkan.'),
+        ]);
+    }
+
+    /**
+     * Claim voucher to bypass payment (Rp 0 Free Grant) or apply grant.
+     */
+    public function claimVoucher(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+
+        $request->validate([
+            'code' => 'required|string|max:50',
+            'agree_sign_off' => 'required|accepted',
+        ], [
+            'agree_sign_off.accepted' => 'Anda harus menyetujui spesifikasi scope dan integritas dokumen PRD sebelum mengklaim voucher.',
+        ]);
+
+        $code = strtoupper(trim((string) $request->input('code')));
+        $voucher = BlueprintVoucher::where('code', $code)->first();
+
+        if (!$voucher || !$voucher->isValid()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode voucher tidak valid, kuota telah habis, atau sudah kedaluwarsa.',
+            ], 422);
+        }
+
+        // Increment voucher usage
+        $voucher->incrementUsage();
+
+        // Record digital sign-off and SHA-256 audit hash
+        $blueprint->recordSignOff($request->ip(), $request->userAgent());
+
+        // Provision staging demo sandbox URL
+        $stagingUrl = $blueprint->provisionStagingUrl();
+
+        // Update blueprint status to free grant
+        $blueprint->update([
+            'voucher_code' => $voucher->code,
+            'is_free_grant' => true,
+            'is_published' => true,
+            'project_status' => 'In Development (Free Grant)',
+        ]);
+
+        // Interconnect with Document/Contract if exists
+        $document = $blueprint->documents()->where('document_type', 'contract')->first();
+        if (!$document) {
+            $blueprint->convertToDigitalContract([
+                'contract_amount' => 0.00,
+                'dp_amount' => 0.00,
+                'status' => 'signed',
+                'signer_ip_address' => $request->ip(),
+                'signed_at' => now(),
+                'document_hash' => $blueprint->document_sha256,
+                'project_status' => 'In Development (Free Grant)',
+            ]);
+        } else {
+            $document->update([
+                'contract_amount' => 0.00,
+                'dp_amount' => 0.00,
+                'status' => 'signed',
+                'signer_ip_address' => $request->ip(),
+                'signed_at' => now(),
+                'document_hash' => $blueprint->document_sha256,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Voucher berhasil diklaim! Proyek telah dialokasikan dengan status Pelayanan Gratis (Rp 0). Lingkungan staging Anda telah siap.',
+            'staging_url' => $stagingUrl,
+            'document_sha256' => $blueprint->document_sha256,
+            'redirect_url' => route('blueprint.show', $blueprint->slug),
         ]);
     }
 

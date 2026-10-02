@@ -28,6 +28,11 @@ class AiThreatShield
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Exempt payment gateway and external webhooks from threat shielding
+        if ($request->is('api/webhook/*') || $request->is('webhook/*')) {
+            return $next($request);
+        }
+
         $ip = $request->ip();
 
         // 1. Check if IP is currently blocked due to previous exploit attempts

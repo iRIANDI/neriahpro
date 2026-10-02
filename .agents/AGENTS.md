@@ -77,7 +77,24 @@ After completing any task, you MUST always suggest which deployment script numbe
 - 🤖 **AGENTIC DECISION INTELLIGENCE**: Backend admin features must integrate AI Agentic capabilities:
   - Structured Knowledge Base
   - Retrieval-Augmented Generation (RAG) to eliminate hallucinations
-  - Native Tool Calling (database querying, system diagnostics, automated task execution) to empower executive decision-making.
+# Mandatory Rule: Multi-Language 2-Tier Architecture (Frontend & Backend Native JSON)
+- 🌐 **BACKEND DUAL-LOCALE**: Filament v5 must support English and Indonesia natively. Multilingual database columns MUST be formatted as JSON (`{"id": "...", "en": "..."}`) and cast as `'array'`.
+- 🌐 **FRONTEND 2-TIER LOCALE**:
+  - **Tier 1 (Native Precise)**: UI and UX support English & Indonesian native language toggle.
+  - **Tier 2 (Global Plugin)**: Google Translate plugin in frontend with selectable language whitelist managed centrally from backend admin settings.
+
+# Mandatory Rule: Country Zone Dialing Code Standard
+- 📞 **COUNTRY ZONE INPUTS**: Every phone and WhatsApp input must use Country Zone selector (`config/country_zones.php`, e.g. +62, +65, +1, +44, +81) to enforce international E.164 compliance and eliminate invalid phone numbers.
+
+# Mandatory Rule: Thousand Separators on Numbers & Currencies
+- 🔢 **THOUSAND SEPARATORS**: Any numeric input, currency, or metric display reaching thousands (>= 1,000) MUST format thousands with proper separators (dot `.` for ID / comma `,` for EN) across UI/UX components.
+
+# Mandatory Rule: Local FontAwesome Icons (Zero CDN Latency)
+- 🎨 **LOCAL FONTAWESOME LIBRARY**: Representative icons for navigation, footer, global alert, and plugins MUST use local SVGs (`config/fontawesome.php` and `\App\Support\FontAwesome::svg('name')`) to prevent third-party CDN latency, blocking, or offline broken layouts.
+
+# Mandatory Rule: Project OS Developer AI Cockpit & Visual Timeline Sync
+- ⏱️ **VISUAL SPRINT TIMELINE**: The client-facing PRD view must render an interactive visual timeline synchronized with the signed contract duration (total days, elapsed days, remaining days, 5 milestone stages).
+- 🧭 **DEV COCKPIT PLAYBOOK**: Include step-by-step developer playbook (Fase 1 Produksi Vertikal -> Fase 2 Quality Testing Gate -> Fase 3 Delivery & Scope Lock) with a one-click copyable Master Orchestration Prompt for IDE AI agents.
 
 # AlpineJS HTML Escaping Rule
 When writing inline javascript within AlpineJS attributes (such as `x-data="..."`), NEVER use raw double quotes (") or single quotes (') inside string literals as it can break the HTML attribute parsing. ALWAYS encode them into HTML entities:

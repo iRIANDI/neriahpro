@@ -1805,16 +1805,23 @@ class PrdGeneratorService
    - **Zero Native Dialogs**: Strict ban on `window.alert()`, `confirm()`, and `prompt()`. ALWAYS use centralized floating Toast (`window.showToast`) and curated Tailwind backdrop-blur modals.
    - **Subtle Round Corners**: Use thin, crisp borders/corners (`rounded-xs`, `rounded-sm`, max `rounded-md`). STRICTLY AVOID capsule/pill shapes (`rounded-full`).
    - **Interactive & 3D**: High-contrast typography pairing, loading skeletons, Framer Motion or Three.js 60fps micro-animations, avoiding generic AI slop.
-5. **Decoupled CMS Architecture**:
+   - **Thousand Separators**: Every number or currency >= 1,000 must use thousand separator masking (e.g. `10.000.000` / `10,000,000`).
+   - **Local FontAwesome Icons**: Use representative local SVG icons (`config/fontawesome.php`), never external icon fonts with CDN latency.
+5. **Multi-Language Architecture (Frontend & Backend)**:
+   - **Backend**: Filament v5 native dual-language (English & Indonesia) with multilingual database columns stored as JSON (`{"id": "...", "en": "..."}`).
+   - **Frontend**: 2-Tier Language support: Tier 1 Native ID/EN switcher + Tier 2 Google Translate plugin configured from backend admin.
+6. **Decoupled CMS & Global Settings**:
    - **Modular Page Plugins**: Page features are built as configurable, educational, and user-friendly plugins.
    - **Isolated Global Layout**: Top/sidebar navigation, footer, and global alerts MUST be decoupled outside page plugins so they can be adjusted independently.
-6. **Bulletproof Scalability (Millions of Records & Viewers)**:
+   - **Centralized Global Settings**: Manage Company Profile, Contact Info, Social Links, and SEO Schema.org with strict privacy (never exposing internal API secrets).
+   - **Phone Inputs**: ALWAYS use Country Zone selector (`config/country_zones.php`, e.g. +62, +65, +1) with E.164 format.
+7. **Bulletproof Scalability (Millions of Records & Viewers)**:
    - Cache forever (`Cache::rememberForever()`) on Redis/memory for CMS pages, global settings, and Schema.org.
    - Automatic Event-Driven Reset: Invalidate caches immediately on model `saved` and `deleted` hooks.
-7. **SEO Optimization Standard**: Tab browser titles MUST follow `[NAMA DOMAIN - NAMA PAGE]` alongside comprehensive Schema.org JSON-LD structured data.
-8. **Anti-AI Malware Security Suite**: Modern multi-layered defense (Honeypot bot traps, CSP, rate limiting) with educational feedback for visitors.
-9. **Admin AI Agentic Engine**: Knowledge base, RAG (Retrieval-Augmented Generation), and native tool calling to prevent hallucination and empower executive decision-making.
-10. **Filament v5 Form Rule**: Always use `\Filament\Schemas\Schema` method signature for `form()`.
+8. **SEO Optimization Standard**: Tab browser titles MUST follow `[NAMA DOMAIN - NAMA PAGE]` alongside comprehensive Schema.org JSON-LD structured data.
+9. **Anti-AI Malware Security Suite**: Modern multi-layered defense (Honeypot bot traps, CSP, rate limiting) with educational feedback for visitors.
+10. **Admin AI Agentic Engine**: Knowledge base, RAG (Retrieval-Augmented Generation), and native tool calling to prevent hallucination and empower executive decision-making.
+11. **Filament v5 Form Rule**: Always use `\Filament\Schemas\Schema` method signature for `form()`.
 
 #### Target Files to Create / Modify:
 - {$filesStr}
@@ -1843,6 +1850,22 @@ PROMPT;
             'subtle_corners' => [
                 'title' => 'Sudut Tipis & Presisi (Strict Ban on Capsule/Pill Shapes)',
                 'description' => 'Gunakan round corner tipis dan presisi (rounded-none, rounded-xs, rounded-sm, max rounded-md). Dilarang keras menggunakan border-radius ekstrem atau efek kapsul (rounded-full / pill buttons) yang menimbulkan kesan murahan ("AI slop") dan membuang area klik fungsional.',
+            ],
+            'multilingual_two_tier' => [
+                'title' => 'Dukungan Multi-Bahasa 2-Tier (Frontend & Backend Native JSON)',
+                'description' => 'Backend Filament v5 dan Frontend mendukung Bahasa Inggris dan Indonesia secara native. Data konten multibahasa disimpan dalam database kolom JSON (title->id, title->en). Tier 1 menggunakan terjemahan native internal berpresisi tinggi. Tier 2 menyediakan plugin Google Translate di frontend dengan pilihan bahasa yang dapat dikontrol dari backend admin.',
+            ],
+            'country_zone_phone_inputs' => [
+                'title' => 'Input Nomor Telepon dengan Country Zone Selector',
+                'description' => 'Seluruh input telepon/WhatsApp wajib menggunakan Country Zone selector standar (berbasis config/country_zones.php, e.g. +62, +65, +1, +44, +81, +61) dengan validasi E.164 untuk mencegah nomor salah ketik atau data invalid.',
+            ],
+            'thousands_separator_formatting' => [
+                'title' => 'Formatting Angka Ribuan (Thousand Separator UX)',
+                'description' => 'Setiap angka nominal, currency, metrik statistik, atau kalkulasi yang mencapai ribuan wajib memiliki pemisah ribuan otomatis (titik "." untuk format Indonesia atau koma "," untuk format internasional) baik pada input mask maupun tampilan teks agar mudah dibaca.',
+            ],
+            'local_fontawesome_library' => [
+                'title' => 'Library FontAwesome Lokal Tanpa Ketergantungan Eksternal',
+                'description' => 'Seluruh icon representatif untuk navigasi, footer, global alert, dan plugin wajib menggunakan library FontAwesome lokal (config/fontawesome.php dan helper SVG lokal) guna menghindari delay CDN pihak ketiga dan mencegah layout broken saat offline/downtime.',
             ],
             'typography' => [
                 'title' => 'Kurasi Tipografi & Skala Kontras',
@@ -1909,6 +1932,10 @@ PROMPT;
                 'rule' => 'CMS Page Bulletproof Cache Forever (Million Viewers Resilience)',
                 'explanation' => 'Setiap landing page dan sub-page yang dirender oleh CMS wajib memanfaatkan Cache::rememberForever() berbasis Redis/file cache untuk melayani jutaan hit dengan latensi sub-1ms (O(1)). Cache otomatis di-flush menggunakan Eloquent Model Observer (booted: saved & deleted) pada CmsPage dan CmsGlobalSetting begitu terjadi perubahan data.',
             ],
+            'centralized_global_settings' => [
+                'rule' => 'Global Setting Backend Admin dengan Aturan Privasi Ketat',
+                'explanation' => 'Menyediakan modul CmsGlobalSetting di backend admin untuk mengatur Company Profile, Social Links, Hotline Kontak, dan SEO Schema.org yang digunakan berulang kali di frontend. Sistem menerapkan isolasi privasi ketat: credential rahasia/API keys tidak boleh diekspos ke frontend publik.',
+            ],
             'schema_org_and_cache' => [
                 'rule' => 'Mandatory Schema.org Structured Data & Admin Backend Adjustments',
                 'explanation' => 'Setiap entitas publik wajib mengekspos Schema.org JSON-LD (Organization, WebSite, SoftwareApplication, Product, Breadcrumbs). Disediakan modul backend admin untuk mengkustomisasi payload Schema.org. Seluruh data Schema.org WAJIB di-cache menggunakan Cache::rememberForever() dan otomatis di-reset saat ada perubahan data di admin.',
@@ -1926,7 +1953,6 @@ PROMPT;
                 'explanation' => 'Backend admin wajib dilengkapi mesin AI Agentic yang mengintegrasikan Knowledge Base terstruktur, Retrieval-Augmented Generation (RAG) untuk mencegah halusinasi, dan Native Tool Calling (database query inspection, system health audit, automated reporting) guna membantu admin dalam pengambilan keputusan strategis.',
             ],
         ];
-    }      ];
     }
 
     /**
@@ -2171,6 +2197,10 @@ PROMPT;
         $md .= "- **Dark Surface**: " . $slop['color_tokens']['dark_mode'] . "\n";
         $md .= "- **Light Surface**: " . $slop['color_tokens']['light_mode'] . "\n";
         $md .= "- **Interactive & 3D**: " . ($slop['interactive_and_3d']['description'] ?? 'Micro-animations 60fps & WebGL/Canvas interaktif.') . "\n";
+        $md .= "- **Multi-Language (2-Tier)**: " . ($slop['multilingual_two_tier']['description'] ?? 'Dukungan Tier 1 ID/EN & Tier 2 Google Translate plugin.') . "\n";
+        $md .= "- **Country Zone Phone**: " . ($slop['country_zone_phone_inputs']['description'] ?? 'Input nomor telepon wajib menggunakan country zone.') . "\n";
+        $md .= "- **Thousand Separators**: " . ($slop['thousands_separator_formatting']['description'] ?? 'Pemisah ribuan otomatis untuk angka dan mata uang.') . "\n";
+        $md .= "- **Local FontAwesome**: " . ($slop['local_fontawesome_library']['description'] ?? 'Library icon lokal SVG tanpa CDN eksternal.') . "\n";
         $md .= "- **Modular CMS Plugins**: " . ($slop['cms_plugins_and_isolated_layout']['description'] ?? 'Fitur berbasis plugin dengan navigasi/footer global terisolasi.') . "\n";
         $md .= "- **Educational UX**: " . ($slop['educational_plugin_ux']['description'] ?? 'Komponen informatif dan membimbing pengguna.') . "\n";
         $md .= "- **State Primitives**: " . $slop['component_primitives']['states'] . "\n";

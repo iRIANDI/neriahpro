@@ -170,6 +170,28 @@ class BlueprintController extends Controller
     }
 
     /**
+     * Auto-save blueprint draft in background (Dual-Tier Persistence: Cache & Session).
+     */
+    public function autoSave(Request $request): JsonResponse
+    {
+        $blueprint = $request->input('blueprint', []);
+        $draftId = $request->input('draft_id') ?: (string) Str::ulid();
+
+        if (!empty($blueprint) && is_array($blueprint)) {
+            Cache::put('blueprint_draft_' . $draftId, $blueprint, now()->addDays(7));
+            session(['blueprint_draft' => $blueprint]);
+        }
+
+        $tz = config('app.timezone', 'Asia/Jakarta');
+
+        return response()->json([
+            'success' => true,
+            'draft_id' => $draftId,
+            'saved_at' => now()->timezone($tz)->format('H:i:s') . ' WIB',
+        ]);
+    }
+
+    /**
      * Show the generated Ultimate PRD & Blueprint for a specific project slug.
      */
     public function show(string $slug): View

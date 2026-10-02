@@ -23,6 +23,7 @@ Route::get('/document/{document}/sign', \App\Livewire\DocumentSignature::class)
 // Project OS: Tech Proposal & Ultimate PRD Routes
 Route::post('/api/blueprint/analyze-idea', [BlueprintController::class, 'analyzeIdea'])->name('api.blueprint.analyze-idea')->middleware('throttle:15,1');
 Route::post('/api/blueprint/supplement-idea', [BlueprintController::class, 'supplementIdea'])->name('api.blueprint.supplement-idea')->middleware('throttle:30,1');
+Route::post('/api/blueprint/autosave', [BlueprintController::class, 'autoSave'])->name('api.blueprint.autosave')->middleware('throttle:60,1');
 Route::get('/blueprint', [BlueprintController::class, 'create'])->name('blueprint.create');
 Route::get('/blueprint/{slug}', [BlueprintController::class, 'show'])->name('blueprint.show');
 Route::post('/blueprint/{slug}/generate-contract', [BlueprintController::class, 'generateContract'])->name('blueprint.generate-contract');

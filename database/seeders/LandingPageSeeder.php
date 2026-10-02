@@ -55,20 +55,6 @@ class LandingPageSeeder extends Seeder
                         'en' => '4 Pillars of Our Digital Hub.'
                     ]
                 ]
-            ],
-            [
-                'type' => 'onboarding_form',
-                'is_active' => true,
-                'data' => [
-                    'title' => [
-                        'id' => 'Onboarding Engine & Discovery',
-                        'en' => 'Onboarding Engine & Discovery'
-                    ],
-                    'description' => [
-                        'id' => 'Sampaikan ide dan spesifikasi aplikasi Anda secara rahasia dan terenkripsi.',
-                        'en' => 'Submit your application ideas and system specifications securely with end-to-end encryption.'
-                    ]
-                ]
             ]
         ];
 

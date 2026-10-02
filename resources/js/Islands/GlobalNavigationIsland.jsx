@@ -276,7 +276,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                       )}
 
                       {isClientOnboardingEnabled && (
-                        <a href="/#onboarding" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                        <a href="/blueprint" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
                           <div className="flex items-center justify-between mb-0.5">
                             <span className="font-bold text-zinc-900 dark:text-white text-xs">Rapid Monolith</span>
                             <span className="px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[9px] font-bold">ENTERPRISE</span>
@@ -467,7 +467,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                 </a>
               )}
               {isClientOnboardingEnabled && (
-                <a href="/#onboarding" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
+                <a href="/blueprint" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
                   Enterprise Monolith &rarr;
                 </a>
               )}

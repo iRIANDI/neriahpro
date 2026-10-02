@@ -120,8 +120,8 @@ export default function ProductGridIsland({ title, featureFlags, currentLocale }
         "Frontend Island Architecture (React + Livewire)",
         "Dedicated Docker / Nixpacks VPS Environment"
       ],
-      ctaText: isEn ? "Consultation & Onboarding" : "Konsultasi & Onboarding",
-      ctaLink: "#onboarding",
+      ctaText: isEn ? "Start Project Discovery" : "Mulai Onboarding Proyek",
+      ctaLink: "/blueprint",
       isPrimary: false
     }
   ];

@@ -70,7 +70,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
                 )}
                 {isClientOnboardingEnabled && (
                   <li>
-                    <a href="#onboarding" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                    <a href="/blueprint" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
                       <span>Enterprise Rapid Monolith</span>
                       <ArrowUpRight className="w-3 h-3 text-zinc-400" />
                     </a>

@@ -529,6 +529,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [successData, setSuccessData] = useState(null);
+  const isLocked = !!successData;
 
   // Dynamic Completeness Score
   const completeness = useMemo(() => {

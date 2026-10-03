@@ -31,6 +31,11 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  ArrowUp,
+  Compass,
   FileCheck,
   Plus,
   Trash2,
@@ -132,6 +137,27 @@ const TRANSLATIONS = {
     openPrdBtn: "Buka Dokumen Ultimate PRD",
     newProjectBtn: "Kirim Proyek Lainnya",
     daysSuffix: "Hari Kerja",
+
+    // Floating Left Index
+    indexTitle: "Index Navigasi",
+    indexSubtitle: "Pindah cepat tanpa scrolling",
+    indexSearchPlaceholder: "Cari blok / parameter...",
+    indexExpandAll: "Buka Semua",
+    indexCollapseAll: "Tutup Semua",
+    indexHidePanel: "Sembunyikan Panel",
+    indexShowPanel: "Buka Index Navigasi",
+    indexActiveStatus: "FOKUS AKTIF",
+    indexJumpAction: "Fokuskan Blok",
+    indexBackToTop: "Ke Atas",
+    indexSubmitBlock: "Kunci & Terbitkan PRD",
+    indexSubmitDesc: "Finalisasi 26 parameter arsitektur",
+    indexGroupStudio: "Ruang Kerja AI & Ide",
+    indexGroupStudioDesc: "Sintesis cepat & panduan proaktif",
+    indexGroupSpec1: "Spesifikasi Inti (Blok A-C)",
+    indexGroupSpec1Desc: "Identitas bisnis, RBAC & fitur MVP",
+    indexGroupSpec2: "Arsitektur & Legal (Blok D-F)",
+    indexGroupSpec2Desc: "Hosting, skala, budget & PIC",
+    indexGroupFinal: "Finalisasi Spesifikasi",
   },
   en: {
     topBadge: "PROJECT OS // ARCHITECTURAL DISCOVERY WORKSPACE",
@@ -213,6 +239,27 @@ const TRANSLATIONS = {
     openPrdBtn: "Open Ultimate PRD Document",
     newProjectBtn: "Submit Another Project",
     daysSuffix: "Working Days",
+
+    // Floating Left Index
+    indexTitle: "Block Directory",
+    indexSubtitle: "Jump directly to blocks without scrolling fatigue",
+    indexSearchPlaceholder: "Filter blocks / params...",
+    indexExpandAll: "Expand All",
+    indexCollapseAll: "Collapse All",
+    indexHidePanel: "Collapse Rail",
+    indexShowPanel: "Open Directory",
+    indexActiveStatus: "IN FOCUS",
+    indexJumpAction: "Focus Block",
+    indexBackToTop: "Top",
+    indexSubmitBlock: "Lock & Generate PRD",
+    indexSubmitDesc: "Finalize all 26 parameters",
+    indexGroupStudio: "AI Workspace & Ideas",
+    indexGroupStudioDesc: "Quick synthesis & proactive co-pilot",
+    indexGroupSpec1: "Core Specification (Blocks A-C)",
+    indexGroupSpec1Desc: "Identity, RBAC & MVP features",
+    indexGroupSpec2: "Architecture & Legal (Blocks D-F)",
+    indexGroupSpec2Desc: "Hosting, scale, budget & PIC",
+    indexGroupFinal: "Specification Finalization",
   }
 };
 
@@ -477,6 +524,260 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const completeness = useMemo(() => {
     return calculateCompleteness(formData, lang);
   }, [formData, lang]);
+
+  // Floating Left Index & Scroll-Spy States
+  const [activeSection, setActiveSection] = useState('section-ide-studio');
+  const [isIndexExpanded, setIsIndexExpanded] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1280;
+    }
+    return true;
+  });
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [indexSearchQuery, setIndexSearchQuery] = useState('');
+  const [openAccordionGroups, setOpenAccordionGroups] = useState({
+    studio: true,
+    spec1: true,
+    spec2: true,
+    final: true,
+  });
+
+  const toggleAccordionGroup = useCallback((grp) => {
+    setOpenAccordionGroups(prev => ({ ...prev, [grp]: !prev[grp] }));
+  }, []);
+
+  const expandAllGroups = useCallback(() => {
+    setOpenAccordionGroups({
+      studio: true,
+      spec1: true,
+      spec2: true,
+      final: true,
+    });
+  }, []);
+
+  const collapseAllGroups = useCallback(() => {
+    setOpenAccordionGroups({
+      studio: false,
+      spec1: false,
+      spec2: false,
+      final: false,
+    });
+  }, []);
+
+  const jumpToSection = useCallback((id) => {
+    if (id === 'section-ide-studio') {
+      setIsStudioOpen(true);
+    }
+    const el = document.getElementById(id);
+    if (!el) return;
+    const yOffset = -90;
+    const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+    setActiveSection(id);
+    setMobileDrawerOpen(false);
+
+    // Visual pulse outline
+    el.classList.add('outline-2', 'outline-emerald-500', 'transition-all');
+    setTimeout(() => {
+      el.classList.remove('outline-2', 'outline-emerald-500');
+    }, 2000);
+  }, []);
+
+  const sectionIds = useMemo(() => [
+    'section-ide-studio',
+    'section-ai-assistant',
+    'section-block-a',
+    'section-block-b',
+    'section-block-c',
+    'section-block-d',
+    'section-block-e',
+    'section-block-f',
+    'section-submit'
+  ], []);
+
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollPosition = window.scrollY + 180;
+          let current = sectionIds[0];
+          for (let i = sectionIds.length - 1; i >= 0; i--) {
+            const el = document.getElementById(sectionIds[i]);
+            if (el && el.offsetTop <= scrollPosition) {
+              current = sectionIds[i];
+              break;
+            }
+          }
+          setActiveSection(current);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [sectionIds]);
+
+  const blockCompletion = useMemo(() => {
+    const check = (fields) => {
+      let filled = 0;
+      fields.forEach(f => {
+        const val = formData[f];
+        if (Array.isArray(val) ? val.length > 0 : !!val && String(val).trim().length > 0) {
+          filled++;
+        }
+      });
+      return { filled, total: fields.length, isComplete: filled === fields.length };
+    };
+
+    return {
+      blockA: check(['namaBisnis', 'masalahUtama', 'tujuanUtama']),
+      blockB: check(['targetAudiens', 'aktorSistem', 'targetPlatform']),
+      blockC: check(['fiturWajib', 'alurKerja', 'migrasiData', 'kesiapanAset']),
+      blockD: check(['kebutuhanIntegrasi', 'preferensiHosting', 'referensiDesain', 'gayaVisual']),
+      blockE: check(['targetWaktu', 'skalaPengguna', 'kepatuhanKeamanan', 'outOfScope', 'bahasaSistem', 'kebutuhanBackup']),
+      blockF: check(['kisaranBudget', 'garansiSla', 'terminPembayaran', 'clientName', 'email', 'phone']),
+    };
+  }, [formData]);
+
+  const indexSections = useMemo(() => [
+    {
+      id: 'section-ide-studio',
+      badge: '⚡',
+      group: 'studio',
+      title: lang === 'en' ? 'Quick Idea & MarkItDown' : 'Studio Ide & MarkItDown',
+      subtitle: lang === 'en' ? 'Vision prompt, document upload, auto-fill' : 'Input ide, upload dokumen, ekstraksi AI',
+      countLabel: null,
+      isComplete: !!(ideaText && ideaText.length > 20),
+    },
+    {
+      id: 'section-ai-assistant',
+      badge: '🤖',
+      group: 'studio',
+      title: lang === 'en' ? 'AI Assistant Co-Pilot' : 'Asisten Proaktif AI',
+      subtitle: lang === 'en' ? 'Architecture suggestions & auto-tuning' : 'Rekomendasi arsitektur & panduan sistem',
+      countLabel: null,
+      isComplete: false,
+    },
+    {
+      id: 'section-block-a',
+      badge: 'A',
+      group: 'spec1',
+      title: lang === 'en' ? 'Block A: Identity & Goals' : 'Blok A: Identitas & Tujuan',
+      subtitle: lang === 'en' ? 'Name, core problem, KPIs' : 'Nama bisnis, masalah utama, KPI',
+      countLabel: `${blockCompletion.blockA.filled}/${blockCompletion.blockA.total}`,
+      isComplete: blockCompletion.blockA.isComplete,
+    },
+    {
+      id: 'section-block-b',
+      badge: 'B',
+      group: 'spec1',
+      title: lang === 'en' ? 'Block B: Target RBAC & Platform' : 'Blok B: Target RBAC & Platform',
+      subtitle: lang === 'en' ? 'Audience, user roles, devices' : 'Profil audiens, aktor RBAC, perangkat',
+      countLabel: `${blockCompletion.blockB.filled}/${blockCompletion.blockB.total}`,
+      isComplete: blockCompletion.blockB.isComplete,
+    },
+    {
+      id: 'section-block-c',
+      badge: 'C',
+      group: 'spec1',
+      title: lang === 'en' ? 'Block C: MVP Features & Flow' : 'Blok C: Fitur MVP & Alur Kerja',
+      subtitle: lang === 'en' ? 'Priority features, user flow, migration' : 'Fitur MVP, diagram alur, data lama',
+      countLabel: `${blockCompletion.blockC.filled}/${blockCompletion.blockC.total}`,
+      isComplete: blockCompletion.blockC.isComplete,
+    },
+    {
+      id: 'section-block-d',
+      badge: 'D',
+      group: 'spec2',
+      title: lang === 'en' ? 'Block D: Integrations & Hosting' : 'Blok D: Integrasi & Hosting',
+      subtitle: lang === 'en' ? 'API gateways, server, UI/UX reference' : 'Integrasi API, server, preferensi UI/UX',
+      countLabel: `${blockCompletion.blockD.filled}/${blockCompletion.blockD.total}`,
+      isComplete: blockCompletion.blockD.isComplete,
+    },
+    {
+      id: 'section-block-e',
+      badge: 'E',
+      group: 'spec2',
+      title: lang === 'en' ? 'Block E: Scale & Scope Freeze' : 'Blok E: Skala & Batasan Scope',
+      subtitle: lang === 'en' ? 'Timeline, security, out-of-scope' : 'Target waktu, security, scope freeze',
+      countLabel: `${blockCompletion.blockE.filled}/${blockCompletion.blockE.total}`,
+      isComplete: blockCompletion.blockE.isComplete,
+    },
+    {
+      id: 'section-block-f',
+      badge: 'F',
+      group: 'spec2',
+      title: lang === 'en' ? 'Block F: Budget, SLA & PIC' : 'Blok F: Anggaran, SLA & PIC',
+      subtitle: lang === 'en' ? 'Budget, warranty SLA, terms, PIC info' : 'Alokasi budget, SLA garansi, termin, PIC',
+      countLabel: `${blockCompletion.blockF.filled}/${blockCompletion.blockF.total}`,
+      isComplete: blockCompletion.blockF.isComplete,
+    },
+    {
+      id: 'section-submit',
+      badge: '🔒',
+      group: 'final',
+      title: lang === 'en' ? 'Lock Blueprint & Generate PRD' : 'Kunci Blueprint & Terbitkan PRD',
+      subtitle: lang === 'en' ? 'Final lock & PostgreSQL schema' : 'Kunci spesifikasi & skema PostgreSQL',
+      countLabel: `${completeness.score}%`,
+      isComplete: completeness.score >= 90,
+    },
+  ], [lang, ideaText, blockCompletion, completeness]);
+
+  const accordionGroups = useMemo(() => [
+    {
+      key: 'studio',
+      title: t.indexGroupStudio,
+      desc: t.indexGroupStudioDesc,
+      itemCount: 2,
+    },
+    {
+      key: 'spec1',
+      title: t.indexGroupSpec1,
+      desc: t.indexGroupSpec1Desc,
+      itemCount: 3,
+    },
+    {
+      key: 'spec2',
+      title: t.indexGroupSpec2,
+      desc: t.indexGroupSpec2Desc,
+      itemCount: 3,
+    },
+    {
+      key: 'final',
+      title: t.indexGroupFinal,
+      desc: t.indexSubmitDesc,
+      itemCount: 1,
+    },
+  ], [t]);
+
+  const getActiveSectionTitle = useCallback(() => {
+    const map = {
+      'section-ide-studio': lang === 'en' ? 'Quick Idea Studio' : 'Studio Ide & MarkItDown',
+      'section-ai-assistant': lang === 'en' ? 'AI Co-Pilot' : 'Asisten Proaktif AI',
+      'section-block-a': lang === 'en' ? 'Block A: Identity' : 'Blok A: Identitas Bisnis',
+      'section-block-b': lang === 'en' ? 'Block B: RBAC & Platform' : 'Blok B: RBAC & Platform',
+      'section-block-c': lang === 'en' ? 'Block C: MVP Features' : 'Blok C: Fitur MVP & Alur',
+      'section-block-d': lang === 'en' ? 'Block D: Integrations' : 'Blok D: Integrasi & Server',
+      'section-block-e': lang === 'en' ? 'Block E: Scale & Scope' : 'Blok E: Skala & Batasan',
+      'section-block-f': lang === 'en' ? 'Block F: Budget & PIC' : 'Blok F: Anggaran & PIC',
+      'section-submit': lang === 'en' ? 'Lock & Submit' : 'Kunci Spesifikasi PRD',
+    };
+    return map[activeSection] || (lang === 'en' ? 'Directory' : 'Index Blok');
+  }, [activeSection, lang]);
+
+  const filteredIndexSections = useMemo(() => {
+    if (!indexSearchQuery.trim()) return indexSections;
+    const q = indexSearchQuery.toLowerCase();
+    return indexSections.filter(sec => 
+      sec.title.toLowerCase().includes(q) || 
+      sec.subtitle.toLowerCase().includes(q) ||
+      sec.badge.toLowerCase().includes(q)
+    );
+  }, [indexSections, indexSearchQuery]);
 
   // Initial local storage hydration
   useEffect(() => {
@@ -906,7 +1207,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     }
   };
 
-  const panelClass = "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-none p-6 sm:p-8 transition-colors duration-200";
+  const panelClass = "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-none p-6 sm:p-8 transition-colors duration-200 scroll-mt-24";
   const inputClass = "w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-sm focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-0 outline-none rounded-none transition font-sans";
   const labelClass = "block text-xs font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5 font-bold";
 
@@ -1022,6 +1323,412 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         )}
       </AnimatePresence>
       
+      {/* =========================================================================
+          FLOATING LEFT HUD INDEX: TABLE OF CONTENTS (DESKTOP RAIL & MOBILE DRAWER)
+          ========================================================================= */}
+
+      {/* 1. DESKTOP FLOATING LEFT SIDEBAR / RAIL (xl:flex) */}
+      <aside 
+        aria-label="Blueprint Index Navigation"
+        className="fixed left-3 2xl:left-6 top-24 z-40 hidden xl:flex flex-col font-mono select-none"
+      >
+        {isIndexExpanded ? (
+          /* EXPANDED DIRECTORY PANEL */
+          <div className="w-72 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[calc(100vh-7rem)] rounded-none transition-all duration-200">
+            {/* Header */}
+            <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-950/80">
+              <div className="flex items-center gap-2">
+                <Compass className="w-4 h-4 text-emerald-500" />
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+                      {t.indexTitle}
+                    </span>
+                    <span className="text-[9px] px-1 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold">
+                      HUD
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setIsIndexExpanded(false)}
+                  className="p-1 text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition"
+                  title={t.indexHidePanel}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Sub-header / Search & Quick Controls */}
+            <div className="p-2 border-b border-zinc-200 dark:border-zinc-800 space-y-1.5 bg-zinc-50/40 dark:bg-zinc-950/40">
+              {/* Search Bar */}
+              <div className="relative flex items-center">
+                <Search className="w-3.5 h-3.5 absolute left-2 text-zinc-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={indexSearchQuery}
+                  onChange={(e) => setIndexSearchQuery(e.target.value)}
+                  placeholder={t.indexSearchPlaceholder}
+                  className="w-full pl-7 pr-6 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-[11px] text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-emerald-500 font-sans"
+                />
+                {indexSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setIndexSearchQuery('')}
+                    className="absolute right-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
+              {/* Group Toggle & Top Jumper Toolbar */}
+              <div className="flex items-center justify-between text-[10px] text-zinc-500 dark:text-zinc-400 px-0.5 pt-0.5">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={expandAllGroups}
+                    className="hover:text-emerald-600 dark:hover:text-emerald-400 transition underline underline-offset-2"
+                  >
+                    {t.indexExpandAll}
+                  </button>
+                  <span>·</span>
+                  <button
+                    type="button"
+                    onClick={collapseAllGroups}
+                    className="hover:text-emerald-600 dark:hover:text-emerald-400 transition underline underline-offset-2"
+                  >
+                    {t.indexCollapseAll}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="flex items-center gap-0.5 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+                  title="Scroll to top"
+                >
+                  <ArrowUp className="w-3 h-3" />
+                  <span>{t.indexBackToTop}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Accordion List Body */}
+            <div className="flex-1 overflow-y-auto px-2 py-2 space-y-2 text-xs divide-y divide-zinc-100 dark:divide-zinc-800/60">
+              {accordionGroups.map((grp) => {
+                const groupSections = filteredIndexSections.filter(sec => sec.group === grp.key);
+                if (groupSections.length === 0) return null;
+                const isOpen = openAccordionGroups[grp.key] ?? true;
+
+                return (
+                  <div key={grp.key} className="pt-2 first:pt-0">
+                    {/* Accordion Group Header */}
+                    <button
+                      type="button"
+                      onClick={() => toggleAccordionGroup(grp.key)}
+                      className="w-full flex items-center justify-between py-1 text-left text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 group font-bold tracking-wider text-[10px] uppercase"
+                    >
+                      <span className="flex items-center gap-1.5 truncate">
+                        {isOpen ? <ChevronDown className="w-3 h-3 shrink-0" /> : <ChevronRight className="w-3 h-3 shrink-0" />}
+                        <span className="truncate">{grp.title}</span>
+                      </span>
+                      <span className="text-[9px] px-1 py-0.2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 shrink-0 font-normal">
+                        {groupSections.length}
+                      </span>
+                    </button>
+
+                    {/* Group Items */}
+                    {isOpen && (
+                      <div className="mt-1 space-y-1 pl-1">
+                        {groupSections.map((sec) => {
+                          const isActive = activeSection === sec.id;
+                          return (
+                            <button
+                              key={sec.id}
+                              type="button"
+                              onClick={() => jumpToSection(sec.id)}
+                              className={`w-full text-left p-1.5 flex items-center justify-between gap-1.5 border transition-all ${
+                                isActive
+                                  ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-700 dark:text-emerald-300 font-bold shadow-xs'
+                                  : 'bg-transparent border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <span className={`w-5 h-5 flex items-center justify-center text-[10px] font-mono shrink-0 border ${
+                                  isActive
+                                    ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                                    : sec.isComplete
+                                    ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40'
+                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
+                                }`}>
+                                  {sec.badge}
+                                </span>
+                                <div className="truncate">
+                                  <div className="text-[11px] truncate leading-tight font-sans">
+                                    {sec.title}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1 shrink-0">
+                                {sec.countLabel && (
+                                  <span className={`text-[9px] font-mono px-1 py-0.2 border ${
+                                    sec.isComplete
+                                      ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                                      : 'border-zinc-200 dark:border-zinc-700 text-zinc-500 bg-zinc-50 dark:bg-zinc-800'
+                                  }`}>
+                                    {sec.countLabel}
+                                  </span>
+                                )}
+                                {isActive && (
+                                  <span className="relative flex h-1.5 w-1.5 ml-0.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-none bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-none h-1.5 w-1.5 bg-emerald-500"></span>
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer Telemetry */}
+            <div className="p-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/80">
+              <div className="flex items-center justify-between text-[10px] mb-1">
+                <span className="text-zinc-500 uppercase tracking-wider">{lang === 'en' ? 'Readiness' : 'Kesiapan'}:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">{completeness.score}%</span>
+              </div>
+              <div className="w-full bg-zinc-200 dark:bg-zinc-800 h-1.5 rounded-none overflow-hidden">
+                <div
+                  className="bg-emerald-500 h-full transition-all duration-300"
+                  style={{ width: `${completeness.score}%` }}
+                />
+              </div>
+              <div className="mt-1.5 text-[9px] text-zinc-400 dark:text-zinc-500 flex items-center justify-between font-mono">
+                <span className="truncate max-w-[130px]">{getActiveSectionTitle()}</span>
+                <span className="text-emerald-500 font-bold uppercase">{t.indexActiveStatus}</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* COLLAPSED RAIL MODE */
+          <div className="w-12 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-xl flex flex-col items-center py-2.5 rounded-none transition-all duration-200">
+            {/* Expand Trigger */}
+            <button
+              type="button"
+              onClick={() => setIsIndexExpanded(true)}
+              className="p-1.5 text-zinc-500 hover:text-emerald-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition mb-2"
+              title={t.indexShowPanel}
+            >
+              <ChevronRight className="w-4 h-4 text-emerald-500" />
+            </button>
+
+            <div className="w-6 h-[1px] bg-zinc-200 dark:bg-zinc-800 mb-2" />
+
+            {/* Vertical Icons List */}
+            <div className="flex flex-col gap-1 w-full px-1.5">
+              {indexSections.map((sec) => {
+                const isActive = activeSection === sec.id;
+                return (
+                  <button
+                    key={sec.id}
+                    type="button"
+                    onClick={() => jumpToSection(sec.id)}
+                    title={`${sec.badge} - ${sec.title}`}
+                    className={`w-full aspect-square flex items-center justify-center text-[11px] font-mono transition border ${
+                      isActive
+                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold shadow-xs scale-105'
+                        : sec.isComplete
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50 hover:text-zinc-900 dark:hover:text-zinc-100'
+                    }`}
+                  >
+                    {sec.badge}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="w-6 h-[1px] bg-zinc-200 dark:bg-zinc-800 my-2" />
+
+            {/* Mini Progress Percentage Pill */}
+            <div className="text-[9px] font-mono font-bold text-emerald-600 dark:text-emerald-400 px-1 py-0.5 bg-emerald-500/10 border border-emerald-500/30">
+              {completeness.score}%
+            </div>
+          </div>
+        )}
+      </aside>
+
+      {/* 2. MOBILE / TABLET FLOATING BUTTON & SLIDE-OVER DRAWER (xl:hidden) */}
+      <div className="xl:hidden">
+        {/* Floating Trigger Badge on Bottom Left */}
+        <button
+          type="button"
+          onClick={() => setMobileDrawerOpen(true)}
+          className="fixed left-3 bottom-5 z-40 bg-zinc-950/90 text-white border border-zinc-700/80 shadow-2xl px-3 py-2 flex items-center gap-2 font-mono text-xs font-bold rounded-none hover:border-emerald-500 transition-all backdrop-blur-md active:scale-95 group"
+          aria-label="Open Blueprint Section Directory"
+        >
+          <Compass className="w-4 h-4 text-emerald-400 group-hover:rotate-45 transition-transform" />
+          <span className="uppercase tracking-wider">INDEX</span>
+          <span className="px-1.5 py-0.2 bg-emerald-500 text-black text-[10px] font-mono font-bold">
+            {completeness.score}%
+          </span>
+          <span className="text-[10px] text-zinc-400 hidden sm:inline truncate max-w-[120px]">
+            {getActiveSectionTitle()}
+          </span>
+        </button>
+
+        {/* Mobile Slide-over Drawer Modal */}
+        <AnimatePresence>
+          {mobileDrawerOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMobileDrawerOpen(false)}
+                className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50"
+              />
+
+              {/* Drawer Sheet */}
+              <motion.div
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'tween', duration: 0.25 }}
+                className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 z-50 flex flex-col font-mono text-xs shadow-2xl"
+              >
+                {/* Drawer Header */}
+                <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950">
+                  <div className="flex items-center gap-2">
+                    <Compass className="w-4 h-4 text-emerald-500" />
+                    <span className="font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+                      {t.indexTitle}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMobileDrawerOpen(false)}
+                    className="p-1.5 text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Search Bar in Mobile Drawer */}
+                <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50">
+                  <div className="relative flex items-center">
+                    <Search className="w-3.5 h-3.5 absolute left-2.5 text-zinc-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={indexSearchQuery}
+                      onChange={(e) => setIndexSearchQuery(e.target.value)}
+                      placeholder={t.indexSearchPlaceholder}
+                      className="w-full pl-8 pr-6 py-1.5 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-emerald-500 font-sans"
+                    />
+                    {indexSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setIndexSearchQuery('')}
+                        className="absolute right-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Drawer Scrollable Body */}
+                <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                  {accordionGroups.map((grp) => {
+                    const groupSections = filteredIndexSections.filter(sec => sec.group === grp.key);
+                    if (groupSections.length === 0) return null;
+                    const isOpen = openAccordionGroups[grp.key] ?? true;
+
+                    return (
+                      <div key={grp.key} className="space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => toggleAccordionGroup(grp.key)}
+                          className="w-full flex items-center justify-between py-1 text-left text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px] tracking-wider"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                            <span>{grp.title}</span>
+                          </span>
+                          <span className="text-[9px] px-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                            {groupSections.length}
+                          </span>
+                        </button>
+
+                        {isOpen && (
+                          <div className="space-y-1 pl-1">
+                            {groupSections.map((sec) => {
+                              const isActive = activeSection === sec.id;
+                              return (
+                                <button
+                                  key={sec.id}
+                                  type="button"
+                                  onClick={() => jumpToSection(sec.id)}
+                                  className={`w-full text-left p-2 flex items-center justify-between border transition ${
+                                    isActive
+                                      ? 'bg-emerald-500/10 border-emerald-500/60 text-emerald-600 dark:text-emerald-400 font-bold'
+                                      : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 truncate">
+                                    <span className={`w-5 h-5 flex items-center justify-center text-[10px] font-mono shrink-0 border ${
+                                      isActive
+                                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                                        : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700'
+                                    }`}>
+                                      {sec.badge}
+                                    </span>
+                                    <span className="truncate text-xs font-sans">{sec.title}</span>
+                                  </div>
+                                  {sec.countLabel && (
+                                    <span className="text-[10px] font-mono px-1 py-0.2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 shrink-0">
+                                      {sec.countLabel}
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Drawer Footer */}
+                <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-zinc-500">{lang === 'en' ? 'Readiness Score:' : 'Skor Kesiapan:'}</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{completeness.score}%</span>
+                  </div>
+                  <div className="w-full bg-zinc-200 dark:bg-zinc-800 h-1.5 rounded-none overflow-hidden">
+                    <div
+                      className="bg-emerald-500 h-full transition-all duration-300"
+                      style={{ width: `${completeness.score}%` }}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+      
       {/* TOP TOOLBAR: BRANDING, THEME, LANGUAGE & LIVE AUTO-SAVE TELEMETRY */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
         <div>
@@ -1127,7 +1834,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       {/* =========================================================================
           SECTION 1: QUICK IDEA STUDIO & MARKITDOWN DROPZONE (TOP ACCELERATOR)
           ========================================================================= */}
-      <section className="mb-8 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-none transition-all">
+      <section id="section-ide-studio" className="scroll-mt-24 mb-8 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-none transition-all">
         
         {/* Studio Accordion Header */}
         <button
@@ -1328,7 +2035,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       {/* =========================================================================
           SECTION 2: PROACTIVE AI ASSISTANT (ANTI-BONCOS FLASH CO-PILOT)
           ========================================================================= */}
-      <section className="mb-8 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-none">
+      <section id="section-ai-assistant" className="scroll-mt-24 mb-8 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-none">
         <div className="flex items-center gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-5">
           <div className="w-8 h-8 bg-emerald-500 text-black flex items-center justify-center font-bold">
             <Lightbulb className="w-4 h-4" />
@@ -1532,7 +2239,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         {/* ---------------------------------------------------------------------
             BLOK B: TARGET PENGGUNA, RBAC & PLATFORM PERANGKAT (FIELDS 4 - 6)
             --------------------------------------------------------------------- */}
-        <section className={panelClass}>
+        <section id="section-block-b" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
               AKTOR & PLATFORM // 02
@@ -1682,7 +2389,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         {/* ---------------------------------------------------------------------
             BLOK C: FITUR MVP, WORKFLOW & MIGRASI DATA (FIELDS 7 - 10)
             --------------------------------------------------------------------- */}
-        <section className={panelClass}>
+        <section id="section-block-c" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
               FITUR, ALUR & DATA // 03
@@ -1858,7 +2565,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         {/* ---------------------------------------------------------------------
             BLOK D: INTEGRASI, ESTETIKA & HOSTING (FIELDS 11 - 14)
             --------------------------------------------------------------------- */}
-        <section className={panelClass}>
+        <section id="section-block-d" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
               INTEGRASI & HOSTING // 04
@@ -2020,7 +2727,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         {/* ---------------------------------------------------------------------
             BLOK E: TIMELINE, SKALA, KEAMANAN & BATASAN RUANG LINGKUP (FIELDS 15 - 20)
             --------------------------------------------------------------------- */}
-        <section className={panelClass}>
+        <section id="section-block-e" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
               TIMELINE & BATASAN // 05
@@ -2178,7 +2885,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         {/* ---------------------------------------------------------------------
             BLOK F: ANGGARAN, GARANSI SLA & PENGESAHAN PIC (FIELDS 21 - 25)
             --------------------------------------------------------------------- */}
-        <section className={panelClass}>
+        <section id="section-block-f" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
               PENGESAHAN PIC & KONTRAK // 06
@@ -2367,6 +3074,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
           {/* Submit Button */}
           <button
+            id="section-submit"
             type="submit"
             disabled={isSubmitting}
             className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-wider py-4 px-6 rounded-none text-center flex items-center justify-center gap-2 transition disabled:opacity-50 text-sm font-mono"

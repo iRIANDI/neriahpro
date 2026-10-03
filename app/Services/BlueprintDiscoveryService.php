@@ -22,9 +22,35 @@ class BlueprintDiscoveryService
      * @return array
      * @throws \InvalidArgumentException
      */
-    public function synthesize(string $rawIdeaText, array $uploadedFiles = [], string $locale = 'id'): array
+    public function synthesize(string $rawIdeaText, array $uploadedFiles = [], string $locale = 'id', ?string $projectName = null): array
     {
         $isEn = ($locale === 'en');
+
+        // Pre-determine or prepare project folder
+        $cleanRaw = trim($rawIdeaText);
+        $tempSlug = $projectName ? Str::slug($projectName) : null;
+        if (!$tempSlug && !empty($cleanRaw)) {
+            $firstWords = Str::words($cleanRaw, 3, '');
+            $tempSlug = Str::slug($firstWords);
+        }
+        if (!$tempSlug || strlen($tempSlug) < 3) {
+            $tempSlug = 'project-' . now()->format('Ymd-His');
+        }
+
+        $projectFolder = "projects/{$tempSlug}";
+        $absProjectDir = storage_path("app/{$projectFolder}");
+        $docsDir = "{$absProjectDir}/documents";
+        $mdDir = "{$absProjectDir}/markdown";
+
+        if (!is_dir($absProjectDir)) {
+            @mkdir($absProjectDir, 0775, true);
+        }
+        if (!is_dir($mdDir)) {
+            @mkdir($mdDir, 0775, true);
+        }
+        if (!empty($uploadedFiles) && !is_dir($docsDir)) {
+            @mkdir($docsDir, 0775, true);
+        }
 
         // 1. Process files using Microsoft MarkItDown replica service
         $convertedDocs = [];
@@ -33,19 +59,36 @@ class BlueprintDiscoveryService
         foreach ($uploadedFiles as $file) {
             if ($file instanceof UploadedFile && $file->isValid()) {
                 try {
-                    $conversion = $this->markItDownService->convert($file);
-                    $filename = $file->getClientOriginalName();
+                    $originalName = $file->getClientOriginalName();
                     $fileExt = strtolower($file->getClientOriginalExtension());
-                    $fileSizeKb = round($file->getSize() / 1024, 1);
+                    $fileBase = pathinfo($originalName, PATHINFO_FILENAME);
+                    $safeBaseName = Str::slug($fileBase) ?: 'document';
+                    $safeFilename = $safeBaseName . '-' . substr(md5($originalName . microtime()), 0, 6) . '.' . $fileExt;
+                    $storedDocPath = "{$docsDir}/{$safeFilename}";
+
+                    // Store original physical file in project's documents folder
+                    $file->move($docsDir, $safeFilename);
+
+                    // Convert from stored file using MarkItDown
+                    $conversion = $this->markItDownService->convert($storedDocPath);
+                    $fileSizeKb = file_exists($storedDocPath) ? round(filesize($storedDocPath) / 1024, 1) : 0;
+                    $convertedMarkdown = $conversion['markdown'] ?? '';
+
+                    // Save converted Markdown into project's markdown folder
+                    $savedMdFilename = "{$safeBaseName}.md";
+                    file_put_contents("{$mdDir}/{$savedMdFilename}", $convertedMarkdown);
 
                     $fileSummaries[] = [
-                        'name' => $filename,
+                        'name' => $originalName,
+                        'stored_file' => $safeFilename,
                         'extension' => $fileExt,
                         'size_kb' => $fileSizeKb,
+                        'document_path' => "{$projectFolder}/documents/{$safeFilename}",
+                        'markdown_path' => "{$projectFolder}/markdown/{$savedMdFilename}",
                         'engine' => $conversion['engine'] ?? 'markitdown',
                     ];
 
-                    $convertedDocs[] = "### [Dokumen Lampiran: {$filename} ({$fileSizeKb} KB)]\n" . ($conversion['markdown'] ?? '');
+                    $convertedDocs[] = "### [Dokumen Lampiran: {$originalName} ({$fileSizeKb} KB)]\n" . $convertedMarkdown;
                 } catch (\Throwable $e) {
                     Log::warning("MarkItDown conversion failed for file: " . $file->getClientOriginalName(), [
                         'error' => $e->getMessage()
@@ -61,7 +104,44 @@ class BlueprintDiscoveryService
         $this->validateAntiSpam($rawIdeaText, $corpusText, !empty($uploadedFiles), $isEn);
 
         // 3. Extract & Synthesize Architectural Blueprint
-        return $this->performArchitecturalAnalysis($rawIdeaText, $allDocsMarkdown, $corpusText, $fileSummaries, $isEn);
+        $result = $this->performArchitecturalAnalysis($rawIdeaText, $allDocsMarkdown, $corpusText, $fileSummaries, $isEn);
+
+        // If a business name was synthesized and differs from tempSlug, cleanly re-map folder
+        $synthesizedName = $projectName ?: ($result['namaBisnis'] ?? null);
+        if ($synthesizedName) {
+            $finalSlug = Str::slug($synthesizedName);
+            if ($finalSlug && $finalSlug !== $tempSlug && is_dir($absProjectDir)) {
+                $finalProjectDir = storage_path("app/projects/{$finalSlug}");
+                if (!is_dir($finalProjectDir)) {
+                    @rename($absProjectDir, $finalProjectDir);
+                    $projectFolder = "projects/{$finalSlug}";
+                    $absProjectDir = $finalProjectDir;
+                    $mdDir = "{$absProjectDir}/markdown";
+                    $docsDir = "{$absProjectDir}/documents";
+                }
+            }
+        }
+
+        // Save combined synthesized corpus markdown into project's markdown folder
+        if (is_dir($mdDir)) {
+            file_put_contents("{$mdDir}/synthesized_corpus.md", $corpusText);
+
+            $manifest = [
+                'project_name' => $synthesizedName ?: $tempSlug,
+                'project_slug' => basename($projectFolder),
+                'locale' => $locale,
+                'synthesized_at' => now()->toIso8601String(),
+                'files_count' => count($fileSummaries),
+                'files' => $fileSummaries,
+            ];
+            file_put_contents("{$absProjectDir}/manifest.json", json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        }
+
+        $result['_meta']['project_directory'] = $projectFolder;
+        $result['_meta']['project_slug'] = basename($projectFolder);
+        $result['_meta']['stored_files'] = $fileSummaries;
+
+        return $result;
     }
 
     /**

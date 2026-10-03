@@ -93,6 +93,23 @@ class VisionBlueprint extends Model
     {
         $content = \App\Services\PrdGeneratorService::generate($this);
         $this->update(['prd_content' => $content]);
+
+        // Partitioned Project Storage: Save official PRD Markdown into dedicated project folder
+        try {
+            $slug = $this->slug ?: \Illuminate\Support\Str::slug($this->nama_bisnis);
+            if ($slug) {
+                $projectDir = storage_path("app/projects/{$slug}");
+                if (!is_dir($projectDir)) {
+                    @mkdir($projectDir, 0775, true);
+                }
+                $md = \App\Services\PrdGeneratorService::toMarkdown($this, $content);
+                @file_put_contents("{$projectDir}/prd.md", $md);
+                @file_put_contents("{$projectDir}/blueprint.json", json_encode($this->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Failed to save PRD markdown in project folder: " . $e->getMessage());
+        }
+
         return $content;
     }
 

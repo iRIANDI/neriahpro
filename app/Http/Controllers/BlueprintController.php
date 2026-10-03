@@ -108,9 +108,10 @@ class BlueprintController extends Controller
             $files = [$files];
         }
         $locale = $request->input('locale', app()->getLocale() ?: 'id');
+        $projectName = $request->input('nama_bisnis') ?: $request->input('namaBisnis') ?: $request->input('project_name');
 
         try {
-            $synthesized = $discoveryService->synthesize($rawIdeaText, $files, $locale);
+            $synthesized = $discoveryService->synthesize($rawIdeaText, $files, $locale, $projectName);
 
             $draftId = (string) Str::ulid();
             Cache::put('blueprint_draft_' . $draftId, $synthesized, now()->addHours(24));

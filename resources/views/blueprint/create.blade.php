@@ -74,7 +74,7 @@
     </header>
 
     <!-- Header Section (Technical Precision Theme) -->
-    <section class="bg-zinc-900 text-white py-12 px-4 text-center border-b border-zinc-800 relative">
+    <section id="blueprint-hero" class="bg-zinc-900 text-white py-12 px-4 text-center border-b border-zinc-800 relative">
         <div class="max-w-4xl mx-auto">
             <span class="inline-block px-3 py-1 text-[11px] font-mono font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 mb-3 rounded-none">
                 SYSTEM SPECIFICATION & PRD PROTOCOL

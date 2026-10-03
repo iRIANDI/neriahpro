@@ -158,6 +158,11 @@ const TRANSLATIONS = {
     indexGroupSpec2: "Arsitektur & Legal (Blok D-F)",
     indexGroupSpec2Desc: "Hosting, skala, budget & PIC",
     indexGroupFinal: "Finalisasi Spesifikasi",
+    indexToggleDetails: "Rincian Parameter",
+    indexExpandDetails: "+ Rincian",
+    indexCollapseDetails: "- Rincian",
+    indexSubFilled: "Terisi",
+    indexSubEmpty: "Kosong",
   },
   en: {
     topBadge: "PROJECT OS // ARCHITECTURAL DISCOVERY WORKSPACE",
@@ -260,6 +265,11 @@ const TRANSLATIONS = {
     indexGroupSpec2: "Architecture & Legal (Blocks D-F)",
     indexGroupSpec2Desc: "Hosting, scale, budget & PIC",
     indexGroupFinal: "Specification Finalization",
+    indexToggleDetails: "Parameter Details",
+    indexExpandDetails: "+ Details",
+    indexCollapseDetails: "- Details",
+    indexSubFilled: "Filled",
+    indexSubEmpty: "Empty",
   }
 };
 
@@ -564,6 +574,21 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     });
   }, []);
 
+  // Sub-block detail toggle state
+  const [expandedSubBlocks, setExpandedSubBlocks] = useState({
+    'section-block-a': true,
+  });
+
+  const toggleSubBlock = useCallback((secId, e) => {
+    e?.stopPropagation();
+    setExpandedSubBlocks(prev => ({
+      ...prev,
+      [secId]: !prev[secId],
+    }));
+  }, []);
+
+  const [indexTopOffset, setIndexTopOffset] = useState(260);
+
   const jumpToSection = useCallback((id) => {
     if (id === 'section-ide-studio') {
       setIsStudioOpen(true);
@@ -583,6 +608,38 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     }, 2000);
   }, []);
 
+  const jumpToField = useCallback((fieldId, sectionId) => {
+    if (sectionId === 'section-ide-studio') {
+      setIsStudioOpen(true);
+    }
+    const el = document.getElementById(fieldId);
+    if (el) {
+      const yOffset = -90;
+      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+      if (sectionId) {
+        setActiveSection(sectionId);
+      }
+      setMobileDrawerOpen(false);
+
+      // Flash highlight
+      el.classList.add('ring-2', 'ring-emerald-500', 'ring-offset-2', 'transition-all');
+      setTimeout(() => {
+        el.classList.remove('ring-2', 'ring-emerald-500', 'ring-offset-2');
+      }, 2000);
+
+      // Focus if input or textarea
+      const inputEl = el.querySelector('input, textarea, select') || (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el : null);
+      if (inputEl) {
+        try {
+          inputEl.focus({ preventScroll: true });
+        } catch (_) {}
+      }
+    } else if (sectionId) {
+      jumpToSection(sectionId);
+    }
+  }, [jumpToSection]);
+
   const sectionIds = useMemo(() => [
     'section-ide-studio',
     'section-ai-assistant',
@@ -600,6 +657,19 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
+          // Dynamic calculation: index stops strictly beneath the hero area when hero is visible
+          const heroEl = document.getElementById('blueprint-hero');
+          const minTop = 68; // sticky header is ~56px + 12px gap
+          if (heroEl) {
+            const rect = heroEl.getBoundingClientRect();
+            // rect.bottom is the viewport pixel distance to bottom edge of hero
+            const calculatedTop = Math.max(rect.bottom + 12, minTop);
+            setIndexTopOffset(calculatedTop);
+          } else {
+            setIndexTopOffset(minTop);
+          }
+
+          // Active Section Spy
           const scrollPosition = window.scrollY + 180;
           let current = sectionIds[0];
           for (let i = sectionIds.length - 1; i >= 0; i--) {
@@ -617,8 +687,12 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
   }, [sectionIds]);
 
   const blockCompletion = useMemo(() => {
@@ -636,9 +710,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     return {
       blockA: check(['namaBisnis', 'masalahUtama', 'tujuanUtama']),
       blockB: check(['targetAudiens', 'aktorSistem', 'targetPlatform']),
-      blockC: check(['fiturWajib', 'alurKerja', 'migrasiData', 'kesiapanAset']),
-      blockD: check(['kebutuhanIntegrasi', 'preferensiHosting', 'referensiDesain', 'gayaVisual']),
-      blockE: check(['targetWaktu', 'skalaPengguna', 'kepatuhanKeamanan', 'outOfScope', 'bahasaSistem', 'kebutuhanBackup']),
+      blockC: check(['fiturWajib', 'fiturTambahan', 'alurKerja', 'migrasiData']),
+      blockD: check(['kebutuhanIntegrasi', 'referensiDesain', 'kesiapanAset', 'preferensiHosting']),
+      blockE: check(['targetWaktu', 'skalaPengguna', 'outOfScope', 'kepatuhanKeamanan']),
       blockF: check(['kisaranBudget', 'garansiSla', 'terminPembayaran', 'clientName', 'email', 'phone']),
     };
   }, [formData]);
@@ -652,6 +726,20 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       subtitle: lang === 'en' ? 'Vision prompt, document upload, auto-fill' : 'Input ide, upload dokumen, ekstraksi AI',
       countLabel: null,
       isComplete: !!(ideaText && ideaText.length > 20),
+      subItems: [
+        {
+          id: 'field-ideaText',
+          code: 'S1',
+          label: lang === 'en' ? 'Project Vision Prompt' : 'Teks Visi & Ringkasan Ide',
+          isFilled: !!(ideaText && ideaText.trim().length >= 15),
+        },
+        {
+          id: 'field-attachedFiles',
+          code: 'S2',
+          label: lang === 'en' ? 'MarkItDown Document Attachments' : 'Lampiran Dokumen (MarkItDown)',
+          isFilled: attachedFiles.length > 0,
+        },
+      ],
     },
     {
       id: 'section-ai-assistant',
@@ -660,7 +748,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       title: lang === 'en' ? 'AI Assistant Co-Pilot' : 'Asisten Proaktif AI',
       subtitle: lang === 'en' ? 'Architecture suggestions & auto-tuning' : 'Rekomendasi arsitektur & panduan sistem',
       countLabel: null,
-      isComplete: false,
+      isComplete: proactiveSuggestions.length > 0,
+      subItems: [
+        {
+          id: 'field-proactiveSuggestions',
+          code: 'P1',
+          label: lang === 'en' ? 'Smart Recommendations' : 'Rekomendasi Pintar AI',
+          isFilled: proactiveSuggestions.length > 0,
+        },
+      ],
     },
     {
       id: 'section-block-a',
@@ -670,6 +766,26 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       subtitle: lang === 'en' ? 'Name, core problem, KPIs' : 'Nama bisnis, masalah utama, KPI',
       countLabel: `${blockCompletion.blockA.filled}/${blockCompletion.blockA.total}`,
       isComplete: blockCompletion.blockA.isComplete,
+      subItems: [
+        {
+          id: 'field-namaBisnis',
+          code: 'A1',
+          label: lang === 'en' ? 'Application / Domain Name' : 'Nama Aplikasi / Domain Bisnis',
+          isFilled: !!formData.namaBisnis && formData.namaBisnis.trim().length >= 3,
+        },
+        {
+          id: 'field-masalahUtama',
+          code: 'A2',
+          label: lang === 'en' ? 'Core Problem & Pain Points' : 'Masalah Utama & Pain Points',
+          isFilled: !!formData.masalahUtama && formData.masalahUtama.trim().length >= 10,
+        },
+        {
+          id: 'field-tujuanUtama',
+          code: 'A3',
+          label: lang === 'en' ? 'Success Metrics (KPIs)' : 'Tolak Ukur Sukses (Target KPI)',
+          isFilled: !!formData.tujuanUtama && formData.tujuanUtama.trim().length >= 5,
+        },
+      ],
     },
     {
       id: 'section-block-b',
@@ -679,6 +795,26 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       subtitle: lang === 'en' ? 'Audience, user roles, devices' : 'Profil audiens, aktor RBAC, perangkat',
       countLabel: `${blockCompletion.blockB.filled}/${blockCompletion.blockB.total}`,
       isComplete: blockCompletion.blockB.isComplete,
+      subItems: [
+        {
+          id: 'field-targetAudiens',
+          code: 'B1',
+          label: lang === 'en' ? 'Target Audience Profile' : 'Profil Target Audiens',
+          isFilled: !!formData.targetAudiens && formData.targetAudiens.trim().length >= 5,
+        },
+        {
+          id: 'field-aktorSistem',
+          code: 'B2',
+          label: lang === 'en' ? 'User Roles & RBAC Matrix' : 'Aktor Sistem & Hak Akses RBAC',
+          isFilled: !!formData.aktorSistem && formData.aktorSistem.trim().length >= 10,
+        },
+        {
+          id: 'field-targetPlatform',
+          code: 'B3',
+          label: lang === 'en' ? 'Platform Form Factors' : 'Platform & Perangkat Sasaran',
+          isFilled: !!formData.targetPlatform && formData.targetPlatform.trim().length >= 3,
+        },
+      ],
     },
     {
       id: 'section-block-c',
@@ -688,6 +824,32 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       subtitle: lang === 'en' ? 'Priority features, user flow, migration' : 'Fitur MVP, diagram alur, data lama',
       countLabel: `${blockCompletion.blockC.filled}/${blockCompletion.blockC.total}`,
       isComplete: blockCompletion.blockC.isComplete,
+      subItems: [
+        {
+          id: 'field-fiturWajib',
+          code: 'C1',
+          label: lang === 'en' ? 'Phase 1 MVP Features' : 'Fitur Utama Wajib MVP (Fase 1)',
+          isFilled: !!formData.fiturWajib && formData.fiturWajib.trim().length >= 10,
+        },
+        {
+          id: 'field-fiturTambahan',
+          code: 'C2',
+          label: lang === 'en' ? 'Phase 2 Feature Roadmap' : 'Roadmap Fitur (Fase 2)',
+          isFilled: !!formData.fiturTambahan && formData.fiturTambahan.trim().length >= 5,
+        },
+        {
+          id: 'field-alurKerja',
+          code: 'C3',
+          label: lang === 'en' ? 'Operational User Flow' : 'Alur Kerja Operasional Utama',
+          isFilled: !!formData.alurKerja && formData.alurKerja.trim().length >= 10,
+        },
+        {
+          id: 'field-migrasiData',
+          code: 'C4',
+          label: lang === 'en' ? 'Legacy Data Migration' : 'Migrasi Data Warisan (Excel/DB)',
+          isFilled: !!formData.migrasiData && formData.migrasiData.trim().length >= 3,
+        },
+      ],
     },
     {
       id: 'section-block-d',
@@ -697,6 +859,32 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       subtitle: lang === 'en' ? 'API gateways, server, UI/UX reference' : 'Integrasi API, server, preferensi UI/UX',
       countLabel: `${blockCompletion.blockD.filled}/${blockCompletion.blockD.total}`,
       isComplete: blockCompletion.blockD.isComplete,
+      subItems: [
+        {
+          id: 'field-kebutuhanIntegrasi',
+          code: 'D1',
+          label: lang === 'en' ? 'Third-Party Gateways & APIs' : 'Integrasi API & Payment Gateway',
+          isFilled: !!formData.kebutuhanIntegrasi && formData.kebutuhanIntegrasi.trim().length >= 3,
+        },
+        {
+          id: 'field-referensiDesain',
+          code: 'D2',
+          label: lang === 'en' ? 'UI/UX Design References' : 'Tolak Ukur & Referensi Desain',
+          isFilled: !!formData.referensiDesain && formData.referensiDesain.trim().length >= 3,
+        },
+        {
+          id: 'field-kesiapanAset',
+          code: 'D3',
+          label: lang === 'en' ? 'Brand & Content Readiness' : 'Kesiapan Brand & Konten/Aset',
+          isFilled: !!formData.kesiapanAset && formData.kesiapanAset.trim().length >= 3,
+        },
+        {
+          id: 'field-preferensiHosting',
+          code: 'D4',
+          label: lang === 'en' ? 'Cloud & Server Hosting' : 'Infrastruktur & Cloud Hosting',
+          isFilled: !!formData.preferensiHosting && formData.preferensiHosting.trim().length >= 3,
+        },
+      ],
     },
     {
       id: 'section-block-e',
@@ -706,6 +894,32 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       subtitle: lang === 'en' ? 'Timeline, security, out-of-scope' : 'Target waktu, security, scope freeze',
       countLabel: `${blockCompletion.blockE.filled}/${blockCompletion.blockE.total}`,
       isComplete: blockCompletion.blockE.isComplete,
+      subItems: [
+        {
+          id: 'field-targetWaktu',
+          code: 'E1',
+          label: lang === 'en' ? 'Target Go-Live Timeline' : 'Target Peluncuran (Go-Live)',
+          isFilled: !!formData.targetWaktu && formData.targetWaktu.trim().length >= 3,
+        },
+        {
+          id: 'field-skalaPengguna',
+          code: 'E2',
+          label: lang === 'en' ? 'Traffic & Data Concurrency' : 'Estimasi Trafik & Data Konkuren',
+          isFilled: !!formData.skalaPengguna && formData.skalaPengguna.trim().length >= 3,
+        },
+        {
+          id: 'field-outOfScope',
+          code: 'E3',
+          label: lang === 'en' ? 'Scope Boundaries (Anti-Creep)' : 'Batasan Scope (Scope Freeze)',
+          isFilled: !!formData.outOfScope && formData.outOfScope.trim().length >= 3,
+        },
+        {
+          id: 'field-kepatuhanKeamanan',
+          code: 'E4',
+          label: lang === 'en' ? 'Security & OWASP Compliance' : 'Standar Keamanan & Kepatuhan',
+          isFilled: !!formData.kepatuhanKeamanan && formData.kepatuhanKeamanan.trim().length >= 3,
+        },
+      ],
     },
     {
       id: 'section-block-f',
@@ -715,6 +929,44 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       subtitle: lang === 'en' ? 'Budget, warranty SLA, terms, PIC info' : 'Alokasi budget, SLA garansi, termin, PIC',
       countLabel: `${blockCompletion.blockF.filled}/${blockCompletion.blockF.total}`,
       isComplete: blockCompletion.blockF.isComplete,
+      subItems: [
+        {
+          id: 'field-kisaranBudget',
+          code: 'F1',
+          label: lang === 'en' ? 'Project Budget Allocation' : 'Alokasi Anggaran Investasi',
+          isFilled: !!formData.kisaranBudget && formData.kisaranBudget.trim().length >= 3,
+        },
+        {
+          id: 'field-garansiSla',
+          code: 'F2',
+          label: lang === 'en' ? 'Post-Launch Bug Warranty SLA' : 'Garansi Bug Pasca-Peluncuran',
+          isFilled: !!formData.garansiSla && formData.garansiSla.trim().length >= 3,
+        },
+        {
+          id: 'field-terminPembayaran',
+          code: 'F3',
+          label: lang === 'en' ? 'Payment Milestone Terms' : 'Termin Pembayaran Proyek',
+          isFilled: !!formData.terminPembayaran && formData.terminPembayaran.trim().length >= 3,
+        },
+        {
+          id: 'field-clientName',
+          code: 'F4',
+          label: lang === 'en' ? 'PIC Full Name' : 'Nama Lengkap PIC Penanggung Jawab',
+          isFilled: !!formData.clientName && formData.clientName.trim().length >= 3,
+        },
+        {
+          id: 'field-email',
+          code: 'F5',
+          label: lang === 'en' ? 'Official PIC Email' : 'Alamat Email Resmi PIC',
+          isFilled: !!formData.email && formData.email.includes('@'),
+        },
+        {
+          id: 'field-phone',
+          code: 'F6',
+          label: lang === 'en' ? 'Active PIC WhatsApp Number' : 'Nomor WhatsApp Aktif PIC',
+          isFilled: !!formData.phone && formData.phone.length >= 8,
+        },
+      ],
     },
     {
       id: 'section-submit',
@@ -724,8 +976,45 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       subtitle: lang === 'en' ? 'Final lock & PostgreSQL schema' : 'Kunci spesifikasi & skema PostgreSQL',
       countLabel: `${completeness.score}%`,
       isComplete: completeness.score >= 90,
+      subItems: [
+        {
+          id: 'field-readinessScore',
+          code: 'L1',
+          label: lang === 'en' ? 'Readiness Score >= 90%' : 'Skor Kesiapan >= 90%',
+          isFilled: completeness.score >= 90,
+        },
+        {
+          id: 'field-lockBtn',
+          code: 'L2',
+          label: lang === 'en' ? 'Lock & Issue PRD' : 'Kunci & Terbitkan Dokumen PRD',
+          isFilled: isLocked,
+        },
+      ],
     },
-  ], [lang, ideaText, blockCompletion, completeness]);
+  ], [lang, ideaText, attachedFiles, proactiveSuggestions, blockCompletion, completeness, formData, isLocked]);
+
+  const isAllSubExpanded = useMemo(() => {
+    return indexSections.every(sec => !sec.subItems || sec.subItems.length === 0 || expandedSubBlocks[sec.id]);
+  }, [indexSections, expandedSubBlocks]);
+
+  const toggleAllSubBlocks = useCallback(() => {
+    if (isAllSubExpanded) {
+      setExpandedSubBlocks({});
+    } else {
+      const next = {};
+      indexSections.forEach(sec => {
+        if (sec.subItems && sec.subItems.length > 0) {
+          next[sec.id] = true;
+        }
+      });
+      setExpandedSubBlocks(next);
+    }
+  }, [isAllSubExpanded, indexSections]);
+
+  const isSubBlockOpen = useCallback((secId) => {
+    if (indexSearchQuery.trim()) return true;
+    return !!expandedSubBlocks[secId];
+  }, [indexSearchQuery, expandedSubBlocks]);
 
   const accordionGroups = useMemo(() => [
     {
@@ -775,7 +1064,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     return indexSections.filter(sec => 
       sec.title.toLowerCase().includes(q) || 
       sec.subtitle.toLowerCase().includes(q) ||
-      sec.badge.toLowerCase().includes(q)
+      sec.badge.toLowerCase().includes(q) ||
+      (sec.subItems && sec.subItems.some(sub => 
+        sub.label.toLowerCase().includes(q) || 
+        sub.code.toLowerCase().includes(q)
+      ))
     );
   }, [indexSections, indexSearchQuery]);
 
@@ -951,6 +1244,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       formDataUpload.append('_hp_check', honeypot);
       formDataUpload.append('_website', honeypotWebsite);
       formDataUpload.append('locale', lang);
+      if (formData.namaBisnis && formData.namaBisnis.trim()) {
+        formDataUpload.append('nama_bisnis', formData.namaBisnis.trim());
+      }
 
       attachedFiles.forEach(file => {
         formDataUpload.append('files[]', file);
@@ -1330,11 +1626,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       {/* 1. DESKTOP FLOATING LEFT SIDEBAR / RAIL (xl:flex) */}
       <aside 
         aria-label="Blueprint Index Navigation"
-        className="fixed left-3 2xl:left-6 top-24 z-40 hidden xl:flex flex-col font-mono select-none"
+        style={{
+          top: `${indexTopOffset}px`,
+          maxHeight: `calc(100vh - ${indexTopOffset + 16}px)`
+        }}
+        className="fixed left-3 2xl:left-6 z-40 hidden xl:flex flex-col font-mono select-none transition-[top] duration-75"
       >
         {isIndexExpanded ? (
           /* EXPANDED DIRECTORY PANEL */
-          <div className="w-72 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[calc(100vh-7rem)] rounded-none transition-all duration-200">
+          <div className="w-72 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col h-full max-h-full rounded-none transition-all duration-200">
             {/* Header */}
             <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-950/80">
               <div className="flex items-center gap-2">
@@ -1387,7 +1687,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
               {/* Group Toggle & Top Jumper Toolbar */}
               <div className="flex items-center justify-between text-[10px] text-zinc-500 dark:text-zinc-400 px-0.5 pt-0.5">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <button
                     type="button"
                     onClick={expandAllGroups}
@@ -1403,11 +1703,20 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   >
                     {t.indexCollapseAll}
                   </button>
+                  <span>·</span>
+                  <button
+                    type="button"
+                    onClick={toggleAllSubBlocks}
+                    className="hover:text-emerald-600 dark:hover:text-emerald-400 transition font-bold text-emerald-600 dark:text-emerald-400"
+                    title={t.indexToggleDetails}
+                  >
+                    {isAllSubExpanded ? t.indexCollapseDetails : t.indexExpandDetails}
+                  </button>
                 </div>
                 <button
                   type="button"
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="flex items-center gap-0.5 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+                  className="flex items-center gap-0.5 hover:text-emerald-600 dark:hover:text-emerald-400 transition shrink-0"
                   title="Scroll to top"
                 >
                   <ArrowUp className="w-3 h-3" />
@@ -1445,52 +1754,119 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       <div className="mt-1 space-y-1 pl-1">
                         {groupSections.map((sec) => {
                           const isActive = activeSection === sec.id;
+                          const isSubOpen = isSubBlockOpen(sec.id);
+                          const hasSubItems = sec.subItems && sec.subItems.length > 0;
                           return (
-                            <button
-                              key={sec.id}
-                              type="button"
-                              onClick={() => jumpToSection(sec.id)}
-                              className={`w-full text-left p-1.5 flex items-center justify-between gap-1.5 border transition-all ${
-                                isActive
-                                  ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-700 dark:text-emerald-300 font-bold shadow-xs'
-                                  : 'bg-transparent border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 truncate">
-                                <span className={`w-5 h-5 flex items-center justify-center text-[10px] font-mono shrink-0 border ${
+                            <div key={sec.id} className="space-y-0.5">
+                              <div
+                                onClick={() => jumpToSection(sec.id)}
+                                className={`w-full text-left p-1.5 flex items-center justify-between gap-1.5 border transition-all cursor-pointer ${
                                   isActive
-                                    ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
-                                    : sec.isComplete
-                                    ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40'
-                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
-                                }`}>
-                                  {sec.badge}
-                                </span>
-                                <div className="truncate">
-                                  <div className="text-[11px] truncate leading-tight font-sans">
-                                    {sec.title}
+                                    ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-700 dark:text-emerald-300 font-bold shadow-xs'
+                                    : 'bg-transparent border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 truncate">
+                                  <span className={`w-5 h-5 flex items-center justify-center text-[10px] font-mono shrink-0 border ${
+                                    isActive
+                                      ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                                      : sec.isComplete
+                                      ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
+                                  }`}>
+                                    {sec.isComplete ? (
+                                      <Check className="w-3 h-3 stroke-[3]" />
+                                    ) : (
+                                      sec.badge
+                                    )}
+                                  </span>
+                                  <div className="truncate">
+                                    <div className="text-[11px] truncate leading-tight font-sans">
+                                      {sec.title}
+                                    </div>
                                   </div>
+                                </div>
+
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {sec.countLabel && (
+                                    <span className={`text-[9px] font-mono px-1 py-0.2 border ${
+                                      sec.isComplete
+                                        ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-bold'
+                                        : 'border-zinc-200 dark:border-zinc-700 text-zinc-500 bg-zinc-50 dark:bg-zinc-800'
+                                    }`}>
+                                      {sec.countLabel}
+                                    </span>
+                                  )}
+
+                                  {hasSubItems && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => toggleSubBlock(sec.id, e)}
+                                      className="p-0.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition rounded-none"
+                                      title={isSubOpen ? t.indexCollapseDetails : t.indexExpandDetails}
+                                    >
+                                      {isSubOpen ? (
+                                        <ChevronDown className="w-3 h-3" />
+                                      ) : (
+                                        <ChevronRight className="w-3 h-3" />
+                                      )}
+                                    </button>
+                                  )}
+
+                                  {isActive && (
+                                    <span className="relative flex h-1.5 w-1.5 ml-0.5">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-none bg-emerald-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-none h-1.5 w-1.5 bg-emerald-500"></span>
+                                    </span>
+                                  )}
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-1 shrink-0">
-                                {sec.countLabel && (
-                                  <span className={`text-[9px] font-mono px-1 py-0.2 border ${
-                                    sec.isComplete
-                                      ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
-                                      : 'border-zinc-200 dark:border-zinc-700 text-zinc-500 bg-zinc-50 dark:bg-zinc-800'
-                                  }`}>
-                                    {sec.countLabel}
-                                  </span>
-                                )}
-                                {isActive && (
-                                  <span className="relative flex h-1.5 w-1.5 ml-0.5">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-none bg-emerald-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-none h-1.5 w-1.5 bg-emerald-500"></span>
-                                  </span>
-                                )}
-                              </div>
-                            </button>
+                              {/* Sub-Items List when Expanded */}
+                              {isSubOpen && hasSubItems && (
+                                <div className="ml-3 pl-2 border-l border-zinc-200 dark:border-zinc-800/80 space-y-0.5 py-0.5">
+                                  {sec.subItems.map((sub) => (
+                                    <button
+                                      key={sub.id}
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        jumpToField(sub.id, sec.id);
+                                      }}
+                                      className={`w-full text-left py-1 px-1.5 flex items-center justify-between gap-1 text-[10px] transition ${
+                                        sub.isFilled
+                                          ? 'text-zinc-800 dark:text-zinc-200 hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300'
+                                          : 'text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 hover:text-zinc-700 dark:hover:text-zinc-300'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-1.5 truncate">
+                                        {sub.isFilled ? (
+                                          <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center bg-emerald-500 text-black">
+                                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                          </span>
+                                        ) : (
+                                          <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center border border-zinc-300 dark:border-zinc-700 text-zinc-400 text-[8px] font-mono">
+                                            ○
+                                          </span>
+                                        )}
+                                        <span className="font-mono text-[9px] text-zinc-400 shrink-0">{sub.code}</span>
+                                        <span className={`truncate font-sans ${sub.isFilled ? 'font-medium' : ''}`}>
+                                          {sub.label}
+                                        </span>
+                                      </div>
+
+                                      <span className={`text-[8px] font-mono shrink-0 px-1 py-0.2 border uppercase ${
+                                        sub.isFilled
+                                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
+                                          : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400'
+                                      }`}>
+                                        {sub.isFilled ? (lang === 'en' ? '✓ Filled' : '✓ Terisi') : (lang === 'en' ? 'Empty' : 'Kosong')}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           );
                         })}
                       </div>
@@ -1547,11 +1923,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       isActive
                         ? 'bg-emerald-500 text-black border-emerald-500 font-bold shadow-xs scale-105'
                         : sec.isComplete
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold hover:bg-emerald-400'
                         : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50 hover:text-zinc-900 dark:hover:text-zinc-100'
                     }`}
                   >
-                    {sec.badge}
+                    {sec.isComplete ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : sec.badge}
                   </button>
                 );
               })}
@@ -1625,7 +2001,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 </div>
 
                 {/* Search Bar in Mobile Drawer */}
-                <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50">
+                <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 space-y-2">
                   <div className="relative flex items-center">
                     <Search className="w-3.5 h-3.5 absolute left-2.5 text-zinc-400 pointer-events-none" />
                     <input
@@ -1644,6 +2020,27 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                         <X className="w-3.5 h-3.5" />
                       </button>
                     )}
+                  </div>
+                  {/* Mobile Details Toggle */}
+                  <div className="flex items-center justify-between text-[10px] text-zinc-500">
+                    <button
+                      type="button"
+                      onClick={toggleAllSubBlocks}
+                      className="hover:text-emerald-500 transition font-bold text-emerald-600 dark:text-emerald-400"
+                    >
+                      {isAllSubExpanded ? t.indexCollapseDetails : t.indexExpandDetails}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileDrawerOpen(false);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="hover:text-emerald-500 transition flex items-center gap-1"
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                      <span>{t.indexBackToTop}</span>
+                    </button>
                   </div>
                 </div>
 
@@ -1674,33 +2071,94 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                           <div className="space-y-1 pl-1">
                             {groupSections.map((sec) => {
                               const isActive = activeSection === sec.id;
+                              const isSubOpen = isSubBlockOpen(sec.id);
+                              const hasSubItems = sec.subItems && sec.subItems.length > 0;
                               return (
-                                <button
-                                  key={sec.id}
-                                  type="button"
-                                  onClick={() => jumpToSection(sec.id)}
-                                  className={`w-full text-left p-2 flex items-center justify-between border transition ${
-                                    isActive
-                                      ? 'bg-emerald-500/10 border-emerald-500/60 text-emerald-600 dark:text-emerald-400 font-bold'
-                                      : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2 truncate">
-                                    <span className={`w-5 h-5 flex items-center justify-center text-[10px] font-mono shrink-0 border ${
+                                <div key={sec.id} className="space-y-0.5">
+                                  <div
+                                    onClick={() => jumpToSection(sec.id)}
+                                    className={`w-full text-left p-2 flex items-center justify-between border transition cursor-pointer ${
                                       isActive
-                                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
-                                        : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700'
-                                    }`}>
-                                      {sec.badge}
-                                    </span>
-                                    <span className="truncate text-xs font-sans">{sec.title}</span>
+                                        ? 'bg-emerald-500/10 border-emerald-500/60 text-emerald-600 dark:text-emerald-400 font-bold'
+                                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2 truncate">
+                                      <span className={`w-5 h-5 flex items-center justify-center text-[10px] font-mono shrink-0 border ${
+                                        isActive
+                                          ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                                          : sec.isComplete
+                                          ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                                          : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700'
+                                      }`}>
+                                        {sec.isComplete ? <Check className="w-3 h-3 stroke-[3]" /> : sec.badge}
+                                      </span>
+                                      <span className="truncate text-xs font-sans">{sec.title}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      {sec.countLabel && (
+                                        <span className={`text-[10px] font-mono px-1 py-0.2 border ${
+                                          sec.isComplete
+                                            ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-bold'
+                                            : 'border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                                        }`}>
+                                          {sec.countLabel}
+                                        </span>
+                                      )}
+                                      {hasSubItems && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => toggleSubBlock(sec.id, e)}
+                                          className="p-0.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                                        >
+                                          {isSubOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
-                                  {sec.countLabel && (
-                                    <span className="text-[10px] font-mono px-1 py-0.2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 shrink-0">
-                                      {sec.countLabel}
-                                    </span>
+
+                                  {/* Sub-items in Mobile Drawer */}
+                                  {isSubOpen && hasSubItems && (
+                                    <div className="ml-3 pl-2 border-l border-zinc-200 dark:border-zinc-800 space-y-1 py-1">
+                                      {sec.subItems.map((sub) => (
+                                        <button
+                                          key={sub.id}
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            jumpToField(sub.id, sec.id);
+                                          }}
+                                          className={`w-full text-left py-1 px-1.5 flex items-center justify-between gap-1 text-[11px] transition ${
+                                            sub.isFilled
+                                              ? 'text-zinc-800 dark:text-zinc-200 hover:text-emerald-500 font-medium'
+                                              : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
+                                          }`}
+                                        >
+                                          <div className="flex items-center gap-1.5 truncate">
+                                            {sub.isFilled ? (
+                                              <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center bg-emerald-500 text-black">
+                                                <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                              </span>
+                                            ) : (
+                                              <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center border border-zinc-400 text-zinc-400 text-[8px] font-mono">
+                                                ○
+                                              </span>
+                                            )}
+                                            <span className="font-mono text-[10px] text-zinc-400 shrink-0">{sub.code}</span>
+                                            <span className="truncate font-sans">{sub.label}</span>
+                                          </div>
+                                          <span className={`text-[8px] font-mono shrink-0 px-1 py-0.2 border uppercase ${
+                                            sub.isFilled
+                                              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
+                                              : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-400'
+                                          }`}>
+                                            {sub.isFilled ? (lang === 'en' ? '✓' : '✓') : '—'}
+                                          </span>
+                                        </button>
+                                      ))}
+                                    </div>
                                   )}
-                                </button>
+                                </div>
                               );
                             })}
                           </div>
@@ -1911,7 +2369,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Brain Dump Textarea */}
-            <div>
+            <div id="field-ideaText">
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
                   Uraian Ide & Alur Proses Bisnis
@@ -1930,7 +2388,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* MarkItDown File Dropzone */}
-            <div>
+            <div id="field-attachedFiles">
               <label className={labelClass}>
                 {t.dropzoneTitle}
               </label>
@@ -2055,7 +2513,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         </p>
 
         {/* 1-Click Suggestion Chips */}
-        <div className="mb-6">
+        <div id="field-proactiveSuggestions" className="mb-6">
           <span className="block text-[11px] font-mono uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2.5 font-bold">
             {t.suggestionsTitle}
           </span>
@@ -2154,7 +2612,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
           <div className="space-y-5">
             {/* Field 1: namaBisnis */}
-            <div>
+            <div id="field-namaBisnis">
               <label className={labelClass}>
                 {lang === 'en' ? '1. Application Name / System Domain *' : '1. Nama Aplikasi / Domain Sistem *'}
               </label>
@@ -2169,7 +2627,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 2: masalahUtama */}
-            <div>
+            <div id="field-masalahUtama">
               <label className={labelClass}>
                 {lang === 'en' ? '2. Core Problem & Business Pain Points' : '2. Masalah Utama & Pain Points yang Dihadapi Bisnis'}
               </label>
@@ -2183,7 +2641,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 3: tujuanUtama (KPIs) */}
-            <div>
+            <div id="field-tujuanUtama">
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
                   {lang === 'en' ? '3. Key Success Metrics (Business KPIs)' : '3. Tolak Ukur Keberhasilan (Target KPI Bisnis)'}
@@ -2252,7 +2710,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
           <div className="space-y-5">
             {/* Field 4: targetAudiens */}
-            <div>
+            <div id="field-targetAudiens">
               <label className={labelClass}>
                 {lang === 'en' ? '4. Target Audience / End-User Profile' : '4. Profil Target Audiens / Pengguna Akhir'}
               </label>
@@ -2266,7 +2724,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 5: aktorSistem (RBAC) */}
-            <div>
+            <div id="field-aktorSistem">
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
                   {lang === 'en' ? '5. System Actors & Role Permissions (RBAC Matrix)' : '5. Aktor Sistem & Matriks Wewenang (RBAC)'}
@@ -2341,7 +2799,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 6: targetPlatform (NEW & CRITICAL) */}
-            <div>
+            <div id="field-targetPlatform">
               <label className={labelClass}>
                 {lang === 'en'
                   ? '6. Target Platform & Device Accessibility *'
@@ -2402,7 +2860,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
           <div className="space-y-6">
             {/* Field 7: fiturWajib (MVP) */}
-            <div>
+            <div id="field-fiturWajib">
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
                   {lang === 'en' ? '7. Essential MVP Features (Phase 1 - Absolute Priority)' : '7. Fitur Wajib MVP (Fase 1 - Prioritas Mutlak)'}
@@ -2454,7 +2912,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 8: fiturTambahan (Roadmap) */}
-            <div>
+            <div id="field-fiturTambahan">
               <label className={labelClass}>
                 {lang === 'en' ? '8. Secondary Features (Phase 2 - Future Roadmap)' : '8. Fitur Tambahan (Fase 2 - Roadmap Masa Depan)'}
               </label>
@@ -2468,7 +2926,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 9: alurKerja (User Flow) */}
-            <div>
+            <div id="field-alurKerja">
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
                   {lang === 'en' ? '9. Core Operational Workflow (Step-by-Step User Flow)' : '9. Alur Kerja Utama (User Flow Langkah demi Langkah)'}
@@ -2520,7 +2978,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 10: migrasiData (NEW & CRITICAL) */}
-            <div>
+            <div id="field-migrasiData">
               <label className={labelClass}>
                 {lang === 'en'
                   ? '10. Legacy Data Migration Scope & Strategy *'
@@ -2578,7 +3036,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
           <div className="space-y-5">
             {/* Field 11: kebutuhanIntegrasi */}
-            <div>
+            <div id="field-kebutuhanIntegrasi">
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
                   {lang === 'en' ? '11. Third-Party Integrations (APIs & Gateways)' : '11. Kebutuhan Integrasi Pihak Ketiga (API & Gateway)'}
@@ -2655,7 +3113,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
             {/* Field 12 & 13: referensiDesain & kesiapanAset */}
             <div className="grid sm:grid-cols-2 gap-4">
-              <div>
+              <div id="field-referensiDesain">
                 <label className={labelClass}>
                   {lang === 'en' ? '12. UI/UX Design References & Brand Benchmarks' : '12. Referensi Desain / Benchmark UI/UX'}
                 </label>
@@ -2667,7 +3125,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   className={inputClass}
                 />
               </div>
-              <div>
+              <div id="field-kesiapanAset">
                 <label className={labelClass}>
                   {lang === 'en' ? '13. Digital Assets Readiness (Logo, Copywriting)' : '13. Kesiapan Aset Digital (Logo, Konten)'}
                 </label>
@@ -2682,7 +3140,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 14: preferensiHosting (NEW & CRITICAL) */}
-            <div>
+            <div id="field-preferensiHosting">
               <label className={labelClass}>
                 {lang === 'en'
                   ? '14. Hosting Infrastructure & Server Ownership Preference *'
@@ -2772,7 +3230,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 />
               </div>
 
-              <div>
+              <div id="field-targetWaktu">
                 <label className={labelClass}>
                   {lang === 'en' ? '16. Target Launch Window (Target Release)' : '16. Target Waktu Peluncuran (Target Rilis)'}
                 </label>
@@ -2788,7 +3246,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
             {/* Field 17 & 18: skalaPengguna & jangkauanPasar */}
             <div className="grid sm:grid-cols-2 gap-4">
-              <div>
+              <div id="field-skalaPengguna">
                 <label className={labelClass}>
                   {lang === 'en' ? '17. Estimated User Traffic Scale (Concurrent Users)' : '17. Estimasi Skala Trafik Pengguna'}
                 </label>
@@ -2815,7 +3273,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 19: outOfScope (Anti Scope Creep) */}
-            <div>
+            <div id="field-outOfScope">
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
                   {lang === 'en' ? '19. Negative Scope Limits (Out of Scope - Anti Scope Creep)' : '19. Batasan Negatif (Out of Scope - Anti Scope Creep)'}
@@ -2867,7 +3325,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 20: kepatuhanKeamanan */}
-            <div>
+            <div id="field-kepatuhanKeamanan">
               <label className={labelClass}>
                 {lang === 'en' ? '20. Security Standards & Encryption Compliance' : '20. Standar Keamanan & Kepatuhan Enkripsi'}
               </label>
@@ -2899,7 +3357,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
           <div className="space-y-6 mb-8">
             {/* Field 21: kisaranBudget */}
-            <div>
+            <div id="field-kisaranBudget">
               <label className={labelClass}>
                 {lang === 'en' ? '21. Investment Budget Allocation *' : '21. Alokasi Kisaran Budget Investasi *'}
               </label>
@@ -2913,7 +3371,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 22: garansiSla (NEW & CRITICAL) */}
-            <div>
+            <div id="field-garansiSla">
               <label className={labelClass}>
                 {lang === 'en'
                   ? '22. Post-Launch Bug Warranty, SLA & Git Repo Handover *'
@@ -2954,7 +3412,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Field 23: terminPembayaran (NEW & CRITICAL) */}
-            <div>
+            <div id="field-terminPembayaran">
               <label className={labelClass}>
                 {lang === 'en'
                   ? '23. Payment Milestone Terms & Schedule *'
@@ -3004,7 +3462,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             {/* Fields 24, 25, 26: PIC Contact Info */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
               {/* Field 24: clientName */}
-              <div>
+              <div id="field-clientName">
                 <label className={labelClass}>
                   {lang === 'en' ? '24. Authorized PIC Full Name *' : '24. Nama Lengkap PIC *'}
                 </label>
@@ -3019,7 +3477,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </div>
 
               {/* Field 25: email */}
-              <div>
+              <div id="field-email">
                 <label className={labelClass}>
                   {lang === 'en' ? '25. Official PIC Email *' : '25. Email Resmi PIC *'}
                 </label>
@@ -3034,7 +3492,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </div>
 
               {/* Field 26: phone with Country Zone Code */}
-              <div>
+              <div id="field-phone">
                 <label className={labelClass}>
                   {lang === 'en' ? '26. Authorized PIC WhatsApp / Phone *' : '26. WhatsApp / Telepon PIC *'}
                 </label>

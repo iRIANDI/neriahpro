@@ -2194,6 +2194,14 @@ x-init="
                         >
                             <span>5. INFRASTRUKTUR</span>
                         </button>
+                        <button 
+                            type="button"
+                            @click="chartStudioTab = 'mobile_sync'; $nextTick(() => window.renderMermaidDiagram('mermaid-studio-mobilesync-target', 'mermaid-studio-mobilesync-source'))" 
+                            :class="chartStudioTab === 'mobile_sync' ? 'bg-sky-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                            class="px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1"
+                        >
+                            <span>6. MOBILE &amp; SYNC</span>
+                        </button>
                     </div>
                 </div>
 
@@ -2312,6 +2320,30 @@ x-init="
                             <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-none bg-violet-500 animate-ping"></span>
                                 <span>Memuat topologi infrastruktur Mermaid...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart 6: Mobile App & Local SQLite Sync Sequence -->
+                <div x-show="chartStudioTab === 'mobile_sync'" x-cloak class="space-y-4">
+                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
+                            <span class="text-emerald-400 font-bold uppercase">DIAGRAM 6: ALUR SINKRONISASI MOBILE &amp; LOCAL SQLITE (OFFLINE-FIRST)</span>
+                            <button 
+                                type="button"
+                                onclick="window.copyMermaidCode('mermaid-studio-mobilesync-source', this)"
+                                class="px-2.5 py-1 bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                            >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
+                            </button>
+                        </div>
+                        <script type="text/plain" id="mermaid-studio-mobilesync-source">{!! $prd['virtual_charts']['mobile_sync_mermaid'] ?? '' !!}</script>
+                        <div id="mermaid-studio-mobilesync-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center">
+                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
+                                <span>Memuat topologi sinkronisasi Mobile &amp; SQLite Mermaid...</span>
                             </div>
                         </div>
                     </div>

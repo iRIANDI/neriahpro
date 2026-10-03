@@ -373,6 +373,32 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
         window.copyFullPrdMarkdown = function(btnEl) {
             window.location.href = '{{ route('blueprint.download-md', $blueprint->slug) }}';
         };
+
+        window.copyCockpitStepPrompt = function(btnEl, preId) {
+            const el = document.getElementById(preId);
+            if (!el) return;
+            const text = el.innerText || el.textContent;
+            navigator.clipboard.writeText(text.trim()).then(() => {
+                const orig = btnEl.innerHTML;
+                btnEl.innerHTML = '<span class="text-black dark:text-emerald-950 font-black">✓ PROMPT DISALIN!</span>';
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'success',
+                        title: 'PROMPT TAHAP DISALIN',
+                        message: 'Prompt vertikal siap di-paste ke Cursor / Claude Code / Antigravity!'
+                    });
+                }
+                setTimeout(() => { btnEl.innerHTML = orig; }, 2200);
+            }).catch(err => {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'GAGAL MENYALIN',
+                        message: 'Browser memblokir akses clipboard.'
+                    });
+                }
+            });
+        };
     </script>
 @php
     $pricingTiers = $prd['velocity_pricing_options'] ?? \App\Services\PrdGeneratorService::generateVelocityPricingOptions(
@@ -392,6 +418,33 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     }
     $tierKeys = array_keys($alpineTiers);
     $defaultSelectedTier = count($tierKeys) >= 2 ? $tierKeys[1] : ($tierKeys[0] ?? '');
+
+    $mvpEngineeringSpecs = $prd['features']['mvp_phase1'] ?? ($prd['engineering_specs']['mvp_specs'] ?? []);
+    $totalDevSteps = count($mvpEngineeringSpecs) + 2;
+
+    $erdTablesList = $prd['erd_schema']['tables'] ?? [];
+    $erdSummary = [];
+    foreach ($erdTablesList as $t) {
+        $cols = array_map(fn($c) => $c['name'] . ' (' . $c['type'] . ')', $t['columns'] ?? []);
+        $erdSummary[] = "- Tabel: " . $t['name'] . " [PK: " . $t['primary_key'] . "]\n  Kolom: " . implode(', ', array_slice($cols, 0, 8));
+    }
+    $erdText = implode("\n", $erdSummary);
+
+    $hasSync = !empty($prd['mobile_and_sync_architecture']);
+    $syncText = $hasSync 
+        ? "\n\nArsitektur Sinkronisasi Offline-First (Bab 5.6):\n- Endpoint Push: POST /api/v1/sync/push\n- Endpoint Pull: GET /api/v1/sync/pull\n- Resolusi Konflik: Last-Write-Wins (LWW) berdasarkan updated_at ULID\n- SQLite Local DDL & SQLite client support" 
+        : "";
+
+    $foundationPrompt = "[FONDASI GLOBAL & SETUP BASIS DATA: " . ($blueprint->nama_bisnis ?: $blueprint->client_name) . "]\n"
+        . "Tugas Arsitektur: Inisialisasi struktur database PostgreSQL, model Eloquent ULID, dan base stack project.\n\n"
+        . "Spesifikasi Bab 5 (ERD Schema):\n" . $erdText . $syncText . "\n\n"
+        . "Aturan Wajib Kepatuhan (.agents/AGENTS.md):\n"
+        . "1. Gunakan ULID (->ulid('id')->primary()) untuk semua primary key tabel bisnis. Dilarang AUTO_INCREMENT.\n"
+        . "2. Model Eloquent wajib menyertakan trait HasUlids.\n"
+        . "3. Keyset Cursor Pagination O(1) (cursorPaginate()). Dilarang offset pagination.\n"
+        . "4. Kolom multi-bahasa bertipe JSON dengan cast 'array'.\n"
+        . "5. Jalankan verifikasi terminal: php artisan migrate:status && php artisan test\n"
+        . "6. Setelah exit code 0, lakukan commit git: git commit -m 'chore(db): setup ULID migrations and base foundation'";
 @endphp
 </head>
 <body x-data="{ 
@@ -402,6 +455,59 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     erdLang: 'id',
     chartStudioTab: 'workflow',
     devEducationMode: 'step_by_step',
+    devActiveStep: 0,
+    devCompletedSteps: (() => {
+        try {
+            return JSON.parse(localStorage.getItem('neriah_dev_progress_{{ $blueprint->slug }}') || '{}');
+        } catch(e) {
+            return {};
+        }
+    })(),
+    isStepCompleted(k) {
+        return !!this.devCompletedSteps[k];
+    },
+    toggleStepCompleted(k, label) {
+        this.devCompletedSteps[k] = !this.devCompletedSteps[k];
+        try {
+            localStorage.setItem('neriah_dev_progress_{{ $blueprint->slug }}', JSON.stringify(this.devCompletedSteps));
+        } catch(e){}
+        if (window.showToast) {
+            if (this.devCompletedSteps[k]) {
+                window.showToast({
+                    type: 'success',
+                    title: 'TAHAP TERVERIFIKASI',
+                    message: (label || k) + ' ditandai selesai & disimpan ke riwayat sprint.'
+                });
+            } else {
+                window.showToast({
+                    type: 'info',
+                    title: 'STATUS DIPERBARUI',
+                    message: (label || k) + ' dikembalikan ke status antrean (pending).'
+                });
+            }
+        }
+    },
+    resetDevProgress() {
+        this.devCompletedSteps = {};
+        try {
+            localStorage.removeItem('neriah_dev_progress_{{ $blueprint->slug }}');
+        } catch(e){}
+        if (window.showToast) {
+            window.showToast({
+                type: 'warning',
+                title: 'PROGRESS DIRESET',
+                message: 'Semua progres sprint developer telah dibersihkan.'
+            });
+        }
+    },
+    getDevCompletedCount() {
+        return Object.values(this.devCompletedSteps).filter(Boolean).length;
+    },
+    getDevProgressPercentage() {
+        const total = {{ $totalDevSteps }};
+        if (!total || total <= 0) return 0;
+        return Math.min(100, Math.round((this.getDevCompletedCount() / total) * 100));
+    },
     selectedIdeTool: 'antigravity_ide',
     selectedTier: '{{ $defaultSelectedTier }}',
     tierAmounts: {{ json_encode($alpineTiers) }},
@@ -575,6 +681,13 @@ x-init="
                 <button type="button" @click="showAiPromptModal = true" class="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 flex items-center gap-1.5 transition" title="Buka Pusat Helper Prompt AI Agent (Antigravity, Cursor, Claude Code, Windsurf)">
                     <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                     <span>PROMPT AGENT</span>
+                </button>
+
+                <!-- AI Orchestration Sprint Cockpit Button in Header -->
+                <button type="button" @click="jumpTo('section-3-5')" class="px-2.5 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none border border-zinc-700 dark:border-emerald-400 flex items-center gap-1.5 transition" title="Buka AI Agent Sprint Execution Cockpit">
+                    <span class="w-1.5 h-1.5 rounded-none" :class="getDevCompletedCount() > 0 ? 'bg-emerald-400 dark:bg-black animate-pulse' : 'bg-amber-400 dark:bg-black'"></span>
+                    <span class="hidden lg:inline">COCKPIT SPRINT:</span>
+                    <span x-text="getDevCompletedCount() + '/' + {{ $totalDevSteps }}"></span>
                 </button>
 
                 <a href="{{ route('blueprint.create', ['slug' => $blueprint->slug]) }}" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 transition flex items-center gap-1" title="Lengkapi / Tambah Kebutuhan di Studio">
@@ -1599,15 +1712,20 @@ x-init="
                         </div>
 
                         @foreach($mvpEngineeringSpecs as $specIdx => $spec)
+                            @php
+                                $featKey = $spec['feature_id'] ?? ($spec['id'] ?? ('FEAT-SPEC-' . $specIdx));
+                            @endphp
                             <div 
+                                id="card-feat-{{ $specIdx }}"
                                 x-data="{ specTab: &apos;gherkin&apos;, expanded: true }" 
-                                class="bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-none transition"
+                                class="bg-zinc-50 dark:bg-zinc-950 border-2 rounded-none transition scroll-mt-24"
+                                :class="isStepCompleted('{{ $featKey }}') ? 'border-emerald-500/80 shadow-xs' : 'border-zinc-200 dark:border-zinc-800'"
                             >
                                 <!-- Feature Spec Header Bar -->
                                 <div class="p-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div class="flex items-start sm:items-center gap-3">
-                                        <span class="px-2 py-0.5 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs uppercase tracking-wider">
-                                            {{ $spec['feature_id'] ?? ($spec['id'] ?? 'FEAT-SPEC') }}
+                                        <span class="px-2 py-0.5 font-mono font-bold text-xs uppercase tracking-wider" :class="isStepCompleted('{{ $featKey }}') ? 'bg-emerald-500 text-black' : 'bg-zinc-900 dark:bg-zinc-800 text-white'">
+                                            {{ $featKey }}
                                         </span>
                                         <div>
                                             <div class="flex flex-wrap items-center gap-2">
@@ -1625,6 +1743,18 @@ x-init="
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2 no-print self-end sm:self-auto">
+                                        <!-- Step Verification Toggle in Feature Card -->
+                                        <button 
+                                            type="button" 
+                                            @click="toggleStepCompleted('{{ $featKey }}', '{{ addslashes($spec['title'] ?? '') }}')"
+                                            :class="isStepCompleted('{{ $featKey }}') ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 border-zinc-300 dark:border-zinc-700'"
+                                            class="px-2.5 py-1 text-xs font-mono border flex items-center gap-1.5 transition rounded-none"
+                                            title="Tandai Status Pengerjaan Fitur Ini di Cockpit Sprint"
+                                        >
+                                            <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted('{{ $featKey }}') ? 'bg-black' : 'bg-zinc-400'"></span>
+                                            <span x-text="isStepCompleted('{{ $featKey }}') ? '✓ VERIFIED & COMMITTED' : 'TANDAI SELESAI'"></span>
+                                        </button>
+
                                         <button 
                                             type="button" 
                                             onclick="copyFeaturePrompt(this, 'prompt-code-{{ $specIdx }}')" 
@@ -1862,114 +1992,434 @@ x-init="
                         @endforeach
                     </div>
                 @endif
-            </section>
-
-            <!-- SECTION 3.5: PUSAT EDUKASI DEVELOPER & PROTOKOL HANDOFF AI CODING AGENT -->
+                <!-- SECTION 3.5: PUSAT ORKESTRASI & SPRINT COCKPIT AI CODING AGENT -->
             <section id="section-3-5" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-4">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">&para;</span>
                         <div>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Pusat Edukasi Developer: Cara Memberikan PRD ke AI Coding Agent</h2>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Panduan taktis membimbing AI Agent (Cursor, Claude Code, Windsurf, Devin) membaca PRD secara bertahap atau sekaligus tanpa amnesia arsitektur.</p>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Pusat Orkestrasi AI Agent: Strategi Vertical Slice &amp; Interactive Sprint Cockpit</h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Panduan taktis membimbing AI Agent (Cursor Composer, Claude Code CLI, Windsurf Cascade, Devin, Antigravity IDE) membaca PRD per fitur vertikal secara terpandu sampai tuntas.</p>
                         </div>
                     </div>
                     <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
-                        ANTI CONTEXT-ROT PROTOCOL
+                        VERTICAL SLICE ENGINE // O(1) CONTEXT
                     </span>
                 </div>
 
-                <!-- Education Rationale Banner -->
-                <div class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs mb-6 text-zinc-300 space-y-2">
-                    <div class="flex items-center gap-2 text-amber-400 font-bold uppercase text-xs">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span>KENAPA DEVELOPER DILARANG SEMBARANGAN MELAKUKAN "PROMPT DUMPING"?</span>
+                <!-- Executive Warning & Rationale Against Prompt Dumping -->
+                <div class="p-5 bg-zinc-950 border border-zinc-800 font-mono text-xs mb-6 text-zinc-300 space-y-4">
+                    <div class="border-b border-zinc-800 pb-3">
+                        <div class="text-amber-400 font-bold uppercase text-xs sm:text-sm tracking-wide mb-1">
+                            Strategi Orkestrasi AI: Apakah PRD Diberikan Sekaligus atau Sedikit demi Sedikit?
+                        </div>
+                        <div class="p-2.5 bg-rose-500/10 border-l-4 border-rose-500 text-rose-400 font-black text-xs sm:text-sm uppercase tracking-tight mt-2">
+                            🚨 JAWABAN TEGAS: JANGAN PERNAH MEMBERIKAN SELURUH DOKUMEN PRD SEKALIGUS DALAM SATU PROMPT KODING!
+                        </div>
                     </div>
-                    <p class="font-sans text-xs text-zinc-400 leading-relaxed">
-                        AI Coding Agent bekerja berbasis bobot probabilitas token. Memasukkan ribuan baris dokumen PRD sekaligus ke dalam sesi percakapan aktif yang sedang mengedit kode akan memicu <strong>Context Rot &amp; Attention Drift</strong>—AI akan lupa constraint migrasi basis data, melanggar pola arsitektur, dan memodifikasi file di luar modul tanpa izin.
+
+                    <p class="font-sans text-xs text-zinc-300 leading-relaxed">
+                        Memberikan seluruh dokumen PRD (ribuan baris) ke dalam jendela obrolan AI yang sedang mengedit kode aktif adalah <strong>kesalahan paling fatal</strong> yang sering dilakukan developer. Ini adalah penyebab nomor satu mengapa kode menjadi berantakan, amnesia migrasi, dan banyak file terhapus secara tidak sengaja.
                     </p>
+
+                    <!-- 4 Technical Breakdown Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        <div class="p-3 bg-zinc-900/80 border border-zinc-800">
+                            <span class="text-rose-400 font-bold block mb-1">1. Attention Drift &amp; Context Rot:</span>
+                            <p class="font-sans text-[11px] text-zinc-400 leading-relaxed">
+                                Walaupun model AI modern memiliki context window besar (200K hingga 2M token), kemampuan penalaran logika menurun seiring bertambahnya token. AI akan mengalami <em>instruction dilution</em> (mengabaikan aturan-aturan kecil di tengah dokumen).
+                            </p>
+                        </div>
+                        <div class="p-3 bg-zinc-900/80 border border-zinc-800">
+                            <span class="text-amber-400 font-bold block mb-1">2. Shallow Code &amp; Mock Implementation:</span>
+                            <p class="font-sans text-[11px] text-zinc-400 leading-relaxed">
+                                Jika AI diminta mengimplementasikan 10 fitur sekaligus, AI akan kehabisan token output. Akibatnya, AI mulai memotong kode, meninggalkan komentar berbahaya seperti <code class="text-amber-300">// TODO: implement logic here</code>, atau membuat fungsi dummy/mock yang tidak bekerja.
+                            </p>
+                        </div>
+                        <div class="p-3 bg-zinc-900/80 border border-zinc-800">
+                            <span class="text-sky-400 font-bold block mb-1">3. Amnesia Migrasi &amp; Regresi:</span>
+                            <p class="font-sans text-[11px] text-zinc-400 leading-relaxed">
+                                AI akan lupa relasi foreign key dari modul yang dibuat 5 menit lalu dan membuat duplikasi fungsi yang memecah kode sebelumnya.
+                            </p>
+                        </div>
+                        <div class="p-3 bg-zinc-900/80 border border-zinc-800">
+                            <span class="text-emerald-400 font-bold block mb-1">4. Audit Diff yang Mustahil:</span>
+                            <p class="font-sans text-[11px] text-zinc-400 leading-relaxed">
+                                Jika 1 prompt menghasilkan perubahan pada 40 file sekaligus, Anda sebagai manusia tidak akan bisa mereview bug secara teliti sebelum menekan Accept All.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- ASCII Flowchart Diagram -->
+                    <div class="pt-2">
+                        <div class="flex items-center justify-between text-zinc-400 mb-1.5">
+                            <span class="text-emerald-400 font-bold uppercase text-[11px]">Metodologi Terbaik: &quot;Vertical Slice Prompting&quot; (Per Fitur Vertikal)</span>
+                            <span class="text-[10px] text-zinc-500 font-mono">STANDAR EMAS NERIAH PRO</span>
+                        </div>
+                        <pre class="bg-black p-4 text-[11px] text-emerald-400/95 overflow-x-auto select-all leading-relaxed whitespace-pre font-mono border border-zinc-800">+---------------------------------------------------------------------------------+
+|                        ALUR KERJA ORKESTRASI AI AGENT                           |
++---------------------------------------------------------------------------------+
+|                                                                                 |
+|  [ LANGKAH 1: FONDASI GLOBAL (1 Kali di Awal) ]                                 |
+|  - Input ke AI: Bab 5 (ERD Schema), Bab 5.6 (Sync Spec), Bab 6 (Tech Stack)     |
+|  - Instruksi AI: &quot;Buat migrasi database, model ULID, dan setup base project&quot;    |
+|  - Verifikasi: Jalankan `php artisan migrate` -&gt; Commit Git                     |
+|                                                                                 |
+|  [ LANGKAH 2: EKSEKUSI PER FITUR (Iterasi Berulang) ]                           |
+|  - Buka kartu fitur PRD (misal: FEAT-MVP-01)                                    |
+|  - Klik tombol &quot;Salin Prompt Handoff AI Code Agent&quot; yang sudah tersedia         |
+|  - Paste ke Cursor / Claude Code / Antigravity                                  |
+|  - AI hanya bekerja di 3-4 file yang ditentukan (Model -&gt; Controller -&gt; UI)     |
+|  - Verifikasi: Jalankan `php artisan test` -&gt; Commit Git                        |
+|                                                                                 |
+|  [ LANGKAH 3: FITUR SELANJUTNYA ]                                               |
+|  - Ambil kartu fitur berikutnya (FEAT-MVP-02)                                   |
+|  - Ulangi Langkah 2                                                             |
+|                                                                                 |
++---------------------------------------------------------------------------------+</pre>
+                    </div>
+
+                    <!-- 3 Benefits Highlights -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-[11px]">
+                        <div class="p-2.5 bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
+                            <strong class="block text-emerald-400 font-bold mb-0.5">&check; Zero Context-Rot:</strong>
+                            <span class="text-zinc-300">AI fokus 100% pada satu masalah spesifik dalam batasan file yang ketat.</span>
+                        </div>
+                        <div class="p-2.5 bg-sky-950/40 border border-sky-500/30 text-sky-300">
+                            <strong class="block text-sky-400 font-bold mb-0.5">&check; Kualitas Kode Penuh:</strong>
+                            <span class="text-zinc-300">Tidak ada pemotongan kode atau // TODO. AI menuliskan validasi lengkap.</span>
+                        </div>
+                        <div class="p-2.5 bg-amber-950/40 border border-amber-500/30 text-amber-300">
+                            <strong class="block text-amber-400 font-bold mb-0.5">&check; Troubleshooting Mudah:</strong>
+                            <span class="text-zinc-300">Jika error, Anda tahu persis modul mana yang bermasalah. Riwayat Git rapi per fitur.</span>
+                        </div>
+                    </div>
+
+                    <div class="text-[11px] text-zinc-400 italic pt-1 border-t border-zinc-800">
+                        &quot;Di dalam halaman <code class="text-emerald-400">show.blade.php</code> pada setiap kartu fitur (Bab 3), tim kami telah menyediakan tombol <strong>&apos;Salin Prompt Handoff AI Code Agent&apos;</strong> yang siap Anda gunakan untuk disalin ke AI Agent per fitur secara terpandu.&quot;
+                    </div>
                 </div>
 
-                <!-- Mode Selector: Single-Shot vs Step-by-Step -->
-                <div class="mb-6">
-                    <div class="flex flex-wrap items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
+                <!-- ========================================================================= -->
+                <!-- INTERACTIVE SPRINT EXECUTION COCKPIT (THE LIVE STEP-BY-STEP ORCHESTRATOR) -->
+                <!-- ========================================================================= -->
+                <div class="bg-zinc-950 border-2 border-emerald-500/60 p-5 sm:p-6 mb-8 rounded-none font-mono text-xs">
+                    <!-- Cockpit Progress Top Bar -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 bg-emerald-500 inline-block animate-pulse"></span>
+                            <span class="font-bold text-white uppercase text-xs tracking-wider">COCKPIT PELAKSANAAN SPRINT AI DEVELOPER</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-[11px] text-emerald-400 font-bold">
+                                PROGRES SPRINT: <span x-text="getDevCompletedCount()"></span> / {{ $totalDevSteps }} TAHAP SELESAI (<span x-text="getDevProgressPercentage()"></span>%)
+                            </span>
+                            <button 
+                                type="button" 
+                                @click="resetDevProgress()" 
+                                class="text-[10px] text-zinc-500 hover:text-rose-400 underline transition"
+                                title="Reset data pengerjaan sprint lokal"
+                            >
+                                Reset Progres
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Visual Progress Bar -->
+                    <div class="w-full bg-zinc-900 border border-zinc-800 h-2.5 overflow-hidden mb-5">
+                        <div class="bg-gradient-to-r from-emerald-600 via-emerald-500 to-sky-400 h-full transition-all duration-300" :style="&apos;width: &apos; + getDevProgressPercentage() + &apos;%&apos;"></div>
+                    </div>
+
+                    <!-- Step Selection Tabs (Horizontal Scrollable) -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto pb-3 mb-5 border-b border-zinc-800 scrollbar-thin">
+                        <!-- Step 0: Fondasi Global -->
                         <button 
-                            type="button"
-                            @click="devEducationMode = 'step_by_step'" 
-                            :class="devEducationMode === 'step_by_step' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
-                            class="px-4 py-2 font-mono text-xs font-bold border border-zinc-300 dark:border-zinc-700 flex items-center gap-2 transition"
+                            type="button" 
+                            @click="devActiveStep = 0"
+                            :class="devActiveStep === 0 ? &apos;bg-emerald-500 text-black font-bold border-emerald-400&apos; : (isStepCompleted(&apos;step_foundation&apos;) ? &apos;bg-zinc-900 text-emerald-400 border-emerald-500/40&apos; : &apos;bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200&apos;)"
+                            class="px-3 py-1.5 border text-xs whitespace-nowrap flex items-center gap-1.5 transition shrink-0"
                         >
-                            <span>1. MODE BERTAHAP (STEP-BY-STEP VERTICAL SLICE)</span>
-                            <span class="px-1.5 py-0.5 bg-black/20 text-[9px] uppercase font-mono">RECOMMENDED</span>
+                            <span x-show="isStepCompleted(&apos;step_foundation&apos;)" class="text-xs">&check;</span>
+                            <span>01. FONDASI GLOBAL</span>
                         </button>
+
+                        <!-- Step 1..N: Each MVP Feature -->
+                        @foreach($mvpEngineeringSpecs as $specIdx => $spec)
+                            @php
+                                $sKey = $spec['feature_id'] ?? ($spec['id'] ?? ('FEAT-SPEC-' . $specIdx));
+                            @endphp
+                            <button 
+                                type="button" 
+                                @click="devActiveStep = {{ $specIdx + 1 }}"
+                                :class="devActiveStep === {{ $specIdx + 1 }} ? &apos;bg-emerald-500 text-black font-bold border-emerald-400&apos; : (isStepCompleted(&apos;{{ $sKey }}&apos;) ? &apos;bg-zinc-900 text-emerald-400 border-emerald-500/40&apos; : &apos;bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200&apos;)"
+                                class="px-3 py-1.5 border text-xs whitespace-nowrap flex items-center gap-1.5 transition shrink-0"
+                            >
+                                <span x-show="isStepCompleted(&apos;{{ $sKey }}&apos;)" class="text-xs">&check;</span>
+                                <span>{{ sprintf('%02d', $specIdx + 2) }}. {{ $spec['id'] ?? ('FITUR ' . ($specIdx + 1)) }}</span>
+                            </button>
+                        @endforeach
+
+                        <!-- Step Final: Quality Gate & Deploy -->
                         <button 
-                            type="button"
-                            @click="devEducationMode = 'single_shot'" 
-                            :class="devEducationMode === 'single_shot' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
-                            class="px-4 py-2 font-mono text-xs font-bold border border-zinc-300 dark:border-zinc-700 flex items-center gap-2 transition"
+                            type="button" 
+                            @click="devActiveStep = {{ $totalDevSteps - 1 }}"
+                            :class="devActiveStep === {{ $totalDevSteps - 1 }} ? &apos;bg-emerald-500 text-black font-bold border-emerald-400&apos; : (isStepCompleted(&apos;step_deployment&apos;) ? &apos;bg-zinc-900 text-emerald-400 border-emerald-500/40&apos; : &apos;bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200&apos;)"
+                            class="px-3 py-1.5 border text-xs whitespace-nowrap flex items-center gap-1.5 transition shrink-0"
                         >
-                            <span>2. MODE KESELURUHAN (SINGLE-SHOT FULL INGESTION)</span>
-                            <span class="px-1.5 py-0.5 bg-black/20 text-[9px] uppercase font-mono">GREENFIELD ONLY</span>
+                            <span x-show="isStepCompleted(&apos;step_deployment&apos;)" class="text-xs">&check;</span>
+                            <span>{{ sprintf('%02d', $totalDevSteps) }}. QUALITY GATE &amp; DEPLOY</span>
                         </button>
                     </div>
 
-                    <!-- Mode B: Step-by-Step (Vertical Slice) Stepper -->
-                    <div x-show="devEducationMode === 'step_by_step'" class="space-y-4">
-                        <div class="p-3 bg-emerald-500/10 border-l-4 border-emerald-500 text-xs font-mono text-emerald-800 dark:text-emerald-300">
-                            <strong>CARA KERJA</strong>: Kerjakan proyek dalam 6 tahap vertikal berurutan (Sprint-by-Sprint). Jangan pindah ke tahap berikutnya sebelum tahap sebelumnya lolos automated quality gate!
+                    <!-- ============================================ -->
+                    <!-- ACTIVE STEP DETAIL DISPLAY PANE -->
+                    <!-- ============================================ -->
+                    
+                    <!-- PANE 0: LANGKAH 1 - FONDASI GLOBAL (1 Kali di Awal) -->
+                    <div x-show="devActiveStep === 0" class="space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+                            <div>
+                                <span class="px-2 py-0.5 bg-emerald-500 text-black font-bold text-[10px] uppercase">TAHAP 01 // FONDASI ARSITEKTUR</span>
+                                <h3 class="text-sm sm:text-base font-black text-white mt-1 uppercase">LANGKAH 1: FONDASI GLOBAL &amp; SETUP BASIS DATA (1 KALI DI AWAL)</h3>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button 
+                                    type="button" 
+                                    @click="toggleStepCompleted(&apos;step_foundation&apos;, &apos;Langkah 1: Fondasi Global&apos;)"
+                                    :class="isStepCompleted(&apos;step_foundation&apos;) ? &apos;bg-emerald-500 text-black font-bold border-emerald-500&apos; : &apos;bg-zinc-900 text-zinc-300 border-zinc-700 hover:border-emerald-500&apos;"
+                                    class="px-3 py-1.5 border text-xs font-mono flex items-center gap-1.5 transition"
+                                >
+                                    <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted(&apos;step_foundation&apos;) ? &apos;bg-black&apos; : &apos;bg-zinc-500&apos;"></span>
+                                    <span x-text="isStepCompleted(&apos;step_foundation&apos;) ? &apos;&check; TAHAP 1 TERVERIFIKASI &amp; COMMITTED&apos; : &apos;TANDAI TAHAP 1 SELESAI&apos;"></span>
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 font-mono text-xs">
-                            @foreach($prd['developer_education']['modes']['step_by_step']['steps'] ?? [] as $st)
-                                <div class="bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between hover:border-emerald-500/50 transition">
-                                    <div>
-                                        <div class="flex items-center justify-between gap-2 mb-2">
-                                            <span class="px-2 py-0.5 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold text-[10px]">
-                                                TAHAP 0{{ $st['step'] }}
-                                            </span>
-                                            <span class="text-[10px] text-zinc-400 truncate max-w-[140px]">
-                                                {{ $st['target_tool'] }}
-                                            </span>
-                                        </div>
-                                        <h3 class="font-bold text-zinc-900 dark:text-zinc-100 mb-1.5 text-xs uppercase">{{ $st['title'] }}</h3>
-                                        <p class="font-sans text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed mb-3">
-                                            {{ $st['instruction'] }}
-                                        </p>
+                        <!-- Target Context Inputs -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="p-3 bg-zinc-900 border border-zinc-800">
+                                <span class="text-zinc-500 text-[10px] block font-bold mb-0.5">DOKUMEN INPUT KE AI:</span>
+                                <span class="text-zinc-200 text-xs font-bold block">Bab 5 (ERD PostgreSQL ULID)</span>
+                                @if($hasSync)
+                                    <span class="text-emerald-400 text-[10px] block mt-1">+ Bab 5.6 (Sync Engine Spec)</span>
+                                @endif
+                                <span class="text-sky-400 text-[10px] block mt-0.5">+ Bab 6 (Tech Stack &amp; VPS)</span>
+                            </div>
+                            <div class="p-3 bg-zinc-900 border border-zinc-800">
+                                <span class="text-zinc-500 text-[10px] block font-bold mb-0.5">TARGET BOUNDED FILES:</span>
+                                <span class="text-zinc-300 text-[11px] block font-mono">database/migrations/*_create_*.php</span>
+                                <span class="text-zinc-300 text-[11px] block font-mono">app/Models/*.php</span>
+                            </div>
+                            <div class="p-3 bg-zinc-900 border border-zinc-800">
+                                <span class="text-zinc-500 text-[10px] block font-bold mb-0.5">TERMINAL VERIFICATION GATE:</span>
+                                <code class="text-emerald-400 text-[11px] block font-mono select-all">php artisan migrate:status</code>
+                                <code class="text-amber-400 text-[11px] block font-mono select-all">git commit -m &quot;chore(db): setup ULID migrations&quot;</code>
+                            </div>
+                        </div>
+
+                        <!-- Prompt Pre-Crafted Box -->
+                        <div class="p-3.5 bg-zinc-900/90 border border-zinc-800 space-y-2">
+                            <div class="flex items-center justify-between text-zinc-400">
+                                <span class="text-emerald-400 font-bold uppercase text-[11px]">Prompt Fondasi Global Siap Di-Paste ke AI Agent:</span>
+                                <div class="flex items-center gap-2">
+                                    <button 
+                                        type="button" 
+                                        onclick="copyCockpitStepPrompt(this, &apos;prompt-step-foundation&apos;)"
+                                        class="px-2.5 py-1 bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition"
+                                    >
+                                        SALIN PROMPT FONDASI (LANGKAH 1)
+                                    </button>
+                                </div>
+                            </div>
+                            <pre id="prompt-step-foundation" class="bg-black p-3 text-[11px] text-emerald-300/90 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap font-mono">{{ $foundationPrompt }}</pre>
+                        </div>
+
+                        <!-- Action Next Footer -->
+                        <div class="flex items-center justify-between pt-2 border-t border-zinc-800">
+                            <button 
+                                type="button" 
+                                @click="jumpTo(&apos;section-5&apos;)" 
+                                class="text-xs text-sky-400 hover:text-sky-300 underline font-mono flex items-center gap-1"
+                            >
+                                <span>&rarr; Lihat Skema ERD di Bab 5</span>
+                            </button>
+                            <button 
+                                type="button" 
+                                @click="if (!isStepCompleted(&apos;step_foundation&apos;)) { toggleStepCompleted(&apos;step_foundation&apos;, &apos;Langkah 1: Fondasi Global&apos;); } devActiveStep = 1;" 
+                                class="px-4 py-2 bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition flex items-center gap-2"
+                            >
+                                <span>Lanjut ke Langkah 2 (Fitur MVP 01)</span>
+                                <span>&rarr;</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- PANES 1..N: LANGKAH 2 - EKSEKUSI PER FITUR VERTICAL SLICE -->
+                    @foreach($mvpEngineeringSpecs as $specIdx => $spec)
+                        @php
+                            $stepNum = $specIdx + 1;
+                            $featKey = $spec['feature_id'] ?? ($spec['id'] ?? ('FEAT-SPEC-' . $specIdx));
+                            $featTitle = $spec['title'] ?? ('Fitur ' . $stepNum);
+                            $cleanSlug = Str::studly(Str::slug($featTitle));
+                            $testCmd = 'php artisan test --filter=' . $cleanSlug . 'Test';
+                            $promptCodeId = 'prompt-step-feat-' . $specIdx;
+                        @endphp
+                        <div x-show="devActiveStep === {{ $stepNum }}" class="space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 bg-emerald-500 text-black font-bold text-[10px] uppercase">TAHAP 02.{{ sprintf('%02d', $stepNum) }} // VERTICAL SLICE</span>
+                                        <span class="px-2 py-0.5 bg-zinc-800 text-zinc-300 text-[10px]">{{ $spec['category'] ?? 'CORE DOMAIN' }}</span>
+                                        <span class="px-2 py-0.5 bg-sky-500/20 text-sky-300 text-[10px]">{{ $spec['complexity_label'] ?? 'Standard' }}</span>
                                     </div>
-                                    <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800/80 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
-                                        &check; Lolos Verifikasi Exit Code 0
+                                    <h3 class="text-sm sm:text-base font-black text-white uppercase">{{ $featKey }}: {{ $featTitle }}</h3>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button 
+                                        type="button" 
+                                        @click="toggleStepCompleted(&apos;{{ $featKey }}&apos;, &apos;{{ addslashes($featTitle) }}&apos;)"
+                                        :class="isStepCompleted(&apos;{{ $featKey }}&apos;) ? &apos;bg-emerald-500 text-black font-bold border-emerald-500&apos; : &apos;bg-zinc-900 text-zinc-300 border-zinc-700 hover:border-emerald-500&apos;"
+                                        class="px-3 py-1.5 border text-xs font-mono flex items-center gap-1.5 transition"
+                                    >
+                                        <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted(&apos;{{ $featKey }}&apos;) ? &apos;bg-black&apos; : &apos;bg-zinc-500&apos;"></span>
+                                        <span x-text="isStepCompleted(&apos;{{ $featKey }}&apos;) ? &apos;&check; FITUR TERVERIFIKASI &amp; COMMITTED&apos; : &apos;TANDAI FITUR SELESAI&apos;"></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Target Bounded Files & User Story -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-2">
+                                    <span class="text-amber-400 text-[10px] block font-bold">BOUNDED TARGET FILES (ISOLASI FILE AGENT):</span>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @foreach($spec['target_files'] ?? [] as $tf)
+                                            <span class="px-2 py-0.5 bg-black text-zinc-300 text-[10px] font-mono border border-zinc-800 select-all">
+                                                {{ $tf }}
+                                            </span>
+                                        @endforeach
                                     </div>
                                 </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <!-- Mode A: Single-Shot Full Ingestion -->
-                    <div x-show="devEducationMode === 'single_shot'" x-cloak class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs space-y-4">
-                        <div class="p-3 bg-amber-500/10 border-l-4 border-amber-500 text-amber-800 dark:text-amber-300">
-                            <strong>PERUNTUKAN</strong>: Gunakan mode ini HANYA saat repositori baru pertama kali dibuat (Greenfield) pada AI LLM dengan reasoning 200k+ token (Claude 3.7 Sonnet, Gemini 2.0 Pro, Devin).
-                        </div>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div>
-                                <h4 class="font-bold uppercase text-zinc-900 dark:text-zinc-100 mb-2">Alur Eksekusi Single-Shot:</h4>
-                                <ol class="list-decimal list-inside space-y-1.5 text-zinc-600 dark:text-zinc-400 font-sans text-xs">
-                                    <li>Install fresh Laravel 13, Filament v5, &amp; PostgreSQL.</li>
-                                    <li>Salin Master Prompt AI IDE (dari tombol di atas).</li>
-                                    <li>Download file PRD format Markdown (.md) dan lampirkan ke AI.</li>
-                                    <li>Perintahkan AI membaca keseluruhan dokumen dan membuat fondasi sistem.</li>
-                                </ol>
+                                <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-2">
+                                    <span class="text-zinc-500 text-[10px] block font-bold">USER STORY:</span>
+                                    <p class="font-sans text-[11px] text-zinc-300 italic leading-relaxed">
+                                        &quot;{{ $spec['user_story'] ?? 'Pengguna dapat menjalankan alur kerja ini dengan aman dan tervalidasi.' }}&quot;
+                                    </p>
+                                    <div class="pt-1 border-t border-zinc-800 flex items-center justify-between text-[10px]">
+                                        <span class="text-zinc-500">VERIFIKASI TEST:</span>
+                                        <code class="text-emerald-400 font-mono select-all">{{ $testCmd }}</code>
+                                    </div>
+                                </div>
                             </div>
+
+                            <!-- Pre-Crafted Vertical Slice Prompt -->
+                            <div class="p-3.5 bg-zinc-900/90 border border-zinc-800 space-y-2">
+                                <div class="flex items-center justify-between text-zinc-400">
+                                    <span class="text-emerald-400 font-bold uppercase text-[11px]">Prompt Directive Siap Di-Paste ke Cursor / Claude Code / Antigravity:</span>
+                                    <button 
+                                        type="button" 
+                                        onclick="copyCockpitStepPrompt(this, &apos;{{ $promptCodeId }}&apos;)"
+                                        class="px-2.5 py-1 bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition"
+                                    >
+                                        SALIN PROMPT FITUR INI
+                                    </button>
+                                </div>
+                                <pre id="{{ $promptCodeId }}" class="bg-black p-3 text-[11px] text-emerald-300/90 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap font-mono">{{ $spec['code_agent_directive'] ?? ($spec['agent_directive_prompt'] ?? '') }}</pre>
+                            </div>
+
+                            <!-- Footer Nav -->
+                            <div class="flex items-center justify-between pt-2 border-t border-zinc-800">
+                                <div class="flex items-center gap-3">
+                                    <button 
+                                        type="button" 
+                                        @click="devActiveStep = {{ $stepNum - 1 }}" 
+                                        class="text-xs text-zinc-400 hover:text-zinc-200 underline font-mono"
+                                    >
+                                        &larr; Tahap Sebelumnya
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        @click="jumpTo(&apos;card-feat-{{ $specIdx }}&apos;)" 
+                                        class="text-xs text-sky-400 hover:text-sky-300 underline font-mono"
+                                    >
+                                        &loz; Lihat Kartu Spesifikasi Lengkap (Bab 3)
+                                    </button>
+                                </div>
+                                <button 
+                                    type="button" 
+                                    @click="if (!isStepCompleted(&apos;{{ $featKey }}&apos;)) { toggleStepCompleted(&apos;{{ $featKey }}&apos;, &apos;{{ addslashes($featTitle) }}&apos;); } devActiveStep = {{ $stepNum < count($mvpEngineeringSpecs) ? ($stepNum + 1) : ($totalDevSteps - 1) }};" 
+                                    class="px-4 py-2 bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition flex items-center gap-2"
+                                >
+                                    <span>Tandai Selesai &amp; Lanjut</span>
+                                    <span>&rarr;</span>
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
+
+                    <!-- PANE LAST: LANGKAH AKHIR - AUTOMATED QUALITY GATE & DEPLOYMENT -->
+                    <div x-show="devActiveStep === {{ $totalDevSteps - 1 }}" class="space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
                             <div>
-                                <h4 class="font-bold uppercase text-rose-600 dark:text-rose-400 mb-2">Batasan &amp; Risiko:</h4>
-                                <p class="font-sans text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                    Jangan gunakan Single-Shot pada proyek yang sedang berjalan (Brownfield). AI agent rentan merusak relasi model eksisting atau menulis ulang konfigurasi yang sudah stabil.
+                                <span class="px-2 py-0.5 bg-emerald-500 text-black font-bold text-[10px] uppercase">TAHAP AKHIR // PRODUCTION VERIFICATION</span>
+                                <h3 class="text-sm sm:text-base font-black text-white mt-1 uppercase">LANGKAH 3: AUTOMATED QUALITY GATE &amp; PRODUCTION DEPLOYMENT</h3>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button 
+                                    type="button" 
+                                    @click="toggleStepCompleted(&apos;step_deployment&apos;, &apos;Langkah Akhir: Quality Gate &amp; Deployment&apos;)"
+                                    :class="isStepCompleted(&apos;step_deployment&apos;) ? &apos;bg-emerald-500 text-black font-bold border-emerald-500&apos; : &apos;bg-zinc-900 text-zinc-300 border-zinc-700 hover:border-emerald-500&apos;"
+                                    class="px-3 py-1.5 border text-xs font-mono flex items-center gap-1.5 transition"
+                                >
+                                    <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted(&apos;step_deployment&apos;) ? &apos;bg-black&apos; : &apos;bg-zinc-500&apos;"></span>
+                                    <span x-text="isStepCompleted(&apos;step_deployment&apos;) ? &apos;&check; SELURUH SPRINT PRODUCTION READY&apos; : &apos;TANDAI QUALITY GATE SELESAI&apos;"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4 Quality Gate Verification Cards -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                            <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
+                                <span class="text-emerald-400 font-bold block">1. AUTOMATED TESTS</span>
+                                <code class="text-zinc-300 block text-[11px] font-mono select-all">php artisan test</code>
+                                <p class="text-[10px] text-zinc-400">Pastikan 100% assertions lulus dengan exit code 0.</p>
+                            </div>
+                            <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
+                                <span class="text-sky-400 font-bold block">2. ASSET BUNDLE</span>
+                                <code class="text-zinc-300 block text-[11px] font-mono select-all">npm run build</code>
+                                <p class="text-[10px] text-zinc-400">Sinkronisasi public/build/manifest.json untuk produksi.</p>
+                            </div>
+                            <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
+                                <span class="text-amber-400 font-bold block">3. GIT SYNC</span>
+                                <code class="text-zinc-300 block text-[11px] font-mono select-all">git push origin main</code>
+                                <p class="text-[10px] text-zinc-400">Sinkronkan seluruh commit riwayat per fitur ke repository.</p>
+                            </div>
+                            <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
+                                <span class="text-rose-400 font-bold block">4. DEPLOY SCRIPT</span>
+                                <code class="text-zinc-300 block text-[11px] font-mono select-all">./deploy.sh 6</code>
+                                <p class="text-[10px] text-zinc-400">Skenario 6 (Assets) atau Skenario 2 (Migrasi Aman).</p>
+                            </div>
+                        </div>
+
+                        <!-- Quality Gate Completion Banner -->
+                        <div class="p-4 bg-emerald-950/30 border border-emerald-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <span class="text-emerald-400 font-bold text-xs uppercase block">STATUS FINAL SPRINT:</span>
+                                <p class="text-zinc-300 text-xs font-sans mt-0.5">
+                                    Ketika seluruh tahapan telah terverifikasi, aplikasi siap diserahterimakan kepada klien dengan garansi integritas 100% bebas amnesia arsitektur.
                                 </p>
                             </div>
+                            <button 
+                                type="button" 
+                                @click="jumpTo(&apos;section-10&apos;)" 
+                                class="px-4 py-2 bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition shrink-0 uppercase"
+                            >
+                                Kunci Scope &amp; Serah Terima &rarr;
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tool IDE Selector Tabs (Cursor, Claude Code, Windsurf, Devin) -->
+                <!-- Tool IDE Selector Tabs (Cursor, Claude Code, Windsurf, Devin, Antigravity) -->
                 <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800">
                     <div class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
                         <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
@@ -1978,88 +2428,110 @@ x-init="
 
                     <div class="flex flex-wrap items-center gap-1.5 font-mono text-xs mb-4">
                         <button 
-                            type="button"
-                            @click="selectedIdeTool = 'cursor'" 
-                            :class="selectedIdeTool === 'cursor' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
+                            type="button" 
+                            @click="selectedIdeTool = &apos;antigravity_ide&apos;" 
+                            :class="selectedIdeTool === &apos;antigravity_ide&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400&apos;"
+                            class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
+                        >
+                            <span>Google Antigravity IDE</span>
+                        </button>
+                        <button 
+                            type="button" 
+                            @click="selectedIdeTool = &apos;cursor&apos;" 
+                            :class="selectedIdeTool === &apos;cursor&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400&apos;"
                             class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                         >
                             <span>Cursor Composer (Cmd+I)</span>
                         </button>
                         <button 
-                            type="button"
-                            @click="selectedIdeTool = 'claude'" 
-                            :class="selectedIdeTool === 'claude' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
+                            type="button" 
+                            @click="selectedIdeTool = &apos;claude&apos;" 
+                            :class="selectedIdeTool === &apos;claude&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400&apos;"
                             class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                         >
                             <span>Claude Code CLI</span>
                         </button>
                         <button 
-                            type="button"
-                            @click="selectedIdeTool = 'windsurf'" 
-                            :class="selectedIdeTool === 'windsurf' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
+                            type="button" 
+                            @click="selectedIdeTool = &apos;windsurf&apos;" 
+                            :class="selectedIdeTool === &apos;windsurf&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400&apos;"
                             class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                         >
                             <span>Windsurf Cascade</span>
                         </button>
                         <button 
-                            type="button"
-                            @click="selectedIdeTool = 'devin'" 
-                            :class="selectedIdeTool === 'devin' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
+                            type="button" 
+                            @click="selectedIdeTool = &apos;devin&apos;" 
+                            :class="selectedIdeTool === &apos;devin&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400&apos;"
                             class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                         >
                             <span>Devin &amp; Copilot Workspace</span>
                         </button>
                     </div>
 
-                    <!-- Cursor Composer Tool Guide -->
-                    <div x-show="selectedIdeTool === 'cursor'" class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
+                    <!-- Antigravity IDE Guide -->
+                    <div x-show="selectedIdeTool === &apos;antigravity_ide&apos;" class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
                         <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
-                            <span class="font-bold text-emerald-400 uppercase">1. CARA MENGGUNAKAN DI CURSOR COMPOSER (Cmd+I):</span>
+                            <span class="font-bold text-emerald-400 uppercase">1. CARA MENGGUNAKAN DI GOOGLE DEEPMIND ANTIGRAVITY IDE:</span>
+                            <span class="text-[10px] text-zinc-500">Autonomous Agentic Coding</span>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
+                            <li>Buka workspace di Antigravity IDE. Pastikan file <code class="text-emerald-400">.agents/AGENTS.md</code> dan Ponytail Decision Ladder aktif.</li>
+                            <li>Buka tab <strong>Cockpit Pelaksanaan Sprint</strong> di atas, pilih tahap yang sedang berjalan (Langkah 1 Fondasi atau Fitur spesifik).</li>
+                            <li>Klik tombol <strong>SALIN PROMPT</strong>, lalu tempelkan ke prompt bar Antigravity IDE.</li>
+                            <li>AI akan memproses diff secara terisolasi pada target files bounded, menjalankan verifikasi pengujian terminal, dan melaporkan ringkasan perubahan.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Cursor Composer Tool Guide -->
+                    <div x-show="selectedIdeTool === &apos;cursor&apos;" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
+                        <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
+                            <span class="font-bold text-emerald-400 uppercase">2. CARA MENGGUNAKAN DI CURSOR COMPOSER (Cmd+I):</span>
                             <span class="text-[10px] text-zinc-500">Shortcut: Cmd+I (Mac) / Ctrl+I (Win)</span>
                         </div>
                         <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
                             <li>Buka Cursor Composer dengan menekan <code class="text-emerald-400">Cmd+I</code>.</li>
                             <li>Ketik simbol <code class="text-cyan-400">@</code> untuk melampirkan file yang menjadi batas target modul (lihat <em>BOUNDED TARGET FILES</em> pada kartu fitur).</li>
-                            <li>Salin <strong>PROMPT FITUR</strong> dari kartu fitur yang ingin dikerjakan di bawah, lalu tempel ke Composer.</li>
+                            <li>Salin <strong>PROMPT FITUR</strong> dari Cockpit Pelaksanaan Sprint di atas, lalu tempel ke Composer.</li>
                             <li>Tekan Enter, tinjau perubahan diff baris per baris, dan jalankan perintah verifikasi terminal <code class="text-amber-400">php artisan test --filter=...</code> sebelum menekan Accept All.</li>
                         </ol>
                     </div>
 
                     <!-- Claude Code CLI Tool Guide -->
-                    <div x-show="selectedIdeTool === 'claude'" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
+                    <div x-show="selectedIdeTool === &apos;claude&apos;" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
                         <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
-                            <span class="font-bold text-cyan-400 uppercase">2. CARA MENGGUNAKAN DI CLAUDE CODE CLI (claude):</span>
+                            <span class="font-bold text-cyan-400 uppercase">3. CARA MENGGUNAKAN DI CLAUDE CODE CLI (claude):</span>
                             <span class="text-[10px] text-zinc-500">Terminal Command</span>
                         </div>
                         <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
                             <li>Jalankan perintah <code class="text-cyan-400">claude</code> pada terminal root direktori proyek.</li>
-                            <li>Beri perintah terpandu: <code class="text-emerald-400 select-all">claude "Baca kartu FEAT-MVP-01 pada PRD. Implementasikan migration dan model sesuai kriteria Gherkin. Jalankan php artisan test."</code></li>
-                            <li>Biarkan Claude Code membaca file, mengeksekusi diff, dan menjalankan loop pengujian terminal secara otonom.</li>
+                            <li>Beri perintah terpandu dengan prompt dari Cockpit: <code class="text-emerald-400 select-all">claude &quot;[Tempel prompt fitur dari Cockpit di sini]&quot;</code></li>
+                            <li>Biarkan Claude Code membaca file bounded, mengeksekusi diff, dan menjalankan loop pengujian terminal secara otonom.</li>
                         </ol>
                     </div>
 
                     <!-- Windsurf Cascade Tool Guide -->
-                    <div x-show="selectedIdeTool === 'windsurf'" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
+                    <div x-show="selectedIdeTool === &apos;windsurf&apos;" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
                         <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
-                            <span class="font-bold text-sky-400 uppercase">3. CARA MENGGUNAKAN DI WINDSURF CASCADE:</span>
+                            <span class="font-bold text-sky-400 uppercase">4. CARA MENGGUNAKAN DI WINDSURF CASCADE:</span>
                             <span class="text-[10px] text-zinc-500">Flow-Based Agent</span>
                         </div>
                         <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
                             <li>Buka panel Cascade di Windsurf dan aktifkan mode <strong>Agentic Write</strong>.</li>
-                            <li>Masukkan instruksi bertahap: "Implementasikan vertical slice FEAT-MVP-02. Batasi perubahan hanya pada direktori app/Http/Controllers dan resources/views."</li>
-                            <li>Pantau cascade flow hingga build sukses.</li>
+                            <li>Tempelkan prompt dari Cockpit Pelaksanaan Sprint. Pastikan batasan target file terkunci.</li>
+                            <li>Pantau cascade flow hingga build sukses dan verifikasi tes lolos.</li>
                         </ol>
                     </div>
 
                     <!-- Devin & Copilot Tool Guide -->
-                    <div x-show="selectedIdeTool === 'devin'" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
+                    <div x-show="selectedIdeTool === &apos;devin&apos;" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
                         <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
-                            <span class="font-bold text-amber-400 uppercase">4. CARA MENGGUNAKAN DI DEVIN &amp; GITHUB COPILOT:</span>
+                            <span class="font-bold text-amber-400 uppercase">5. CARA MENGGUNAKAN DI DEVIN &amp; GITHUB COPILOT:</span>
                             <span class="text-[10px] text-zinc-500">Autonomous Agent / Workspace</span>
                         </div>
                         <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
                             <li>Buat issue/task baru dengan judul ID Fitur (cth: FEAT-MVP-01).</li>
-                            <li>Salin User Story dan seluruh tabel skenario Gherkin (Given-When-Then) ke dalam task description.</li>
+                            <li>Salin User Story dan seluruh tabel skenario Gherkin (Given-When-Then) dari Cockpit ke dalam task description.</li>
                             <li>Biarkan Devin / Copilot menyelesaikan issue dan membuka Pull Request terisolasi.</li>
                         </ol>
                     </div>
@@ -2085,7 +2557,7 @@ x-init="
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>Sudut Tipis:</strong> Border radius halus (<code>rounded-sm/md</code>), dilarang tombol kapsul <code>rounded-full</code>.</span>
+                                    <span><strong>Sudut Tipis:</strong> Border radius halus (<code>rounded-none/sm</code>), dilarang tombol kapsul <code>rounded-full</code>.</span>
                                 </li>
                             </ul>
                         </div>
@@ -2101,7 +2573,7 @@ x-init="
                             <ul class="space-y-2 text-[11px] text-zinc-700 dark:text-zinc-300">
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-sky-500 font-bold">&check;</span>
-                                    <span><strong>Strict ULID Primary Keys:</strong> Gunakan <code>ulid('id')</code> (VARCHAR(26)). Hindari AUTO_INCREMENT.</span>
+                                    <span><strong>Strict ULID Primary Keys:</strong> Gunakan <code>ulid(&apos;id&apos;)</code> (VARCHAR(26)). Hindari AUTO_INCREMENT.</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-sky-500 font-bold">&check;</span>

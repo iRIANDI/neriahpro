@@ -2371,6 +2371,67 @@ PROMPT;
     {
         return [
             'title' => 'Panduan Edukasi Developer: Cara Mengoperasikan PRD ke AI Coding Agent Tanpa Context Rot',
+            'orchestration_strategy' => [
+                'question' => 'Strategi Orkestrasi AI: Apakah PRD Diberikan Sekaligus atau Sedikit demi Sedikit?',
+                'definitive_verdict' => 'JAWABAN TEGAS: JANGAN PERNAH MEMBERIKAN SELURUH DOKUMEN PRD SEKALIGUS DALAM SATU PROMPT KODING!',
+                'fatal_flaw_summary' => 'Memberikan seluruh dokumen PRD (ribuan baris) ke dalam jendela obrolan AI yang sedang mengedit kode aktif adalah kesalahan paling fatal yang sering dilakukan developer. Ini adalah penyebab nomor satu mengapa kode menjadi berantakan.',
+                'technical_reasons' => [
+                    [
+                        'title' => 'Attention Drift & Context Rot',
+                        'desc' => 'Walaupun model AI modern memiliki context window besar (200K hingga 2M token), kemampuan penalaran logika menurun seiring bertambahnya token. AI akan mengalami instruction dilution (mengabaikan aturan-aturan kecil di tengah dokumen).',
+                    ],
+                    [
+                        'title' => 'Shallow Code & Mock Implementation',
+                        'desc' => 'Jika AI diminta mengimplementasikan 10 fitur sekaligus, AI akan kehabisan token output. Akibatnya, AI mulai memotong kode, meninggalkan komentar berbahaya seperti // TODO: implement logic here, atau membuat fungsi dummy/mock yang tidak bekerja.',
+                    ],
+                    [
+                        'title' => 'Amnesia Migrasi & Regresi',
+                        'desc' => 'AI akan lupa relasi foreign key dari modul yang dibuat 5 menit lalu dan membuat duplikasi fungsi yang memecah kode sebelumnya.',
+                    ],
+                    [
+                        'title' => 'Audit Diff yang Mustahil',
+                        'desc' => 'Jika 1 prompt menghasilkan perubahan pada 40 file sekaligus, Anda sebagai manusia tidak akan bisa mereview bug secara teliti.',
+                    ],
+                ],
+                'best_methodology' => 'Vertical Slice Prompting (Per Fitur Vertikal)',
+                'methodology_description' => 'Dokumen PRD Project OS Neriah Pro telah dirancang secara khusus untuk mendukung alur kerja Vertical Slice:',
+                'workflow_ascii_art' => "+---------------------------------------------------------------------------------+\n"
+                    . "|                        ALUR KERJA ORKESTRASI AI AGENT                           |\n"
+                    . "+---------------------------------------------------------------------------------+\n"
+                    . "|                                                                                 |\n"
+                    . "|  [ LANGKAH 1: FONDASI GLOBAL (1 Kali di Awal) ]                                 |\n"
+                    . "|  - Input ke AI: Bab 5 (ERD Schema), Bab 5.6 (Sync Spec), Bab 6 (Tech Stack)     |\n"
+                    . "|  - Instruksi AI: \"Buat migrasi database, model ULID, dan setup base project\"    |\n"
+                    . "|  - Verifikasi: Jalankan `php artisan migrate` -> Commit Git                     |\n"
+                    . "|                                                                                 |\n"
+                    . "|  [ LANGKAH 2: EKSEKUSI PER FITUR (Iterasi Berulang) ]                           |\n"
+                    . "|  - Buka kartu fitur PRD (misal: FEAT-MVP-01)                                    |\n"
+                    . "|  - Klik tombol \"Salin Prompt Handoff AI Code Agent\" yang sudah tersedia         |\n"
+                    . "|  - Paste ke Cursor / Claude Code / Antigravity                                  |\n"
+                    . "|  - AI hanya bekerja di 3-4 file yang ditentukan (Model -> Controller -> UI)     |\n"
+                    . "|  - Verifikasi: Jalankan `php artisan test` -> Commit Git                        |\n"
+                    . "|                                                                                 |\n"
+                    . "|  [ LANGKAH 3: FITUR SELANJUTNYA ]                                               |\n"
+                    . "|  - Ambil kartu fitur berikutnya (FEAT-MVP-02)                                   |\n"
+                    . "|  - Ulangi Langkah 2                                                             |\n"
+                    . "|                                                                                 |\n"
+                    . "+---------------------------------------------------------------------------------+",
+                'benefits' => [
+                    [
+                        'title' => 'Zero Context-Rot',
+                        'desc' => 'AI fokus 100% pada satu masalah spesifik dalam batasan file yang ketat.',
+                    ],
+                    [
+                        'title' => 'Kualitas Kode Penuh',
+                        'desc' => 'Tidak ada pemotongan kode atau // TODO. AI menuliskan validasi, sanitasi, dan error handling lengkap.',
+                    ],
+                    [
+                        'title' => 'Kemudahan Troubleshooting',
+                        'desc' => 'Jika terjadi error, Anda tahu persis error tersebut terjadi di fitur mana, dan riwayat commit Git Anda tercatat rapi per fitur.',
+                    ],
+                ],
+                'card_handoff_guidance' => 'Di dalam halaman show.blade.php pada setiap kartu fitur, tim kami telah menyediakan tombol "Salin Prompt Handoff AI Code Agent" yang siap Anda gunakan untuk disalin ke AI Agent per fitur secara terpandu.',
+            ],
             'philosophy' => [
                 'summary' => 'AI Coding Agent (Claude Code, Cursor Composer, Windsurf Cascade, Devin, GitHub Copilot) bekerja dengan model probabilitas token. Semakin besar dokumen yang dimasukkan sekaligus (Prompt Dumping), semakin tinggi resiko Attention Drift, amnesia terhadap migration, dan halusinasi arsitektur.',
                 'warning' => 'DILARANG melakukan copy-paste ribuan baris PRD sekaligus ke jendela obrolan AI yang sedang mengedit kode aktif! Gunakan pendekatan terpandu di bawah ini.',
@@ -2803,7 +2864,29 @@ PROMPT;
 
         // 9. AI Agent Handoff Protocol & Developer Education
         $eduDeck = self::getDeveloperEducationDeck($blueprint->nama_bisnis ?: $blueprint->client_name);
+        $strat = $eduDeck['orchestration_strategy'] ?? [];
         $md .= "## 9. Panduan Edukasi Developer & Protokol Handoff AI Code Agent (Anti Context-Rot)\n\n";
+        
+        if (!empty($strat)) {
+            $md .= "### " . ($strat['question'] ?? 'Strategi Orkestrasi AI: Apakah PRD Diberikan Sekaligus atau Sedikit demi Sedikit?') . "\n\n";
+            $md .= "> 🚨 **" . ($strat['definitive_verdict'] ?? '') . "**\n\n";
+            $md .= $strat['fatal_flaw_summary'] . "\n\n";
+            $md .= "#### Alasan Teknis Mengapa \"Prompt Dumping\" Merusak Kode:\n";
+            foreach ($strat['technical_reasons'] ?? [] as $tr) {
+                $md .= "- **" . $tr['title'] . "**: " . $tr['desc'] . "\n";
+            }
+            $md .= "\n";
+            $md .= "#### Metodologi Terbaik: " . ($strat['best_methodology'] ?? 'Vertical Slice Prompting') . "\n\n";
+            $md .= ($strat['methodology_description'] ?? '') . "\n\n";
+            $md .= "```text\n" . ($strat['workflow_ascii_art'] ?? '') . "\n```\n\n";
+            $md .= "#### Keuntungan Pendekatan Ini:\n";
+            foreach ($strat['benefits'] ?? [] as $b) {
+                $md .= "- **" . $b['title'] . "**: " . $b['desc'] . "\n";
+            }
+            $md .= "\n";
+            $md .= "> " . ($strat['card_handoff_guidance'] ?? '') . "\n\n";
+        }
+
         $md .= "> " . $eduDeck['philosophy']['summary'] . "\n\n";
         $md .= "> ⚠️ **PERINGATAN KRUSIAL**: " . $eduDeck['philosophy']['warning'] . "\n\n";
 

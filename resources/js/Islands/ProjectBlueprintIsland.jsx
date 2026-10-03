@@ -368,6 +368,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     return '+62';
   });
 
+  const currentCountry = useMemo(() => {
+    return countryList.find(c => c.code === selectedCountryCode) || countryList[0] || { code: '+62', emoji: '🇮🇩', name: 'Indonesia' };
+  }, [countryList, selectedCountryCode]);
+
   const [phoneDigits, setPhoneDigits] = useState(() => {
     if (initialData.phone) {
       let d = String(initialData.phone).replace(/\D/g, '');
@@ -445,6 +449,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         target_field: 'fiturWajib',
         addition: 'Autentikasi 1-Klik Google Sign-In (OAuth 2.0) untuk kenyamanan dan keamanan pengguna.',
         badge: 'Fitur MVP',
+      },
+      {
+        id: 'mobile_offline_sync',
+        category: 'integration',
+        title: lang === 'en' ? 'Offline-First Local DB Sync' : 'Sinkronisasi Database Lokal & Server',
+        desc: lang === 'en' ? 'SQLite local storage with bi-directional server sync' : 'Penyimpanan lokal SQLite dengan auto-sync ke server PostgreSQL',
+        target_field: 'kebutuhanIntegrasi',
+        addition: 'Sync Engine: Penyimpanan lokal SQLite / Room dengan protokol sinkronisasi delta dua arah (push/pull) ke server PostgreSQL.',
+        badge: 'Mobile & Sync',
       },
     ];
   });
@@ -2809,17 +2822,20 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div className="flex flex-wrap gap-2 mb-2">
                 {[
                   lang === 'en'
+                    ? 'Hybrid: Web App + Mobile Apps (Flutter / React Native - iOS & Android) + SQLite Local DB'
+                    : 'Hybrid: Web App + Mobile Apps (Flutter / React Native - iOS & Android) + SQLite Local DB',
+                  lang === 'en'
+                    ? 'Mobile-First Native App (Flutter / Swift / Kotlin) + Offline Local DB + Cloud PostgreSQL Sync'
+                    : 'Mobile-First Native App (Flutter / Swift / Kotlin) + Offline Local DB + Cloud PostgreSQL Sync',
+                  lang === 'en'
                     ? 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)'
                     : 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)',
                   lang === 'en'
-                    ? 'Desktop-Only Backoffice & High-Density Operational Portal'
+                    ? 'Web Desktop Backoffice & High-Density Operational Portal'
                     : 'Web Desktop Backoffice (Khusus Monitor & Komputer Kantor)',
                   lang === 'en'
-                    ? 'Dedicated Tablet POS & Touchscreen Counter Station'
-                    : 'Dedicated Tablet POS & Kasir (Touchscreen Optimized)',
-                  lang === 'en'
-                    ? 'Native Mobile Ready (PWA with Capacitor/React Native Bridge)'
-                    : 'Web + Mobile Native App Readiness (Hybrid Multi-Platform)'
+                    ? 'Dedicated Tablet POS & Kasir (Touchscreen Optimized)'
+                    : 'Dedicated Tablet POS & Kasir (Touchscreen Optimized)'
                 ].map((plat, idx) => (
                   <button
                     key={idx}
@@ -3053,7 +3069,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
               {/* Preset Chips */}
               <div className="flex flex-wrap gap-1.5 mb-2.5">
-                {['+ Midtrans Snap', '+ WhatsApp Gateway', '+ Google Maps API', '+ Cloudflare R2', '+ RajaOngkir Kurir', '+ Mailgun Transactional'].map((preset, idx) => (
+                {['+ Midtrans Snap', '+ WhatsApp Gateway', '+ Offline Sync (SQLite/Mobile)', '+ Firebase FCM Push', '+ Google Maps API', '+ Cloudflare R2', '+ RajaOngkir Kurir'].map((preset, idx) => (
                   <button
                     key={idx}
                     type="button"
@@ -3149,6 +3165,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {[
+                  lang === 'en'
+                    ? 'Hybrid Topology: Central Cloud VPS (PostgreSQL 16+, Redis) + Mobile Client Local DB (SQLite Offline Sync)'
+                    : 'Topologi Hybrid: Cloud Server PostgreSQL 16+ & Redis + Database Lokal Mobile SQLite (Offline-First Sync)',
                   lang === 'en'
                     ? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Automated Backups)'
                     : 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup Otomatis)',
@@ -3461,9 +3480,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             )}
 
             {/* Fields 24, 25, 26: PIC Contact Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
               {/* Field 24: clientName */}
-              <div id="field-clientName">
+              <div id="field-clientName" className="min-w-0">
                 <label className={labelClass}>
                   {lang === 'en' ? '24. Authorized PIC Full Name *' : '24. Nama Lengkap PIC *'}
                 </label>
@@ -3478,7 +3497,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </div>
 
               {/* Field 25: email */}
-              <div id="field-email">
+              <div id="field-email" className="min-w-0">
                 <label className={labelClass}>
                   {lang === 'en' ? '25. Official PIC Email *' : '25. Email Resmi PIC *'}
                 </label>
@@ -3493,33 +3512,42 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </div>
 
               {/* Field 26: phone with Country Zone Code */}
-              <div id="field-phone">
+              <div id="field-phone" className="min-w-0">
                 <label className={labelClass}>
                   {lang === 'en' ? '26. Authorized PIC WhatsApp / Phone *' : '26. WhatsApp / Telepon PIC *'}
                 </label>
-                <div className="flex rounded-none border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 focus-within:border-emerald-500 transition">
-                  <select
-                    value={selectedCountryCode}
-                    onChange={(e) => {
-                      const code = e.target.value;
-                      setSelectedCountryCode(code);
-                      updateField('phone', phoneDigits ? `${code}${phoneDigits}` : '');
-                    }}
-                    className="bg-transparent text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 py-2.5 pl-2 pr-1 outline-none border-r border-zinc-300 dark:border-zinc-700 cursor-pointer"
-                  >
-                    {countryList.map((c) => (
-                      <option key={c.code} value={c.code} className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
-                        {c.emoji || '🌐'} {c.code} ({c.name})
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex w-full min-w-0 rounded-none border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 focus-within:border-emerald-500 transition">
+                  {/* Compact Country Selector with Overlay Native Select */}
+                  <div className="relative shrink-0 w-24 bg-zinc-100 dark:bg-zinc-900 border-r border-zinc-300 dark:border-zinc-700 flex items-center justify-between px-2 cursor-pointer group">
+                    <span className="text-xs font-mono font-bold text-zinc-800 dark:text-zinc-200 truncate pointer-events-none flex items-center gap-1">
+                      <span className="text-sm">{currentCountry?.emoji || '🌐'}</span>
+                      <span>{selectedCountryCode}</span>
+                    </span>
+                    <ChevronDown className="w-3 h-3 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200 shrink-0 pointer-events-none" />
+                    <select
+                      value={selectedCountryCode}
+                      onChange={(e) => {
+                        const code = e.target.value;
+                        setSelectedCountryCode(code);
+                        updateField('phone', phoneDigits ? `${code}${phoneDigits}` : '');
+                      }}
+                      aria-label="Country Dialing Code"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-xs"
+                    >
+                      {countryList.map((c, idx) => (
+                        <option key={`${c.code}-${c.iso || idx}`} value={c.code} className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
+                          {c.emoji || '🌐'} {c.code} ({c.name})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <input
                     type="tel"
                     required
                     placeholder="81234567890"
                     value={phoneDigits}
                     onChange={handlePhoneDigitsChange}
-                    className="w-full px-3 py-2.5 bg-transparent text-zinc-900 dark:text-zinc-100 text-sm outline-none font-mono"
+                    className="flex-1 min-w-0 px-3 py-2.5 bg-transparent text-zinc-900 dark:text-zinc-100 text-sm outline-none font-mono"
                   />
                 </div>
                 <span className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 block font-mono">

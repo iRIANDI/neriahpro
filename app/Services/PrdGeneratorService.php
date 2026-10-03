@@ -73,6 +73,8 @@ class PrdGeneratorService
         $featureDepMermaid = self::generateFeatureDependencyMermaid($actorItems, $mvpItems, $erdTables);
         $sprintGanttMermaid = self::generateSprintGanttMermaid($blueprint, $targetWaktu);
         $infrastructureMermaid = self::generateInfrastructureMermaid($blueprint, $extraContext);
+        $mobileSyncMermaid = self::generateMobileSyncMermaid($businessName);
+        $mobileArchitecture = self::generateMobileAndSyncArchitecture($businessName, $extraContext['target_platform'] ?? '', $erdTables, $mvpItems);
         $developerEducation = self::getDeveloperEducationDeck($businessName);
 
         return [
@@ -125,7 +127,9 @@ class PrdGeneratorService
                 'feature_dependency_mermaid' => $featureDepMermaid,
                 'sprint_gantt_mermaid' => $sprintGanttMermaid,
                 'infrastructure_mermaid' => $infrastructureMermaid,
+                'mobile_sync_mermaid' => $mobileSyncMermaid,
             ],
+            'mobile_and_sync_architecture' => $mobileArchitecture,
             'developer_education' => $developerEducation,
             'tech_stack' => [
                 'backend' => [
@@ -140,9 +144,21 @@ class PrdGeneratorService
                     'name' => 'Island Architecture (React 19 + Framer Motion + Tailwind CSS)',
                     'role' => 'Ultra-fluid interactive forms, Canva-style canvas capability, 60fps micro-animations',
                 ],
+                'mobile_app' => [
+                    'name' => 'Flutter 3.x / React Native (Cross-Platform iOS & Android)',
+                    'role' => 'Native Mobile Client, Offline-First UI, Background Sync Worker (WorkManager)',
+                ],
+                'local_database' => [
+                    'name' => 'SQLite (Drift / Room / WatermelonDB) Encrypted',
+                    'role' => 'Zero-Latency Offline-First Local Storage, Mutation Journal, Client-Side Keyset Cache',
+                ],
                 'database' => [
                     'name' => 'PostgreSQL 16+ (Strict ULID Schema)',
-                    'role' => 'ACID Relational Storage, JSONB indexing, Keyset Cursor Pagination',
+                    'role' => 'ACID Relational Storage, JSONB indexing, Keyset Cursor Pagination, Central Source of Truth',
+                ],
+                'sync_protocol' => [
+                    'name' => 'Bi-Directional Delta Sync with Idempotency Engine',
+                    'role' => 'Deterministic Sync Protocol (/api/v1/sync/push & pull), Last-Write-Wins (LWW) with ULID Timestamps, Exponential Backoff Retries',
                 ],
                 'cache_and_queue' => [
                     'name' => 'Redis / Predis Engine',
@@ -2216,6 +2232,139 @@ PROMPT;
     }
 
     /**
+     * Generate Sequence Diagram for Mobile App, Local Database (SQLite), & Server Sync Engine.
+     */
+    public static function generateMobileSyncMermaid(string $businessName): string
+    {
+        $code = "sequenceDiagram\n";
+        $code .= "    autonumber\n";
+        $code .= "    actor User as Pengguna / Operator Lapangan\n";
+        $code .= "    participant Mobile as Mobile App (Flutter / React Native)\n";
+        $code .= "    participant SQLite as Local Database (SQLite Encrypted)\n";
+        $code .= "    participant SyncWorker as Background Sync Worker\n";
+        $code .= "    participant API as Laravel 13 REST API Gateway\n";
+        $code .= "    participant ServerDB as Server Database (PostgreSQL 16+)\n";
+        $code .= "    participant Redis as Redis Cache & Idempotency Guard\n\n";
+        $code .= "    Note over User,SQLite: FASE OFFLINE (Mutasi Lokal Tanpa Internet)\n";
+        $code .= "    User->>Mobile: Input Transaksi / Formulir Baru\n";
+        $code .= "    Mobile->>SQLite: INSERT (status='pending_push', mutation_id=ULID)\n";
+        $code .= "    SQLite-->>Mobile: Commit Berhasil (O(1) Local Latency)\n";
+        $code .= "    Mobile-->>User: Tampilkan UI Sukses Instan (Optimistic UI)\n\n";
+        $code .= "    Note over SyncWorker,ServerDB: FASE SINKRONISASI PUSH (Saat Terhubung Online)\n";
+        $code .= "    SyncWorker->>SQLite: Ambil antrean WHERE status='pending_push'\n";
+        $code .= "    SQLite-->>SyncWorker: Daftar Batch Mutasi Lokal\n";
+        $code .= "    SyncWorker->>API: POST /api/v1/sync/push (Header: X-Idempotency-Key)\n";
+        $code .= "    API->>Redis: Cek Kunci Idempotensi (Mencegah Duplikasi Retry)\n";
+        $code .= "    alt Mutasi Baru (Valid)\n";
+        $code .= "        API->>ServerDB: Transaksi ACID (Insert/Update PostgreSQL)\n";
+        $code .= "        ServerDB-->>API: Berhasil Disimpan\n";
+        $code .= "        API-->>SyncWorker: 200 OK { status: 'synced', server_synced_at: ISO8601 }\n";
+        $code .= "    else Mutasi Duplikat (Network Retry)\n";
+        $code .= "        Redis-->>API: Key Sudah Diproses Sebelumnya\n";
+        $code .= "        API-->>SyncWorker: 200 OK (Idempotent Cached Result)\n";
+        $code .= "    end\n";
+        $code .= "    SyncWorker->>SQLite: UPDATE status='synced', server_synced_at=now()\n\n";
+        $code .= "    Note over SyncWorker,ServerDB: FASE SINKRONISASI PULL (Delta Update dari Server)\n";
+        $code .= "    SyncWorker->>API: GET /api/v1/sync/pull?since={last_sync}&cursor={cursor}\n";
+        $code .= "    API->>ServerDB: Query Delta (updated_at > last_sync & soft deletes)\n";
+        $code .= "    ServerDB-->>API: Daftar Record Baru / Diperbarui\n";
+        $code .= "    API-->>SyncWorker: 200 OK { delta_records: [...], has_more: false }\n";
+        $code .= "    SyncWorker->>SQLite: UPSERT Delta ke SQLite (LWW Conflict Resolution)\n";
+        $code .= "    SQLite-->>Mobile: Stream Reaktif Memicu Update Tampilan UI\n";
+
+        return trim($code);
+    }
+
+    /**
+     * Generate Comprehensive Mobile, Local Database, and Server Sync Architecture Specifications.
+     */
+    public static function generateMobileAndSyncArchitecture(string $businessName, string $targetPlatform, array $erdTables, array $mvpItems): array
+    {
+        $primaryTable = !empty($erdTables[0]['name']) ? $erdTables[0]['name'] : 'business_records';
+
+        return [
+            'mobile_platform' => [
+                'framework' => 'Flutter 3.x (Dart) / React Native with TypeScript',
+                'architecture_pattern' => 'Clean Architecture (Domain, Data, Presentation) with Feature-First Modularization',
+                'state_management' => 'Riverpod 2.x / Bloc (Stream-Based Local DB Observers)',
+                'offline_resilience' => '100% Offline-First (Operasi CRUD lokal tanpa dependensi koneksi internet seketika)',
+                'network_interceptor' => 'Dio / Axios dengan Exponential Backoff Retry (1s, 2s, 4s, 8s, max 30s) & Idempotency Header',
+            ],
+            'local_database' => [
+                'engine' => 'SQLite 3 with WAL Mode & SQLCipher AES-256 Encryption',
+                'client_orm' => 'Drift (Flutter) / Room (Android Native) / WatermelonDB (React Native)',
+                'storage_strategy' => 'In-Memory Query Cache + Encrypted File Persistence on App Sandboxed Directory',
+                'sync_fields' => [
+                    'sync_status' => "TEXT CHECK(sync_status IN ('synced', 'pending_push', 'conflict', 'failed')) DEFAULT 'synced'",
+                    'client_mutation_id' => "TEXT UNIQUE NOT NULL (26-character ULID)",
+                    'local_updated_at' => "INTEGER NOT NULL (Unix timestamp in milliseconds)",
+                    'server_synced_at' => "TEXT NULL (ISO-8601 UTC string)",
+                    'is_deleted' => "INTEGER DEFAULT 0 (Tombstone soft-delete flag)",
+                ],
+            ],
+            'server_database' => [
+                'engine' => 'PostgreSQL 16+ (Strict ULID Architecture)',
+                'primary_key_standard' => 'VARCHAR(26) ULID (Time-Ordered Distributed Keys, Zero Collision)',
+                'soft_delete_strategy' => 'deleted_at TIMESTAMP NULL (Wajib pada seluruh entitas yang direplikasi ke mobile)',
+                'caching_layer' => 'Redis 7+ untuk Idempotency Key Lock (24h TTL) & Active Session Store',
+                'pagination_standard' => 'Keyset Cursor Pagination O(1) via ->cursorPaginate()',
+            ],
+            'sync_protocol' => [
+                'strategy' => 'Bi-Directional Delta Sync with Microsecond ULID Timestamp Conflict Resolution',
+                'push_endpoint' => '/api/v1/sync/push',
+                'pull_endpoint' => '/api/v1/sync/pull',
+                'push_request_schema' => [
+                    'client_id' => '01J8H8Y4QW0123456789ABCDEF',
+                    'device_info' => 'Android 14 / SM-S918B',
+                    'batch_count' => 1,
+                    'mutations' => [
+                        [
+                            'mutation_id' => '01J8H8Y4QW0123456789ABCDEF',
+                            'table' => $primaryTable,
+                            'operation' => 'INSERT',
+                            'record_id' => '01J8H8Y4QW0123456789ABCDEF',
+                            'client_timestamp' => 1727930000000,
+                            'payload' => [
+                                'title' => 'Sample Record',
+                                'status' => 'active',
+                                'notes' => 'Created in offline mode',
+                            ],
+                        ],
+                    ],
+                ],
+                'push_response_schema' => [
+                    'success' => true,
+                    'processed_count' => 1,
+                    'results' => [
+                        [
+                            'mutation_id' => '01J8H8Y4QW0123456789ABCDEF',
+                            'status' => 'applied',
+                            'server_id' => '01J8H8Y4QW0123456789ABCDEF',
+                            'server_synced_at' => '2026-10-03T13:00:00.000000Z',
+                        ],
+                    ],
+                ],
+                'pull_response_schema' => [
+                    'success' => true,
+                    'has_more' => false,
+                    'next_cursor' => null,
+                    'server_time' => '2026-10-03T13:00:00.000000Z',
+                    'changes' => [
+                        $primaryTable => [
+                            [
+                                'id' => '01J8H8Y4QW0123456789ABCDEF',
+                                'status' => 'verified',
+                                'updated_at' => '2026-10-03T12:59:00.000000Z',
+                                'deleted_at' => null,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
      * Comprehensive Developer Education Deck & AI Agent Orchestration Masterclass.
      */
     public static function getDeveloperEducationDeck(string $businessName): array
@@ -2343,6 +2492,10 @@ PROMPT;
                 [
                     'rule' => '4. Automated Verification Quality Gate',
                     'desc' => 'Wajibkan agen menjalankan perintah verifikasi terminal otomatis (cth: php artisan test --filter=... dan npm run build) dan memastikan exit code 0 sebelum menandai task selesai.',
+                ],
+                [
+                    'rule' => '5. Strict Mobile & Offline-First Local DB Guardrail',
+                    'desc' => 'Ketika mengimplementasikan aplikasi mobile (Flutter/React Native), agen DILARANG mengasumsikan koneksi internet selalu aktif. Seluruh mutasi data harus ditulis ke database lokal (SQLite/Drift/Room) terlebih dahulu dengan sync_status=pending_push, kemudian disinkronkan ke server secara asinkron via endpoint /api/v1/sync/push menggunakan header X-Idempotency-Key. Agen dilarang menebak skema lokal; gunakan skema DDL SQLite dan kontrak API yang didefinisikan pada Bab 5.6.',
                 ],
             ],
         ];
@@ -2565,6 +2718,51 @@ PROMPT;
         $md .= "```mermaid\n" . $sprintGanttMermaid . "\n```\n\n";
         $md .= "### C. Hosting, Keamanan & Topologi Infrastruktur (Flowchart TB)\n\n";
         $md .= "```mermaid\n" . $infraMermaid . "\n```\n\n";
+
+        // 5.6 Multi-Platform Mobile & Offline-First Sync Architecture
+        $mobileSync = $prd['mobile_and_sync_architecture'] ?? self::generateMobileAndSyncArchitecture($projectName, $exec['target_platform'] ?? '', $erd, $mvpFeatures);
+        $mobileSyncMermaid = $prd['virtual_charts']['mobile_sync_mermaid'] ?? self::generateMobileSyncMermaid($projectName);
+
+        $md .= "## 5.6 Arsitektur Multi-Platform: Aplikasi Mobile, Database Lokal (Offline-First) & Protokol Sinkronisasi Server\n\n";
+        $md .= "### A. Alur Kerja Sinkronisasi Data Offline-to-Online (Sequence Pipeline)\n\n";
+        $md .= "```mermaid\n" . $mobileSyncMermaid . "\n```\n\n";
+
+        $md .= "### B. Spesifikasi Platform Mobile & Database Lokal (Offline-First)\n\n";
+        $md .= "- **Mobile Framework**: " . ($mobileSync['mobile_platform']['framework'] ?? 'Flutter 3.x / React Native') . "\n";
+        $md .= "- **Pola Arsitektur Mobile**: " . ($mobileSync['mobile_platform']['architecture_pattern'] ?? 'Clean Architecture Feature-First') . "\n";
+        $md .= "- **State Management & Reaktivitas**: " . ($mobileSync['mobile_platform']['state_management'] ?? 'Riverpod / Bloc') . "\n";
+        $md .= "- **Ketahanan Jaringan (Offline-Resilience)**: " . ($mobileSync['mobile_platform']['offline_resilience'] ?? '100% Offline-First') . "\n";
+        $md .= "- **Network Interceptor**: " . ($mobileSync['mobile_platform']['network_interceptor'] ?? 'Dio / Axios dengan Exponential Backoff') . "\n";
+        $md .= "- **Engine Database Lokal (Client/Device)**: " . ($mobileSync['local_database']['engine'] ?? 'SQLite 3 Encrypted (Drift / Room)') . "\n";
+        $md .= "- **Engine Database Server (Central Hub)**: " . ($mobileSync['server_database']['engine'] ?? 'PostgreSQL 16+ (Strict ULID Schema)') . "\n";
+        $md .= "- **Protokol Sinkronisasi**: " . ($mobileSync['sync_protocol']['strategy'] ?? 'Bi-Directional Delta Sync with Idempotency Key') . "\n\n";
+
+        $md .= "### C. Skema Standar Metadata Sinkronisasi Database Lokal (SQLite DDL)\n\n";
+        $md .= "Setiap tabel lokal pada perangkat mobile wajib menyertakan kolom kontrol sinkronisasi berikut untuk mencegah tabrakan data dan amnesia status:\n\n";
+        $md .= "```sql\n";
+        $md .= "-- Kolom Standar Sync pada SQLite Lokal (Drift / Room / WatermelonDB)\n";
+        $md .= "ALTER TABLE local_records ADD COLUMN sync_status TEXT CHECK(sync_status IN ('synced', 'pending_push', 'conflict', 'failed')) DEFAULT 'synced';\n";
+        $md .= "ALTER TABLE local_records ADD COLUMN client_mutation_id TEXT UNIQUE; -- 26-char ULID per mutasi lokal\n";
+        $md .= "ALTER TABLE local_records ADD COLUMN local_updated_at INTEGER NOT NULL; -- Unix Timestamp in milliseconds\n";
+        $md .= "ALTER TABLE local_records ADD COLUMN server_synced_at TEXT NULL; -- ISO-8601 UTC timestamp saat berhasil tersinkron\n";
+        $md .= "ALTER TABLE local_records ADD COLUMN is_deleted INTEGER DEFAULT 0; -- Tombstone flag untuk soft delete offline\n";
+        $md .= "CREATE INDEX idx_local_sync ON local_records(sync_status, local_updated_at);\n";
+        $md .= "```\n\n";
+
+        $md .= "### D. Kontrak Spesifikasi API Sinkronisasi (Machine-Readable Endpoint Contracts)\n\n";
+        $md .= "#### 1. Push Mutasi Offline ke Server: `POST /api/v1/sync/push`\n";
+        $md .= "- **Headers Wajib**: `Authorization: Bearer <token>`, `X-Idempotency-Key: <client_mutation_id>`, `Content-Type: application/json`\n";
+        $md .= "- **Request Payload Schema**:\n```json\n" . json_encode($mobileSync['sync_protocol']['push_request_schema'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n```\n";
+        $md .= "- **Response Payload Schema (200 OK)**:\n```json\n" . json_encode($mobileSync['sync_protocol']['push_response_schema'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n```\n\n";
+
+        $md .= "#### 2. Pull Delta Pembaruan dari Server: `GET /api/v1/sync/pull`\n";
+        $md .= "- **Query Parameters**: `?since=<ISO8601>&cursor=<ULID>&limit=100`\n";
+        $md .= "- **Response Payload Schema (200 OK)**:\n```json\n" . json_encode($mobileSync['sync_protocol']['pull_response_schema'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n```\n\n";
+
+        $md .= "### E. Kebijakan Resolusi Konflik (Conflict Resolution Engine)\n\n";
+        $md .= "1. **Deterministic Last-Write-Wins (LWW)**: Resolusi konflik otomatis mengacu pada timestamp mikrodetik yang tertanam di dalam 10-byte pertama Primary Key ULID. Mutasi dengan timestamp tertinggi secara deterministik diterima sebagai state final.\n";
+        $md .= "2. **Tombstone Soft Deletes**: Penghapusan data offline tidak langsung menghapus baris fisik SQLite melainkan menandai `is_deleted = 1` dengan `deleted_at = now()`. Saat disinkronkan ke server, server mencatat `deleted_at` dan mempropagasi penghapusan ini ke perangkat lain saat `GET /api/v1/sync/pull`.\n";
+        $md .= "3. **Idempotency Protection**: Header `X-Idempotency-Key` di-cache di Redis server selama 24 jam. Jika koneksi seluler putus saat pengiriman dan mobile app melakukan retry, server mendeteksi mutasi duplikat dan langsung mengembalikan status sukses tanpa memicu duplikasi data.\n\n";
 
         // 6. Technology Stack & Architecture Decision
         $md .= "## 6. Keputusan Arsitektur & Rekomendasi Stack (Modern Monolith)\n\n";

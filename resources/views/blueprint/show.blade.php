@@ -216,6 +216,49 @@
             }
         };
 
+        window.jumpToSection = function(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const yOffset = -80;
+            const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+
+            // Visual pulse highlight
+            el.classList.add('outline-2', 'outline-emerald-500', 'transition-all');
+            setTimeout(() => {
+                el.classList.remove('outline-2', 'outline-emerald-500');
+            }, 2000);
+        };
+
+        window.setupBlueprintScrollSpy = function(onActiveChange) {
+            const sectionIds = [
+                'section-1', 'section-2', 'section-3', 'section-3-5',
+                'section-3-8', 'section-4', 'section-5', 'section-6',
+                'section-7', 'section-8', 'section-9', 'section-10'
+            ];
+            let ticking = false;
+            const update = () => {
+                const scrollPosition = window.scrollY + 160;
+                let current = sectionIds[0];
+                for (let i = sectionIds.length - 1; i >= 0; i--) {
+                    const el = document.getElementById(sectionIds[i]);
+                    if (el && el.offsetTop <= scrollPosition) {
+                        current = sectionIds[i];
+                        break;
+                    }
+                }
+                onActiveChange(current);
+                ticking = false;
+            };
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    window.requestAnimationFrame(update);
+                    ticking = true;
+                }
+            }, { passive: true });
+            update();
+        };
+
         // Initialize Mermaid with startOnLoad: false to prevent 0-width rendering in hidden tabs
         if (window.mermaid) {
             try {
@@ -422,9 +465,65 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 window.showToast({ type: 'error', title: 'KLAIM GAGAL', message: err.message || 'Gagal memproses klaim voucher.' });
             }
         }
+    },
+    activeSectionId: 'section-1',
+    indexSearchQuery: '',
+    indexAccordionOpen: true,
+    floatingIndexOpen: false,
+    accordionGroups: {
+        scope: true,
+        studio: true,
+        infra: true,
+        legal: true
+    },
+    toggleAccordionGroup(grp) {
+        this.accordionGroups[grp] = !this.accordionGroups[grp];
+    },
+    expandAllGroups() {
+        this.accordionGroups.scope = true;
+        this.accordionGroups.studio = true;
+        this.accordionGroups.infra = true;
+        this.accordionGroups.legal = true;
+    },
+    collapseAllGroups() {
+        this.accordionGroups.scope = false;
+        this.accordionGroups.studio = false;
+        this.accordionGroups.infra = false;
+        this.accordionGroups.legal = false;
+    },
+    jumpTo(id) {
+        window.jumpToSection(id);
+        this.activeSectionId = id;
+        this.floatingIndexOpen = false;
+    },
+    getActiveSectionTitle() {
+        const titles = {
+            'section-1': { id: '01. Executive Discovery', en: '01. Executive Discovery' },
+            'section-2': { id: '02. RBAC & Aktor Sistem', en: '02. RBAC & System Actors' },
+            'section-3': { id: '03. Rekayasa Fitur MVP', en: '03. Feature Engineering' },
+            'section-3-5': { id: '04. Edukasi Handoff AI', en: '04. AI Handoff Playbook' },
+            'section-3-8': { id: '05. Virtual Studio Charts', en: '05. Virtual Charts Studio' },
+            'section-4': { id: '06. Alur Kerja User Flow', en: '06. Core User Flow' },
+            'section-5': { id: '07. Database ERD', en: '07. Database ERD Blueprint' },
+            'section-6': { id: '08. Evaluasi Infra VPS', en: '08. Cloud VPS & Infra' },
+            'section-7': { id: '09. Velocity Pricing', en: '09. Velocity Pricing' },
+            'section-8': { id: '10. Timeline Sprint Gantt', en: '10. Sprint Timeline' },
+            'section-9': { id: '11. Tata Kelola & SLA', en: '11. Governance & SLA' },
+            'section-10': { id: '12. Kunci Scope & DP', en: '12. Scope Freeze & DP' }
+        };
+        const s = titles[this.activeSectionId] || { id: 'Daftar Isi PRD', en: 'PRD Directory' };
+        return this.locale === 'en' ? s.en : s.id;
+    },
+    getActiveSectionIndex() {
+        const order = ['section-1', 'section-2', 'section-3', 'section-3-5', 'section-3-8', 'section-4', 'section-5', 'section-6', 'section-7', 'section-8', 'section-9', 'section-10'];
+        const idx = order.indexOf(this.activeSectionId);
+        return idx >= 0 ? (idx + 1) : 1;
     }
 }" 
 x-init="
+    $nextTick(() => {
+        window.setupBlueprintScrollSpy(id => { activeSectionId = id; });
+    });
     $watch('flowTab', val => {
         if (val === 'mermaid') $nextTick(() => window.renderMermaidDiagram('mermaid-flow-target', 'mermaid-flow-source'));
     });
@@ -650,6 +749,324 @@ x-init="
                         <span class="text-zinc-400 block mb-0.5">KESIAPAN ASET</span>
                         <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $blueprint->kesiapan_aset ?? 'Sedang Disiapkan' }}</span>
                     </div>
+                </div>
+            </div>
+
+            @php
+                $blueprintSections = [
+                    [
+                        'id' => 'section-1',
+                        'num' => '01',
+                        'group' => 'scope',
+                        'title_id' => 'Executive Technical Discovery',
+                        'title_en' => 'Executive Technical Discovery',
+                        'subtitle_id' => '26 Parameter Arsitektur & Analisis Kebutuhan Bisnis',
+                        'subtitle_en' => '26 Architecture Parameters & Business Needs Analysis',
+                        'badge' => '26 PARAMS',
+                    ],
+                    [
+                        'id' => 'section-2',
+                        'num' => '02',
+                        'group' => 'scope',
+                        'title_id' => 'Pengguna & Hak Akses (RBAC)',
+                        'title_en' => 'Users & Access Control (RBAC)',
+                        'subtitle_id' => 'Aktor Sistem, Peran Pengguna & Batasan Otoritas',
+                        'subtitle_en' => 'System Actors, User Roles & Authorization Boundaries',
+                        'badge' => 'RBAC',
+                    ],
+                    [
+                        'id' => 'section-3',
+                        'num' => '03',
+                        'group' => 'scope',
+                        'title_id' => 'Spesifikasi Rekayasa Fitur',
+                        'title_en' => 'Feature Engineering Specs',
+                        'subtitle_id' => 'Vertical Slices, Gherkin Scenarios & Agent Matrix',
+                        'subtitle_en' => 'Vertical Slices, Gherkin Scenarios & Agent Matrix',
+                        'badge' => 'MVP FASE 1',
+                    ],
+                    [
+                        'id' => 'section-3-5',
+                        'num' => '04',
+                        'group' => 'studio',
+                        'title_id' => 'Pusat Edukasi Developer AI',
+                        'title_en' => 'AI Developer Education Hub',
+                        'subtitle_id' => 'Protokol Handoff AI Coding Agent (Cursor, Claude, Windsurf)',
+                        'subtitle_en' => 'AI Coding Agent Handoff Protocols (Cursor, Claude, Windsurf)',
+                        'badge' => 'DEV PLAYBOOK',
+                    ],
+                    [
+                        'id' => 'section-3-8',
+                        'num' => '05',
+                        'group' => 'studio',
+                        'title_id' => 'Virtual Architecture Studio',
+                        'title_en' => 'Virtual Architecture Studio',
+                        'subtitle_id' => 'Command Center 4 Diagram Visual (Workflow, ERD, Dep, Gantt)',
+                        'subtitle_en' => 'Command Center for 4 Visual Diagrams (Workflow, ERD, Dep, Gantt)',
+                        'badge' => '4 CHARTS',
+                    ],
+                    [
+                        'id' => 'section-4',
+                        'num' => '06',
+                        'group' => 'studio',
+                        'title_id' => 'Alur Kerja Utama (User Flow)',
+                        'title_en' => 'Core User Workflow',
+                        'subtitle_id' => 'Diagram Alur Transaksi, Interaksi Visual & Validasi Bisnis',
+                        'subtitle_en' => 'Transaction Flowchart, Visual Interaction & Business Validation',
+                        'badge' => 'FLOWCHART',
+                    ],
+                    [
+                        'id' => 'section-5',
+                        'num' => '07',
+                        'group' => 'studio',
+                        'title_id' => 'Database ERD & Skema Relasi',
+                        'title_en' => 'Database ERD & Relational Schema',
+                        'subtitle_id' => 'Topologi PostgreSQL Strict, Entitas Kunci & Tipe Data ULID',
+                        'subtitle_en' => 'PostgreSQL Strict Topology, Key Entities & ULID Datatypes',
+                        'badge' => 'POSTGRESQL',
+                    ],
+                    [
+                        'id' => 'section-6',
+                        'num' => '08',
+                        'group' => 'infra',
+                        'title_id' => 'Evaluasi Arsitektur & Infra',
+                        'title_en' => 'Architecture & Infra Evaluation',
+                        'subtitle_id' => 'Spesifikasi Cloud VPS, AI Database, Redis & Keamanan',
+                        'subtitle_en' => 'Cloud VPS Specs, AI Database, Redis & Security Stack',
+                        'badge' => 'MANAGED VPS',
+                    ],
+                    [
+                        'id' => 'section-7',
+                        'num' => '09',
+                        'group' => 'legal',
+                        'title_id' => 'Opsi Velocity Pengerjaan & Harga',
+                        'title_en' => 'Delivery Velocity & Pricing',
+                        'subtitle_id' => 'Termin Pembayaran, Pilihan Sprint & Akselerasi AI Gemini Ultra',
+                        'subtitle_en' => 'Payment Milestones, Sprint Velocity & Gemini Ultra Cloud',
+                        'badge' => 'PRICING TIERS',
+                    ],
+                    [
+                        'id' => 'section-8',
+                        'num' => '10',
+                        'group' => 'legal',
+                        'title_id' => 'Timeline & Gantt Milestone',
+                        'title_en' => 'Timeline & Gantt Milestones',
+                        'subtitle_id' => 'Alokasi Hari Pengerjaan per Sprint dari Kickoff sampai Delivery',
+                        'subtitle_en' => 'Daily Sprint Allocations from Kickoff to Production Delivery',
+                        'badge' => 'SPRINTS',
+                    ],
+                    [
+                        'id' => 'section-9',
+                        'num' => '11',
+                        'group' => 'legal',
+                        'title_id' => 'Tata Kelola, Kualitas & SLA',
+                        'title_en' => 'Governance, Quality & SLA',
+                        'subtitle_id' => 'Definition of Done (DoD), Garansi Bug 30 Hari & Penyerahan Repo',
+                        'subtitle_en' => 'Definition of Done (DoD), 30-Day Bug Warranty & Repo Handover',
+                        'badge' => 'SLA 30 HARI',
+                    ],
+                    [
+                        'id' => 'section-10',
+                        'num' => '12',
+                        'group' => 'legal',
+                        'title_id' => 'Kunci Scope & Pembayaran DP',
+                        'title_en' => 'Scope Lock & DP Payment',
+                        'subtitle_id' => 'Segel Integritas SHA-256, Kontrak Digital & Midtrans / Voucher',
+                        'subtitle_en' => 'SHA-256 Integrity Seal, Digital Contract & Midtrans / Voucher',
+                        'badge' => 'LEGAL & DP',
+                    ],
+                ];
+
+                $accordionGroupDefs = [
+                    'scope' => [
+                        'title_id' => 'Ruang Lingkup & Kebutuhan Bisnis',
+                        'title_en' => 'Scope & Business Requirements',
+                        'desc_id' => 'Spesifikasi discovery, aktor pengguna, dan dekomposisi fitur MVP',
+                        'desc_en' => 'Discovery specs, user actors, and MVP feature decomposition',
+                        'count' => 3,
+                    ],
+                    'studio' => [
+                        'title_id' => 'Studio Visual & Diagram Arsitektur',
+                        'title_en' => 'Visual Studio & Architecture Diagrams',
+                        'desc_id' => 'Handoff developer, 4 chart studio, user flowchart, dan skema database ERD',
+                        'desc_en' => 'Developer handoff, 4 chart studio, user flow, and database ERD schema',
+                        'count' => 4,
+                    ],
+                    'infra' => [
+                        'title_id' => 'Infrastruktur Cloud & AI Database',
+                        'title_en' => 'Cloud Infrastructure & AI Database',
+                        'desc_id' => 'Evaluasi arsitektur VPS, PostgreSQL strict, Redis cache & backup',
+                        'desc_en' => 'VPS architecture evaluation, PostgreSQL strict, Redis cache & backup',
+                        'count' => 1,
+                    ],
+                    'legal' => [
+                        'title_id' => 'Investasi, SLA, Kontrak & Pembayaran',
+                        'title_en' => 'Investment, SLA, Contracts & Payment',
+                        'desc_id' => 'Opsi velocity pricing, timeline sprint, SLA garansi, dan kunci scope DP',
+                        'desc_en' => 'Velocity pricing tiers, sprint timeline, SLA warranty, and DP scope lock',
+                        'count' => 4,
+                    ],
+                ];
+            @endphp
+
+            <!-- INTERACTIVE ARCHITECTURE INDEX & ACCORDION TABLE OF CONTENTS (QUICK JUMP) -->
+            <div class="bg-white dark:bg-zinc-900 border-2 border-emerald-500/70 p-5 sm:p-7 mb-8 rounded-none shadow-sm relative no-print">
+                <!-- Header with Title, Accordion Toggle & Search -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5 mb-5">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="w-2.5 h-2.5 bg-emerald-500 rounded-none animate-pulse"></span>
+                            <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold tracking-widest uppercase">
+                                QUICK JUMP DIRECTORY // SCROLL-SPY ACTIVE
+                            </span>
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-black uppercase text-zinc-900 dark:text-zinc-100 tracking-tight flex items-center gap-2">
+                            <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                            <span x-show="locale === 'en'">PRD Table of Contents &amp; Architecture Index</span>
+                            <span x-show="locale !== 'en'">Daftar Isi PRD &amp; Index Navigasi Arsitektur</span>
+                        </h2>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-1">
+                            <span x-show="locale === 'en'">Click any section below to jump instantly without tedious scrolling. Live indicator tracks your viewport.</span>
+                            <span x-show="locale !== 'en'">Klik blok di bawah untuk langsung berpindah ke spesifikasi yang ingin difokuskan tanpa lelah scrolling. Indikator aktif mengikuti posisi layar.</span>
+                        </p>
+                    </div>
+
+                    <!-- Search & Accordion Controls -->
+                    <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                        <div class="relative min-w-[200px] flex-1 sm:flex-initial">
+                            <input 
+                                type="text" 
+                                x-model="indexSearchQuery" 
+                                placeholder="Cari blok/fitur/ERD..." 
+                                class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 rounded-none focus:outline-none focus:border-emerald-500"
+                            />
+                            <button 
+                                type="button" 
+                                x-show="indexSearchQuery" 
+                                @click="indexSearchQuery = ''" 
+                                class="absolute right-2.5 top-2 text-zinc-400 hover:text-zinc-600 text-xs"
+                            >&times;</button>
+                        </div>
+                        <button 
+                            type="button" 
+                            @click="expandAllGroups()" 
+                            class="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 transition"
+                            title="Buka Semua Grup"
+                        >
+                            <span x-show="locale === 'en'">Expand All</span>
+                            <span x-show="locale !== 'en'">Buka Semua</span>
+                        </button>
+                        <button 
+                            type="button" 
+                            @click="collapseAllGroups()" 
+                            class="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 transition"
+                            title="Tutup Semua Grup"
+                        >
+                            <span x-show="locale === 'en'">Collapse</span>
+                            <span x-show="locale !== 'en'">Tutup Semua</span>
+                        </button>
+                        <button 
+                            type="button" 
+                            @click="indexAccordionOpen = !indexAccordionOpen" 
+                            class="px-3 py-1.5 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold border border-zinc-900 dark:border-emerald-500 transition flex items-center gap-1.5"
+                        >
+                            <span x-show="indexAccordionOpen">&blacktriangle; <span x-show="locale === 'en'">Hide Index</span><span x-show="locale !== 'en'">Tutup Panel</span></span>
+                            <span x-show="!indexAccordionOpen">&blacktriangledown; <span x-show="locale === 'en'">Show Index</span><span x-show="locale !== 'en'">Buka Panel</span></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Accordion Body -->
+                <div x-show="indexAccordionOpen" x-transition.opacity class="space-y-4">
+                    @foreach($accordionGroupDefs as $groupKey => $groupDef)
+                        <div class="border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 rounded-none overflow-hidden">
+                            <!-- Accordion Group Header -->
+                            <button 
+                                type="button" 
+                                @click="toggleAccordionGroup('{{ $groupKey }}')"
+                                class="w-full p-3.5 bg-zinc-100/70 dark:bg-zinc-900/90 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/80 transition flex items-center justify-between text-left font-mono"
+                            >
+                                <div class="flex items-center gap-2.5">
+                                    <span class="w-6 h-6 bg-zinc-800 dark:bg-zinc-800 text-zinc-200 font-bold text-xs flex items-center justify-center rounded-none border border-zinc-700">
+                                        {{ $loop->iteration }}
+                                    </span>
+                                    <div>
+                                        <div class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                                            <span x-show="locale === 'en'">{{ $groupDef['title_en'] }}</span>
+                                            <span x-show="locale !== 'en'">{{ $groupDef['title_id'] }}</span>
+                                            <span class="px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-normal border border-zinc-300 dark:border-zinc-700">
+                                                {{ $groupDef['count'] }} <span x-show="locale === 'en'">Sections</span><span x-show="locale !== 'en'">Bagian</span>
+                                            </span>
+                                        </div>
+                                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans mt-0.5 hidden sm:block">
+                                            <span x-show="locale === 'en'">{{ $groupDef['desc_en'] }}</span>
+                                            <span x-show="locale !== 'en'">{{ $groupDef['desc_id'] }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <svg 
+                                        class="w-4 h-4 text-zinc-500 transition-transform duration-200" 
+                                        :class="accordionGroups['{{ $groupKey }}'] ? 'rotate-180' : ''" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </button>
+
+                            <!-- Accordion Items Grid -->
+                            <div 
+                                x-show="accordionGroups['{{ $groupKey }}'] || indexSearchQuery.trim() !== ''" 
+                                x-transition 
+                                class="p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 font-mono text-xs"
+                            >
+                                @foreach($blueprintSections as $sec)
+                                    @if($sec['group'] === $groupKey)
+                                        <div 
+                                            x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
+                                            @click="jumpTo('{{ $sec['id'] }}')"
+                                            :class="activeSectionId === '{{ $sec['id'] }}' 
+                                                ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold shadow-xs' 
+                                                : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600'"
+                                            class="p-3 border rounded-none cursor-pointer transition flex flex-col justify-between group relative select-none"
+                                        >
+                                            <div>
+                                                <div class="flex items-center justify-between gap-1 mb-1.5">
+                                                    <span class="flex items-center gap-1.5">
+                                                        <span 
+                                                            :class="activeSectionId === '{{ $sec['id'] }}' ? 'bg-emerald-500 text-black' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'"
+                                                            class="w-5 h-5 flex items-center justify-center font-bold text-[10px] rounded-none"
+                                                        >
+                                                            {{ $sec['num'] }}
+                                                        </span>
+                                                        <span x-show="activeSectionId === '{{ $sec['id'] }}'" class="flex items-center gap-1 text-[10px] text-emerald-500 font-bold uppercase tracking-wider">
+                                                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-none animate-ping"></span>
+                                                            <span class="hidden sm:inline">ACTIVE</span>
+                                                        </span>
+                                                    </span>
+                                                    <span class="px-1.5 py-0.2 text-[9px] bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/60 font-bold">
+                                                        {{ $sec['badge'] }}
+                                                    </span>
+                                                </div>
+                                                <div class="font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-500 transition-colors text-xs leading-snug">
+                                                    <span x-show="locale === 'en'">{{ $sec['title_en'] }}</span>
+                                                    <span x-show="locale !== 'en'">{{ $sec['title_id'] }}</span>
+                                                </div>
+                                                <p class="text-[10px] text-zinc-500 dark:text-zinc-400 font-sans mt-1 leading-snug line-clamp-2">
+                                                    <span x-show="locale === 'en'">{{ $sec['subtitle_en'] }}</span>
+                                                    <span x-show="locale !== 'en'">{{ $sec['subtitle_id'] }}</span>
+                                                </p>
+                                            </div>
+                                            <div class="mt-2.5 pt-1.5 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between text-[10px] text-zinc-400 group-hover:text-emerald-500">
+                                                <span><span x-show="locale === 'en'">Jump to section</span><span x-show="locale !== 'en'">Fokuskan blok</span></span>
+                                                <span class="group-hover:translate-x-0.5 transition-transform">&rarr;</span>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
 
@@ -976,7 +1393,7 @@ x-init="
             </div>
 
             <!-- SECTION 1: EXECUTIVE TECHNICAL DISCOVERY -->
-            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+            <section id="section-1" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01</span>
                     <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Executive Technical Discovery</h2>
@@ -1059,7 +1476,7 @@ x-init="
             </section>
 
             <!-- SECTION 2: PENGGUNA & HAK AKSES (RBAC) -->
-            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+            <section id="section-2" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">02</span>
                     <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Pengguna & Hak Akses (Aktor / RBAC)</h2>
@@ -1108,7 +1525,7 @@ x-init="
             </section>
 
             <!-- SECTION 3: SPESIFIKASI REKAYASA FITUR (DEEP VERTICAL SLICES & AGENT DIRECTIVE) -->
-            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+            <section id="section-3" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-6">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">03</span>
@@ -1448,7 +1865,7 @@ x-init="
             </section>
 
             <!-- SECTION 3.5: PUSAT EDUKASI DEVELOPER & PROTOKOL HANDOFF AI CODING AGENT -->
-            <section class="bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+            <section id="section-3-5" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-4">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">&para;</span>
@@ -1725,7 +2142,7 @@ x-init="
             </section>
 
             <!-- SECTION 3.8: VIRTUAL ARCHITECTURE STUDIO (THE 4 VIRTUAL CHARTS COMMAND CENTER) -->
-            <section class="bg-white dark:bg-zinc-900 border-2 border-sky-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+            <section id="section-3-8" class="bg-white dark:bg-zinc-900 border-2 border-sky-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-sky-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">&loz;</span>
@@ -1797,7 +2214,7 @@ x-init="
                         <script type="text/plain" id="mermaid-studio-flow-source">{!! $prd['virtual_charts']['workflow_mermaid'] ?? '' !!}</script>
                         <div id="mermaid-studio-flow-target" class="overflow-x-auto min-h-[160px] flex items-center justify-center p-2 text-center">
                             <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-sky-500 animate-ping"></span>
+                                <span class="w-2 h-2 rounded-none bg-sky-500 animate-ping"></span>
                                 <span>Memuat visualisasi alur kerja Mermaid...</span>
                             </div>
                         </div>
@@ -1821,7 +2238,7 @@ x-init="
                         <script type="text/plain" id="mermaid-studio-erd-source">{!! $prd['virtual_charts']['erd_mermaid'] ?? '' !!}</script>
                         <div id="mermaid-studio-erd-target" class="overflow-x-auto min-h-[220px] flex items-center justify-center p-2 text-center">
                             <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
                                 <span>Memuat topologi ERD Mermaid...</span>
                             </div>
                         </div>
@@ -1845,7 +2262,7 @@ x-init="
                         <script type="text/plain" id="mermaid-studio-featdep-source">{!! $prd['virtual_charts']['feature_dependency_mermaid'] ?? '' !!}</script>
                         <div id="mermaid-studio-featdep-target" class="overflow-x-auto min-h-[180px] flex items-center justify-center p-2 text-center">
                             <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                                <span class="w-2 h-2 rounded-none bg-amber-500 animate-ping"></span>
                                 <span>Memuat peta ketergantungan fitur Mermaid...</span>
                             </div>
                         </div>
@@ -1869,7 +2286,7 @@ x-init="
                         <script type="text/plain" id="mermaid-studio-gantt-source">{!! $prd['virtual_charts']['sprint_gantt_mermaid'] ?? '' !!}</script>
                         <div id="mermaid-studio-gantt-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center">
                             <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                                <span class="w-2 h-2 rounded-none bg-rose-500 animate-ping"></span>
                                 <span>Memuat timeline roadmap Mermaid...</span>
                             </div>
                         </div>
@@ -1893,7 +2310,7 @@ x-init="
                         <script type="text/plain" id="mermaid-studio-infra-source">{!! $prd['virtual_charts']['infrastructure_mermaid'] ?? '' !!}</script>
                         <div id="mermaid-studio-infra-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center">
                             <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-violet-500 animate-ping"></span>
+                                <span class="w-2 h-2 rounded-none bg-violet-500 animate-ping"></span>
                                 <span>Memuat topologi infrastruktur Mermaid...</span>
                             </div>
                         </div>
@@ -1940,7 +2357,7 @@ x-init="
                     }
                 }
             @endphp
-            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+            <section id="section-4" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-6">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">04</span>
@@ -1984,7 +2401,7 @@ x-init="
                                         <div>
                                             <div class="flex items-center justify-between gap-2 mb-2 font-mono">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                    <span class="w-2 h-2 rounded-none bg-emerald-500 animate-pulse"></span>
                                                     <span class="text-xs font-bold text-white">STEP 0{{ $flow['step'] ?? ($index + 1) }}</span>
                                                 </div>
                                                 <span class="text-[9px] uppercase px-1.5 py-0.5 bg-zinc-800 text-emerald-400 border border-emerald-500/30 font-bold">
@@ -2063,7 +2480,7 @@ x-init="
 
                         <div id="mermaid-flow-target" class="overflow-x-auto min-h-[140px] flex items-center justify-center p-2 text-center">
                             <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
                                 <span>Memuat visualisasi alur kerja Mermaid...</span>
                             </div>
                         </div>
@@ -2119,7 +2536,7 @@ x-init="
             </section>
 
             <!-- SECTION 5: ENTERPRISE DATABASE ERD & SCHEMA BLUEPRINT -->
-            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+            <section id="section-5" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">05</span>
@@ -2328,7 +2745,7 @@ x-init="
 
                         <div id="mermaid-erd-target" class="overflow-x-auto min-h-[260px] flex items-center justify-center p-2 text-center">
                             <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
                                 <span>Memuat skema relasi database Mermaid...</span>
                             </div>
                         </div>
@@ -2402,7 +2819,7 @@ x-init="
                     $blueprint->user_metadata ?? []
                 );
             @endphp
-            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+            <section id="section-6" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
@@ -2874,7 +3291,7 @@ x-init="
             </section>
 
             <!-- SECTION 07: OPSI VELOCITY PENGERJAAN & AKSESORIS AI GEMINI ULTRA (PRICING & SPRINT SELECTION) -->
-            <section class="bg-white dark:bg-zinc-900 border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+            <section id="section-7" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
@@ -2934,7 +3351,7 @@ x-init="
                                     <span class="text-[9px] uppercase px-1.5 py-0.5 {{ $isEmergencyOrEnterprise ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40' : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40' }} font-bold">
                                         {{ $tierItem['badge'] }}
                                     </span>
-                                    <span x-show="selectedTier === '{{ $tierItem['id'] }}'" class="w-2 h-2 rounded-full {{ $isEmergencyOrEnterprise ? 'bg-amber-500' : 'bg-emerald-500' }}"></span>
+                                    <span x-show="selectedTier === '{{ $tierItem['id'] }}'" class="w-2 h-2 rounded-none {{ $isEmergencyOrEnterprise ? 'bg-amber-500' : 'bg-emerald-500' }}"></span>
                                 </div>
                                 <h3 class="text-base font-black uppercase text-zinc-900 dark:text-zinc-100">{{ $tierItem['name'] }}</h3>
                                 <div class="text-xl font-black {{ $isEmergencyOrEnterprise ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400' }} my-2">
@@ -2967,9 +3384,10 @@ x-init="
                         </div>
                     @endforeach
                 </div>
+            </section>
 
             <!-- SECTION 08: TIMELINE & GANTT MILESTONE (ALIGNED TO VELOCITY) -->
-            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+            <section id="section-8" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex items-center justify-between gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">08</span>
@@ -3013,7 +3431,7 @@ x-init="
             </section>
 
             <!-- SECTION 09: STANDAR TATA KELOLA, KUALITAS & SLA SERAH TERIMA (GOVERNANCE & SLA) -->
-            <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid">
+            <section id="section-9" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">09</span>
@@ -3103,7 +3521,7 @@ x-init="
             </section>
 
             <!-- SECTION 10: SCOPE FREEZE, DIGITAL CONTRACT & DP MIDTRANS (CRUCIAL) -->
-            <section class="bg-zinc-900 text-white border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none no-print">
+            <section id="section-10" class="bg-zinc-900 text-white border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none no-print scroll-mt-24">
                 <!-- Staging Sandbox Environment Banner (If Provisioned) -->
                 @if($blueprint->staging_url)
                     <div class="mb-6 p-4 sm:p-5 bg-gradient-to-r from-emerald-950/80 via-zinc-950 to-zinc-950 border border-emerald-500 text-zinc-200">
@@ -3266,6 +3684,218 @@ x-init="
                     </form>
                 </div>
             </section>
+
+            <!-- FLOATING QUICK-ACCESS DOCK & SCROLL-SPY NAVIGATOR -->
+            <aside 
+                class="fixed bottom-5 right-4 sm:right-6 z-40 font-mono no-print flex flex-col items-end"
+                @keydown.escape.window="floatingIndexOpen = false"
+            >
+                <!-- Floating Accordion Drawer Popover -->
+                <div 
+                    x-show="floatingIndexOpen" 
+                    x-cloak
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+                    @click.outside="floatingIndexOpen = false"
+                    class="mb-3 w-[92vw] sm:w-[380px] max-h-[75vh] flex flex-col bg-white dark:bg-zinc-950 border-2 border-emerald-500 shadow-2xl rounded-none overflow-hidden"
+                >
+                    <!-- Drawer Header -->
+                    <div class="p-3.5 bg-zinc-900 text-white flex items-center justify-between border-b border-zinc-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 bg-emerald-400 rounded-none animate-pulse"></span>
+                            <div>
+                                <h3 class="font-bold text-xs uppercase tracking-wider text-emerald-400">
+                                    <span x-show="locale === 'en'">Quick PRD Directory</span>
+                                    <span x-show="locale !== 'en'">Index Navigasi Cepat PRD</span>
+                                </h3>
+                                <p class="text-[10px] text-zinc-400">
+                                    <span x-show="locale === 'en'">Jump to section without scrolling</span>
+                                    <span x-show="locale !== 'en'">Pindah cepat tanpa lelah scrolling</span>
+                                </p>
+                            </div>
+                        </div>
+                        <button 
+                            type="button" 
+                            @click="floatingIndexOpen = false" 
+                            class="text-zinc-400 hover:text-white text-base px-2 py-0.5 leading-none transition"
+                        >
+                            &times;
+                        </button>
+                    </div>
+
+                    <!-- Search & Quick Actions Bar -->
+                    <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2">
+                        <div class="relative flex-1">
+                            <input 
+                                type="text" 
+                                x-model="indexSearchQuery" 
+                                :placeholder="locale === 'en' ? 'Filter sections...' : 'Cari blok/fitur/ERD...'"
+                                class="w-full bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 px-2.5 py-1 text-xs text-zinc-900 dark:text-zinc-100 rounded-none focus:outline-none focus:border-emerald-500"
+                            />
+                            <button 
+                                type="button" 
+                                x-show="indexSearchQuery" 
+                                @click="indexSearchQuery = ''" 
+                                class="absolute right-2 top-1 text-zinc-400 hover:text-zinc-600 text-xs"
+                            >&times;</button>
+                        </div>
+                        <button 
+                            type="button" 
+                            @click="expandAllGroups()" 
+                            class="px-2 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] border border-zinc-300 dark:border-zinc-700 transition"
+                            :title="locale === 'en' ? 'Expand All' : 'Buka Semua'"
+                        >
+                            &boxplus;
+                        </button>
+                        <button 
+                            type="button" 
+                            @click="collapseAllGroups()" 
+                            class="px-2 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] border border-zinc-300 dark:border-zinc-700 transition"
+                            :title="locale === 'en' ? 'Collapse All' : 'Tutup Semua'"
+                        >
+                            &boxminus;
+                        </button>
+                    </div>
+
+                    <!-- Drawer Accordion Body (Scrollable) -->
+                    <div class="p-2 overflow-y-auto flex-1 space-y-2 text-xs divide-y divide-zinc-100 dark:divide-zinc-900">
+                        @foreach($accordionGroupDefs as $groupKey => $groupDef)
+                            <div class="pt-2 first:pt-0">
+                                <!-- Group Header Toggle -->
+                                <button 
+                                    type="button" 
+                                    @click="toggleAccordionGroup('{{ $groupKey }}')"
+                                    class="w-full px-2 py-1.5 bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-left flex items-center justify-between transition border border-zinc-200 dark:border-zinc-800"
+                                >
+                                    <span class="font-bold text-[11px] text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                                        <span class="text-emerald-500 font-mono">#{{ $loop->iteration }}</span>
+                                        <span x-show="locale === 'en'">{{ $groupDef['title_en'] }}</span>
+                                        <span x-show="locale !== 'en'">{{ $groupDef['title_id'] }}</span>
+                                    </span>
+                                    <svg 
+                                        class="w-3.5 h-3.5 text-zinc-500 transition-transform duration-200" 
+                                        :class="accordionGroups['{{ $groupKey }}'] ? 'rotate-180' : ''" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+
+                                <!-- Group Items -->
+                                <div 
+                                    x-show="accordionGroups['{{ $groupKey }}'] || indexSearchQuery.trim() !== ''" 
+                                    x-transition
+                                    class="mt-1 space-y-1 pl-1"
+                                >
+                                    @foreach($blueprintSections as $sec)
+                                        @if($sec['group'] === $groupKey)
+                                            <div 
+                                                x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
+                                                @click="jumpTo('{{ $sec['id'] }}')"
+                                                :class="activeSectionId === '{{ $sec['id'] }}' 
+                                                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold' 
+                                                    : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600'"
+                                                class="px-2.5 py-1.5 border rounded-none cursor-pointer transition flex items-center justify-between text-xs group"
+                                            >
+                                                <div class="flex items-center gap-2 truncate pr-1">
+                                                    <span 
+                                                        :class="activeSectionId === '{{ $sec['id'] }}' ? 'bg-emerald-500 text-black' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
+                                                        class="w-4 h-4 flex-shrink-0 flex items-center justify-center font-bold text-[9px] rounded-none"
+                                                    >
+                                                        {{ $sec['num'] }}
+                                                    </span>
+                                                    <span class="truncate text-[11px] group-hover:text-emerald-500">
+                                                        <span x-show="locale === 'en'">{{ $sec['title_en'] }}</span>
+                                                        <span x-show="locale !== 'en'">{{ $sec['title_id'] }}</span>
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center gap-1 flex-shrink-0">
+                                                    <span x-show="activeSectionId === '{{ $sec['id'] }}'" class="w-1.5 h-1.5 bg-emerald-500 rounded-none animate-ping"></span>
+                                                    <span class="text-[9px] text-zinc-400 uppercase font-mono">{{ $sec['badge'] }}</span>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <!-- Drawer Footer with Back to Top -->
+                    <div class="p-2.5 bg-zinc-100 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px]">
+                        <span class="text-zinc-500 dark:text-zinc-400">
+                            <span x-show="locale === 'en'">Active:</span>
+                            <span x-show="locale !== 'en'">Aktif:</span>
+                            <strong class="text-emerald-600 dark:text-emerald-400 ml-1" x-text="getActiveSectionTitle()"></strong>
+                        </span>
+                        <button 
+                            type="button" 
+                            @click="window.scrollTo({ top: 0, behavior: 'smooth' }); floatingIndexOpen = false;" 
+                            class="px-2 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold uppercase transition flex items-center gap-1 hover:opacity-90"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                            <span x-show="locale === 'en'">Top</span>
+                            <span x-show="locale !== 'en'">Atas</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Dock Pill-Free Bar -->
+                <div class="flex items-center bg-zinc-950/95 text-white border-2 border-emerald-500 shadow-2xl backdrop-blur-md rounded-none overflow-hidden select-none">
+                    <!-- Live Radar & Active Section Status -->
+                    <button 
+                        type="button" 
+                        @click="floatingIndexOpen = !floatingIndexOpen"
+                        class="px-3.5 py-2 hover:bg-zinc-800/80 transition flex items-center gap-2.5 text-left border-r border-zinc-800 group"
+                        :title="locale === 'en' ? 'Click to toggle PRD section index' : 'Klik untuk buka/tutup index bagian PRD'"
+                    >
+                        <span class="relative flex h-2.5 w-2.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex h-2.5 w-2.5 bg-emerald-500"></span>
+                        </span>
+                        <div class="flex flex-col">
+                            <div class="flex items-center gap-1.5 text-[9px] text-zinc-400 leading-none">
+                                <span class="text-emerald-400 font-bold" x-text="'[' + (getActiveSectionIndex() < 10 ? '0' : '') + getActiveSectionIndex() + ' / 12]'"></span>
+                                <span class="hidden sm:inline uppercase">SPY ACTIVE</span>
+                            </div>
+                            <span class="text-xs font-bold text-zinc-100 group-hover:text-emerald-400 transition-colors max-w-[150px] sm:max-w-[210px] truncate leading-tight mt-0.5" x-text="getActiveSectionTitle()"></span>
+                        </div>
+                        <svg 
+                            class="w-3.5 h-3.5 text-emerald-400 transition-transform duration-200" 
+                            :class="floatingIndexOpen ? 'rotate-180' : ''" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                        ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                    </button>
+
+                    <!-- Quick Jump Index Button -->
+                    <button 
+                        type="button" 
+                        @click="floatingIndexOpen = !floatingIndexOpen"
+                        :class="floatingIndexOpen ? 'bg-emerald-500 text-black font-black' : 'text-zinc-200 hover:bg-zinc-800/80 hover:text-emerald-400'"
+                        class="px-3 py-2 text-xs font-bold uppercase tracking-wider transition border-r border-zinc-800 flex items-center gap-1.5"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                        <span class="hidden sm:inline" x-show="locale === 'en'">INDEX</span>
+                        <span class="hidden sm:inline" x-show="locale !== 'en'">DAFTAR ISI</span>
+                    </button>
+
+                    <!-- Scroll to Top Button -->
+                    <button 
+                        type="button" 
+                        @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+                        class="px-2.5 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition"
+                        :title="locale === 'en' ? 'Back to top' : 'Kembali ke atas'"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                    </button>
+                </div>
+            </aside>
 
         </main>
     @endif

@@ -247,17 +247,28 @@
                 'section-7', 'section-8', 'section-9', 'section-10'
             ];
             let ticking = false;
+            let lastActive = null;
             const update = () => {
-                const scrollPosition = window.scrollY + 160;
                 let current = sectionIds[0];
-                for (let i = sectionIds.length - 1; i >= 0; i--) {
-                    const el = document.getElementById(sectionIds[i]);
-                    if (el && el.offsetTop <= scrollPosition) {
-                        current = sectionIds[i];
-                        break;
+                const isBottom = (window.innerHeight + window.pageYOffset) >= (document.body.offsetHeight - 120);
+                if (isBottom) {
+                    current = sectionIds[sectionIds.length - 1];
+                } else {
+                    for (let i = sectionIds.length - 1; i >= 0; i--) {
+                        const el = document.getElementById(sectionIds[i]);
+                        if (el) {
+                            const rect = el.getBoundingClientRect();
+                            if (rect.top <= 240) {
+                                current = sectionIds[i];
+                                break;
+                            }
+                        }
                     }
                 }
-                onActiveChange(current);
+                if (current !== lastActive) {
+                    lastActive = current;
+                    onActiveChange(current);
+                }
                 ticking = false;
             };
             window.addEventListener('scroll', () => {
@@ -587,11 +598,49 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     indexSearchQuery: '',
     indexAccordionOpen: true,
     floatingIndexOpen: false,
+    autoSyncAccordion: true,
+    sectionGroupMap: {
+        'section-1': 'scope',
+        'section-1-5': 'scope',
+        'section-2': 'scope',
+        'section-3': 'scope',
+        'section-3-5': 'studio',
+        'section-3-8': 'studio',
+        'section-4': 'studio',
+        'section-5': 'studio',
+        'section-6': 'infra',
+        'section-7': 'legal',
+        'section-8': 'legal',
+        'section-9': 'legal',
+        'section-10': 'legal'
+    },
     accordionGroups: {
         scope: true,
-        studio: true,
-        infra: true,
-        legal: true
+        studio: false,
+        infra: false,
+        legal: false
+    },
+    syncAccordionToSection(secId) {
+        if (!this.autoSyncAccordion) return;
+        const targetGroup = this.sectionGroupMap[secId];
+        if (!targetGroup) return;
+        for (const grp in this.accordionGroups) {
+            this.accordionGroups[grp] = (grp === targetGroup);
+        }
+        this.$nextTick(() => {
+            const activeItems = document.querySelectorAll(`[data-spy-sec="${secId}"]`);
+            activeItems.forEach(el => {
+                const scrollContainer = el.closest('.custom-prd-scrollbar');
+                if (scrollContainer) {
+                    const cRect = scrollContainer.getBoundingClientRect();
+                    const iRect = el.getBoundingClientRect();
+                    if (iRect.top < cRect.top + 15 || iRect.bottom > cRect.bottom - 15) {
+                        const relativeOffset = iRect.top - cRect.top + scrollContainer.scrollTop;
+                        scrollContainer.scrollTo({ top: Math.max(0, relativeOffset - 40), behavior: 'smooth' });
+                    }
+                }
+            });
+        });
     },
     toggleAccordionGroup(grp) {
         this.accordionGroups[grp] = !this.accordionGroups[grp];
@@ -601,16 +650,26 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
         this.accordionGroups.studio = true;
         this.accordionGroups.infra = true;
         this.accordionGroups.legal = true;
+        this.autoSyncAccordion = false;
     },
     collapseAllGroups() {
         this.accordionGroups.scope = false;
         this.accordionGroups.studio = false;
         this.accordionGroups.infra = false;
         this.accordionGroups.legal = false;
+        this.autoSyncAccordion = false;
+    },
+    toggleAutoSync() {
+        this.autoSyncAccordion = !this.autoSyncAccordion;
+        if (this.autoSyncAccordion) {
+            this.syncAccordionToSection(this.activeSectionId);
+        }
     },
     jumpTo(id) {
         window.jumpToSection(id);
         this.activeSectionId = id;
+        this.autoSyncAccordion = true;
+        this.syncAccordionToSection(id);
         this.floatingIndexOpen = false;
     },
     getActiveSectionTitle() {
@@ -640,7 +699,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 }" 
 x-init="
     $nextTick(() => {
-        window.setupBlueprintScrollSpy(id => { activeSectionId = id; });
+        window.setupBlueprintScrollSpy(id => { 
+            activeSectionId = id; 
+            syncAccordionToSection(id);
+        });
+        syncAccordionToSection(activeSectionId);
     });
     $watch('flowTab', val => {
         if (val === 'mermaid') $nextTick(() => window.renderMermaidDiagram('mermaid-flow-target', 'mermaid-flow-source'));
@@ -1056,6 +1119,17 @@ x-init="
                     >
                         &boxminus;
                     </button>
+                    <button 
+                        type="button" 
+                        @click="toggleAutoSync()" 
+                        :class="autoSyncAccordion ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'"
+                        class="px-2 py-1 text-[10px] font-mono font-bold border transition flex items-center gap-1"
+                        :title="autoSyncAccordion ? 'Auto-Collapse Aktif: Otomatis buka-tutup grup mengikuti scroll' : 'Auto-Collapse Nonaktif: Klik untuk aktifkan mode spy'"
+                    >
+                        <span class="w-1.5 h-1.5 rounded-none" :class="autoSyncAccordion ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'"></span>
+                        <span x-show="autoSyncAccordion">SPY</span>
+                        <span x-show="!autoSyncAccordion">OFF</span>
+                    </button>
                 </div>
 
                 <!-- Scrollable Section List (Independently scrollable with mouse wheel) -->
@@ -1068,20 +1142,31 @@ x-init="
                             <button 
                                 type="button" 
                                 @click="toggleAccordionGroup('{{ $groupKey }}')"
-                                class="w-full px-2 py-1.5 bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-left flex items-center justify-between transition border border-zinc-200 dark:border-zinc-800"
+                                :class="sectionGroupMap[activeSectionId] === '{{ $groupKey }}' 
+                                    ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/60 text-emerald-600 dark:text-emerald-400 font-bold' 
+                                    : 'bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800'"
+                                class="w-full px-2 py-1.5 text-left flex items-center justify-between transition border"
                             >
-                                <span class="font-bold text-[11px] text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-                                    <span class="text-emerald-500 font-mono">#{{ $loop->iteration }}</span>
+                                <span class="text-[11px] flex items-center gap-1.5">
+                                    <span class="font-mono" :class="sectionGroupMap[activeSectionId] === '{{ $groupKey }}' ? 'text-emerald-500 font-black' : 'text-zinc-500'">#{{ $loop->iteration }}</span>
                                     <span x-show="locale === 'en'">{{ $groupDef['title_en'] }}</span>
                                     <span x-show="locale !== 'en'">{{ $groupDef['title_id'] }}</span>
                                 </span>
-                                <svg 
-                                    class="w-3.5 h-3.5 text-zinc-500 transition-transform duration-200" 
-                                    :class="accordionGroups['{{ $groupKey }}'] ? 'rotate-180' : ''" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                <div class="flex items-center gap-1.5">
+                                    <span x-show="sectionGroupMap[activeSectionId] === '{{ $groupKey }}'" class="px-1.5 py-0.2 bg-emerald-500 text-black text-[8px] font-mono font-bold uppercase tracking-wider">
+                                        ACTIVE
+                                    </span>
+                                    <svg 
+                                        class="w-3.5 h-3.5 transition-transform duration-200" 
+                                        :class="[
+                                            accordionGroups['{{ $groupKey }}'] ? 'rotate-180' : '',
+                                            sectionGroupMap[activeSectionId] === '{{ $groupKey }}' ? 'text-emerald-500' : 'text-zinc-500'
+                                        ]" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
                             </button>
 
                             <div 
@@ -1092,6 +1177,7 @@ x-init="
                                 @foreach($blueprintSections as $sec)
                                     @if($sec['group'] === $groupKey)
                                         <div 
+                                            data-spy-sec="{{ $sec['id'] }}"
                                             x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
                                             @click="jumpTo('{{ $sec['id'] }}')"
                                             :class="activeSectionId === '{{ $sec['id'] }}' 
@@ -1250,6 +1336,17 @@ x-init="
                         </button>
                         <button 
                             type="button" 
+                            @click="toggleAutoSync()" 
+                            :class="autoSyncAccordion ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'"
+                            class="px-2.5 py-1.5 text-xs font-mono font-bold border transition flex items-center gap-1.5"
+                            :title="autoSyncAccordion ? 'Auto-Collapse Aktif: Mengikuti scroll bagian PRD' : 'Auto-Collapse Nonaktif: Klik untuk aktifkan mode spy'"
+                        >
+                            <span class="w-1.5 h-1.5 rounded-none" :class="autoSyncAccordion ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'"></span>
+                            <span x-show="autoSyncAccordion">SPY AUTO</span>
+                            <span x-show="!autoSyncAccordion">STATIC</span>
+                        </button>
+                        <button 
+                            type="button" 
                             @click="indexAccordionOpen = !indexAccordionOpen" 
                             class="px-3 py-1.5 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold border border-zinc-900 dark:border-emerald-500 transition flex items-center gap-1.5"
                         >
@@ -1267,7 +1364,10 @@ x-init="
                             <button 
                                 type="button" 
                                 @click="toggleAccordionGroup('{{ $groupKey }}')"
-                                class="w-full p-3.5 bg-zinc-100/70 dark:bg-zinc-900/90 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/80 transition flex items-center justify-between text-left font-mono"
+                                :class="sectionGroupMap[activeSectionId] === '{{ $groupKey }}' 
+                                    ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-b border-emerald-500/60' 
+                                    : 'bg-zinc-100/70 dark:bg-zinc-900/90 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/80'"
+                                class="w-full p-3.5 transition flex items-center justify-between text-left font-mono"
                             >
                                 <div class="flex items-center gap-2.5">
                                     <span class="w-6 h-6 bg-zinc-800 dark:bg-zinc-800 text-zinc-200 font-bold text-xs flex items-center justify-center rounded-none border border-zinc-700">
@@ -1288,9 +1388,15 @@ x-init="
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
+                                    <span x-show="sectionGroupMap[activeSectionId] === '{{ $groupKey }}'" class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-mono font-bold uppercase tracking-wider">
+                                        ACTIVE
+                                    </span>
                                     <svg 
-                                        class="w-4 h-4 text-zinc-500 transition-transform duration-200" 
-                                        :class="accordionGroups['{{ $groupKey }}'] ? 'rotate-180' : ''" 
+                                        class="w-4 h-4 transition-transform duration-200" 
+                                        :class="[
+                                            accordionGroups['{{ $groupKey }}'] ? 'rotate-180' : '',
+                                            sectionGroupMap[activeSectionId] === '{{ $groupKey }}' ? 'text-emerald-500' : 'text-zinc-500'
+                                        ]" 
                                         fill="none" 
                                         stroke="currentColor" 
                                         viewBox="0 0 24 24"
@@ -1307,6 +1413,7 @@ x-init="
                                 @foreach($blueprintSections as $sec)
                                     @if($sec['group'] === $groupKey)
                                         <div 
+                                            data-spy-sec="{{ $sec['id'] }}"
                                             x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
                                             @click="jumpTo('{{ $sec['id'] }}')"
                                             :class="activeSectionId === '{{ $sec['id'] }}' 
@@ -4654,6 +4761,17 @@ x-init="
                         >
                             &boxminus;
                         </button>
+                        <button 
+                            type="button" 
+                            @click="toggleAutoSync()" 
+                            :class="autoSyncAccordion ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'"
+                            class="px-2 py-1 text-[10px] font-mono font-bold border transition flex items-center gap-1"
+                            :title="autoSyncAccordion ? 'Auto-Collapse Aktif: Otomatis buka-tutup grup mengikuti scroll' : 'Auto-Collapse Nonaktif: Klik untuk aktifkan mode spy'"
+                        >
+                            <span class="w-1.5 h-1.5 rounded-none" :class="autoSyncAccordion ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'"></span>
+                            <span x-show="autoSyncAccordion">SPY</span>
+                            <span x-show="!autoSyncAccordion">OFF</span>
+                        </button>
                     </div>
 
                     <!-- Drawer Accordion Body (Scrollable with mousewheel) -->
@@ -4667,20 +4785,31 @@ x-init="
                                 <button 
                                     type="button" 
                                     @click="toggleAccordionGroup('{{ $groupKey }}')"
-                                    class="w-full px-2 py-1.5 bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-left flex items-center justify-between transition border border-zinc-200 dark:border-zinc-800"
+                                    :class="sectionGroupMap[activeSectionId] === '{{ $groupKey }}' 
+                                        ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/60 text-emerald-600 dark:text-emerald-400 font-bold' 
+                                        : 'bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800'"
+                                    class="w-full px-2 py-1.5 text-left flex items-center justify-between transition border"
                                 >
-                                    <span class="font-bold text-[11px] text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-                                        <span class="text-emerald-500 font-mono">#{{ $loop->iteration }}</span>
+                                    <span class="text-[11px] flex items-center gap-1.5">
+                                        <span class="font-mono" :class="sectionGroupMap[activeSectionId] === '{{ $groupKey }}' ? 'text-emerald-500 font-black' : 'text-zinc-500'">#{{ $loop->iteration }}</span>
                                         <span x-show="locale === 'en'">{{ $groupDef['title_en'] }}</span>
                                         <span x-show="locale !== 'en'">{{ $groupDef['title_id'] }}</span>
                                     </span>
-                                    <svg 
-                                        class="w-3.5 h-3.5 text-zinc-500 transition-transform duration-200" 
-                                        :class="accordionGroups['{{ $groupKey }}'] ? 'rotate-180' : ''" 
-                                        fill="none" 
-                                        stroke="currentColor" 
-                                        viewBox="0 0 24 24"
-                                    ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    <div class="flex items-center gap-1.5">
+                                        <span x-show="sectionGroupMap[activeSectionId] === '{{ $groupKey }}'" class="px-1.5 py-0.2 bg-emerald-500 text-black text-[8px] font-mono font-bold uppercase tracking-wider">
+                                            ACTIVE
+                                        </span>
+                                        <svg 
+                                            class="w-3.5 h-3.5 transition-transform duration-200" 
+                                            :class="[
+                                                accordionGroups['{{ $groupKey }}'] ? 'rotate-180' : '',
+                                                sectionGroupMap[activeSectionId] === '{{ $groupKey }}' ? 'text-emerald-500' : 'text-zinc-500'
+                                            ]" 
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                        ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
                                 </button>
 
                                 <!-- Group Items -->
@@ -4692,6 +4821,7 @@ x-init="
                                     @foreach($blueprintSections as $sec)
                                         @if($sec['group'] === $groupKey)
                                             <div 
+                                                data-spy-sec="{{ $sec['id'] }}"
                                                 x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
                                                 @click="jumpTo('{{ $sec['id'] }}')"
                                                 :class="activeSectionId === '{{ $sec['id'] }}' 

@@ -50,11 +50,18 @@ class CartController extends Controller
 
             $blueprint = VisionBlueprint::where('slug', $slug)->first();
             if ($blueprint) {
-                $contractAmount = (float) ($item['contract_amount'] ?? 50000000);
+                // Ensure PRD with itemized estimation is populated
+                if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['itemized_cost_breakdown'])) {
+                    $blueprint->generateAndSavePrd();
+                    $blueprint->refresh();
+                }
+
+                $contractAmount = (float) ($item['contract_amount'] ?? 25000000);
                 $dpAmount = (float) ($item['dp_amount'] ?? ($contractAmount * 0.50));
                 $tier = $item['tier'] ?? 'standard';
                 $tierName = $item['tier_name'] ?? 'Standard Velocity (30 Hari)';
                 $targetWaktu = $item['target_waktu'] ?? ($blueprint->target_waktu ?: '30 Hari Kerja');
+                $itemizedItems = $item['itemized_items'] ?? ($blueprint->prd_content['itemized_cost_breakdown']['items'] ?? []);
 
                 $items[] = [
                     'blueprint' => $blueprint,
@@ -67,6 +74,7 @@ class CartController extends Controller
                     'target_waktu' => $targetWaktu,
                     'contract_amount' => $contractAmount,
                     'dp_amount' => $dpAmount,
+                    'itemized_items' => $itemizedItems,
                     'added_at' => $item['added_at'] ?? now()->toIso8601String(),
                     'expires_at' => $expiresAt->toIso8601String(),
                     'remaining_seconds' => $remainingSeconds,
@@ -97,25 +105,31 @@ class CartController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
 
-        $tier = $request->input('tier', 'standard');
-        
-        // Define pricing and duration matrix based on accelerator tier
-        if ($tier === 'hyper_sprint') {
-            $contractAmount = 100000000.00;
-            $dpAmount = 50000000.00;
-            $targetWaktu = '7 Hari Kerja (Hyper-Sprint 24/7)';
-            $tierName = 'Hyper-Sprint Emergency (7 Hari + 24/7 Gemini Ultra Squad)';
-        } elseif ($tier === 'fast_track') {
-            $contractAmount = 75000000.00;
-            $dpAmount = 37500000.00;
-            $targetWaktu = '14 Hari Kerja (Fast-Track 2x)';
-            $tierName = 'Fast-Track Accelerator (14 Hari + Gemini Ultra Reasoning)';
-        } else {
-            $contractAmount = 50000000.00;
-            $dpAmount = 25000000.00;
-            $targetWaktu = '30 Hari Kerja (Standard)';
-            $tierName = 'Standard Velocity (30 Hari Kerja)';
+        // Ensure PRD with itemized estimation is populated
+        if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['itemized_cost_breakdown'])) {
+            $blueprint->generateAndSavePrd();
+            $blueprint->refresh();
         }
+
+        $tier = $request->input('tier', 'standard');
+        $itemizedData = $blueprint->prd_content['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
+        $velocityTiers = $blueprint->prd_content['velocity_pricing_options'] ?? ($itemizedData['velocity_tiers'] ?? []);
+
+        $matchedTier = null;
+        foreach ($velocityTiers as $vt) {
+            if (($vt['id'] ?? '') === $tier) {
+                $matchedTier = $vt;
+                break;
+            }
+        }
+        if (!$matchedTier && !empty($velocityTiers)) {
+            $matchedTier = $velocityTiers[0];
+        }
+
+        $contractAmount = $matchedTier ? (float) $matchedTier['contract_amount'] : 25000000.00;
+        $dpAmount = $matchedTier ? (float) $matchedTier['dp_amount'] : ($contractAmount * 0.50);
+        $targetWaktu = $matchedTier ? ($matchedTier['duration'] ?? '30 Hari Kerja') : '30 Hari Kerja';
+        $tierName = $matchedTier ? ($matchedTier['name'] ?? 'Standard Velocity') : 'Standard Velocity (30 Hari Kerja)';
 
         // Allow explicit amount overrides if passed safely
         if ($request->filled('contract_amount')) {
@@ -136,6 +150,7 @@ class CartController extends Controller
             'target_waktu' => $targetWaktu,
             'contract_amount' => $contractAmount,
             'dp_amount' => $dpAmount,
+            'itemized_items' => $itemizedData['items'] ?? [],
             'added_at' => $addedAt->toIso8601String(),
             'expires_at' => $expiresAt->toIso8601String(),
         ];

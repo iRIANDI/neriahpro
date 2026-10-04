@@ -134,7 +134,7 @@
                                 $tierBadge = 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40';
                             }
                         @endphp
-                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 item-row" data-expires="{{ $item['expires_at'] }}">
+                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 item-row" data-expires="{{ $item['expires_at'] }}" x-data="{ showBreakdown: false }">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-3">
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2 mb-1.5">
@@ -158,6 +158,47 @@
                                     <span class="text-[10px] text-zinc-400 block">Total: Rp {{ number_format($item['contract_amount'], 0, ',', '.') }}</span>
                                 </div>
                             </div>
+
+                            <!-- Itemized Scope Breakdown Toggle Button -->
+                            @if(!empty($item['itemized_items']))
+                                <div class="mb-3">
+                                    <button 
+                                        type="button" 
+                                        @click="showBreakdown = !showBreakdown"
+                                        class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 flex items-center gap-1.5 py-1 px-2.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800/60 transition"
+                                    >
+                                        <span x-text="showBreakdown ? '▲ Sembunyikan Rincian Spesifikasi' : '▼ Lihat Rincian Biaya Input Anda (' + {{ count($item['itemized_items']) }} + ' Komponen Teranalisis)'"></span>
+                                    </button>
+
+                                    <!-- Collapsible Itemized Scope Table -->
+                                    <div x-show="showBreakdown" x-cloak class="mt-2.5 p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-[11px] space-y-2">
+                                        <div class="flex items-center justify-between text-[10px] font-bold uppercase text-zinc-400 border-b border-zinc-200 dark:border-zinc-800 pb-1 mb-2">
+                                            <span>Komponen / Fitur Yang Dianalisis</span>
+                                            <span>Bobot Nilai</span>
+                                        </div>
+                                        <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                                            @foreach($item['itemized_items'] as $it)
+                                                <div class="flex items-start justify-between gap-2 py-1 border-b border-zinc-100 dark:border-zinc-900 last:border-0">
+                                                    <div>
+                                                        <div class="flex items-center gap-1.5">
+                                                            <span class="text-[9px] px-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold">{{ $it['code'] ?? 'FEAT' }}</span>
+                                                            <strong class="text-zinc-800 dark:text-zinc-200">{{ $it['title'] }}</strong>
+                                                        </div>
+                                                        <p class="text-[10px] text-zinc-500 mt-0.5 line-clamp-1">{{ $it['desc'] }}</p>
+                                                    </div>
+                                                    <span class="font-bold whitespace-nowrap {{ ($it['amount'] ?? 0) < 0 ? 'text-amber-500' : 'text-zinc-900 dark:text-zinc-100' }}">
+                                                        {{ ($it['amount'] ?? 0) < 0 ? '-Rp ' : 'Rp ' }}{{ number_format(abs($it['amount'] ?? 0), 0, ',', '.') }}
+                                                    </span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        <div class="border-t border-zinc-200 dark:border-zinc-800 pt-2 flex items-center justify-between text-xs font-bold">
+                                            <span class="text-zinc-500">Tier Terpilih: {{ $item['tier_name'] }}</span>
+                                            <span class="text-emerald-600 dark:text-emerald-400">Total: Rp {{ number_format($item['contract_amount'], 0, ',', '.') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
 
                             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 text-xs font-mono">
                                 <div class="flex items-center gap-3">

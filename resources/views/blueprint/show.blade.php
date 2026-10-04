@@ -401,12 +401,13 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
         };
     </script>
 @php
-    $pricingTiers = $prd['velocity_pricing_options'] ?? \App\Services\PrdGeneratorService::generateVelocityPricingOptions(
+    $itemizedScope = $prd['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
+    $pricingTiers = $prd['velocity_pricing_options'] ?? ($itemizedScope['velocity_tiers'] ?? \App\Services\PrdGeneratorService::generateVelocityPricingOptions(
         $blueprint->target_waktu ?? '30 Hari Kerja',
         $blueprint->user_metadata['kisaran_budget'] ?? null,
         $blueprint->nama_bisnis ?? $blueprint->client_name,
         $blueprint->masalah_utama ?? ''
-    );
+    ));
     $alpineTiers = [];
     foreach ($pricingTiers as $t) {
         $alpineTiers[$t['id']] = [
@@ -3824,6 +3825,56 @@ x-init="
                         Pengerjaan kilat tidak sekadar menambah jam kerja manusia, melainkan mengalokasikan <strong>Swarm AI Agent Parallel Workers (Gemini Ultra)</strong> dengan kuota inferensi jutaan token per menit untuk auto-synthesize skema database, unit test otomatis, dan refactoring real-time tanpa antrean cloud.
                     </p>
                 </div>
+
+                <!-- Itemized Scope Breakdown Table (Transparansi Poin Input Klien) -->
+                @if(!empty($itemizedScope['items']))
+                    <div class="mb-6 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 font-mono text-xs">
+                        <div class="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 bg-emerald-500"></span>
+                                <strong class="uppercase text-zinc-900 dark:text-zinc-100 font-bold">Rincian Komponen Biaya Berdasarkan Input Anda:</strong>
+                            </div>
+                            <span class="text-[10px] text-zinc-500 font-bold">{{ count($itemizedScope['items']) }} Komponen Teranalisis</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-400 uppercase">
+                                        <th class="py-2 pr-3">Kategori</th>
+                                        <th class="py-2 pr-3">Kode</th>
+                                        <th class="py-2 pr-3">Komponen / Spesifikasi Fitur</th>
+                                        <th class="py-2 pr-3">Kompleksitas</th>
+                                        <th class="py-2 text-right">Bobot Nilai</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-900 text-[11px]">
+                                    @foreach($itemizedScope['items'] as $it)
+                                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
+                                            <td class="py-2 pr-3 text-zinc-500">{{ $it['category'] }}</td>
+                                            <td class="py-2 pr-3"><span class="px-1 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[9px] font-bold">{{ $it['code'] }}</span></td>
+                                            <td class="py-2 pr-3 font-bold text-zinc-800 dark:text-zinc-200">
+                                                {{ $it['title'] }}
+                                                <span class="block text-[10px] text-zinc-400 font-normal line-clamp-1">{{ $it['desc'] }}</span>
+                                            </td>
+                                            <td class="py-2 pr-3 text-zinc-500 text-[10px]">{{ $it['complexity'] }}</td>
+                                            <td class="py-2 text-right font-bold whitespace-nowrap {{ ($it['amount'] ?? 0) < 0 ? 'text-amber-500' : 'text-zinc-900 dark:text-zinc-100' }}">
+                                                {{ ($it['amount'] ?? 0) < 0 ? '-Rp ' : 'Rp ' }}{{ number_format(abs($it['amount'] ?? 0), 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                                <tfoot>
+                                    <tr class="border-t-2 border-zinc-200 dark:border-zinc-800 text-xs font-bold">
+                                        <td colspan="4" class="py-2 text-zinc-900 dark:text-zinc-100 uppercase">Subtotal Base Scope (Pace Standard 30 Hari)</td>
+                                        <td class="py-2 text-right text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                                            Rp {{ number_format($itemizedScope['base_subtotal'] ?? 0, 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Dynamic Comparative Velocity & Budget Pricing Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 font-mono">

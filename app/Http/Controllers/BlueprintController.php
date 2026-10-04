@@ -277,18 +277,34 @@ class BlueprintController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         
-        $tier = request('tier', 'standard');
-        $overrides = [];
-        if ($tier === 'fast_track') {
-            $overrides['contract_amount'] = 75000000.00;
-            $overrides['dp_amount'] = 37500000.00;
-        } elseif ($tier === 'hyper_sprint') {
-            $overrides['contract_amount'] = 100000000.00;
-            $overrides['dp_amount'] = 50000000.00;
-        } else {
-            $overrides['contract_amount'] = 50000000.00;
-            $overrides['dp_amount'] = 25000000.00;
+        // Ensure PRD with itemized estimation is populated
+        if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['itemized_cost_breakdown'])) {
+            $blueprint->generateAndSavePrd();
+            $blueprint->refresh();
         }
+
+        $tier = request('tier', 'standard');
+        $itemizedData = $blueprint->prd_content['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
+        $velocityTiers = $blueprint->prd_content['velocity_pricing_options'] ?? ($itemizedData['velocity_tiers'] ?? []);
+
+        $matchedTier = null;
+        foreach ($velocityTiers as $vt) {
+            if (($vt['id'] ?? '') === $tier) {
+                $matchedTier = $vt;
+                break;
+            }
+        }
+        if (!$matchedTier && !empty($velocityTiers)) {
+            $matchedTier = $velocityTiers[0];
+        }
+
+        $contractAmount = $matchedTier ? (float) $matchedTier['contract_amount'] : 25000000.00;
+        $dpAmount = $matchedTier ? (float) $matchedTier['dp_amount'] : ($contractAmount * 0.50);
+
+        $overrides = [
+            'contract_amount' => $contractAmount,
+            'dp_amount' => $dpAmount,
+        ];
 
         $document = $blueprint->documents()->where('document_type', 'contract')->first();
         if (!$document) {
@@ -310,24 +326,29 @@ class BlueprintController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         
-        $tier = $request->input('tier', 'standard');
-        
-        // Calculate contract and DP amount based on tier
-        $contractAmount = match ($tier) {
-            'fast_track' => 75000000.00,
-            'hyper_sprint' => 100000000.00,
-            default => 50000000.00,
-        };
+        if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['itemized_cost_breakdown'])) {
+            $blueprint->generateAndSavePrd();
+            $blueprint->refresh();
+        }
 
-        // DP is 50%
-        $dpAmount = (int) ($contractAmount * 0.50);
-        
-        $orderId = 'NP-BP-' . strtoupper(substr($blueprint->id, 0, 8)) . '-' . time();
-        $tierLabel = match ($tier) {
-            'fast_track' => 'Fast-Track Velocity',
-            'hyper_sprint' => 'Hyper-Sprint Delivery',
-            default => 'Standard Velocity',
-        };
+        $tier = $request->input('tier', 'standard');
+        $itemizedData = $blueprint->prd_content['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
+        $velocityTiers = $blueprint->prd_content['velocity_pricing_options'] ?? ($itemizedData['velocity_tiers'] ?? []);
+
+        $matchedTier = null;
+        foreach ($velocityTiers as $vt) {
+            if (($vt['id'] ?? '') === $tier) {
+                $matchedTier = $vt;
+                break;
+            }
+        }
+        if (!$matchedTier && !empty($velocityTiers)) {
+            $matchedTier = $velocityTiers[0];
+        }
+
+        $contractAmount = $matchedTier ? (float) $matchedTier['contract_amount'] : 25000000.00;
+        $dpAmount = (int) ($matchedTier ? (float) $matchedTier['dp_amount'] : ($contractAmount * 0.50));
+        $tierLabel = $matchedTier ? ($matchedTier['name'] ?? 'Standard Velocity') : 'Standard Velocity';
 
         $params = [
             'transaction_details' => [

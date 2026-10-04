@@ -76,6 +76,7 @@ class PrdGeneratorService
         $mobileSyncMermaid = self::generateMobileSyncMermaid($businessName);
         $mobileArchitecture = self::generateMobileAndSyncArchitecture($businessName, $extraContext['target_platform'] ?? '', $erdTables, $mvpItems);
         $developerEducation = self::getDeveloperEducationDeck($businessName);
+        $itemizedEstimation = self::calculateItemizedEstimation($blueprint);
 
         return [
             'meta' => [
@@ -174,7 +175,8 @@ class PrdGeneratorService
                 'notes' => 'Akan dihubungkan melalui service providers terisolasi dengan fallback retry mechanism.',
             ],
             'architecture_evaluation' => self::evaluateArchitecture($businessName, $masalah, $mvpItems, $alurKerja, $extraContext),
-            'velocity_pricing_options' => self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null, $businessName, $masalah),
+            'itemized_cost_breakdown' => $itemizedEstimation,
+            'velocity_pricing_options' => $itemizedEstimation['velocity_tiers'] ?? self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null, $businessName, $masalah),
             'governance_and_sla' => [
                 'title' => 'Tata Kelola, Standar Kualitas & SLA Serah Terima (Strict Governance & Handoff)',
                 'definition_of_done' => [
@@ -962,6 +964,278 @@ class PrdGeneratorService
                 ['category' => 'Infrastructure & Runtime', 'name' => 'Dedicated VPS via Nixpacks & Docker', 'desc' => 'Container isolation, Nginx HTTP/2, automated SSL, Zero-downtime deploy'],
                 ['category' => 'AI Acceleration Engine', 'name' => 'Gemini Ultra / Pro API SDK', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
             ],
+        ];
+    }
+
+    /**
+     * Calculate transparent, professional itemized scope cost breakdown
+     * derived 100% from client questionnaire inputs.
+     */
+    public static function calculateItemizedEstimation(VisionBlueprint $blueprint, array $options = []): array
+    {
+        $items = [];
+
+        // 1. Fondasi Arsitektur Monolith (Base Core)
+        $items[] = [
+            'category' => 'Fondasi Arsitektur',
+            'code' => 'BASE-CORE',
+            'title' => 'Pondasi Modern Monolith & Setup Keamanan Enterprise',
+            'desc' => 'Arsitektur Laravel 13, Filament v5 Enterprise, Database PostgreSQL 16+ Strict ULID, Sanitasi OWASP Top 10, Dark/Light Mode, dan Deploy Container VPS Docker/Nixpacks.',
+            'complexity' => 'Standar Wajib',
+            'amount' => 5000000.00,
+        ];
+
+        // 2. Dekomposisi Fitur MVP (Poin per Fitur Wajib yang Diinput Klien)
+        $rawMvp = self::parseItems($blueprint->fitur_wajib ?: 'Manajemen Pengguna & RBAC, Input Formulir Data, Rekap Database Dinamis, Ekspor PDF/Excel.');
+        if (empty($rawMvp)) {
+            $rawMvp = [
+                ['title' => 'Autentikasi & RBAC', 'desc' => 'Login aman dengan Role-Based Access Control dan ULID identifiers.'],
+                ['title' => 'Formulir Intake Terstruktur', 'desc' => 'Pengumpulan data tervalidasi dengan proteksi Anti-Spam.'],
+                ['title' => 'Dasbor Administrasi', 'desc' => 'Pusat kendali berbasis Filament PHP dengan tabel filter data instan.'],
+                ['title' => 'Laporan & Ekspor Data', 'desc' => 'Fitur ekspor format PDF dan Excel untuk kebutuhan rekonsiliasi harian.'],
+            ];
+        }
+
+        foreach ($rawMvp as $idx => $feat) {
+            $t = strtolower($feat['title'] . ' ' . ($feat['desc'] ?? ''));
+            
+            // Check feature complexity
+            $isHigh = str_contains($t, 'transaksi') || str_contains($t, 'pembayaran') || str_contains($t, 'checkout') ||
+                      str_contains($t, 'booking') || str_contains($t, 'rekam medis') || str_contains($t, 'escrow') ||
+                      str_contains($t, 'chat') || str_contains($t, 'real-time') || str_contains($t, 'realtime') ||
+                      str_contains($t, 'payroll') || str_contains($t, 'pos') || str_contains($t, 'kasir') ||
+                      str_contains($t, 'tracking') || str_contains($t, 'pelacakan');
+            
+            $isLow = str_contains($t, 'kontak') || str_contains($t, 'faq') || str_contains($t, 'profil') ||
+                     str_contains($t, 'banner') || str_contains($t, 'about') || str_contains($t, 'tentang') ||
+                     str_contains($t, 'galeri') || str_contains($t, 'buku tamu');
+
+            if ($isHigh) {
+                $featComplexity = 'Kompleks / Transaksional';
+                $featAmount = 4500000.00;
+            } elseif ($isLow) {
+                $featComplexity = 'Ringan / Informasi Dasar';
+                $featAmount = 1500000.00;
+            } else {
+                $featComplexity = 'Menengah / Alur Interaktif';
+                $featAmount = 3000000.00;
+            }
+
+            $items[] = [
+                'category' => 'Fitur MVP Spesifik',
+                'code' => 'FEAT-MVP-' . ($idx + 1),
+                'title' => $feat['title'],
+                'desc' => $feat['desc'] ?: 'Spesifikasi fungsional operasional sistem.',
+                'complexity' => $featComplexity,
+                'amount' => $featAmount,
+            ];
+        }
+
+        // 3. Aktor Sistem & Portal Hak Akses (Multi-Role)
+        $rawActors = self::parseActors($blueprint->aktor_sistem ?: 'Superadmin, Klien', $blueprint->nama_bisnis ?? '', $blueprint->target_audiens ?? '');
+        $actorCount = count($rawActors);
+        // 1-2 Role sudah tercover di Base Core. Role ke-3 dan seterusnya dihitung per portal
+        if ($actorCount > 2) {
+            $extraRoles = array_slice($rawActors, 2);
+            foreach ($extraRoles as $rIdx => $role) {
+                $roleName = is_array($role) ? ($role['name'] ?? 'Peran Tambahan') : (string) $role;
+                $items[] = [
+                    'category' => 'Aktor & Hak Akses',
+                    'code' => 'ROLE-PORTAL-' . ($rIdx + 1),
+                    'title' => 'Portal & Guard Otorisasi: ' . $roleName,
+                    'desc' => 'Penyediaan navigasi terpisah, filter data terisolasi, dan authorization policy khusus untuk peran ' . $roleName . '.',
+                    'complexity' => 'Menengah',
+                    'amount' => 1500000.00,
+                ];
+            }
+        }
+
+        // 4. Kebutuhan Integrasi Pihak Ketiga
+        $rawIntegrasi = strtolower($blueprint->kebutuhan_integrasi ?: '');
+        if (!empty($rawIntegrasi) && $rawIntegrasi !== 'tidak ada' && $rawIntegrasi !== 'none') {
+            if (str_contains($rawIntegrasi, 'payment') || str_contains($rawIntegrasi, 'midtrans') || str_contains($rawIntegrasi, 'xendit') || str_contains($rawIntegrasi, 'qris') || str_contains($rawIntegrasi, 'virtual account')) {
+                $items[] = [
+                    'category' => 'Integrasi Pihak Ketiga',
+                    'code' => 'INT-PAYMENT',
+                    'title' => 'Payment Gateway Escrow (Midtrans Snap / QRIS / VA)',
+                    'desc' => 'Integrasi HTTP Basic Auth Snap Token, penerima Webhook callback otomatis, log rekonsiliasi audit trail, dan perlindungan replay attack.',
+                    'complexity' => 'Menengah',
+                    'amount' => 2500000.00,
+                ];
+            }
+
+            if (str_contains($rawIntegrasi, 'whatsapp') || str_contains($rawIntegrasi, 'wa') || str_contains($rawIntegrasi, 'fonnte') || str_contains($rawIntegrasi, 'notifikasi')) {
+                $items[] = [
+                    'category' => 'Integrasi Pihak Ketiga',
+                    'code' => 'INT-WHATSAPP',
+                    'title' => 'WhatsApp Gateway & Queue Worker Notifikasi Real-time',
+                    'desc' => 'Pengiriman pesan transaksi/warta otomatis dengan background worker Redis untuk mencegah lag pada UI klien.',
+                    'complexity' => 'Menengah',
+                    'amount' => 2000000.00,
+                ];
+            }
+
+            if (str_contains($rawIntegrasi, 'maps') || str_contains($rawIntegrasi, 'ongkir') || str_contains($rawIntegrasi, 'kurir') || str_contains($rawIntegrasi, 'rajaongkir') || str_contains($rawIntegrasi, 'lokasi')) {
+                $items[] = [
+                    'category' => 'Integrasi Pihak Ketiga',
+                    'code' => 'INT-LOGISTICS',
+                    'title' => 'Logistik Ekspedisi & Geocoding Maps Platform',
+                    'desc' => 'Koneksi tarif kurir instan (JNE/TIKI/POS) dan penanda koordinat lokasi pelanggan pada peta interaktif.',
+                    'complexity' => 'Menengah',
+                    'amount' => 2500000.00,
+                ];
+            }
+
+            if (str_contains($rawIntegrasi, 'ai') || str_contains($rawIntegrasi, 'gemini') || str_contains($rawIntegrasi, 'openai') || str_contains($rawIntegrasi, 'vector') || str_contains($rawIntegrasi, 'rag')) {
+                $items[] = [
+                    'category' => 'Integrasi Pihak Ketiga',
+                    'code' => 'INT-AI-COPILOT',
+                    'title' => 'AI Copilot RAG & Basis Data Semantik (pgvector)',
+                    'desc' => 'Penyimpanan vector embeddings dan pencarian similaritas semantik HNSW langsung di basis data relasional PostgreSQL.',
+                    'complexity' => 'Tinggi',
+                    'amount' => 5000000.00,
+                ];
+            }
+        }
+
+        // 5. Skala Pengguna & Arsitektur Concurrency
+        $metadata = $blueprint->user_metadata ?? [];
+        $rawScale = strtolower($metadata['skala_pengguna'] ?? '');
+        if (str_contains($rawScale, '100.000') || str_contains($rawScale, '1.000.000') || str_contains($rawScale, 'jutaan') || str_contains($rawScale, 'high concurrency')) {
+            $items[] = [
+                'category' => 'Infrastruktur & Skala',
+                'code' => 'INFRA-CONCURRENCY',
+                'title' => 'High-Concurrency Redis Caching & Keyset Keystone O(1)',
+                'desc' => 'Optimasi query database anti-lemot dengan cursor keyset pagination O(1) dan caching agresif untuk melayani ratusan ribu pengguna.',
+                'complexity' => 'Menengah',
+                'amount' => 3500000.00,
+            ];
+        }
+
+        // Target Platform: Flutter / Mobile
+        $rawPlatform = strtolower($metadata['target_platform'] ?? '');
+        $isMobileClient = str_contains($rawPlatform, 'flutter') || str_contains($rawPlatform, 'mobile') || str_contains($rawPlatform, 'ios') || str_contains($rawPlatform, 'android');
+        if ($isMobileClient) {
+            $items[] = [
+                'category' => 'Multi-Platform Client',
+                'code' => 'PLATFORM-MOBILE',
+                'title' => 'Cross-Platform Native Client (Flutter / Mobile iOS & Android)',
+                'desc' => 'Pengembangan antarmuka mobile native dengan SQLite offline-first sync engine terpadu.',
+                'complexity' => 'Tinggi',
+                'amount' => 8500000.00,
+            ];
+        }
+
+        // Hitung Base Subtotal (Standard Velocity: 30 Hari Kerja)
+        $baseSubtotal = 0;
+        foreach ($items as $it) {
+            $baseSubtotal += (float) $it['amount'];
+        }
+
+        // Toleransi Budget Bracket & Gereja / Komunitas (Community Discount / Reality Guard)
+        $rawBudget = strtolower($metadata['kisaran_budget'] ?? '');
+        $combinedText = strtolower(($blueprint->nama_bisnis ?? '') . ' ' . ($blueprint->masalah_utama ?? '') . ' ' . $rawBudget);
+        $isChurch = str_contains($combinedText, 'gereja') || str_contains($combinedText, 'jemaat') || str_contains($combinedText, 'ibadah');
+
+        // Jika gereja/komunitas non-profit, berikan subsidi efisiensi modular agar realistis
+        if ($isChurch && $baseSubtotal > 15000000) {
+            $discount = round(($baseSubtotal - 10000000) * 0.4, -5);
+            $items[] = [
+                'category' => 'Subsidi & Penyesuaian',
+                'code' => 'GRANT-COMMUNITY',
+                'title' => 'Subsidi Efisiensi Komunitas / Pelayanan Non-Profit',
+                'desc' => 'Penyesuaian biaya efisiensi arsitektur modular Neriah Pro untuk institusi keagamaan dan komunitas sosial.',
+                'complexity' => 'Pengurang Biaya',
+                'amount' => -$discount,
+            ];
+            $baseSubtotal -= $discount;
+        }
+
+        // Bulatkan ke ratusan ribu bersih
+        $standardContract = max(5000000.00, round($baseSubtotal, -5));
+        $standardDp = $standardContract * 0.50;
+        $standardPelunasan = $standardContract - $standardDp;
+
+        // Hitung 3 Velocity Tiers:
+        $fastTrackContract = round($standardContract * 1.4, -5);
+        $fastTrackDp = $fastTrackContract * 0.50;
+        $fastTrackPelunasan = $fastTrackContract - $fastTrackDp;
+
+        $hyperSprintContract = round($standardContract * 2.0, -5);
+        $hyperSprintDp = $hyperSprintContract * 0.50;
+        $hyperSprintPelunasan = $hyperSprintContract - $hyperSprintDp;
+
+        $velocityTiers = [
+            [
+                'id' => 'standard',
+                'name' => 'Standard Velocity (30 Hari Kerja)',
+                'duration' => '30 Hari Kerja',
+                'badge' => 'STANDARD_PACE // BEST_VALUE',
+                'speed_multiplier' => '1.0x (Pace Terencana)',
+                'contract_amount' => $standardContract,
+                'dp_amount' => $standardDp,
+                'pelunasan_amount' => $standardPelunasan,
+                'ai_quota_spec' => 'Modern Monolith Blueprint Engine',
+                'squad_allocation' => '1 Dedicated Fullstack Engineer + QA Reviewer',
+                'cost_formula' => 'Nilai Riil Itemized Scope (' . count($items) . ' Komponen Teranalisis)',
+                'ai_swarm_specs' => [
+                    'Arsitektur: Laravel 13, Filament v5, PostgreSQL ULID, Docker VPS',
+                    'Daftar Fitur: Terhitung persis dari ' . count($rawMvp) . ' fitur MVP yang diajukan',
+                    'Hak Akses: Multi-role terisolasi dengan otorisasi ketat',
+                    'Garansi: 30 Hari Bug-free Support + Akses Penuh Private Repo GitHub',
+                ],
+                'description' => 'Kecepatan pengerjaan standar terencana dengan biaya investasi paling efisien dan transparan.',
+            ],
+            [
+                'id' => 'fast_track',
+                'name' => 'Fast-Track Velocity (14 Hari Kerja)',
+                'duration' => '14 Hari Kerja',
+                'badge' => 'RECOMMENDED // 2X_ACCELERATED',
+                'speed_multiplier' => '1.4x (Akselerasi 2 Pekan)',
+                'contract_amount' => $fastTrackContract,
+                'dp_amount' => $fastTrackDp,
+                'pelunasan_amount' => $fastTrackPelunasan,
+                'ai_quota_spec' => 'Gemini Ultra Parallel Swarm + High-Reasoning Token Pipeline',
+                'squad_allocation' => '2 Dedicated Senior Engineers + AI Agentic Pair Programming',
+                'cost_formula' => 'Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + Akselerasi Swarm AI (40%)',
+                'ai_swarm_specs' => [
+                    'Seluruh cakupan rincian fitur paket Standard',
+                    'Paralelisasi Frontend Island & Backend DB Migration serentak',
+                    'Kuota inferensi Gemini Ultra Uncapped untuk sintesis kode tanpa antrean',
+                    'Prioritas Review dan Deploy Staging otomatis setiap akhir sprint',
+                ],
+                'description' => 'Akselerasi pengerjaan 14 hari kerja dengan bantuan kluster komputasi Swarm AI untuk memangkas waktu rilis hingga 50%.',
+            ],
+            [
+                'id' => 'hyper_sprint',
+                'name' => 'Hyper-Sprint Emergency (7 Hari Kerja / 24/7 War Room)',
+                'duration' => '7 Hari Kerja',
+                'badge' => 'TOP_SPEED // 24_7_WAR_ROOM',
+                'speed_multiplier' => '2.0x (Rilis 1 Pekan)',
+                'contract_amount' => $hyperSprintContract,
+                'dp_amount' => $hyperSprintDp,
+                'pelunasan_amount' => $hyperSprintPelunasan,
+                'ai_quota_spec' => 'Gemini Ultra 8-Agent Swarm + Dedicated 24/7 Shift Rotation',
+                'squad_allocation' => 'Dedicated Tri-Engineer War Room (24/7 Shift Rotation)',
+                'cost_formula' => 'Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + 24/7 War Room Shift (100%)',
+                'ai_swarm_specs' => [
+                    'Rotasi engineer 24 jam non-stop dengan deployment kontinyu ke Staging',
+                    'SLA Uptime & Respons Darurat 99.9% dengan dedicated DevOps on-call',
+                    'Throughput inferensi maksimum untuk sintesis kode instan',
+                ],
+                'description' => 'Pengerjaan prioritas darurat 1 pekan kalender untuk kebutuhan bisnis dengan urgensi kritis absolut.',
+            ],
+        ];
+
+        return [
+            'items' => $items,
+            'items_count' => count($items),
+            'mvp_features_count' => count($rawMvp),
+            'roles_count' => $actorCount,
+            'base_subtotal' => $standardContract,
+            'standard_dp' => $standardDp,
+            'standard_pelunasan' => $standardPelunasan,
+            'velocity_tiers' => $velocityTiers,
         ];
     }
 
@@ -2926,6 +3200,26 @@ PROMPT;
             $md .= "- [x] {$dod}\n";
         }
         $md .= "\n";
+
+        // 10.5 Itemized Scope Breakdown
+        $itemized = $prd['itemized_cost_breakdown'] ?? self::calculateItemizedEstimation($blueprint);
+        if (!empty($itemized['items'])) {
+            $md .= "## 10.5 Rincian Biaya Spesifikasi Berdasarkan Poin Input Klien (Itemized Scope Metric)\n\n";
+            $md .= "> **Transparansi Investasi**: Setiap komponen biaya diturunkan langsung secara matematis dari formulir spesifikasi yang diajukan oleh pihak klien.\n\n";
+            $md .= "| Kategori | Kode | Komponen / Fitur Spesifik | Kompleksitas | Bobot Biaya |\n";
+            $md .= "|---|---|---|---|---|\n";
+            foreach ($itemized['items'] as $it) {
+                $cCat = $it['category'] ?? '-';
+                $cCode = $it['code'] ?? '-';
+                $cTitle = $it['title'] ?? '-';
+                $cComp = $it['complexity'] ?? '-';
+                $cAmount = ($it['amount'] < 0 ? '-Rp ' : 'Rp ') . number_format(abs($it['amount']), 0, ',', '.');
+                $md .= "| **{$cCat}** | `{$cCode}` | {$cTitle} | {$cComp} | **{$cAmount}** |\n";
+            }
+            $md .= "| **TOTAL BASE SCOPE (STANDARD VELOCITY)** | | | | **Rp " . number_format($itemized['base_subtotal'] ?? 0, 0, ',', '.') . "** |\n";
+            $md .= "| **TERMIN DP 50% (DIBAYARKAN VIA MIDTRANS SNAP)** | | | | **Rp " . number_format($itemized['standard_dp'] ?? 0, 0, ',', '.') . "** |\n";
+            $md .= "| **PELUNASAN SETELAH LOLOS UAT & SERAH TERIMA** | | | | **Rp " . number_format($itemized['standard_pelunasan'] ?? 0, 0, ',', '.') . "** |\n\n";
+        }
 
         // 11. Velocity Pricing
         $md .= "## 11. Opsi Akselerasi Peluncuran (Velocity Pricing Continuum)\n\n";

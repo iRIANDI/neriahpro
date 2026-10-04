@@ -209,12 +209,13 @@
                                         <svg class="w-3 h-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         <span>Exp: <span class="item-countdown font-bold text-zinc-700 dark:text-zinc-300">--:--:--</span></span>
                                     </span>
-                                </div>
-
-                                <div class="flex items-center gap-2">
+                                                               <div class="flex items-center gap-2">
                                     <form method="POST" action="{{ route('blueprint.generate-contract', $item['slug']) }}" class="m-0">
                                         @csrf
                                         <input type="hidden" name="tier" value="{{ $tierKey }}">
+                                        @if($voucher)
+                                            <input type="hidden" name="voucher" value="{{ $voucher['code'] }}">
+                                        @endif
                                         <button type="submit" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold uppercase text-[11px] transition">
                                             Tanda Tangan Kontrak
                                         </button>
@@ -241,19 +242,91 @@
                         Midtrans Escrow
                     </h3>
 
-                    <div class="space-y-3 text-xs font-mono mb-6">
-                        <div class="flex justify-between text-zinc-500 dark:text-zinc-400">
+                    <div class="space-y-3 text-xs font-mono mb-4">
+                        <div class="flex justify-between items-baseline text-zinc-500 dark:text-zinc-400">
                             <span>Total Nilai Kontrak</span>
-                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($totalContract, 0, ',', '.') }}</span>
+                            <div>
+                                @if($voucher)
+                                    <span class="line-through text-zinc-400 text-[11px] mr-1">Rp {{ number_format($totalContract, 0, ',', '.') }}</span>
+                                    <span class="font-bold text-emerald-600 dark:text-emerald-400">Rp {{ number_format($finalTotalContract, 0, ',', '.') }}</span>
+                                @else
+                                    <span class="font-bold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($totalContract, 0, ',', '.') }}</span>
+                                @endif
+                            </div>
                         </div>
+
+                        @if($voucher)
+                            <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold border-t border-dashed border-zinc-200 dark:border-zinc-800 pt-2 text-[11px]">
+                                <span>Subsidi Voucher ({{ $voucher['code'] }})</span>
+                                <span>-Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+
                         <div class="flex justify-between text-zinc-500 dark:text-zinc-400">
                             <span>Ketentuan Termin DP</span>
                             <span class="font-bold text-emerald-600 dark:text-emerald-400">50% di Muka</span>
                         </div>
                         <div class="border-t border-zinc-200 dark:border-zinc-800 pt-3 flex justify-between items-baseline">
                             <span class="font-bold uppercase text-zinc-900 dark:text-zinc-100">Total Tagihan DP</span>
-                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400">Rp {{ number_format($totalDp, 0, ',', '.') }}</span>
+                            <div class="text-right">
+                                @if($voucher)
+                                    <span class="line-through text-zinc-400 text-xs block">Rp {{ number_format($totalDp, 0, ',', '.') }}</span>
+                                    <span class="text-xl font-black text-emerald-600 dark:text-emerald-400">Rp {{ number_format($finalTotalDp, 0, ',', '.') }}</span>
+                                @else
+                                    <span class="text-xl font-black text-emerald-600 dark:text-emerald-400">Rp {{ number_format($totalDp, 0, ',', '.') }}</span>
+                                @endif
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Voucher Promo / Pelayanan Input Block in Cart -->
+                    <div class="border border-dashed border-zinc-300 dark:border-zinc-700 p-3 mb-6 bg-zinc-50 dark:bg-zinc-950/60 rounded-none font-mono">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-[11px] uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                                <span>Punya Kode Voucher / Subsidi?</span>
+                            </span>
+                            @if($voucher)
+                                <span class="text-[10px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">AKTIF</span>
+                            @endif
+                        </div>
+
+                        @if(!$voucher)
+                            <form method="POST" action="{{ route('cart.voucher.apply') }}" class="flex gap-2 m-0">
+                                @csrf
+                                <input 
+                                    type="text" 
+                                    name="voucher_code" 
+                                    placeholder="Contoh: PELAYANAN-KASIH"
+                                    class="flex-1 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2.5 py-1.5 text-xs font-mono uppercase focus:outline-none focus:border-emerald-500 rounded-none"
+                                    required
+                                />
+                                <button 
+                                    type="submit" 
+                                    class="bg-zinc-800 hover:bg-zinc-700 text-white font-mono font-bold text-xs uppercase px-3 py-1.5 transition border border-zinc-600 rounded-none"
+                                >
+                                    Terapkan
+                                </button>
+                            </form>
+                        @else
+                            <div class="p-2 bg-emerald-950/40 border border-emerald-600/40 text-emerald-300 text-[11px] space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <strong class="font-bold text-emerald-400 flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        {{ $voucher['code'] }}
+                                    </strong>
+                                    <form method="POST" action="{{ route('cart.voucher.remove') }}" class="m-0">
+                                        @csrf
+                                        <button type="submit" class="text-rose-400 hover:text-rose-300 text-[10px] uppercase font-bold underline cursor-pointer">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="text-[10px] text-zinc-400 leading-snug">
+                                    {{ $voucher['description'] ?: 'Potongan subsidi berhasil diterapkan ke seluruh tagihan cart.' }}
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
@@ -263,12 +336,12 @@
 
                     <div class="space-y-3">
                         <button 
-                            type="button"
+                            type="button" 
                             id="btn-pay-snap"
                             onclick="payWithSnap()"
-                            class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-widest py-3.5 px-4 text-center block transition cursor-pointer disabled:opacity-50 shadow-md"
+                            class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-widest py-3.5 px-4 text-center block transition cursor-pointer disabled:opacity-50 shadow-md rounded-none"
                         >
-                            Bayar DP Sekarang (Midtrans Snap) &rarr;
+                            {{ $voucher ? 'Bayar DP Sekarang (Rp ' . number_format($finalTotalDp, 0, ',', '.') . ') &rarr;' : 'Bayar DP Sekarang (Midtrans Snap) &rarr;' }}
                         </button>
                         <p class="text-[10px] text-zinc-400 text-center font-mono">
                             Escrow diamankan & diverifikasi otomatis oleh Midtrans webhook.

@@ -44,6 +44,8 @@ Route::post('/cart/add/{slug}', [\App\Http\Controllers\CartController::class, 'a
 Route::post('/cart/remove/{slug}', [\App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove');
 Route::post('/cart/clear', [\App\Http\Controllers\CartController::class, 'clear'])->name('cart.clear');
 Route::post('/cart/snap-token', [\App\Http\Controllers\CartController::class, 'getSnapToken'])->name('cart.snap-token');
+Route::post('/cart/voucher/apply', [\App\Http\Controllers\CartController::class, 'applyVoucher'])->name('cart.voucher.apply');
+Route::post('/cart/voucher/remove', [\App\Http\Controllers\CartController::class, 'removeVoucher'])->name('cart.voucher.remove');
 
 Route::get('/invite/{slug}', \App\Livewire\ClientInviteForm::class)->name('invite');
 

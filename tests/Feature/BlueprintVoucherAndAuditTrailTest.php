@@ -203,4 +203,88 @@ class BlueprintVoucherAndAuditTrailTest extends TestCase
         $this->assertTrue(BlueprintVoucherResource::canEdit($voucher));
         $this->assertTrue(BlueprintVoucherResource::canDelete($voucher));
     }
+
+    public function test_partial_discount_voucher_rejected_by_free_claim_endpoint(): void
+    {
+        $blueprint = VisionBlueprint::create([
+            'client_name' => 'Ahmad Dani',
+            'nama_bisnis' => 'Dani Store',
+            'email' => 'dani@danistore.id',
+            'phone' => '08123456781',
+            'masalah_utama' => 'E-commerce platform',
+            'tujuan_utama' => 'Online shop',
+            'is_published' => true,
+        ]);
+
+        $voucher = BlueprintVoucher::create([
+            'code' => 'DISC-500K',
+            'description' => 'Diskon 500 Ribu',
+            'discount_type' => 'fixed',
+            'discount_value' => 500000,
+            'is_active' => true,
+        ]);
+
+        // Attempting to claim partial voucher as free grant must be rejected
+        $response = $this->postJson(route('blueprint.voucher.claim', $blueprint->slug), [
+            'code' => 'DISC-500K',
+            'agree_sign_off' => true,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+            ]);
+
+        $blueprint->refresh();
+        $this->assertFalse($blueprint->is_free_grant);
+    }
+
+    public function test_scope_lock_prevents_prd_regeneration(): void
+    {
+        $blueprint = VisionBlueprint::create([
+            'client_name' => 'Citra Lestari',
+            'nama_bisnis' => 'Citra Bakery',
+            'email' => 'citra@bakery.com',
+            'phone' => '08123456782',
+            'masalah_utama' => 'Order tracking',
+            'tujuan_utama' => 'Automate orders',
+            'is_published' => true,
+            'signed_agreement' => true,
+            'document_sha256' => hash('sha256', 'locked_spec'),
+            'prd_content' => [
+                'meta' => ['project_name' => 'Citra Bakery'],
+                'engineering_specs' => ['status' => 'locked_original_content']
+            ]
+        ]);
+
+        // Accessing with ?regenerate=1 must NOT regenerate when scope is locked
+        $response = $this->get(route('blueprint.show', ['slug' => $blueprint->slug, 'regenerate' => 1]));
+        $response->assertStatus(200);
+
+        $blueprint->refresh();
+        $this->assertEquals('locked_original_content', $blueprint->prd_content['engineering_specs']['status']);
+    }
+
+    public function test_cart_voucher_apply_and_remove(): void
+    {
+        BlueprintVoucher::create([
+            'code' => 'MITRA-1JT',
+            'description' => 'Subsidi Mitra 1 Juta',
+            'discount_type' => 'fixed',
+            'discount_value' => 1000000,
+            'is_active' => true,
+        ]);
+
+        // 1. Apply voucher
+        $response = $this->post(route('cart.voucher.apply'), [
+            'voucher_code' => 'MITRA-1JT',
+        ]);
+        $response->assertRedirect(route('cart.index'));
+        $this->assertEquals('MITRA-1JT', session('neriah_cart_voucher')['code']);
+
+        // 2. Remove voucher
+        $response = $this->post(route('cart.voucher.remove'));
+        $response->assertRedirect(route('cart.index'));
+        $this->assertNull(session('neriah_cart_voucher'));
+    }
 }

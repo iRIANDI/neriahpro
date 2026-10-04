@@ -129,9 +129,13 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/blueprint/{slug}/raw-md`: Endpoint raw Markdown PRD Ultimate untuk 1-click clipboard prompt AI Code Agent (`BlueprintController::rawMd`).
 - `/blueprint/{slug}/download/md`: Endpoint unduh dokumen spesifikasi PRD Ultimate format Markdown (`BlueprintController::downloadMd`).
 - `/blueprint/{slug}/download/pdf`: Endpoint unduh dokumen PRD format PDF (`BlueprintController::downloadPdf`).
-- `/blueprint/{slug}/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Blueprint DP (`BlueprintController::getSnapToken`).
-- `/cart`: Halaman Cart pembayaran & penguncian kontrak proyek dengan Anti-Ghost Hold 24 jam countdown (`CartController::index`).
-- `/cart/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Cart DP checkout multi-item (`CartController::getSnapToken`).
+- `/blueprint/{slug}/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Blueprint DP dengan kalkulasi diskon voucher otomatis (`BlueprintController::getSnapToken`).
+- `/blueprint/{slug}/voucher/validate`: Validasi kode voucher promo / subsidi (`BlueprintController::validateVoucher`).
+- `/blueprint/{slug}/voucher/claim`: Klaim voucher 100% Free Grant bypass (Rp 0) dengan proteksi penolakan partial vouchers (`BlueprintController::claimVoucher`).
+- `/cart`: Halaman Cart pembayaran & penguncian kontrak proyek dengan Anti-Ghost Hold 24 jam countdown & diskon voucher terintegrasi (`CartController::index`).
+- `/cart/voucher/apply`: Terapkan kode voucher promo / subsidi ke keranjang belanja (`CartController::applyVoucher`).
+- `/cart/voucher/remove`: Hapus kode voucher aktif dari keranjang belanja (`CartController::removeVoucher`).
+- `/cart/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Cart DP checkout multi-item dengan kalkulasi subsidi voucher (`CartController::getSnapToken`).
 - `/document/{document}/preview`: Preview draft kontrak kerja sama digital.
 - `/document/{document}/sign`: Livewire signing page (`DocumentSignature`).
 - `/lang/{locale}`: Switcher bahasa (`id` / `en`) dengan persistensi session dan cookie.

@@ -75,7 +75,7 @@
     <!-- Midtrans Snap JS (In-Page Popup Modal) -->
     <script src="{{ config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/snap.js') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
     <script>
-        window.payBlueprintSnap = async function(tier, agreeSignOff, onStart, onFinish) {
+        window.payBlueprintSnap = async function(tier, agreeSignOff, voucherCode, onStart, onFinish) {
             if (!agreeSignOff) {
                 if (window.showToast) {
                     window.showToast({
@@ -97,7 +97,7 @@
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ tier: tier, agree_sign_off: agreeSignOff })
+                    body: JSON.stringify({ tier: tier, agree_sign_off: agreeSignOff, voucher_code: voucherCode || '' })
                 });
                 const data = await res.json();
                 if (!data.success || !data.token) {
@@ -533,6 +533,28 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     selectedIdeTool: 'antigravity_ide',
     selectedTier: '{{ $defaultSelectedTier }}',
     tierAmounts: {{ json_encode($alpineTiers) }},
+    getDiscountAmount(tierKey) {
+        if (!this.appliedVoucher) return 0;
+        const contract = this.tierAmounts[tierKey]?.contract || 0;
+        if (this.appliedVoucher.is_free_bypass) return contract;
+        if (this.appliedVoucher.discount_type === 'percent') {
+            return Math.round(contract * (parseFloat(this.appliedVoucher.discount_value) / 100));
+        }
+        if (this.appliedVoucher.discount_type === 'fixed') {
+            return Math.min(contract, parseFloat(this.appliedVoucher.discount_value));
+        }
+        return 0;
+    },
+    getDiscountedContract(tierKey) {
+        const contract = this.tierAmounts[tierKey]?.contract || 0;
+        return Math.max(0, contract - this.getDiscountAmount(tierKey));
+    },
+    getDiscountedDp(tierKey) {
+        if (!this.appliedVoucher) return this.tierAmounts[tierKey]?.dp || 0;
+        if (this.appliedVoucher.is_free_bypass) return 0;
+        const finalContract = this.getDiscountedContract(tierKey);
+        return Math.round(finalContract * 0.50);
+    },
     isPayingSnap: false,
     devPlaybookOpen: true,
     activeDevPhase: 1,
@@ -770,10 +792,17 @@ x-init="
                     <span class="hidden md:inline" x-text="locale === 'en' ? 'EDIT SPEC' : 'LENGKAPI SPESIFIKASI'">LENGKAPI SPESIFIKASI</span>
                 </a>
 
-                <a href="{{ route('blueprint.show', $blueprint->slug) }}?regenerate=1" class="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono uppercase font-bold border border-amber-500/30 transition flex items-center gap-1" title="Sintesis Ulang PRD">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    <span class="hidden md:inline">REGENERATE</span>
-                </a>
+                @if(!($blueprint->signed_agreement || ($isScopeLocked ?? false)))
+                    <a href="{{ route('blueprint.show', $blueprint->slug) }}?regenerate=1" class="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono uppercase font-bold border border-amber-500/30 transition flex items-center gap-1" title="Sintesis Ulang PRD">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <span class="hidden md:inline">REGENERATE</span>
+                    </a>
+                @else
+                    <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-xs font-mono uppercase font-bold border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 cursor-not-allowed select-none" title="Scope Terkunci: Dokumen telah ditandatangani dan tidak dapat diregenerasi.">
+                        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <span class="hidden md:inline">LOCKED (SHA-256)</span>
+                    </span>
+                @endif
                 
                 <div class="h-6 w-px bg-zinc-300 dark:bg-zinc-700 mx-1 hidden sm:block"></div>
 
@@ -4967,9 +4996,12 @@ x-init="
                     <span>Opsi Velocity Terpilih</span>
                     <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="tierAmounts[selectedTier].name"></span>
                 </div>
-                <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
+                <div class="flex justify-between items-baseline text-zinc-600 dark:text-zinc-400">
                     <span>Nilai Total Kontrak</span>
-                    <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="'Rp ' + tierAmounts[selectedTier].contract.toLocaleString('id-ID')"></span>
+                    <div>
+                        <span x-show="appliedVoucher" class="line-through text-zinc-400 text-xs mr-1.5" x-text="'Rp ' + tierAmounts[selectedTier].contract.toLocaleString('id-ID')"></span>
+                        <span class="font-bold text-zinc-900 dark:text-zinc-100" :class="appliedVoucher ? 'text-emerald-600 dark:text-emerald-400 font-black' : ''" x-text="'Rp ' + getDiscountedContract(selectedTier).toLocaleString('id-ID')"></span>
+                    </div>
                 </div>
                 <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
                     <span>Termin DP (Uang Muka)</span>
@@ -4978,9 +5010,9 @@ x-init="
 
                 <!-- Voucher Status Row (If Applied) -->
                 <template x-if="appliedVoucher">
-                    <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold border-t border-dashed border-zinc-200 dark:border-zinc-800 pt-2">
-                        <span x-text="'Potongan Voucher (' + appliedVoucher.code + ')'"></span>
-                        <span x-text="appliedVoucher.is_free_bypass ? '-100% (FREE BYPASS)' : '-' + appliedVoucher.discount_value + '%'"></span>
+                    <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold border-t border-dashed border-zinc-200 dark:border-zinc-800 pt-2 text-xs">
+                        <span x-text="'Subsidi Voucher (' + appliedVoucher.code + ')'"></span>
+                        <span x-text="appliedVoucher.is_free_bypass ? '-100% (FREE BYPASS)' : (appliedVoucher.discount_type === 'percent' ? '-' + appliedVoucher.discount_value + '% (-Rp ' + getDiscountAmount(selectedTier).toLocaleString('id-ID') + ')' : '-Rp ' + getDiscountAmount(selectedTier).toLocaleString('id-ID'))"></span>
                     </div>
                 </template>
 
@@ -4990,7 +5022,10 @@ x-init="
                         <span class="text-lg font-black text-emerald-500">RP 0 (GRATIS)</span>
                     </template>
                     <template x-if="!appliedVoucher || !appliedVoucher.is_free_bypass">
-                        <span class="text-lg font-black text-emerald-600 dark:text-emerald-400" x-text="'Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
+                        <div class="text-right">
+                            <span x-show="appliedVoucher" class="line-through text-zinc-400 text-xs block" x-text="'Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
+                            <span class="text-lg font-black text-emerald-600 dark:text-emerald-400" x-text="'Rp ' + getDiscountedDp(selectedTier).toLocaleString('id-ID')"></span>
+                        </div>
                     </template>
                 </div>
                 <div class="text-[10px] text-zinc-400 pt-1 flex justify-between">
@@ -5101,11 +5136,11 @@ x-init="
                 <template x-if="!appliedVoucher || !appliedVoucher.is_free_bypass">
                     <button 
                         type="button" 
-                        @click="isPayingSnap = true; window.payBlueprintSnap(selectedTier, agreeSignOff, () => { isPayingSnap = true }, () => { isPayingSnap = false })"
+                        @click="isPayingSnap = true; window.payBlueprintSnap(selectedTier, agreeSignOff, voucherCode, () => { isPayingSnap = true }, () => { isPayingSnap = false })"
                         :disabled="isPayingSnap || !agreeSignOff"
                         class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider py-3.5 px-4 text-center block transition shadow-lg cursor-pointer disabled:opacity-50 rounded-none"
                     >
-                        <span x-show="!isPayingSnap">Bayar Sekarang via Midtrans Snap &rarr;</span>
+                        <span x-show="!isPayingSnap" x-text="appliedVoucher ? 'Bayar DP Sekarang (Rp ' + getDiscountedDp(selectedTier).toLocaleString('id-ID') + ') &rarr;' : 'Bayar Sekarang via Midtrans Snap &rarr;'"></span>
                         <span x-show="isPayingSnap" class="inline-block animate-pulse">Membuat Sesi Snap...</span>
                     </button>
                 </template>
@@ -5113,6 +5148,7 @@ x-init="
                 <form method="POST" action="{{ route('cart.add', $blueprint->slug) }}" class="m-0">
                     @csrf
                     <input type="hidden" name="tier" :value="selectedTier">
+                    <input type="hidden" name="voucher" :value="voucherCode">
                     <button 
                         type="submit" 
                         class="w-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider py-2.5 px-4 text-center block transition border border-zinc-300 dark:border-zinc-700 rounded-none"

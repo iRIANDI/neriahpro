@@ -257,8 +257,10 @@ class BlueprintController extends Controller
 
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
 
-        // Ensure PRD content is populated or regenerate if requested or missing new evaluation schema or engineering specs
-        if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['engineering_specs']) || request()->has('regenerate')) {
+        $isScopeLocked = (bool) $blueprint->signed_agreement || $blueprint->documents()->where('scope_locked', true)->exists();
+
+        // Ensure PRD content is populated or regenerate if requested and scope is not locked
+        if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['engineering_specs']) || (request()->has('regenerate') && !$isScopeLocked)) {
             $blueprint->generateAndSavePrd();
             $blueprint->refresh();
         }
@@ -267,6 +269,7 @@ class BlueprintController extends Controller
             'blueprint' => $blueprint,
             'prd' => $blueprint->prd_content,
             'globalSettings' => $globalSettings,
+            'isScopeLocked' => $isScopeLocked,
         ]);
     }
 
@@ -299,12 +302,33 @@ class BlueprintController extends Controller
         }
 
         $contractAmount = $matchedTier ? (float) $matchedTier['contract_amount'] : 25000000.00;
-        $dpAmount = $matchedTier ? (float) $matchedTier['dp_amount'] : ($contractAmount * 0.50);
+
+        // Check if voucher applied
+        $voucherCode = strtoupper(trim((string) request('voucher', request('voucher_code', ''))));
+        $appliedVoucher = null;
+        if (!empty($voucherCode)) {
+            $voucher = BlueprintVoucher::where('code', $voucherCode)->first();
+            if ($voucher && $voucher->isValid()) {
+                $appliedVoucher = $voucher;
+                if ($voucher->discount_type === 'free_bypass' || ($voucher->discount_type === 'percent' && (float) $voucher->discount_value >= 100)) {
+                    $contractAmount = 0.00;
+                } elseif ($voucher->discount_type === 'percent') {
+                    $contractAmount = max(0, $contractAmount - round($contractAmount * ((float) $voucher->discount_value / 100)));
+                } elseif ($voucher->discount_type === 'fixed') {
+                    $contractAmount = max(0, $contractAmount - (float) $voucher->discount_value);
+                }
+            }
+        }
+
+        $dpAmount = (float) round($contractAmount * 0.50);
 
         $overrides = [
             'contract_amount' => $contractAmount,
             'dp_amount' => $dpAmount,
         ];
+        if ($appliedVoucher) {
+            $overrides['voucher_code'] = $appliedVoucher->code;
+        }
 
         $document = $blueprint->documents()->where('document_type', 'contract')->first();
         if (!$document) {
@@ -347,13 +371,45 @@ class BlueprintController extends Controller
         }
 
         $contractAmount = $matchedTier ? (float) $matchedTier['contract_amount'] : 25000000.00;
-        $dpAmount = (int) ($matchedTier ? (float) $matchedTier['dp_amount'] : ($contractAmount * 0.50));
         $tierLabel = $matchedTier ? ($matchedTier['name'] ?? 'Standard Velocity') : 'Standard Velocity';
+
+        // Check for voucher discount
+        $voucherCode = strtoupper(trim((string) $request->input('voucher_code', '')));
+        $voucher = null;
+        $discountAmount = 0;
+        if (!empty($voucherCode)) {
+            $voucher = BlueprintVoucher::where('code', $voucherCode)->first();
+            if ($voucher && $voucher->isValid()) {
+                if ($voucher->discount_type === 'percent') {
+                    $discountAmount = round($contractAmount * ((float) $voucher->discount_value / 100));
+                } elseif ($voucher->discount_type === 'fixed') {
+                    $discountAmount = min($contractAmount, (float) $voucher->discount_value);
+                }
+            }
+        }
+
+        $finalContractAmount = max(0, $contractAmount - $discountAmount);
+        $finalDpAmount = (int) round($finalContractAmount * 0.50);
+
+        if ($finalDpAmount <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Voucher ini memberikan akses 100% Gratis (Rp 0). Silakan gunakan tombol Klaim Voucher Pelayanan untuk mengaktifkan proyek tanpa pembayaran.',
+            ], 400);
+        }
+
+        // Guaranteed Order ID generation
+        $orderId = 'NPRO-DP-' . strtoupper(substr($blueprint->id, 0, 8)) . '-' . time();
+
+        $itemName = 'DP (50%) - ' . ($blueprint->nama_bisnis ?: 'Proyek');
+        if ($voucher) {
+            $itemName .= ' (Disc ' . $voucher->code . ')';
+        }
 
         $params = [
             'transaction_details' => [
                 'order_id' => $orderId,
-                'gross_amount' => $dpAmount,
+                'gross_amount' => $finalDpAmount,
             ],
             'customer_details' => [
                 'first_name' => $blueprint->client_name ?: ($blueprint->nama_bisnis ?: 'Client'),
@@ -363,9 +419,9 @@ class BlueprintController extends Controller
             'item_details' => [
                 [
                     'id' => 'DP-' . strtoupper($tier),
-                    'price' => $dpAmount,
+                    'price' => $finalDpAmount,
                     'quantity' => 1,
-                    'name' => substr('DP (50%) - ' . ($blueprint->nama_bisnis ?: 'Proyek') . ' (' . $tierLabel . ')', 0, 50),
+                    'name' => substr($itemName, 0, 50),
                 ]
             ],
         ];
@@ -384,12 +440,17 @@ class BlueprintController extends Controller
             $blueprint->recordSignOff($request->ip(), $request->userAgent());
         }
 
+        if ($voucher) {
+            $voucher->incrementUsage();
+            $blueprint->update(['voucher_code' => $voucher->code]);
+        }
+
         return response()->json([
             'success' => true,
             'token' => $snapResponse['token'],
             'redirect_url' => $snapResponse['redirect_url'],
             'order_id' => $orderId,
-            'gross_amount' => $dpAmount,
+            'gross_amount' => $finalDpAmount,
             'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
             'document_sha256' => $blueprint->document_sha256 ?: $blueprint->calculatePrdHash(),
         ]);
@@ -454,6 +515,16 @@ class BlueprintController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Kode voucher tidak valid, kuota telah habis, atau sudah kedaluwarsa.',
+            ], 422);
+        }
+
+        $isFreeBypass = $voucher->discount_type === 'free_bypass' 
+            || ($voucher->discount_type === 'percent' && (float) $voucher->discount_value >= 100);
+
+        if (!$isFreeBypass) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Voucher ini adalah voucher potongan harga/subsidi (bukan gratis 100%). Silakan gunakan tombol "Bayar Sekarang via Midtrans Snap" untuk melakukan pembayaran DP dengan harga diskon.',
             ], 422);
         }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\VisionBlueprint;
+use App\Models\BlueprintVoucher;
 use App\Models\Document;
 use App\Services\MidtransSnapService;
 use Illuminate\Http\Request;
@@ -90,10 +91,44 @@ class CartController extends Controller
             session()->flash('warning', 'Satu atau lebih slot reservasi proyek telah kadaluwarsa dan dilepas secara otomatis untuk mencegah Ghost Hold.');
         }
 
+        // Voucher Calculation for Cart
+        $cartVoucher = session()->get('neriah_cart_voucher');
+        $voucherData = null;
+        $discountAmount = 0;
+
+        if ($cartVoucher && !empty($cartVoucher['code'])) {
+            $voucherModel = BlueprintVoucher::where('code', $cartVoucher['code'])->first();
+            if ($voucherModel && $voucherModel->isValid()) {
+                if ($voucherModel->discount_type === 'free_bypass' || ($voucherModel->discount_type === 'percent' && (float)$voucherModel->discount_value >= 100)) {
+                    $discountAmount = $totalContract;
+                } elseif ($voucherModel->discount_type === 'percent') {
+                    $discountAmount = round($totalContract * ((float)$voucherModel->discount_value / 100));
+                } elseif ($voucherModel->discount_type === 'fixed') {
+                    $discountAmount = min($totalContract, (float)$voucherModel->discount_value);
+                }
+                $voucherData = [
+                    'code' => $voucherModel->code,
+                    'discount_type' => $voucherModel->discount_type,
+                    'discount_value' => (float) $voucherModel->discount_value,
+                    'description' => $voucherModel->description,
+                    'is_free_bypass' => $voucherModel->discount_type === 'free_bypass' || ($voucherModel->discount_type === 'percent' && (float)$voucherModel->discount_value >= 100),
+                ];
+            } else {
+                session()->forget('neriah_cart_voucher');
+            }
+        }
+
+        $finalTotalContract = max(0, $totalContract - $discountAmount);
+        $finalTotalDp = (int) round($finalTotalContract * 0.50);
+
         return view('cart.index', [
             'items' => $items,
             'totalContract' => $totalContract,
             'totalDp' => $totalDp,
+            'voucher' => $voucherData,
+            'discountAmount' => $discountAmount,
+            'finalTotalContract' => $finalTotalContract,
+            'finalTotalDp' => $finalTotalDp,
             'minRemainingSeconds' => $minRemainingSeconds ?? (self::RESERVATION_HOURS * 3600),
         ]);
     }
@@ -156,6 +191,22 @@ class CartController extends Controller
         ];
 
         session()->put('neriah_cart', $cart);
+
+        // If voucher provided from blueprint, apply to cart
+        if ($request->filled('voucher')) {
+            $vCode = strtoupper(trim((string) $request->input('voucher')));
+            if (!empty($vCode)) {
+                $vModel = BlueprintVoucher::where('code', $vCode)->first();
+                if ($vModel && $vModel->isValid()) {
+                    session()->put('neriah_cart_voucher', [
+                        'code' => $vModel->code,
+                        'discount_type' => $vModel->discount_type,
+                        'discount_value' => (float) $vModel->discount_value,
+                        'description' => $vModel->description,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('cart.index')->with('success', 'Paket "' . $tierName . '" untuk proyek "' . ($blueprint->nama_bisnis ?: $blueprint->client_name) . '" berhasil dimasukkan ke Cart! Slot pengerjaan diamankan selama 24 jam.');
     }
@@ -226,7 +277,42 @@ class CartController extends Controller
     public function clear(): RedirectResponse
     {
         session()->forget('neriah_cart');
+        session()->forget('neriah_cart_voucher');
         return redirect()->route('cart.index')->with('success', 'Cart berhasil dikosongkan.');
+    }
+
+    /**
+     * Apply promo/subsidy voucher to active cart.
+     */
+    public function applyVoucher(Request $request): RedirectResponse
+    {
+        $code = strtoupper(trim((string) $request->input('voucher_code', '')));
+        if (empty($code)) {
+            return redirect()->route('cart.index')->with('warning', 'Silakan masukkan kode voucher terlebih dahulu.');
+        }
+
+        $voucher = BlueprintVoucher::where('code', $code)->first();
+        if (!$voucher || !$voucher->isValid()) {
+            return redirect()->route('cart.index')->with('warning', 'Kode voucher "' . $code . '" tidak valid, kuota telah habis, atau sudah kedaluwarsa.');
+        }
+
+        session()->put('neriah_cart_voucher', [
+            'code' => $voucher->code,
+            'discount_type' => $voucher->discount_type,
+            'discount_value' => (float) $voucher->discount_value,
+            'description' => $voucher->description,
+        ]);
+
+        return redirect()->route('cart.index')->with('success', 'Voucher "' . $voucher->code . '" berhasil diterapkan! Total tagihan telah disesuaikan.');
+    }
+
+    /**
+     * Remove voucher from active cart.
+     */
+    public function removeVoucher(): RedirectResponse
+    {
+        session()->forget('neriah_cart_voucher');
+        return redirect()->route('cart.index')->with('success', 'Voucher berhasil dilepas dari Cart.');
     }
 
     /**
@@ -243,8 +329,8 @@ class CartController extends Controller
             ], 400);
         }
 
+        $totalContract = 0;
         $totalDp = 0;
-        $itemDetails = [];
         $firstClientName = null;
         $firstEmail = null;
         $firstPhone = null;
@@ -252,6 +338,7 @@ class CartController extends Controller
         foreach ($cart as $slug => $item) {
             $contractAmount = (float) ($item['contract_amount'] ?? 50000000);
             $dpAmount = (int) ($item['dp_amount'] ?? ($contractAmount * 0.50));
+            $totalContract += $contractAmount;
             $totalDp += $dpAmount;
 
             $blueprint = VisionBlueprint::where('slug', $slug)->first();
@@ -260,28 +347,50 @@ class CartController extends Controller
                 $firstEmail = $blueprint->email;
                 $firstPhone = $blueprint->phone;
             }
-
-            $itemDetails[] = [
-                'id' => substr('CART-' . strtoupper(Str::slug($slug)), 0, 50),
-                'price' => $dpAmount,
-                'quantity' => 1,
-                'name' => substr('DP: ' . ($item['nama_bisnis'] ?? $slug), 0, 50),
-            ];
         }
 
-        if ($totalDp <= 0) {
+        // Voucher Calculation for Cart Snap Token
+        $cartVoucher = session()->get('neriah_cart_voucher');
+        $appliedVoucher = null;
+        $discountAmount = 0;
+
+        if ($cartVoucher && !empty($cartVoucher['code'])) {
+            $vModel = BlueprintVoucher::where('code', $cartVoucher['code'])->first();
+            if ($vModel && $vModel->isValid()) {
+                $appliedVoucher = $vModel;
+                if ($vModel->discount_type === 'percent') {
+                    $discountAmount = round($totalContract * ((float)$vModel->discount_value / 100));
+                } elseif ($vModel->discount_type === 'fixed') {
+                    $discountAmount = min($totalContract, (float)$vModel->discount_value);
+                }
+            }
+        }
+
+        $finalContract = max(0, $totalContract - $discountAmount);
+        $finalDp = (int) round($finalContract * 0.50);
+
+        if ($finalDp <= 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Total tagihan DP tidak valid.',
+                'message' => 'Total tagihan bernilai Rp 0 (Free Grant). Silakan hubungi admin atau gunakan aktivasi voucher langsung pada halaman proposal.',
             ], 400);
         }
 
         $orderId = 'NP-CART-' . strtoupper(Str::random(6)) . '-' . time();
 
+        $itemDetails = [
+            [
+                'id' => 'CART-DP',
+                'price' => (int) $finalDp,
+                'quantity' => 1,
+                'name' => substr('DP (' . count($cart) . ' Proyek)' . ($appliedVoucher ? ' (Disc ' . $appliedVoucher->code . ')' : ''), 0, 50),
+            ]
+        ];
+
         $params = [
             'transaction_details' => [
                 'order_id' => $orderId,
-                'gross_amount' => (int) $totalDp,
+                'gross_amount' => (int) $finalDp,
             ],
             'customer_details' => [
                 'first_name' => $firstClientName ?: 'Client Neriah Pro',
@@ -300,12 +409,16 @@ class CartController extends Controller
             ], $snapResponse['status_code'] ?? 500);
         }
 
+        if ($appliedVoucher) {
+            $appliedVoucher->incrementUsage();
+        }
+
         return response()->json([
             'success' => true,
             'token' => $snapResponse['token'],
             'redirect_url' => $snapResponse['redirect_url'],
             'order_id' => $orderId,
-            'gross_amount' => $totalDp,
+            'gross_amount' => $finalDp,
             'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
         ]);
     }

@@ -5,9 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Ultimate Tech Proposal & PRD Blueprint - Neriah Pro Hub</title>
+    <title>neriahpro.com - Project OS Discovery Blueprint</title>
     <meta name="description" content="Kuesioner penyusunan spesifikasi teknis dan blueprint arsitektur aplikasi terpusat untuk bisnis Anda.">
     <link rel="canonical" href="{{ url('/blueprint') }}">
+
+    <style>
+        .custom-prd-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(16, 185, 129, 0.45) transparent;
+        }
+        .custom-prd-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-prd-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-prd-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.35);
+            border-radius: 0px;
+        }
+        .custom-prd-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(16, 185, 129, 0.75);
+        }
+    </style>
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">

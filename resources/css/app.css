@@ -10,6 +10,26 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/* Custom Technical Scrollbar for Blueprint & Project OS HUD */
+.custom-prd-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(16, 185, 129, 0.45) transparent;
+}
+.custom-prd-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+.custom-prd-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-prd-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.35);
+    border-radius: 0px;
+}
+.custom-prd-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.75);
+}
+
 /* ========================================================================= */
 /* BULLETPROOF A4 PDF EXPORT STYLESHEET                                      */
 /* ========================================================================= */

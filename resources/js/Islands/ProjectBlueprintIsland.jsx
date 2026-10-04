@@ -163,6 +163,8 @@ const TRANSLATIONS = {
     indexCollapseDetails: "- Rincian",
     indexSubFilled: "Terisi",
     indexSubEmpty: "Kosong",
+    indexSpyActive: "● SPY",
+    indexSpyManual: "○ OFF",
   },
   en: {
     topBadge: "PROJECT OS // ARCHITECTURAL DISCOVERY WORKSPACE",
@@ -270,6 +272,8 @@ const TRANSLATIONS = {
     indexCollapseDetails: "- Details",
     indexSubFilled: "Filled",
     indexSubEmpty: "Empty",
+    indexSpyActive: "● SPY",
+    indexSpyManual: "○ OFF",
   }
 };
 
@@ -551,6 +555,16 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
   // Floating Left Index & Scroll-Spy States
   const [activeSection, setActiveSection] = useState('section-ide-studio');
+  const [activeField, setActiveField] = useState(null);
+  const [autoSyncAccordion, setAutoSyncAccordion] = useState(true);
+  const activeSectionRef = useRef('section-ide-studio');
+  const autoSyncSpyRef = useRef(true);
+  const desktopScrollRef = useRef(null);
+
+  useEffect(() => {
+    autoSyncSpyRef.current = autoSyncAccordion;
+  }, [autoSyncAccordion]);
+
   const [isIndexExpanded, setIsIndexExpanded] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth >= 1280;
@@ -561,16 +575,63 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [indexSearchQuery, setIndexSearchQuery] = useState('');
   const [openAccordionGroups, setOpenAccordionGroups] = useState({
     studio: true,
-    spec1: true,
-    spec2: true,
-    final: true,
+    spec1: false,
+    spec2: false,
+    final: false,
   });
+
+  const sectionGroupMap = useMemo(() => ({
+    'section-ide-studio': 'studio',
+    'section-ai-assistant': 'studio',
+    'section-block-a': 'spec1',
+    'section-block-b': 'spec1',
+    'section-block-c': 'spec1',
+    'section-block-d': 'spec2',
+    'section-block-e': 'spec2',
+    'section-block-f': 'spec2',
+    'section-submit': 'final',
+  }), []);
+
+  const syncAccordionToSection = useCallback((secId) => {
+    const targetGroup = sectionGroupMap[secId];
+    if (!targetGroup) return;
+
+    // Auto-collapse inactive groups, expand active group
+    setOpenAccordionGroups({
+      studio: targetGroup === 'studio',
+      spec1: targetGroup === 'spec1',
+      spec2: targetGroup === 'spec2',
+      final: targetGroup === 'final',
+    });
+
+    // Auto-collapse inactive sub-blocks, expand active section sub-block
+    setExpandedSubBlocks({
+      [secId]: true,
+    });
+
+    // Keep active index item in viewport within sidebar
+    setTimeout(() => {
+      const container = desktopScrollRef.current;
+      if (!container) return;
+      const activeEl = container.querySelector(`[data-nav-sec="${secId}"]`);
+      if (!activeEl) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const elRect = activeEl.getBoundingClientRect();
+
+      if (elRect.top < containerRect.top + 20 || elRect.bottom > containerRect.bottom - 20) {
+        const targetScrollTop = container.scrollTop + (elRect.top - containerRect.top) - (container.clientHeight / 2) + (elRect.height / 2);
+        container.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+      }
+    }, 60);
+  }, [sectionGroupMap]);
 
   const toggleAccordionGroup = useCallback((grp) => {
     setOpenAccordionGroups(prev => ({ ...prev, [grp]: !prev[grp] }));
   }, []);
 
   const expandAllGroups = useCallback(() => {
+    setAutoSyncAccordion(false);
     setOpenAccordionGroups({
       studio: true,
       spec1: true,
@@ -580,17 +641,19 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   }, []);
 
   const collapseAllGroups = useCallback(() => {
+    setAutoSyncAccordion(false);
     setOpenAccordionGroups({
       studio: false,
       spec1: false,
       spec2: false,
       final: false,
     });
+    setExpandedSubBlocks({});
   }, []);
 
   // Sub-block detail toggle state
   const [expandedSubBlocks, setExpandedSubBlocks] = useState({
-    'section-block-a': true,
+    'section-ide-studio': true,
   });
 
   const toggleSubBlock = useCallback((secId, e) => {
@@ -601,7 +664,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     }));
   }, []);
 
-  const [indexTopOffset, setIndexTopOffset] = useState(260);
+  const [indexTopOffset, setIndexTopOffset] = useState(68);
 
   const jumpToSection = useCallback((id) => {
     if (id === 'section-ide-studio') {
@@ -613,6 +676,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
     window.scrollTo({ top: y, behavior: 'smooth' });
     setActiveSection(id);
+    activeSectionRef.current = id;
+    syncAccordionToSection(id);
     setMobileDrawerOpen(false);
 
     // Visual pulse outline
@@ -620,7 +685,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     setTimeout(() => {
       el.classList.remove('outline-2', 'outline-emerald-500');
     }, 2000);
-  }, []);
+  }, [syncAccordionToSection]);
 
   const jumpToField = useCallback((fieldId, sectionId) => {
     if (sectionId === 'section-ide-studio') {
@@ -633,7 +698,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       window.scrollTo({ top: y, behavior: 'smooth' });
       if (sectionId) {
         setActiveSection(sectionId);
+        activeSectionRef.current = sectionId;
+        syncAccordionToSection(sectionId);
       }
+      setActiveField(fieldId);
       setMobileDrawerOpen(false);
 
       // Flash highlight
@@ -652,7 +720,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     } else if (sectionId) {
       jumpToSection(sectionId);
     }
-  }, [jumpToSection]);
+  }, [jumpToSection, syncAccordionToSection]);
 
   const sectionIds = useMemo(() => [
     'section-ide-studio',
@@ -666,34 +734,79 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     'section-submit'
   ], []);
 
+  const allFieldIds = useMemo(() => [
+    'field-ideaText', 'field-attachedFiles', 'field-proactiveSuggestions',
+    'field-namaBisnis', 'field-masalahUtama', 'field-tujuanUtama',
+    'field-targetAudiens', 'field-aktorSistem', 'field-targetPlatform',
+    'field-fiturWajib', 'field-fiturTambahan', 'field-alurKerja', 'field-migrasiData',
+    'field-kebutuhanIntegrasi', 'field-referensiDesain', 'field-kesiapanAset', 'field-preferensiHosting',
+    'field-targetWaktu', 'field-skalaPengguna', 'field-outOfScope', 'field-kepatuhanKeamanan',
+    'field-kisaranBudget', 'field-garansiSla', 'field-terminPembayaran', 'field-clientName', 'field-email', 'field-phone',
+    'field-readinessScore', 'field-lockBtn'
+  ], []);
+
   useEffect(() => {
     let ticking = false;
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          // Dynamic calculation: index stops strictly beneath the hero area when hero is visible
+          // Dynamic calculation: index stops beneath hero area when hero is visible, clamped nicely
           const heroEl = document.getElementById('blueprint-hero');
           const minTop = 68; // sticky header is ~56px + 12px gap
           if (heroEl) {
             const rect = heroEl.getBoundingClientRect();
-            // rect.bottom is the viewport pixel distance to bottom edge of hero
-            const calculatedTop = Math.max(rect.bottom + 12, minTop);
+            const calculatedTop = Math.min(Math.max(rect.bottom + 12, minTop), 220);
             setIndexTopOffset(calculatedTop);
           } else {
             setIndexTopOffset(minTop);
           }
 
-          // Active Section Spy
-          const scrollPosition = window.scrollY + 180;
+          // Active Section & Field Scroll Spy
+          const triggerOffset = 220; // reading line in viewport
+          const isBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 80);
+
           let current = sectionIds[0];
-          for (let i = sectionIds.length - 1; i >= 0; i--) {
-            const el = document.getElementById(sectionIds[i]);
-            if (el && el.offsetTop <= scrollPosition) {
-              current = sectionIds[i];
-              break;
+          if (isBottom) {
+            current = 'section-submit';
+          } else {
+            for (let i = sectionIds.length - 1; i >= 0; i--) {
+              const el = document.getElementById(sectionIds[i]);
+              if (el) {
+                const rect = el.getBoundingClientRect();
+                if (rect.top <= triggerOffset) {
+                  current = sectionIds[i];
+                  break;
+                }
+              }
             }
           }
-          setActiveSection(current);
+
+          // Field/sub-item active spy
+          let currentField = null;
+          for (let i = allFieldIds.length - 1; i >= 0; i--) {
+            const el = document.getElementById(allFieldIds[i]);
+            if (el) {
+              const rect = el.getBoundingClientRect();
+              if (rect.top <= triggerOffset + 40) {
+                currentField = allFieldIds[i];
+                break;
+              }
+            }
+          }
+          if (currentField) {
+            setActiveField(currentField);
+          }
+
+          if (current !== activeSectionRef.current) {
+            activeSectionRef.current = current;
+            setActiveSection(current);
+
+            // Auto-collapse inactive groups/sub-blocks and expand active if autoSync is active
+            if (autoSyncSpyRef.current) {
+              syncAccordionToSection(current);
+            }
+          }
+
           ticking = false;
         });
         ticking = true;
@@ -707,7 +820,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [sectionIds]);
+  }, [sectionIds, allFieldIds, syncAccordionToSection]);
 
   const blockCompletion = useMemo(() => {
     const check = (fields) => {
@@ -1642,15 +1755,28 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         aria-label="Blueprint Index Navigation"
         style={{
           top: `${indexTopOffset}px`,
+          height: `calc(100vh - ${indexTopOffset + 16}px)`,
           maxHeight: `calc(100vh - ${indexTopOffset + 16}px)`
         }}
-        className="fixed left-3 2xl:left-6 z-40 hidden xl:flex flex-col font-mono select-none transition-[top] duration-75"
+        className="fixed left-3 2xl:left-6 z-40 hidden xl:flex flex-col font-mono select-none transition-[top] duration-75 min-h-0"
       >
         {isIndexExpanded ? (
           /* EXPANDED DIRECTORY PANEL */
-          <div className="w-72 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col h-full max-h-full rounded-none transition-all duration-200">
+          <div 
+            onWheel={(e) => {
+              if (desktopScrollRef.current) {
+                const el = desktopScrollRef.current;
+                const canScrollUp = el.scrollTop > 0;
+                const canScrollDown = el.scrollTop < (el.scrollHeight - el.clientHeight - 1);
+                if ((e.deltaY > 0 && canScrollDown) || (e.deltaY < 0 && canScrollUp)) {
+                  el.scrollTop += e.deltaY;
+                }
+              }
+            }}
+            className="w-72 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col h-full max-h-full min-h-0 rounded-none overflow-hidden transition-all duration-200"
+          >
             {/* Header */}
-            <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-950/80">
+            <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-950/80 shrink-0">
               <div className="flex items-center gap-2">
                 <Compass className="w-4 h-4 text-emerald-500" />
                 <div>
@@ -1658,9 +1784,18 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     <span className="text-[10px] font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
                       {t.indexTitle}
                     </span>
-                    <span className="text-[9px] px-1 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold">
-                      HUD
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAutoSyncAccordion(!autoSyncAccordion)}
+                      className={`text-[9px] px-1.5 py-0.2 font-mono border font-bold transition rounded-none ${
+                        autoSyncAccordion
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'
+                      }`}
+                      title={autoSyncAccordion ? 'Auto-Collapse SPY Active (Click to Pause)' : 'Auto-Collapse Paused (Click to Enable)'}
+                    >
+                      {autoSyncAccordion ? t.indexSpyActive : t.indexSpyManual}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1668,7 +1803,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 <button
                   type="button"
                   onClick={() => setIsIndexExpanded(false)}
-                  className="p-1 text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition"
+                  className="p-1 text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition rounded-none"
                   title={t.indexHidePanel}
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -1677,7 +1812,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Sub-header / Search & Quick Controls */}
-            <div className="p-2 border-b border-zinc-200 dark:border-zinc-800 space-y-1.5 bg-zinc-50/40 dark:bg-zinc-950/40">
+            <div className="p-2 border-b border-zinc-200 dark:border-zinc-800 space-y-1.5 bg-zinc-50/40 dark:bg-zinc-950/40 shrink-0">
               {/* Search Bar */}
               <div className="relative flex items-center">
                 <Search className="w-3.5 h-3.5 absolute left-2 text-zinc-400 pointer-events-none" />
@@ -1739,12 +1874,17 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </div>
             </div>
 
-            {/* Accordion List Body */}
-            <div className="flex-1 overflow-y-auto px-2 py-2 space-y-2 text-xs divide-y divide-zinc-100 dark:divide-zinc-800/60">
+            {/* Accordion List Body with Custom Scrollbar & Contain Behavior */}
+            <div 
+              ref={desktopScrollRef}
+              className="flex-1 min-h-0 overflow-y-auto px-2 py-2 space-y-2 text-xs divide-y divide-zinc-100 dark:divide-zinc-800/60 custom-prd-scrollbar select-none focus:outline-none"
+              style={{ overscrollBehavior: 'contain' }}
+            >
               {accordionGroups.map((grp) => {
                 const groupSections = filteredIndexSections.filter(sec => sec.group === grp.key);
                 if (groupSections.length === 0) return null;
                 const isOpen = openAccordionGroups[grp.key] ?? true;
+                const isGroupActive = groupSections.some(sec => sec.id === activeSection);
 
                 return (
                   <div key={grp.key} className="pt-2 first:pt-0">
@@ -1752,13 +1892,24 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     <button
                       type="button"
                       onClick={() => toggleAccordionGroup(grp.key)}
-                      className="w-full flex items-center justify-between py-1 text-left text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 group font-bold tracking-wider text-[10px] uppercase"
+                      className={`w-full flex items-center justify-between py-1 text-left hover:text-zinc-800 dark:hover:text-zinc-200 group font-bold tracking-wider text-[10px] uppercase transition ${
+                        isGroupActive
+                          ? 'text-emerald-600 dark:text-emerald-400 font-black'
+                          : 'text-zinc-500 dark:text-zinc-400'
+                      }`}
                     >
                       <span className="flex items-center gap-1.5 truncate">
                         {isOpen ? <ChevronDown className="w-3 h-3 shrink-0" /> : <ChevronRight className="w-3 h-3 shrink-0" />}
                         <span className="truncate">{grp.title}</span>
+                        {isGroupActive && (
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-none shrink-0" title="Active Group"></span>
+                        )}
                       </span>
-                      <span className="text-[9px] px-1 py-0.2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 shrink-0 font-normal">
+                      <span className={`text-[9px] px-1 py-0.2 border shrink-0 font-normal ${
+                        isGroupActive
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold'
+                          : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400'
+                      }`}>
                         {groupSections.length}
                       </span>
                     </button>
@@ -1773,6 +1924,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                           return (
                             <div key={sec.id} className="space-y-0.5">
                               <div
+                                data-nav-sec={sec.id}
                                 onClick={() => jumpToSection(sec.id)}
                                 className={`w-full text-left p-1.5 flex items-center justify-between gap-1.5 border transition-all cursor-pointer ${
                                   isActive
@@ -1839,45 +1991,51 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                               {/* Sub-Items List when Expanded */}
                               {isSubOpen && hasSubItems && (
                                 <div className="ml-3 pl-2 border-l border-zinc-200 dark:border-zinc-800/80 space-y-0.5 py-0.5">
-                                  {sec.subItems.map((sub) => (
-                                    <button
-                                      key={sub.id}
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        jumpToField(sub.id, sec.id);
-                                      }}
-                                      className={`w-full text-left py-1 px-1.5 flex items-center justify-between gap-1 text-[10px] transition ${
-                                        sub.isFilled
-                                          ? 'text-zinc-800 dark:text-zinc-200 hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300'
-                                          : 'text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 hover:text-zinc-700 dark:hover:text-zinc-300'
-                                      }`}
-                                    >
-                                      <div className="flex items-center gap-1.5 truncate">
-                                        {sub.isFilled ? (
-                                          <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center bg-emerald-500 text-black">
-                                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                  {sec.subItems.map((sub) => {
+                                    const isFieldActive = activeField === sub.id;
+                                    return (
+                                      <button
+                                        key={sub.id}
+                                        data-nav-field={sub.id}
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          jumpToField(sub.id, sec.id);
+                                        }}
+                                        className={`w-full text-left py-1 px-1.5 flex items-center justify-between gap-1 text-[10px] transition ${
+                                          isFieldActive
+                                            ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold border-l-2 border-emerald-500'
+                                            : sub.isFilled
+                                            ? 'text-zinc-800 dark:text-zinc-200 hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300'
+                                            : 'text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 hover:text-zinc-700 dark:hover:text-zinc-300'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-1.5 truncate">
+                                          {sub.isFilled ? (
+                                            <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center bg-emerald-500 text-black">
+                                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                            </span>
+                                          ) : (
+                                            <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center border border-zinc-300 dark:border-zinc-700 text-zinc-400 text-[8px] font-mono">
+                                              ○
+                                            </span>
+                                          )}
+                                          <span className="font-mono text-[9px] text-zinc-400 shrink-0">{sub.code}</span>
+                                          <span className={`truncate font-sans ${sub.isFilled ? 'font-medium' : ''}`}>
+                                            {sub.label}
                                           </span>
-                                        ) : (
-                                          <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center border border-zinc-300 dark:border-zinc-700 text-zinc-400 text-[8px] font-mono">
-                                            ○
-                                          </span>
-                                        )}
-                                        <span className="font-mono text-[9px] text-zinc-400 shrink-0">{sub.code}</span>
-                                        <span className={`truncate font-sans ${sub.isFilled ? 'font-medium' : ''}`}>
-                                          {sub.label}
-                                        </span>
-                                      </div>
+                                        </div>
 
-                                      <span className={`text-[8px] font-mono shrink-0 px-1 py-0.2 border uppercase ${
-                                        sub.isFilled
-                                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
-                                          : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400'
-                                      }`}>
-                                        {sub.isFilled ? (lang === 'en' ? '✓ Filled' : '✓ Terisi') : (lang === 'en' ? 'Empty' : 'Kosong')}
-                                      </span>
-                                    </button>
-                                  ))}
+                                        <span className={`text-[8px] font-mono shrink-0 px-1 py-0.2 border uppercase ${
+                                          sub.isFilled
+                                            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
+                                            : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400'
+                                        }`}>
+                                          {sub.isFilled ? (lang === 'en' ? '✓ Filled' : '✓ Terisi') : (lang === 'en' ? 'Empty' : 'Kosong')}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>
@@ -1890,8 +2048,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               })}
             </div>
 
-            {/* Footer Telemetry */}
-            <div className="p-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/80">
+            {/* Footer Telemetry - Anchored cleanly at bottom */}
+            <div className="p-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/80 shrink-0">
               <div className="flex items-center justify-between text-[10px] mb-1">
                 <span className="text-zinc-500 uppercase tracking-wider">{lang === 'en' ? 'Readiness' : 'Kesiapan'}:</span>
                 <span className="font-bold text-emerald-600 dark:text-emerald-400">{completeness.score}%</span>
@@ -1910,21 +2068,21 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           </div>
         ) : (
           /* COLLAPSED RAIL MODE */
-          <div className="w-12 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-xl flex flex-col items-center py-2.5 rounded-none transition-all duration-200">
+          <div className="w-12 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-xl flex flex-col items-center py-2.5 rounded-none transition-all duration-200 min-h-0 h-full">
             {/* Expand Trigger */}
             <button
               type="button"
               onClick={() => setIsIndexExpanded(true)}
-              className="p-1.5 text-zinc-500 hover:text-emerald-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition mb-2"
+              className="p-1.5 text-zinc-500 hover:text-emerald-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition mb-2 rounded-none"
               title={t.indexShowPanel}
             >
               <ChevronRight className="w-4 h-4 text-emerald-500" />
             </button>
 
-            <div className="w-6 h-[1px] bg-zinc-200 dark:bg-zinc-800 mb-2" />
+            <div className="w-6 h-[1px] bg-zinc-200 dark:bg-zinc-800 mb-2 shrink-0" />
 
-            {/* Vertical Icons List */}
-            <div className="flex flex-col gap-1 w-full px-1.5">
+            {/* Vertical Icons List with scrollbar */}
+            <div className="flex flex-col gap-1 w-full px-1.5 flex-1 min-h-0 overflow-y-auto custom-prd-scrollbar">
               {indexSections.map((sec) => {
                 const isActive = activeSection === sec.id;
                 return (
@@ -1947,10 +2105,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               })}
             </div>
 
-            <div className="w-6 h-[1px] bg-zinc-200 dark:bg-zinc-800 my-2" />
+            <div className="w-6 h-[1px] bg-zinc-200 dark:bg-zinc-800 my-2 shrink-0" />
 
             {/* Mini Progress Percentage Pill */}
-            <div className="text-[9px] font-mono font-bold text-emerald-600 dark:text-emerald-400 px-1 py-0.5 bg-emerald-500/10 border border-emerald-500/30">
+            <div className="text-[9px] font-mono font-bold text-emerald-600 dark:text-emerald-400 px-1 py-0.5 bg-emerald-500/10 border border-emerald-500/30 shrink-0">
               {completeness.score}%
             </div>
           </div>
@@ -1998,24 +2156,36 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 z-50 flex flex-col font-mono text-xs shadow-2xl"
               >
                 {/* Drawer Header */}
-                <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950">
+                <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950 shrink-0">
                   <div className="flex items-center gap-2">
                     <Compass className="w-4 h-4 text-emerald-500" />
                     <span className="font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
                       {t.indexTitle}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setAutoSyncAccordion(!autoSyncAccordion)}
+                      className={`text-[9px] px-1.5 py-0.2 font-mono border font-bold transition rounded-none ${
+                        autoSyncAccordion
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'
+                      }`}
+                      title={autoSyncAccordion ? 'Auto-Collapse SPY Active' : 'Auto-Collapse Paused'}
+                    >
+                      {autoSyncAccordion ? t.indexSpyActive : t.indexSpyManual}
+                    </button>
                   </div>
                   <button
                     type="button"
                     onClick={() => setMobileDrawerOpen(false)}
-                    className="p-1.5 text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
+                    className="p-1.5 text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 rounded-none"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Search Bar in Mobile Drawer */}
-                <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 space-y-2">
+                <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 space-y-2 shrink-0">
                   <div className="relative flex items-center">
                     <Search className="w-3.5 h-3.5 absolute left-2.5 text-zinc-400 pointer-events-none" />
                     <input
@@ -2058,25 +2228,37 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   </div>
                 </div>
 
-                {/* Drawer Scrollable Body */}
-                <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                {/* Drawer Scrollable Body with Custom Scrollbar */}
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3 custom-prd-scrollbar">
                   {accordionGroups.map((grp) => {
                     const groupSections = filteredIndexSections.filter(sec => sec.group === grp.key);
                     if (groupSections.length === 0) return null;
                     const isOpen = openAccordionGroups[grp.key] ?? true;
+                    const isGroupActive = groupSections.some(sec => sec.id === activeSection);
 
                     return (
                       <div key={grp.key} className="space-y-1">
                         <button
                           type="button"
                           onClick={() => toggleAccordionGroup(grp.key)}
-                          className="w-full flex items-center justify-between py-1 text-left text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px] tracking-wider"
+                          className={`w-full flex items-center justify-between py-1 text-left font-bold uppercase text-[10px] tracking-wider transition ${
+                            isGroupActive
+                              ? 'text-emerald-600 dark:text-emerald-400 font-black'
+                              : 'text-zinc-500 dark:text-zinc-400'
+                          }`}
                         >
-                          <span className="flex items-center gap-1.5">
-                            {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                            <span>{grp.title}</span>
+                          <span className="flex items-center gap-1.5 truncate">
+                            {isOpen ? <ChevronDown className="w-3 h-3 shrink-0" /> : <ChevronRight className="w-3 h-3 shrink-0" />}
+                            <span className="truncate">{grp.title}</span>
+                            {isGroupActive && (
+                              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-none shrink-0" title="Active Group"></span>
+                            )}
                           </span>
-                          <span className="text-[9px] px-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                          <span className={`text-[9px] px-1 border shrink-0 ${
+                            isGroupActive
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold'
+                              : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400'
+                          }`}>
                             {groupSections.length}
                           </span>
                         </button>
@@ -2090,6 +2272,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                               return (
                                 <div key={sec.id} className="space-y-0.5">
                                   <div
+                                    data-nav-sec={sec.id}
                                     onClick={() => jumpToSection(sec.id)}
                                     className={`w-full text-left p-2 flex items-center justify-between border transition cursor-pointer ${
                                       isActive
@@ -2123,7 +2306,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                         <button
                                           type="button"
                                           onClick={(e) => toggleSubBlock(sec.id, e)}
-                                          className="p-0.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                                          className="p-0.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-none"
                                         >
                                           {isSubOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                                         </button>
@@ -2134,42 +2317,48 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                   {/* Sub-items in Mobile Drawer */}
                                   {isSubOpen && hasSubItems && (
                                     <div className="ml-3 pl-2 border-l border-zinc-200 dark:border-zinc-800 space-y-1 py-1">
-                                      {sec.subItems.map((sub) => (
-                                        <button
-                                          key={sub.id}
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            jumpToField(sub.id, sec.id);
-                                          }}
-                                          className={`w-full text-left py-1 px-1.5 flex items-center justify-between gap-1 text-[11px] transition ${
-                                            sub.isFilled
-                                              ? 'text-zinc-800 dark:text-zinc-200 hover:text-emerald-500 font-medium'
-                                              : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
-                                          }`}
-                                        >
-                                          <div className="flex items-center gap-1.5 truncate">
-                                            {sub.isFilled ? (
-                                              <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center bg-emerald-500 text-black">
-                                                <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                              </span>
-                                            ) : (
-                                              <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center border border-zinc-400 text-zinc-400 text-[8px] font-mono">
-                                                ○
-                                              </span>
-                                            )}
-                                            <span className="font-mono text-[10px] text-zinc-400 shrink-0">{sub.code}</span>
-                                            <span className="truncate font-sans">{sub.label}</span>
-                                          </div>
-                                          <span className={`text-[8px] font-mono shrink-0 px-1 py-0.2 border uppercase ${
-                                            sub.isFilled
-                                              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
-                                              : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-400'
-                                          }`}>
-                                            {sub.isFilled ? (lang === 'en' ? '✓' : '✓') : '—'}
-                                          </span>
-                                        </button>
-                                      ))}
+                                      {sec.subItems.map((sub) => {
+                                        const isFieldActive = activeField === sub.id;
+                                        return (
+                                          <button
+                                            key={sub.id}
+                                            data-nav-field={sub.id}
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              jumpToField(sub.id, sec.id);
+                                            }}
+                                            className={`w-full text-left py-1 px-1.5 flex items-center justify-between gap-1 text-[11px] transition ${
+                                              isFieldActive
+                                                ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border-l-2 border-emerald-500'
+                                                : sub.isFilled
+                                                ? 'text-zinc-800 dark:text-zinc-200 hover:text-emerald-500 font-medium'
+                                                : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
+                                            }`}
+                                          >
+                                            <div className="flex items-center gap-1.5 truncate">
+                                              {sub.isFilled ? (
+                                                <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center bg-emerald-500 text-black">
+                                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                                </span>
+                                              ) : (
+                                                <span className="w-3.5 h-3.5 shrink-0 flex items-center justify-center border border-zinc-400 text-zinc-400 text-[8px] font-mono">
+                                                  ○
+                                                </span>
+                                              )}
+                                              <span className="font-mono text-[10px] text-zinc-400 shrink-0">{sub.code}</span>
+                                              <span className="truncate font-sans">{sub.label}</span>
+                                            </div>
+                                            <span className={`text-[8px] font-mono shrink-0 px-1 py-0.2 border uppercase ${
+                                              sub.isFilled
+                                                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
+                                                : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-400'
+                                            }`}>
+                                              {sub.isFilled ? (lang === 'en' ? '✓' : '✓') : '—'}
+                                            </span>
+                                          </button>
+                                        );
+                                      })}
                                     </div>
                                   )}
                                 </div>

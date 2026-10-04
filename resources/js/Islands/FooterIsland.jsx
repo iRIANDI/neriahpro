@@ -41,7 +41,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
           {hasAnyPillar && (
             <div className="md:col-span-3">
               <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-                {isEn ? 'Service Pillars' : 'Pilar Layanan'}
+                {isEn ? 'Solutions & Systems' : 'Solusi & Sistem'}
               </h4>
               <ul className="space-y-2.5 font-mono text-xs">
                 {isBlueprintEnabled && (

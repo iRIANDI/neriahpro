@@ -46,16 +46,6 @@ class LandingPageSeeder extends Seeder
                     'cta_link' => '/blueprint'
                 ]
             ],
-            [
-                'type' => 'feature_grid',
-                'is_active' => true,
-                'data' => [
-                    'title' => [
-                        'id' => '4 Pilar Layanan Digital Hub.',
-                        'en' => '4 Pillars of Our Digital Hub.'
-                    ]
-                ]
-            ]
         ];
 
         $homePage->plugins = $plugins;

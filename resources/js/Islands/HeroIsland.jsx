@@ -330,26 +330,26 @@ export default function HeroIsland({ headline, subheadline, cta_text, cta_link, 
             </a>
           ) : (
             <a
-              href={hasAnyPillar ? "#services" : "#architecture"}
+              href="/blueprint"
               className="bg-emerald-600 hover:bg-emerald-500 text-black font-black py-3.5 px-7 rounded-none transition flex items-center gap-2"
             >
               <span>{isEn ? 'Architecture Consultation' : 'Konsultasi Arsitektur'}</span>
               <ArrowRight className="w-4 h-4" />
             </a>
           )}
-          {hasAnyPillar ? (
+          {isCvProEnabled ? (
             <a
-              href="#services"
-              className="border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 py-3.5 px-7 rounded-none transition"
+              href="/cv-pro"
+              className="border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 py-3.5 px-7 rounded-none transition flex items-center gap-1.5"
             >
-              {isEn ? 'Explore Service Pillars ↓' : 'Jelajahi Pilar Layanan ↓'}
+              <span>{isEn ? 'CV & Portfolio Studio ↗' : 'Studio CV & Portofolio ↗'}</span>
             </a>
           ) : (
             <a
-              href="#architecture"
+              href="/blueprint"
               className="border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 py-3.5 px-7 rounded-none transition"
             >
-              {isEn ? 'Engineering Standards ↓' : 'Standar Rekayasa ↓'}
+              <span>{isEn ? 'Explore Blueprint System ↓' : 'Jelajahi Sistem Blueprint ↓'}</span>
             </a>
           )}
         </div>

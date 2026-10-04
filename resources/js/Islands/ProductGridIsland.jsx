@@ -15,13 +15,8 @@ import {
 } from 'lucide-react';
 
 export default function ProductGridIsland({ title, featureFlags, currentLocale }) {
-  const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
-  const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
-  const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
-  const isContractEnabled = featureFlags?.enable_digital_contract !== false;
-  const isClientOnboardingEnabled = featureFlags?.enable_client_onboarding !== false;
-
-  const isEn = currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
+  // 3 Pillars Arsenal section is removed as requested by user because all architecture, PRD discovery, and contract capabilities are unified in /blueprint
+  return null;
 
   const pillars = [
     {

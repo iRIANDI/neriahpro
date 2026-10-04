@@ -45,18 +45,28 @@
     </script>
 
     <style>
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; color: black !important; }
-            .print-break-inside-avoid { break-inside: avoid; }
-        }
-    </style>
-    <style>
         [x-cloak] { display: none !important; }
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; color: black !important; }
             .print-break-inside-avoid { break-inside: avoid; }
+        }
+        .custom-prd-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #10b981 #18181b;
+        }
+        .custom-prd-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-prd-scrollbar::-webkit-scrollbar-track {
+            background: #18181b;
+        }
+        .custom-prd-scrollbar::-webkit-scrollbar-thumb {
+            background: #10b981;
+        }
+        .custom-prd-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #34d399;
         }
     </style>
     <!-- Alpine.js & Mermaid UMD Bundle -->
@@ -232,7 +242,7 @@
 
         window.setupBlueprintScrollSpy = function(onActiveChange) {
             const sectionIds = [
-                'section-1', 'section-2', 'section-3', 'section-3-5',
+                'section-1', 'section-1-5', 'section-2', 'section-3', 'section-3-5',
                 'section-3-8', 'section-4', 'section-5', 'section-6',
                 'section-7', 'section-8', 'section-9', 'section-10'
             ];
@@ -815,223 +825,372 @@ x-init="
             </div>
         </main>
     @else
+        @php
+            $blueprintSections = [
+                [
+                    'id' => 'section-1',
+                    'num' => '01',
+                    'group' => 'scope',
+                    'title_id' => 'Executive Technical Discovery',
+                    'title_en' => 'Executive Technical Discovery',
+                    'subtitle_id' => '26 Parameter Arsitektur & Analisis Kebutuhan Bisnis',
+                    'subtitle_en' => '26 Architecture Parameters & Business Needs Analysis',
+                    'badge' => '26 PARAMS',
+                ],
+                [
+                    'id' => 'section-1-5',
+                    'num' => '01.5',
+                    'group' => 'scope',
+                    'title_id' => 'Analisis ROI & Garansi Bebas Penyesalan',
+                    'title_en' => 'Business ROI & No-Regret Guarantees',
+                    'subtitle_id' => 'Formula Balik Modal Cepat, Risiko Menunda & 5 Proteksi Klien',
+                    'subtitle_en' => 'Deadly ROI Equation, Cost of Inaction & 5 Client Protections',
+                    'badge' => 'KILLER ROI',
+                ],
+                [
+                    'id' => 'section-2',
+                    'num' => '02',
+                    'group' => 'scope',
+                    'title_id' => 'Pengguna & Hak Akses (RBAC)',
+                    'title_en' => 'Users & Access Control (RBAC)',
+                    'subtitle_id' => 'Aktor Sistem, Peran Pengguna & Batasan Otoritas',
+                    'subtitle_en' => 'System Actors, User Roles & Authorization Boundaries',
+                    'badge' => 'RBAC',
+                ],
+                [
+                    'id' => 'section-3',
+                    'num' => '03',
+                    'group' => 'scope',
+                    'title_id' => 'Spesifikasi Rekayasa Fitur',
+                    'title_en' => 'Feature Engineering Specs',
+                    'subtitle_id' => 'Vertical Slices, Gherkin Scenarios & Agent Matrix',
+                    'subtitle_en' => 'Vertical Slices, Gherkin Scenarios & Agent Matrix',
+                    'badge' => 'MVP FASE 1',
+                ],
+                [
+                    'id' => 'section-3-5',
+                    'num' => '04',
+                    'group' => 'studio',
+                    'title_id' => 'Pusat Edukasi Developer AI',
+                    'title_en' => 'AI Developer Education Hub',
+                    'subtitle_id' => 'Protokol Handoff AI Coding Agent (Cursor, Claude, Windsurf)',
+                    'subtitle_en' => 'AI Coding Agent Handoff Protocols (Cursor, Claude, Windsurf)',
+                    'badge' => 'DEV PLAYBOOK',
+                ],
+                [
+                    'id' => 'section-3-8',
+                    'num' => '05',
+                    'group' => 'studio',
+                    'title_id' => 'Virtual Architecture Studio',
+                    'title_en' => 'Virtual Architecture Studio',
+                    'subtitle_id' => 'Command Center 4 Diagram Visual (Workflow, ERD, Dep, Gantt)',
+                    'subtitle_en' => 'Command Center for 4 Visual Diagrams (Workflow, ERD, Dep, Gantt)',
+                    'badge' => '4 CHARTS',
+                ],
+                [
+                    'id' => 'section-4',
+                    'num' => '06',
+                    'group' => 'studio',
+                    'title_id' => 'Alur Kerja Utama (User Flow)',
+                    'title_en' => 'Core User Workflow',
+                    'subtitle_id' => 'Diagram Alur Transaksi, Interaksi Visual & Validasi Bisnis',
+                    'subtitle_en' => 'Transaction Flowchart, Visual Interaction & Business Validation',
+                    'badge' => 'FLOWCHART',
+                ],
+                [
+                    'id' => 'section-5',
+                    'num' => '07',
+                    'group' => 'studio',
+                    'title_id' => 'Database ERD & Skema Relasi',
+                    'title_en' => 'Database ERD & Relational Schema',
+                    'subtitle_id' => 'Topologi PostgreSQL Strict, Entitas Kunci & Tipe Data ULID',
+                    'subtitle_en' => 'PostgreSQL Strict Topology, Key Entities & ULID Datatypes',
+                    'badge' => 'POSTGRESQL',
+                ],
+                [
+                    'id' => 'section-6',
+                    'num' => '08',
+                    'group' => 'infra',
+                    'title_id' => 'Evaluasi Arsitektur & Infra',
+                    'title_en' => 'Architecture & Infra Evaluation',
+                    'subtitle_id' => 'Spesifikasi Cloud VPS, AI Database, Redis & Keamanan',
+                    'subtitle_en' => 'Cloud VPS Specs, AI Database, Redis & Security Stack',
+                    'badge' => 'MANAGED VPS',
+                ],
+                [
+                    'id' => 'section-7',
+                    'num' => '09',
+                    'group' => 'legal',
+                    'title_id' => 'Opsi Velocity Pengerjaan & Harga',
+                    'title_en' => 'Delivery Velocity & Pricing',
+                    'subtitle_id' => 'Termin Pembayaran, Pilihan Sprint & Akselerasi AI Gemini Ultra',
+                    'subtitle_en' => 'Payment Milestones, Sprint Velocity & Gemini Ultra Cloud',
+                    'badge' => 'PRICING TIERS',
+                ],
+                [
+                    'id' => 'section-8',
+                    'num' => '10',
+                    'group' => 'legal',
+                    'title_id' => 'Timeline & Gantt Milestone',
+                    'title_en' => 'Timeline & Gantt Milestones',
+                    'subtitle_id' => 'Alokasi Hari Pengerjaan per Sprint dari Kickoff sampai Delivery',
+                    'subtitle_en' => 'Daily Sprint Allocations from Kickoff to Production Delivery',
+                    'badge' => 'SPRINTS',
+                ],
+                [
+                    'id' => 'section-9',
+                    'num' => '11',
+                    'group' => 'legal',
+                    'title_id' => 'Tata Kelola, Kualitas & SLA',
+                    'title_en' => 'Governance, Quality & SLA',
+                    'subtitle_id' => 'Definition of Done (DoD), Garansi Bug 30 Hari & Penyerahan Repo',
+                    'subtitle_en' => 'Definition of Done (DoD), 30-Day Bug Warranty & Repo Handover',
+                    'badge' => 'SLA 30 HARI',
+                ],
+                [
+                    'id' => 'section-10',
+                    'num' => '12',
+                    'group' => 'legal',
+                    'title_id' => 'Kunci Scope & Pembayaran DP',
+                    'title_en' => 'Scope Lock & DP Payment',
+                    'subtitle_id' => 'Segel Integritas SHA-256, Kontrak Digital & Midtrans / Voucher',
+                    'subtitle_en' => 'SHA-256 Integrity Seal, Digital Contract & Midtrans / Voucher',
+                    'badge' => 'LEGAL & DP',
+                ],
+            ];
+
+            $accordionGroupDefs = [
+                'scope' => [
+                    'title_id' => 'Ruang Lingkup & Kebutuhan Bisnis',
+                    'title_en' => 'Scope & Business Requirements',
+                    'desc_id' => 'Spesifikasi discovery, aktor pengguna, dan dekomposisi fitur MVP',
+                    'desc_en' => 'Discovery specs, user actors, and MVP feature decomposition',
+                    'count' => 4,
+                ],
+                'studio' => [
+                    'title_id' => 'Studio Visual & Diagram Arsitektur',
+                    'title_en' => 'Visual Studio & Architecture Diagrams',
+                    'desc_id' => 'Handoff developer, 4 chart studio, user flowchart, dan skema database ERD',
+                    'desc_en' => 'Developer handoff, 4 chart studio, user flow, and database ERD schema',
+                    'count' => 4,
+                ],
+                'infra' => [
+                    'title_id' => 'Infrastruktur Cloud & AI Database',
+                    'title_en' => 'Cloud Infrastructure & AI Database',
+                    'desc_id' => 'Evaluasi arsitektur VPS, PostgreSQL strict, Redis cache & backup',
+                    'desc_en' => 'VPS architecture evaluation, PostgreSQL strict, Redis cache & backup',
+                    'count' => 1,
+                ],
+                'legal' => [
+                    'title_id' => 'Investasi, SLA, Kontrak & Pembayaran',
+                    'title_en' => 'Investment, SLA, Contracts & Payment',
+                    'desc_id' => 'Opsi velocity pricing, timeline sprint, SLA garansi, dan kunci scope DP',
+                    'desc_en' => 'Velocity pricing tiers, sprint timeline, SLA warranty, and DP scope lock',
+                    'count' => 4,
+                ],
+            ];
+        @endphp
+
         <!-- PUBLISHED FULL ULTIMATE PRD (SHARP BRUTALIST TECHNICAL THEME) -->
-        <main class="flex-1 py-10 px-4 sm:px-6 max-w-5xl mx-auto w-full">
+        <div class="max-w-[1480px] mx-auto w-full px-3 sm:px-6 py-6 flex gap-6 lg:gap-8 items-start justify-center relative">
             
-            <!-- Document Hero Card -->
-            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none relative">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-6">
-                    <div>
-                        <div class="flex flex-wrap items-center gap-2 mb-2">
-                            <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black rounded-none">
-                                SPEC_ID: {{ strtoupper(substr($blueprint->id, 0, 10)) }}
-                            </span>
-                            <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 rounded-none">
-                                DISTRIBUTED ULID ARCHITECTURE
+            <!-- DESKTOP DEDICATED STICKY NAVIGATION SIDEBAR (xl:flex) -->
+            <aside 
+                class="w-72 xl:w-80 shrink-0 hidden xl:flex flex-col sticky top-20 max-h-[calc(100vh-6rem)] bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-none overflow-hidden z-20 font-mono shadow-sm no-print"
+                x-on:wheel.passive="(e) => {
+                    const scrollEl = $el.querySelector('.custom-prd-scrollbar');
+                    if (scrollEl && !scrollEl.contains(e.target)) {
+                        scrollEl.scrollTop += e.deltaY;
+                    }
+                }"
+            >
+                <!-- Sticky Sidebar Header -->
+                <div class="p-3.5 bg-zinc-900 text-white flex items-center justify-between border-b border-zinc-800 shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 bg-emerald-400 rounded-none animate-pulse"></span>
+                        <div>
+                            <h3 class="font-bold text-xs uppercase tracking-wider text-emerald-400">
+                                <span x-show="locale === 'en'">PRD Directory</span>
+                                <span x-show="locale !== 'en'">Index Navigasi PRD</span>
+                            </h3>
+                            <p class="text-[10px] text-zinc-400">
+                                <span x-show="locale === 'en'">Live Architecture Keystones</span>
+                                <span x-show="locale !== 'en'">Navigasi Cepat Dokumen</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-[10px] font-bold text-emerald-400 bg-zinc-800 px-2 py-0.5 border border-zinc-700">
+                        12 SECTIONS
+                    </div>
+                </div>
+
+                <!-- Sticky Sidebar Search & Controls -->
+                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900/70 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-1.5 shrink-0">
+                    <div class="relative flex-1">
+                        <input 
+                            type="text" 
+                            x-model="indexSearchQuery" 
+                            :placeholder="locale === 'en' ? 'Filter sections...' : 'Cari bagian PRD...'"
+                            class="w-full bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 px-2.5 py-1 text-xs text-zinc-900 dark:text-zinc-100 rounded-none focus:outline-none focus:border-emerald-500"
+                        />
+                        <button 
+                            type="button" 
+                            x-show="indexSearchQuery" 
+                            @click="indexSearchQuery = ''" 
+                            class="absolute right-2 top-1 text-zinc-400 hover:text-zinc-600 text-xs"
+                        >&times;</button>
+                    </div>
+                    <button 
+                        type="button" 
+                        @click="expandAllGroups()" 
+                        class="px-2 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] border border-zinc-300 dark:border-zinc-700 transition"
+                        :title="locale === 'en' ? 'Expand All' : 'Buka Semua'"
+                    >
+                        &boxplus;
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="collapseAllGroups()" 
+                        class="px-2 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] border border-zinc-300 dark:border-zinc-700 transition"
+                        :title="locale === 'en' ? 'Collapse All' : 'Tutup Semua'"
+                    >
+                        &boxminus;
+                    </button>
+                </div>
+
+                <!-- Scrollable Section List (Independently scrollable with mouse wheel) -->
+                <div 
+                    class="p-2 overflow-y-auto flex-1 min-h-0 space-y-2 text-xs divide-y divide-zinc-100 dark:divide-zinc-900 custom-prd-scrollbar select-none focus:outline-none"
+                    tabindex="0"
+                >
+                    @foreach($accordionGroupDefs as $groupKey => $groupDef)
+                        <div class="pt-2 first:pt-0">
+                            <button 
+                                type="button" 
+                                @click="toggleAccordionGroup('{{ $groupKey }}')"
+                                class="w-full px-2 py-1.5 bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-left flex items-center justify-between transition border border-zinc-200 dark:border-zinc-800"
+                            >
+                                <span class="font-bold text-[11px] text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                                    <span class="text-emerald-500 font-mono">#{{ $loop->iteration }}</span>
+                                    <span x-show="locale === 'en'">{{ $groupDef['title_en'] }}</span>
+                                    <span x-show="locale !== 'en'">{{ $groupDef['title_id'] }}</span>
+                                </span>
+                                <svg 
+                                    class="w-3.5 h-3.5 text-zinc-500 transition-transform duration-200" 
+                                    :class="accordionGroups['{{ $groupKey }}'] ? 'rotate-180' : ''" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+
+                            <div 
+                                x-show="accordionGroups['{{ $groupKey }}'] || indexSearchQuery.trim() !== ''" 
+                                x-transition
+                                class="mt-1 space-y-1 pl-1"
+                            >
+                                @foreach($blueprintSections as $sec)
+                                    @if($sec['group'] === $groupKey)
+                                        <div 
+                                            x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
+                                            @click="jumpTo('{{ $sec['id'] }}')"
+                                            :class="activeSectionId === '{{ $sec['id'] }}' 
+                                                ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold' 
+                                                : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600'"
+                                            class="px-2.5 py-1.5 border rounded-none cursor-pointer transition flex items-center justify-between text-xs group"
+                                        >
+                                            <div class="flex items-center gap-2 truncate pr-1">
+                                                <span 
+                                                    :class="activeSectionId === '{{ $sec['id'] }}' ? 'bg-emerald-500 text-black' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
+                                                    class="w-4 h-4 flex-shrink-0 flex items-center justify-center font-bold text-[9px] rounded-none"
+                                                >
+                                                    {{ $sec['num'] }}
+                                                </span>
+                                                <span class="truncate text-[11px] group-hover:text-emerald-500">
+                                                    <span x-show="locale === 'en'">{{ $sec['title_en'] }}</span>
+                                                    <span x-show="locale !== 'en'">{{ $sec['title_id'] }}</span>
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-1 flex-shrink-0">
+                                                <span x-show="activeSectionId === '{{ $sec['id'] }}'" class="w-1.5 h-1.5 bg-emerald-500 rounded-none animate-ping"></span>
+                                                <span class="text-[9px] text-zinc-400 uppercase font-mono">{{ $sec['badge'] }}</span>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Sticky Sidebar Footer -->
+                <div class="p-2.5 bg-zinc-100 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px] shrink-0">
+                    <span class="text-zinc-500 dark:text-zinc-400 truncate max-w-[170px]">
+                        <strong class="text-emerald-600 dark:text-emerald-400" x-text="getActiveSectionTitle()"></strong>
+                    </span>
+                    <button 
+                        type="button" 
+                        @click="window.scrollTo({ top: 0, behavior: 'smooth' })" 
+                        class="px-2 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold uppercase transition flex items-center gap-1 hover:opacity-90"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                        <span x-show="locale === 'en'">Top</span>
+                        <span x-show="locale !== 'en'">Atas</span>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- MAIN PRD CONTENT -->
+            <main class="flex-1 max-w-4xl lg:max-w-5xl w-full min-w-0">
+                
+                <!-- Document Hero Card -->
+                <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none relative">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-6">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black rounded-none">
+                                    SPEC_ID: {{ strtoupper(substr($blueprint->id, 0, 10)) }}
+                                </span>
+                                <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 rounded-none">
+                                    DISTRIBUTED ULID ARCHITECTURE
+                                </span>
+                            </div>
+                            <h1 class="text-2xl sm:text-4xl font-black uppercase text-zinc-900 dark:text-zinc-100 tracking-tight">
+                                {{ $blueprint->nama_bisnis ?: $blueprint->client_name }}
+                            </h1>
+                            <p class="text-zinc-500 dark:text-zinc-400 text-xs mt-1 font-mono">
+                                PREPARED BY NERIAH PRO TECH HUB // SYNCHRONIZED: {{ $blueprint->updated_at?->format('Y-m-d H:i') ?? now()->format('Y-m-d H:i') }} UTC
+                            </p>
+                        </div>
+
+                        <div class="flex flex-col items-start md:items-end gap-1 font-mono text-xs">
+                            <span class="text-zinc-400 uppercase tracking-widest">STATUS KONTRAK</span>
+                            <span class="px-3 py-1 font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-none">
+                                {{ strtoupper($blueprint->project_status) }}
                             </span>
                         </div>
-                        <h1 class="text-2xl sm:text-4xl font-black uppercase text-zinc-900 dark:text-zinc-100 tracking-tight">
-                            {{ $blueprint->nama_bisnis ?: $blueprint->client_name }}
-                        </h1>
-                        <p class="text-zinc-500 dark:text-zinc-400 text-xs mt-1 font-mono">
-                            PREPARED BY NERIAH PRO TECH HUB // SYNCHRONIZED: {{ $blueprint->updated_at?->format('Y-m-d H:i') ?? now()->format('Y-m-d H:i') }} UTC
-                        </p>
                     </div>
 
-                    <div class="flex flex-col items-start md:items-end gap-1 font-mono text-xs">
-                        <span class="text-zinc-400 uppercase tracking-widest">STATUS KONTRAK</span>
-                        <span class="px-3 py-1 font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-none">
-                            {{ strtoupper($blueprint->project_status) }}
-                        </span>
+                    <!-- Meta Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                            <span class="text-zinc-400 block mb-0.5">PIC KLIEN</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100 truncate block">{{ $blueprint->client_name }}</span>
+                        </div>
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                            <span class="text-zinc-400 block mb-0.5">EMAIL RESMI</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100 truncate block">{{ $blueprint->email }}</span>
+                        </div>
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                            <span class="text-zinc-400 block mb-0.5">DURASI PROYEK</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $blueprint->target_waktu ?? '30 Hari Kerja' }}</span>
+                        </div>
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                            <span class="text-zinc-400 block mb-0.5">KESIAPAN ASET</span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $blueprint->kesiapan_aset ?? 'Sedang Disiapkan' }}</span>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Meta Grid -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                    <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                        <span class="text-zinc-400 block mb-0.5">PIC KLIEN</span>
-                        <span class="font-bold text-zinc-900 dark:text-zinc-100 truncate block">{{ $blueprint->client_name }}</span>
-                    </div>
-                    <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                        <span class="text-zinc-400 block mb-0.5">EMAIL RESMI</span>
-                        <span class="font-bold text-zinc-900 dark:text-zinc-100 truncate block">{{ $blueprint->email }}</span>
-                    </div>
-                    <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                        <span class="text-zinc-400 block mb-0.5">DURASI PROYEK</span>
-                        <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $blueprint->target_waktu ?? '30 Hari Kerja' }}</span>
-                    </div>
-                    <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                        <span class="text-zinc-400 block mb-0.5">KESIAPAN ASET</span>
-                        <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $blueprint->kesiapan_aset ?? 'Sedang Disiapkan' }}</span>
-                    </div>
-                </div>
-            </div>
-
-            @php
-                $blueprintSections = [
-                    [
-                        'id' => 'section-1',
-                        'num' => '01',
-                        'group' => 'scope',
-                        'title_id' => 'Executive Technical Discovery',
-                        'title_en' => 'Executive Technical Discovery',
-                        'subtitle_id' => '26 Parameter Arsitektur & Analisis Kebutuhan Bisnis',
-                        'subtitle_en' => '26 Architecture Parameters & Business Needs Analysis',
-                        'badge' => '26 PARAMS',
-                    ],
-                    [
-                        'id' => 'section-1-5',
-                        'num' => '01.5',
-                        'group' => 'scope',
-                        'title_id' => 'Analisis ROI & Garansi Bebas Penyesalan',
-                        'title_en' => 'Business ROI & No-Regret Guarantees',
-                        'subtitle_id' => 'Formula Balik Modal Cepat, Risiko Menunda & 5 Proteksi Klien',
-                        'subtitle_en' => 'Deadly ROI Equation, Cost of Inaction & 5 Client Protections',
-                        'badge' => 'KILLER ROI',
-                    ],
-                    [
-                        'id' => 'section-2',
-                        'num' => '02',
-                        'group' => 'scope',
-                        'title_id' => 'Pengguna & Hak Akses (RBAC)',
-                        'title_en' => 'Users & Access Control (RBAC)',
-                        'subtitle_id' => 'Aktor Sistem, Peran Pengguna & Batasan Otoritas',
-                        'subtitle_en' => 'System Actors, User Roles & Authorization Boundaries',
-                        'badge' => 'RBAC',
-                    ],
-                    [
-                        'id' => 'section-3',
-                        'num' => '03',
-                        'group' => 'scope',
-                        'title_id' => 'Spesifikasi Rekayasa Fitur',
-                        'title_en' => 'Feature Engineering Specs',
-                        'subtitle_id' => 'Vertical Slices, Gherkin Scenarios & Agent Matrix',
-                        'subtitle_en' => 'Vertical Slices, Gherkin Scenarios & Agent Matrix',
-                        'badge' => 'MVP FASE 1',
-                    ],
-                    [
-                        'id' => 'section-3-5',
-                        'num' => '04',
-                        'group' => 'studio',
-                        'title_id' => 'Pusat Edukasi Developer AI',
-                        'title_en' => 'AI Developer Education Hub',
-                        'subtitle_id' => 'Protokol Handoff AI Coding Agent (Cursor, Claude, Windsurf)',
-                        'subtitle_en' => 'AI Coding Agent Handoff Protocols (Cursor, Claude, Windsurf)',
-                        'badge' => 'DEV PLAYBOOK',
-                    ],
-                    [
-                        'id' => 'section-3-8',
-                        'num' => '05',
-                        'group' => 'studio',
-                        'title_id' => 'Virtual Architecture Studio',
-                        'title_en' => 'Virtual Architecture Studio',
-                        'subtitle_id' => 'Command Center 4 Diagram Visual (Workflow, ERD, Dep, Gantt)',
-                        'subtitle_en' => 'Command Center for 4 Visual Diagrams (Workflow, ERD, Dep, Gantt)',
-                        'badge' => '4 CHARTS',
-                    ],
-                    [
-                        'id' => 'section-4',
-                        'num' => '06',
-                        'group' => 'studio',
-                        'title_id' => 'Alur Kerja Utama (User Flow)',
-                        'title_en' => 'Core User Workflow',
-                        'subtitle_id' => 'Diagram Alur Transaksi, Interaksi Visual & Validasi Bisnis',
-                        'subtitle_en' => 'Transaction Flowchart, Visual Interaction & Business Validation',
-                        'badge' => 'FLOWCHART',
-                    ],
-                    [
-                        'id' => 'section-5',
-                        'num' => '07',
-                        'group' => 'studio',
-                        'title_id' => 'Database ERD & Skema Relasi',
-                        'title_en' => 'Database ERD & Relational Schema',
-                        'subtitle_id' => 'Topologi PostgreSQL Strict, Entitas Kunci & Tipe Data ULID',
-                        'subtitle_en' => 'PostgreSQL Strict Topology, Key Entities & ULID Datatypes',
-                        'badge' => 'POSTGRESQL',
-                    ],
-                    [
-                        'id' => 'section-6',
-                        'num' => '08',
-                        'group' => 'infra',
-                        'title_id' => 'Evaluasi Arsitektur & Infra',
-                        'title_en' => 'Architecture & Infra Evaluation',
-                        'subtitle_id' => 'Spesifikasi Cloud VPS, AI Database, Redis & Keamanan',
-                        'subtitle_en' => 'Cloud VPS Specs, AI Database, Redis & Security Stack',
-                        'badge' => 'MANAGED VPS',
-                    ],
-                    [
-                        'id' => 'section-7',
-                        'num' => '09',
-                        'group' => 'legal',
-                        'title_id' => 'Opsi Velocity Pengerjaan & Harga',
-                        'title_en' => 'Delivery Velocity & Pricing',
-                        'subtitle_id' => 'Termin Pembayaran, Pilihan Sprint & Akselerasi AI Gemini Ultra',
-                        'subtitle_en' => 'Payment Milestones, Sprint Velocity & Gemini Ultra Cloud',
-                        'badge' => 'PRICING TIERS',
-                    ],
-                    [
-                        'id' => 'section-8',
-                        'num' => '10',
-                        'group' => 'legal',
-                        'title_id' => 'Timeline & Gantt Milestone',
-                        'title_en' => 'Timeline & Gantt Milestones',
-                        'subtitle_id' => 'Alokasi Hari Pengerjaan per Sprint dari Kickoff sampai Delivery',
-                        'subtitle_en' => 'Daily Sprint Allocations from Kickoff to Production Delivery',
-                        'badge' => 'SPRINTS',
-                    ],
-                    [
-                        'id' => 'section-9',
-                        'num' => '11',
-                        'group' => 'legal',
-                        'title_id' => 'Tata Kelola, Kualitas & SLA',
-                        'title_en' => 'Governance, Quality & SLA',
-                        'subtitle_id' => 'Definition of Done (DoD), Garansi Bug 30 Hari & Penyerahan Repo',
-                        'subtitle_en' => 'Definition of Done (DoD), 30-Day Bug Warranty & Repo Handover',
-                        'badge' => 'SLA 30 HARI',
-                    ],
-                    [
-                        'id' => 'section-10',
-                        'num' => '12',
-                        'group' => 'legal',
-                        'title_id' => 'Kunci Scope & Pembayaran DP',
-                        'title_en' => 'Scope Lock & DP Payment',
-                        'subtitle_id' => 'Segel Integritas SHA-256, Kontrak Digital & Midtrans / Voucher',
-                        'subtitle_en' => 'SHA-256 Integrity Seal, Digital Contract & Midtrans / Voucher',
-                        'badge' => 'LEGAL & DP',
-                    ],
-                ];
-
-                $accordionGroupDefs = [
-                    'scope' => [
-                        'title_id' => 'Ruang Lingkup & Kebutuhan Bisnis',
-                        'title_en' => 'Scope & Business Requirements',
-                        'desc_id' => 'Spesifikasi discovery, aktor pengguna, dan dekomposisi fitur MVP',
-                        'desc_en' => 'Discovery specs, user actors, and MVP feature decomposition',
-                        'count' => 3,
-                    ],
-                    'studio' => [
-                        'title_id' => 'Studio Visual & Diagram Arsitektur',
-                        'title_en' => 'Visual Studio & Architecture Diagrams',
-                        'desc_id' => 'Handoff developer, 4 chart studio, user flowchart, dan skema database ERD',
-                        'desc_en' => 'Developer handoff, 4 chart studio, user flow, and database ERD schema',
-                        'count' => 4,
-                    ],
-                    'infra' => [
-                        'title_id' => 'Infrastruktur Cloud & AI Database',
-                        'title_en' => 'Cloud Infrastructure & AI Database',
-                        'desc_id' => 'Evaluasi arsitektur VPS, PostgreSQL strict, Redis cache & backup',
-                        'desc_en' => 'VPS architecture evaluation, PostgreSQL strict, Redis cache & backup',
-                        'count' => 1,
-                    ],
-                    'legal' => [
-                        'title_id' => 'Investasi, SLA, Kontrak & Pembayaran',
-                        'title_en' => 'Investment, SLA, Contracts & Payment',
-                        'desc_id' => 'Opsi velocity pricing, timeline sprint, SLA garansi, dan kunci scope DP',
-                        'desc_en' => 'Velocity pricing tiers, sprint timeline, SLA warranty, and DP scope lock',
-                        'count' => 4,
-                    ],
-                ];
-            @endphp
 
             <!-- INTERACTIVE ARCHITECTURE INDEX & ACCORDION TABLE OF CONTENTS (QUICK JUMP) -->
             <div class="bg-white dark:bg-zinc-900 border-2 border-emerald-500/70 p-5 sm:p-7 mb-8 rounded-none shadow-sm relative no-print">
@@ -4431,7 +4590,13 @@ x-init="
                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 scale-95"
                     @click.outside="floatingIndexOpen = false"
-                    class="mb-3 w-[92vw] sm:w-[380px] max-h-[75vh] flex flex-col bg-white dark:bg-zinc-950 border-2 border-emerald-500 shadow-2xl rounded-none overflow-hidden"
+                    x-on:wheel.passive="(e) => {
+                        const scrollEl = $el.querySelector('.custom-prd-scrollbar');
+                        if (scrollEl && !scrollEl.contains(e.target)) {
+                            scrollEl.scrollTop += e.deltaY;
+                        }
+                    }"
+                    class="mb-3 w-[92vw] sm:w-[400px] h-[75vh] max-h-[720px] min-h-[350px] flex flex-col bg-white dark:bg-zinc-950 border-2 border-emerald-500 shadow-2xl rounded-none overflow-hidden"
                 >
                     <!-- Drawer Header -->
                     <div class="p-3.5 bg-zinc-900 text-white flex items-center justify-between border-b border-zinc-800">
@@ -4491,8 +4656,11 @@ x-init="
                         </button>
                     </div>
 
-                    <!-- Drawer Accordion Body (Scrollable) -->
-                    <div class="p-2 overflow-y-auto flex-1 space-y-2 text-xs divide-y divide-zinc-100 dark:divide-zinc-900">
+                    <!-- Drawer Accordion Body (Scrollable with mousewheel) -->
+                    <div 
+                        class="p-2 overflow-y-auto flex-1 min-h-0 space-y-2 text-xs divide-y divide-zinc-100 dark:divide-zinc-900 custom-prd-scrollbar select-none focus:outline-none"
+                        tabindex="0"
+                    >
                         @foreach($accordionGroupDefs as $groupKey => $groupDef)
                             <div class="pt-2 first:pt-0">
                                 <!-- Group Header Toggle -->
@@ -4628,6 +4796,7 @@ x-init="
             </aside>
 
         </main>
+    </div>
     @endif
 
     <!-- Interactive Midtrans Escrow & Voucher Payment Modal -->

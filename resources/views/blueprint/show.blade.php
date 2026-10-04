@@ -606,6 +606,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     getActiveSectionTitle() {
         const titles = {
             'section-1': { id: '01. Executive Discovery', en: '01. Executive Discovery' },
+            'section-1-5': { id: '01.5 Analisis ROI & Garansi', en: '01.5 Business ROI & Guarantees' },
             'section-2': { id: '02. RBAC & Aktor Sistem', en: '02. RBAC & System Actors' },
             'section-3': { id: '03. Rekayasa Fitur MVP', en: '03. Feature Engineering' },
             'section-3-5': { id: '04. Edukasi Handoff AI', en: '04. AI Handoff Playbook' },
@@ -622,7 +623,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
         return this.locale === 'en' ? s.en : s.id;
     },
     getActiveSectionIndex() {
-        const order = ['section-1', 'section-2', 'section-3', 'section-3-5', 'section-3-8', 'section-4', 'section-5', 'section-6', 'section-7', 'section-8', 'section-9', 'section-10'];
+        const order = ['section-1', 'section-1-5', 'section-2', 'section-3', 'section-3-5', 'section-3-8', 'section-4', 'section-5', 'section-6', 'section-7', 'section-8', 'section-9', 'section-10'];
         const idx = order.indexOf(this.activeSectionId);
         return idx >= 0 ? (idx + 1) : 1;
     }
@@ -877,6 +878,16 @@ x-init="
                         'subtitle_id' => '26 Parameter Arsitektur & Analisis Kebutuhan Bisnis',
                         'subtitle_en' => '26 Architecture Parameters & Business Needs Analysis',
                         'badge' => '26 PARAMS',
+                    ],
+                    [
+                        'id' => 'section-1-5',
+                        'num' => '01.5',
+                        'group' => 'scope',
+                        'title_id' => 'Analisis ROI & Garansi Bebas Penyesalan',
+                        'title_en' => 'Business ROI & No-Regret Guarantees',
+                        'subtitle_id' => 'Formula Balik Modal Cepat, Risiko Menunda & 5 Proteksi Klien',
+                        'subtitle_en' => 'Deadly ROI Equation, Cost of Inaction & 5 Client Protections',
+                        'badge' => 'KILLER ROI',
                     ],
                     [
                         'id' => 'section-2',
@@ -1585,6 +1596,170 @@ x-init="
                                 {{ $blueprint->user_metadata['termin_pembayaran'] ?? ($prd['executive_summary']['payment_milestones'] ?? 'Termin 1 (50% DP Kickoff) + Termin 2 (50% Pelunasan setelah UAT Lolos)') }}
                             </span>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 1.5: ANALISIS KELAYAKAN BISNIS, PROYEKSI ROI & 5 GARANSI BEBAS PENYESALAN -->
+            @php
+                $businessRoi = $prd['business_roi_analysis'] ?? \App\Services\PrdGeneratorService::generateBusinessRoiAnalysis(
+                    $blueprint, 
+                    $prd['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint)
+                );
+            @endphp
+            <section id="section-1-5" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-8 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01.5</span>
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                                <span x-text="locale === 'en' ? 'Business Feasibility, ROI & No-Regret Protections' : 'Analisis Kelayakan Bisnis, Proyeksi ROI & Garansi Bebas Penyesalan'">Analisis Kelayakan Bisnis, Proyeksi ROI &amp; Garansi Bebas Penyesalan</span>
+                            </h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mt-0.5" x-text="locale === 'en' ? 'Why this system is a high-yield revenue engine rather than a sunk operational cost.' : 'Alasan matematis mengapa investasi sistem ini menjadi mesin pencetak omzet, bukan biaya modal yang hilang.'">
+                                Alasan matematis mengapa investasi sistem ini menjadi mesin pencetak omzet, bukan biaya modal yang hilang.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto font-mono text-[11px]">
+                        <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold uppercase">
+                            {{ $businessRoi['domain_category'] ?? 'Custom Commercial Enterprise' }}
+                        </span>
+                        <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold uppercase">
+                            {{ $businessRoi['domain_badge'] ?? 'HIGH_TICKET' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- TOP BENCHMARK SUMMARY STRIP -->
+                <div class="mb-6 p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs font-mono">
+                    <div class="flex items-center gap-2">
+                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">● BENCHMARK PASAR:</span>
+                        <span class="text-zinc-700 dark:text-zinc-300 font-semibold">{{ $businessRoi['ticket_benchmark'] ?? 'Transaksi Komersial' }}</span>
+                    </div>
+                    <div class="text-zinc-500 dark:text-zinc-400 text-[11px]">
+                        Target BEP Realistis: <span class="text-emerald-600 dark:text-emerald-400 font-bold">{{ $businessRoi['deadly_roi_equation']['projected_annual_roi'] ?? '250% - 500%' }}</span>
+                    </div>
+                </div>
+
+                <!-- 2-COLUMNS: KILLER ROI EQUATION vs COST OF INACTION -->
+                <div class="grid lg:grid-cols-12 gap-6 mb-8">
+                    <!-- LEFT COLUMN (7 COLS): KILLER ROI EQUATION -->
+                    <div class="lg:col-span-7 bg-gradient-to-br from-emerald-950/20 via-zinc-950 to-zinc-950 p-6 border border-emerald-500/40 rounded-none flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                    <span x-text="locale === 'en' ? 'Deadly Sales ROI Equation' : 'Formula Balik Modal Cepat (Deadly ROI Angle)'">Formula Balik Modal Cepat (Deadly ROI Angle)</span>
+                                </span>
+                                <span class="text-[10px] font-mono px-2 py-0.5 bg-emerald-500 text-black font-extrabold uppercase">
+                                    HIGH-YIELD ASSET
+                                </span>
+                            </div>
+
+                            <h3 class="text-base sm:text-lg font-black text-white font-sans leading-snug mb-3">
+                                {{ $businessRoi['deadly_roi_equation']['headline'] ?? 'Balik Modal Cepat dari Transaksi Awal' }}
+                            </h3>
+
+                            <!-- FORMULA DISPLAY BOX -->
+                            <div class="p-3.5 bg-black/60 border border-emerald-500/50 rounded-none font-mono text-xs text-emerald-300 mb-4 leading-relaxed">
+                                <span class="text-[10px] text-zinc-400 block mb-1 font-sans uppercase font-bold tracking-wider">Perhitungan Matematis Nilai Transaksi:</span>
+                                <div class="font-bold text-white text-xs sm:text-sm">
+                                    {{ $businessRoi['deadly_roi_equation']['formula'] ?? '-' }}
+                                </div>
+                            </div>
+
+                            <p class="text-zinc-300 text-xs sm:text-sm font-sans leading-relaxed mb-4">
+                                {{ $businessRoi['deadly_roi_equation']['narrative'] ?? '' }}
+                            </p>
+                        </div>
+
+                        <div class="pt-4 border-t border-zinc-800 text-xs font-mono flex items-center justify-between">
+                            <span class="text-zinc-400">Estimasi Proyeksi ROI Tahun 1:</span>
+                            <span class="text-emerald-400 font-bold text-sm">{{ $businessRoi['deadly_roi_equation']['projected_annual_roi'] ?? '450%+' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN (5 COLS): COST OF INACTION & WIN-WIN STRATEGY -->
+                    <div class="lg:col-span-5 flex flex-col justify-between gap-4">
+                        <!-- COST OF INACTION CARD -->
+                        <div class="bg-rose-950/15 dark:bg-rose-950/25 p-5 border border-rose-500/40 rounded-none">
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="text-xs font-mono font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    <span x-text="locale === 'en' ? 'Cost of Inaction' : 'Biaya Fatal Jika Menunda'">Biaya Fatal Jika Menunda</span>
+                                </span>
+                                <span class="text-[9px] font-mono px-1.5 py-0.5 bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold uppercase">
+                                    LOST REVENUE
+                                </span>
+                            </div>
+
+                            <ul class="space-y-2.5 text-xs font-sans text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                                @foreach($businessRoi['cost_of_inaction']['risks'] ?? [] as $risk)
+                                    <li class="flex items-start gap-2">
+                                        <span class="text-rose-500 font-bold shrink-0 mt-0.5">✕</span>
+                                        <span>{{ $risk }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+
+                        <!-- WIN-WIN STRATEGY CARD -->
+                        <div class="bg-zinc-50 dark:bg-zinc-950 p-5 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                            <span class="text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider block mb-2 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>{{ $businessRoi['win_win_strategy']['title'] ?? 'Solusi Menang-Menang (Win-Win Phased Kickoff)' }}</span>
+                            </span>
+                            <p class="text-xs font-sans text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                {{ $businessRoi['win_win_strategy']['recommendation'] ?? 'Memulai dengan peluncuran modul lean fase 1 agar bisnis segera aktif dan menghasilkan omzet nyata.' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5 NO-REGRET GUARANTEES (NERIAH PRO COMMITMENT) -->
+                <div class="pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <div>
+                            <span class="text-xs font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                <span x-text="locale === 'en' ? '5 No-Regret Client Protections (Why You Will Never Regret Choosing Us)' : '5 Garansi Bebas Penyesalan Neriah Pro (Alasan Klien Tidak Pernah Menyesal)'">
+                                    5 Garansi Bebas Penyesalan Neriah Pro (Alasan Klien Tidak Pernah Menyesal)
+                                </span>
+                            </span>
+                            <p class="text-[11px] text-zinc-500 font-sans mt-0.5" x-text="locale === 'en' ? 'Standard contractual protections applied to every enterprise software delivered by neriahpro.com.' : 'Standar perlindungan kontraktual resmi yang berlaku di setiap sistem yang dibangun neriahpro.com.'">
+                                Standar perlindungan kontraktual resmi yang berlaku di setiap sistem yang dibangun neriahpro.com.
+                            </p>
+                        </div>
+                        <span class="text-[10px] font-mono px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase font-bold self-start sm:self-auto">
+                            100% PEACE OF MIND
+                        </span>
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                        @foreach($businessRoi['why_neriah_pro_guarantees'] ?? [] as $idx => $guarantee)
+                            <div class="bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 rounded-none hover:border-emerald-500/60 transition flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between gap-1 mb-2">
+                                        <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                            0{{ $idx + 1 }}
+                                        </span>
+                                        <span class="text-[9px] font-mono px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-800 font-bold">
+                                            {{ $guarantee['badge'] ?? 'GUARANTEED' }}
+                                        </span>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-zinc-900 dark:text-zinc-100 font-sans mb-1.5 leading-snug">
+                                        {{ $guarantee['title'] }}
+                                    </h4>
+                                    <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+                                        {{ $guarantee['desc'] }}
+                                    </p>
+                                </div>
+                                <div class="mt-3 pt-2 border-t border-zinc-200 dark:border-zinc-800/80 flex items-center gap-1 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>TERJAMIN KONTRAK</span>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </section>

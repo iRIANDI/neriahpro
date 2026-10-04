@@ -176,6 +176,7 @@ class PrdGeneratorService
             ],
             'architecture_evaluation' => self::evaluateArchitecture($businessName, $masalah, $mvpItems, $alurKerja, $extraContext),
             'itemized_cost_breakdown' => $itemizedEstimation,
+            'business_roi_analysis' => self::generateBusinessRoiAnalysis($blueprint, $itemizedEstimation),
             'velocity_pricing_options' => $itemizedEstimation['velocity_tiers'] ?? self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null, $businessName, $masalah),
             'governance_and_sla' => [
                 'title' => 'Tata Kelola, Standar Kualitas & SLA Serah Terima (Strict Governance & Handoff)',
@@ -964,6 +965,175 @@ class PrdGeneratorService
                 ['category' => 'Infrastructure & Runtime', 'name' => 'Dedicated VPS via Nixpacks & Docker', 'desc' => 'Container isolation, Nginx HTTP/2, automated SSL, Zero-downtime deploy'],
                 ['category' => 'AI Acceleration Engine', 'name' => 'Gemini Ultra / Pro API SDK', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
             ],
+        ];
+    }
+
+    /**
+     * Synthesize world-class domain business feasibility, killer ROI equation,
+     * cost of inaction, and Neriah Pro no-regret guarantees.
+     */
+    public static function generateBusinessRoiAnalysis(VisionBlueprint $blueprint, array $itemizedEstimation): array
+    {
+        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name . "'s Project");
+        $masalah = strtolower($blueprint->masalah_utama ?? '');
+        $tujuan = strtolower($blueprint->tujuan_utama ?? '');
+        $fitur = strtolower($blueprint->fitur_wajib ?? '');
+        $corpus = strtolower($businessName . ' ' . $masalah . ' ' . $tujuan . ' ' . $fitur);
+
+        $totalInvestasi = (float) ($itemizedEstimation['base_subtotal'] ?? 10000000.00);
+        $dpInvestasi = (float) ($itemizedEstimation['standard_dp'] ?? ($totalInvestasi * 0.50));
+
+        // Detect Domain
+        $isProperty = str_contains($corpus, 'villa') || str_contains($corpus, 'properti') || str_contains($corpus, 'property') ||
+                      str_contains($corpus, 'sewa') || str_contains($corpus, 'rental') || str_contains($corpus, 'tanah') ||
+                      str_contains($corpus, 'land') || str_contains($corpus, 'leasehold') || str_contains($corpus, 'sanur') ||
+                      str_contains($corpus, 'bali') || str_contains($corpus, 'canggu') || str_contains($corpus, 'ubud') ||
+                      str_contains($corpus, 'kavling') || str_contains($corpus, 'broker') || str_contains($corpus, 'arebi') ||
+                      str_contains($corpus, 'listing');
+
+        $isClinic = str_contains($corpus, 'klinik') || str_contains($corpus, 'pasien') || str_contains($corpus, 'dokter') ||
+                    str_contains($corpus, 'rekam medis') || str_contains($corpus, 'obat') || str_contains($corpus, 'apotek') ||
+                    str_contains($corpus, 'antrean') || str_contains($corpus, 'kesehatan');
+
+        $isLogistics = str_contains($corpus, 'logistik') || str_contains($corpus, 'ekspedisi') || str_contains($corpus, 'armada') ||
+                       str_contains($corpus, 'truk') || str_contains($corpus, 'kontainer') || str_contains($corpus, 'pengiriman') ||
+                       str_contains($corpus, 'resi') || str_contains($corpus, 'tracking') || str_contains($corpus, 'kurir');
+
+        $isChurch = str_contains($corpus, 'gereja') || str_contains($corpus, 'jemaat') || str_contains($corpus, 'ibadah') ||
+                    str_contains($corpus, 'warta') || str_contains($corpus, 'doa') || str_contains($corpus, 'persembahan');
+
+        $isCommerce = str_contains($corpus, 'marketplace') || str_contains($corpus, 'toko online') || str_contains($corpus, 'katalog') ||
+                      str_contains($corpus, 'keranjang') || str_contains($corpus, 'checkout') || str_contains($corpus, 'ecommerce');
+
+        if ($isProperty) {
+            $domainCategory = 'Villa Rental & Real Estate Agency';
+            $domainBadge = 'HIGH_TICKET_COMMERCIAL';
+            $ticketBenchmark = 'Rp 180.000.000 - Rp 650.000.000 / transaksi sewa/jual';
+            $roiHeadline = 'Cukup 1 Transaksi Closing Sewa Villa = 100% BEP Lunas!';
+            $roiFormula = 'Komisi 5% - 10% dari 1 Villa Sewa Tahunan (Rp 220M) = Rp 11.000.000 - Rp 22.000.000';
+            $roiNarrative = 'Dalam industri real estate & rental villa di Bali, komisi rata-rata broker adalah 5% s/d 10%. Sekali Anda berhasil melakukan closing pada 1 unit villa sewa tahunan standar (misal: villa di Sanur seharga Rp 220 juta/tahun), komisi yang Anda kantongi (Rp 11 juta s/d Rp 22 juta) langsung melunasi 100% total biaya investasi pembuatan sistem Neriah Pro (Rp ' . number_format($totalInvestasi, 0, ',', '.') . '). Setiap closing berikutnya adalah 100% keuntungan murni Anda.';
+            $projectedAnnualRoi = '450% - 1.200% (Estimasi realistis 3 - 6 transaksi closing di tahun pertama)';
+            $inactionRisks = [
+                'Kehilangan Calon Penyewa Expat / Turis: Wisatawan mancanegara menuntut katalog online dengan galeri foto jernih dan detail fasilitas transparan. Ketiadaan website membuat mereka langsung lari ke broker berlisensi lain.',
+                'Pemilik Villa (Owner) Enggan Menitipkan Listing: Pemilik villa mewah ratusan juta ragu mempercayakan aset berharganya kepada agen yang hanya mengandalkan status WhatsApp atau feed Instagram pribadi.',
+                'Lead Tercecer & Tidak Terekam: Pertanyaan calon penyewa hilang di tumpukan obrolan chat pribadi tanpa pipeline status ketersediaan (Available / Rented / Sold).',
+            ];
+            $phasedStrategy = 'Mulai dengan Fase 1 Lean Catalog MVP (Listing Properti, Detail Fasilitas, Galeri HD, Direct WhatsApp Concierge, & Dasbor Admin Filament v5) dengan termin 50/50. Website langsung beroperasi dalam 14-21 hari kerja untuk menangkap momentum sewa tanpa beban modal besar di awal.';
+        } elseif ($isClinic) {
+            $domainCategory = 'Healthcare & Clinical Information System';
+            $domainBadge = 'HIGH_IMPACT_HEALTHCARE';
+            $ticketBenchmark = 'Ratusan kunjungan pasien & resep obat harian';
+            $roiHeadline = 'Efisiensi Waktu & Pengendalian Selisih Stok Obat = Balik Modal dalam 2-3 Bulan';
+            $roiFormula = 'Penghematan Jam Antrean + Pengendalian Kebocoran Obat = Rp 5.000.000 - Rp 15.000.000 / bulan';
+            $roiNarrative = 'Digitalisasi pendaftaran pasien memangkas waktu tunggu hingga 70%, memungkinkan klinik melayani 20% lebih banyak pasien harian. Otomatisasi mutasi stok obat apotek mencegah selisih persediaan dan obat kedaluwarsa yang kerap merugikan klinik belasan juta per bulan.';
+            $projectedAnnualRoi = '250% - 500% dari efisiensi operasional dan peningkatan retensi pasien';
+            $inactionRisks = [
+                'Rekam Medis Kertas Rentan Rusak / Hilang: Risiko pelanggaran kepatuhan hukum dan lambatnya rujukan antar-dokter.',
+                'Antrean Menumpuk di Ruang Tunggu: Pasien frustrasi menunggu pendaftaran manual dan beralih ke fasilitas kesehatan lain.',
+                'Selisih Stok Obat Tidak Terdeteksi: Kerugian finansial akibat pencatatan manual buku apotek yang rentan salah hitung.',
+            ];
+            $phasedStrategy = 'Fase 1 memfokuskan pada Pendaftaran Pasien, Rekam Medis Terproteksi (RME), dan Mutasi Stok Apotek dengan termin 50/50 sebelum melangkah ke integrasi BPJS/SatuSehat di Fase 2.';
+        } elseif ($isLogistics) {
+            $domainCategory = 'Logistics & Fleet Operations Hub';
+            $domainBadge = 'HIGH_CONCURRENCY_SUPPLY_CHAIN';
+            $ticketBenchmark = 'Ribuan surat jalan & manifes pengiriman bulanan';
+            $roiHeadline = 'Otomatisasi Surat Jalan & Eliminasi Selisih Klaim = Balik Modal dalam 1-2 Bulan';
+            $roiFormula = 'Pencegahan Klaim Keterlambatan + Penghematan Waktu Admin = Rp 8.000.000 - Rp 20.000.000 / bulan';
+            $roiNarrative = 'Memangkas waktu rekonsiliasi manifes dan bukti serah terima (Proof of Delivery) dari 3 hari menjadi real-time. Membebaskan ratusan jam kerja staf operasional dan mengeliminasi klaim biaya akibat paket hilang atau salah antar.';
+            $projectedAnnualRoi = '350% - 700% dari efisiensi armada dan kecepatan penagihan invoice';
+            $inactionRisks = [
+                'Surat Jalan Kertas Hilang di Lapangan: Menghambat proses penagihan faktur dan memicu komplain pembayaran dari klien korporat.',
+                'Staf Lumpuh Meladeni Chat Manual: Waktu terbuang hanya untuk menjawab "paket saya sudah sampai mana?".',
+            ];
+            $phasedStrategy = 'Fase 1 mengotomatisasi pencatatan resi, tracking armada digital, dan portal tanda terima supir sebelum scale-up ke multi-cabang.';
+        } elseif ($isChurch) {
+            $domainCategory = 'Church Management & Faith Community OS';
+            $domainBadge = 'COMMUNITY_STEWARDSHIP';
+            $ticketBenchmark = 'Pelayanan ratusan hingga ribuan jemaat';
+            $roiHeadline = 'Efisiensi Warta Kertas & Bebas Biaya Langganan Bulanan Software Asing';
+            $roiFormula = 'Hemat Cetak Kertas Warta + Hemat Biaya Software Asing = Rp 15.000.000 - Rp 35.000.000 / tahun';
+            $roiNarrative = 'Menghilangkan beban cetak warta mingguan fisik dan membebaskan gereja dari biaya langganan bulanan software asing (seperti Elvanto/Planning Center) yang menguras kas pelayanan. Sekali bayar, sistem menjadi milik gereja selamanya.';
+            $projectedAnnualRoi = 'Stewardship Efisien: 100% alokasi persembahan kembali untuk pelayanan jemaat';
+            $inactionRisks = [
+                'Warta Cetak Mubazir: Puluhan rim kertas terbuang setiap minggu setelah ibadah selesai.',
+                'Database Jemaat Terfragmentasi: Data keluarga dan baptisan tercecer di laptop pribadi masing-masing pengurus.',
+            ];
+            $phasedStrategy = 'Menerapkan Subsidi Efisiensi Komunitas Neriah Pro dengan termin 50/50 agar pelayanan digital dapat langsung melayani jemaat tanpa kendala anggaran.';
+        } elseif ($isCommerce) {
+            $domainCategory = 'Independent Commercial Commerce Platform';
+            $domainBadge = 'DIRECT_TO_CONSUMER';
+            $ticketBenchmark = 'Volume transaksi ritel harian';
+            $roiHeadline = 'Bebas Potongan Komisi Marketplace (15-20%) = Balik Modal dalam 1-3 Bulan';
+            $roiFormula = 'Penghematan 15% Fee Marketplace dari Omzet Rp 50M = Rp 7.500.000 / bulan';
+            $roiNarrative = 'Setiap transaksi yang dialihkan ke portal mandiri langsung menghemat potongan fee pihak ketiga. Membangun basis data pelanggan milik sendiri tanpa perang harga.';
+            $projectedAnnualRoi = '300% - 600% dari margin keuntungan yang terselamatkan';
+            $inactionRisks = [
+                'Ketergantungan Akun Pihak Ketiga: Risiko akun ditutup sepihak atau algoritma berubah mendadak.',
+                'Data Pelanggan Bukan Milik Anda: Tidak bisa melakukan promosi langsung atau retensi pelanggan setia.',
+            ];
+            $phasedStrategy = 'Peluncuran toko mandiri dengan integrasi Midtrans Snap & Kurir Ekspedisi dalam 14 hari kerja.';
+        } else {
+            $domainCategory = 'Custom Business Operations & Client Management Engine';
+            $domainBadge = 'ENTERPRISE_OPERATIONS';
+            $ticketBenchmark = 'Operasional komersial terpadu';
+            $roiHeadline = 'Kredibilitas Nilai Jual & Otomatisasi Alur Kerja = Balik Modal dari 1-2 Klien Pertama';
+            $roiFormula = '1 Klien Baru Tertutup Berkat Kredibilitas Sistem = 100% BEP Investasi';
+            $roiNarrative = 'Sistem operasional modern meningkatkan positioning dan nilai tawar brand Anda di mata calon klien bernilai tinggi. Efisiensi pencatatan otomatis menghemat puluhan jam kerja tim setiap pekan.';
+            $projectedAnnualRoi = '250% - 500% dalam tahun pertama operasional';
+            $inactionRisks = [
+                'Citra Usaha Terlihat Kurang Profesional: Klien ragu membayar mahal pada bisnis yang pencatatannya masih serba manual.',
+                'Beban Kerja Berulang (Human-Error): Waktu berharga terbuang untuk rekap data rutin yang seharusnya bisa dikerjakan mesin.',
+            ];
+            $phasedStrategy = 'Mulai dengan arsitektur Modern Monolith teruji yang siap pakai dalam 14-21 hari kerja.';
+        }
+
+        $noRegretGuarantees = [
+            [
+                'title' => 'Kepemilikan Penuh 100% (Zero Vendor Lock-in)',
+                'desc' => 'Seluruh hak akses repositori privat GitHub dan basis data diserahkan penuh kepada Anda. Anda memegang kunci aset digital Anda sendiri tanpa ketergantungan sewa platform tertutup.',
+                'badge' => 'FULL_IP_OWNERSHIP',
+            ],
+            [
+                'title' => 'Garansi Scope Freeze SHA-256 (Nol Biaya Tersembunyi)',
+                'desc' => 'Seluruh rincian fitur pada PRD ini dikunci secara kriptografis. Anda tidak akan pernah mengalami tagihan biaya tambahan siluman di tengah pengerjaan sprint.',
+                'badge' => 'ZERO_HIDDEN_COSTS',
+            ],
+            [
+                'title' => 'Arsitektur Modern Monolith O(1) Tanpa Lemot',
+                'desc' => 'Ditenagai Laravel 13, Filament v5 Enterprise, dan PostgreSQL Strict ULID. Website tetap cepat diakses sub-detik bahkan saat data atau galeri foto bertambah ribuan.',
+                'badge' => 'O(1)_SCALABILITY',
+            ],
+            [
+                'title' => 'Desain Anti-AI-Slop & Tampilan Berkelas Internasional',
+                'desc' => 'Antarmuka dibangun dengan estetika berstandar Silicon Valley (Clean Typography, Subtle Radius, Zero Pop-up Murahan) yang menaikkan martabat brand Anda di hadapan klien kelas atas.',
+                'badge' => 'PREMIUM_AESTHETICS',
+            ],
+            [
+                'title' => 'Escrow Termin 50/50 Midtrans & Garansi 30 Hari Bug-Free',
+                'desc' => 'DP 50% diamankan via payment gateway resmi berizin Bank Indonesia. Pelunasan 50% hanya dibayarkan setelah Anda menguji dan menerima sistem secara nyata dengan garansi bug 30 hari penuh.',
+                'badge' => '100%_RISK_PROTECTION',
+            ],
+        ];
+
+        return [
+            'domain_category' => $domainCategory,
+            'domain_badge' => $domainBadge,
+            'ticket_benchmark' => $ticketBenchmark,
+            'deadly_roi_equation' => [
+                'headline' => $roiHeadline,
+                'formula' => $roiFormula,
+                'narrative' => $roiNarrative,
+                'projected_annual_roi' => $projectedAnnualRoi,
+            ],
+            'cost_of_inaction' => [
+                'title' => 'Biaya Fatal Menunda: Risiko & Kerugian Jika Tetap Membiarkan Proses Manual',
+                'risks' => $inactionRisks,
+            ],
+            'win_win_strategy' => [
+                'title' => 'Strategi Investasi Menang-Menang (Win-Win Phased Kickoff)',
+                'recommendation' => $phasedStrategy,
+            ],
+            'why_neriah_pro_guarantees' => $noRegretGuarantees,
         ];
     }
 
@@ -2851,6 +3021,7 @@ PROMPT;
         $tech = $prd['tech_stack'] ?? [];
         $governance = $prd['governance_and_sla'] ?? [];
         $pricing = $prd['velocity_pricing_options'] ?? [];
+        $businessRoi = $prd['business_roi_analysis'] ?? self::generateBusinessRoiAnalysis($blueprint, $prd['itemized_cost_breakdown'] ?? self::calculateItemizedEstimation($blueprint));
         $slop = self::getAntiAiSlopDesignSystem();
         $scalability = self::getBackendScalabilityManifesto();
         $handoff = self::getAgentHandoffProtocol($blueprint->nama_bisnis ?: $blueprint->client_name);
@@ -2882,6 +3053,52 @@ PROMPT;
         $md .= "- **Target Skala**: " . ($exec['target_scale'] ?? '0 - 100.000 Pengguna / Bulan') . "\n";
         $md .= "- **Jangkauan Pasar**: " . ($exec['market_reach'] ?? 'Domestik Indonesia') . "\n";
         $md .= "- **Filosofi Arsitektur**: " . ($exec['architecture_philosophy'] ?? '') . "\n\n";
+
+        // 1.5 Business Feasibility, ROI & No-Regret Guarantees
+        if (!empty($businessRoi)) {
+            $roiEq = $businessRoi['deadly_roi_equation'] ?? [];
+            $inaction = $businessRoi['cost_of_inaction'] ?? [];
+            $winWin = $businessRoi['win_win_strategy'] ?? [];
+            $guarantees = $businessRoi['why_neriah_pro_guarantees'] ?? [];
+
+            $md .= "## 1.5 Analisis Kelayakan Bisnis, Proyeksi ROI & 5 Garansi Bebas Penyesalan Neriah Pro\n\n";
+            $md .= "> **Domain Sektor Bisnis**: `{$businessRoi['domain_category']}` (`{$businessRoi['domain_badge']}`)  \n";
+            $md .= "> **Benchmark Transaksi Pasar**: `{$businessRoi['ticket_benchmark']}`\n\n";
+
+            $md .= "### A. Formula Balik Modal Cepat (Killer ROI Equation)\n";
+            $md .= "- **Target BEP**: **" . ($roiEq['headline'] ?? '-') . "**\n";
+            $md .= "- **Formula Hitungan Realistis**: `" . ($roiEq['formula'] ?? '-') . "`\n";
+            $md .= "- **Proyeksi ROI Tahun ke-1**: **" . ($roiEq['projected_annual_roi'] ?? '-') . "**\n";
+            $md .= "- **Rasional Analisis**: " . ($roiEq['narrative'] ?? '-') . "\n\n";
+
+            if (!empty($inaction['risks'])) {
+                $md .= "### B. " . ($inaction['title'] ?? 'Biaya Fatal Menunda (Cost of Inaction)') . "\n";
+                foreach ($inaction['risks'] as $risk) {
+                    $md .= "- ⚠️ {$risk}\n";
+                }
+                $md .= "\n";
+            }
+
+            if (!empty($winWin['recommendation'])) {
+                $md .= "### C. " . ($winWin['title'] ?? 'Strategi Investasi Menang-Menang (Win-Win Solution)') . "\n";
+                $md .= "{$winWin['recommendation']}\n\n";
+            }
+
+            if (!empty($guarantees)) {
+                $md .= "### D. 5 Garansi Bebas Penyesalan Neriah Pro (No-Regret Investment Guarantees)\n\n";
+                $md .= "| No | Garansi Perlindungan Klien | Deskripsi & Nilai Perlindungan | Badge Standar |\n";
+                $md .= "|---|---|---|---|\n";
+                $gIdx = 1;
+                foreach ($guarantees as $g) {
+                    $gTitle = $g['title'] ?? '-';
+                    $gDesc = $g['desc'] ?? '-';
+                    $gBadge = $g['badge'] ?? 'GUARANTEED';
+                    $md .= "| `0{$gIdx}` | **{$gTitle}** | {$gDesc} | `{$gBadge}` |\n";
+                    $gIdx++;
+                }
+                $md .= "\n";
+            }
+        }
 
         // 2. System Actors
         $md .= "## 2. Aktor Sistem & Matriks Hak Akses (RBAC)\n\n";

@@ -43,6 +43,8 @@ php artisan config:clear 2>/dev/null || true
 php artisan route:clear 2>/dev/null || true
 php artisan view:clear 2>/dev/null || true
 php artisan cache:clear 2>/dev/null || true
+php -r "if (function_exists('opcache_reset')) { opcache_reset(); }" 2>/dev/null || true
+php artisan tinker --execute="try { if (class_exists('App\Models\CmsPage')) { \$p = App\Models\CmsPage::where('slug', 'home')->first(); if (\$p && !empty(\$p->plugins)) { \$p->plugins = array_values(array_filter(\$p->plugins, fn(\$i) => !in_array(\$i['type'] ?? '', ['feature_grid', 'product_grid']))); \$p->save(); } } \Illuminate\Support\Facades\Cache::flush(); } catch (\Throwable \$e) {}" 2>/dev/null || true
 
 case $1 in
     1)
@@ -51,6 +53,7 @@ case $1 in
         php artisan route:clear
         php artisan view:clear
         php artisan cache:clear 2>/dev/null || true
+        php -r "if (function_exists('opcache_reset')) { opcache_reset(); }" 2>/dev/null || true
         ;;
     2)
         echo "--- Menjalankan Skenario 2: Migrate Safe ---"

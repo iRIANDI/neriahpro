@@ -184,11 +184,14 @@
             @endphp
             @if($plugin->is_active ?? true)
                 @php
-                    $pluginName = '';
                     $type = $plugin->plugin_type ?? $plugin->type ?? '';
+                @endphp
+                @if(in_array($type, ['feature_grid', 'product_grid']))
+                    @continue
+                @endif
+                @php
+                    $pluginName = '';
                     if($type == 'hero_section') $pluginName = 'HeroIsland';
-                    // 3 Pillars Arsenal is removed as requested by user because all workflows are unified in /blueprint
-                    if($type == 'feature_grid' || $type == 'product_grid') $pluginName = '';
                     if($type == 'onboarding_form' && $featureFlags['enable_client_onboarding']) $pluginName = 'ClientOnboardingIsland';
                     if($type == 'cv_pricing_table' || $type == 'pricing_section') {
                         // Hide pricing table completely if CV Pro is disabled or in Midtrans strict mode

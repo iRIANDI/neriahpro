@@ -84,6 +84,14 @@ class PageController extends Controller
             abort(404);
         }
 
+        // Hard filter: ensure feature_grid and product_grid are completely purged from plugins array
+        if (! empty($page->plugins) && is_array($page->plugins)) {
+            $page->plugins = array_values(array_filter($page->plugins, function ($item) {
+                $type = is_array($item) ? ($item['type'] ?? $item['plugin_type'] ?? '') : ($item->type ?? $item->plugin_type ?? '');
+                return !in_array($type, ['feature_grid', 'product_grid']);
+            }));
+        }
+
         $globalSettings = CmsGlobalSetting::getAllCached();
 
         return view('page', compact('page', 'globalSettings'));

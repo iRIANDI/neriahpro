@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\PaymentWebhookLog;
 use App\Models\VisionBlueprint;
 use App\Models\Document;
+use App\Models\BlueprintVoucher;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class MidtransWebhookController extends Controller
 {
@@ -87,33 +89,46 @@ class MidtransWebhookController extends Controller
 
     /**
      * Fulfill blueprint project or contract based on order ID.
+     * Consumes voucher quota strictly when payment is confirmed settled.
      */
     protected function fulfillOrder(string $orderId, Request $request): void
     {
-        // Check for attached digital contract document
-        $document = Document::where('midtrans_order_id', $orderId)->first();
-        if ($document) {
-            $document->update([
-                'status' => 'signed',
-                'signed_at' => now(),
-                'signer_ip_address' => $request->ip(),
-            ]);
+        $processedVouchers = [];
 
-            if ($document->related instanceof VisionBlueprint) {
-                $blueprint = $document->related;
-                $blueprint->update([
-                    'project_status' => 'In Development (DP Paid)',
+        // 1. Check for attached digital contract document(s) matching orderId
+        $documents = Document::where('midtrans_order_id', $orderId)->get();
+        if ($documents->isNotEmpty()) {
+            foreach ($documents as $document) {
+                $document->update([
+                    'status' => 'signed',
+                    'signed_at' => now(),
+                    'signer_ip_address' => $request->ip(),
                 ]);
-                $blueprint->provisionStagingUrl();
-                if (!$blueprint->signed_agreement) {
-                    $blueprint->recordSignOff($request->ip(), $request->userAgent());
+
+                if ($document->related instanceof VisionBlueprint) {
+                    $blueprint = $document->related;
+                    $blueprint->update([
+                        'project_status' => 'In Development (DP Paid)',
+                    ]);
+                    $blueprint->provisionStagingUrl();
+                    if (!$blueprint->signed_agreement) {
+                        $blueprint->recordSignOff($request->ip(), $request->userAgent());
+                    }
+
+                    // Increment voucher quota on settlement (only once per voucher code)
+                    if (!empty($blueprint->voucher_code) && !in_array($blueprint->voucher_code, $processedVouchers)) {
+                        $voucher = BlueprintVoucher::where('code', $blueprint->voucher_code)->first();
+                        if ($voucher) {
+                            $voucher->incrementUsage();
+                            $processedVouchers[] = $blueprint->voucher_code;
+                        }
+                    }
                 }
-                return;
             }
         }
 
-        // Direct matching for NP-BP-{first8Id}-{time}
-        if (str_starts_with($orderId, 'NP-BP-')) {
+        // 2. Direct matching for NPRO-DP-{first8Id}-{time} or legacy NP-BP-{first8Id}-{time}
+        if (str_starts_with($orderId, 'NPRO-DP-') || str_starts_with($orderId, 'NP-BP-')) {
             $parts = explode('-', $orderId);
             if (isset($parts[2])) {
                 $shortId = $parts[2];
@@ -125,6 +140,63 @@ class MidtransWebhookController extends Controller
                     $blueprint->provisionStagingUrl();
                     if (!$blueprint->signed_agreement) {
                         $blueprint->recordSignOff($request->ip(), $request->userAgent());
+                    }
+
+                    // Increment voucher quota on settlement
+                    if (!empty($blueprint->voucher_code) && !in_array($blueprint->voucher_code, $processedVouchers)) {
+                        $voucher = BlueprintVoucher::where('code', $blueprint->voucher_code)->first();
+                        if ($voucher) {
+                            $voucher->incrementUsage();
+                            $processedVouchers[] = $blueprint->voucher_code;
+                        }
+                    }
+
+                    // Update corresponding document if exists
+                    $doc = Document::where('related_id', $blueprint->id)
+                        ->where('related_type', VisionBlueprint::class)
+                        ->first();
+                    if ($doc) {
+                        $doc->update([
+                            'status' => 'signed',
+                            'signed_at' => now(),
+                            'signer_ip_address' => $request->ip(),
+                            'midtrans_order_id' => $orderId,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // 3. Cart Order fulfillment fallback: NP-CART-...
+        if (str_starts_with($orderId, 'NP-CART-')) {
+            $cachedOrder = Cache::get('cart_order_' . $orderId);
+            if ($cachedOrder && !empty($cachedOrder['slugs'])) {
+                foreach ($cachedOrder['slugs'] as $slug) {
+                    $blueprint = VisionBlueprint::where('slug', $slug)->first();
+                    if ($blueprint) {
+                        $blueprint->update([
+                            'project_status' => 'In Development (DP Paid)',
+                        ]);
+                        $blueprint->provisionStagingUrl();
+                        if (!$blueprint->signed_agreement) {
+                            $blueprint->recordSignOff($request->ip(), $request->userAgent());
+                        }
+
+                        if (!empty($blueprint->voucher_code) && !in_array($blueprint->voucher_code, $processedVouchers)) {
+                            $voucher = BlueprintVoucher::where('code', $blueprint->voucher_code)->first();
+                            if ($voucher) {
+                                $voucher->incrementUsage();
+                                $processedVouchers[] = $blueprint->voucher_code;
+                            }
+                        }
+                    }
+                }
+
+                if (!empty($cachedOrder['voucher_code']) && !in_array($cachedOrder['voucher_code'], $processedVouchers)) {
+                    $voucher = BlueprintVoucher::where('code', $cachedOrder['voucher_code'])->first();
+                    if ($voucher) {
+                        $voucher->incrementUsage();
+                        $processedVouchers[] = $cachedOrder['voucher_code'];
                     }
                 }
             }

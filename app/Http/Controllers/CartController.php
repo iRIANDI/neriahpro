@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class CartController extends Controller
 {
@@ -409,9 +410,39 @@ class CartController extends Controller
             ], $snapResponse['status_code'] ?? 500);
         }
 
-        if ($appliedVoucher) {
-            $appliedVoucher->incrementUsage();
+        // Persist Cart item linkages to Document model and Cache for Webhook settlement
+        foreach ($cart as $cSlug => $item) {
+            $bp = VisionBlueprint::where('slug', $cSlug)->first();
+            if ($bp) {
+                if ($appliedVoucher) {
+                    $bp->update(['voucher_code' => $appliedVoucher->code]);
+                }
+                Document::updateOrCreate(
+                    [
+                        'related_type' => VisionBlueprint::class,
+                        'related_id' => $bp->id,
+                        'document_type' => 'contract',
+                    ],
+                    [
+                        'title' => 'Perjanjian Kerja Sama - ' . ($bp->nama_bisnis ?: $bp->client_name),
+                        'status' => 'pending_signature',
+                        'scope_locked' => true,
+                        'contract_amount' => (float) ($item['contract_amount'] ?? 50000000),
+                        'dp_amount' => (float) ($item['dp_amount'] ?? 25000000),
+                        'midtrans_order_id' => $orderId,
+                        'signer_name' => $firstClientName ?: ($bp->nama_bisnis ?: $bp->client_name),
+                        'signer_email' => $firstEmail ?: $bp->email,
+                        'document_hash' => $bp->document_sha256 ?: $bp->calculatePrdHash(),
+                    ]
+                );
+            }
         }
+
+        // Cache cart order mapping for fail-safe webhook fulfillment
+        Cache::put('cart_order_' . $orderId, [
+            'slugs' => array_keys($cart),
+            'voucher_code' => $appliedVoucher?->code,
+        ], now()->addDays(7));
 
         return response()->json([
             'success' => true,

@@ -441,9 +441,28 @@ class BlueprintController extends Controller
         }
 
         if ($voucher) {
-            $voucher->incrementUsage();
             $blueprint->update(['voucher_code' => $voucher->code]);
         }
+
+        // Attach/update Digital Contract Document with order_id for webhook fulfillment
+        Document::updateOrCreate(
+            [
+                'related_type' => VisionBlueprint::class,
+                'related_id' => $blueprint->id,
+                'document_type' => 'contract',
+            ],
+            [
+                'title' => 'Perjanjian Kerja Sama - ' . ($blueprint->nama_bisnis ?: $blueprint->client_name),
+                'status' => 'pending_signature',
+                'scope_locked' => true,
+                'contract_amount' => $contractAmount,
+                'dp_amount' => $finalDpAmount,
+                'midtrans_order_id' => $orderId,
+                'signer_name' => $blueprint->client_name ?: $blueprint->nama_bisnis,
+                'signer_email' => $blueprint->email,
+                'document_hash' => $blueprint->document_sha256 ?: $blueprint->calculatePrdHash(),
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -624,6 +643,94 @@ class BlueprintController extends Controller
         
         return response($md, 200, [
             'Content-Type' => 'text/plain; charset=UTF-8',
+        ]);
+    }
+
+    /**
+     * Update and elaborate technical tasks and features for a blueprint proposal.
+     * Guarded against scope lock (only allowed before contract is signed).
+     */
+    public function updateTasks(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+
+        // 1. Guard against Scope Freeze (locked document)
+        $isScopeLocked = (bool) $blueprint->signed_agreement || $blueprint->documents()->where('scope_locked', true)->exists();
+        if ($isScopeLocked) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dokumen PRD telah ditandatangani dan terkunci secara digital (Scope Freeze). Setiap perubahan atau penambahan task baru harus diajukan melalui Addendum / Change Request (CR) resmi.',
+            ], 403);
+        }
+
+        $request->validate([
+            'mvp_tasks' => 'required|array|min:1',
+            'mvp_tasks.*.title' => 'required|string|max:255',
+            'mvp_tasks.*.desc' => 'nullable|string|max:1000',
+            'mvp_tasks.*.category' => 'nullable|string|max:100',
+            'mvp_tasks.*.sprint_phase' => 'nullable|string|max:50',
+            'phase2_tasks' => 'nullable|array',
+            'phase2_tasks.*.title' => 'required|string|max:255',
+            'phase2_tasks.*.desc' => 'nullable|string|max:1000',
+            'phase2_tasks.*.category' => 'nullable|string|max:100',
+            'phase2_tasks.*.sprint_phase' => 'nullable|string|max:50',
+        ]);
+
+        $mvpTasks = $request->input('mvp_tasks', []);
+        $phase2Tasks = $request->input('phase2_tasks', []);
+
+        // Format into normalized text lines for database columns
+        $fiturWajibLines = [];
+        foreach ($mvpTasks as $idx => $t) {
+            $title = trim($t['title'] ?? '');
+            $desc = trim($t['desc'] ?? '');
+            $fiturWajibLines[] = $title . (!empty($desc) ? ' - ' . $desc : '');
+        }
+
+        $fiturTambahanLines = [];
+        foreach ($phase2Tasks as $idx => $t) {
+            $title = trim($t['title'] ?? '');
+            $desc = trim($t['desc'] ?? '');
+            $fiturTambahanLines[] = $title . (!empty($desc) ? ' - ' . $desc : '');
+        }
+
+        $blueprint->fitur_wajib = implode("\n", $fiturWajibLines);
+        $blueprint->fitur_tambahan = implode("\n", $fiturTambahanLines);
+
+        // Update structured prd_content
+        $prd = $blueprint->prd_content ?? [];
+        $prd['features']['mvp_phase1'] = $mvpTasks;
+        $prd['features']['phase2_roadmap'] = $phase2Tasks;
+
+        if (isset($prd['engineering_specs']['mvp_specs'])) {
+            $prd['engineering_specs']['mvp_specs'] = $mvpTasks;
+        }
+        if (isset($prd['engineering_specs']['phase2_specs'])) {
+            $prd['engineering_specs']['phase2_specs'] = $phase2Tasks;
+        }
+
+        $blueprint->prd_content = $prd;
+
+        // Recalculate itemized cost breakdown with the updated tasks
+        $itemized = \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
+        $prd['itemized_cost_breakdown'] = $itemized;
+        $prd['velocity_pricing_options'] = $itemized['velocity_tiers'] ?? ($prd['velocity_pricing_options'] ?? []);
+        $blueprint->prd_content = $prd;
+
+        // Recalculate cryptographic hash of the new specification
+        $blueprint->document_sha256 = $blueprint->calculatePrdHash();
+        $blueprint->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar task & spesifikasi fitur berhasil dielaborasi dan disimpan!',
+            'document_sha256' => $blueprint->document_sha256,
+            'mvp_count' => count($mvpTasks),
+            'phase2_count' => count($phase2Tasks),
+            'itemized_summary' => [
+                'base_total' => $itemized['base_contract_amount'] ?? 0,
+                'items_count' => count($itemized['items'] ?? []),
+            ]
         ]);
     }
 }

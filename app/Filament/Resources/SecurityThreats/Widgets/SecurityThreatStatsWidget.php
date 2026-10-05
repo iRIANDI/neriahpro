@@ -13,7 +13,14 @@ class SecurityThreatStatsWidget extends BaseWidget
         try {
             $totalThreats = SecurityThreatLog::count();
             $blockedIps = SecurityThreatLog::where('is_blocked', true)->distinct('ip_address')->count('ip_address');
-            $criticalExploits = SecurityThreatLog::whereIn('threat_type', ['rce_system_call', 'php_object_deserialization', 'python_dataset_rce'])->count();
+            $criticalExploits = SecurityThreatLog::whereIn('threat_type', [
+                'rce_system_call',
+                'php_object_deserialization',
+                'python_dataset_loader_exploit',
+                'python_system_execution',
+                'python_dataset_rce',
+                'ssti_template_injection',
+            ])->count();
             $topTarget = SecurityThreatLog::select('endpoint')
                 ->groupBy('endpoint')
                 ->orderByRaw('count(*) desc')

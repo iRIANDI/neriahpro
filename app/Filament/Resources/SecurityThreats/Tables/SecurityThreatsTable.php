@@ -42,15 +42,20 @@ class SecurityThreatsTable
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'rce_system_call' => 'RCE (System Call)',
+                        'python_dataset_loader_exploit' => 'Dataset Loader Exploit (HF/Gym)',
+                        'python_system_execution' => 'Python Subprocess/OS',
                         'php_object_deserialization' => 'Unsafe Deserialization',
                         'php_info_probe' => 'PHP Recon / Info Leak',
                         'python_dataset_rce' => 'Dataset Loader Exploit',
                         'critical_path_traversal' => 'Path Traversal',
+                        'ssti_template_injection' => 'Template Injection (SSTI)',
+                        'autonomous_recon_probing' => 'Sensitive Recon Probe',
+                        'autonomous_velocity_burst' => 'Velocity Burst Anomaly',
                         default => ucfirst(str_replace('_', ' ', $state)),
                     })
                     ->color(fn (string $state): string => match ($state) {
-                        'rce_system_call', 'php_object_deserialization', 'python_dataset_rce' => 'danger',
-                        'critical_path_traversal', 'php_info_probe' => 'warning',
+                        'rce_system_call', 'python_dataset_loader_exploit', 'python_system_execution', 'php_object_deserialization', 'ssti_template_injection' => 'danger',
+                        'critical_path_traversal', 'php_info_probe', 'autonomous_recon_probing', 'autonomous_velocity_burst' => 'warning',
                         default => 'secondary',
                     })
                     ->sortable(),
@@ -86,10 +91,14 @@ class SecurityThreatsTable
                     ->label('Tipe Serangan')
                     ->options([
                         'rce_system_call' => 'RCE (System Call)',
+                        'python_dataset_loader_exploit' => 'Dataset Loader Exploit (HF/Gym)',
+                        'python_system_execution' => 'Python Subprocess/OS',
                         'php_object_deserialization' => 'Unsafe Deserialization',
-                        'python_dataset_rce' => 'Dataset Loader Exploit',
                         'php_info_probe' => 'PHP Recon / Probe',
                         'critical_path_traversal' => 'Path Traversal',
+                        'ssti_template_injection' => 'Template Injection (SSTI)',
+                        'autonomous_recon_probing' => 'Sensitive Recon Probe',
+                        'autonomous_velocity_burst' => 'Velocity Burst Anomaly',
                     ]),
 
                 TernaryFilter::make('is_blocked')

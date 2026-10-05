@@ -25,13 +25,21 @@ class SecurityThreatInfolist
                             ->badge()
                             ->formatStateUsing(fn (string $state): string => match ($state) {
                                 'rce_system_call' => 'RCE (System Call Execution)',
+                                'python_dataset_loader_exploit' => 'Dataset Loader Exploit (HF/Gym)',
+                                'python_system_execution' => 'Python Subprocess/OS Injection',
                                 'php_object_deserialization' => 'Unsafe Deserialization',
                                 'python_dataset_rce' => 'Dataset Loader Exploit',
                                 'php_info_probe' => 'PHP Recon / Info Leak',
                                 'critical_path_traversal' => 'Path Traversal',
+                                'ssti_template_injection' => 'Template Injection (SSTI)',
+                                'autonomous_recon_probing' => 'Sensitive Recon Probe',
+                                'autonomous_velocity_burst' => 'Velocity Burst Anomaly',
                                 default => ucfirst(str_replace('_', ' ', $state)),
                             })
-                            ->color('danger'),
+                            ->color(fn (string $state): string => match ($state) {
+                                'rce_system_call', 'python_dataset_loader_exploit', 'python_system_execution', 'php_object_deserialization', 'ssti_template_injection' => 'danger',
+                                default => 'warning',
+                            }),
 
                         TextEntry::make('endpoint')
                             ->label('Target Endpoint URL')

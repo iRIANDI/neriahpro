@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Exceptions\SecurityException;
+use App\Jobs\ProcessSecureDataset;
 use App\Models\InterviewSession;
 use App\Models\OutreachLetter;
 use App\Models\Resume;
@@ -210,6 +212,9 @@ class CvProApiController extends Controller
 
         try {
             $file = $request->file('cv_file');
+
+            // 0. Sandboxed dataset & file security inspection
+            ProcessSecureDataset::inspectAndSanitizeUploadedFile($file);
             
             // 1. Convert file to Markdown via Microsoft MarkItDown replica service
             $markItDownService = new \App\Services\MarkItDown\MarkItDownService();
@@ -234,6 +239,13 @@ class CvProApiController extends Controller
                     'ats_audit' => $atsAudit,
                 ],
             ]);
+        } catch (SecurityException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'message' => 'Pelanggaran keamanan berkas: Berkas ditolak oleh AI-Shield Ingestion Pipeline.',
+                'code' => 'SECURE_INGESTION_REJECTED',
+            ], 403);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,

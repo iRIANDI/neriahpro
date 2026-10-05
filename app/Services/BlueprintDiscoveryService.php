@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Exceptions\SecurityException;
+use App\Jobs\ProcessSecureDataset;
 use App\Services\MarkItDown\MarkItDownService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -59,6 +61,9 @@ class BlueprintDiscoveryService
         foreach ($uploadedFiles as $file) {
             if ($file instanceof UploadedFile && $file->isValid()) {
                 try {
+                    // Sandboxed inspection against executable scripts & dataset loader exploits
+                    ProcessSecureDataset::inspectAndSanitizeUploadedFile($file);
+
                     $originalName = $file->getClientOriginalName();
                     $fileExt = strtolower($file->getClientOriginalExtension());
                     $fileBase = pathinfo($originalName, PATHINFO_FILENAME);

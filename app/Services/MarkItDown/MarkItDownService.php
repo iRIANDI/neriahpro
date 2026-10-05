@@ -49,8 +49,8 @@ class MarkItDownService
             'pdf' => $this->convertPdfToMarkdown($filePath),
             'png', 'jpg', 'jpeg', 'webp', 'bmp' => $this->convertImageScanToMarkdown($filePath, $options),
             'csv', 'tsv' => $this->convertCsvToMarkdown($filePath),
-            'html', 'htm' => $this->convertHtmlToMarkdown(file_get_contents($filePath)),
-            'txt', 'md' => file_get_contents($filePath),
+            'html', 'htm' => $this->convertHtmlToMarkdown($this->readRawContent($file, $filePath)),
+            'txt', 'md' => $this->readRawContent($file, $filePath),
             default => $this->convertFallbackToMarkdown($filePath),
         };
 
@@ -64,6 +64,30 @@ class MarkItDownService
                 'converted_at' => now()->toIso8601String(),
             ],
         ];
+    }
+
+    /**
+     * Safely read raw content from UploadedFile or file path, avoiding stream locking on Windows.
+     */
+    protected function readRawContent(string|UploadedFile $file, string $filePath): string
+    {
+        if ($file instanceof \Illuminate\Http\Testing\File && isset($file->tempFile) && is_resource($file->tempFile)) {
+            rewind($file->tempFile);
+            $res = stream_get_contents($file->tempFile);
+            rewind($file->tempFile);
+            return $res;
+        }
+
+        if ($file instanceof UploadedFile) {
+            try {
+                $content = $file->get();
+                if (!empty($content)) {
+                    return $content;
+                }
+            } catch (\Throwable) {}
+        }
+
+        return @file_get_contents($filePath) ?: '';
     }
 
     /**

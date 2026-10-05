@@ -11,6 +11,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -97,6 +98,7 @@ class LeadContactsTable
                     ->label('Kirim Email')
                     ->icon('heroicon-o-paper-airplane')
                     ->color('primary')
+                    ->visible(fn () => auth()->user()?->hasRole('super_admin') || auth()->user()?->email === 'yoseph.iriandi.tambunan@gmail.com')
                     ->form([
                         TextInput::make('sender_name')
                             ->label('Nama Pengirim (Display Name)')
@@ -206,6 +208,7 @@ class LeadContactsTable
                         }
                     }),
 
+                ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

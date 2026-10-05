@@ -47,29 +47,48 @@ class MidtransComplianceAndRbacTest extends TestCase
         $this->assertTrue($rolePolicy->viewAny($superadmin));
     }
 
-    public function test_midtrans_reviewer_can_only_access_project_os_and_blocked_from_rbac(): void
+    public function test_midtrans_reviewer_can_only_access_project_os_and_client_transaction_contracts(): void
     {
         $reviewer = User::where('email', 'reviewer.midtrans@neriahpro.com')->firstOrFail();
         $this->actingAs($reviewer);
 
-        // Project OS MUST be allowed
+        // 1. Project OS & Client Architecture MUST be viewable
         $this->assertTrue(\App\Filament\Resources\VisionBlueprints\VisionBlueprintResource::canViewAny());
         $this->assertTrue(\App\Filament\Resources\Documents\DocumentResource::canViewAny());
         $this->assertTrue(\App\Filament\Resources\DomainHostingAssets\DomainHostingAssetResource::canViewAny());
 
-        // Non-Project OS MUST be strictly forbidden / hidden
+        // 2. Client Transactions, Services Catalog & Legal Compliance MUST be viewable by reviewer
+        $this->assertTrue(\App\Filament\Resources\Transactions\TransactionResource::canViewAny());
+        $this->assertTrue(\App\Filament\Resources\Products\ProductResource::canViewAny());
+        $this->assertTrue(\App\Filament\Resources\LegalPolicies\LegalPolicyResource::canViewAny());
+        $this->assertTrue(\App\Filament\Resources\LeadContacts\LeadContactResource::canViewAny());
+
+        // 3. Reviewer MUST have strictly Read-Only access (No create or delete permissions on live records)
+        $this->assertFalse(\App\Filament\Resources\Transactions\TransactionResource::canCreate());
+        $this->assertFalse(\App\Filament\Resources\Products\ProductResource::canCreate());
+        $this->assertFalse(\App\Filament\Resources\Documents\DocumentResource::canCreate());
+        $this->assertFalse(\App\Filament\Resources\LegalPolicies\LegalPolicyResource::canCreate());
+        $this->assertFalse(\App\Filament\Resources\LeadContacts\LeadContactResource::canCreate());
+        $this->assertFalse(\App\Filament\Resources\DomainHostingAssets\DomainHostingAssetResource::canCreate());
+
+        $this->assertFalse(\App\Filament\Resources\Transactions\TransactionResource::canDeleteAny());
+        $this->assertFalse(\App\Filament\Resources\Products\ProductResource::canDeleteAny());
+        $this->assertFalse(\App\Filament\Resources\Documents\DocumentResource::canDeleteAny());
+        $this->assertFalse(\App\Filament\Resources\LegalPolicies\LegalPolicyResource::canDeleteAny());
+        $this->assertFalse(\App\Filament\Resources\LeadContacts\LeadContactResource::canDeleteAny());
+        $this->assertFalse(\App\Filament\Resources\DomainHostingAssets\DomainHostingAssetResource::canDeleteAny());
+
+        // 4. Non-Developer & Internal features MUST remain strictly forbidden / hidden
         $this->assertFalse(\App\Filament\Resources\CvProPlans\CvProPlanResource::canViewAny());
         $this->assertFalse(\App\Filament\Resources\Resumes\ResumeResource::canViewAny());
         $this->assertFalse(\App\Filament\Resources\InterviewSessions\InterviewSessionResource::canViewAny());
-        $this->assertFalse(\App\Filament\Resources\Products\ProductResource::canViewAny());
-        $this->assertFalse(\App\Filament\Resources\Transactions\TransactionResource::canViewAny());
         $this->assertFalse(\App\Filament\Resources\CmsPages\CmsPageResource::canViewAny());
         $this->assertFalse(\App\Filament\Resources\SecurityThreats\SecurityThreatResource::canViewAny());
 
         // Settings Page MUST be hidden
         $this->assertFalse(\App\Filament\Pages\ManageSettings::canAccess());
 
-        // RBAC MUST be blocked
+        // RBAC Shield MUST be blocked
         $rolePolicy = new \App\Policies\RolePolicy();
         $this->assertFalse($rolePolicy->viewAny($reviewer));
     }
@@ -83,7 +102,8 @@ class MidtransComplianceAndRbacTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('PROJECT OS');
         $response->assertSee('MIDTRANS COMPLIANCE READY');
-        $response->assertSee('tidak berasumsi 100%');
+        $response->assertSee('Yoseph Iriandi Tambunan');
+        $response->assertSee('Midtrans Snap');
     }
 
     /**
@@ -97,17 +117,16 @@ class MidtransComplianceAndRbacTest extends TestCase
 
         $response->assertStatus(200);
 
-        // Project OS features MUST be present
+        // Project OS & Client Transaction features MUST be present
         $response->assertSee('PORTAL REVIEWER');
-        $response->assertSee('WORKSPACE PROJECT OS');
         $response->assertSee('Kuesioner Blueprint');
         $response->assertSee('Daftar Blueprint Proyek');
         $response->assertSee('Kontrak Perjanjian Digital');
+        $response->assertSee('Riwayat Transaksi Midtrans');
+        $response->assertSee('Katalog Produk');
+        $response->assertSee('Kebijakan Refund');
         $response->assertSee('Aset Domain');
-        $response->assertSee('Server VPS');
-        $response->assertSee('Cart DP');
-        $response->assertSee('Snap Settlement');
-        $response->assertSee('Form Onboarding Klien');
+        $response->assertSee('Database CRM Leads Klien');
         $response->assertSee('MIDTRANS REVIEWER');
 
         // All CV features MUST be completely absent

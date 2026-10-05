@@ -101,7 +101,7 @@
                         <span style="font-size: 12px; color: #38bdf8;">→</span>
                     </div>
                     <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">Daftar Blueprint Proyek</div>
-                    <div style="font-size: 11px; color: #a1a1aa; line-height: 1.4;">Data komprehensif seluruh submission blueprint, ringkasan eksekutif, dan status penguncian scope.</div>
+                    <div style="font-size: 11px; color: #a1a1aa; line-height: 1.4;">Data komprehensif submission blueprint klien, ringkasan eksekutif, dan status penguncian scope.</div>
                 </a>
 
                 <!-- Reviewer Card 3: Digital Contracts -->
@@ -111,37 +111,57 @@
                         <span style="font-size: 12px; color: #10b981;">→</span>
                     </div>
                     <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">Kontrak Perjanjian Digital</div>
-                    <div style="font-size: 11px; color: #a1a1aa; line-height: 1.4;">Surat perjanjian kerja sama digital berkekuatan hukum, tanda tangan elektronik, & hash SHA-256.</div>
+                    <div style="font-size: 11px; color: #a1a1aa; line-height: 1.4;">Surat perjanjian kerja sama digital berkekuatan hukum, klausul garansi, tanda tangan digital, & hash SHA-256.</div>
                 </a>
 
-                <!-- Reviewer Card 4: Domain & Hosting Assets -->
-                <a href="/admin/domain-hosting-assets" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#27272a'">
+                <!-- Reviewer Card 4: Midtrans Transactions -->
+                <a href="/admin/transactions" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#f59e0b'" onmouseout="this.style.borderColor='#27272a'">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #a855f7; font-weight: 700;">INFRASTRUKTUR PROYEK</span>
+                        <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #f59e0b; font-weight: 700;">MIDTRANS SETTLEMENT</span>
+                        <span style="font-size: 12px; color: #f59e0b;">→</span>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">Riwayat Transaksi Midtrans</div>
+                    <div style="font-size: 11px; color: #a1a1aa; line-height: 1.4;">Audit mutasi pembayaran DP klien, order ID Midtrans Snap, status settlement, dan total IDR.</div>
+                </a>
+
+                <!-- Reviewer Card 5: Products & Services Catalog -->
+                <a href="/admin/products" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#06b6d4'" onmouseout="this.style.borderColor='#27272a'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #06b6d4; font-weight: 700;">COMMERCE & BILLING</span>
+                        <span style="font-size: 12px; color: #06b6d4;">→</span>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">Katalog Produk & Layanan</div>
+                    <div style="font-size: 11px; color: #a1a1aa; line-height: 1.4;">Paket jasa web development resmi (Modern Monolith, PRD Architecture, Contract E-Sign) & tarif IDR.</div>
+                </a>
+
+                <!-- Reviewer Card 6: Legal Policies & Refund -->
+                <a href="/admin/legal-policies" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#27272a'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #a855f7; font-weight: 700;">KEPATUHAN REGULASI</span>
                         <span style="font-size: 12px; color: #a855f7;">→</span>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">Legalitas & Kebijakan Refund</div>
+                    <div style="font-size: 11px; color: #a1a1aa; line-height: 1.4;">Syarat & Ketentuan kontrak kerja sama, Kebijakan Privasi, dan Kebijakan Pembatalan / Pengembalian DP.</div>
+                </a>
+
+                <!-- Reviewer Card 7: Domain & Hosting Assets -->
+                <a href="/admin/domain-hosting-assets" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#38bdf8'" onmouseout="this.style.borderColor='#27272a'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #38bdf8; font-weight: 700;">INFRASTRUKTUR PROYEK</span>
+                        <span style="font-size: 12px; color: #38bdf8;">→</span>
                     </div>
                     <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">Aset Domain & Server VPS</div>
                     <div style="font-size: 11px; color: #a1a1aa; line-height: 1.4;">Pencatatan alokasi domain, hosting cloud VPS, sertifikat SSL, dan masa perpanjangan server klien.</div>
                 </a>
 
-                <!-- Reviewer Card 5: Cart & Midtrans Snap -->
-                <a href="/cart" target="_blank" rel="noopener noreferrer" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#f59e0b'" onmouseout="this.style.borderColor='#27272a'">
+                <!-- Reviewer Card 8: CRM Leads -->
+                <a href="/admin/lead-contacts" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='#27272a'">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #f59e0b; font-weight: 700;">COMMERCE & CHECKOUT</span>
-                        <span style="font-size: 12px; color: #f59e0b;">↗</span>
+                        <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #10b981; font-weight: 700;">LEAD INTAKE CRM</span>
+                        <span style="font-size: 12px; color: #10b981;">→</span>
                     </div>
-                    <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">Cart DP & Snap Settlement</div>
-                    <div style="font-size: 11px; color: #a1a1aa; line-height: 1.4;">Alur pembayaran uang muka (DP 50%) proyek via Midtrans Snap terikat dengan dokumen kontrak.</div>
-                </a>
-
-                <!-- Reviewer Card 6: Onboarding Form -->
-                <a href="/#onboarding" target="_blank" rel="noopener noreferrer" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='#27272a'">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #10b981; font-weight: 700;">LEAD INTAKE</span>
-                        <span style="font-size: 12px; color: #10b981;">↗</span>
-                    </div>
-                    <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">Form Onboarding Klien</div>
-                    <div style="font-size: 11px; color: #a1a1aa; line-height: 1.4;">Antarmuka kuesioner intake cepat kebutuhan bisnis dan identitas PIC calon klien.</div>
+                    <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">Database CRM Leads Klien</div>
+                    <div style="font-size: 11px; color: #a1a1aa; line-height: 1.4;">Data intake calon klien yang mengajukan konsultasi arsitektur web development via formulir onboarding.</div>
                 </a>
             @else
                 <!-- Superadmin Card 1: Project OS -->

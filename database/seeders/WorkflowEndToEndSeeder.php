@@ -11,6 +11,7 @@ use App\Models\LegalPolicy;
 use App\Models\VisionBlueprint;
 use App\Models\Document;
 use App\Models\Transaction;
+use App\Models\LeadContact;
 
 class WorkflowEndToEndSeeder extends Seeder
 {
@@ -35,6 +36,9 @@ class WorkflowEndToEndSeeder extends Seeder
 
         // 5. SEED SETTLED DP TRANSACTION (PILAR 4: MIDTRANS PROOF)
         $this->seedTransaction($products['monolith'], $contract);
+
+        // 6. SEED CRM CLIENT INTAKE LEAD
+        $this->seedLeadContacts();
 
         Schema::enableForeignKeyConstraints();
 
@@ -302,6 +306,27 @@ class WorkflowEndToEndSeeder extends Seeder
                     'payment_type' => 'bank_transfer',
                     'bank' => 'bca',
                     'settled_at' => now()->subDays(2)->toIso8601String(),
+                ],
+            ]
+        );
+    }
+
+    private function seedLeadContacts(): void
+    {
+        LeadContact::updateOrCreate(
+            ['email' => 'alexander@apexlogistics.co.id'],
+            [
+                'name' => 'Alexander Wijaya',
+                'company_name' => 'PT Apex Logistics Global',
+                'job_title' => 'VP of Logistics Operations',
+                'phone' => '+62 812-8899-7711',
+                'status' => 'client',
+                'metadata' => [
+                    'inquiry' => 'Kebutuhan sistem manifest digital terpusat real-time dengan status pengiriman armada, invoice digital otomatis, dan gateway pembayaran Midtrans.',
+                    'budget_range' => 'Rp 50.000.000 - Rp 100.000.000',
+                    'service_interest' => 'Enterprise Rapid Monolith Development & Architecture PRD',
+                    'lead_source' => 'Website Onboarding Intake Form',
+                    'onboarded_at' => now()->subDays(5)->toIso8601String(),
                 ],
             ]
         );

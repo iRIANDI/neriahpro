@@ -43,10 +43,10 @@
                         Keterangan Layanan Digital & Verifikasi Akun Merchant Midtrans:
                     </p>
                     <p style="margin: 0 0 10px 0;">
-                        Aplikasi ini adalah platform <strong>Digital Architecture / Project OS</strong> yang dirancang secara khusus untuk membedah dan mentransformasikan visi bisnis klien menjadi dokumen spesifikasi arsitektur komprehensif (Product Requirements Document / PRD, Entity Relationship Diagram / ERD PostgreSQL Strict ULID, Pemilihan Tech Stack, Timeline Sprint MVP, Diagram Visual Mermaid, Boilerplate Scaffold Kode .zip, dan Surat Kontrak Kerja Sama Digital berintegritas hash SHA-256).
+                        Platform <strong>neriahpro.com</strong> adalah instrumen operasional resmi milik <strong>Yoseph Iriandi Tambunan</strong> (Web Developer & Software Architect) untuk melayani klien dalam perancangan spesifikasi sistem (Product Requirements Document / PRD, Entity Relationship Diagram / ERD PostgreSQL Strict ULID, Pemilihan Tech Stack, Timeline Sprint MVP, Boilerplate Scaffold Kode .zip), pengikatan kontrak kerja sama digital berintegritas hash SHA-256, serta penagihan uang muka Down Payment (DP 50%) via payment gateway Midtrans Snap.
                     </p>
                     <p style="margin: 0; color: #a1a1aa;">
-                        <strong style="color: #10b981;">Tujuan Utama & Scope Freeze:</strong> Memastikan implementasi kode oleh AI coding assistant maupun software developer <em>tidak berasumsi 100%</em> atas logika bisnis klien, mengunci ruang lingkup pekerjaan (scope freeze) secara legal untuk mencegah scope creep, serta memberikan dasar deliverable yang jelas dan transparan sebelum komitmen pembayaran Down Payment (DP) 50% via Midtrans Snap diproses.
+                        <strong style="color: #10b981;">Tujuan Utama & Scope Freeze:</strong> Memastikan seluruh pengerjaan kode tidak berasumsi atas kebutuhan bisnis klien, mengunci ruang lingkup pekerjaan (scope freeze) secara legal untuk mencegah scope creep, serta memberikan dasar deliverable yang jelas dan transparan sebelum komitmen pembayaran Down Payment (DP 50%) via Midtrans Snap diproses.
                     </p>
                 </div>
             </div>

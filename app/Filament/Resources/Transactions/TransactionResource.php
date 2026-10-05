@@ -18,7 +18,7 @@ use Filament\Tables\Table;
 
 class TransactionResource extends Resource
 {
-    use \App\Filament\Traits\RestrictedToSuperAdmin;
+    use \App\Filament\Traits\AuditableByMidtransReviewer;
 
     protected static ?string $model = Transaction::class;
 

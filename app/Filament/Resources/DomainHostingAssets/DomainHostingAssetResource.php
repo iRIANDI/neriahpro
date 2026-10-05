@@ -16,6 +16,8 @@ use Filament\Tables\Table;
 
 class DomainHostingAssetResource extends Resource
 {
+    use \App\Filament\Traits\AuditableByMidtransReviewer;
+
     protected static ?string $model = DomainHostingAsset::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-server-stack';

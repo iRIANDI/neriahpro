@@ -15,7 +15,7 @@ use Filament\Tables\Table;
 
 class LeadContactResource extends Resource
 {
-    use \App\Filament\Traits\RestrictedToSuperAdmin;
+    use \App\Filament\Traits\AuditableByMidtransReviewer;
 
     protected static ?string $model = LeadContact::class;
 

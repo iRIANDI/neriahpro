@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Documents\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Actions\Action;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
@@ -88,6 +89,7 @@ class DocumentsTable
                     ->url(fn ($record) => route('document.preview', $record))
                     ->openUrlInNewTab(),
 
+                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

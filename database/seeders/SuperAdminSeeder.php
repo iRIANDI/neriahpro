@@ -50,15 +50,27 @@ class SuperAdminSeeder extends Seeder
             $reviewer->assignRole($reviewerRole);
         }
 
-        // Assign Project OS permissions to midtrans_reviewer
-        $projectOsPermissions = [
+        // Assign Project OS & Compliance Audit permissions to midtrans_reviewer
+        $reviewerPermissions = [
             'ViewAny:VisionBlueprint',
             'View:VisionBlueprint',
             'Create:VisionBlueprint',
             'Update:VisionBlueprint',
+            'ViewAny:Document',
+            'View:Document',
+            'ViewAny:DomainHostingAsset',
+            'View:DomainHostingAsset',
+            'ViewAny:Transaction',
+            'View:Transaction',
+            'ViewAny:Product',
+            'View:Product',
+            'ViewAny:LegalPolicy',
+            'View:LegalPolicy',
+            'ViewAny:LeadContact',
+            'View:LeadContact',
         ];
 
-        foreach ($projectOsPermissions as $permName) {
+        foreach ($reviewerPermissions as $permName) {
             $perm = Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
             if (!$reviewerRole->hasPermissionTo($perm)) {
                 $reviewerRole->givePermissionTo($perm);

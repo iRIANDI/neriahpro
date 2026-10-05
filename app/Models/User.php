@@ -37,6 +37,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasRole('super_admin') 
             || $this->email === 'yoseph.iriandi.tambunan@gmail.com'
+            || $this->hasRole('midtrans_reviewer')
             || $this->email === 'reviewer.midtrans@neriahpro.com';
     }
 

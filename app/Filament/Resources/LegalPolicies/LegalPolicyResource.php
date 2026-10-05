@@ -16,13 +16,13 @@ use Filament\Tables\Table;
 
 class LegalPolicyResource extends Resource
 {
-    use \App\Filament\Traits\RestrictedToSuperAdmin;
+    use \App\Filament\Traits\AuditableByMidtransReviewer;
 
     protected static ?string $model = LegalPolicy::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Settings';
+    protected static string | \UnitEnum | null $navigationGroup = 'Contracts & Legal';
 
     protected static ?string $navigationLabel = 'Legal & Kebijakan';
 
@@ -30,7 +30,7 @@ class LegalPolicyResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Kebijakan Legal';
 
-    protected static ?int $navigationSort = 90;
+    protected static ?int $navigationSort = 16;
 
     protected static ?string $recordTitleAttribute = 'type';
 

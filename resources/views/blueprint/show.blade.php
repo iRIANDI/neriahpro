@@ -679,11 +679,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 scaffoldLoading: false,
                 scaffoldActiveTab: 'docker-compose.yml',
                 scaffoldFiles: {},
-                collaborators: [
-                    { id: 'lead_arch', name: 'Lead Architect (Neriah Pro)', role: 'Lead Architect', is_architect: true },
-                    { id: 'client_pic', name: @json($blueprint->client_name ?: 'Klien'), role: 'Klien / Stakeholder', is_architect: false }
-                ],
-                collaboratorCursor: { x: 42, y: 28, visible: true, name: 'Lead Architect (Neriah Pro)' },
+                collaborators: [],
+                collaboratorCursor: { x: 0, y: 0, visible: false, name: '' },
                 async openScaffoldModal() {
                     this.scaffoldModalOpen = true;
                     if (Object.keys(this.scaffoldFiles).length === 0) {
@@ -991,11 +988,17 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     if (d && d.collaborators && d.collaborators.length > 0) {
                                         this.collaborators = d.collaborators;
                                         const other = d.collaborators.find(c => c.id !== cid);
-                                        if (other) {
-                                            this.collaboratorCursor = { x: other.x || 42, y: other.y || 28, visible: true, name: other.name || 'Lead Architect (Neriah Pro)' };
+                                        if (other && other.x !== undefined && other.y !== undefined) {
+                                            this.collaboratorCursor = { x: other.x, y: other.y, visible: true, name: other.name || 'Lead Architect (Neriah Pro)' };
+                                        } else {
+                                            this.collaboratorCursor.visible = false;
                                         }
+                                    } else {
+                                        this.collaboratorCursor.visible = false;
                                     }
-                                }).catch(() => {});
+                                }).catch(() => {
+                                    this.collaboratorCursor.visible = false;
+                                });
                             };
                             syncPresence();
                             setInterval(() => syncPresence(window.lastMouseX || 42, window.lastMouseY || 28), 4500);
@@ -1013,38 +1016,43 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 <body x-data="blueprintApp()" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- Header Navigation Bar (Sharp Precision Theme) -->
-    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-3 px-6 sticky top-0 z-50 no-print transition-colors">
-        <div class="max-w-6xl mx-auto flex items-center justify-between">
-            <a href="/" class="text-sm font-black uppercase tracking-tight flex items-center gap-2 text-zinc-900 dark:text-white">
-                <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black flex items-center justify-center text-xs font-mono font-bold rounded-none">N</span>
-                <span>NERIAH<span class="text-emerald-500">PRO</span> // PRD SPEC</span>
-            </a>
+    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-2.5 px-4 sm:px-6 sticky top-0 z-50 no-print transition-colors">
+        <div class="w-full max-w-[1700px] mx-auto flex items-center justify-between gap-3 overflow-x-auto custom-prd-scrollbar py-0.5">
+            <!-- Left Branding -->
+            <div class="flex items-center gap-3 shrink-0">
+                <a href="/" class="text-sm font-black uppercase tracking-tight flex items-center gap-2 text-zinc-900 dark:text-white shrink-0">
+                    <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black flex items-center justify-center text-xs font-mono font-bold rounded-none">N</span>
+                    <span class="whitespace-nowrap">NERIAH<span class="text-emerald-500">PRO</span> <span class="hidden sm:inline text-zinc-400 font-normal">// PRD SPEC</span></span>
+                </a>
 
-            <div class="flex items-center gap-2 sm:gap-3">
                 <!-- Real-time Live Collaborative Presence Indicator -->
-                <div class="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-mono">
+                <div x-show="collaborators.length > 1" x-cloak class="hidden 2xl:flex items-center gap-2 px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-mono shrink-0 whitespace-nowrap">
                     <span class="w-2 h-2 bg-emerald-500 rounded-none animate-pulse"></span>
-                    <span class="text-zinc-700 dark:text-zinc-300 font-bold" x-text="collaborators.length > 1 ? (collaborators.length + ' Kolaborator Live') : 'Live Sync Online'">2 Kolaborator Live</span>
+                    <span class="text-zinc-700 dark:text-zinc-300 font-bold" x-text="collaborators.length + ' Kolaborator Live'"></span>
                 </div>
+            </div>
 
+            <!-- Right Actions Toolbar -->
+            <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
                 <!-- One-Click Scaffold & Boilerplate Exporter Modal Button -->
-                <button type="button" @click="openScaffoldModal()" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-none" title="Ekspor Docker Compose, SQL Migrasi, & Struktur Route">
+                <button type="button" @click="openScaffoldModal()" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap" title="Ekspor Docker Compose, SQL Migrasi, & Struktur Route">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    <span>EXPORT SCAFFOLD</span>
+                    <span class="hidden sm:inline">EXPORT SCAFFOLD</span>
+                    <span class="sm:hidden">SCAFFOLD</span>
                 </button>
 
                 <!-- Dual-Language Toggle Button (Tier 1: Native Dual-Locale) -->
-                <button @click="setLocale(locale === 'id' ? 'en' : 'id')" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5" title="Tier 1: Ganti Bahasa Native / Switch Native Locale">
+                <button @click="setLocale(locale === 'id' ? 'en' : 'id')" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer" title="Tier 1: Ganti Bahasa Native / Switch Native Locale">
                     <span class="w-2 h-2 rounded-none" :class="locale === 'en' ? 'bg-sky-500' : 'bg-emerald-500'"></span>
-                    <span x-text="locale === 'id' ? 'TIER 1: ID ➔ EN' : 'TIER 1: EN ➔ ID'">TIER 1: ID ➔ EN</span>
+                    <span x-text="locale === 'id' ? 'ID ➔ EN' : 'EN ➔ ID'">ID ➔ EN</span>
                 </button>
 
                 @if($googleTranslateEnabled)
                 <!-- Dual-Language Dropdown (Tier 2: Global Google Translate Whitelist) -->
-                <div x-data="{ openLang: false, activeLang: 'ID' }" class="relative inline-block text-left" @click.outside="openLang = false">
-                    <button type="button" @click="openLang = !openLang" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5 cursor-pointer" title="Tier 2: Pemilih Bahasa Global (Google Translate Whitelist)">
+                <div x-data="{ openLang: false, activeLang: 'ID' }" class="relative inline-block text-left shrink-0" @click.outside="openLang = false">
+                    <button type="button" @click="openLang = !openLang" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap" title="Tier 2: Pemilih Bahasa Global (Google Translate Whitelist)">
                         <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
-                        <span class="hidden sm:inline font-bold uppercase text-[10px] tracking-wider text-emerald-600 dark:text-emerald-400">TIER 2:</span>
+                        <span class="hidden sm:inline font-bold uppercase text-[10px] tracking-wider text-emerald-600 dark:text-emerald-400">GLOBAL:</span>
                         <span class="uppercase text-[11px]" x-text="activeLang">ID</span>
                         <svg class="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
@@ -1066,51 +1074,53 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 </div>
                 @endif
 
-                <button onclick="toggleTheme()" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono rounded-none border border-zinc-300 dark:border-zinc-700 transition">
-                    THEME
+                <!-- Unified Document Actions: Print, PDF, MD -->
+                <div class="hidden sm:inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
+                    <button type="button" onclick="window.print()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Cetak PRD">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        <span class="hidden md:inline">PRINT</span>
+                    </button>
+                    <a href="{{ route('blueprint.download-pdf', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh PDF">
+                        <span>PDF</span>
+                    </a>
+                    <a href="{{ route('blueprint.download-md', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Markdown">
+                        <span>MD</span>
+                    </a>
+                </div>
+
+                <!-- Theme Toggle Button -->
+                <button type="button" onclick="toggleTheme()" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono rounded-none border border-zinc-300 dark:border-zinc-700 transition shrink-0 flex items-center gap-1 cursor-pointer whitespace-nowrap" title="Toggle Dark/Light Mode">
+                    <svg class="w-3.5 h-3.5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg class="w-3.5 h-3.5 block dark:hidden text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    <span class="hidden xl:inline text-[11px] font-bold">THEME</span>
                 </button>
-                <button onclick="window.print()" class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                    <span class="hidden sm:inline" x-text="locale === 'en' ? 'Print' : 'Cetak'">Cetak</span>
-                </button>
-                <a href="{{ route('blueprint.download-pdf', $blueprint->slug) }}" class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition">
-                    <span>PDF</span>
-                </a>
-                <a href="{{ route('blueprint.download-md', $blueprint->slug) }}" class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition">
-                    <span>MD</span>
-                </a>
 
                 <!-- Dedicated AI AGENT HELPER Trigger -->
-                <button type="button" @click="showAiPromptModal = true" class="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 flex items-center gap-1.5 transition" title="Buka Pusat Helper Prompt AI Agent (Antigravity, Cursor, Claude Code, Windsurf)">
+                <button type="button" @click="showAiPromptModal = true" class="px-2.5 sm:px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Buka Pusat Helper Prompt AI Agent (Antigravity, Cursor, Claude Code, Windsurf)">
                     <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                    <span>PROMPT AGENT</span>
+                    <span class="hidden md:inline">PROMPT AGENT</span>
                 </button>
 
                 <!-- AI Orchestration Sprint Cockpit Button in Header -->
-                <button type="button" @click="jumpTo('section-3-5')" class="px-2.5 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none border border-zinc-700 dark:border-emerald-400 flex items-center gap-1.5 transition" title="Buka AI Agent Sprint Execution Cockpit">
+                <button type="button" @click="jumpTo('section-3-5')" class="px-2.5 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none border border-zinc-700 dark:border-emerald-400 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Buka AI Agent Sprint Execution Cockpit">
                     <span class="w-1.5 h-1.5 rounded-none" :class="getDevCompletedCount() > 0 ? 'bg-emerald-400 dark:bg-black animate-pulse' : 'bg-amber-400 dark:bg-black'"></span>
-                    <span class="hidden lg:inline">COCKPIT SPRINT:</span>
+                    <span class="hidden lg:inline">COCKPIT:</span>
                     <span x-text="getDevCompletedCount() + '/' + {{ $totalDevSteps }}"></span>
                 </button>
 
-                <a href="{{ route('blueprint.create', ['slug' => $blueprint->slug]) }}" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 transition flex items-center gap-1" title="Lengkapi / Tambah Kebutuhan di Studio">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                    <span class="hidden md:inline" x-text="locale === 'en' ? 'EDIT SPEC' : 'LENGKAPI SPESIFIKASI'">LENGKAPI SPESIFIKASI</span>
-                </a>
-
                 @if(!($blueprint->signed_agreement || ($isScopeLocked ?? false)))
-                    <a href="{{ route('blueprint.show', $blueprint->slug) }}?regenerate=1" class="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono uppercase font-bold border border-amber-500/30 transition flex items-center gap-1" title="Sintesis Ulang PRD">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        <span class="hidden md:inline">REGENERATE</span>
+                    <a href="{{ route('blueprint.create', ['slug' => $blueprint->slug]) }}" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 transition flex items-center gap-1 shrink-0 whitespace-nowrap" title="Lengkapi / Tambah Kebutuhan di Studio">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <span class="hidden xl:inline" x-text="locale === 'en' ? 'EDIT SPEC' : 'LENGKAPI'">LENGKAPI</span>
                     </a>
                 @else
-                    <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-xs font-mono uppercase font-bold border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 cursor-not-allowed select-none" title="Scope Terkunci: Dokumen telah ditandatangani dan tidak dapat diregenerasi.">
+                    <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-xs font-mono uppercase font-bold border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 cursor-not-allowed select-none shrink-0 whitespace-nowrap" title="Scope Terkunci: Dokumen telah ditandatangani dan tidak dapat diregenerasi.">
                         <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        <span class="hidden md:inline">LOCKED (SHA-256)</span>
+                        <span class="hidden md:inline">LOCKED</span>
                     </span>
                 @endif
                 
-                <div class="h-6 w-px bg-zinc-300 dark:bg-zinc-700 mx-1 hidden sm:block"></div>
+                <div class="h-6 w-px bg-zinc-300 dark:bg-zinc-700 mx-0.5 hidden sm:block shrink-0"></div>
 
                 @php
                     $rawCart = session('neriah_cart', []);
@@ -1133,21 +1143,21 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 @endphp
 
                 <!-- Cart Navigation Button with Anti-Ghost Hold Timer -->
-                <a href="{{ route('cart.index') }}" class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition">
+                <a href="{{ route('cart.index') }}" class="px-2.5 sm:px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap">
                     <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     <span>CART</span>
                     @if($cartCount > 0)
                         <span class="px-1.5 py-0.2 bg-emerald-500 text-black text-[10px] font-bold">{{ $cartCount }}</span>
                         @if($minRemaining)
-                            <span class="text-[10px] text-amber-500 font-bold hidden sm:inline" id="nav-cart-timer" data-rem="{{ $minRemaining }}">⏱️ {{ gmdate('H:i:s', $minRemaining) }}</span>
+                            <span class="text-[10px] text-amber-500 font-bold hidden xl:inline" id="nav-cart-timer" data-rem="{{ $minRemaining }}">⏱️ {{ gmdate('H:i:s', $minRemaining) }}</span>
                         @endif
                     @endif
                 </a>
 
                 @auth
                     <!-- User Dropdown Navigation Board -->
-                    <div class="relative" @click.outside="userMenuOpen = false">
-                        <button @click="userMenuOpen = !userMenuOpen" class="px-3 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black hover:bg-black dark:hover:bg-emerald-400 text-xs font-mono uppercase font-bold border border-zinc-900 dark:border-emerald-500 flex items-center gap-1.5 cursor-pointer transition">
+                    <div class="relative shrink-0" @click.outside="userMenuOpen = false">
+                        <button @click="userMenuOpen = !userMenuOpen" class="px-2.5 sm:px-3 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black hover:bg-black dark:hover:bg-emerald-400 text-xs font-mono uppercase font-bold border border-zinc-900 dark:border-emerald-500 flex items-center gap-1.5 cursor-pointer transition shrink-0 whitespace-nowrap">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             <span class="max-w-[110px] truncate">{{ explode(' ', Auth::user()->name)[0] }}</span>
                             <svg class="w-3 h-3 transition-transform" :class="userMenuOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -1174,7 +1184,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             </div>
                             <form method="POST" action="{{ Route::has('logout') ? route('logout') : url('/logout') }}" class="m-0">
                                 @csrf
-                                <button type="submit" class="w-full text-left flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition">
+                                <button type="submit" class="w-full text-left flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer">
                                     <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                                     <span>LOG OUT</span>
                                 </button>
@@ -1182,7 +1192,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     </div>
                 @else
-                    <a href="{{ Route::has('login') ? route('login') : url('/login') }}" class="px-3 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none transition flex items-center gap-1">
+                    <a href="{{ Route::has('login') ? route('login') : url('/login') }}" class="px-2.5 sm:px-3 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none transition flex items-center gap-1 shrink-0 whitespace-nowrap">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
                         LOGIN
                     </a>

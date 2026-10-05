@@ -144,7 +144,7 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/lang/{locale}`: Switcher bahasa (`id` / `en`) dengan persistensi session dan cookie.
 - `/admin`: Panel admin Filament v5 dengan database notifications (PostgreSQL `jsonb` schema).
 - `/admin/login`: Customized Enterprise Login Portal (`App\Filament\Pages\Auth\Login`) dengan Vision & Mission Pillars, 1-Click Demo Credential Assistant, dan System Telemetry (Split-Screen Desktop & Responsive Portrait).
-- `/admin/settings`: Pengaturan Global (`ManageSettings.php`) dengan tab General, Midtrans, Domain Expiration, AI Integrations, dan **Frontend Feature Flags** (toggle saklar on/off untuk CV Pro, Job Hub, Keuangan Pro, Mock Interview, LinkedIn Suite, Vision Blueprint, dsb).
+- `/admin/settings`: Pengaturan Global (`ManageSettings.php`) dengan tab General, Multi-Language (2-Tier Locale: Native ID/EN & Google Translate Whitelist), Frontend Feature Flags (toggle saklar on/off untuk CV Pro, Job Hub, Keuangan Pro, Mock Interview, LinkedIn Suite, Vision Blueprint, dsb), Navigation & Footer, dan SEO Schema Markup.
 - `/{slug?}`: Fallback dinamis CMS page (`PageController::show`).
 - `api/vision-blueprint`: Endpoint POST penyimpanan form Project OS dengan Honeypot anti-spam (`throttle:30,1`), normalisasi nomor WhatsApp internasional dengan selector kode negara dari `config/countries.php`, dan filter anti-awalan 0.
 
@@ -153,9 +153,9 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 ## 5. Layanan Inti & Background Scheduler
 
 - **`App\Services\ScaffoldGeneratorService`**:
-  Mesin sintesis boilerplate dan scaffold kode dari dokumen PRD/ERD: menghasilkan file `docker-compose.yml` (PHP 8.4, PostgreSQL 16, Redis 7, Nginx, Mailpit), `.env.example`, migrasi SQL `schema_complete.sql` lengkap dengan skema strict ULID (`VARCHAR(26)`), routing web & API Laravel 13, serta Next.js App Router API route (`route.ts`). Mengemasnya ke dalam file `.zip` sekali klik via `ZipArchive`.
+  Mesin sintesis boilerplate dan scaffold kode dari dokumen PRD/ERD: menghasilkan file `docker-compose.yml` (PHP 8.4, PostgreSQL 16, Redis 7, Nginx, Mailpit), `.env.example`, migrasi SQL `schema_complete.sql` lengkap dengan skema strict ULID (`VARCHAR(26)`), spesifikasi REST API OpenAPI 3.0 (`openapi.json` siap impor ke Postman/Swagger), routing web & API Laravel 13, serta Next.js App Router API route (`route.ts`). Mengemasnya ke dalam file `.zip` sekali klik via `ZipArchive`.
 - **`App\Services\PrdGeneratorService`**:
-  Mesin sintesis PRD Ultimate & Technical Architecture: mendekomposisi kebutuhan bisnis menjadi vertical slices terstruktur (Frontend Anti-AI-Slop, Backend Keyset O(1) & ULID, API Contracts, dan AI Code Agent Prompt Directives), visualisasi diagram alur kerja Mermaid Flowchart, skema relasional Mermaid ERD PostgreSQL, evaluasi infrastruktur (Hosting Ladder & Scale Matrix), serta generator dokumen Markdown (.md) komprehensif.
+  Mesin sintesis PRD Ultimate & Technical Architecture: mendekomposisi kebutuhan bisnis menjadi vertical slices terstruktur (Frontend Anti-AI-Slop, Backend Keyset O(1) & ULID, API Contracts, dan AI Code Agent Prompt Directives), visualisasi diagram alur kerja Mermaid Flowchart, skema relasional Mermaid ERD PostgreSQL, evaluasi infrastruktur (Hosting Ladder & Scale Matrix), Architecture & Security Compliance Health Auditor (Score 100/100), Simulator Interaktif Biaya Server VPS & SLA Token AI, serta generator dokumen Markdown (.md) komprehensif.
 - **`App\Services\MidtransSnapService`**:
   Layanan integrasi Midtrans Snap API: memproses pembuatan Snap Token transaksi secara aman via HTTP Basic Auth ke endpoint Midtrans Sandbox/Production, mendukung modal prompt interaktif in-page (Snap popup `window.snap.pay`) tanpa redirect 404, serta menangani audit log kegagalan gateway.
 - **`App\Services\CvPro\CvAiService`**:

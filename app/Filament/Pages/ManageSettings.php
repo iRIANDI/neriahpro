@@ -96,6 +96,56 @@ class ManageSettings extends Page implements HasForms
                                     ->valueLabel('URL'),
                             ]),
 
+                        Tabs\Tab::make('Multi-Language (2-Tier Locale)')
+                            ->icon('heroicon-m-language')
+                            ->badge('Tier 1 & Tier 2')
+                            ->schema([
+                                Section::make('Tier 1: Native Dual-Locale (Backend & Frontend)')
+                                    ->description('Standar bahasa presisi tinggi yang didukung secara native pada database JSON ({"id": "...", "en": "..."}) dan antarmuka.')
+                                    ->schema([
+                                        Select::make('default_frontend_locale')
+                                            ->label('Bahasa Default Frontend (Tier 1)')
+                                            ->options([
+                                                'id' => '🇮🇩 Bahasa Indonesia (ID) - Standar Default',
+                                                'en' => '🇬🇧 English (EN) - Global Default',
+                                            ])
+                                            ->default('id')
+                                            ->required(),
+                                    ]),
+
+                                Section::make('Tier 2: Global Google Translate Plugin (Whitelist Bahasa)')
+                                    ->description('Sistem penerjemah global multi-bahasa otomatis di frontend. Hanya bahasa yang Anda pilih dalam whitelist di bawah yang akan tampil di pilihan pengguna.')
+                                    ->schema([
+                                        Toggle::make('google_translate_enabled')
+                                            ->label('Aktifkan Google Translate (Tier 2 Global Locale)')
+                                            ->helperText('Jika diaktifkan, tombol pemilih bahasa global Tier 2 akan muncul di header navigasi frontend.')
+                                            ->default(true),
+
+                                        Select::make('google_translate_allowed_languages')
+                                            ->label('Daftar Bahasa Tier 2 yang Diizinkan (Whitelist)')
+                                            ->helperText('Pilih negara/bahasa resmi yang diizinkan tampil di frontend untuk menjaga UI/UX tetap rapi dan performa cepat.')
+                                            ->multiple()
+                                            ->options([
+                                                'en' => '🇬🇧 English (EN)',
+                                                'id' => '🇮🇩 Bahasa Indonesia (ID)',
+                                                'ja' => '🇯🇵 Japanese (日本語)',
+                                                'zh-CN' => '🇨🇳 Chinese Simplified (简体中文)',
+                                                'ar' => '🇸🇦 Arabic (العربية)',
+                                                'de' => '🇩🇪 German (Deutsch)',
+                                                'fr' => '🇫🇷 French (Français)',
+                                                'es' => '🇪🇸 Spanish (Español)',
+                                                'ko' => '🇰🇷 Korean (한국어)',
+                                                'ru' => '🇷🇺 Russian (Русский)',
+                                                'pt' => '🇵🇹 Portuguese (Português)',
+                                                'nl' => '🇳🇱 Dutch (Nederlands)',
+                                                'vi' => '🇻🇳 Vietnamese (Tiếng Việt)',
+                                                'th' => '🇹🇭 Thai (ไทย)',
+                                            ])
+                                            ->default(['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es'])
+                                            ->required(),
+                                    ]),
+                            ]),
+
                         Tabs\Tab::make('Frontend Feature Flags')
                             ->icon('heroicon-m-bolt')
                             ->badge('Live Controls')
@@ -326,6 +376,8 @@ class ManageSettings extends Page implements HasForms
         \Illuminate\Support\Facades\Cache::forget('seo_schema_raw');
         \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
         \Illuminate\Support\Facades\Cache::forget('cms_global_settings_data');
+        \Illuminate\Support\Facades\Cache::forget('google_translate_settings');
+        \Illuminate\Support\Facades\Cache::forget('frontend_locale_settings');
 
         Notification::make()
             ->title('Pengaturan & Schema.org Berhasil Disimpan')

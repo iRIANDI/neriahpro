@@ -2929,19 +2929,28 @@ PROMPT;
      */
     public static function generateErdMermaid(array $erdTables): string
     {
-        $domainTable = 'project_records';
+        $domainTable = 'PROJECT_RECORDS';
         foreach ($erdTables as $t) {
-            $tname = $t['name'] ?? '';
-            if ($tname !== 'users' && $tname !== 'activity_logs' && $tname !== 'system_notifications') {
+            $tname = strtoupper(preg_replace('/[^a-zA-Z0-9_]/', '_', $t['name'] ?? ''));
+            if ($tname !== 'USERS' && $tname !== 'ACTIVITY_LOGS' && $tname !== 'SYSTEM_NOTIFICATIONS' && !empty($tname)) {
                 $domainTable = $tname;
                 break;
             }
         }
 
         $code = "erDiagram\n";
-        $code .= "    users ||--o{ {$domainTable} : \"manages/owns\"\n";
-        $code .= "    users ||--o{ activity_logs : \"triggers\"\n";
-        $code .= "    {$domainTable} ||--o{ system_notifications : \"generates\"\n\n";
+        $code .= "    USERS ||--o{ {$domainTable} : \"manages/owns\"\n";
+        $code .= "    USERS ||--o{ ACTIVITY_LOGS : \"triggers\"\n";
+        $code .= "    {$domainTable} ||--o{ SYSTEM_NOTIFICATIONS : \"generates\"\n";
+
+        // Connect any additional custom domain tables to primary domain table
+        foreach ($erdTables as $t) {
+            $tname = strtoupper(preg_replace('/[^a-zA-Z0-9_]/', '_', $t['name'] ?? ''));
+            if (!in_array($tname, ['USERS', 'ACTIVITY_LOGS', 'SYSTEM_NOTIFICATIONS', $domainTable, 'TABLE']) && !empty($tname)) {
+                $code .= "    {$domainTable} ||--o{ {$tname} : \"contains/relates\"\n";
+            }
+        }
+        $code .= "\n";
 
         foreach ($erdTables as $table) {
             $tname = strtoupper(preg_replace('/[^a-zA-Z0-9_]/', '_', $table['name'] ?? 'TABLE'));
@@ -2976,48 +2985,65 @@ PROMPT;
     {
         $code = "flowchart LR\n";
         $code .= "    subgraph ACTORS [\"👥 Aktor Sistem (RBAC)\"]\n";
-        foreach (array_slice($actorItems, 0, 3) as $idx => $actor) {
+        $actCount = min(count($actorItems), 3);
+        if ($actCount === 0) $actCount = 1;
+        for ($idx = 0; $idx < $actCount; $idx++) {
             $aId = "A" . ($idx + 1);
+            $actor = $actorItems[$idx] ?? [];
             $aName = preg_replace('/["\r\n]+/', '', $actor['name'] ?? ('Actor ' . ($idx + 1)));
             $code .= "        {$aId}[\"{$aName}\"]\n";
         }
         $code .= "    end\n\n";
 
         $code .= "    subgraph FEATURES [\"⚡ Modul Fitur MVP (Fase 1)\"]\n";
-        foreach (array_slice($mvpItems, 0, 4) as $idx => $f) {
+        $featCount = min(count($mvpItems), 4);
+        if ($featCount === 0) $featCount = 1;
+        for ($idx = 0; $idx < $featCount; $idx++) {
             $fId = "F" . ($idx + 1);
+            $f = $mvpItems[$idx] ?? [];
             $fTitle = preg_replace('/["\r\n]+/', '', $f['title'] ?? ('Feature ' . ($idx + 1)));
             $code .= "        {$fId}[\"{$fTitle}\"]\n";
         }
         $code .= "    end\n\n";
 
         $code .= "    subgraph DB [\"🗄️ Basis Data (PostgreSQL Strict ULID)\"]\n";
-        foreach (array_slice($erdTables, 0, 4) as $idx => $t) {
+        $dbCount = min(count($erdTables), 4);
+        if ($dbCount === 0) $dbCount = 1;
+        for ($idx = 0; $idx < $dbCount; $idx++) {
             $tId = "T" . ($idx + 1);
+            $t = $erdTables[$idx] ?? [];
             $tName = preg_replace('/["\r\n]+/', '', $t['name'] ?? ('table_' . ($idx + 1)));
             $code .= "        {$tId}[(\"{$tName}\")]\n";
         }
         $code .= "    end\n\n";
 
-        // Relasi Aktor -> Fitur
+        // Safe Relasi Aktor -> Fitur
         $code .= "    A1 --> F1\n";
-        if (count($actorItems) > 1) {
+        if ($actCount > 1 && $featCount > 1) {
             $code .= "    A2 --> F2\n";
+        }
+        if ($featCount > 2) {
             $code .= "    A1 --> F3\n";
         }
-        if (count($actorItems) > 2) {
+        if ($actCount > 2 && $featCount > 1) {
             $code .= "    A3 --> F2\n";
-            $code .= "    A3 --> F4\n";
-        } else {
-            $code .= "    A1 --> F4\n";
+        }
+        if ($featCount > 3) {
+            $code .= ($actCount > 2 ? "    A3 --> F4\n" : "    A1 --> F4\n");
         }
 
-        // Relasi Fitur -> Database
+        // Safe Relasi Fitur -> Database
         $code .= "    F1 --> T1\n";
-        $code .= "    F2 --> T2\n";
-        $code .= "    F3 --> T2\n";
-        $code .= "    F3 --> T3\n";
-        if (count($erdTables) > 3) {
+        if ($featCount > 1 && $dbCount > 1) {
+            $code .= "    F2 --> T2\n";
+        }
+        if ($featCount > 2 && $dbCount > 1) {
+            $code .= "    F3 --> T2\n";
+        }
+        if ($featCount > 2 && $dbCount > 2) {
+            $code .= "    F3 --> T3\n";
+        }
+        if ($featCount > 3 && $dbCount > 3) {
             $code .= "    F4 --> T4\n";
         }
 
@@ -3030,12 +3056,13 @@ PROMPT;
     public static function generateSprintGanttMermaid(VisionBlueprint $blueprint, string $targetWaktu): string
     {
         $projectName = preg_replace('/["\r\n]+/', '', $blueprint->nama_bisnis ?: 'Proyek');
+        $startDate = now()->format('Y-m-d');
         $code = "gantt\n";
         $code .= "    title Roadmap Eksekusi & Sprint Delivery: {$projectName}\n";
         $code .= "    dateFormat YYYY-MM-DD\n";
         $code .= "    axisFormat %d %b\n\n";
         $code .= "    section Fase 0: Blueprint & Skema\n";
-        $code .= "    Discovery PRD & Arsitektur Approval :done, p0_1, 2026-10-05, 3d\n";
+        $code .= "    Discovery PRD & Arsitektur Approval :done, p0_1, {$startDate}, 3d\n";
         $code .= "    Skema Basis Data ULID & RBAC Matrix  :done, p0_2, after p0_1, 2d\n\n";
         $code .= "    section Fase 1: DB & Admin Panel\n";
         $code .= "    PostgreSQL Migration & Model ULID   :active, p1_1, after p0_2, 3d\n";
@@ -3069,7 +3096,7 @@ PROMPT;
         $code .= "        C1[\"{$platform}<br/><small>Aksesibilitas Browser Desktop, Tablet & PWA Mobile</small>\"]\n";
         $code .= "    end\n\n";
         $code .= "    subgraph EdgeLayer[\"2. Keamanan Jaringan & Reverse Proxy\"]\n";
-        $code .= "        Nginx[\"Nginx Reverse Proxy & HTTP/2<br/><small>Let's Encrypt SSL & Gzip Compression</small>\"]\n";
+        $code .= "        Nginx[\"Nginx Reverse Proxy & HTTP/2<br/><small>Lets Encrypt SSL & Gzip Compression</small>\"]\n";
         $code .= "        Waf[\"Cyber Threat Defense<br/><small>Rate Limiter, Anti-Bot & Honeypot</small>\"]\n";
         $code .= "    end\n\n";
         $code .= "    subgraph ServerHost[\"3. {$hosting}\"]\n";
@@ -3650,11 +3677,7 @@ PROMPT;
 
         // 5. Database ERD
         $md .= "## 5. Skema Basis Data (PostgreSQL Strict ULID) & Mermaid ERD\n\n";
-        $md .= "```mermaid\nerDiagram\n";
-        $md .= "    users ||--o{ domain_records : \"manages\"\n";
-        $md .= "    users ||--o{ activity_logs : \"triggers\"\n";
-        $md .= "    users ||--o{ system_notifications : \"receives\"\n";
-        $md .= "```\n\n";
+        $md .= "```mermaid\n" . self::generateErdMermaid($erd) . "\n```\n\n";
 
         foreach ($erd as $table) {
             $tname = $table['name'] ?? 'table';

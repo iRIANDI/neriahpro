@@ -27,8 +27,35 @@
     "file": "assets/instrument-sans-600-normal-B9e8oLYv.woff",
     "src": "_instrument-sans-600-normal-B9e8oLYv.woff"
   },
+  "_rolldown-runtime-CbXtAM7H.js": {
+    "file": "assets/rolldown-runtime-CbXtAM7H.js",
+    "name": "rolldown-runtime"
+  },
+  "_vendor-icons-CNn6U-ME.js": {
+    "file": "assets/vendor-icons-CNn6U-ME.js",
+    "name": "vendor-icons",
+    "imports": [
+      "_rolldown-runtime-CbXtAM7H.js"
+    ]
+  },
+  "_vendor-motion-ogVHFRTj.js": {
+    "file": "assets/vendor-motion-ogVHFRTj.js",
+    "name": "vendor-motion",
+    "imports": [
+      "_rolldown-runtime-CbXtAM7H.js",
+      "_vendor-icons-CNn6U-ME.js"
+    ]
+  },
+  "_vendor-react-CfwGApnR.js": {
+    "file": "assets/vendor-react-CfwGApnR.js",
+    "name": "vendor-react",
+    "imports": [
+      "_rolldown-runtime-CbXtAM7H.js",
+      "_vendor-icons-CNn6U-ME.js"
+    ]
+  },
   "resources/css/app.css": {
-    "file": "assets/app-CB-tErhF.css",
+    "file": "assets/app-DDDfaJhw.css",
     "name": "app",
     "names": [
       "app.css"
@@ -37,7 +64,7 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-sQyD5hk1.js",
+    "file": "assets/app-C9Us6jon.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -47,9 +74,15 @@
     ]
   },
   "resources/js/islands.jsx": {
-    "file": "assets/islands-BrTrbsfC.js",
+    "file": "assets/islands-y_mGdA9K.js",
     "name": "islands",
     "src": "resources/js/islands.jsx",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_rolldown-runtime-CbXtAM7H.js",
+      "_vendor-icons-CNn6U-ME.js",
+      "_vendor-react-CfwGApnR.js",
+      "_vendor-motion-ogVHFRTj.js"
+    ]
   }
 }

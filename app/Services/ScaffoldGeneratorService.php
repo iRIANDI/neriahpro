@@ -27,6 +27,7 @@ class ScaffoldGeneratorService
             'docker-compose.yml' => self::generateDockerCompose($blueprint, $slug),
             '.env.example' => self::generateEnvExample($blueprint, $slug),
             'README.md' => self::generateReadme($blueprint, $projectName, $slug),
+            'openapi.json' => self::generateOpenApiSpec($blueprint, $erdTables),
             'schema_complete.sql' => $schemaSql,
             'database/migrations/schema_complete.sql' => $schemaSql,
             'docker/nginx/default.conf' => self::generateNginxConf($slug),
@@ -628,5 +629,421 @@ MARKDOWN;
         }
 
         return $zipPath;
+    }
+
+    /**
+     * Generate OpenAPI 3.0 / Swagger JSON specification.
+     */
+    public static function generateOpenApiSpec(VisionBlueprint $blueprint, array $erdTables): string
+    {
+        $projectName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'MyApplication');
+        $slug = $blueprint->slug ?: Str::slug($projectName);
+        $cleanSlug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
+
+        $paths = [];
+        $schemas = [];
+
+        $schemas['ErrorResponse'] = [
+            'type' => 'object',
+            'properties' => [
+                'success' => ['type' => 'boolean', 'example' => false],
+                'message' => ['type' => 'string', 'example' => 'Validation error or resource not found'],
+                'errors' => ['type' => 'object', 'additionalProperties' => ['type' => 'array', 'items' => ['type' => 'string']]],
+            ],
+            'required' => ['success', 'message'],
+        ];
+
+        $schemas['CursorPaginationMeta'] = [
+            'type' => 'object',
+            'properties' => [
+                'path' => ['type' => 'string', 'example' => "/api/v1/{$cleanSlug}"],
+                'per_page' => ['type' => 'integer', 'example' => 25],
+                'next_cursor' => ['type' => 'string', 'nullable' => true, 'example' => '01J9V9XYZK0000000000000000'],
+                'prev_cursor' => ['type' => 'string', 'nullable' => true],
+                'has_more' => ['type' => 'boolean', 'example' => true],
+            ],
+        ];
+
+        $tablesToProcess = !empty($erdTables) ? $erdTables : [
+            [
+                'name' => 'records',
+                'columns' => [
+                    ['name' => 'id', 'type' => 'ulid', 'index' => 'PRIMARY'],
+                    ['name' => 'title', 'type' => 'string'],
+                    ['name' => 'status', 'type' => 'string'],
+                    ['name' => 'created_at', 'type' => 'timestamp'],
+                ]
+            ]
+        ];
+
+        foreach ($tablesToProcess as $table) {
+            $tname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $table['name'] ?? 'record'));
+            $entityName = Str::studly(Str::singular($tname));
+            $schemaProps = [];
+            $requiredProps = [];
+
+            foreach ($table['columns'] ?? [] as $col) {
+                $cname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? 'col'));
+                $rawType = strtolower($col['type'] ?? 'string');
+                $type = 'string';
+                $format = null;
+                $example = 'sample_value';
+
+                if (str_contains($rawType, 'ulid') || $cname === 'id' || str_ends_with($cname, '_id')) {
+                    $type = 'string';
+                    $example = '01J9V9ABCDEF0123456789XYZ0';
+                } elseif (str_contains($rawType, 'int')) {
+                    $type = 'integer';
+                    $example = 100;
+                } elseif (str_contains($rawType, 'bool')) {
+                    $type = 'boolean';
+                    $example = true;
+                } elseif (str_contains($rawType, 'json')) {
+                    $type = 'object';
+                    $example = ['key' => 'value'];
+                } elseif (str_contains($rawType, 'date') || str_contains($rawType, 'time')) {
+                    $type = 'string';
+                    $format = 'date-time';
+                    $example = '2026-10-05T12:00:00Z';
+                }
+
+                $prop = ['type' => $type, 'example' => $example];
+                if ($format) $prop['format'] = $format;
+                if (!empty($col['notes'])) $prop['description'] = $col['notes'];
+
+                $schemaProps[$cname] = $prop;
+                if (empty($col['nullable']) && $cname !== 'id' && !in_array($cname, ['created_at', 'updated_at', 'deleted_at'])) {
+                    $requiredProps[] = $cname;
+                }
+            }
+
+            $schemas[$entityName] = [
+                'type' => 'object',
+                'properties' => $schemaProps,
+                'required' => array_values(array_unique(array_merge(['id'], $requiredProps))),
+            ];
+
+            $paths["/{$tname}"] = [
+                'get' => [
+                    'summary' => "Daftar {$entityName} dengan Keyset Cursor Pagination O(1)",
+                    'tags' => [$entityName],
+                    'parameters' => [
+                        [
+                            'name' => 'cursor',
+                            'in' => 'query',
+                            'required' => false,
+                            'description' => 'Pointer cursor ULID untuk paginasi O(1) tanpa offset degradasi',
+                            'schema' => ['type' => 'string'],
+                        ],
+                        [
+                            'name' => 'limit',
+                            'in' => 'query',
+                            'required' => false,
+                            'description' => 'Jumlah record per halaman (maksimal 100)',
+                            'schema' => ['type' => 'integer', 'default' => 25],
+                        ],
+                        [
+                            'name' => 'q',
+                            'in' => 'query',
+                            'required' => false,
+                            'description' => 'Pencarian kata kunci database-agnostic (ILIKE)',
+                            'schema' => ['type' => 'string'],
+                        ],
+                    ],
+                    'responses' => [
+                        '200' => [
+                            'description' => 'Sukses mengambil data dengan cursor pagination',
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type' => 'object',
+                                        'properties' => [
+                                            'data' => [
+                                                'type' => 'array',
+                                                'items' => ['$ref' => "#/components/schemas/{$entityName}"],
+                                            ],
+                                            'meta' => ['$ref' => '#/components/schemas/CursorPaginationMeta'],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        '401' => [
+                            'description' => 'Tidak terautentikasi (Bearer token tidak valid)',
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => ['$ref' => '#/components/schemas/ErrorResponse'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'post' => [
+                    'summary' => "Buat record {$entityName} baru dengan ULID",
+                    'tags' => [$entityName],
+                    'requestBody' => [
+                        'required' => true,
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => array_filter($schemaProps, fn($k) => !in_array($k, ['id', 'created_at', 'updated_at', 'deleted_at']), ARRAY_FILTER_USE_KEY),
+                                    'required' => $requiredProps,
+                                ],
+                            ],
+                        ],
+                    ],
+                    'responses' => [
+                        '201' => [
+                            'description' => "Record {$entityName} berhasil dibuat",
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type' => 'object',
+                                        'properties' => [
+                                            'success' => ['type' => 'boolean', 'example' => true],
+                                            'data' => ['$ref' => "#/components/schemas/{$entityName}"],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        '422' => [
+                            'description' => 'Validasi gagal',
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => ['$ref' => '#/components/schemas/ErrorResponse'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+
+            $paths["/{$tname}/{id}"] = [
+                'parameters' => [
+                    [
+                        'name' => 'id',
+                        'in' => 'path',
+                        'required' => true,
+                        'description' => "ID ULID 26 karakter {$entityName}",
+                        'schema' => ['type' => 'string'],
+                    ],
+                ],
+                'get' => [
+                    'summary' => "Ambil detail {$entityName} berdasarkan ULID",
+                    'tags' => [$entityName],
+                    'responses' => [
+                        '200' => [
+                            'description' => 'Detail data ditemukan',
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type' => 'object',
+                                        'properties' => [
+                                            'data' => ['$ref' => "#/components/schemas/{$entityName}"],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        '404' => [
+                            'description' => 'Data tidak ditemukan',
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => ['$ref' => '#/components/schemas/ErrorResponse'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'put' => [
+                    'summary' => "Perbarui record {$entityName}",
+                    'tags' => [$entityName],
+                    'requestBody' => [
+                        'required' => true,
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => array_filter($schemaProps, fn($k) => !in_array($k, ['id', 'created_at', 'updated_at', 'deleted_at']), ARRAY_FILTER_USE_KEY),
+                                ],
+                            ],
+                        ],
+                    ],
+                    'responses' => [
+                        '200' => [
+                            'description' => 'Record berhasil diperbarui',
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type' => 'object',
+                                        'properties' => [
+                                            'success' => ['type' => 'boolean', 'example' => true],
+                                            'data' => ['$ref' => "#/components/schemas/{$entityName}"],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        '422' => [
+                            'description' => 'Validasi gagal',
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => ['$ref' => '#/components/schemas/ErrorResponse'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'delete' => [
+                    'summary' => "Hapus (Soft-Delete) record {$entityName}",
+                    'tags' => [$entityName],
+                    'responses' => [
+                        '204' => [
+                            'description' => 'Record berhasil dihapus',
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        $paths['/sync/push'] = [
+            'post' => [
+                'summary' => 'Sinkronisasi Mutasi Lokal Offline ke Server (Idempotent)',
+                'tags' => ['OfflineSync'],
+                'parameters' => [
+                    [
+                        'name' => 'X-Idempotency-Key',
+                        'in' => 'header',
+                        'required' => true,
+                        'description' => 'Kunci Idempotensi ULID / UUID unik dari perangkat mobile untuk mencegah eksekusi duplikat',
+                        'schema' => ['type' => 'string'],
+                    ],
+                ],
+                'requestBody' => [
+                    'required' => true,
+                    'content' => [
+                        'application/json' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'mutations' => [
+                                        'type' => 'array',
+                                        'items' => [
+                                            'type' => 'object',
+                                            'properties' => [
+                                                'mutation_id' => ['type' => 'string', 'example' => '01J9V9XYZK0000000000000000'],
+                                                'entity' => ['type' => 'string', 'example' => 'transactions'],
+                                                'action' => ['type' => 'string', 'enum' => ['insert', 'update', 'delete']],
+                                                'payload' => ['type' => 'object'],
+                                                'timestamp' => ['type' => 'string', 'format' => 'date-time'],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'responses' => [
+                    '200' => [
+                        'description' => 'Batch mutasi berhasil disinkronkan',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'status' => ['type' => 'string', 'example' => 'synced'],
+                                        'server_synced_at' => ['type' => 'string', 'format' => 'date-time'],
+                                        'processed_count' => ['type' => 'integer', 'example' => 1],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $paths['/sync/pull'] = [
+            'get' => [
+                'summary' => 'Ambil Delta Update Record Terbaru dari Server',
+                'tags' => ['OfflineSync'],
+                'parameters' => [
+                    [
+                        'name' => 'since',
+                        'in' => 'query',
+                        'required' => true,
+                        'description' => 'Timestamp ISO8601 sinkronisasi terakhir perangkat mobile',
+                        'schema' => ['type' => 'string', 'format' => 'date-time'],
+                    ],
+                    [
+                        'name' => 'cursor',
+                        'in' => 'query',
+                        'required' => false,
+                        'description' => 'Keyset pointer cursor jika delta record melebihi batas batch',
+                        'schema' => ['type' => 'string'],
+                    ],
+                ],
+                'responses' => [
+                    '200' => [
+                        'description' => 'Delta record terbaru dari server',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'delta_records' => ['type' => 'array', 'items' => ['type' => 'object']],
+                                        'has_more' => ['type' => 'boolean', 'example' => false],
+                                        'server_time' => ['type' => 'string', 'format' => 'date-time'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $spec = [
+            'openapi' => '3.0.3',
+            'info' => [
+                'title' => "{$projectName} API Specification",
+                'description' => "Spesifikasi REST API OpenAPI 3.0 otomatis di-generate oleh Neriah Pro Project OS. Mengimplementasikan standar Bulletproof Scalability O(1) Keyset Cursor Pagination, Strict PostgreSQL ULID, Idempotency Guard, dan Anti-RCE Payload Shield.",
+                'version' => '1.0.0',
+                'contact' => [
+                    'name' => 'Neriah Pro Engineering Team',
+                    'url' => 'https://neriahpro.com',
+                ],
+            ],
+            'servers' => [
+                [
+                    'url' => 'http://localhost:8080/api/v1',
+                    'description' => 'Local Docker Container Environment',
+                ],
+                [
+                    'url' => "https://api.{$cleanSlug}.com/v1",
+                    'description' => 'Production Cloud VPS Environment',
+                ],
+            ],
+            'security' => [
+                ['BearerAuth' => []],
+            ],
+            'paths' => $paths,
+            'components' => [
+                'securitySchemes' => [
+                    'BearerAuth' => [
+                        'type' => 'http',
+                        'scheme' => 'bearer',
+                        'bearerFormat' => 'JWT',
+                        'description' => 'Ketik token Sanctum atau JWT Anda di sini: Bearer <token>',
+                    ],
+                ],
+                'schemas' => $schemas,
+            ],
+        ];
+
+        return json_encode($spec, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 }

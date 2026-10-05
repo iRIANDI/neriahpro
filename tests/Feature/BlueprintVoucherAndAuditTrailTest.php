@@ -518,4 +518,63 @@ class BlueprintVoucherAndAuditTrailTest extends TestCase
                 'success' => false,
             ]);
     }
+
+    public function test_cart_claim_free_grant_workflow(): void
+    {
+        $bp1 = VisionBlueprint::create([
+            'client_name' => 'Pastor Lukas',
+            'nama_bisnis' => 'Yayasan Kasih Bangsa',
+            'email' => 'lukas@kasihbangsa.org',
+            'phone' => '08123456788',
+            'is_published' => true,
+        ]);
+
+        $bp2 = VisionBlueprint::create([
+            'client_name' => 'Pastor Lukas',
+            'nama_bisnis' => 'Panti Asuhan Terang Kasih',
+            'email' => 'lukas@kasihbangsa.org',
+            'phone' => '08123456788',
+            'is_published' => true,
+        ]);
+
+        $voucher = BlueprintVoucher::where('code', 'PELAYANAN-KASIH')->first();
+        $this->assertEquals(0, $voucher->used_count);
+
+        // Put in cart
+        $this->withSession([
+            'neriah_cart' => [
+                $bp1->slug => ['slug' => $bp1->slug, 'contract_amount' => 30000000, 'dp_amount' => 15000000],
+                $bp2->slug => ['slug' => $bp2->slug, 'contract_amount' => 20000000, 'dp_amount' => 10000000],
+            ],
+            'neriah_cart_voucher' => [
+                'code' => $voucher->code,
+                'discount_type' => $voucher->discount_type,
+                'discount_value' => $voucher->discount_value,
+            ],
+        ]);
+
+        $response = $this->post(route('cart.claim-free'));
+        $response->assertRedirect(route('cart.index'));
+        $response->assertSessionHas('success');
+
+        // Blueprints fulfilled
+        $bp1->refresh();
+        $bp2->refresh();
+        $this->assertTrue($bp1->is_free_grant);
+        $this->assertTrue($bp2->is_free_grant);
+        $this->assertTrue($bp1->signed_agreement);
+        $this->assertTrue($bp2->signed_agreement);
+        $this->assertEquals('In Development (Free Grant)', $bp1->project_status);
+        $this->assertEquals('In Development (Free Grant)', $bp2->project_status);
+        $this->assertNotEmpty($bp1->staging_url);
+        $this->assertNotEmpty($bp2->staging_url);
+
+        // Voucher quota incremented
+        $voucher->refresh();
+        $this->assertEquals(1, $voucher->used_count);
+
+        // Cart session cleared
+        $this->assertNull(session('neriah_cart'));
+        $this->assertNull(session('neriah_cart_voucher'));
+    }
 }

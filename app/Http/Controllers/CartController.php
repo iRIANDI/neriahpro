@@ -434,7 +434,7 @@ class CartController extends Controller
                     [
                         'title' => 'Perjanjian Kerja Sama - ' . ($bp->nama_bisnis ?: $bp->client_name),
                         'status' => 'pending_signature',
-                        'scope_locked' => true,
+                        'scope_locked' => false,
                         'contract_amount' => (float) ($item['contract_amount'] ?? 50000000),
                         'dp_amount' => (float) ($item['dp_amount'] ?? 25000000),
                         'midtrans_order_id' => $orderId,
@@ -460,5 +460,87 @@ class CartController extends Controller
             'gross_amount' => $finalDp,
             'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
         ]);
+    }
+
+    /**
+     * Claim 100% Free Bypass voucher for all blueprints in cart.
+     */
+    public function claimFreeGrant(Request $request): RedirectResponse
+    {
+        $cart = session()->get('neriah_cart', []);
+        if (empty($cart)) {
+            return redirect()->route('cart.index')->with('warning', 'Cart Anda kosong.');
+        }
+
+        $cartVoucher = session()->get('neriah_cart_voucher');
+        if (!$cartVoucher || empty($cartVoucher['code'])) {
+            return redirect()->route('cart.index')->with('warning', 'Tidak ada voucher yang diterapkan pada cart.');
+        }
+
+        $voucher = BlueprintVoucher::where('code', $cartVoucher['code'])->first();
+        if (!$voucher || !$voucher->isValid()) {
+            return redirect()->route('cart.index')->with('warning', 'Kode voucher tidak valid atau sudah kedaluwarsa.');
+        }
+
+        // Calculate total contract
+        $totalContract = 0;
+        foreach ($cart as $item) {
+            $totalContract += (float) ($item['contract_amount'] ?? 25000000);
+        }
+
+        $discountAmount = 0;
+        if ($voucher->discount_type === 'free_bypass' || ($voucher->discount_type === 'percent' && (float)$voucher->discount_value >= 100)) {
+            $discountAmount = $totalContract;
+        } elseif ($voucher->discount_type === 'percent') {
+            $discountAmount = round($totalContract * ((float)$voucher->discount_value / 100));
+        } elseif ($voucher->discount_type === 'fixed') {
+            $discountAmount = min($totalContract, (float)$voucher->discount_value);
+        }
+
+        $finalContract = max(0, $totalContract - $discountAmount);
+        if ($finalContract > 0) {
+            return redirect()->route('cart.index')->with('warning', 'Voucher ini tidak mencakup 100% gratis. Silakan gunakan tombol pembayaran DP via Midtrans Snap.');
+        }
+
+        // Consume voucher quota once
+        $voucher->incrementUsage();
+
+        foreach ($cart as $slug => $item) {
+            $bp = VisionBlueprint::where('slug', $slug)->first();
+            if ($bp) {
+                $bp->update([
+                    'voucher_code' => $voucher->code,
+                    'is_free_grant' => true,
+                    'is_published' => true,
+                    'project_status' => 'In Development (Free Grant)',
+                ]);
+                $bp->provisionStagingUrl();
+                $bp->recordSignOff($request->ip(), $request->userAgent());
+
+                Document::updateOrCreate(
+                    [
+                        'related_type' => VisionBlueprint::class,
+                        'related_id' => $bp->id,
+                        'document_type' => 'contract',
+                    ],
+                    [
+                        'title' => 'Perjanjian Kerja Sama - ' . ($bp->nama_bisnis ?: $bp->client_name),
+                        'status' => 'signed',
+                        'scope_locked' => true,
+                        'contract_amount' => 0.00,
+                        'dp_amount' => 0.00,
+                        'signed_at' => now(),
+                        'signer_name' => $bp->client_name ?: $bp->nama_bisnis,
+                        'signer_email' => $bp->email,
+                        'signer_ip_address' => $request->ip(),
+                        'document_hash' => $bp->document_sha256 ?: $bp->calculatePrdHash(),
+                    ]
+                );
+            }
+        }
+
+        session()->forget(['neriah_cart', 'neriah_cart_voucher']);
+
+        return redirect()->route('cart.index')->with('success', 'Seluruh proyek dalam Cart berhasil diklaim dengan Voucher Pelayanan 100% (Free Grant) dan resmi masuk ke tahap pengembangan!');
     }
 }

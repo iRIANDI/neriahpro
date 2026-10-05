@@ -335,17 +335,32 @@
                     </div>
 
                     <div class="space-y-3">
-                        <button 
-                            type="button" 
-                            id="btn-pay-snap"
-                            onclick="payWithSnap()"
-                            class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-widest py-3.5 px-4 text-center block transition cursor-pointer disabled:opacity-50 shadow-md rounded-none"
-                        >
-                            {{ $voucher ? 'Bayar DP Sekarang (Rp ' . number_format($finalTotalDp, 0, ',', '.') . ') &rarr;' : 'Bayar DP Sekarang (Midtrans Snap) &rarr;' }}
-                        </button>
-                        <p class="text-[10px] text-zinc-400 text-center font-mono">
-                            Escrow diamankan & diverifikasi otomatis oleh Midtrans webhook.
-                        </p>
+                        @if($finalTotalDp <= 0)
+                            <form method="POST" action="{{ route('cart.claim-free') }}" class="m-0">
+                                @csrf
+                                <button 
+                                    type="submit" 
+                                    class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-widest py-3.5 px-4 text-center block transition cursor-pointer shadow-md rounded-none"
+                                >
+                                    KLAIM VOUCHER PELAYANAN (RP 0 FREE BYPASS) &amp; KUNCI KONTRAK &rarr;
+                                </button>
+                            </form>
+                            <p class="text-[10px] text-zinc-400 text-center font-mono">
+                                Provisi sandbox staging otomatis &amp; penguncian scope tanpa biaya.
+                            </p>
+                        @else
+                            <button 
+                                type="button" 
+                                id="btn-pay-snap"
+                                onclick="payWithSnap()"
+                                class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-widest py-3.5 px-4 text-center block transition cursor-pointer disabled:opacity-50 shadow-md rounded-none"
+                            >
+                                {{ $voucher ? 'Bayar DP Sekarang (Rp ' . number_format($finalTotalDp, 0, ',', '.') . ') &rarr;' : 'Bayar DP Sekarang (Midtrans Snap) &rarr;' }}
+                            </button>
+                            <p class="text-[10px] text-zinc-400 text-center font-mono">
+                                Escrow diamankan &amp; diverifikasi otomatis oleh Midtrans webhook.
+                            </p>
+                        @endif
                     </div>
                 </div>
             </div>

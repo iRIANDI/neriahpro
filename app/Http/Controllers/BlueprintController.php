@@ -598,12 +598,9 @@ class BlueprintController extends Controller
     public function downloadPdf(string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
-        $prd = $blueprint->prd_content;
+        $prd = $blueprint->prd_content ?? [];
         
-        // Ensure DomPDF can render this (might need a simpler view, but we can reuse show for now or create a dedicated one later)
-        // Here we just render a simple string if no specific PDF view exists, or use a basic template.
-        // For production, create a resources/views/pdf/blueprint.blade.php
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('blueprint.show', [
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.blueprint', [
             'blueprint' => $blueprint,
             'prd' => $prd,
         ]);

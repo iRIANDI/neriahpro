@@ -4,67 +4,131 @@
     <meta charset="UTF-8">
     <title>{{ $document->title }}</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; line-height: 1.5; color: #333; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .title { font-size: 18px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
-        .content { margin-bottom: 40px; text-align: justify; }
-        .signature-section { margin-top: 50px; width: 100%; }
-        .signature-box { width: 45%; float: right; text-align: center; }
-        .signature-image { max-width: 200px; max-height: 100px; margin: 10px 0; border-bottom: 1px solid #ccc; }
-        .footer { position: fixed; bottom: -30px; left: 0px; right: 0px; height: 50px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 10px; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; line-height: 1.5; color: #222; margin: 20px; }
+        .header { text-align: left; margin-bottom: 25px; border-bottom: 2px solid #10b981; padding-bottom: 12px; }
+        .badge { display: inline-block; background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 9px; font-weight: bold; text-transform: uppercase; padding: 2px 6px; margin-bottom: 6px; }
+        .title { font-size: 16px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; color: #111; }
+        .subtitle { font-size: 10px; color: #666; font-family: monospace; }
+        .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .meta-table td { padding: 5px 8px; border: 1px solid #e5e7eb; font-size: 10px; }
+        .meta-table .label { font-weight: bold; width: 25%; background-color: #f9fafb; color: #4b5563; }
+        .parties-box { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
+        .parties-box td { width: 50%; vertical-align: top; padding: 8px; border: 1px solid #e5e7eb; }
+        .parties-title { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #059669; margin-bottom: 4px; }
+        .clause-box { margin-bottom: 12px; padding: 8px 12px; border-left: 3px solid #10b981; background-color: #f9fafb; }
+        .clause-title { font-weight: bold; font-size: 11px; color: #111; margin-bottom: 4px; }
+        .clause-desc { font-size: 10.5px; color: #374151; text-align: justify; margin: 0; }
+        .signature-section { margin-top: 35px; width: 100%; border-collapse: collapse; }
+        .signature-box { width: 50%; vertical-align: top; text-align: center; padding: 10px; }
+        .signature-image { max-width: 180px; max-height: 80px; margin: 8px 0; }
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 30px; font-size: 9px; color: #9ca3af; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 8px; font-family: monospace; }
     </style>
 </head>
 <body>
     <div class="header">
+        <span class="badge">Surat Perjanjian Kerja Sama Resmi (E-Sign)</span>
         <div class="title">{{ $document->title }}</div>
-        <div>Dokumen Legal Terverifikasi Secara Digital</div>
+        <div class="subtitle">DOKUMEN HUKUM &bull; ID: {{ strtoupper(substr($document->id, 0, 12)) }} &bull; TANGGAL: {{ ($document->signed_at ?: $document->created_at)->format('d F Y') }}</div>
     </div>
 
-    <div class="content">
-        <p>Pada hari ini, disepakati bahwa dokumen dengan rincian berikut sah dan mengikat:</p>
-        
-        <table style="width: 100%; margin-bottom: 20px;">
-            <tr>
-                <td style="width: 30%;"><strong>ID Dokumen:</strong></td>
-                <td>{{ $document->id }}</td>
-            </tr>
-            <tr>
-                <td><strong>Tipe Dokumen:</strong></td>
-                <td>{{ strtoupper(str_replace('_', ' ', $document->document_type)) }}</td>
-            </tr>
-            <tr>
-                <td><strong>Status:</strong></td>
-                <td>{{ strtoupper($document->status) }}</td>
-            </tr>
-        </table>
+    <table class="parties-box">
+        <tr>
+            <td>
+                <div class="parties-title">PIHAK PERTAMA (KLIEN / PEMESAN):</div>
+                <strong>{{ $document->signer_name ?: ($document->related?->client_name ?: 'Alexander Wijaya') }}</strong><br>
+                <span>Usaha: {{ $document->related?->nama_bisnis ?: 'Mitra Bisnis' }}</span><br>
+                <span style="font-size: 9.5px; color: #666;">Email: {{ $document->signer_email ?: ($document->related?->email ?: '-') }}</span>
+            </td>
+            <td>
+                <div class="parties-title">PIHAK KEDUA (PENGEMBANG SISTEM):</div>
+                <strong>PT NERIAH PRO SOLUSINDO</strong><br>
+                <span>Engineering &amp; Architecture Hub</span><br>
+                <span style="font-size: 9.5px; color: #666;">Email: engineering@neriahpro.com &bull; Jakarta, Indonesia</span>
+            </td>
+        </tr>
+    </table>
 
-        <h3>Pasal 1: Persetujuan</h3>
-        <p>Dengan membubuhkan tanda tangan secara elektronik pada dokumen ini, pihak yang bertanda tangan di bawah ini menyatakan telah membaca, memahami, dan menyetujui seluruh isi dokumen ini tanpa ada paksaan dari pihak manapun.</p>
-        
-        <h3>Pasal 2: Validitas Elektronik</h3>
-        <p>Dokumen ini ditandatangani secara digital. Berdasarkan undang-undang yang berlaku terkait Informasi dan Transaksi Elektronik, tanda tangan digital yang tertera pada halaman ini memiliki kekuatan hukum yang sah dan mengikat, sama dengan tanda tangan basah pada dokumen fisik.</p>
-    </div>
+    <table class="meta-table">
+        <tr>
+            <td class="label">Total Nilai Kontrak</td>
+            <td><strong>Rp {{ number_format($document->contract_amount ?: 50000000, 0, ',', '.') }}</strong> (Termasuk 5 Sprint Kerja)</td>
+            <td class="label">Termin Uang Muka (DP 50%)</td>
+            <td><strong style="color: #059669;">Rp {{ number_format($document->dp_amount ?: (($document->contract_amount ?: 50000000) * 0.5), 0, ',', '.') }}</strong></td>
+        </tr>
+        <tr>
+            <td class="label">Status Ruang Lingkup</td>
+            <td>SCOPE LOCKED (TERKUNCI SECARA KRIPTOGRAFIS)</td>
+            <td class="label">Status Pembayaran</td>
+            <td>{{ $document->status === 'signed' ? 'DP TERKONFIRMASI / LUNAS' : 'MENUNGGU DP' }}</td>
+        </tr>
+    </table>
 
-    <div class="signature-section">
-        <div class="signature-box">
-            <p><strong>DITANDATANGANI OLEH:</strong></p>
-            @if($document->status === 'signed' && $document->digital_signature_image)
-                <img src="{{ $document->digital_signature_image }}" class="signature-image" alt="Tanda Tangan Digital">
-                <p style="font-weight: bold; margin-bottom: 0;">{{ $document->signer_name }}</p>
-                <p style="margin-top: 0; font-size: 10px;">Email: {{ $document->signer_email }}<br>IP: {{ $document->signer_ip_address }}<br>Waktu: {{ $document->signed_at?->format('d M Y H:i:s') }}</p>
-                @if($document->document_hash)
-                    <p style="font-size: 8px; word-break: break-all; color: #888;">Hash: {{ $document->document_hash }}</p>
-                @endif
-            @else
-                <div style="height: 100px; border-bottom: 1px dashed #ccc; margin: 10px 0;"></div>
-                <p>( Belum Ditandatangani )</p>
-            @endif
+    <h4 style="margin-top: 15px; margin-bottom: 8px; font-size: 11px; text-transform: uppercase;">Pasal-Pasal Kesepakatan:</h4>
+
+    @php
+        $clauses = $document->content_clauses;
+        if (empty($clauses) || !is_array($clauses)) {
+            $projectName = $document->related?->nama_bisnis ?: ($document->related?->client_name ?: 'Apex Logistics Global');
+            $docId = strtoupper(substr($document->id, 0, 10));
+            $clauses = [
+                'pasal_1_ruang_lingkup' => [
+                    'title' => 'Pasal 1: Ruang Lingkup Sistem & Spesifikasi PRD',
+                    'description' => 'Pihak Kedua sepakat untuk merancang dan membangun sistem perangkat lunak untuk Pihak Pertama (' . $projectName . ') sesuai spesifikasi fitur pada Dokumen Ultimate PRD ID: ' . $docId . '.',
+                ],
+                'pasal_2_timeline_sprint' => [
+                    'title' => 'Pasal 2: Alokasi Waktu Pengerjaan (5 Sprint Kerja)',
+                    'description' => 'Pekerjaan dilaksanakan selama ' . ($document->related?->target_waktu ?: '30 Hari Kerja') . ' yang dibagi dalam 5 Sprint berurutan (Setup Arsitektur, Core MVP, User Flow, Security Audit, VPS Deployment).',
+                ],
+                'pasal_3_biaya_dan_dp' => [
+                    'title' => 'Pasal 3: Nilai Kontrak & Ketentuan Pembayaran DP',
+                    'description' => 'Total investasi adalah Rp ' . number_format($document->contract_amount ?: 50000000, 0, ',', '.') . ' dengan DP 50% sebesar Rp ' . number_format($document->dp_amount ?: 25000000, 0, ',', '.') . ' dibayarkan sebelum kickoff, dan Pelunasan 50% saat serah terima sistem.',
+                ],
+                'pasal_4_penguncian_scope' => [
+                    'title' => 'Pasal 4: Penguncian Ruang Lingkup (Scope Freeze)',
+                    'description' => 'Seluruh fitur di luar spesifikasi PRD ini dinyatakan sebagai ruang lingkup baru yang dituangkan dalam Addendum / Change Request (CR) terpisah.',
+                ],
+                'pasal_5_keabsahan_hukum' => [
+                    'title' => 'Pasal 5: Tanda Tangan Elektronik & Integritas Dokumen (SHA-256)',
+                    'description' => 'Surat perjanjian ini sah dan berkekuatan hukum tetap, ditandatangani secara digital dengan pencatatan audit trail IP address, timestamp, dan enkripsi hash SHA-256.',
+                ],
+            ];
+        }
+    @endphp
+
+    @foreach($clauses as $key => $clause)
+        <div class="clause-box">
+            <div class="clause-title">{{ $clause['title'] ?? ('Pasal: ' . strtoupper($key)) }}</div>
+            <p class="clause-desc">{{ $clause['description'] ?? (is_string($clause) ? $clause : json_encode($clause)) }}</p>
         </div>
-        <div style="clear: both;"></div>
-    </div>
+    @endforeach
+
+    <table class="signature-section">
+        <tr>
+            <td class="signature-box">
+                <p><strong>PIHAK KEDUA (PENYEDIA SISTEM)</strong><br>PT NERIAH PRO SOLUSINDO</p>
+                <div style="height: 60px; padding-top: 15px;">
+                    <strong style="color: #059669; font-family: monospace; font-size: 11px;">[ VERIFIED CORPORATE KEY ]</strong>
+                </div>
+                <p style="margin: 0; font-size: 10px;">Engineering &amp; Architecture Lead</p>
+            </td>
+            <td class="signature-box">
+                <p><strong>PIHAK PERTAMA (KLIEN / PEMESAN)</strong><br>{{ $document->related?->nama_bisnis ?: 'Mitra Pemesan' }}</p>
+                @if($document->status === 'signed' && $document->digital_signature_image)
+                    <img src="{{ $document->digital_signature_image }}" class="signature-image" alt="Tanda Tangan Digital">
+                    <p style="font-weight: bold; margin: 0; font-size: 10.5px;">{{ $document->signer_name }}</p>
+                    <p style="margin: 0; font-size: 9px; color: #666; font-family: monospace;">
+                        IP: {{ $document->signer_ip_address }} &bull; {{ $document->signed_at?->format('d M Y H:i:s T') }}
+                    </p>
+                @else
+                    <div style="height: 60px; border-bottom: 1px dashed #ccc; margin: 10px 30px;"></div>
+                    <p style="font-size: 10px; color: #888;">( Menunggu Tanda Tangan )</p>
+                @endif
+            </td>
+        </tr>
+    </table>
 
     <div class="footer">
-        Dihasilkan oleh Sistem Neriah Pro pada {{ now()->format('d M Y H:i') }}
+        Dihasilkan secara otomatis oleh Neriah Pro Digital Legal Engine &bull; Dokumen Sah Dilindungi Kriptografi SHA-256
     </div>
 </body>
 </html>

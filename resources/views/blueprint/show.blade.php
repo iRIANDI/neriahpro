@@ -2445,7 +2445,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 no-print">
-                        @if(!$isScopeLocked)
+                        @if(!($isScopeLocked ?? false))
                             <button type="button" @click="taskEditorOpen = true" class="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono font-bold border border-amber-500/30 flex items-center gap-1.5 transition cursor-pointer">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 <span>ELABORASI &amp; SESUAIKAN TASK</span>
@@ -5754,7 +5754,7 @@ class ProcessSecureDataset implements ShouldQueue
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-emerald-500/20">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-emerald-500/20">
                             @php
                                 $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
                             @endphp
@@ -5778,16 +5778,16 @@ class ProcessSecureDataset implements ShouldQueue
                                     <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                                     <span>Buka Sandbox Staging</span>
                                 </a>
-                            @else
-                                <a 
-                                    href="{{ route('blueprint.download-pdf', $blueprint->slug) }}"
-                                    target="_blank"
-                                    class="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
-                                >
-                                    <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                    <span>Unduh Dokumen PRD</span>
-                                </a>
                             @endif
+
+                            <a 
+                                href="{{ route('blueprint.download-md', $blueprint->slug) }}"
+                                class="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                title="Unduh File Asli Markdown (.MD) untuk AI Coding Agent"
+                            >
+                                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                <span>Unduh PRD (.MD)</span>
+                            </a>
 
                             <button 
                                 type="button" 
@@ -6576,14 +6576,14 @@ class ProcessSecureDataset implements ShouldQueue
         x-show="showAiPromptModal" 
         x-cloak 
         @keydown.escape.window="showAiPromptModal = false"
-        class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 no-print font-mono"
+        class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-xs flex items-start justify-center p-3 sm:p-6 no-print font-mono"
     >
         <div 
             @click.outside="showAiPromptModal = false" 
-            class="bg-zinc-950 border-2 border-emerald-500/80 max-w-4xl w-full p-6 sm:p-8 rounded-none text-zinc-100 shadow-2xl relative"
+            class="bg-zinc-950 border-2 border-emerald-500/80 max-w-4xl w-full my-auto max-h-[92vh] flex flex-col p-5 sm:p-7 rounded-none text-zinc-100 shadow-2xl relative"
         >
-            <!-- Header -->
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-4 mb-6">
+            <!-- Sticky Header -->
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-3 mb-4 shrink-0">
                 <div class="flex items-center gap-3">
                     <span class="w-8 h-8 bg-emerald-500 text-black flex items-center justify-center font-bold text-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -6603,10 +6603,12 @@ class ProcessSecureDataset implements ShouldQueue
                 </button>
             </div>
 
-            <!-- Agent Selector Tabs -->
-            <div class="mb-5">
-                <label class="text-[11px] text-zinc-400 uppercase font-bold block mb-2">1. PILIH AI CODING AGENT TARGET:</label>
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+            <!-- Scrollable Body Content -->
+            <div class="overflow-y-auto flex-1 pr-1.5 space-y-4">
+                <!-- Agent Selector Tabs -->
+                <div>
+                    <label class="text-[11px] text-zinc-400 uppercase font-bold block mb-2">1. PILIH AI CODING AGENT TARGET:</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
                     <button 
                         type="button" 
                         @click="selectedPromptAgent = 'antigravity'"
@@ -6741,9 +6743,10 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
                 <div class="bg-black border border-zinc-800 p-4 max-h-56 overflow-y-auto font-mono text-[11px] text-emerald-400 leading-relaxed whitespace-pre-wrap select-all" id="ai-agent-cockpit-prompt-text" x-text="generateAgentPrompt(selectedPromptAgent, selectedPromptSprint)"></div>
             </div>
+            </div>
 
             <!-- Modal Action Buttons -->
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-800">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-800 shrink-0">
                 <button 
                     type="button" 
                     @click="showAiPromptModal = false"

@@ -47,4 +47,44 @@ class AdminLoginAndNotificationTest extends TestCase
 
         $this->assertIsInt($count);
     }
+
+    /**
+     * Test that the Filament dashboard renders updated Project OS pillars and Frontpage quick launch widgets.
+     */
+    public function test_filament_dashboard_renders_updated_project_os_and_frontpage_quick_launch(): void
+    {
+        $admin = User::create([
+            'name' => 'Yoseph Iriandi',
+            'email' => 'yoseph.iriandi.tambunan@gmail.com',
+            'password' => bcrypt('password'),
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin');
+
+        $response->assertStatus(200);
+
+        // Verify updated Project OS features
+        $response->assertSee('NERIAH PRO // PROJECT OS');
+        $response->assertSee('DIGITAL ARCHITECTURE PLATFORM');
+        $response->assertSee('26 ARCHITECTURAL PARAMETERS');
+        $response->assertSee('Kuesioner 26 Parameter Inti (Blok A-F)');
+        $response->assertSee('Quick Idea Studio');
+        $response->assertSee('Multi-Doc Ingestion');
+        $response->assertSee('Ultimate PRD, ERD');
+        $response->assertSee('Boilerplate .zip');
+        $response->assertSee('AI-Shield');
+        $response->assertSee('Secure Ingestion Pipeline');
+
+        // Verify Frontpage quick launch widget
+        $response->assertSee('PORTAL PUBLIK');
+        $response->assertSee('Buka Beranda Utama Website (neriahpro.com)');
+        $response->assertSee('/blueprint');
+        $response->assertSee('/cv-pro');
+        $response->assertSee('/pricing');
+        $response->assertSee('/cart');
+
+        // Verify removed default Filament widgets
+        $response->assertDontSee('filament v5');
+        $response->assertDontSee('Documentation');
+    }
 }

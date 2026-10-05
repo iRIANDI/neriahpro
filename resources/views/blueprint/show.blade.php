@@ -541,471 +541,476 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
         . "5. Jalankan verifikasi terminal: php artisan migrate:status && php artisan test\n"
         . "6. Setelah exit code 0, lakukan commit git: git commit -m 'chore(db): setup ULID migrations and base foundation'";
 @endphp
-</head>
-<body x-data="{ 
-    userMenuOpen: false, 
-    paymentModalOpen: false, 
-    taskEditorOpen: false,
-    taskEditorSaving: false,
-    taskEditorTab: 'mvp',
-    mvpTasks: @json($prd['features']['mvp_phase1'] ?? []),
-    phase2Tasks: @json($prd['features']['phase2_roadmap'] ?? []),
-    newTaskTitle: '',
-    newTaskDesc: '',
-    newTaskCategory: 'CORE DOMAIN',
-    newTaskSprint: 'Sprint 1-2',
-    newTaskTarget: 'mvp',
-    addNewTask() {
-        const title = this.newTaskTitle.trim();
-        if (!title) {
-            if (window.showToast) {
-                window.showToast({
-                    type: 'warning',
-                    title: 'NAMA TASK DIPERLUKAN',
-                    message: 'Silakan isi nama task atau judul fitur terlebih dahulu.'
-                });
-            }
-            return;
-        }
-        const item = {
-            title: title,
-            desc: this.newTaskDesc.trim() || 'Dielaborasi secara visual sebelum dokumen dikunci.',
-            category: this.newTaskCategory || 'CORE DOMAIN',
-            sprint_phase: this.newTaskSprint || (this.newTaskTarget === 'mvp' ? 'Sprint 1-2' : 'Fase 2 Roadmap')
-        };
-        if (this.newTaskTarget === 'mvp') {
-            this.mvpTasks.push(item);
-        } else {
-            this.phase2Tasks.push(item);
-        }
-        this.newTaskTitle = '';
-        this.newTaskDesc = '';
-        if (window.showToast) {
-            window.showToast({
-                type: 'info',
-                title: 'TASK DITAMBAHKAN',
-                message: 'Task baru berhasil dimasukkan ke daftar ' + (this.newTaskTarget === 'mvp' ? 'Fase 1 (MVP)' : 'Fase 2 (Roadmap)') + '.'
-            });
-        }
-    },
-    removeMvpTask(idx) {
-        if (this.mvpTasks.length <= 1) {
-            if (window.showToast) {
-                window.showToast({
-                    type: 'warning',
-                    title: 'MINIMAL 1 TASK',
-                    message: 'Daftar MVP wajib memiliki minimal satu spesifikasi fitur.'
-                });
-            }
-            return;
-        }
-        this.mvpTasks.splice(idx, 1);
-    },
-    removePhase2Task(idx) {
-        this.phase2Tasks.splice(idx, 1);
-    },
-    moveTaskToPhase2(idx) {
-        if (this.mvpTasks.length <= 1) {
-            if (window.showToast) {
-                window.showToast({
-                    type: 'warning',
-                    title: 'MINIMAL 1 TASK',
-                    message: 'Daftar MVP wajib memiliki minimal satu spesifikasi fitur.'
-                });
-            }
-            return;
-        }
-        const item = this.mvpTasks.splice(idx, 1)[0];
-        item.sprint_phase = 'Fase 2 Roadmap';
-        this.phase2Tasks.push(item);
-        if (window.showToast) {
-            window.showToast({
-                type: 'info',
-                title: 'PINDAH KE ROADMAP',
-                message: '&quot;' + item.title + '&quot; dipindahkan ke Fase 2 (Roadmap Susulan).'
-            });
-        }
-    },
-    moveTaskToMvp(idx) {
-        const item = this.phase2Tasks.splice(idx, 1)[0];
-        item.sprint_phase = 'Sprint 1-2';
-        this.mvpTasks.push(item);
-        if (window.showToast) {
-            window.showToast({
-                type: 'info',
-                title: 'PINDAH KE MVP',
-                message: '&quot;' + item.title + '&quot; dipromosikan menjadi Fitur Wajib (Fase 1 MVP).'
-            });
-        }
-    },
-    async submitSaveTasks() {
-        if (this.mvpTasks.length === 0) {
-            if (window.showToast) {
-                window.showToast({
-                    type: 'warning',
-                    title: 'MINIMAL 1 TASK',
-                    message: 'Daftar MVP harus memiliki minimal 1 task.'
-                });
-            }
-            return;
-        }
-        try {
-            const res = await window.saveBlueprintTasks('{{ $blueprint->slug }}', this.mvpTasks, this.phase2Tasks, () => { this.taskEditorSaving = true; }, () => { this.taskEditorSaving = false; });
-            if (res && res.success) {
-                if (window.showToast) {
-                    window.showToast({
-                        type: 'success',
-                        title: 'TASK BERHASIL DISIMPAN',
-                        message: res.message || 'Perubahan spesifikasi fitur berhasil disimpan. Memuat ulang...'
-                    });
-                }
-                this.taskEditorOpen = false;
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            }
-        } catch(err) {
-            if (window.showToast) {
-                window.showToast({
-                    type: 'error',
-                    title: 'GAGAL MENYIMPAN',
-                    message: err.message || 'Terjadi kesalahan sistem saat menyimpan perubahan task.'
-                });
-            }
-        }
-    },
-    scaffoldModalOpen: false,
-    scaffoldLoading: false,
-    scaffoldActiveTab: 'docker-compose.yml',
-    scaffoldFiles: {},
-    collaborators: [
-        { id: 'lead_arch', name: 'Lead Architect (Neriah Pro)', role: 'Lead Architect', is_architect: true },
-        { id: 'client_pic', name: '{{ $blueprint->client_name ?: "Klien" }}', role: 'Klien / Stakeholder', is_architect: false }
-    ],
-    collaboratorCursor: { x: 42, y: 28, visible: true, name: 'Lead Architect (Neriah Pro)' },
-    async openScaffoldModal() {
-        this.scaffoldModalOpen = true;
-        if (Object.keys(this.scaffoldFiles).length === 0) {
-            this.scaffoldLoading = true;
-            try {
-                const res = await fetch('{{ route('blueprint.scaffold.preview', $blueprint->slug) }}');
-                const data = await res.json();
-                if (data && data.files) {
-                    this.scaffoldFiles = data.files;
-                    const keys = Object.keys(data.files);
-                    if (keys.length > 0) this.scaffoldActiveTab = keys[0];
-                }
-            } catch(e) {
-                if (window.showToast) window.showToast({ type: 'error', title: 'GAGAL MEMUAT', message: 'Gagal memuat pratinjau scaffold.' });
-            } finally {
-                this.scaffoldLoading = false;
-            }
-        }
-    },
-    copyActiveScaffold() {
-        const code = this.scaffoldFiles[this.scaffoldActiveTab] || '';
-        if (!code) return;
-        navigator.clipboard.writeText(code).then(() => {
-            if (window.showToast) window.showToast({ type: 'success', title: 'KODE DISALIN', message: 'File ' + this.scaffoldActiveTab + ' berhasil disalin ke clipboard!' });
-        });
-    },
-    flowTab: 'visual', 
-    erdTab: 'visual', 
-    erdLang: 'id',
-    chartStudioTab: 'workflow',
-    devEducationMode: 'step_by_step',
-    devActiveStep: 0,
-    devCompletedSteps: (() => {
-        try {
-            return JSON.parse(localStorage.getItem('neriah_dev_progress_{{ $blueprint->slug }}') || '{}');
-        } catch(e) {
-            return {};
-        }
-    })(),
-    isStepCompleted(k) {
-        return !!this.devCompletedSteps[k];
-    },
-    toggleStepCompleted(k, label) {
-        this.devCompletedSteps[k] = !this.devCompletedSteps[k];
-        try {
-            localStorage.setItem('neriah_dev_progress_{{ $blueprint->slug }}', JSON.stringify(this.devCompletedSteps));
-        } catch(e){}
-        if (window.showToast) {
-            if (this.devCompletedSteps[k]) {
-                window.showToast({
-                    type: 'success',
-                    title: 'TAHAP TERVERIFIKASI',
-                    message: (label || k) + ' ditandai selesai & disimpan ke riwayat sprint.'
-                });
-            } else {
-                window.showToast({
-                    type: 'info',
-                    title: 'STATUS DIPERBARUI',
-                    message: (label || k) + ' dikembalikan ke status antrean (pending).'
-                });
-            }
-        }
-    },
-    resetDevProgress() {
-        this.devCompletedSteps = {};
-        try {
-            localStorage.removeItem('neriah_dev_progress_{{ $blueprint->slug }}');
-        } catch(e){}
-        if (window.showToast) {
-            window.showToast({
-                type: 'warning',
-                title: 'PROGRESS DIRESET',
-                message: 'Semua progres sprint developer telah dibersihkan.'
-            });
-        }
-    },
-    getDevCompletedCount() {
-        return Object.values(this.devCompletedSteps).filter(Boolean).length;
-    },
-    getDevProgressPercentage() {
-        const total = {{ $totalDevSteps }};
-        if (!total || total <= 0) return 0;
-        return Math.min(100, Math.round((this.getDevCompletedCount() / total) * 100));
-    },
-    selectedIdeTool: 'antigravity_ide',
-    selectedTier: '{{ $defaultSelectedTier }}',
-    tierAmounts: {{ json_encode($alpineTiers) }},
-    getDiscountAmount(tierKey) {
-        if (!this.appliedVoucher) return 0;
-        const contract = this.tierAmounts[tierKey]?.contract || 0;
-        if (this.appliedVoucher.is_free_bypass) return contract;
-        if (this.appliedVoucher.discount_type === 'percent') {
-            return Math.round(contract * (parseFloat(this.appliedVoucher.discount_value) / 100));
-        }
-        if (this.appliedVoucher.discount_type === 'fixed') {
-            return Math.min(contract, parseFloat(this.appliedVoucher.discount_value));
-        }
-        return 0;
-    },
-    getDiscountedContract(tierKey) {
-        const contract = this.tierAmounts[tierKey]?.contract || 0;
-        return Math.max(0, contract - this.getDiscountAmount(tierKey));
-    },
-    getDiscountedDp(tierKey) {
-        if (!this.appliedVoucher) return this.tierAmounts[tierKey]?.dp || 0;
-        if (this.appliedVoucher.is_free_bypass) return 0;
-        const finalContract = this.getDiscountedContract(tierKey);
-        return Math.round(finalContract * 0.50);
-    },
-    isPayingSnap: false,
-    devPlaybookOpen: true,
-    activeDevPhase: 1,
-    copyMasterPromptSuccess: false,
-    locale: localStorage.getItem('neriah_blueprint_lang') || '{{ app()->getLocale() === "en" ? "en" : "id" }}',
-    setLocale(l) {
-        this.locale = l;
-        try { localStorage.setItem('neriah_blueprint_lang', l); } catch(e){}
-    },
-    showAiPromptModal: false,
-    selectedPromptAgent: 'antigravity',
-    selectedPromptSprint: 'all',
-    generateAgentPrompt(agent, sprint) {
-        return window.getBlueprintAgentPrompt ? window.getBlueprintAgentPrompt(agent, sprint) : '';
-    },
-    agreeSignOff: false,
-    voucherCode: '',
-    appliedVoucher: null,
-    isValidatingVoucher: false,
-    isClaimingVoucher: false,
-    async applyVoucher() {
-        const c = this.voucherCode.trim().toUpperCase();
-        if (!c) {
-            if (window.showToast) {
-                window.showToast({ type: 'warning', title: 'KODE VOUCHER', message: 'Silakan masukkan kode voucher terlebih dahulu.' });
-            }
-            return;
-        }
-        try {
-            const v = await window.validateBlueprintVoucher('{{ $blueprint->slug }}', c, () => { this.isValidatingVoucher = true; }, () => { this.isValidatingVoucher = false; });
-            this.appliedVoucher = v;
-            if (window.showToast) {
-                window.showToast({ type: 'success', title: 'VOUCHER VALID', message: v.message || 'Potongan voucher berhasil diaplikasikan!' });
-            }
-        } catch(err) {
-            this.appliedVoucher = null;
-            if (window.showToast) {
-                window.showToast({ type: 'error', title: 'VOUCHER TIDAK VALID', message: err.message || 'Kode voucher tidak valid.' });
-            }
-        }
-    },
-    resetVoucher() {
-        this.appliedVoucher = null;
-        this.voucherCode = '';
-    },
-    async submitClaimVoucher() {
-        if (!this.appliedVoucher || !this.voucherCode.trim()) return;
-        try {
-            const res = await window.claimBlueprintVoucher('{{ $blueprint->slug }}', this.voucherCode.trim().toUpperCase(), this.agreeSignOff, () => { this.isClaimingVoucher = true; }, () => { this.isClaimingVoucher = false; });
-            if (res && res.success) {
-                if (window.showToast) {
-                    window.showToast({ type: 'success', title: 'PELAYANAN GRATIS AKTIF', message: res.message, duration: 4000 });
-                }
-                setTimeout(() => { window.location.reload(); }, 1800);
-            }
-        } catch(err) {
-            if (window.showToast) {
-                window.showToast({ type: 'error', title: 'KLAIM GAGAL', message: err.message || 'Gagal memproses klaim voucher.' });
-            }
-        }
-    },
-    activeSectionId: 'section-1',
-    indexSearchQuery: '',
-    indexAccordionOpen: true,
-    floatingIndexOpen: false,
-    autoSyncAccordion: true,
-    sectionGroupMap: {
-        'section-1': 'scope',
-        'section-1-5': 'scope',
-        'section-2': 'scope',
-        'section-3': 'scope',
-        'section-3-5': 'studio',
-        'section-3-8': 'studio',
-        'section-4': 'studio',
-        'section-5': 'studio',
-        'section-6': 'infra',
-        'section-7': 'legal',
-        'section-8': 'legal',
-        'section-9': 'legal',
-        'section-10': 'legal'
-    },
-    accordionGroups: {
-        scope: true,
-        studio: false,
-        infra: false,
-        legal: false
-    },
-    syncAccordionToSection(secId) {
-        if (!this.autoSyncAccordion) return;
-        const targetGroup = this.sectionGroupMap[secId];
-        if (!targetGroup) return;
-        for (const grp in this.accordionGroups) {
-            this.accordionGroups[grp] = (grp === targetGroup);
-        }
-        this.$nextTick(() => {
-            const activeItems = document.querySelectorAll(`[data-spy-sec="${secId}"]`);
-            activeItems.forEach(el => {
-                const scrollContainer = el.closest('.custom-prd-scrollbar');
-                if (scrollContainer) {
-                    const cRect = scrollContainer.getBoundingClientRect();
-                    const iRect = el.getBoundingClientRect();
-                    if (iRect.top < cRect.top + 15 || iRect.bottom > cRect.bottom - 15) {
-                        const relativeOffset = iRect.top - cRect.top + scrollContainer.scrollTop;
-                        scrollContainer.scrollTo({ top: Math.max(0, relativeOffset - 40), behavior: 'smooth' });
+    <script>
+        function blueprintApp() {
+            return {
+                userMenuOpen: false, 
+                paymentModalOpen: false, 
+                taskEditorOpen: false,
+                taskEditorSaving: false,
+                taskEditorTab: 'mvp',
+                mvpTasks: @json($prd['features']['mvp_phase1'] ?? []),
+                phase2Tasks: @json($prd['features']['phase2_roadmap'] ?? []),
+                newTaskTitle: '',
+                newTaskDesc: '',
+                newTaskCategory: 'CORE DOMAIN',
+                newTaskSprint: 'Sprint 1-2',
+                newTaskTarget: 'mvp',
+                addNewTask() {
+                    const title = this.newTaskTitle.trim();
+                    if (!title) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'warning',
+                                title: 'NAMA TASK DIPERLUKAN',
+                                message: 'Silakan isi nama task atau judul fitur terlebih dahulu.'
+                            });
+                        }
+                        return;
                     }
-                }
-            });
-        });
-    },
-    toggleAccordionGroup(grp) {
-        this.accordionGroups[grp] = !this.accordionGroups[grp];
-    },
-    expandAllGroups() {
-        this.accordionGroups.scope = true;
-        this.accordionGroups.studio = true;
-        this.accordionGroups.infra = true;
-        this.accordionGroups.legal = true;
-        this.autoSyncAccordion = false;
-    },
-    collapseAllGroups() {
-        this.accordionGroups.scope = false;
-        this.accordionGroups.studio = false;
-        this.accordionGroups.infra = false;
-        this.accordionGroups.legal = false;
-        this.autoSyncAccordion = false;
-    },
-    toggleAutoSync() {
-        this.autoSyncAccordion = !this.autoSyncAccordion;
-        if (this.autoSyncAccordion) {
-            this.syncAccordionToSection(this.activeSectionId);
-        }
-    },
-    jumpTo(id) {
-        window.jumpToSection(id);
-        this.activeSectionId = id;
-        this.autoSyncAccordion = true;
-        this.syncAccordionToSection(id);
-        this.floatingIndexOpen = false;
-    },
-    getActiveSectionTitle() {
-        const titles = {
-            'section-1': { id: '01. Executive Discovery', en: '01. Executive Discovery' },
-            'section-1-5': { id: '01.5 Analisis ROI & Garansi', en: '01.5 Business ROI & Guarantees' },
-            'section-2': { id: '02. RBAC & Aktor Sistem', en: '02. RBAC & System Actors' },
-            'section-3': { id: '03. Rekayasa Fitur MVP', en: '03. Feature Engineering' },
-            'section-3-5': { id: '04. Edukasi Handoff AI', en: '04. AI Handoff Playbook' },
-            'section-3-8': { id: '05. Virtual Studio Charts', en: '05. Virtual Charts Studio' },
-            'section-4': { id: '06. Alur Kerja User Flow', en: '06. Core User Flow' },
-            'section-5': { id: '07. Database ERD', en: '07. Database ERD Blueprint' },
-            'section-6': { id: '08. Evaluasi Infra VPS', en: '08. Cloud VPS & Infra' },
-            'section-7': { id: '09. Velocity Pricing', en: '09. Velocity Pricing' },
-            'section-8': { id: '10. Timeline Sprint Gantt', en: '10. Sprint Timeline' },
-            'section-9': { id: '11. Tata Kelola & SLA', en: '11. Governance & SLA' },
-            'section-10': { id: '12. Kunci Scope & DP', en: '12. Scope Freeze & DP' }
-        };
-        const s = titles[this.activeSectionId] || { id: 'Daftar Isi PRD', en: 'PRD Directory' };
-        return this.locale === 'en' ? s.en : s.id;
-    },
-    getActiveSectionIndex() {
-        const order = ['section-1', 'section-1-5', 'section-2', 'section-3', 'section-3-5', 'section-3-8', 'section-4', 'section-5', 'section-6', 'section-7', 'section-8', 'section-9', 'section-10'];
-        const idx = order.indexOf(this.activeSectionId);
-        return idx >= 0 ? (idx + 1) : 1;
-    }
-}" 
-x-init="
-    $nextTick(() => {
-        window.setupBlueprintScrollSpy(id => { 
-            activeSectionId = id; 
-            syncAccordionToSection(id);
-        });
-        syncAccordionToSection(activeSectionId);
-    });
-    $watch('flowTab', val => {
-        if (val === 'mermaid') $nextTick(() => window.renderMermaidDiagram('mermaid-flow-target', 'mermaid-flow-source'));
-    });
-    $watch('erdTab', val => {
-        if (val === 'mermaid') $nextTick(() => window.renderMermaidDiagram('mermaid-erd-target', 'mermaid-erd-source'));
-    });
-    $watch('chartStudioTab', val => {
-        if (val === 'workflow') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-flow-target', 'mermaid-studio-flow-source'));
-        if (val === 'erd') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-erd-target', 'mermaid-studio-erd-source'));
-        if (val === 'feature_dep') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-featdep-target', 'mermaid-studio-featdep-source'));
-        if (val === 'gantt') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-gantt-target', 'mermaid-studio-gantt-source'));
-        if (val === 'infra') $nextTick(() => window.renderMermaidDiagram('mermaid-studio-infra-target', 'mermaid-studio-infra-source'));
-    });
-    $nextTick(() => {
-        window.renderMermaidDiagram('mermaid-studio-flow-target', 'mermaid-studio-flow-source');
-        // Initialize Real-time Collaborative Presence Heartbeat
-        try {
-            const cid = 'c_' + Math.random().toString(36).substring(2, 9);
-            const syncPresence = (mx = 42, my = 28) => {
-                fetch('{{ route('api.blueprint.presence.update', $blueprint->slug) }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                    body: JSON.stringify({ client_id: cid, x: mx, y: my, section: activeSectionId })
-                }).then(r => r.json()).then(d => {
-                    if (d && d.collaborators && d.collaborators.length > 0) {
-                        collaborators = d.collaborators;
-                        const other = d.collaborators.find(c => c.id !== cid);
-                        if (other) {
-                            collaboratorCursor = { x: other.x || 42, y: other.y || 28, visible: true, name: other.name || 'Lead Architect (Neriah Pro)' };
+                    const item = {
+                        title: title,
+                        desc: this.newTaskDesc.trim() || 'Dielaborasi secara visual sebelum dokumen dikunci.',
+                        category: this.newTaskCategory || 'CORE DOMAIN',
+                        sprint_phase: this.newTaskSprint || (this.newTaskTarget === 'mvp' ? 'Sprint 1-2' : 'Fase 2 Roadmap')
+                    };
+                    if (this.newTaskTarget === 'mvp') {
+                        this.mvpTasks.push(item);
+                    } else {
+                        this.phase2Tasks.push(item);
+                    }
+                    this.newTaskTitle = '';
+                    this.newTaskDesc = '';
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: 'TASK DITAMBAHKAN',
+                            message: 'Task baru berhasil dimasukkan ke daftar ' + (this.newTaskTarget === 'mvp' ? 'Fase 1 (MVP)' : 'Fase 2 (Roadmap)') + '.'
+                        });
+                    }
+                },
+                removeMvpTask(idx) {
+                    if (this.mvpTasks.length <= 1) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'warning',
+                                title: 'MINIMAL 1 TASK',
+                                message: 'Daftar MVP wajib memiliki minimal satu spesifikasi fitur.'
+                            });
+                        }
+                        return;
+                    }
+                    this.mvpTasks.splice(idx, 1);
+                },
+                removePhase2Task(idx) {
+                    this.phase2Tasks.splice(idx, 1);
+                },
+                moveTaskToPhase2(idx) {
+                    if (this.mvpTasks.length <= 1) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'warning',
+                                title: 'MINIMAL 1 TASK',
+                                message: 'Daftar MVP wajib memiliki minimal satu spesifikasi fitur.'
+                            });
+                        }
+                        return;
+                    }
+                    const item = this.mvpTasks.splice(idx, 1)[0];
+                    item.sprint_phase = 'Fase 2 Roadmap';
+                    this.phase2Tasks.push(item);
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: 'PINDAH KE ROADMAP',
+                            message: '"' + item.title + '" dipindahkan ke Fase 2 (Roadmap Susulan).'
+                        });
+                    }
+                },
+                moveTaskToMvp(idx) {
+                    const item = this.phase2Tasks.splice(idx, 1)[0];
+                    item.sprint_phase = 'Sprint 1-2';
+                    this.mvpTasks.push(item);
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: 'PINDAH KE MVP',
+                            message: '"' + item.title + '" dipromosikan menjadi Fitur Wajib (Fase 1 MVP).'
+                        });
+                    }
+                },
+                async submitSaveTasks() {
+                    if (this.mvpTasks.length === 0) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'warning',
+                                title: 'MINIMAL 1 TASK',
+                                message: 'Daftar MVP harus memiliki minimal 1 task.'
+                            });
+                        }
+                        return;
+                    }
+                    try {
+                        const res = await window.saveBlueprintTasks('{{ $blueprint->slug }}', this.mvpTasks, this.phase2Tasks, () => { this.taskEditorSaving = true; }, () => { this.taskEditorSaving = false; });
+                        if (res && res.success) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: 'TASK BERHASIL DISIMPAN',
+                                    message: res.message || 'Perubahan spesifikasi fitur berhasil disimpan. Memuat ulang...'
+                                });
+                            }
+                            this.taskEditorOpen = false;
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        }
+                    } catch(err) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: 'GAGAL MENYIMPAN',
+                                message: err.message || 'Terjadi kesalahan sistem saat menyimpan perubahan task.'
+                            });
                         }
                     }
-                }).catch(() => {});
+                },
+                scaffoldModalOpen: false,
+                scaffoldLoading: false,
+                scaffoldActiveTab: 'docker-compose.yml',
+                scaffoldFiles: {},
+                collaborators: [
+                    { id: 'lead_arch', name: 'Lead Architect (Neriah Pro)', role: 'Lead Architect', is_architect: true },
+                    { id: 'client_pic', name: '{{ $blueprint->client_name ?: "Klien" }}', role: 'Klien / Stakeholder', is_architect: false }
+                ],
+                collaboratorCursor: { x: 42, y: 28, visible: true, name: 'Lead Architect (Neriah Pro)' },
+                async openScaffoldModal() {
+                    this.scaffoldModalOpen = true;
+                    if (Object.keys(this.scaffoldFiles).length === 0) {
+                        this.scaffoldLoading = true;
+                        try {
+                            const res = await fetch('{{ route('blueprint.scaffold.preview', $blueprint->slug) }}');
+                            const data = await res.json();
+                            if (data && data.files) {
+                                this.scaffoldFiles = data.files;
+                                const keys = Object.keys(data.files);
+                                if (keys.length > 0) this.scaffoldActiveTab = keys[0];
+                            }
+                        } catch(e) {
+                            if (window.showToast) window.showToast({ type: 'error', title: 'GAGAL MEMUAT', message: 'Gagal memuat pratinjau scaffold.' });
+                        } finally {
+                            this.scaffoldLoading = false;
+                        }
+                    }
+                },
+                copyActiveScaffold() {
+                    const code = this.scaffoldFiles[this.scaffoldActiveTab] || '';
+                    if (!code) return;
+                    navigator.clipboard.writeText(code).then(() => {
+                        if (window.showToast) window.showToast({ type: 'success', title: 'KODE DISALIN', message: 'File ' + this.scaffoldActiveTab + ' berhasil disalin ke clipboard!' });
+                    });
+                },
+                flowTab: 'visual', 
+                erdTab: 'visual', 
+                erdLang: 'id',
+                chartStudioTab: 'workflow',
+                devEducationMode: 'step_by_step',
+                devActiveStep: 0,
+                devCompletedSteps: (() => {
+                    try {
+                        return JSON.parse(localStorage.getItem('neriah_dev_progress_{{ $blueprint->slug }}') || '{}');
+                    } catch(e) {
+                        return {};
+                    }
+                })(),
+                isStepCompleted(k) {
+                    return !!this.devCompletedSteps[k];
+                },
+                toggleStepCompleted(k, label) {
+                    this.devCompletedSteps[k] = !this.devCompletedSteps[k];
+                    try {
+                        localStorage.setItem('neriah_dev_progress_{{ $blueprint->slug }}', JSON.stringify(this.devCompletedSteps));
+                    } catch(e){}
+                    if (window.showToast) {
+                        if (this.devCompletedSteps[k]) {
+                            window.showToast({
+                                type: 'success',
+                                title: 'TAHAP TERVERIFIKASI',
+                                message: (label || k) + ' ditandai selesai & disimpan ke riwayat sprint.'
+                            });
+                        } else {
+                            window.showToast({
+                                type: 'info',
+                                title: 'STATUS DIPERBARUI',
+                                message: (label || k) + ' dikembalikan ke status antrean (pending).'
+                            });
+                        }
+                    }
+                },
+                resetDevProgress() {
+                    this.devCompletedSteps = {};
+                    try {
+                        localStorage.removeItem('neriah_dev_progress_{{ $blueprint->slug }}');
+                    } catch(e){}
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'warning',
+                            title: 'PROGRESS DIRESET',
+                            message: 'Semua progres sprint developer telah dibersihkan.'
+                        });
+                    }
+                },
+                getDevCompletedCount() {
+                    return Object.values(this.devCompletedSteps).filter(Boolean).length;
+                },
+                getDevProgressPercentage() {
+                    const total = {{ $totalDevSteps }};
+                    if (!total || total <= 0) return 0;
+                    return Math.min(100, Math.round((this.getDevCompletedCount() / total) * 100));
+                },
+                selectedIdeTool: 'antigravity_ide',
+                selectedTier: '{{ $defaultSelectedTier }}',
+                tierAmounts: {{ json_encode($alpineTiers) }},
+                getDiscountAmount(tierKey) {
+                    if (!this.appliedVoucher) return 0;
+                    const contract = this.tierAmounts[tierKey]?.contract || 0;
+                    if (this.appliedVoucher.is_free_bypass) return contract;
+                    if (this.appliedVoucher.discount_type === 'percent') {
+                        return Math.round(contract * (parseFloat(this.appliedVoucher.discount_value) / 100));
+                    }
+                    if (this.appliedVoucher.discount_type === 'fixed') {
+                        return Math.min(contract, parseFloat(this.appliedVoucher.discount_value));
+                    }
+                    return 0;
+                },
+                getDiscountedContract(tierKey) {
+                    const contract = this.tierAmounts[tierKey]?.contract || 0;
+                    return Math.max(0, contract - this.getDiscountAmount(tierKey));
+                },
+                getDiscountedDp(tierKey) {
+                    if (!this.appliedVoucher) return this.tierAmounts[tierKey]?.dp || 0;
+                    if (this.appliedVoucher.is_free_bypass) return 0;
+                    const finalContract = this.getDiscountedContract(tierKey);
+                    return Math.round(finalContract * 0.50);
+                },
+                isPayingSnap: false,
+                devPlaybookOpen: true,
+                activeDevPhase: 1,
+                copyMasterPromptSuccess: false,
+                locale: localStorage.getItem('neriah_blueprint_lang') || '{{ app()->getLocale() === "en" ? "en" : "id" }}',
+                setLocale(l) {
+                    this.locale = l;
+                    try { localStorage.setItem('neriah_blueprint_lang', l); } catch(e){}
+                },
+                showAiPromptModal: false,
+                selectedPromptAgent: 'antigravity',
+                selectedPromptSprint: 'all',
+                generateAgentPrompt(agent, sprint) {
+                    return window.getBlueprintAgentPrompt ? window.getBlueprintAgentPrompt(agent, sprint) : '';
+                },
+                agreeSignOff: false,
+                voucherCode: '',
+                appliedVoucher: null,
+                isValidatingVoucher: false,
+                isClaimingVoucher: false,
+                async applyVoucher() {
+                    const c = this.voucherCode.trim().toUpperCase();
+                    if (!c) {
+                        if (window.showToast) {
+                            window.showToast({ type: 'warning', title: 'KODE VOUCHER', message: 'Silakan masukkan kode voucher terlebih dahulu.' });
+                        }
+                        return;
+                    }
+                    try {
+                        const v = await window.validateBlueprintVoucher('{{ $blueprint->slug }}', c, () => { this.isValidatingVoucher = true; }, () => { this.isValidatingVoucher = false; });
+                        this.appliedVoucher = v;
+                        if (window.showToast) {
+                            window.showToast({ type: 'success', title: 'VOUCHER VALID', message: v.message || 'Potongan voucher berhasil diaplikasikan!' });
+                        }
+                    } catch(err) {
+                        this.appliedVoucher = null;
+                        if (window.showToast) {
+                            window.showToast({ type: 'error', title: 'VOUCHER TIDAK VALID', message: err.message || 'Kode voucher tidak valid.' });
+                        }
+                    }
+                },
+                resetVoucher() {
+                    this.appliedVoucher = null;
+                    this.voucherCode = '';
+                },
+                async submitClaimVoucher() {
+                    if (!this.appliedVoucher || !this.voucherCode.trim()) return;
+                    try {
+                        const res = await window.claimBlueprintVoucher('{{ $blueprint->slug }}', this.voucherCode.trim().toUpperCase(), this.agreeSignOff, () => { this.isClaimingVoucher = true; }, () => { this.isClaimingVoucher = false; });
+                        if (res && res.success) {
+                            if (window.showToast) {
+                                window.showToast({ type: 'success', title: 'PELAYANAN GRATIS AKTIF', message: res.message, duration: 4000 });
+                            }
+                            setTimeout(() => { window.location.reload(); }, 1800);
+                        }
+                    } catch(err) {
+                        if (window.showToast) {
+                            window.showToast({ type: 'error', title: 'KLAIM GAGAL', message: err.message || 'Gagal memproses klaim voucher.' });
+                        }
+                    }
+                },
+                activeSectionId: 'section-1',
+                indexSearchQuery: '',
+                indexAccordionOpen: true,
+                floatingIndexOpen: false,
+                autoSyncAccordion: true,
+                sectionGroupMap: {
+                    'section-1': 'scope',
+                    'section-1-5': 'scope',
+                    'section-2': 'scope',
+                    'section-3': 'scope',
+                    'section-3-5': 'studio',
+                    'section-3-8': 'studio',
+                    'section-4': 'studio',
+                    'section-5': 'studio',
+                    'section-6': 'infra',
+                    'section-7': 'legal',
+                    'section-8': 'legal',
+                    'section-9': 'legal',
+                    'section-10': 'legal'
+                },
+                accordionGroups: {
+                    scope: true,
+                    studio: false,
+                    infra: false,
+                    legal: false
+                },
+                syncAccordionToSection(secId) {
+                    if (!this.autoSyncAccordion) return;
+                    const targetGroup = this.sectionGroupMap[secId];
+                    if (!targetGroup) return;
+                    for (const grp in this.accordionGroups) {
+                        this.accordionGroups[grp] = (grp === targetGroup);
+                    }
+                    this.$nextTick(() => {
+                        const activeItems = document.querySelectorAll(`[data-spy-sec="${secId}"]`);
+                        activeItems.forEach(el => {
+                            const scrollContainer = el.closest('.custom-prd-scrollbar');
+                            if (scrollContainer) {
+                                const cRect = scrollContainer.getBoundingClientRect();
+                                const iRect = el.getBoundingClientRect();
+                                if (iRect.top < cRect.top + 15 || iRect.bottom > cRect.bottom - 15) {
+                                    const relativeOffset = iRect.top - cRect.top + scrollContainer.scrollTop;
+                                    scrollContainer.scrollTo({ top: Math.max(0, relativeOffset - 40), behavior: 'smooth' });
+                                }
+                            }
+                        });
+                    });
+                },
+                toggleAccordionGroup(grp) {
+                    this.accordionGroups[grp] = !this.accordionGroups[grp];
+                },
+                expandAllGroups() {
+                    this.accordionGroups.scope = true;
+                    this.accordionGroups.studio = true;
+                    this.accordionGroups.infra = true;
+                    this.accordionGroups.legal = true;
+                    this.autoSyncAccordion = false;
+                },
+                collapseAllGroups() {
+                    this.accordionGroups.scope = false;
+                    this.accordionGroups.studio = false;
+                    this.accordionGroups.infra = false;
+                    this.accordionGroups.legal = false;
+                    this.autoSyncAccordion = false;
+                },
+                toggleAutoSync() {
+                    this.autoSyncAccordion = !this.autoSyncAccordion;
+                    if (this.autoSyncAccordion) {
+                        this.syncAccordionToSection(this.activeSectionId);
+                    }
+                },
+                jumpTo(id) {
+                    window.jumpToSection(id);
+                    this.activeSectionId = id;
+                    this.autoSyncAccordion = true;
+                    this.syncAccordionToSection(id);
+                    this.floatingIndexOpen = false;
+                },
+                getActiveSectionTitle() {
+                    const titles = {
+                        'section-1': { id: '01. Executive Discovery', en: '01. Executive Discovery' },
+                        'section-1-5': { id: '01.5 Analisis ROI & Garansi', en: '01.5 Business ROI & Guarantees' },
+                        'section-2': { id: '02. RBAC & Aktor Sistem', en: '02. RBAC & System Actors' },
+                        'section-3': { id: '03. Rekayasa Fitur MVP', en: '03. Feature Engineering' },
+                        'section-3-5': { id: '04. Edukasi Handoff AI', en: '04. AI Handoff Playbook' },
+                        'section-3-8': { id: '05. Virtual Studio Charts', en: '05. Virtual Charts Studio' },
+                        'section-4': { id: '06. Alur Kerja User Flow', en: '06. Core User Flow' },
+                        'section-5': { id: '07. Database ERD', en: '07. Database ERD Blueprint' },
+                        'section-6': { id: '08. Evaluasi Infra VPS', en: '08. Cloud VPS & Infra' },
+                        'section-7': { id: '09. Velocity Pricing', en: '09. Velocity Pricing' },
+                        'section-8': { id: '10. Timeline Sprint Gantt', en: '10. Sprint Timeline' },
+                        'section-9': { id: '11. Tata Kelola & SLA', en: '11. Governance & SLA' },
+                        'section-10': { id: '12. Kunci Scope & DP', en: '12. Scope Freeze & DP' }
+                    };
+                    const s = titles[this.activeSectionId] || { id: 'Daftar Isi PRD', en: 'PRD Directory' };
+                    return this.locale === 'en' ? s.en : s.id;
+                },
+                getActiveSectionIndex() {
+                    const order = ['section-1', 'section-1-5', 'section-2', 'section-3', 'section-3-5', 'section-3-8', 'section-4', 'section-5', 'section-6', 'section-7', 'section-8', 'section-9', 'section-10'];
+                    const idx = order.indexOf(this.activeSectionId);
+                    return idx >= 0 ? (idx + 1) : 1;
+                },
+                init() {
+                    this.$nextTick(() => {
+                        window.setupBlueprintScrollSpy(id => { 
+                            this.activeSectionId = id; 
+                            this.syncAccordionToSection(id);
+                        });
+                        this.syncAccordionToSection(this.activeSectionId);
+                    });
+                    this.$watch('flowTab', val => {
+                        if (val === 'mermaid') this.$nextTick(() => window.renderMermaidDiagram('mermaid-flow-target', 'mermaid-flow-source'));
+                    });
+                    this.$watch('erdTab', val => {
+                        if (val === 'mermaid') this.$nextTick(() => window.renderMermaidDiagram('mermaid-erd-target', 'mermaid-erd-source'));
+                    });
+                    this.$watch('chartStudioTab', val => {
+                        if (val === 'workflow') this.$nextTick(() => window.renderMermaidDiagram('mermaid-studio-flow-target', 'mermaid-studio-flow-source'));
+                        if (val === 'erd') this.$nextTick(() => window.renderMermaidDiagram('mermaid-studio-erd-target', 'mermaid-studio-erd-source'));
+                        if (val === 'feature_dep') this.$nextTick(() => window.renderMermaidDiagram('mermaid-studio-featdep-target', 'mermaid-studio-featdep-source'));
+                        if (val === 'gantt') this.$nextTick(() => window.renderMermaidDiagram('mermaid-studio-gantt-target', 'mermaid-studio-gantt-source'));
+                        if (val === 'infra') this.$nextTick(() => window.renderMermaidDiagram('mermaid-studio-infra-target', 'mermaid-studio-infra-source'));
+                    });
+                    this.$nextTick(() => {
+                        window.renderMermaidDiagram('mermaid-studio-flow-target', 'mermaid-studio-flow-source');
+                        // Initialize Real-time Collaborative Presence Heartbeat
+                        try {
+                            const cid = 'c_' + Math.random().toString(36).substring(2, 9);
+                            const syncPresence = (mx = 42, my = 28) => {
+                                fetch('{{ route('api.blueprint.presence.update', $blueprint->slug) }}', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                                    body: JSON.stringify({ client_id: cid, x: mx, y: my, section: this.activeSectionId })
+                                }).then(r => r.json()).then(d => {
+                                    if (d && d.collaborators && d.collaborators.length > 0) {
+                                        this.collaborators = d.collaborators;
+                                        const other = d.collaborators.find(c => c.id !== cid);
+                                        if (other) {
+                                            this.collaboratorCursor = { x: other.x || 42, y: other.y || 28, visible: true, name: other.name || 'Lead Architect (Neriah Pro)' };
+                                        }
+                                    }
+                                }).catch(() => {});
+                            };
+                            syncPresence();
+                            setInterval(() => syncPresence(window.lastMouseX || 42, window.lastMouseY || 28), 4500);
+                            window.addEventListener('mousemove', e => {
+                                window.lastMouseX = Math.round((e.clientX / window.innerWidth) * 100);
+                                window.lastMouseY = Math.round((e.clientY / window.innerHeight) * 100);
+                            }, { passive: true });
+                        } catch(e) {}
+                    });
+                }
             };
-            syncPresence();
-            setInterval(() => syncPresence(window.lastMouseX || 42, window.lastMouseY || 28), 4500);
-            window.addEventListener('mousemove', e => {
-                window.lastMouseX = Math.round((e.clientX / window.innerWidth) * 100);
-                window.lastMouseY = Math.round((e.clientY / window.innerHeight) * 100);
-            }, { passive: true });
-        } catch(e) {}
-    });
-" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
+        }
+    </script>
+</head>
+<body x-data="blueprintApp()" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- Header Navigation Bar (Sharp Precision Theme) -->
     <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-3 px-6 sticky top-0 z-50 no-print transition-colors">

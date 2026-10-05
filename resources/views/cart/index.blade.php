@@ -124,14 +124,15 @@
                     @foreach($items as $item)
                         @php
                             $tierKey = $item['tier'] ?? 'standard';
-                            $tierLabel = 'Standard (30 Hari)';
+                            $tierLabel = $item['tier_name'] ?? 'Standard Velocity (30 Hari)';
+                            $isHighSpeed = str_contains(strtolower($tierKey), 'hyper') || str_contains(strtolower($tierKey), 'emergency');
+                            $isMiddleFast = str_contains(strtolower($tierKey), 'fast') || str_contains(strtolower($tierKey), 'swarm') || str_contains(strtolower($tierKey), 'ultra');
+
                             $tierBadge = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300';
-                            if ($tierKey === 'fast_track') {
-                                $tierLabel = '⚡ Fast-Track (14 Hari) &bull; Gemini Ultra AI Accelerator';
-                                $tierBadge = 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40';
-                            } elseif ($tierKey === 'hyper_sprint') {
-                                $tierLabel = '🔥 Hyper-Sprint (7 Hari) &bull; 24/7 War Room Squad';
+                            if ($isHighSpeed) {
                                 $tierBadge = 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40';
+                            } elseif ($isMiddleFast) {
+                                $tierBadge = 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40';
                             }
                         @endphp
                         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 item-row" data-expires="{{ $item['expires_at'] }}" x-data="{ showBreakdown: false }">
@@ -142,7 +143,7 @@
                                             ID: {{ strtoupper(substr($item['blueprint']->id, 0, 8)) }}
                                         </span>
                                         <span class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 font-bold {{ $tierBadge }}">
-                                            {!! $tierLabel !!}
+                                            {!! e($tierLabel) !!}
                                         </span>
                                     </div>
                                     <h3 class="text-lg font-black uppercase text-zinc-900 dark:text-zinc-100 mt-1">

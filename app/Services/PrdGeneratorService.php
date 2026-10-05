@@ -180,7 +180,7 @@ class PrdGeneratorService
             'server_hardware_sizing' => self::calculateServerHardwareSizing($businessName, $masalah, $mvpItems, $extraContext),
             'itemized_cost_breakdown' => $itemizedEstimation,
             'business_roi_analysis' => self::generateBusinessRoiAnalysis($blueprint, $itemizedEstimation),
-            'velocity_pricing_options' => $itemizedEstimation['velocity_tiers'] ?? self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null, $businessName, $masalah),
+            'velocity_pricing_options' => self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null, $businessName, $masalah) ?: ($itemizedEstimation['velocity_tiers'] ?? []),
             'governance_and_sla' => [
                 'title' => 'Tata Kelola, Standar Kualitas & SLA Serah Terima (Strict Governance & Handoff)',
                 'definition_of_done' => [
@@ -1906,6 +1906,138 @@ class PrdGeneratorService
                 ],
                 'description' => 'Solusi berdaya tahan tinggi bagi entitas bisnis yang siap bersaing di pasar komersial dengan volume transaksi masif.',
             ],
+        ];
+    }
+
+    /**
+     * Get primary velocity pricing tiers for display (e.g. 3 comparative options in PRD view).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function getPrimaryVelocityTiers(VisionBlueprint $blueprint): array
+    {
+        // 1. If stored in prd_content['velocity_pricing_options'] and non-empty
+        if (!empty($blueprint->prd_content['velocity_pricing_options']) && is_array($blueprint->prd_content['velocity_pricing_options'])) {
+            return array_values($blueprint->prd_content['velocity_pricing_options']);
+        }
+
+        // 2. Derive from blueprint budget and context
+        $contextBudget = $blueprint->user_metadata['kisaran_budget'] 
+            ?? ($blueprint->prd_content['engineering_specs']['budget_range'] ?? null);
+
+        $generated = self::generateVelocityPricingOptions(
+            $blueprint->target_waktu ?? '30 Hari Kerja',
+            $contextBudget,
+            $blueprint->nama_bisnis ?? $blueprint->client_name,
+            $blueprint->masalah_utama ?? ''
+        );
+
+        if (!empty($generated)) {
+            return $generated;
+        }
+
+        // 3. Fallback to itemized breakdown tiers
+        $itemized = $blueprint->prd_content['itemized_cost_breakdown'] ?? null;
+        if (empty($itemized) || empty($itemized['velocity_tiers'])) {
+            $itemized = self::calculateItemizedEstimation($blueprint);
+        }
+
+        return $itemized['velocity_tiers'] ?? [];
+    }
+
+    /**
+     * Resolve all available velocity pricing tiers for a blueprint, ensuring complete consistency
+     * between the PRD view, Cart, Midtrans Snap checkout, and Digital Contracts.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function getAvailableVelocityTiers(VisionBlueprint $blueprint): array
+    {
+        $tiers = [];
+
+        // 1. Primary continuum tiers (UMKM -> Growth -> Scale -> Enterprise)
+        foreach (self::getPrimaryVelocityTiers($blueprint) as $t) {
+            if (!empty($t['id'])) {
+                $tiers[$t['id']] = $t;
+            }
+        }
+
+        // 2. Ensure budget-aware continuum tiers are also available
+        $contextBudget = $blueprint->user_metadata['kisaran_budget'] 
+            ?? ($blueprint->prd_content['engineering_specs']['budget_range'] ?? null);
+        $generated = self::generateVelocityPricingOptions(
+            $blueprint->target_waktu ?? '30 Hari Kerja',
+            $contextBudget,
+            $blueprint->nama_bisnis ?? $blueprint->client_name,
+            $blueprint->masalah_utama ?? ''
+        );
+        foreach ($generated as $t) {
+            if (!empty($t['id']) && !isset($tiers[$t['id']])) {
+                $tiers[$t['id']] = $t;
+            }
+        }
+
+        // 3. Ensure itemized cost breakdown tiers (standard, fast_track, hyper_sprint) are also available
+        $itemized = $blueprint->prd_content['itemized_cost_breakdown'] ?? null;
+        if (empty($itemized) || empty($itemized['velocity_tiers'])) {
+            $itemized = self::calculateItemizedEstimation($blueprint);
+        }
+        if (!empty($itemized['velocity_tiers']) && is_array($itemized['velocity_tiers'])) {
+            foreach ($itemized['velocity_tiers'] as $t) {
+                if (!empty($t['id']) && !isset($tiers[$t['id']])) {
+                    $tiers[$t['id']] = $t;
+                }
+            }
+        }
+
+        return array_values($tiers);
+    }
+
+    /**
+     * Find a specific velocity tier by its ID with smart matching and safe fallback.
+     *
+     * @return array<string, mixed>
+     */
+    public static function resolveVelocityTier(VisionBlueprint $blueprint, ?string $tierId): array
+    {
+        $allTiers = self::getAvailableVelocityTiers($blueprint);
+
+        if (!empty($tierId)) {
+            // 1. Exact match
+            foreach ($allTiers as $t) {
+                if (($t['id'] ?? '') === $tierId) {
+                    return $t;
+                }
+            }
+
+            // 2. Intelligent fuzzy/keyword match (e.g. 'enterprise_fast' matching 'fast' or 'swarm')
+            $cleanTier = strtolower(trim($tierId));
+            foreach ($allTiers as $t) {
+                $tid = strtolower($t['id'] ?? '');
+                if ((str_contains($cleanTier, 'fast') || str_contains($cleanTier, 'swarm')) && (str_contains($tid, 'fast') || str_contains($tid, 'swarm'))) {
+                    return $t;
+                }
+                if ((str_contains($cleanTier, 'hyper') || str_contains($cleanTier, 'emergency') || str_contains($cleanTier, 'war_room')) && (str_contains($tid, 'hyper') || str_contains($tid, 'emergency'))) {
+                    return $t;
+                }
+                if (str_contains($cleanTier, 'standard') && str_contains($tid, 'standard')) {
+                    return $t;
+                }
+            }
+        }
+
+        if (!empty($allTiers)) {
+            // Default to middle recommended tier if available, otherwise first tier
+            return count($allTiers) >= 2 ? $allTiers[1] : $allTiers[0];
+        }
+
+        return [
+            'id' => 'standard',
+            'name' => 'Standard Velocity (30 Hari Kerja)',
+            'duration' => '30 Hari Kerja',
+            'contract_amount' => 50000000.00,
+            'dp_amount' => 25000000.00,
+            'pelunasan_amount' => 25000000.00,
         ];
     }
 

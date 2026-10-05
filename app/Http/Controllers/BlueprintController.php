@@ -287,21 +287,8 @@ class BlueprintController extends Controller
         }
 
         $tier = request('tier', 'standard');
-        $itemizedData = $blueprint->prd_content['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
-        $velocityTiers = $blueprint->prd_content['velocity_pricing_options'] ?? ($itemizedData['velocity_tiers'] ?? []);
-
-        $matchedTier = null;
-        foreach ($velocityTiers as $vt) {
-            if (($vt['id'] ?? '') === $tier) {
-                $matchedTier = $vt;
-                break;
-            }
-        }
-        if (!$matchedTier && !empty($velocityTiers)) {
-            $matchedTier = $velocityTiers[0];
-        }
-
-        $contractAmount = $matchedTier ? (float) $matchedTier['contract_amount'] : 25000000.00;
+        $matchedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+        $contractAmount = (float) $matchedTier['contract_amount'];
 
         // Check if voucher applied
         $voucherCode = strtoupper(trim((string) request('voucher', request('voucher_code', ''))));
@@ -356,22 +343,10 @@ class BlueprintController extends Controller
         }
 
         $tier = $request->input('tier', 'standard');
-        $itemizedData = $blueprint->prd_content['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
-        $velocityTiers = $blueprint->prd_content['velocity_pricing_options'] ?? ($itemizedData['velocity_tiers'] ?? []);
+        $matchedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
 
-        $matchedTier = null;
-        foreach ($velocityTiers as $vt) {
-            if (($vt['id'] ?? '') === $tier) {
-                $matchedTier = $vt;
-                break;
-            }
-        }
-        if (!$matchedTier && !empty($velocityTiers)) {
-            $matchedTier = $velocityTiers[0];
-        }
-
-        $contractAmount = $matchedTier ? (float) $matchedTier['contract_amount'] : 25000000.00;
-        $tierLabel = $matchedTier ? ($matchedTier['name'] ?? 'Standard Velocity') : 'Standard Velocity';
+        $contractAmount = (float) $matchedTier['contract_amount'];
+        $tierLabel = $matchedTier['name'] ?? 'Standard Velocity';
 
         // Check for voucher discount
         $voucherCode = strtoupper(trim((string) $request->input('voucher_code', '')));
@@ -418,7 +393,7 @@ class BlueprintController extends Controller
             ],
             'item_details' => [
                 [
-                    'id' => 'DP-' . strtoupper($tier),
+                    'id' => 'DP-' . strtoupper($matchedTier['id'] ?? $tier),
                     'price' => $finalDpAmount,
                     'quantity' => 1,
                     'name' => substr($itemName, 0, 50),

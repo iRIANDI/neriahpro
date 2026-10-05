@@ -496,12 +496,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     </script>
 @php
     $itemizedScope = $prd['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
-    $pricingTiers = $prd['velocity_pricing_options'] ?? ($itemizedScope['velocity_tiers'] ?? \App\Services\PrdGeneratorService::generateVelocityPricingOptions(
-        $blueprint->target_waktu ?? '30 Hari Kerja',
-        $blueprint->user_metadata['kisaran_budget'] ?? null,
-        $blueprint->nama_bisnis ?? $blueprint->client_name,
-        $blueprint->masalah_utama ?? ''
-    ));
+    $pricingTiers = \App\Services\PrdGeneratorService::getPrimaryVelocityTiers($blueprint);
     $alpineTiers = [];
     foreach ($pricingTiers as $t) {
         $alpineTiers[$t['id']] = [

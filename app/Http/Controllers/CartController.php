@@ -64,12 +64,23 @@ class CartController extends Controller
                     $blueprint->refresh();
                 }
 
-                $contractAmount = (float) ($item['contract_amount'] ?? 25000000);
-                $dpAmount = (float) ($item['dp_amount'] ?? ($contractAmount * 0.50));
                 $tier = $item['tier'] ?? 'standard';
-                $tierName = $item['tier_name'] ?? 'Standard Velocity (30 Hari)';
-                $targetWaktu = $item['target_waktu'] ?? ($blueprint->target_waktu ?: '30 Hari Kerja');
+                $resolvedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+
+                $contractAmount = (float) ($resolvedTier['contract_amount'] ?? ($item['contract_amount'] ?? 25000000));
+                $dpAmount = (float) ($resolvedTier['dp_amount'] ?? ($item['dp_amount'] ?? ($contractAmount * 0.50)));
+                $tierName = $resolvedTier['name'] ?? ($item['tier_name'] ?? 'Standard Velocity (30 Hari)');
+                $targetWaktu = $resolvedTier['duration'] ?? ($item['target_waktu'] ?? ($blueprint->target_waktu ?: '30 Hari Kerja'));
                 $itemizedItems = $item['itemized_items'] ?? ($blueprint->prd_content['itemized_cost_breakdown']['items'] ?? []);
+
+                // Auto-sync / heal cart session if amounts were previously mismatched
+                if ($contractAmount !== (float)($item['contract_amount'] ?? 0) || $dpAmount !== (float)($item['dp_amount'] ?? 0)) {
+                    $cart[$slug]['contract_amount'] = $contractAmount;
+                    $cart[$slug]['dp_amount'] = $dpAmount;
+                    $cart[$slug]['tier_name'] = $tierName;
+                    $cart[$slug]['target_waktu'] = $targetWaktu;
+                    session()->put('neriah_cart', $cart);
+                }
 
                 $items[] = [
                     'blueprint' => $blueprint,
@@ -156,24 +167,13 @@ class CartController extends Controller
         }
 
         $tier = $request->input('tier', 'standard');
+        $matchedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
         $itemizedData = $blueprint->prd_content['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
-        $velocityTiers = $blueprint->prd_content['velocity_pricing_options'] ?? ($itemizedData['velocity_tiers'] ?? []);
 
-        $matchedTier = null;
-        foreach ($velocityTiers as $vt) {
-            if (($vt['id'] ?? '') === $tier) {
-                $matchedTier = $vt;
-                break;
-            }
-        }
-        if (!$matchedTier && !empty($velocityTiers)) {
-            $matchedTier = $velocityTiers[0];
-        }
-
-        $contractAmount = $matchedTier ? (float) $matchedTier['contract_amount'] : 25000000.00;
-        $dpAmount = $matchedTier ? (float) $matchedTier['dp_amount'] : ($contractAmount * 0.50);
-        $targetWaktu = $matchedTier ? ($matchedTier['duration'] ?? '30 Hari Kerja') : '30 Hari Kerja';
-        $tierName = $matchedTier ? ($matchedTier['name'] ?? 'Standard Velocity') : 'Standard Velocity (30 Hari Kerja)';
+        $contractAmount = (float) $matchedTier['contract_amount'];
+        $dpAmount = (float) $matchedTier['dp_amount'];
+        $targetWaktu = $matchedTier['duration'] ?? '30 Hari Kerja';
+        $tierName = $matchedTier['name'] ?? 'Standard Velocity (30 Hari Kerja)';
 
         // Allow explicit amount overrides if passed safely
         if ($request->filled('contract_amount')) {
@@ -345,12 +345,14 @@ class CartController extends Controller
         $firstPhone = null;
 
         foreach ($cart as $slug => $item) {
-            $contractAmount = (float) ($item['contract_amount'] ?? 50000000);
-            $dpAmount = (int) ($item['dp_amount'] ?? ($contractAmount * 0.50));
+            $blueprint = VisionBlueprint::where('slug', $slug)->first();
+            $resolvedTier = $blueprint ? \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $item['tier'] ?? 'standard') : null;
+
+            $contractAmount = $resolvedTier ? (float) $resolvedTier['contract_amount'] : (float) ($item['contract_amount'] ?? 50000000);
+            $dpAmount = $resolvedTier ? (int) $resolvedTier['dp_amount'] : (int) ($item['dp_amount'] ?? ($contractAmount * 0.50));
             $totalContract += $contractAmount;
             $totalDp += $dpAmount;
 
-            $blueprint = VisionBlueprint::where('slug', $slug)->first();
             if ($blueprint && !$firstClientName) {
                 $firstClientName = $blueprint->client_name ?: $blueprint->nama_bisnis;
                 $firstEmail = $blueprint->email;

@@ -577,4 +577,66 @@ class BlueprintVoucherAndAuditTrailTest extends TestCase
         $this->assertNull(session('neriah_cart'));
         $this->assertNull(session('neriah_cart_voucher'));
     }
+
+    public function test_enterprise_fast_tier_charges_exact_fifty_million_in_midtrans_snap_and_cart(): void
+    {
+        $blueprint = VisionBlueprint::create([
+            'client_name' => 'Alexander Wijaya',
+            'nama_bisnis' => 'Apex Logistics Global',
+            'email' => 'alexander@apexlogistics.co.id',
+            'phone' => '+62 812-8899-7711',
+            'masalah_utama' => 'Pencatatan manual manifest armada',
+            'tujuan_utama' => 'Sistem manifest digital real-time',
+            'target_waktu' => '30 Hari Kerja',
+            'is_published' => true,
+            'user_metadata' => [
+                'kisaran_budget' => 'Rp 50.000.000 - Rp 100.000.000 (Growth Production)',
+            ],
+        ]);
+
+        $blueprint->generateAndSavePrd();
+
+        // 1. Verify resolveVelocityTier returns Gemini Ultra Swarm with Rp 100M contract & Rp 50M DP
+        $tier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, 'enterprise_fast');
+        $this->assertEquals('enterprise_fast', $tier['id']);
+        $this->assertEquals(100000000.00, (float) $tier['contract_amount']);
+        $this->assertEquals(50000000.00, (float) $tier['dp_amount']);
+        $this->assertStringContainsString('Gemini Ultra Swarm', $tier['name']);
+
+        // 2. Blueprint Snap Token request with enterprise_fast tier
+        $response = $this->postJson(route('blueprint.snap-token', $blueprint->slug), [
+            'tier' => 'enterprise_fast',
+            'agree_sign_off' => true,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson(['success' => true]);
+        $this->assertNotEmpty($response->json('token'));
+
+        // 3. Add to Cart with enterprise_fast tier
+        $cartAddRes = $this->post(route('cart.add', $blueprint->slug), [
+            'tier' => 'enterprise_fast',
+        ]);
+        $cartAddRes->assertRedirect(route('cart.index'));
+
+        $cart = session('neriah_cart');
+        $this->assertNotNull($cart);
+        $this->assertArrayHasKey($blueprint->slug, $cart);
+        $this->assertEquals(100000000.00, (float) $cart[$blueprint->slug]['contract_amount']);
+        $this->assertEquals(50000000.00, (float) $cart[$blueprint->slug]['dp_amount']);
+        $this->assertStringContainsString('Gemini Ultra Swarm', $cart[$blueprint->slug]['tier_name']);
+
+        // 4. Cart Page shows Rp 50.000.000 DP and correct tier name
+        $cartPageRes = $this->get(route('cart.index'));
+        $cartPageRes->assertStatus(200);
+        $cartPageRes->assertSee('50.000.000');
+        $cartPageRes->assertSee('Gemini Ultra Swarm');
+
+        // 5. Cart Snap Token generates 50M DP
+        $cartSnapRes = $this->postJson(route('cart.snap-token'));
+        $cartSnapRes->assertStatus(200)
+            ->assertJson(['success' => true]);
+        $this->assertNotEmpty($cartSnapRes->json('token'));
+    }
 }
+

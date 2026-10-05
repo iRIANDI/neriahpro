@@ -28,26 +28,26 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
             </a>
             <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed max-w-sm mb-6">
               {isEn 
-                ? 'Enterprise software architecture and engineering hub. Empowering businesses to design PRD blueprints, scalable database schemas, contract locks, and modern applications with zero bottlenecks.'
-                : 'Pusat arsitektur dan rekayasa perangkat lunak berskala tinggi. Membantu bisnis merancang spesifikasi PRD, skema database, penguncian kontrak, dan implementasi aplikasi modern tanpa batasan.'}
+                ? 'Platform providing innovative applications and digital systems that empower everyday life needs. From Project OS architectural blueprinting to automated productivity studios.'
+                : 'Situs dan platform penyedia aplikasi-aplikasi inovatif yang membantu berbagai kebutuhan hidup dan produktivitas Anda. Dari perancangan cetak biru Project OS hingga studio karier dan sistem digital modern.'}
             </p>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-[11px] font-mono uppercase tracking-wider rounded-none">
               <span className="w-2 h-2 bg-emerald-500 rounded-none animate-pulse"></span>
-              <span>{isEn ? 'TESTED SYSTEM ENGINEERING STANDARDS' : 'STANDAR REKAYASA SISTEM TERUJI'}</span>
+              <span>{isEn ? 'LIFE SOLUTIONS & SOFTWARE ENGINEERING' : 'APLIKASI SOLUSI HIDUP & REKAYASA SISTEM'}</span>
             </div>
           </div>
 
-          {/* 4 Pillars Services Hub */}
+          {/* Solutions Hub */}
           {hasAnyPillar && (
             <div className="md:col-span-3">
               <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-                {isEn ? 'Solutions & Systems' : 'Solusi & Sistem'}
+                {isEn ? 'Life & Tech Solutions' : 'Aplikasi & Solusi'}
               </h4>
               <ul className="space-y-2.5 font-mono text-xs">
                 {isBlueprintEnabled && (
                   <li>
                     <a href="/blueprint" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                      <span>Project OS & Blueprint</span>
+                      <span>Project OS & Blueprint (PRD)</span>
                       <ArrowUpRight className="w-3 h-3 text-zinc-400" />
                     </a>
                   </li>
@@ -55,23 +55,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
                 {isCvProEnabled && (
                   <li>
                     <a href="/cv-pro" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                      <span>CV & Portfolio Studio</span>
-                      <ArrowUpRight className="w-3 h-3 text-zinc-400" />
-                    </a>
-                  </li>
-                )}
-                {isContractEnabled && (
-                  <li>
-                    <a href="/blueprint#contract" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                      <span>{isEn ? 'Digital Contract & E-Sign' : 'Kontrak Digital & E-Sign'}</span>
-                      <ArrowUpRight className="w-3 h-3 text-zinc-400" />
-                    </a>
-                  </li>
-                )}
-                {isClientOnboardingEnabled && (
-                  <li>
-                    <a href="/blueprint" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                      <span>Enterprise Rapid Monolith</span>
+                      <span>CV Pro Studio & Karir</span>
                       <ArrowUpRight className="w-3 h-3 text-zinc-400" />
                     </a>
                   </li>

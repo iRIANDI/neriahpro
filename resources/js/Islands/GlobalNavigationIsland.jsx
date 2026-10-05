@@ -207,8 +207,8 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
             <span className="font-black text-lg sm:text-xl uppercase tracking-tighter text-zinc-900 dark:text-white font-sans">
               NERIAH<span className="text-emerald-500">PRO</span>
             </span>
-            <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400 border-l border-zinc-300 dark:border-zinc-700 pl-2 hidden md:inline">
-              DIGITAL HUB
+            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 border-l border-zinc-300 dark:border-zinc-700 pl-2 hidden md:inline font-bold">
+              {lang === 'id' ? 'APLIKASI SOLUSI HIDUP' : 'LIFE SOLUTION APPS'}
             </span>
           </a>
 
@@ -259,30 +259,6 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                           </div>
                           <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
                             {lang === 'id' ? 'Studio CV Visual & Portofolio Klien' : 'Visual Resume & Portfolio Studio'}
-                          </p>
-                        </a>
-                      )}
-
-                      {isContractEnabled && (
-                        <a href="/blueprint#contract" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="font-bold text-zinc-900 dark:text-white text-xs">Digital Contract</span>
-                            <span className="px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[9px] font-bold">E-SIGN</span>
-                          </div>
-                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
-                            {lang === 'id' ? 'Tanda Tangan Elektronik & Penguncian Scope' : 'Legal E-Signature & Scope Freeze'}
-                          </p>
-                        </a>
-                      )}
-
-                      {isClientOnboardingEnabled && (
-                        <a href="/blueprint" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="font-bold text-zinc-900 dark:text-white text-xs">Rapid Monolith</span>
-                            <span className="px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[9px] font-bold">ENTERPRISE</span>
-                          </div>
-                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
-                            {lang === 'id' ? 'Arsitektur High-Throughput & VPS Dedicated' : 'High-Throughput Architecture & VPS'}
                           </p>
                         </a>
                       )}
@@ -461,19 +437,9 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                   CV Pro Studio &rarr;
                 </a>
               )}
-              {isContractEnabled && (
-                <a href="/blueprint#contract" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                  Digital Contract (E-Sign) &rarr;
-                </a>
-              )}
-              {isClientOnboardingEnabled && (
-                <a href="/blueprint" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                  Enterprise Monolith &rarr;
-                </a>
-              )}
               {hasAnyService && (
                 <a href="#services" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                  Layanan Digital HUB
+                  Aplikasi Solusi Kebutuhan Hidup
                 </a>
               )}
               <a href="#architecture" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">

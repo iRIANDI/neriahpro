@@ -33,6 +33,11 @@ Route::post('/blueprint/{slug}/voucher/claim', [BlueprintController::class, 'cla
 Route::get('/blueprint/{slug}/download/pdf', [BlueprintController::class, 'downloadPdf'])->name('blueprint.download-pdf');
 Route::get('/blueprint/{slug}/download/md', [BlueprintController::class, 'downloadMd'])->name('blueprint.download-md');
 Route::get('/blueprint/{slug}/raw-md', [BlueprintController::class, 'rawMd'])->name('blueprint.raw-md');
+Route::get('/blueprint/{slug}/export/scaffold', [BlueprintController::class, 'exportScaffold'])->name('blueprint.export-scaffold');
+Route::get('/blueprint/{slug}/scaffold/preview', [BlueprintController::class, 'previewScaffold'])->name('blueprint.scaffold.preview');
+Route::get('/blueprint/{slug}/scaffold-preview', [BlueprintController::class, 'previewScaffold'])->name('blueprint.scaffold-preview');
+Route::post('/api/blueprint/{slug}/presence', [BlueprintController::class, 'updatePresence'])->name('api.blueprint.presence.update');
+Route::get('/api/blueprint/{slug}/presence', [BlueprintController::class, 'getPresence'])->name('api.blueprint.presence.get');
 Route::post('/blueprint/{slug}/tasks/update', [BlueprintController::class, 'updateTasks'])->name('blueprint.tasks.update');
 
 // Payment Gateway Webhooks (Midtrans DLQ Handler)

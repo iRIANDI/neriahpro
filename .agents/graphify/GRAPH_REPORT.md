@@ -128,6 +128,9 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/blueprint/{slug}`: Halaman preview dokumen PRD, ERD, dan Tech Stack (`BlueprintController::show`).
 - `/blueprint/{slug}/raw-md`: Endpoint raw Markdown PRD Ultimate untuk 1-click clipboard prompt AI Code Agent (`BlueprintController::rawMd`).
 - `/blueprint/{slug}/download/md`: Endpoint unduh dokumen spesifikasi PRD Ultimate format Markdown (`BlueprintController::downloadMd`).
+- `/blueprint/{slug}/export/scaffold`: Endpoint ekspor 1-click arsip zip berisikan docker-compose.yml, schema_complete.sql (strict ULID), dan struktur routing Laravel 13 / Next.js (`BlueprintController::exportScaffold`).
+- `/blueprint/{slug}/scaffold/preview`: Endpoint AJAX JSON preview source code berkas scaffold (`BlueprintController::previewScaffold`).
+- `/api/blueprint/{slug}/presence`: Endpoint POST & GET sinkronisasi kehadiran kolaborator real-time (Lead Architect & Klien) dan koordinat kursor langsung (`BlueprintController::updatePresence`, `BlueprintController::getPresence`).
 - `/blueprint/{slug}/download/pdf`: Endpoint unduh dokumen PRD format PDF (`BlueprintController::downloadPdf`).
 - `/blueprint/{slug}/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Blueprint DP dengan kalkulasi diskon voucher otomatis (`BlueprintController::getSnapToken`).
 - `/blueprint/{slug}/voucher/validate`: Validasi kode voucher promo / subsidi (`BlueprintController::validateVoucher`).
@@ -149,6 +152,8 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 ## 5. Layanan Inti & Background Scheduler
 
+- **`App\Services\ScaffoldGeneratorService`**:
+  Mesin sintesis boilerplate dan scaffold kode dari dokumen PRD/ERD: menghasilkan file `docker-compose.yml` (PHP 8.4, PostgreSQL 16, Redis 7, Nginx, Mailpit), `.env.example`, migrasi SQL `schema_complete.sql` lengkap dengan skema strict ULID (`VARCHAR(26)`), routing web & API Laravel 13, serta Next.js App Router API route (`route.ts`). Mengemasnya ke dalam file `.zip` sekali klik via `ZipArchive`.
 - **`App\Services\PrdGeneratorService`**:
   Mesin sintesis PRD Ultimate & Technical Architecture: mendekomposisi kebutuhan bisnis menjadi vertical slices terstruktur (Frontend Anti-AI-Slop, Backend Keyset O(1) & ULID, API Contracts, dan AI Code Agent Prompt Directives), visualisasi diagram alur kerja Mermaid Flowchart, skema relasional Mermaid ERD PostgreSQL, evaluasi infrastruktur (Hosting Ladder & Scale Matrix), serta generator dokumen Markdown (.md) komprehensif.
 - **`App\Services\MidtransSnapService`**:

@@ -965,6 +965,131 @@ class PrdGeneratorService
                 ['category' => 'Infrastructure & Runtime', 'name' => 'Dedicated VPS via Nixpacks & Docker', 'desc' => 'Container isolation, Nginx HTTP/2, automated SSL, Zero-downtime deploy'],
                 ['category' => 'AI Acceleration Engine', 'name' => 'Gemini Ultra / Pro API SDK', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
             ],
+            'server_hardware_sizing' => self::calculateServerHardwareSizing($businessName, $masalah, $mvpItems, $extraContext),
+        ];
+    }
+
+    /**
+     * Compute tailored server hardware capacity sizing based on business workload.
+     */
+    public static function calculateServerHardwareSizing(string $businessName, string $masalah, array $mvpItems, array $extraContext = []): array
+    {
+        $scaleDeclared = strtolower($extraContext['skala_pengguna'] ?? '');
+        $isHighTraffic = str_contains($scaleDeclared, '500.000') || str_contains($scaleDeclared, '1.000.000') || str_contains($scaleDeclared, 'enterprise');
+        $isMediumTraffic = str_contains($scaleDeclared, '100.000') || str_contains($scaleDeclared, '250.000');
+
+        $hasAi = false;
+        $hasMedia = false;
+        $hasPayment = false;
+
+        foreach ($mvpItems as $item) {
+            $text = strtolower(($item['title'] ?? '') . ' ' . ($item['desc'] ?? ''));
+            if (str_contains($text, 'ai') || str_contains($text, 'vector') || str_contains($text, 'cerdas') || str_contains($text, 'rekomendasi')) $hasAi = true;
+            if (str_contains($text, 'upload') || str_contains($text, 'foto') || str_contains($text, 'gambar') || str_contains($text, 'media') || str_contains($text, 'berkas')) $hasMedia = true;
+            if (str_contains($text, 'bayar') || str_contains($text, 'midtrans') || str_contains($text, 'checkout') || str_contains($text, 'transaksi')) $hasPayment = true;
+        }
+
+        if ($isHighTraffic) {
+            $tierName = 'Enterprise High-Throughput Dedicated VPS';
+            $vcpu = 4;
+            $ramGb = 8;
+            $storageNvmeGb = 160;
+            $bandwidthTb = 10;
+            $monthlyCostIdr = 'Rp 450.000 - Rp 950.000';
+            $monthlyCostUsd = '$30 - $60';
+            $profile = 'High-Concurrency OLTP & Asynchronous Worker Cluster';
+        } elseif ($isMediumTraffic || $hasAi) {
+            $tierName = 'Production Performance Dedicated VPS (Rekomendasi Utama)';
+            $vcpu = 2;
+            $ramGb = 4;
+            $storageNvmeGb = 80;
+            $bandwidthTb = 5;
+            $monthlyCostIdr = 'Rp 200.000 - Rp 450.000';
+            $monthlyCostUsd = '$15 - $30';
+            $profile = 'Balanced Web Application, PostgreSQL In-Memory Buffer & Background Queues';
+        } else {
+            $tierName = 'Lean Cloud Starter / Micro VPS';
+            $vcpu = 2;
+            $ramGb = 2;
+            $storageNvmeGb = 40;
+            $bandwidthTb = 2;
+            $monthlyCostIdr = 'Rp 90.000 - Rp 250.000';
+            $monthlyCostUsd = '$6 - $15';
+            $profile = 'Lean Resource Footprint for Early-Stage Validation & Business Profile';
+        }
+
+        return [
+            'tier_name' => $tierName,
+            'workload_profile' => $profile,
+            'specifications' => [
+                'vcpu' => [
+                    'count' => $vcpu . ' vCPU Cores (Dedicated High-Frequency)',
+                    'architecture' => 'x86_64 AMD EPYC / Intel Xeon Cascade Lake (3.0 GHz+)',
+                    'allocation' => [
+                        'Web Server & PHP-FPM Workers' => round($vcpu * 0.5, 1) . ' vCPU (Penanganan 25-50 HTTP req/detik)',
+                        'PostgreSQL 16 Database Engine' => round($vcpu * 0.3, 1) . ' vCPU (Eksekusi query B-Tree & ULID cursor)',
+                        'Redis In-Memory Queue & Scheduler' => round($vcpu * 0.2, 1) . ' vCPU (Pemrosesan background jobs asinkron)',
+                    ],
+                ],
+                'ram' => [
+                    'total' => $ramGb . ' GB RAM DDR4 / DDR5 ECC',
+                    'budget_distribution' => [
+                        ['component' => 'Linux OS Kernel & Base Daemons', 'size' => round($ramGb * 0.12, 2) . ' GB', 'pct' => '12%'],
+                        ['component' => 'PHP-FPM Worker Pool (15-30 Processes)', 'size' => round($ramGb * 0.25, 2) . ' GB', 'pct' => '25%'],
+                        ['component' => 'PostgreSQL 16 shared_buffers & work_mem', 'size' => round($ramGb * 0.28, 2) . ' GB', 'pct' => '28%'],
+                        ['component' => 'Redis Cache, Sessions & Queues', 'size' => round($ramGb * 0.15, 2) . ' GB', 'pct' => '15%'],
+                        ['component' => 'Safety Headroom for Traffic Bursts & PDF/Excel Exports', 'size' => round($ramGb * 0.20, 2) . ' GB', 'pct' => '20%'],
+                    ],
+                ],
+                'storage' => [
+                    'capacity' => $storageNvmeGb . ' GB NVMe SSD (PCIe Gen 4.0)',
+                    'speed' => 'Read/Write hingga 3.500 MB/s (Zero I/O Wait)',
+                    'distribution' => [
+                        ['use' => 'OS Linux, Nixpacks Runtimes & Container Engine', 'size' => '12 GB'],
+                        ['use' => 'PostgreSQL 16 Data Tables, WAL & Indices (~10M Baris Data)', 'size' => round($storageNvmeGb * 0.35) . ' GB'],
+                        ['use' => 'Curator Media Storage & Dokumen Attachment', 'size' => round($storageNvmeGb * 0.35) . ' GB'],
+                        ['use' => 'Cadangan Snapshot Lokal & Rolling DB Dump', 'size' => round($storageNvmeGb * 0.15) . ' GB'],
+                    ],
+                ],
+                'network' => [
+                    'port_speed' => '1 Gbps Uplink Dedicated Port',
+                    'bandwidth' => $bandwidthTb . ' TB / Bulan (Unmetered Fair Usage)',
+                    'latency_target' => '< 25 ms Domestik Indonesia via Cloudflare Global CDN Edge',
+                ],
+            ],
+            'estimated_monthly_investment' => [
+                'idr' => $monthlyCostIdr . ' / bulan',
+                'usd' => $monthlyCostUsd . ' / month',
+            ],
+            'benchmark_providers' => [
+                [
+                    'name' => 'Managed Dedicated Cloud VPS Neriah Pro',
+                    'badge' => 'REKOMENDASI TERPADU (AGENCY MANAGED)',
+                    'plan' => 'Custom Cloud Container (Postgres 16, Redis, Automated Backup)',
+                    'est_cost' => $monthlyCostIdr . ' / bulan',
+                    'pros' => 'Terima beres, zero DevOps maintenance bagi klien, backup rolling otomatis setiap tengah malam.',
+                ],
+                [
+                    'name' => 'IDCloudHost / Biznet Gio (Domestik Indonesia)',
+                    'badge' => 'DATA CENTER LOKAL (IIX)',
+                    'plan' => 'Cloud VPS Pro ' . $vcpu . 'C/' . $ramGb . 'GB',
+                    'est_cost' => 'Rp ' . number_format($vcpu * 90000 + $ramGb * 35000, 0, ',', '.') . ' / bulan',
+                    'pros' => 'Data tersimpan di wilayah hukum Indonesia, latensi transfer perbankan lokal optimal.',
+                ],
+                [
+                    'name' => 'Hetzner Cloud / DigitalOcean (Global Hyperscaler)',
+                    'badge' => 'GLOBAL COST-TO-PERFORMANCE LEADER',
+                    'plan' => 'CX/CPX Series (' . $vcpu . ' vCPU / ' . $ramGb . 'GB RAM)',
+                    'est_cost' => $monthlyCostUsd . ' / bulan (Rp ' . number_format($vcpu * 85000 + $ramGb * 30000, 0, ',', '.') . ' / bln)',
+                    'pros' => 'Hardware AMD EPYC kelas atas dengan stabilitas SLA 99.95%.',
+                ],
+            ],
+            'scaling_thresholds' => [
+                'CPU Utilization: Rata-rata penggunaan melampaui 75% selama 15 menit berturut-turut.',
+                'RAM Saturation: Penggunaan memori riil konsisten di atas 85% dari total kapasitas.',
+                'Disk Capacity: Ruang kosong NVMe tersisa kurang dari 20%.',
+                'Pencegahan: Naikkan tier server hanya dalam 2 menit tanpa perlu memprogram ulang aplikasi (Seamless Vertical Scaling).',
+            ],
         ];
     }
 

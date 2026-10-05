@@ -664,7 +664,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     }));
   }, []);
 
-  const [indexTopOffset, setIndexTopOffset] = useState(68);
+  const [indexTopOffset, setIndexTopOffset] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const heroEl = document.getElementById('blueprint-hero');
+      if (heroEl) {
+        return Math.max(heroEl.getBoundingClientRect().bottom + 16, 68);
+      }
+    }
+    return 360;
+  });
 
   const jumpToSection = useCallback((id) => {
     if (id === 'section-ide-studio') {
@@ -755,7 +763,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           const minTop = 68; // sticky header is ~56px + 12px gap
           if (heroEl) {
             const rect = heroEl.getBoundingClientRect();
-            const calculatedTop = Math.min(Math.max(rect.bottom + 12, minTop), 220);
+            // Guarantee index never overlaps or enters the hero area
+            const calculatedTop = Math.max(rect.bottom + 16, minTop);
             setIndexTopOffset(calculatedTop);
           } else {
             setIndexTopOffset(minTop);

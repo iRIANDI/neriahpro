@@ -4059,11 +4059,149 @@ x-init="
                     </div>
                 </div>
 
-                <!-- 2. Monolith vs Decoupled Assessment -->
+                <!-- 2. Analisis & Matriks Spesifikasi Hardware Server Nyata (Hardware Capacity Sizing Engine) -->
+                @php
+                    $serverSizing = $archEval['server_hardware_sizing'] ?? \App\Services\PrdGeneratorService::calculateServerHardwareSizing(
+                        $blueprint->nama_bisnis ?? $blueprint->client_name,
+                        $blueprint->masalah_utama ?? '',
+                        $prd['features']['mvp_phase1'] ?? [],
+                        $blueprint->user_metadata ?? []
+                    );
+                @endphp
+                <div class="mb-8 p-6 bg-zinc-950 border-2 border-emerald-500 font-mono text-zinc-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4 mb-5">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase tracking-wider">HARDWARE SIZING ENGINE</span>
+                                <span class="text-xs text-zinc-400">&bull; {{ $serverSizing['workload_profile'] }}</span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-black uppercase text-white">
+                                Rekomendasi Spesifikasi Server: {{ $serverSizing['tier_name'] }}
+                            </h3>
+                        </div>
+                        <div class="text-left sm:text-right bg-zinc-900 border border-zinc-800 p-2.5">
+                            <span class="text-[10px] text-zinc-500 block uppercase">Estimasi Biaya Server</span>
+                            <strong class="text-emerald-400 text-sm font-black">{{ $serverSizing['estimated_monthly_investment']['idr'] }}</strong>
+                            <span class="text-zinc-500 text-[10px] block">({{ $serverSizing['estimated_monthly_investment']['usd'] }})</span>
+                        </div>
+                    </div>
+
+                    <!-- 4 Hardware Pillar Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <!-- vCPU -->
+                        <div class="p-4 bg-zinc-900 border border-zinc-800">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] text-zinc-400 font-bold uppercase">PROSESOR (vCPU)</span>
+                                <span class="text-emerald-400 font-black text-xs">&part; CPU</span>
+                            </div>
+                            <div class="text-base font-black text-white mb-1">{{ $serverSizing['specifications']['vcpu']['count'] }}</div>
+                            <p class="text-[10px] text-zinc-400 mb-3">{{ $serverSizing['specifications']['vcpu']['architecture'] }}</p>
+                            <div class="space-y-1.5 pt-2 border-t border-zinc-800 text-[10px] text-zinc-400">
+                                @foreach($serverSizing['specifications']['vcpu']['allocation'] as $allocKey => $allocVal)
+                                    <div>&bull; <strong class="text-zinc-300">{{ $allocKey }}:</strong> {{ $allocVal }}</div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- RAM -->
+                        <div class="p-4 bg-zinc-900 border border-zinc-800">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] text-zinc-400 font-bold uppercase">MEMORI (RAM ECC)</span>
+                                <span class="text-sky-400 font-black text-xs">&infin; MEM</span>
+                            </div>
+                            <div class="text-base font-black text-white mb-1">{{ $serverSizing['specifications']['ram']['total'] }}</div>
+                            <p class="text-[10px] text-zinc-400 mb-3">Distribusi Anggaran Memori Terisolasi</p>
+                            <div class="space-y-1.5 pt-2 border-t border-zinc-800 text-[10px] text-zinc-400">
+                                @foreach($serverSizing['specifications']['ram']['budget_distribution'] as $b)
+                                    <div class="flex justify-between">
+                                        <span class="truncate pr-1">{{ $b['component'] }}</span>
+                                        <strong class="text-sky-300 shrink-0">{{ $b['size'] }}</strong>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Storage -->
+                        <div class="p-4 bg-zinc-900 border border-zinc-800">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] text-zinc-400 font-bold uppercase">STORAGE (NVMe SSD)</span>
+                                <span class="text-amber-400 font-black text-xs">&Delta; DISK</span>
+                            </div>
+                            <div class="text-base font-black text-white mb-1">{{ $serverSizing['specifications']['storage']['capacity'] }}</div>
+                            <p class="text-[10px] text-zinc-400 mb-3">{{ $serverSizing['specifications']['storage']['speed'] }}</p>
+                            <div class="space-y-1.5 pt-2 border-t border-zinc-800 text-[10px] text-zinc-400">
+                                @foreach($serverSizing['specifications']['storage']['distribution'] as $d)
+                                    <div class="flex justify-between">
+                                        <span class="truncate pr-1">{{ $d['use'] }}</span>
+                                        <strong class="text-amber-300 shrink-0">{{ $d['size'] }}</strong>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Network -->
+                        <div class="p-4 bg-zinc-900 border border-zinc-800">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] text-zinc-400 font-bold uppercase">JARINGAN & BANDWIDTH</span>
+                                <span class="text-emerald-400 font-black text-xs">&theta; NET</span>
+                            </div>
+                            <div class="text-base font-black text-white mb-1">{{ $serverSizing['specifications']['network']['port_speed'] }}</div>
+                            <p class="text-[10px] text-zinc-400 mb-3">{{ $serverSizing['specifications']['network']['bandwidth'] }}</p>
+                            <div class="space-y-1.5 pt-2 border-t border-zinc-800 text-[10px] text-zinc-400">
+                                <div>&bull; <strong class="text-zinc-300">Latensi Target:</strong> {{ $serverSizing['specifications']['network']['latency_target'] }}</div>
+                                <div>&bull; <strong class="text-zinc-300">Proteksi:</strong> Anti-DDoS Anycast L3/L4/L7</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Provider Benchmark Comparison Table -->
+                    <div class="mb-5">
+                        <div class="text-xs font-bold uppercase text-zinc-300 mb-2 flex items-center gap-1.5">
+                            <span>Perbandingan Benchmark Provider Server Riil:</span>
+                        </div>
+                        <div class="overflow-x-auto border border-zinc-800">
+                            <table class="w-full text-[11px] text-left">
+                                <thead class="bg-zinc-900 text-zinc-400 uppercase font-mono text-[10px] border-b border-zinc-800">
+                                    <tr>
+                                        <th class="py-2.5 px-3">Provider Cloud</th>
+                                        <th class="py-2.5 px-3">Tipe Paket</th>
+                                        <th class="py-2.5 px-3">Estimasi Biaya</th>
+                                        <th class="py-2.5 px-3">Kelebihan Operasional</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-800/60 font-mono">
+                                    @foreach($serverSizing['benchmark_providers'] as $p)
+                                        <tr class="hover:bg-zinc-900/60 transition">
+                                            <td class="py-2 px-3">
+                                                <strong class="text-white block">{{ $p['name'] }}</strong>
+                                                <span class="text-[9px] text-emerald-400 uppercase">{{ $p['badge'] }}</span>
+                                            </td>
+                                            <td class="py-2 px-3 text-zinc-300">{{ $p['plan'] }}</td>
+                                            <td class="py-2 px-3 font-bold text-emerald-400">{{ $p['est_cost'] }}</td>
+                                            <td class="py-2 px-3 text-zinc-400 font-sans text-[11px]">{{ $p['pros'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Scaling Triggers -->
+                    <div class="p-3.5 bg-zinc-900/80 border border-zinc-800 text-[11px] text-zinc-400">
+                        <strong class="text-amber-400 uppercase block mb-1">Indikator Kapan Harus Upgrade Server (Scaling Triggers):</strong>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px]">
+                            @foreach($serverSizing['scaling_thresholds'] as $st)
+                                <div>&check; {{ $st }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Monolith vs Decoupled Assessment -->
                 <div class="mb-8">
                     <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
                         <span class="w-2 h-2 bg-emerald-500"></span>
-                        2. Penilaian Pola Arsitektur: Modern Monolith vs Decoupled (Microservices)
+                        3. Penilaian Pola Arsitektur: Modern Monolith vs Decoupled (Microservices)
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Modern Monolith -->

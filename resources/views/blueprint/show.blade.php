@@ -1017,7 +1017,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
     <!-- Header Navigation Bar (Sharp Precision Theme) -->
     <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-2.5 px-4 sm:px-6 sticky top-0 z-50 no-print transition-colors">
-        <div class="w-full max-w-[1700px] mx-auto flex items-center justify-between gap-3 overflow-x-auto custom-prd-scrollbar py-0.5">
+        <div class="w-full max-w-[1700px] mx-auto flex items-center justify-between gap-2 sm:gap-3">
             <!-- Left Branding -->
             <div class="flex items-center gap-3 shrink-0">
                 <a href="/" class="text-sm font-black uppercase tracking-tight flex items-center gap-2 text-zinc-900 dark:text-white shrink-0">
@@ -1057,7 +1057,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <svg class="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
 
-                    <div x-show="openLang" x-cloak class="absolute right-0 mt-1 w-44 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none shadow-xl z-50 py-1 font-mono text-xs max-h-60 overflow-y-auto custom-prd-scrollbar">
+                    <div x-show="openLang" x-cloak class="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none shadow-xl z-[100] py-1 font-mono text-xs max-h-60 overflow-y-auto custom-prd-scrollbar">
                         <div class="px-2.5 py-1 text-[10px] uppercase font-bold text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
                             Whitelist Global (Tier 2)
                         </div>
@@ -1163,7 +1163,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <svg class="w-3 h-3 transition-transform" :class="userMenuOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                         <!-- Navigation Board Dropdown Menu -->
-                        <div x-show="userMenuOpen" x-cloak x-transition.opacity.duration.150ms class="absolute right-0 top-full mt-1.5 w-64 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-emerald-500 shadow-2xl z-50 font-mono">
+                        <div x-show="userMenuOpen" x-cloak x-transition.opacity.duration.150ms class="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-emerald-500 shadow-2xl z-[100] font-mono">
                             <div class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800">
                                 <div class="text-[9px] text-zinc-400 uppercase tracking-widest font-bold">AKTOR TERAUTENTIKASI</div>
                                 <div class="text-xs font-bold text-zinc-900 dark:text-white truncate mt-0.5">{{ Auth::user()->name }}</div>

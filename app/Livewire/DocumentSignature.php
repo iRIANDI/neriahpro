@@ -58,8 +58,13 @@ class DocumentSignature extends Component implements HasForms
             'digital_signature_image' => $data['digital_signature_image'],
             'signed_at' => now(), // Stored in UTC (standard)
             'signer_ip_address' => request()->ip(),
-            'status' => 'signed'
+            'status' => 'signed',
+            'scope_locked' => true,
         ]);
+
+        if ($this->document->related instanceof \App\Models\VisionBlueprint) {
+            $this->document->related->recordSignOff(request()->ip(), request()->userAgent());
+        }
 
         $this->isSigned = true;
     }

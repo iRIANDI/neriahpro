@@ -435,9 +435,12 @@ class BlueprintController extends Controller
             ], $snapResponse['status_code'] ?? 500);
         }
 
-        // Record digital sign-off and SHA-256 integrity hash if agreed
+        // Record pending signer metadata without prematurely locking agreement
         if ($request->boolean('agree_sign_off')) {
-            $blueprint->recordSignOff($request->ip(), $request->userAgent());
+            $blueprint->update([
+                'signer_ip' => $request->ip(),
+                'signer_user_agent' => substr((string) $request->userAgent(), 0, 500),
+            ]);
         }
 
         if ($voucher) {
@@ -454,7 +457,7 @@ class BlueprintController extends Controller
             [
                 'title' => 'Perjanjian Kerja Sama - ' . ($blueprint->nama_bisnis ?: $blueprint->client_name),
                 'status' => 'pending_signature',
-                'scope_locked' => true,
+                'scope_locked' => false,
                 'contract_amount' => $contractAmount,
                 'dp_amount' => $finalDpAmount,
                 'midtrans_order_id' => $orderId,
@@ -696,30 +699,15 @@ class BlueprintController extends Controller
 
         $blueprint->fitur_wajib = implode("\n", $fiturWajibLines);
         $blueprint->fitur_tambahan = implode("\n", $fiturTambahanLines);
+        $blueprint->save();
 
-        // Update structured prd_content
-        $prd = $blueprint->prd_content ?? [];
-        $prd['features']['mvp_phase1'] = $mvpTasks;
-        $prd['features']['phase2_roadmap'] = $phase2Tasks;
-
-        if (isset($prd['engineering_specs']['mvp_specs'])) {
-            $prd['engineering_specs']['mvp_specs'] = $mvpTasks;
-        }
-        if (isset($prd['engineering_specs']['phase2_specs'])) {
-            $prd['engineering_specs']['phase2_specs'] = $phase2Tasks;
-        }
-
-        $blueprint->prd_content = $prd;
-
-        // Recalculate itemized cost breakdown with the updated tasks
-        $itemized = \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
-        $prd['itemized_cost_breakdown'] = $itemized;
-        $prd['velocity_pricing_options'] = $itemized['velocity_tiers'] ?? ($prd['velocity_pricing_options'] ?? []);
-        $blueprint->prd_content = $prd;
-
-        // Recalculate cryptographic hash of the new specification
+        // Regenerate complete Ultimate PRD with deep vertical slice engineering specs, BDD, diagrams, and costs
+        $prd = $blueprint->generateAndSavePrd();
+        $blueprint->refresh();
         $blueprint->document_sha256 = $blueprint->calculatePrdHash();
         $blueprint->save();
+
+        $itemized = $prd['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
 
         return response()->json([
             'success' => true,

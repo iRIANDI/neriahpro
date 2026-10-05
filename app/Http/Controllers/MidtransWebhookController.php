@@ -101,6 +101,7 @@ class MidtransWebhookController extends Controller
             foreach ($documents as $document) {
                 $document->update([
                     'status' => 'signed',
+                    'scope_locked' => true,
                     'signed_at' => now(),
                     'signer_ip_address' => $request->ip(),
                 ]);
@@ -158,6 +159,7 @@ class MidtransWebhookController extends Controller
                     if ($doc) {
                         $doc->update([
                             'status' => 'signed',
+                            'scope_locked' => true,
                             'signed_at' => now(),
                             'signer_ip_address' => $request->ip(),
                             'midtrans_order_id' => $orderId,

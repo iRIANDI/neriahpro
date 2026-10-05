@@ -51,6 +51,12 @@ class CartController extends Controller
             }
 
             $blueprint = VisionBlueprint::where('slug', $slug)->first();
+            if (!$blueprint || $blueprint->signed_agreement || $blueprint->project_status === 'In Development (DP Paid)') {
+                unset($cart[$slug]);
+                $hasExpired = true;
+                continue;
+            }
+
             if ($blueprint) {
                 // Ensure PRD with itemized estimation is populated
                 if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['itemized_cost_breakdown'])) {
@@ -87,9 +93,11 @@ class CartController extends Controller
             }
         }
 
-        if ($hasExpired) {
+        if (empty($cart)) {
+            session()->forget(['neriah_cart', 'neriah_cart_voucher']);
+        } elseif ($hasExpired) {
             session()->put('neriah_cart', $cart);
-            session()->flash('warning', 'Satu atau lebih slot reservasi proyek telah kadaluwarsa dan dilepas secara otomatis untuk mencegah Ghost Hold.');
+            session()->flash('warning', 'Satu atau lebih slot reservasi proyek telah diperbarui atau dilepas secara otomatis.');
         }
 
         // Voucher Calculation for Cart

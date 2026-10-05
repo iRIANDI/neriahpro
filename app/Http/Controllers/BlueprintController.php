@@ -257,7 +257,10 @@ class BlueprintController extends Controller
 
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
 
-        $isScopeLocked = (bool) $blueprint->signed_agreement || $blueprint->documents()->where('scope_locked', true)->exists();
+        $isScopeLocked = $blueprint->isScopeFrozen();
+        $isDpConfirmed = $blueprint->isDpConfirmed();
+        $isContractSigned = $blueprint->isContractSigned();
+        $contractDocument = $blueprint->getContractDocument();
 
         // Ensure PRD content is populated or regenerate if requested and scope is not locked
         if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['engineering_specs']) || (request()->has('regenerate') && !$isScopeLocked)) {
@@ -270,6 +273,9 @@ class BlueprintController extends Controller
             'prd' => $blueprint->prd_content,
             'globalSettings' => $globalSettings,
             'isScopeLocked' => $isScopeLocked,
+            'isDpConfirmed' => $isDpConfirmed,
+            'isContractSigned' => $isContractSigned,
+            'contractDocument' => $contractDocument,
         ]);
     }
 
@@ -280,6 +286,11 @@ class BlueprintController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         
+        $existingContract = $blueprint->getContractDocument();
+        if ($existingContract && ($blueprint->isContractSigned() || $blueprint->isDpConfirmed())) {
+            return redirect()->route('document.sign', ['document' => $existingContract->id]);
+        }
+
         // Ensure PRD with itemized estimation is populated
         if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['itemized_cost_breakdown'])) {
             $blueprint->generateAndSavePrd();
@@ -336,6 +347,13 @@ class BlueprintController extends Controller
     public function getSnapToken(Request $request, string $slug): JsonResponse
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+
+        if ($blueprint->isDpConfirmed()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Uang muka (DP) untuk proyek ini sudah terkonfirmasi / lunas. Tidak memerlukan pembayaran ulang.',
+            ], 400);
+        }
         
         if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['itemized_cost_breakdown'])) {
             $blueprint->generateAndSavePrd();

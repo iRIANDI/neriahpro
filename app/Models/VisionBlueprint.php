@@ -266,4 +266,83 @@ class VisionBlueprint extends Model
 
         return $url;
     }
+
+    /**
+     * Check if DP payment has been confirmed, settled, or granted for this blueprint.
+     */
+    public function isDpConfirmed(): bool
+    {
+        // 1. Free grant voucher bypass
+        if ($this->is_free_grant) {
+            return true;
+        }
+
+        // 2. Active project statuses indicating DP has been settled/verified
+        $confirmedStatuses = [
+            'In Development (DP Paid)',
+            'In Development (Free Grant)',
+            'Active Sprint',
+            'Completed',
+            'In Review',
+        ];
+        if (in_array($this->project_status, $confirmedStatuses, true)) {
+            return true;
+        }
+
+        // 3. Staging sandbox already provisioned with signed agreement
+        if (!empty($this->staging_url) && $this->signed_agreement) {
+            return true;
+        }
+
+        // 4. Linked signed contract document with settled transaction
+        $contract = $this->getContractDocument();
+        if ($contract && $contract->status === 'signed' && $contract->scope_locked) {
+            if (!empty($contract->midtrans_order_id)) {
+                $hasSettledTx = \App\Models\Transaction::where('midtrans_order_id', $contract->midtrans_order_id)
+                    ->whereIn('status', ['settlement', 'capture', 'success'])
+                    ->exists();
+                if ($hasSettledTx) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if digital contract has been signed by client or admin.
+     */
+    public function isContractSigned(): bool
+    {
+        if ($this->signed_agreement) {
+            return true;
+        }
+
+        if ($this->documents()->where('document_type', 'contract')->where('status', 'signed')->exists()) {
+            return true;
+        }
+
+        return $this->isDpConfirmed();
+    }
+
+    /**
+     * Check if project scope is locked/frozen (anti-dispute).
+     */
+    public function isScopeFrozen(): bool
+    {
+        return $this->signed_agreement 
+            || $this->isDpConfirmed() 
+            || !empty($this->document_sha256) 
+            || $this->documents()->where('scope_locked', true)->exists();
+    }
+
+    /**
+     * Get the primary contract document if it exists.
+     */
+    public function getContractDocument(): ?Document
+    {
+        return $this->documents()->where('document_type', 'contract')->latest()->first();
+    }
 }
+

@@ -5639,8 +5639,26 @@ class ProcessSecureDataset implements ShouldQueue
                     <div class="text-left sm:text-right font-mono">
                         <span class="text-zinc-400 text-xs block">TERMIN TERPILIH: <span class="text-white font-bold" x-text="tierAmounts[selectedTier].name"></span></span>
                         @if($blueprint->is_free_grant)
-                            <span class="text-xl font-black text-emerald-400">RP 0 (PELAYANAN KASIH)</span>
+                            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-block mb-1">
+                                ✓ SUBSIDI KASIH (RP 0)
+                            </span>
+                            <span class="text-xl font-black text-emerald-400 block">RP 0 (PELAYANAN KASIH)</span>
                             <span class="text-[10px] text-zinc-400 block">VOUCHER: {{ $blueprint->voucher_code }}</span>
+                        @elseif($blueprint->isDpConfirmed())
+                            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1 mb-1">
+                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                <span>DP TERKONFIRMASI // SPRINT AKTIF</span>
+                            </span>
+                            @php
+                                $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
+                                $paidDp = $contractDoc?->dp_amount;
+                            @endphp
+                            <span class="text-xl font-black text-emerald-400 block">
+                                {{ $paidDp ? 'Rp ' . number_format($paidDp, 0, ',', '.') : 'LUNAS (DP 50%)' }}
+                            </span>
+                            <span class="text-[10px] text-zinc-400 block">
+                                {{ $contractDoc?->contract_amount ? 'Total Kontrak: Rp ' . number_format($contractDoc->contract_amount, 0, ',', '.') : 'Kontrak Terkunci' }} &bull; SPRINT 1 IN PROGRESS
+                            </span>
                         @else
                             <span class="text-xl font-black text-emerald-400" x-text="'DP (50%): Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
                             <span class="text-[10px] text-zinc-400 block" x-text="'Total Kontrak: Rp ' + tierAmounts[selectedTier].contract.toLocaleString('id-ID')"></span>
@@ -5656,12 +5674,18 @@ class ProcessSecureDataset implements ShouldQueue
                             <span class="font-bold text-white uppercase tracking-wider text-[11px]">
                                 SHA-256 SPECIFICATION INTEGRITY SEAL
                             </span>
-                            @if($blueprint->signed_agreement)
-                                <span class="px-2 py-0.2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold">
-                                    SIGNED &amp; LOCKED
+                            @if($blueprint->isDpConfirmed())
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold inline-flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    SCOPE FROZEN &amp; DP CONFIRMED
+                                </span>
+                            @elseif($blueprint->isContractSigned())
+                                <span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold inline-flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    CONTRACT SIGNED &amp; SCOPE LOCKED
                                 </span>
                             @else
-                                <span class="px-2 py-0.2 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
+                                <span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
                                     READY FOR SIGN-OFF
                                 </span>
                             @endif
@@ -5685,11 +5709,18 @@ class ProcessSecureDataset implements ShouldQueue
                         <code class="text-emerald-400 break-all select-all font-mono text-[11px] block">
                             {{ $blueprint->document_sha256 ?: $blueprint->calculatePrdHash() }}
                         </code>
-                        @if($blueprint->signed_agreement && $blueprint->signed_at)
+                        @php
+                            $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
+                            $hasAudit = ($blueprint->signed_agreement && $blueprint->signed_at) || ($contractDoc && $contractDoc->signed_at);
+                        @endphp
+                        @if($hasAudit)
                             <div class="mt-2 pt-2 border-t border-zinc-800/80 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-zinc-400">
-                                <span>Penandatangan: <strong class="text-zinc-200">{{ $blueprint->client_name ?: $blueprint->nama_bisnis }}</strong></span>
-                                <span>Waktu: <strong class="text-zinc-200">{{ $blueprint->signed_at->format('d M Y H:i:s T') }}</strong></span>
-                                <span>IP Audit: <strong class="text-zinc-200">{{ $blueprint->signer_ip ?: 'Recorded' }}</strong></span>
+                                <span>Penandatangan: <strong class="text-zinc-200">{{ $blueprint->client_name ?: ($contractDoc?->signer_name ?: $blueprint->nama_bisnis) }}</strong></span>
+                                <span>Waktu: <strong class="text-zinc-200">{{ ($blueprint->signed_at ?: $contractDoc?->signed_at)?->format('d M Y H:i:s T') }}</strong></span>
+                                <span>IP Audit: <strong class="text-zinc-200">{{ $blueprint->signer_ip ?: ($contractDoc?->signer_ip_address ?: 'Recorded') }}</strong></span>
+                                @if(!empty($blueprint->staging_url))
+                                    <span class="text-emerald-400 font-bold">Sandbox: <strong class="text-emerald-300 font-mono">{{ $blueprint->staging_url }}</strong></span>
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -5699,41 +5730,150 @@ class ProcessSecureDataset implements ShouldQueue
                     </p>
                 </div>
 
-                <!-- Action Buttons: Sign Contract & Pay DP -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <form method="POST" action="{{ route('blueprint.generate-contract', $blueprint->slug) }}" class="m-0">
-                        @csrf
-                        <input type="hidden" name="tier" :value="selectedTier">
-                        <button 
-                            type="submit"
-                            class="w-full h-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none transition flex items-center justify-center gap-2"
-                        >
-                            <span>Tanda Tangani Kontrak &amp; Kunci Scope</span>
-                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        </button>
-                    </form>
+                <!-- Action State Engine: Active Sprint Cockpit vs Sign & Pay Actions -->
+                @if($blueprint->isDpConfirmed())
+                    <!-- PROYEK SUDAH BAYAR DP / AKTIF: Tampilkan Cockpit Kontrak & Status Sprint (Bukan Tombol Bayar / Cart) -->
+                    <div class="p-5 bg-emerald-950/20 border-2 border-emerald-500/50 rounded-none space-y-4">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <span class="w-10 h-10 bg-emerald-500 text-black flex items-center justify-center font-bold text-lg flex-shrink-0">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                </span>
+                                <div>
+                                    <div class="text-xs uppercase font-mono tracking-wider text-emerald-400 font-bold flex items-center gap-2">
+                                        <span>STATUS: PEMBAYARAN DP TERVERIFIKASI &bull; SPRINT AKTIF</span>
+                                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                    </div>
+                                    <h4 class="text-sm font-bold text-white font-sans mt-0.5">
+                                        Ruang Lingkup (Scope) Resmi Dikunci &amp; Proyek Sedang Dikerjakan
+                                    </h4>
+                                    <p class="text-xs text-zinc-300 font-sans mt-0.5">
+                                        Kontrak digital dan spesifikasi teknis PRD telah mengikat secara hukum. Anda tidak perlu membayar DP lagi atau menambahkan ke keranjang belanja.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
 
-                    <button 
-                        type="button" 
-                        @click="paymentModalOpen = true"
-                        class="w-full h-full bg-zinc-800 hover:bg-zinc-700 text-white font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2"
-                    >
-                        <span>Bayar DP / Klaim Voucher</span>
-                        <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    </button>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-emerald-500/20">
+                            @php
+                                $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
+                            @endphp
+                            @if($contractDoc)
+                                <a 
+                                    href="{{ route('document.sign', $contractDoc->id) }}"
+                                    target="_blank"
+                                    class="bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                >
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    <span>Lihat Kontrak Digital</span>
+                                </a>
+                            @endif
 
-                    <form method="POST" action="{{ route('cart.add', $blueprint->slug) }}" class="m-0">
-                        @csrf
-                        <input type="hidden" name="tier" :value="selectedTier">
+                            @if(!empty($blueprint->staging_url))
+                                <a 
+                                    href="{{ $blueprint->staging_url }}"
+                                    target="_blank"
+                                    class="bg-zinc-900 hover:bg-zinc-800 text-emerald-400 hover:text-emerald-300 border border-emerald-500/50 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                >
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    <span>Buka Sandbox Staging</span>
+                                </a>
+                            @else
+                                <a 
+                                    href="{{ route('blueprint.download-pdf', $blueprint->slug) }}"
+                                    target="_blank"
+                                    class="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                >
+                                    <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    <span>Unduh Dokumen PRD</span>
+                                </a>
+                            @endif
+
+                            <button 
+                                type="button" 
+                                @click="showAiPromptModal = true"
+                                class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                            >
+                                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <span>AI Agent Ingestion</span>
+                            </button>
+                        </div>
+                    </div>
+                @elseif($blueprint->isContractSigned())
+                    <!-- KONTRAK SUDAH DITANDATANGANI TAPI BELUM BAYAR DP -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        @php
+                            $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
+                        @endphp
+                        @if($contractDoc)
+                            <a 
+                                href="{{ route('document.sign', $contractDoc->id) }}"
+                                target="_blank"
+                                class="w-full h-full bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none transition flex items-center justify-center gap-2"
+                            >
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <span>Lihat Kontrak Tertandatangani</span>
+                            </a>
+                        @endif
+
                         <button 
-                            type="submit"
-                            class="w-full h-full bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2"
+                            type="button" 
+                            @click="paymentModalOpen = true"
+                            class="w-full h-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none transition flex items-center justify-center gap-2 cursor-pointer"
                         >
-                            <span>Tambahkan ke Cart</span>
-                            <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            <span>Bayar DP Sekarang &rarr;</span>
+                            <svg class="w-4 h-4 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </button>
-                    </form>
-                </div>
+
+                        <form method="POST" action="{{ route('cart.add', $blueprint->slug) }}" class="m-0">
+                            @csrf
+                            <input type="hidden" name="tier" :value="selectedTier">
+                            <button 
+                                type="submit" 
+                                class="w-full h-full bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <span>Tambahkan ke Cart</span>
+                                <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <!-- DRAFT: BELUM TANDATANGAN & BELUM BAYAR DP -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <form method="POST" action="{{ route('blueprint.generate-contract', $blueprint->slug) }}" class="m-0">
+                            @csrf
+                            <input type="hidden" name="tier" :value="selectedTier">
+                            <button 
+                                type="submit"
+                                class="w-full h-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none transition flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <span>Tanda Tangani Kontrak &amp; Kunci Scope</span>
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
+                        </form>
+
+                        <button 
+                            type="button" 
+                            @click="paymentModalOpen = true"
+                            class="w-full h-full bg-zinc-800 hover:bg-zinc-700 text-white font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <span>Bayar DP / Klaim Voucher</span>
+                            <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </button>
+
+                        <form method="POST" action="{{ route('cart.add', $blueprint->slug) }}" class="m-0">
+                            @csrf
+                            <input type="hidden" name="tier" :value="selectedTier">
+                            <button 
+                                type="submit"
+                                class="w-full h-full bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <span>Tambahkan ke Cart</span>
+                                <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            </button>
+                        </form>
+                    </div>
+                @endif
             </section>
 
             <!-- FLOATING QUICK-ACCESS DOCK & SCROLL-SPY NAVIGATOR -->
@@ -6370,45 +6510,64 @@ class ProcessSecureDataset implements ShouldQueue
             </div>
 
             <!-- Actions -->
-            <div class="space-y-2">
-                <!-- Free Voucher Bypass Claim Button -->
-                <template x-if="appliedVoucher && appliedVoucher.is_free_bypass">
+            @if($blueprint->isDpConfirmed())
+                <div class="p-4 bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 text-center space-y-2 rounded-none">
+                    <div class="font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        <span>PEMBAYARAN DP SUDAH TERKONFIRMASI</span>
+                    </div>
+                    <p class="text-xs text-zinc-300 font-sans">
+                        Uang muka (DP) untuk proyek ini sudah lunas terverifikasi dan masuk tahap pengerjaan. Tidak perlu melakukan pembayaran ulang.
+                    </p>
                     <button 
                         type="button" 
-                        @click="submitClaimVoucher()"
-                        :disabled="isClaimingVoucher || !agreeSignOff"
-                        class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider py-4 px-4 text-center block transition shadow-lg cursor-pointer disabled:opacity-50 rounded-none"
+                        @click="paymentModalOpen = false" 
+                        class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3 px-4 text-xs uppercase cursor-pointer rounded-none"
                     >
-                        <span x-show="!isClaimingVoucher">KLAIM PELAYANAN GRATIS SEKARANG (Rp 0) &rarr;</span>
-                        <span x-show="isClaimingVoucher" class="inline-block animate-pulse">Mengaktifkan Sandbox &amp; Kontrak...</span>
+                        Tutup Modal
                     </button>
-                </template>
+                </div>
+            @else
+                <div class="space-y-2">
+                    <!-- Free Voucher Bypass Claim Button -->
+                    <template x-if="appliedVoucher && appliedVoucher.is_free_bypass">
+                        <button 
+                            type="button" 
+                            @click="submitClaimVoucher()"
+                            :disabled="isClaimingVoucher || !agreeSignOff"
+                            class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider py-4 px-4 text-center block transition shadow-lg cursor-pointer disabled:opacity-50 rounded-none"
+                        >
+                            <span x-show="!isClaimingVoucher">KLAIM PELAYANAN GRATIS SEKARANG (Rp 0) &rarr;</span>
+                            <span x-show="isClaimingVoucher" class="inline-block animate-pulse">Mengaktifkan Sandbox &amp; Kontrak...</span>
+                        </button>
+                    </template>
 
-                <!-- Standard Midtrans Snap Payment Button -->
-                <template x-if="!appliedVoucher || !appliedVoucher.is_free_bypass">
-                    <button 
-                        type="button" 
-                        @click="isPayingSnap = true; window.payBlueprintSnap(selectedTier, agreeSignOff, voucherCode, () => { isPayingSnap = true }, () => { isPayingSnap = false })"
-                        :disabled="isPayingSnap || !agreeSignOff"
-                        class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider py-3.5 px-4 text-center block transition shadow-lg cursor-pointer disabled:opacity-50 rounded-none"
-                    >
-                        <span x-show="!isPayingSnap" x-text="appliedVoucher ? 'Bayar DP Sekarang (Rp ' + getDiscountedDp(selectedTier).toLocaleString('id-ID') + ') &rarr;' : 'Bayar Sekarang via Midtrans Snap &rarr;'"></span>
-                        <span x-show="isPayingSnap" class="inline-block animate-pulse">Membuat Sesi Snap...</span>
-                    </button>
-                </template>
-                
-                <form method="POST" action="{{ route('cart.add', $blueprint->slug) }}" class="m-0">
-                    @csrf
-                    <input type="hidden" name="tier" :value="selectedTier">
-                    <input type="hidden" name="voucher" :value="voucherCode">
-                    <button 
-                        type="submit" 
-                        class="w-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider py-2.5 px-4 text-center block transition border border-zinc-300 dark:border-zinc-700 rounded-none"
-                    >
-                        Simpan ke Cart Belanja
-                    </button>
-                </form>
-            </div>
+                    <!-- Standard Midtrans Snap Payment Button -->
+                    <template x-if="!appliedVoucher || !appliedVoucher.is_free_bypass">
+                        <button 
+                            type="button" 
+                            @click="isPayingSnap = true; window.payBlueprintSnap(selectedTier, agreeSignOff, voucherCode, () => { isPayingSnap = true }, () => { isPayingSnap = false })"
+                            :disabled="isPayingSnap || !agreeSignOff"
+                            class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider py-3.5 px-4 text-center block transition shadow-lg cursor-pointer disabled:opacity-50 rounded-none"
+                        >
+                            <span x-show="!isPayingSnap" x-text="appliedVoucher ? 'Bayar DP Sekarang (Rp ' + getDiscountedDp(selectedTier).toLocaleString('id-ID') + ') &rarr;' : 'Bayar Sekarang via Midtrans Snap &rarr;'"></span>
+                            <span x-show="isPayingSnap" class="inline-block animate-pulse">Membuat Sesi Snap...</span>
+                        </button>
+                    </template>
+                    
+                    <form method="POST" action="{{ route('cart.add', $blueprint->slug) }}" class="m-0">
+                        @csrf
+                        <input type="hidden" name="tier" :value="selectedTier">
+                        <input type="hidden" name="voucher" :value="voucherCode">
+                        <button 
+                            type="submit" 
+                            class="w-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider py-2.5 px-4 text-center block transition border border-zinc-300 dark:border-zinc-700 rounded-none cursor-pointer"
+                        >
+                            Simpan ke Cart Belanja
+                        </button>
+                    </form>
+                </div>
+            @endif
         </div>
     </div>
 

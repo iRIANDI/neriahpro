@@ -218,6 +218,13 @@ class WorkflowEndToEndSeeder extends Seeder
                 'project_status' => 'Active Sprint',
                 'is_published' => true,
                 'ip_address' => '182.253.51.197',
+                'signed_agreement' => true,
+                'signer_ip' => '182.253.51.197',
+                'signer_user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/128.0.0.0 Safari/537.36',
+                'document_sha256' => hash('sha256', 'NERIAHPRO-APEX-CONTRACT-2026-SIGNED'),
+                'signed_at' => now()->subDays(2),
+                'staging_url' => 'https://apex-logistics-global.staging.neriahpro.com',
+                'staging_provisioned_at' => now()->subDays(2),
                 'user_metadata' => [
                     'source' => 'Midtrans Onboarding Verification Seeder',
                     'browser' => 'Chrome Enterprise',

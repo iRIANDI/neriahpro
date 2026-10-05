@@ -51,7 +51,7 @@ class CartController extends Controller
             }
 
             $blueprint = VisionBlueprint::where('slug', $slug)->first();
-            if (!$blueprint || $blueprint->signed_agreement || $blueprint->project_status === 'In Development (DP Paid)') {
+            if (!$blueprint || $blueprint->isDpConfirmed()) {
                 unset($cart[$slug]);
                 $hasExpired = true;
                 continue;
@@ -159,6 +159,11 @@ class CartController extends Controller
     public function add(Request $request, string $slug): RedirectResponse
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+
+        if ($blueprint->isDpConfirmed()) {
+            return redirect()->route('blueprint.show', $slug)
+                ->with('warning', 'Proyek ini sudah memiliki pembayaran DP terkonfirmasi / aktif pengerjaan sprint. Tidak dapat ditambahkan ke keranjang belanja.');
+        }
 
         // Ensure PRD with itemized estimation is populated
         if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['itemized_cost_breakdown'])) {

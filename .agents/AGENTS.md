@@ -106,10 +106,12 @@ After completing any task, you MUST always suggest which deployment script numbe
 - ⚡ **CACHE PRIMITIVE ATTRIBUTES ARRAY**: ALWAYS store raw attribute arrays (`$record ? $record->getAttributes() : null`) or JSON, and reconstitute the model via `(new Model)->newFromBuilder($cachedAttributes)`.
 - 🛡️ **DEFENSIVE VIEW GUARD**: Views accessing cached models must always guard against `__PHP_Incomplete_Class` and self-heal from database if invalid.
 
-# AlpineJS HTML Escaping Rule
-When writing inline javascript within AlpineJS attributes (such as `x-data="..."`), NEVER use raw double quotes (") or single quotes (') inside string literals as it can break the HTML attribute parsing. ALWAYS encode them into HTML entities:
-- Tanda kutip ganda (") → `&quot;`
-- Tanda kutip tunggal (') → `&apos;`
+# Mandatory Rule: AlpineJS HTML Escaping & Extraction Standard (Attribute Parsing & Raw Code Leak Prevention)
+- 🚫 **ZERO TOLERANCE FOR RAW QUOTES IN INLINE ALPINE ATTRIBUTES**: When writing inline JavaScript within Alpine.js attributes (such as `x-data="..."`, `x-init="..."`, `x-on:...`, `@click="..."`), NEVER use raw double quotes (`"`) or single quotes (`'`) inside string literals or JSON outputs (`@json()`). Raw quotes prematurely close the HTML attribute (e.g. `x-data="{ "`), causing the browser's HTML parser to break and misinterpret any subsequent `>` (such as in arrow functions `() =>`) as the closing bracket of the HTML tag, spilling the entire JavaScript code onto the screen as raw text.
+- 🔤 **MANDATORY HTML ENTITY ENCODING**:
+  - Tanda kutip ganda (") → `&quot;`
+  - Tanda kutip tunggal (') → `&apos;`
+- 🛡️ **MANDATORY SCRIPT EXTRACTION FOR COMPLEX STATE**: For complex Alpine components (>3 properties, nested objects, lifecycle hooks, or long methods), NEVER cram large state objects inside inline HTML attributes. ALWAYS extract the component into a separate `<script>` block (e.g. `function componentName() { return { ... }; }`) and bind cleanly using `<tag x-data="componentName()">`.
 
 ---
 

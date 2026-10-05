@@ -127,5 +127,40 @@ class BlueprintDiscoveryTest extends TestCase
         $this->assertStringContainsString('cetak struk', $data['fiturWajib']);
         $this->assertArrayHasKey('completeness', $data);
     }
+
+    public function test_blueprint_show_renders_valid_javascript_without_entity_corruption(): void
+    {
+        $blueprint = \App\Models\VisionBlueprint::create([
+            'nama_bisnis' => 'Apex Logistics Global',
+            'client_name' => 'Alexander Wijaya',
+            'email' => 'alexander@example.com',
+            'phone' => '+6281234567890',
+            'slug' => 'apex-logistics-global-prd',
+            'masalah_utama' => 'Pelacakan armada',
+            'tujuan_utama' => 'Efisiensi',
+            'target_audiens' => 'B2B Logistics',
+            'aktor_sistem' => 'Superadmin, Driver',
+            'fitur_wajib' => 'GPS Tracker, Proof of Delivery',
+            'alur_kerja' => 'Workflow tracking',
+            'is_published' => true,
+            'prd_content' => [
+                'meta' => ['project_name' => 'Apex Logistics Global'],
+                'features' => [
+                    'mvp_phase1' => [['title' => 'GPS Tracking', 'desc' => 'Track armada']],
+                    'phase2_roadmap' => [['title' => 'AI Routing', 'desc' => 'Optimize route']]
+                ]
+            ]
+        ]);
+
+        $response = $this->get(route('blueprint.show', ['slug' => $blueprint->slug]));
+        $response->assertStatus(200);
+
+        $content = $response->getContent();
+        // Ensure no HTML entity corruption inside tierAmounts or script
+        $this->assertStringNotContainsString('tierAmounts: {&quot;', $content);
+        $this->assertStringContainsString('function blueprintApp()', $content);
+        $this->assertStringContainsString('openScaffoldModal()', $content);
+    }
 }
+
 

@@ -681,7 +681,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 scaffoldFiles: {},
                 collaborators: [
                     { id: 'lead_arch', name: 'Lead Architect (Neriah Pro)', role: 'Lead Architect', is_architect: true },
-                    { id: 'client_pic', name: '{{ $blueprint->client_name ?: "Klien" }}', role: 'Klien / Stakeholder', is_architect: false }
+                    { id: 'client_pic', name: @json($blueprint->client_name ?: 'Klien'), role: 'Klien / Stakeholder', is_architect: false }
                 ],
                 collaboratorCursor: { x: 42, y: 28, visible: true, name: 'Lead Architect (Neriah Pro)' },
                 async openScaffoldModal() {
@@ -770,7 +770,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 },
                 selectedIdeTool: 'antigravity_ide',
                 selectedTier: '{{ $defaultSelectedTier }}',
-                tierAmounts: {{ json_encode($alpineTiers) }},
+                tierAmounts: @json($alpineTiers),
                 getDiscountAmount(tierKey) {
                     if (!this.appliedVoucher) return 0;
                     const contract = this.tierAmounts[tierKey]?.contract || 0;

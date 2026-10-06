@@ -198,6 +198,39 @@ class BlueprintDiscoveryTest extends TestCase
         $this->assertStringContainsString('14 - 30 Hari Kerja', $data['targetWaktu']);
         $this->assertEquals(100, $data['completeness']['score']);
     }
+
+    public function test_blueprint_create_starts_clean_without_session_contamination_and_can_be_reset(): void
+    {
+        // 1. Synthesize an idea
+        $synthResponse = $this->postJson('/api/blueprint/analyze-idea', [
+            'idea_text' => 'Aplikasi bengkel mobil servis rutin dan ganti oli AutoPrima.',
+            'locale' => 'id'
+        ]);
+        $synthResponse->assertStatus(200);
+        $draftId = $synthResponse->json('draft_id');
+
+        // 2. Direct visit to /blueprint without parameters MUST be completely clean/empty
+        $cleanResponse = $this->get('/blueprint');
+        $cleanResponse->assertStatus(200);
+        $cleanResponse->assertViewHas('initialData', []);
+
+        // 3. Explicit visit with draft_id loads the draft
+        $draftResponse = $this->get('/blueprint?draft_id=' . $draftId);
+        $draftResponse->assertStatus(200);
+        $this->assertNotEmpty($draftResponse->viewData('initialData'));
+
+        // 4. Reset endpoint purges the draft completely
+        $resetResponse = $this->postJson('/api/blueprint/reset', [
+            'draft_id' => $draftId
+        ]);
+        $resetResponse->assertStatus(200);
+        $this->assertFalse(Cache::has('blueprint_draft_' . $draftId));
+
+        // 5. Subsequent visit with that draft_id is now empty
+        $postResetResponse = $this->get('/blueprint?draft_id=' . $draftId);
+        $postResetResponse->assertStatus(200);
+        $postResetResponse->assertViewHas('initialData', []);
+    }
 }
 
 

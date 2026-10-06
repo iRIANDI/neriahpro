@@ -138,6 +138,12 @@ class VisionBlueprintController extends Controller
             // Synthesize and attach Ultimate PRD
             $vision->generateAndSavePrd();
 
+            // Clear draft from session and cache once successfully submitted ("kalau sudah beres")
+            session()->forget('blueprint_draft');
+            if ($draftId = $request->input('draft_id')) {
+                \Illuminate\Support\Facades\Cache::forget('blueprint_draft_' . $draftId);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Vision blueprint & Ultimate PRD berhasil diproses!',

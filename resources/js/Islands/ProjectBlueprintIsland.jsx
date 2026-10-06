@@ -139,6 +139,8 @@ const TRANSLATIONS = {
     saveBtn: "Simpan",
     cancelBtn: "Batal",
     deleteBtn: "Hapus",
+    resetFormBtn: "Bersihkan Form",
+    resetFormSuccess: "Seluruh isi formulir blueprint berhasil dibersihkan.",
     lockBtn: "Kunci Blueprint & Terbitkan Dokumen Ultimate PRD",
     lockingBtn: "Mengunci Blueprint & Menerbitkan Dokumen PRD...",
 
@@ -258,6 +260,8 @@ const TRANSLATIONS = {
     saveBtn: "Save",
     cancelBtn: "Cancel",
     deleteBtn: "Delete",
+    resetFormBtn: "Reset Form",
+    resetFormSuccess: "All blueprint fields have been reset to blank.",
     lockBtn: "Lock Blueprint & Generate Ultimate PRD Document",
     lockingBtn: "Locking Blueprint & Issuing PRD Document...",
 
@@ -1500,6 +1504,68 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     }
   };
 
+  // Reset / Clear all blueprint form fields back to pristine blank state
+  const handleResetForm = async () => {
+    const blankForm = {
+      namaBisnis: '',
+      masalahUtama: '',
+      tujuanUtama: '',
+      targetAudiens: '',
+      aktorSistem: '',
+      targetPlatform: 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)',
+      fiturWajib: '',
+      fiturTambahan: '',
+      alurKerja: '',
+      migrasiData: 'Database Baru Bersih (Input Mandiri & Dukungan Template CSV)',
+      kebutuhanIntegrasi: '',
+      referensiDesain: 'Clean Modern Monolith (Linear.app & Stripe inspired), sharp rectangular borders, dark/light mode fidelity.',
+      kesiapanAset: 'Sedang Disiapkan Tim Internal',
+      preferensiHosting: 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup Otomatis)',
+      durasiHari: '30',
+      targetWaktu: '30 Hari Kerja',
+      skalaPengguna: '0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)',
+      jangkauanPasar: 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
+      outOfScope: '',
+      kepatuhanKeamanan: 'Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)',
+      kisaranBudget: 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
+      garansiSla: '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
+      terminPembayaran: 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+      clientName: '',
+      email: '',
+      phone: '',
+    };
+
+    setFormData(blankForm);
+    setIdeaText('');
+    setAttachedFiles([]);
+    setConvertedMarkdown('');
+    setPhoneDigits('');
+    setAiTelemetry(null);
+    setQuickInputText('');
+    setAppliedSuggestionIds(new Set());
+    draftIdRef.current = null;
+    setSuccessData(null);
+    setErrorMessage(null);
+
+    try {
+      const token = csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      await fetch('/api/blueprint/reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': token,
+          'Accept': 'application/json',
+        },
+      });
+    } catch (e) {}
+
+    if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    showLocalToast('info', t.resetFormSuccess || (lang === 'en' ? 'Blueprint form has been reset to blank.' : 'Seluruh isi formulir blueprint berhasil dibersihkan.'), 'RESET FORM');
+  };
+
   // Proactive Co-Pilot: Submit additional requirement via AI Flash
   const handleCoPilotSubmit = async (e) => {
     e?.preventDefault();
@@ -1914,6 +1980,16 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     title={t.indexToggleDetails}
                   >
                     {isAllSubExpanded ? t.indexCollapseDetails : t.indexExpandDetails}
+                  </button>
+                  <span>·</span>
+                  <button
+                    type="button"
+                    onClick={handleResetForm}
+                    className="hover:text-red-600 dark:hover:text-red-400 text-red-500 font-bold transition flex items-center gap-0.5 cursor-pointer"
+                    title={lang === 'en' ? 'Reset form to blank' : 'Bersihkan seluruh isi formulir'}
+                  >
+                    <RotateCcw className="w-2.5 h-2.5" />
+                    <span>Reset</span>
                   </button>
                 </div>
                 <button
@@ -2509,6 +2585,17 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             title="Toggle Dark / Light Mode"
           >
             {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-zinc-800" />}
+          </button>
+
+          {/* Bersihkan Form / Reset Button */}
+          <button
+            type="button"
+            onClick={handleResetForm}
+            className="px-2.5 py-1 flex items-center gap-1.5 border border-red-300 dark:border-red-900/60 bg-red-50/70 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 font-mono text-xs font-bold transition rounded-none cursor-pointer"
+            title={lang === 'en' ? 'Reset all fields to blank' : 'Bersihkan seluruh isi formulir menjadi kosong'}
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>{t.resetFormBtn || (lang === 'en' ? 'Reset' : 'Bersihkan Form')}</span>
           </button>
         </div>
       </div>

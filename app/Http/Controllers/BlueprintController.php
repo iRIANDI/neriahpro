@@ -68,15 +68,36 @@ class BlueprintController extends Controller
                     ]
                 ];
             }
+        } elseif ($request->boolean('reset') || $request->has('new') || $request->has('clean')) {
+            session()->forget('blueprint_draft');
+            if ($draftId) {
+                Cache::forget('blueprint_draft_' . $draftId);
+            }
+            $initialData = [];
         } elseif ($draftId && Cache::has('blueprint_draft_' . $draftId)) {
             $initialData = Cache::get('blueprint_draft_' . $draftId, []);
-        } elseif (session()->has('blueprint_draft')) {
-            $initialData = session('blueprint_draft', []);
         }
 
         return view('blueprint.create', [
             'globalSettings' => $globalSettings,
             'initialData' => $initialData,
+        ]);
+    }
+
+    /**
+     * Explicitly reset and purge current blueprint draft from session and cache.
+     */
+    public function resetDraft(Request $request): JsonResponse
+    {
+        session()->forget('blueprint_draft');
+
+        if ($draftId = $request->input('draft_id')) {
+            Cache::forget('blueprint_draft_' . $draftId);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Draf formulir blueprint berhasil dibersihkan.',
         ]);
     }
 

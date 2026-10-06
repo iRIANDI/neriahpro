@@ -403,6 +403,13 @@ class BlueprintDiscoveryService
             } elseif (preg_match('/(\d+)\s*hari/i', $targetWaktu, $dm)) {
                 $durasiHari = (string) $dm[1];
             }
+        } elseif (preg_match('/(?:target|waktu|selesai|jalan|deadline|durasi)\s*[^.\n\r]*?(\d+)(?:\s*(?:-|sampai|hingga)\s*(\d+))?\s*hari/i', $corpus, $tm)) {
+            $minDays = $tm[1];
+            $maxDays = !empty($tm[2]) ? $tm[2] : $minDays;
+            $targetWaktu = ($minDays === $maxDays) 
+                ? ($isEn ? "{$minDays} Working Days" : "{$minDays} Hari Kerja")
+                : ($isEn ? "{$minDays} - {$maxDays} Working Days" : "{$minDays} - {$maxDays} Hari Kerja");
+            $durasiHari = (string) $maxDays;
         }
 
         $skalaPengguna = "0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)";
@@ -414,6 +421,13 @@ class BlueprintDiscoveryService
         $kisaranBudget = "Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)";
         if (!empty($brief['kisaranBudget'])) {
             $kisaranBudget = $brief['kisaranBudget'];
+        } elseif (preg_match('/(?:budget|anggaran|biaya|dana)\s*[^.\n\r]*?(\d+)\s*(?:-|sampai|hingga)\s*(\d+)\s*(?:jt|juta|jutaan)/i', $corpus, $jtm)) {
+            $b1 = number_format((int)$jtm[1] * 1000000, 0, ',', '.');
+            $b2 = number_format((int)$jtm[2] * 1000000, 0, ',', '.');
+            $kisaranBudget = "Rp {$b1} - Rp {$b2} (Sesuai Alokasi Klien)";
+        } elseif (preg_match('/(?:budget|anggaran|biaya|dana)\s*[^.\n\r]*?(\d+)\s*(?:jt|juta|jutaan)/i', $corpus, $jtm)) {
+            $b1 = number_format((int)$jtm[1] * 1000000, 0, ',', '.');
+            $kisaranBudget = "Rp {$b1} (Sesuai Alokasi Klien)";
         } elseif (preg_match('/(?:rp\.?\s*[\d\.]+\s*(?:-|sampai|hingga)\s*rp\.?\s*[\d\.]+|budget\s*[:=]?\s*[\d\w\s\.\-]+)/i', $corpus, $bm)) {
             $kisaranBudget = trim($bm[0]);
         } elseif ($domain === 'property' && (str_contains($corpus, '5') || str_contains($corpus, '7'))) {
@@ -527,27 +541,39 @@ class BlueprintDiscoveryService
 
     protected function detectDomain(string $text, array $brief = []): string
     {
-        $combinedText = $text;
+        $combinedText = strtolower($text);
         if (!empty($brief)) {
             $combinedText .= ' ' . strtolower(implode(' ', $brief));
         }
 
         $patterns = [
+            'fnb_culinary' => ['katering', 'catering', 'makanan', 'kuliner', 'dapur', 'resto', 'restoran', 'cafe', 'kafe', 'kopi', 'bakery', 'roti', 'kue', 'menu mingguan', 'paket diet', 'nasi kotak', 'makan siang', 'resep', 'chef', 'dine in', 'takeaway', 'food'],
+            'services_workshop' => ['bengkel', 'servis mobil', 'servis motor', 'montir', 'sparepart', 'onderdil', 'salon', 'barbershop', 'spa', 'laundry', 'cuci sepatu', 'cuci mobil', 'perbaikan', 'reparasi', 'mekanik', 'jasa cuci'],
             'property' => ['villa', 'resort', 'homestay', 'properti', 'perumahan', 'apartemen', 'booking villa', 'kavling', 'tanah', 'kost', 'kontrakan', 'real estate', 'agen properti', 'katalog properti', 'listing villa', 'listing properti', 'sewa villa', 'jual villa'],
-            'logistics' => ['logistik', 'ekspedisi', 'armada', 'truk', 'kontainer', 'pengiriman', 'gudang', 'cargo', 'resi', 'tracking', 'kurir', 'shipping', 'freight'],
-            'clinic' => ['klinik', 'pasien', 'dokter', 'rekam medis', 'obat', 'apotek', 'rumah sakit', 'antrean', 'poliklinik', 'kesehatan', 'diagnosis', 'medical'],
-            'finance' => ['keuangan', 'invoice', 'faktur', 'tagihan', 'pembayaran', 'akuntansi', 'kasir', 'pos', 'pembukuan', 'laporan keuangan', 'escrow'],
+            'clinic' => ['klinik', 'pasien', 'dokter', 'rekam medis', 'obat', 'apotek', 'rumah sakit', 'antrean poli', 'kesehatan', 'diagnosis', 'medical', 'dental', 'gigi', 'fisioterapi'],
+            'finance' => ['keuangan', 'invoice', 'faktur', 'tagihan', 'pembayaran', 'akuntansi', 'kasir', 'pos', 'pembukuan', 'laporan keuangan', 'escrow', 'pajak'],
             'hr' => ['hrd', 'karyawan', 'rekrutmen', 'pelamar', 'lowongan', 'gaji', 'payroll', 'absensi', 'cuti', 'kinerja', 'talent'],
-            'education' => ['sekolah', 'kursus', 'siswa', 'guru', 'kelas', 'ujian', 'materi', 'bimbel', 'lms', 'akademik', 'pembelajaran'],
-            'marketplace' => ['sewa', 'rental', 'marketplace', 'jual beli', 'toko online', 'ecommerce', 'e-commerce', 'katalog', 'produk', 'keranjang', 'checkout', 'vendor'],
+            'education' => ['sekolah', 'kursus', 'siswa', 'guru', 'kelas', 'ujian', 'materi ajar', 'bimbel', 'lms', 'akademik', 'pembelajaran', 'les privat', 'kampus'],
+            'logistics' => ['logistik', 'ekspedisi', 'armada truk', 'truk kontainer', 'kontainer', 'pengiriman kargo', 'gudang kargo', 'cargo', 'surat jalan', 'resi ekspedisi', 'freight'],
+            'marketplace' => ['marketplace', 'jual beli online', 'toko online', 'ecommerce', 'e-commerce', 'multi vendor', 'keranjang belanja', 'checkout online'],
         ];
 
+        $scores = [];
         foreach ($patterns as $domain => $keywords) {
+            $score = 0;
             foreach ($keywords as $kw) {
                 if (str_contains($combinedText, $kw)) {
-                    return $domain;
+                    $score += str_contains($kw, ' ') ? 3 : 1;
                 }
             }
+            if ($score > 0) {
+                $scores[$domain] = $score;
+            }
+        }
+
+        if (!empty($scores)) {
+            arsort($scores);
+            return array_key_first($scores);
         }
 
         return 'custom_portal';
@@ -555,15 +581,30 @@ class BlueprintDiscoveryService
 
     protected function extractProjectName(string $corpus, string $domain, bool $isEn): string
     {
-        // Try extracting explicit title or project name
-        if (preg_match('/(?:nama\s*(?:proyek|bisnis|aplikasi|platform)|project\s*name)\s*[:=\t]\s*([^\n\r,.]+)/i', $corpus, $m)) {
+        // 1. Try extracting explicit key-value name
+        if (preg_match('/(?:nama\s*(?:proyek|bisnis|aplikasi|platform|usaha|katering|toko|bengkel)|project\s*name)\s*[:=\t]\s*([^\n\r,.]+)/i', $corpus, $m)) {
             $name = trim($m[1]);
             if (mb_strlen($name) >= 3 && mb_strlen($name) <= 60) {
                 return $name;
             }
         }
 
-        // Try extracting first heading from markitdown
+        // 2. Try extracting from conversational storytelling patterns (e.g. "namanya Dapur Bu Ani", "usaha saya Katering Berkah", "brand kami ...")
+        if (preg_match('/(?:namanya|nama\s*usahanya|nama\s*tokonya|nama\s*brandnya|nama\s*bisnisnya|nama\s*kateringnya|nama\s*bengkelnya|nama\s*kliniknya)\s*[:=\s]+["\']?([A-Z0-9][A-Za-z0-9\s&\'\-]{2,35}?)(?=[.,\n\r]|\s+(?:dan|yang|di|dengan|selama|sejak|karena)|$)/iu', $corpus, $m)) {
+            $name = trim(rtrim($m[1], ".,\n\r"));
+            if (mb_strlen($name) >= 3 && mb_strlen($name) <= 50) {
+                return $name;
+            }
+        }
+
+        if (preg_match('/(?:usaha|bisnis|katering|toko|bengkel|klinik|brand|pt|cv)\s+(?:saya|kami)\s+(?:namanya\s+)?["\']?([A-Z0-9][A-Za-z0-9\s&\'\-]{2,35}?)(?=[.,\n\r]|\s+(?:dan|yang|di|dengan|selama|sejak|karena)|$)/iu', $corpus, $m)) {
+            $name = trim(rtrim($m[1], ".,\n\r"));
+            if (mb_strlen($name) >= 3 && mb_strlen($name) <= 50) {
+                return $name;
+            }
+        }
+
+        // 3. Try extracting first heading from markitdown
         if (preg_match('/^#\s+([^\n\r]+)/m', $corpus, $hMatch)) {
             $candidate = trim($hMatch[1]);
             if (mb_strlen($candidate) >= 4 && mb_strlen($candidate) <= 60 && !stripos($candidate, 'error') && !stripos($candidate, 'scanned')) {
@@ -573,24 +614,28 @@ class BlueprintDiscoveryService
 
         // Domain-tailored defaults
         $defaultsId = [
+            'fnb_culinary' => 'Platform Katering & Pemesanan Kuliner Harian Terpadu',
+            'services_workshop' => 'Sistem Manajemen Reservasi Servis & Operasional Bengkel',
+            'property' => 'Platform Katalog Properti & Reservasi Villa Terpadu',
             'logistics' => 'Sistem Manajemen Logistik & Pelacakan Armada Terintegrasi',
             'marketplace' => 'Platform Marketplace & Reservasi Layanan Terpusat',
             'clinic' => 'Sistem Informasi Manajemen Klinik & Rekam Medis Elektronik',
             'finance' => 'Sistem Penagihan Terpadu & Otomatisasi Faktur Komersial',
             'hr' => 'Platform Manajemen Talenta & Rekrutmen Terpadu',
             'education' => 'Portal Pembelajaran & Administrasi Akademik Digital',
-            'property' => 'Platform Katalog Properti & Reservasi Villa Terpadu',
             'custom_portal' => 'Platform Operasional & Portal Bisnis Terintegrasi',
         ];
 
         $defaultsEn = [
+            'fnb_culinary' => 'Integrated Catering & Culinary Ordering Platform',
+            'services_workshop' => 'Automotive Service & Workshop Management System',
+            'property' => 'Real Estate Asset Management & Villa Catalog Portal',
             'logistics' => 'Integrated Fleet Tracking & Logistics Management Engine',
             'marketplace' => 'Centralized Service Marketplace & Booking Platform',
             'clinic' => 'Clinical Information System & Electronic Medical Records',
             'finance' => 'Unified Commercial Invoicing & Financial Operations Hub',
             'hr' => 'Enterprise Talent Acquisition & People Operations Platform',
             'education' => 'Digital Academic Administration & Learning Portal',
-            'property' => 'Real Estate Asset Management & Villa Catalog Portal',
             'custom_portal' => 'Centralized Enterprise Business Management Platform',
         ];
 
@@ -599,12 +644,22 @@ class BlueprintDiscoveryService
 
     protected function synthesizeProblem(string $corpus, string $domain, bool $isEn): string
     {
+        // 1. Try extracting explicit conversational pain points (e.g. "selama ini orderan cuma lewat WA dan buku tulis...")
+        if (preg_match('/(?:selama\s*ini|kendala(?:nya)?|masalah(?:nya)?|susahnya|sering(?:kali)?|kesulitan)\s*[:=\s,]+([^.\n\r]+(?:\.[^.\n\r]+)?)/iu', $corpus, $pm)) {
+            $extractedPain = trim($pm[0]);
+            if (mb_strlen($extractedPain) >= 20 && mb_strlen($extractedPain) <= 350) {
+                return ucfirst($extractedPain);
+            }
+        }
+
         $firstParagraph = trim(preg_split('/\n\s*\n/', $corpus)[0] ?? '');
-        if (mb_strlen($firstParagraph) > 40 && mb_strlen($firstParagraph) < 400) {
+        if (mb_strlen($firstParagraph) > 40 && mb_strlen($firstParagraph) < 400 && !str_contains($firstParagraph, '###')) {
             return $firstParagraph;
         }
 
         $problemsId = [
+            'fnb_culinary' => 'Pencatatan pesanan katering dan langganan makanan harian saat ini masih manual via chat WhatsApp dan catatan buku fisik, rentan salah alamat pengiriman, pesanan tercatat ganda, dan rekap porsi dapur berantakan.',
+            'services_workshop' => 'Penjadwalan antrean servis dan riwayat perawatan kendaraan pelanggan masih dicatat manual, menyebabkan antrean menumpuk di bengkel, stok suku cadang tidak termonitor akurat, dan riwayat servis kendaraan hilang.',
             'logistics' => 'Pencatatan manifes, status pengiriman armada, dan pelacakan surat jalan saat ini masih manual via spreadsheet dan pesan instan, menyebabkan lambatnya rekonsiliasi dan risiko kehilangan bukti serah terima.',
             'marketplace' => 'Koordinasi transaksi antara penyedia jasa/vendor dan pelanggan masih terfragmentasi tanpa adanya verifikasi ketersediaan armada/stok real-time, kalkulasi tarif transparan, serta sistem penjamin transaksi yang aman.',
             'clinic' => 'Data rekam medis pasien dan riwayat pemeriksaan masih terpisah dalam berkas kertas atau sistem offline, memperlambat proses pendaftaran, rujukan dokter, dan rekonsiliasi stok obat.',
@@ -616,6 +671,8 @@ class BlueprintDiscoveryService
         ];
 
         $problemsEn = [
+            'fnb_culinary' => 'Catering orders and meal subscriptions are managed manually via chat and physical paper ledgers, causing delivery address mix-ups, duplicate billing, and disorganized kitchen portion batching.',
+            'services_workshop' => 'Workshop service appointment queues and vehicle maintenance histories are recorded manually, resulting in physical queue congestion, untracked parts, and missing maintenance logs.',
             'logistics' => 'Manifest logging, shipment status tracking, and delivery receipts are managed manually through disconnected spreadsheets, leading to delayed reconciliation and lost records.',
             'marketplace' => 'Service bookings and vendor interactions are highly fragmented without real-time inventory validation, transparent rate calculation, or centralized payment escrow.',
             'clinic' => 'Patient medical histories and registration queues remain tied to physical folders or siloed offline databases, hindering doctor handoffs and medicine stock tracking.',
@@ -631,7 +688,29 @@ class BlueprintDiscoveryService
 
     protected function synthesizeGoal(string $corpus, string $domain, bool $isEn): string
     {
+        // 1. Try extracting conversational desires (e.g. "Saya pengen punya web buat langganan catering...")
+        if (preg_match('/(?:saya\s*pengen|kami\s*ingin|tujuan(?:nya)?|pengen\s*punya|rencana\s*mau)\s*[:=\s,]+([^.\n\r]+)/iu', $corpus, $gm)) {
+            $wish = trim($gm[1]);
+            if (mb_strlen($wish) >= 20 && mb_strlen($wish) <= 300) {
+                $parts = preg_split('/,\s*|\s+terus\s+|\s+dan\s+/i', $wish);
+                if (count($parts) >= 2) {
+                    $numbered = [];
+                    foreach (array_slice($parts, 0, 3) as $idx => $part) {
+                        $cleanedPart = trim($part);
+                        if (!empty($cleanedPart)) {
+                            $numbered[] = ($idx + 1) . '. ' . ucfirst($cleanedPart);
+                        }
+                    }
+                    if (count($numbered) >= 2) {
+                        return implode("\n", $numbered);
+                    }
+                }
+            }
+        }
+
         $goalsId = [
+            'fnb_culinary' => "1. Digitalisasi alur pemesanan dan paket langganan katering harian/mingguan hingga 100% tersistem.\n2. Otomatisasi rekap porsi dapur dan pembuatan nota pesanan digital seketika.\n3. Integrasi notifikasi WhatsApp rincian pesanan dan rute antar langsung ke kurir katering.",
+            'services_workshop' => "1. Mengurangi antrean fisik di bengkel dengan sistem booking reservasi servis online berjadwal.\n2. Sentralisasi buku riwayat servis (service logbook) dan estimasi biaya transparan bagi pelanggan.\n3. Otomatisasi pengingat servis berkala (service reminder) via pesan WhatsApp.",
             'logistics' => '1. Otomatisasi pencatatan resi dan pelacakan armada hingga 100% digital.\n2. Waktu rekonsiliasi laporan pengiriman dipangkas dari 3 hari menjadi real-time.\n3. Akses visibilitas langsung bagi pelanggan untuk memeriksa posisi kiriman.',
             'marketplace' => '1. Mengintegrasikan proses booking, verifikasi armada/jasa, dan pembayaran dalam 1 portal terpusat.\n2. Mengurangi waktu tunggu konfirmasi pesanan hingga di bawah 15 menit.\n3. Menjamin transparansi transaksi dengan faktur digital dan histori transaksi lengkap.',
             'clinic' => '1. Digitalisasi 100% rekam medis dan data pemeriksaan pasien sesuai standar kepatuhan medis.\n2. Mengurangi waktu antrean pendaftaran hingga 70% melalui booking online.\n3. Otomatisasi mutasi stok obat dan laporan keuangan klinik harian.',
@@ -643,6 +722,8 @@ class BlueprintDiscoveryService
         ];
 
         $goalsEn = [
+            'fnb_culinary' => "1. 100% digitization of meal subscription workflows and scheduled daily orders.\n2. Automated kitchen batch portioning and instant digital order receipts.\n3. Automated WhatsApp dispatch integration alerting delivery drivers and customers.",
+            'services_workshop' => "1. Reduce physical workshop waiting congestion with scheduled online service reservations.\n2. Centralized digital service passport and transparent repair estimates for vehicle owners.\n3. Automated proactive service maintenance reminders via WhatsApp.",
             'logistics' => '1. 100% digitization of manifests and automated dispatch logging.\n2. Reduction of delivery audit time from 3 days to real-time.\n3. Direct live tracking visibility for enterprise clients.',
             'marketplace' => '1. Streamlined service booking, vendor verification, and payment gateway escrow in one hub.\n2. Lower confirmation turnaround to under 15 minutes.\n3. Complete transaction auditing with automated digital receipts.',
             'clinic' => '1. Complete digitization of medical records and patient histories compliant with health regulations.\n2. 70% reduction in patient check-in waiting times via self-service intake.\n3. Automated pharmacy inventory tracking and daily revenue analytics.',
@@ -650,6 +731,7 @@ class BlueprintDiscoveryService
             'hr' => '1. Centralization of candidate submissions into a searchable talent repository.\n2. 50% faster recruitment pipeline turnaround.\n3. Automated personnel evaluation reporting in exportable PDF formats.',
             'education' => '1. Unified repository for learning resources, syllabus tracking, and student assessments.\n2. Automated attendance and academic progress reporting.',
             'property' => "1. High-speed digital showcase for villa and property listings with HD photos and mobile filters.\n2. Accelerate prospective tenant inquiry turnaround with direct WhatsApp survey scheduling.\n3. Unified administrator control panel to manage unit pricing, photos, and live occupancy status.",
+            'custom_portal' => '1. Eliminate error-prone manual spreadsheets and redundant data entry.\n2. Guarantee transactional integrity with multi-tier validation workflows.\n3. Automated generation of executive analytics reports in PDF and Excel formats daily.',
         ];
 
         return $isEn ? ($goalsEn[$domain] ?? $goalsEn['custom_portal']) : ($goalsId[$domain] ?? $goalsId['custom_portal']);
@@ -658,6 +740,8 @@ class BlueprintDiscoveryService
     protected function synthesizeAudience(string $corpus, string $domain, bool $isEn): string
     {
         $audiencesId = [
+            'fnb_culinary' => 'Pelanggan individu, karyawan perkantoran (B2B catering), tim operasional dapur, dan kurir pengantaran.',
+            'services_workshop' => 'Pemilik kendaraan bermotor, service advisor, mekanik teknisi, dan manajer operasional bengkel.',
             'logistics' => 'Klien korporat (B2B), manajer pengiriman, staf operasional logistik, dan pengemudi/vendor armada.',
             'marketplace' => 'Pelanggan pencari layanan/persewaan, vendor pemilik armada/jasa, dan admin verifikator.',
             'clinic' => 'Pasien umum, dokter spesialis/umum, staf resepsionis, perawat, dan apoteker.',
@@ -669,6 +753,8 @@ class BlueprintDiscoveryService
         ];
 
         $audiencesEn = [
+            'fnb_culinary' => 'Individual meal subscribers, corporate office workers (B2B catering), kitchen culinary staff, and delivery couriers.',
+            'services_workshop' => 'Vehicle owners, workshop service advisors, certified mechanics, and operations managers.',
             'logistics' => 'Corporate B2B clients, freight managers, dispatch operators, and fleet drivers/contractors.',
             'marketplace' => 'Service renters, vehicle/equipment owners, and platform dispatch administrators.',
             'clinic' => 'Outpatients, physicians, reception staff, nurses, and pharmacy dispensary staff.',
@@ -685,6 +771,8 @@ class BlueprintDiscoveryService
     protected function synthesizeActors(string $corpus, string $domain, bool $isEn): string
     {
         $actorsId = [
+            'fnb_culinary' => "1. Superadmin (Pemilik Katering / Resto): Kontrol penuh master menu, paket langganan, dan rekap penjualan.\n2. Tim Dapur (Chef / Kitchen Head): Memantau daftar pesanan siap masak dan rekap porsi harian.\n3. Kurir Pengantaran: Menerima rincian alamat antar dan nomor kontak pemesan via WhatsApp.\n4. Pelanggan (Individu / Perkantoran): Memilih menu mingguan, langganan harian, dan menerima nota otomatis.",
+            'services_workshop' => "1. Superadmin (Owner / Kepala Bengkel): Manajemen master layanan jasa, tarif servis, dan stok sparepart.\n2. Service Advisor / Front Desk: Pendaftaran antrean servis, input Work Order (WO), dan verifikasi keluhan.\n3. Mekanik / Teknisi: Memperbarui progres servis dan mencatat suku cadang yang digunakan.\n4. Pelanggan: Booking jadwal servis online, pantau status pengerjaan, dan cek riwayat servis kendaraan.",
             'logistics' => "1. Superadmin: Mengendalikan master data armada, tarif wilayah, dan hak akses staf.\n2. Staff Dispatcher: Menginput manifes, menugaskan pengemudi, dan memverifikasi status jalan.\n3. Driver / Vendor: Memperbarui titik lokasi, unggah foto bukti serah terima (POD).\n4. Klien / Customer: Memantau status pengiriman live dan mengunduh invoice/e-POD.",
             'marketplace' => "1. Superadmin: Validasi identitas vendor, audit transaksi pembayaran, dan manajemen sistem.\n2. Vendor / Mitra: Mengelola katalog ketersediaan, menerima pesanan sewa, dan konfirmasi unit.\n3. Customer / Klien: Mencari unit/layanan, reservasi jadwal, dan melakukan pembayaran aman.\n4. Finance Officer: Rekonsiliasi pembayaran bertahap dan pencairan dana ke vendor mitra.",
             'clinic' => "1. Superadmin: Manajemen dokter, tarif tindakan medis, dan konfigurasi sistem.\n2. Resepsionis / Front Desk: Pendaftaran pasien baru, antrean poli, dan cetak kartu rekam medis.\n3. Dokter: Menginput rekam medis elektronik (RME), diagnosis, dan resep digital.\n4. Apoteker: Validasi resep, penyerahan obat, dan rekonsiliasi mutasi stok obat.",
@@ -696,6 +784,8 @@ class BlueprintDiscoveryService
         ];
 
         $actorsEn = [
+            'fnb_culinary' => "1. Superadmin (Culinary / Catering Owner): Master menu setup, subscription pricing, and revenue audits.\n2. Kitchen Head / Chef: Monitors kitchen batch production queues and daily portion lists.\n3. Delivery Courier: Receives drop-off addresses and recipient contact info via WhatsApp.\n4. Customer (Corporate / Individual): Selects weekly menus, configures meal plans, and receives receipts.",
+            'services_workshop' => "1. Superadmin (Workshop Owner / General Manager): Service catalog pricing, labor rates, and spare parts inventory.\n2. Service Advisor: Intake queue registration, Work Order (WO) drafting, and diagnostic symptom verification.\n3. Lead Mechanic: Updates live repair milestones and records installed spare parts.\n4. Vehicle Owner: Online appointment booking, repair status tracker, and digital maintenance logbook.",
             'logistics' => "1. Superadmin: Full control over master fleet catalog, regional rate matrices, and role authorization.\n2. Dispatch Operator: Registers manifests, assigns drivers, and verifies delivery routes.\n3. Driver / Fleet Contractor: Updates transit waypoints, uploads proof of delivery (POD) photo.\n4. Corporate Client: Real-time shipment tracking and automated e-POD / invoice downloads.",
             'marketplace' => "1. Superadmin: Vendor KYC verification, transaction escrow audits, and platform settings.\n2. Vendor Partner: Manages equipment availability, confirms booking requests, and updates terms.\n3. Customer: Searches availability, reserves dates, and completes payment checkout.\n4. Financial Officer: Reconciles escrow releases and vendor settlements.",
             'clinic' => "1. Superadmin: Clinic branches, doctor schedules, and security policy management.\n2. Receptionist: Patient intake, appointment queue management, and card printing.\n3. Physician: Diagnostic inputs, Electronic Medical Records (EMR), and digital prescriptions.\n4. Pharmacist: Prescription validation, medication dispensing, and inventory tracking.",
@@ -712,6 +802,8 @@ class BlueprintDiscoveryService
     protected function synthesizeMvpFeatures(string $corpus, string $domain, bool $isEn): string
     {
         $featuresId = [
+            'fnb_culinary' => "1. Autentikasi Modern & Dasbor Pengelola (Filament v5): Manajemen menu mingguan, paket diet/reguler, dan rekapitulasi pesanan harian.\n2. Katalog Menu Mingguan & Kalender Langganan: Tampilan menu bervariasi dengan foto lezat via Curator Picker dan pilihan paket diet vs reguler.\n3. Formulir Pemesanan & Alamat Pengiriman: Input jadwal kirim, alamat kantor/rumah, dan kalkulasi total biaya transparan.\n4. Penerbitan & Pengiriman Nota Otomatis: Nota transaksi instan ber-QR Code dalam format PDF resmi terkirim otomatis.\n5. Integrasi WhatsApp Pesanan & Kurir: Notifikasi konfirmasi pesanan ke pelanggan dan rute penugasan antar ke kurir katering.\n6. Rekapitulasi Porsi Dapur (Kitchen Batching): Dasbor rekap total porsi bahan baku dan menu yang harus dimasak setiap hari.",
+            'services_workshop' => "1. Autentikasi Pengguna & Dasbor Bengkel (Filament v5): Pusat kendali Work Order, antrean servis, dan performa teknisi.\n2. Reservasi & Booking Antrean Servis Online: Pelanggan memilih jenis perawatan, plat nomor kendaraan, dan jadwal kedatangan.\n3. Manajemen Perintah Kerja (Digital Work Order): Pencatatan keluhan awal, suku cadang terpakai, dan estimasi waktu selesai.\n4. Buku Riwayat Servis Digital (Service Passport): Catatan histori perawatan kendaraan tersimpan rapi berdasarkan plat nomor.\n5. Faktur Biaya & Estimasi Transparan: Rincian biaya jasa montir dan sparepart tercetak otomatis dalam format PDF resmi.\n6. Integrasi Notifikasi WhatsApp: Update otomatis status servis kendaraan (Diterima -> Dikerjakan -> Selesai Siap Diambil).",
             'logistics' => "1. Autentikasi Pengguna & RBAC: Manajemen akses aman untuk Superadmin, Dispatcher, Vendor, dan Klien dengan PostgreSQL ULID.\n2. Manajemen Master Data: Pengelolaan data armada truk, jenis kontainer, kapasitas muatan, dan tarif wilayah.\n3. Modul Pencatatan Manifes & Resi: Penerbitan nomor surat jalan otomatis dengan QR Code verifikasi.\n4. Pelacakan Status Pengiriman Real-Time: Update status bertahap (Diterima -> Muat -> Dalam Perjalanan -> Terkirim) lengkap dengan bukti foto serah terima (e-POD).\n5. Dasbor Admin Filament v5: Tabel filter data pengiriman dengan pencarian instan, status badge, dan metrik operasional harian.\n6. Ekspor Laporan & Surat Jalan: Cetak otomatis Surat Jalan, Berita Acara, dan rekapitulasi data format PDF dan Excel.",
             'marketplace' => "1. Autentikasi & Verifikasi Akun: Login aman dengan pemisahan peran Pelanggan dan Vendor Mitra.\n2. Manajemen Katalog & Ketersediaan: Input detail layanan/unit sewa dengan galeri foto via Curator Picker dan tarif harian/bulanan.\n3. Alur Reservasi & Booking: Formulir pemilihan tanggal sewa, kalkulasi harga otomatis, dan konfirmasi ketersediaan.\n4. Integrasi Pembayaran Midtrans: Dukungan pembayaran multi-channel (Virtual Account, QRIS, Kartu Kredit) dengan webhook otomatis.\n5. Pusat Kendali Admin (Filament PHP): Audit pesanan masuk, verifikasi berkas legal vendor, dan pemantauan transaksi.\n6. Faktur Digital & Notifikasi: Penerbitan invoice resmi otomatis dan notifikasi status pesanan.",
             'clinic' => "1. Modul Autentikasi & Hak Akses Medis: Akses terisolasi untuk Resepsionis, Dokter, dan Apoteker.\n2. Pendaftaran Pasien & Antrean: Input data pasien dengan nomor rekam medis unik dan antrean digital poli.\n3. Rekam Medis Elektronik (RME): Form pencatatan keluhan, anamnesis, diagnosis standar ICD-10, dan resep obat digital.\n4. Manajemen Stok Apotek: Pencatatan otomatis pengurangan stok saat obat diresepkan serta peringatan stok menipis.\n5. Dasbor Manajemen & Kasir: Perhitungan total billing perawatan obat dan cetak kuitansi pembayaran.\n6. Laporan Medis & Keuangan: Ekspor data kunjungan pasien dan rekapitulasi penjualan farmasi ke PDF/Excel.",
@@ -721,6 +813,8 @@ class BlueprintDiscoveryService
         ];
 
         $featuresEn = [
+            'fnb_culinary' => "1. Modern Auth & Kitchen Management Hub (Filament v5): Weekly menu rotation, diet/regular meal packages, and daily order batching.\n2. Interactive Weekly Menu & Subscription Calendar: Appetizing dish showcase curated via Curator Picker and diet tier selectors.\n3. Delivery Scheduling & Address Portal: Delivery time intake, office drop-off notes, and automated transparent invoice calculation.\n4. Automated PDF Receipt Issuance: QR-coded official purchase receipts and instant PDF generation.\n5. WhatsApp Notification Dispatch: Automated order confirmation to customers and dispatch instructions to internal drivers.\n6. Kitchen Batch Production Dashboard: Ingredient and portion aggregation ledger for culinary kitchen staff.",
+            'services_workshop' => "1. Workshop Manager Hub (Filament v5): Work Order intake, vehicle service queue tracker, and mechanic productivity.\n2. Online Service Appointment Booking: Vehicle plate number intake, service type selection, and scheduled arrival time.\n3. Digital Work Order Management: Diagnostic symptom intake, installed spare parts recording, and estimated completion timer.\n4. Vehicle Service Passport (Digital Logbook): Historical maintenance records organized by license plate numbers.\n5. Itemized Estimates & Official Invoicing: Transparent labor rate and parts calculation with exportable PDF receipts.\n6. Automated WhatsApp Progress Alerts: Real-time service milestones dispatched directly to car owner WhatsApp numbers.",
             'logistics' => "1. User Authentication & RBAC: Strict access authorization for Superadmin, Dispatcher, Vendor, and Client using PostgreSQL ULID.\n2. Master Fleet & Route Catalog: Fleet specifications, container capacities, and regional rate tables.\n3. Automated Manifest & Waybill Generation: Instant assignment with unique QR code verification.\n4. Live Shipment Progression: Multi-stage status updates (Accepted -> In-Transit -> Delivered) with mobile photo e-POD upload.\n5. Filament v5 Command Center: Real-time dispatch filter table, operational KPI metric cards, and bulk status triggers.\n6. Document Generation & Export: Instant printable PDF waybills and XLSX dispatch reconciliations.",
             'marketplace' => "1. Verified User Profiles & RBAC: Dual-role onboarding for Customers and Verified Vendors.\n2. Service & Asset Availability Catalog: Media management via Curator Picker and dynamic tier pricing.\n3. Booking & Reservation Pipeline: Interactive calendar picker, pricing calculator, and confirmation lock.\n4. Midtrans Payment Engine: Multi-channel checkout (Virtual Account, QRIS, Cards) with automated webhook settlement.\n5. Command Center (Filament PHP): Booking inspection, vendor credential review, and revenue tracking.\n6. Digital Invoicing & Receipts: Automated PDF receipt generation and instant status notifications.",
             'clinic' => "1. Role-Segregated Clinical Auth: Isolated portals for Receptionists, Physicians, and Pharmacists.\n2. Patient Intake & Queue Management: Patient registration with automated medical record numbers.\n3. Electronic Medical Records (EMR): Diagnostic documentation, anamnesis logs, and digital prescription issuance.\n4. Pharmacy Dispensary & Inventory Sync: Automated real-time deduction upon prescription dispensing with low-stock alerts.\n5. Cashier & Billing Hub: Aggregated billing calculation and instant invoice receipt generation.\n6. Clinical & Revenue Analytics: Exportable patient visit metrics and pharmacy ledger in PDF and Excel formats.",
@@ -735,6 +829,8 @@ class BlueprintDiscoveryService
     protected function synthesizeRoadmapFeatures(string $corpus, string $domain, bool $isEn): string
     {
         $roadmapId = [
+            'fnb_culinary' => "1. Integrasi Payment Gateway Multi-Channel: Pembayaran otomatis via QRIS dan Virtual Account Bank BCA/Mandiri.\n2. PWA Pelanggan (1-Klik Reorder): Kemudahan repeat order paket makan siang langsung dari layar ponsel tanpa download app store.\n3. Optimasi Rute Pengantaran Kurir (Delivery Dispatch AI): Pengelompokan alamat antar dalam satu rute wilayah terdekat untuk efisiensi ongkos kirim.",
+            'services_workshop' => "1. Pengingat Servis Rutin Otomatis (WhatsApp CRM): Pengingat servis berkala otomatis (ganti oli/tune up) berdasarkan kilometer estimasi.\n2. Integrasi Pembayaran Midtrans (DP Booking Servis): Pembayaran uang muka reservasi servis atau pembelian sparepart via QRIS.\n3. Inventori Barcode Scanner: Pemindaian barcode sparepart saat dipasang ke kendaraan untuk akurasi stok gudang bengkel.",
             'logistics' => "1. Integrasi GPS IoT Telemetri: Pembacaan sensor GPS armada real-time dan pemantauan suhu muatan kontainer.\n2. Notifikasi WhatsApp Gateway: Kirim nomor resi dan link tracking live otomatis ke nomor WhatsApp penerima.\n3. Algoritma Optimasi Rute (Route Dispatcher AI): Rekomendasi rute terpendek untuk efisiensi bahan bakar armada.",
             'marketplace' => "1. Integrasi Escrow Multi-Vendor Otomatis: Pencairan dana otomatis ke rekening bank vendor setelah pesanan selesai.\n2. Notifikasi WhatsApp Bisnis: Notifikasi pengingat pembayaran dan konfirmasi penjemputan unit secara instan.\n3. Aplikasi Mobile PWA Teroptimasi: Akses offline dan notifikasi push untuk mitra di lapangan.",
             'clinic' => "1. Integrasi SatuSehat Kemenkes: Penyelarasan data riwayat medis pasien dengan platform SatuSehat nasional.\n2. Notifikasi Pengingat Kontrol WhatsApp: Pengingat otomatis jadwal kontrol ulang pasien dan resep rutin.\n3. Portal Pasien Mandiri (PWA): Pasien dapat melihat riwayat hasil lab dan mengunduh resep digital sendiri.",
@@ -744,6 +840,8 @@ class BlueprintDiscoveryService
         ];
 
         $roadmapEn = [
+            'fnb_culinary' => "1. Multi-Channel Payment Gateway: Automated QRIS and Bank Virtual Account checkout.\n2. 1-Click PWA Reorder: Lightweight mobile shortcut for recurring corporate lunch ordering.\n3. AI Delivery Route Dispatcher: Cluster delivery waypoints by geographic vicinity to optimize driver fuel.",
+            'services_workshop' => "1. Proactive Maintenance CRM: Scheduled mileage-based oil change and tune-up notifications via WhatsApp.\n2. Booking Fee Payment Gateway: Instant online deposit settlement via QRIS.\n3. Barcode Inventory Scanner: Instant parts barcode scanning upon vehicle mounting to prevent warehouse leakage.",
             'logistics' => "1. IoT GPS Telemetry Integration: Direct sensor integration for live vehicle coordinate and container temperature logging.\n2. Automated WhatsApp Gateway: Instant notification dispatch with live tracking links to recipient phone numbers.\n3. AI Route Optimization Engine: Automated best-route dispatch recommendations to minimize fuel consumption.",
             'marketplace' => "1. Automated Multi-Vendor Escrow Payouts: Automated bank disbursements to vendor accounts upon verified completion.\n2. Official WhatsApp Notifications: Automated reminders for pending payments and booking pickup confirmations.\n3. Mobile PWA Field Companion: Offline-first access with background sync for mobile field coordinators.",
             'clinic' => "1. SatuSehat Ministry of Health Compliance: Bi-directional EMR synchronization with national health services.\n2. Automated WhatsApp Check-up Reminders: Proactive appointment reminders for recurring patient checkups.\n3. Patient Self-Service Portal (PWA): Direct access for patients to view test results and digital prescription history.",
@@ -758,6 +856,8 @@ class BlueprintDiscoveryService
     protected function synthesizeWorkflow(string $corpus, string $domain, bool $isEn): string
     {
         $workflowId = [
+            'fnb_culinary' => "1. Pelanggan membuka website katering dan memilih paket (Harian, Mingguan, Diet, atau Reguler).\n2. Pelanggan menentukan tanggal langganan dan memasukkan alamat pengiriman serta nomor WhatsApp aktif.\n3. Sistem menerbitkan nota pesanan otomatis dan mengirimkan konfirmasi via WhatsApp.\n4. Tim dapur memantau rekap porsi di dasbor admin dan menyiapkan masakan sesuai pesanan.\n5. Kurir menerima rincian antaran via WhatsApp dan mengantarkan makanan tepat waktu ke alamat pelanggan.",
+            'services_workshop' => "1. Pelanggan mengakses portal bengkel dan memilih jenis layanan servis serta jadwal kedatangan.\n2. Service advisor menerima kendaraan di bengkel dan mengonfirmasi Work Order (WO) di sistem.\n3. Mekanik mengerjakan servis dan memperbarui status pengerjaan serta suku cadang yang diganti.\n4. Sistem mengirimkan notifikasi WhatsApp ke pelanggan bahwa kendaraan telah selesai diservis.\n5. Pelanggan melakukan pembayaran, menerima kuitansi resmi, dan catatan riwayat servis kendaraan otomatis tersimpan.",
             'logistics' => "1. Klien / Dispatcher membuat pesanan pengiriman baru di portal.\n2. Sistem menerbitkan Surat Jalan unik ber-QR Code dan menugaskan armada yang tersedia.\n3. Pengemudi melakukan check-in keberangkatan dan status diperbarui menjadi 'Dalam Perjalanan'.\n4. Barang tiba di tujuan, penerima menandatangani secara digital atau pengemudi mengunggah foto e-POD.\n5. Sistem secara otomatis mencatat pengiriman selesai dan mengirimkan rekapitulasi faktur ke klien.",
             'marketplace' => "1. Pengguna mencari layanan atau unit sewa yang tersedia sesuai tanggal.\n2. Pengguna mengisi detail durasi dan sistem menghitung total biaya secara transparan.\n3. Pengguna melakukan pembayaran melalui Virtual Account atau QRIS Midtrans.\n4. Pembayaran terverifikasi otomatis via webhook, vendor menerima notifikasi pesanan.\n5. Vendor menyerahkan unit/layanan dan menyelesaikan transaksi di dasbor.",
             'clinic' => "1. Pasien mendaftar online atau melalui staf resepsionis di lokasi klinik.\n2. Pasien dipanggil menuju ruang dokter sesuai nomor antrean digital.\n3. Dokter memeriksa pasien dan menginput diagnosis serta resep langsung di Rekam Medis Elektronik.\n4. Apotek menerima resep secara real-time dan menyiapkan obat.\n5. Pasien melakukan pembayaran di kasir dan menerima obat beserta kuitansi resmi.",
@@ -767,6 +867,8 @@ class BlueprintDiscoveryService
         ];
 
         $workflowEn = [
+            'fnb_culinary' => "1. Customer opens the responsive web portal and selects meal package (Daily, Weekly, Diet, or Regular).\n2. Customer configures delivery dates, office/home drop-off address, and WhatsApp contact.\n3. System issues automated itemized receipt and alerts customer via WhatsApp.\n4. Kitchen team inspects portion batching in the control panel and prepares daily meals.\n5. Delivery driver receives route dispatch via WhatsApp and completes on-time doorstep delivery.",
+            'services_workshop' => "1. Customer accesses workshop portal and selects required service package and preferred arrival slot.\n2. Service advisor admits vehicle, inspecting symptoms and confirming digital Work Order (WO).\n3. Assigned mechanic executes repairs, logging replaced parts and labor hours in the system.\n4. System dispatches real-time WhatsApp alert notifying vehicle owner that maintenance is completed.\n5. Customer completes payment, receives official digital invoice, and maintenance record logs into vehicle passport.",
             'logistics' => "1. Client / Dispatcher registers a new shipment order on the portal.\n2. System issues a unique QR-coded waybill and assigns available fleet assets.\n3. Driver confirms departure, transitioning status to 'In Transit'.\n4. Consignment arrives at destination, recipient signs electronically, and driver uploads e-POD.\n5. System automatically logs completion and sends reconciliation invoice to the client.",
             'marketplace' => "1. User selects desired service or equipment availability for specified dates.\n2. User provides required details and system transparently calculates total pricing.\n3. User executes payment via Midtrans Virtual Account or QRIS.\n4. Settlement verifies via automated webhook, alerting the vendor partner instantly.\n5. Vendor delivers unit/service and confirms completion in the dashboard.",
             'clinic' => "1. Patient checks in online or via front-desk registration.\n2. Patient is queued and routed to physician examination room.\n3. Physician records examination notes, diagnosis, and digital prescriptions in EMR.\n4. Dispensary receives prescription instantly and prepares medication packages.\n5. Patient completes billing settlement at checkout and receives dispensed medicine.",
@@ -781,6 +883,8 @@ class BlueprintDiscoveryService
     protected function synthesizeIntegrations(string $corpus, string $domain, bool $isEn): string
     {
         $integrationsId = [
+            'fnb_culinary' => 'WhatsApp Cloud API, Google Maps Embed API, Cloudflare R2 Storage (Foto Menu HD), Mailgun Transactional Email.',
+            'services_workshop' => 'WhatsApp Cloud API, Google Maps Embed API, Cloudflare R2 Storage, Midtrans Payment Gateway.',
             'logistics' => 'Midtrans Payment Gateway, WhatsApp Cloud API, Mapbox / OpenStreetMap Routing API, S3 / Cloudflare R2 Object Storage.',
             'marketplace' => 'Midtrans Snap Payment Gateway, WhatsApp Business Cloud API, Google Maps Autocomplete, Cloudflare R2.',
             'clinic' => 'SatuSehat Kemenkes API, Midtrans QRIS/VA, WhatsApp Gateway Pengingat Pasien, Cloud Backup Storage.',
@@ -790,6 +894,8 @@ class BlueprintDiscoveryService
         ];
 
         $integrationsEn = [
+            'fnb_culinary' => 'WhatsApp Business Cloud API, Google Maps Embed API, Cloudflare R2 Storage (HD Food Images), Mailgun SMTP.',
+            'services_workshop' => 'WhatsApp Business Cloud API, Google Maps Embed API, Cloudflare R2 Storage, Midtrans Payment Gateway.',
             'logistics' => 'Midtrans Payment Gateway, WhatsApp Cloud API, Mapbox / OpenStreetMap Routing API, Cloudflare R2 Storage.',
             'marketplace' => 'Midtrans Snap Payment Gateway, WhatsApp Business API, Google Places Autocomplete, Cloudflare R2.',
             'clinic' => 'SatuSehat MOH API, Midtrans QRIS/VA, Patient WhatsApp Dispatcher, Encrypted Cloud Storage.',
@@ -804,6 +910,8 @@ class BlueprintDiscoveryService
     protected function synthesizeOutOfScope(string $corpus, string $domain, bool $isEn): string
     {
         $outOfScopeId = [
+            'fnb_culinary' => "1. Tidak membangun aplikasi native Play Store / App Store di Fase 1 (fokus pada Web App responsif mobile yang cepat dibuka di browser smartphone).\n2. Tidak mengelola armada logistik pihak ketiga secara langsung (fokus pada operasional katering dan kurir internal).\n3. Penanganan kompensasi pembatalan mendadak di luar jam operasional diatur dalam S&K resmi katering.",
+            'services_workshop' => "1. Tidak mencakup integrasi perangkat keras scan OBD-II / mesin diagnostik ECU secara langsung di Fase 1.\n2. Tidak menyediakan aplikasi native mobile store di rilis awal (berbasis Web Responsive PWA performa tinggi).\n3. Pengurusan klaim asuransi pihak ketiga di luar bengkel ditangani secara manual.",
             'logistics' => "1. Tidak membuat aplikasi native iOS & Android khusus app store pada Fase 1 MVP (fokus pada Progressive Web App / Web Responsive yang ringan dan dapat diakses dari browser smartphone).\n2. Tidak mencakup integrasi perangkat keras sensor telemetri pihak ketiga (IoT) yang belum terstandarisasi di tahap awal.\n3. Tidak melayani pengurusan bea cukai dan regulasi pengiriman lintas negara (fokus pada pengiriman domestik Indonesia).",
             'marketplace' => "1. Tidak menyediakan aplikasi native mobile store iOS/Android di rilis awal (menggunakan Web Responsive PWA performa tinggi).\n2. Tidak mengelola logistik fisik atau asuransi barang secara langsung (tanggung jawab vendor dan pihak ketiga).\n3. Tidak menyediakan skema kredit cicilan tanpa agunan (BNPL) pihak ketiga selain saluran pembayaran resmi Midtrans.",
             'clinic' => "1. Tidak menyediakan integrasi mesin radiologi / PACS imaging langsung di Fase 1 (fokus pada data rekam medis teks, diagnosa, dan laboratorium).\n2. Tidak mencakup aplikasi native mobile pasien di Google Play / App Store pada tahap MVP.\n3. Tidak melakukan pemotongan klaim BPJS otomatis secara langsung sebelum bridging resmi tersedia.",
@@ -813,6 +921,8 @@ class BlueprintDiscoveryService
         ];
 
         $outOfScopeEn = [
+            'fnb_culinary' => "1. No native mobile app store binaries in Phase 1 (focus is on ultra-fast responsive Web App accessible from smartphone browsers).\n2. Platform does not directly manage third-party freight carriers (scoped to in-house kitchen and local couriers).\n3. Last-minute cancellation compensations outside kitchen cutoff hours are governed by standard operating policies.",
+            'services_workshop' => "1. Excludes direct OBD-II vehicle diagnostic hardware scanner integration in Phase 1 MVP.\n2. Excludes native mobile app store distribution in MVP release (delivered as high-performance responsive Web PWA).\n3. Third-party insurance claim paperwork is handled manually outside the platform.",
             'logistics' => "1. No native iOS/Android binary store application in Phase 1 MVP (focus is on lightweight, high-performance Progressive Web App accessible via mobile browsers).\n2. Excludes proprietary non-standard IoT telemetry hardware sensor interfacing in initial release.\n3. Excludes international customs declaration processing (scoped strictly to domestic Indonesian operations).",
             'marketplace' => "1. No native mobile app store binaries in Phase 1 MVP (delivered as a fast Responsive Web PWA).\n2. Platform does not directly manage physical inventory custody or third-party transit insurance.\n3. No custom third-party Buy-Now-Pay-Later (BNPL) credit underwriting outside standard Midtrans channels.",
             'clinic' => "1. Excludes direct integration with physical radiology / PACS machinery in Phase 1 MVP (focus on text clinical records, diagnoses, and lab results).\n2. Excludes native mobile patient app store distribution in MVP release.\n3. Excludes direct unbridged national health insurance (BPJS) claim underwriting.",

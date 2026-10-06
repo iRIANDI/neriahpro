@@ -974,7 +974,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         // Initialize Real-time Collaborative Presence Heartbeat
                         try {
                             const cid = 'c_' + Math.random().toString(36).substring(2, 9);
-                            const syncPresence = (mx = 42, my = 28) => {
+                            let hasMoved = false;
+                            const syncPresence = (mx, my) => {
+                                if (mx === undefined || my === undefined) return;
                                 fetch('{{ route('api.blueprint.presence.update', $blueprint->slug) }}', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
@@ -982,9 +984,10 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 }).then(r => r.json()).then(d => {
                                     if (d && d.collaborators && d.collaborators.length > 0) {
                                         this.collaborators = d.collaborators;
-                                        const other = d.collaborators.find(c => c.id !== cid);
-                                        if (other && other.x !== undefined && other.y !== undefined) {
-                                            this.collaboratorCursor = { x: other.x, y: other.y, visible: true, name: other.name || 'Lead Architect (Neriah Pro)' };
+                                        const nowTs = Math.floor(Date.now() / 1000);
+                                        const other = d.collaborators.find(c => c.id !== cid && (nowTs - (c.last_seen || 0)) <= 8);
+                                        if (other && other.x !== undefined && other.y !== undefined && other.x > 0 && other.y > 0) {
+                                            this.collaboratorCursor = { x: other.x, y: other.y, visible: true, name: other.name || 'Kolaborator' };
                                         } else {
                                             this.collaboratorCursor.visible = false;
                                         }
@@ -995,12 +998,19 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     this.collaboratorCursor.visible = false;
                                 });
                             };
-                            syncPresence();
-                            setInterval(() => syncPresence(window.lastMouseX || 42, window.lastMouseY || 28), 4500);
                             window.addEventListener('mousemove', e => {
                                 window.lastMouseX = Math.round((e.clientX / window.innerWidth) * 100);
                                 window.lastMouseY = Math.round((e.clientY / window.innerHeight) * 100);
+                                if (!hasMoved) {
+                                    hasMoved = true;
+                                    syncPresence(window.lastMouseX, window.lastMouseY);
+                                }
                             }, { passive: true });
+                            setInterval(() => {
+                                if (window.lastMouseX !== undefined && window.lastMouseY !== undefined) {
+                                    syncPresence(window.lastMouseX, window.lastMouseY);
+                                }
+                            }, 4000);
                         } catch(e) {}
                     });
                 }

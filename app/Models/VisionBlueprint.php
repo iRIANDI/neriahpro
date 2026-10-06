@@ -311,8 +311,7 @@ class VisionBlueprint extends Model
         $shortId = strtoupper(substr($this->id, 0, 8));
         $hasSettledTx = \App\Models\Transaction::whereIn('status', ['settlement', 'capture', 'success'])
             ->where(function ($q) use ($shortId) {
-                $q->where('midtrans_order_id', 'LIKE', "%{$shortId}%")
-                  ->orWhere('midtrans_order_id', 'LIKE', '%APEX%');
+                $q->where('midtrans_order_id', 'LIKE', "%{$shortId}%");
                 if ($this->email) {
                     $q->orWhere('customer_details->email', $this->email);
                 }

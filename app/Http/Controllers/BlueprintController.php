@@ -765,8 +765,10 @@ class BlueprintController extends Controller
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
 
         $clientId = $request->input('client_id') ?: session()->getId();
-        $name = $request->input('name') ?: (auth()->check() ? auth()->user()->name : ($blueprint->client_name ?: 'Klien'));
-        $role = $request->input('role') ?: (auth()->user()?->isSuperAdmin() ? 'Lead Architect (Neriah Pro)' : 'Klien / Stakeholder');
+        $isArchitect = auth()->user()?->isSuperAdmin() || (auth()->user() && str_contains(auth()->user()->email, 'neriahpro'));
+        $defaultName = auth()->check() ? auth()->user()->name : 'Tamu / Reviewer';
+        $name = $request->input('name') ?: $defaultName;
+        $role = $request->input('role') ?: ($isArchitect ? 'Lead Architect (Neriah Pro)' : (auth()->check() ? 'Klien / Stakeholder' : 'Tamu'));
         $x = (float) $request->input('x', 0);
         $y = (float) $request->input('y', 0);
         $section = $request->input('section', 'Section 01');

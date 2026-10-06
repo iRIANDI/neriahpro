@@ -477,9 +477,10 @@ class ManageSettings extends Page implements HasForms
         $data = $this->form->getState();
         
         foreach ($data as $key => $value) {
+            $safeValue = $value !== null ? $value : '';
             CmsGlobalSetting::updateOrCreate(
                 ['key' => $key],
-                ['value' => $value]
+                ['value' => $safeValue]
             );
         }
 

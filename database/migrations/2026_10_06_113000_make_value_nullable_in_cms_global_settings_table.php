@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cms_global_settings', function (Blueprint $table) {
-            $table->ulid('id')->primary();
-            $table->string('key')->unique(); // e.g. 'main_navigation', 'footer_links'
-            $table->json('value')->nullable(); // multi-language json
-            $table->timestamps();
+        Schema::table('cms_global_settings', function (Blueprint $table) {
+            $table->json('value')->nullable()->change();
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cms_global_settings');
+        Schema::table('cms_global_settings', function (Blueprint $table) {
+            $table->json('value')->nullable(false)->change();
+        });
     }
 };

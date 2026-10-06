@@ -146,7 +146,7 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/cart/voucher/remove`: Hapus kode voucher aktif dari keranjang belanja (`CartController::removeVoucher`).
 - `/cart/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Cart DP checkout multi-item dengan kalkulasi subsidi voucher (`CartController::getSnapToken`).
 - `/document/{document}/preview`: Preview draft kontrak kerja sama digital.
-- `/document/{document}/sign`: Livewire signing page (`DocumentSignature`).
+- `/document/{document}/sign`: Livewire signing page (`DocumentSignature`, Dual-Locale `id`/`en`, Dark/Light Mode, Printer-ready formatting, Dynamic Project OS clauses via `ContractLegalHelper`).
 - `/lang/{locale}`: Switcher bahasa (`id` / `en`) dengan persistensi session dan cookie.
 - `/admin`: Panel admin Filament v5 dengan database notifications (PostgreSQL `jsonb` schema).
 - `/admin/login`: Customized Enterprise Login Portal (`App\Filament\Pages\Auth\Login`) dengan Vision & Mission Pillars, 1-Click Demo Credential Assistant, dan System Telemetry (Split-Screen Desktop & Responsive Portrait).

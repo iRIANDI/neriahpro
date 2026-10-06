@@ -96,6 +96,53 @@ class ManageSettings extends Page implements HasForms
                                     ->valueLabel('URL'),
                             ]),
 
+                        Tabs\Tab::make('Legal & Developer Signature')
+                            ->icon('heroicon-m-pencil-square')
+                            ->badge('Pihak Kedua')
+                            ->schema([
+                                Section::make('Identitas Pihak Kedua (Pengembang Sistem / Studio)')
+                                    ->description('Konfigurasi nama entitas, kontak, dan alamat resmi Neriah Pro yang dicantumkan pada kontrak hukum digital.')
+                                    ->schema([
+                                        TextInput::make('developer_entity_name')
+                                            ->label('Nama Entitas Pihak Kedua')
+                                            ->helperText('Nama resmi studio/agensi (cukup "Neriah Pro", belum berbadan hukum PT).')
+                                            ->default('Neriah Pro')
+                                            ->required(),
+                                        TextInput::make('developer_support_email')
+                                            ->label('Email Resmi Support & Kontrak')
+                                            ->email()
+                                            ->helperText('Email resmi untuk korespondensi kontrak dan dokumen hukum.')
+                                            ->default('support@neriahpro.com')
+                                            ->required(),
+                                        TextInput::make('developer_phone')
+                                            ->label('Nomor Telepon / WhatsApp Resmi')
+                                            ->default('+628123456789'),
+                                        TextInput::make('developer_location')
+                                            ->label('Domisili / Wilayah Hukum')
+                                            ->default('Jakarta, Indonesia'),
+                                    ])->columns(2),
+
+                                Section::make('Penanggung Jawab Teknis & Tanda Tangan Developer')
+                                    ->description('Unggah gambar tanda tangan Anda selaku developer / arsitek sistem untuk dibubuhkan otomatis pada dokumen kontrak digital Pihak Kedua.')
+                                    ->schema([
+                                        TextInput::make('developer_pic_name')
+                                            ->label('Nama Lengkap Penanggung Jawab (PIC)')
+                                            ->helperText('Nama yang dicantumkan di bawah tanda tangan Pihak Kedua.')
+                                            ->default('Yoseph Iriandi Tambunan')
+                                            ->required(),
+                                        TextInput::make('developer_pic_title')
+                                            ->label('Jabatan / Peran PIC')
+                                            ->default('Lead Software Architect & Tech Lead')
+                                            ->required(),
+                                        TextInput::make('developer_seal_text')
+                                            ->label('Teks Segel Digital Korporat')
+                                            ->default('NERIAH PRO VERIFIED ARCHITECT')
+                                            ->required(),
+                                        \App\Support\FilamentCuratorHelper::picker('developer_signature_image', 'signatures', 'Tanda Tangan Digital Developer')
+                                            ->helperText('Unggah berkas gambar tanda tangan Anda (format PNG transparan direkomendasikan). Otomatis tersimpan secara rapi di folder dangkal "storage/signatures".'),
+                                    ])->columns(2),
+                            ]),
+
                         Tabs\Tab::make('Multi-Language (2-Tier Locale)')
                             ->icon('heroicon-m-language')
                             ->badge('Tier 1 & Tier 2')
@@ -378,6 +425,8 @@ class ManageSettings extends Page implements HasForms
         \Illuminate\Support\Facades\Cache::forget('cms_global_settings_data');
         \Illuminate\Support\Facades\Cache::forget('google_translate_settings');
         \Illuminate\Support\Facades\Cache::forget('frontend_locale_settings');
+        \Illuminate\Support\Facades\Cache::forget('developer_signature_settings');
+        \Illuminate\Support\Facades\Cache::forget('cms_contract_developer_info');
 
         Notification::make()
             ->title('Pengaturan & Schema.org Berhasil Disimpan')

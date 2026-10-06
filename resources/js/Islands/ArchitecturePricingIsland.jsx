@@ -43,12 +43,17 @@ export default function ArchitecturePricingIsland({
   // Tab switcher
   const [activeTab, setActiveTab] = useState('software'); // 'software' | 'cv'
   
-  // Voucher copy state
-  const [copiedCode, setCopiedCode] = useState(null);
-
-  // Modal State for Consultation / Booking Intake
+  // Modal State for Capacity Reservation & Direct Selection
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState('blueprint_advisory');
+  const [selectedPackage, setSelectedPackage] = useState('full_mvp');
+  
+  // Sprint Capacity & Time Management States (Anti-Collision Architecture)
+  const [sprintBatch, setSprintBatch] = useState('Batch 1 (15 Okt - 25 Nov 2026)');
+  const [kickoffSlot, setKickoffSlot] = useState('Pagi (09:30 - 10:30 WIB)');
+  const [hasBlueprint, setHasBlueprint] = useState('no'); // 'no' | 'ready'
+  const [blueprintSlug, setBlueprintSlug] = useState('');
+  const [umkmCategory, setUmkmCategory] = useState('Toko Retail & Grosir');
+
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -68,14 +73,6 @@ export default function ArchitecturePricingIsland({
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
-  };
-
-  const copyVoucher = (code) => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(code);
-      setCopiedCode(code);
-      setTimeout(() => setCopiedCode(null), 3000);
-    }
   };
 
   const openBookingModal = (packageTier, defaultVoucher = '') => {
@@ -117,6 +114,11 @@ export default function ArchitecturePricingIsland({
           phone: formData.phone,
           package_tier: selectedPackage,
           voucher_code: formData.voucher_code,
+          sprint_batch: selectedPackage === 'full_mvp' ? sprintBatch : null,
+          kickoff_slot: selectedPackage === 'full_mvp' ? kickoffSlot : null,
+          has_blueprint: selectedPackage === 'full_mvp' ? hasBlueprint : null,
+          blueprint_slug: selectedPackage === 'full_mvp' && hasBlueprint === 'ready' ? blueprintSlug : null,
+          umkm_category: selectedPackage === 'umkm_starter' ? umkmCategory : null,
           notes: formData.notes
         })
       });
@@ -124,7 +126,7 @@ export default function ArchitecturePricingIsland({
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.message || (isEn ? 'Failed to submit inquiry.' : 'Gagal mengirimkan formulir konsultasi.'));
+        throw new Error(result.message || (isEn ? 'Failed to record reservation.' : 'Gagal mencatat reservasi jadwal.'));
       }
 
       setSubmitSuccess(true);
@@ -141,30 +143,6 @@ export default function ArchitecturePricingIsland({
       setIsSubmitting(false);
     }
   };
-
-  const activeVouchers = [
-    {
-      code: 'UMKM-SUBSIDI-50',
-      label: isEn ? 'UMKM 50% Subsidy' : 'Subsidi 50% UMKM',
-      desc: isEn ? 'Special government/community initiative discount for local business digital transformation.' : 'Bantuan stimulus transformasi digital bisnis lokal & wirausaha mandiri.',
-      badge: '50% OFF',
-      tierTarget: 'umkm_starter'
-    },
-    {
-      code: 'CORP-INNOVATION-15M',
-      label: isEn ? 'Enterprise Voucher' : 'Voucher Korporasi',
-      desc: isEn ? 'Direct Rp 15,000,000 deduction on Full MVP Rapid Monolith Development.' : 'Potongan langsung Rp 15.000.000 untuk kontrak Full MVP Enterprise Monolith.',
-      badge: '-Rp 15.000.000',
-      tierTarget: 'full_mvp'
-    },
-    {
-      code: 'ENTERPRISE-SPRINT-25',
-      label: isEn ? 'Sprint Kickstart' : 'Diskon Sprint 25%',
-      desc: isEn ? '25% discount for 5 full sprints development with dedicated engineers.' : 'Diskon 25% pengerjaan sprint akselerasi MVP sistem berskala tinggi.',
-      badge: '25% OFF',
-      tierTarget: 'full_mvp'
-    }
-  ];
 
   const faqs = [
     {
@@ -218,56 +196,20 @@ export default function ArchitecturePricingIsland({
             {subheadline}
           </p>
 
-          {/* VOUCHER PROMOTION ALERT BAR */}
-          <div className="mt-8 p-4 bg-gradient-to-r from-emerald-950/40 via-zinc-900 to-zinc-900 border-2 border-emerald-500/40 text-left rounded-none shadow-lg">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-emerald-500 text-black flex items-center justify-center font-bold shrink-0">
-                  <Gift className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-                    <span>{isEn ? 'ACTIVE STIMULUS & VOUCHERS' : 'PROGRAM STIMULUS & VOUCHER AKTIF'}</span>
-                    <span className="px-1.5 py-0.2 bg-emerald-500 text-black text-[9px] font-black">TERBATAS</span>
-                  </h4>
-                  <p className="text-xs text-zinc-300 font-sans mt-0.5">
-                    {pricingSettings.active_promo_banner || (isEn 
-                      ? 'Apply voucher codes below to unlock exclusive subsidies for UMKM and corporate innovation.'
-                      : 'Klaim subsidi transformasi digital untuk UMKM atau potongan harga khusus bagi korporasi & startup.')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Quick Voucher Pills */}
-              <div className="flex flex-wrap items-center gap-2">
-                {activeVouchers.map((v) => (
-                  <button
-                    key={v.code}
-                    onClick={() => copyVoucher(v.code)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-zinc-950 border border-zinc-700 hover:border-emerald-500 transition text-left group"
-                    title={v.desc}
-                  >
-                    <span className="font-mono text-[11px] font-bold text-white group-hover:text-emerald-400">
-                      {v.code}
-                    </span>
-                    <span className="text-[10px] px-1 py-0.2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
-                      {v.badge}
-                    </span>
-                    {copiedCode === v.code ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white shrink-0" />
-                    )}
-                  </button>
-                ))}
-              </div>
+          {/* ENGINEERING DISCIPLINE & ASSURANCE BAR (CLEAN, SOLID, NO GRADIENTS, NO VOUCHER DUMP) */}
+          <div className="mt-8 py-3 px-4 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-around gap-4 text-xs font-mono text-zinc-600 dark:text-zinc-400">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span>{isEn ? 'Legal Scope-Locked Digital Contract' : 'Kontrak Hukum Digital Scope-Locked'}</span>
             </div>
-            {copiedCode && (
-              <p className="text-[11px] font-mono text-emerald-400 mt-2 flex items-center gap-1">
-                <Check className="w-3 h-3" />
-                {isEn ? `Voucher ${copiedCode} copied! Paste it in the booking form.` : `Kode voucher ${copiedCode} berhasil disalin! Masukkan ke formulir pemesanan.`}
-              </p>
-            )}
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span>{isEn ? '50% Milestone DP via Midtrans' : 'DP 50% Milestone Terproteksi'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span>{isEn ? 'Strict Sprint Capacity: Max 2 Projects / Cycle' : 'Kapasitas Terjadwal: Maks. 2 Proyek / Siklus'}</span>
+            </div>
           </div>
         </div>
 
@@ -332,13 +274,13 @@ export default function ArchitecturePricingIsland({
             </div>
 
             <div className="space-y-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-              <button
-                onClick={() => openBookingModal('blueprint_advisory')}
-                className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-3 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-xs"
+              <a
+                href="/blueprint?package=blueprint_advisory"
+                className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-3 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-xs text-center"
               >
                 <span>{isEn ? 'ORDER BLUEPRINT NOW' : 'PESAN BLUEPRINT (RP 2.5 JT)'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              </a>
 
               <a
                 href="/blueprint"
@@ -424,16 +366,16 @@ export default function ArchitecturePricingIsland({
 
             <div className="space-y-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
               <button
-                onClick={() => openBookingModal('full_mvp', 'CORP-INNOVATION-15M')}
-                className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-lg"
+                onClick={() => openBookingModal('full_mvp')}
+                className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-lg cursor-pointer"
               >
-                <span>{isEn ? 'START 5 SPRINT DEVELOPMENT (DP 50%)' : 'MULAI SPRINT PROYEK (DP 50%)'}</span>
+                <span>{isEn ? 'START 5 SPRINT DEVELOPMENT (DP 50%)' : 'RESERVASI SPRINT PROYEK (DP 50%)'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
 
               <button
                 onClick={() => openBookingModal('full_mvp')}
-                className="w-full bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 py-2.5 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none"
+                className="w-full bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 py-2.5 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
               >
                 <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
                 <span>{isEn ? 'SCHEDULE TECH SCOPING CALL' : 'KONSULTASI SCOPE TEKNIS'}</span>
@@ -471,13 +413,13 @@ export default function ArchitecturePricingIsland({
                   </span>
                 </div>
                 <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-zinc-500">Dengan Voucher Subsidi:</span>
+                  <span className="text-[11px] font-mono text-zinc-500">Dengan Subsidi UMKM (50%):</span>
                   <span className="text-xs font-mono font-black text-amber-500">
                     Rp 3.750.000
                   </span>
                 </div>
                 <span className="text-[10px] text-amber-500 font-mono mt-1 block">
-                  &bull; Gunakan Voucher: <strong className="underline">UMKM-SUBSIDI-50</strong>
+                  &bull; {isEn ? 'Limited community subsidy quota (2 business slots / month)' : 'Program subsidi terbatas (Alokasi 2 kuota usaha / bulan)'}
                 </span>
               </div>
 
@@ -506,19 +448,21 @@ export default function ArchitecturePricingIsland({
             <div className="space-y-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
               <button
                 onClick={() => openBookingModal('umkm_starter', 'UMKM-SUBSIDI-50')}
-                className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-3 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-xs"
+                className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-3 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-xs cursor-pointer"
               >
                 <span>{isEn ? 'APPLY UMKM SUBSIDY' : 'KLAIM SUBSIDI UMKM (50%)'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
 
-              <button
-                onClick={() => openBookingModal('umkm_starter')}
+              <a
+                href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Halo Lead Architect Neriah Pro, saya ingin konsultasi mengenai Program Subsidi UMKM Digital Starter.')}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2.5 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
               >
                 <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
                 <span>{isEn ? 'CHAT WITH ADVISOR' : 'KONSULTASI KEBUTUHAN UMKM'}</span>
-              </button>
+              </a>
             </div>
           </div>
 
@@ -704,8 +648,6 @@ export default function ArchitecturePricingIsland({
 
         {/* 5. BOTTOM FAST CONTACT CALLOUT */}
         <div className="p-8 sm:p-10 bg-zinc-900 dark:bg-zinc-900/90 border-2 border-zinc-800 text-white text-center rounded-none shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-          
           <h3 className="text-xl sm:text-3xl font-black uppercase tracking-tight font-sans mb-3">
             {isEn ? 'READY TO DISCUSS YOUR ARCHITECTURE SCOPE?' : 'PUNYA KEBUTUHAN KHUSUS DI LUAR PAKET DI ATAS?'}
           </h3>
@@ -718,10 +660,10 @@ export default function ArchitecturePricingIsland({
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => openBookingModal('full_mvp')}
-              className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-black py-3 px-6 font-mono text-xs font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-black py-3 px-6 font-mono text-xs font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Send className="w-3.5 h-3.5" />
-              <span>{isEn ? 'SUBMIT FORM INTAKE' : 'KIRIM INTAKE PROYEK'}</span>
+              <Clock className="w-3.5 h-3.5" />
+              <span>{isEn ? 'RESERVE SCOPING SESSION' : 'RESERVASI JADWAL SCOPING'}</span>
             </button>
 
             <a
@@ -738,7 +680,7 @@ export default function ArchitecturePricingIsland({
 
       </div>
 
-      {/* 6. INTERACTIVE FAST CONSULTATION & BOOKING MODAL (WORLD-CLASS CRM INTAKE) */}
+      {/* 6. INTERACTIVE SPRINT CAPACITY & DIRECT SELECTION MODAL (ANTI-COLLISION TIME MANAGEMENT) */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
@@ -756,28 +698,63 @@ export default function ArchitecturePricingIsland({
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative w-full max-w-lg bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-emerald-500 shadow-2xl p-6 sm:p-8 z-10 font-sans my-8"
+              className="relative w-full max-w-xl bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-emerald-500 shadow-2xl p-6 sm:p-8 z-10 font-sans my-8"
             >
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="absolute top-4 right-4 p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition"
+                className="absolute top-4 right-4 p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
 
+              {/* Dynamic Header Based on Selected Package */}
               <div className="mb-6">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
-                  <ShieldCheck className="w-3 h-3" />
-                  <span>{isEn ? 'CONFIDENTIAL & DIRECT TO CRM' : 'KERAHASIAAN DATA TERJAMIN (CRM WORLD-CLASS)'}</span>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                  {isEn ? 'FAST PROJECT INTAKE' : 'FORMULIR INTAKE & KONSULTASI'}
-                </h3>
-                <p className="text-xs text-zinc-500 font-sans mt-0.5">
-                  {isEn 
-                    ? 'Fill in your details below. Our technical team will reach out within 2 hours.'
-                    : 'Lengkapi data kebutuhan Anda di bawah ini. Lead Architect kami akan menghubungi dalam maksimal 2 jam.'}
-                </p>
+                {selectedPackage === 'full_mvp' ? (
+                  <>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
+                      <Clock className="w-3 h-3" />
+                      <span>{isEn ? 'SPRINT CAPACITY & TIME MANAGEMENT // MAX 2 PROJECTS' : 'MANAJEMEN WAKTU SPRINT // MAKSIMAL 2 PROYEK'}</span>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
+                      {isEn ? 'RESERVE SPRINT BATCH & CONTRACT' : 'RESERVASI BATCH SPRINT & JADWAL PROYEK'}
+                    </h3>
+                    <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
+                      {isEn 
+                        ? 'To preserve strict engineering standards, we cap development at 2 active projects per sprint cycle. Select your timeline slot to prevent collisions.'
+                        : 'Untuk menjaga standar zero-bug dan dedikasi penuh Lead Architect, pengerjaan dibatasi maksimal 2 proyek per siklus sprint agar jadwal tidak saling bertabrakan.'}
+                    </p>
+                  </>
+                ) : selectedPackage === 'umkm_starter' ? (
+                  <>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
+                      <Sparkles className="w-3 h-3" />
+                      <span>{isEn ? 'LOCAL BUSINESS DIGITAL STIMULUS' : 'PROGRAM STIMULUS DIGITAL UMKM'}</span>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
+                      {isEn ? 'CLAIM 50% SUBSIDY QUOTA' : 'KLAIM KUOTA SUBSIDI 50% (RP 3.750.000)'}
+                    </h3>
+                    <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
+                      {isEn 
+                        ? 'Digital transformation subsidy for local shops, culinary, and social ventures. Active quota: 2 slots remaining this month.'
+                        : 'Subsidi transformasi digital khusus pemilik usaha lokal, retail, dan yayasan. Kuota aktif: Tersisa 2 dari 3 slot bulan ini.'}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
+                      <FileText className="w-3 h-3" />
+                      <span>{isEn ? 'TECHNICAL ADVISORY ARCHITECTURE' : 'CETAK BIRU & SPESIFIKASI ARSITEKTUR'}</span>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
+                      {isEn ? 'ORDER BLUEPRINT PRD (RP 2.500.000)' : 'PESAN ARSITEKTUR BLUEPRINT (RP 2.5 JT)'}
+                    </h3>
+                    <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
+                      {isEn 
+                        ? 'Receive full 26-parameter PRD, PostgreSQL Strict ULID ERD, and 5-sprint WBS in 24–48 hours.'
+                        : 'Dapatkan cetak biru teknis lengkap (PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan WBS 5 Sprint) siap eksekusi dalam 24–48 jam.'}
+                    </p>
+                  </>
+                )}
               </div>
 
               {submitSuccess ? (
@@ -786,16 +763,16 @@ export default function ArchitecturePricingIsland({
                     <Check className="w-6 h-6" />
                   </div>
                   <h4 className="font-bold text-sm text-zinc-900 dark:text-white uppercase font-mono">
-                    {isEn ? 'INQUIRY SUBMITTED SUCCESSFULLY!' : 'FORMULIR BERHASIL TERCATAT!'}
+                    {isEn ? 'RESERVATION RECORDED SUCCESSFULLY!' : 'RESERVASI JADWAL BERHASIL TERCATAT!'}
                   </h4>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
                     {isEn 
-                      ? 'We have recorded your lead into our CRM and initiated a WhatsApp chat for immediate discussion.'
-                      : 'Data Anda telah tersimpan di CRM Neriah Pro. Obrolan WhatsApp resmi sedang dibuka secara otomatis.'}
+                      ? 'Your slot and timeline requirements have been logged into our CRM. WhatsApp coordination is opening automatically.'
+                      : 'Slot jadwal dan spesifikasi kebutuhan Anda telah tercatat rapi di CRM Neriah Pro. Obrolan WhatsApp resmi dengan Lead Architect sedang dibuka otomatis.'}
                   </p>
                   <button
                     onClick={() => setIsModalOpen(false)}
-                    className="mt-4 px-6 py-2.5 bg-emerald-500 text-black font-mono text-xs font-black uppercase tracking-wider"
+                    className="mt-4 px-6 py-2.5 bg-emerald-500 text-black font-mono text-xs font-black uppercase tracking-wider cursor-pointer"
                   >
                     {isEn ? 'CLOSE WINDOW' : 'TUTUP JENDELA'}
                   </button>
@@ -819,10 +796,10 @@ export default function ArchitecturePricingIsland({
                     </div>
                   )}
 
-                  {/* Pilihan Paket */}
+                  {/* Pilihan Paket Switcher */}
                   <div>
                     <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                      Pilihan Paket Layanan *
+                      Paket Layanan Terpilih *
                     </label>
                     <select
                       value={selectedPackage}
@@ -830,17 +807,177 @@ export default function ArchitecturePricingIsland({
                       className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-sans"
                       required
                     >
+                      <option value="full_mvp">Enterprise Rapid Monolith MVP (5 Sprint - DP 50% Rp 25.000.000)</option>
+                      <option value="umkm_starter">UMKM Digital Starter (Program Subsidi 50% - Rp 3.750.000)</option>
                       <option value="blueprint_advisory">Blueprint & PRD Architecture Only (Rp 2.500.000)</option>
-                      <option value="full_mvp">Enterprise Rapid Monolith MVP (Rp 50.000.000 - DP 50%)</option>
-                      <option value="umkm_starter">UMKM Digital Starter (Program Subsidi Voucher)</option>
                     </select>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Nama Lengkap */}
+                  {/* 1. KHUSUS FULL MVP: PILIHAN BATCH WAKTU & ANTI-TABRAKAN */}
+                  {selectedPackage === 'full_mvp' && (
+                    <div className="space-y-3 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase">
+                            1. Pilih Batch Waktu Sprint (Kapasitas Terkelola) *
+                          </label>
+                          <span className="text-[10px] font-mono text-emerald-500 font-bold">ANTI-COLLISION</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {[
+                            { id: 'Batch 1 (15 Okt - 25 Nov 2026)', label: 'Batch 1', dates: '15 Okt - 25 Nov', slot: 'SISA 1 SLOT', highlight: true },
+                            { id: 'Batch 2 (01 Des 2026 - 15 Jan 2027)', label: 'Batch 2', dates: '01 Des - 15 Jan', slot: 'TERSEDIA 2 SLOT', highlight: false },
+                            { id: 'Batch Q1 2027 (Mulai Feb 2027)', label: 'Batch Q1 2027', dates: 'Mulai Feb 2027', slot: 'RESERVASI AWAL', highlight: false },
+                          ].map((b) => (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => setSprintBatch(b.id)}
+                              className={`p-2.5 text-left border rounded-none transition font-sans cursor-pointer ${
+                                sprintBatch === b.id
+                                  ? 'border-emerald-500 bg-emerald-500/10 text-zinc-900 dark:text-white'
+                                  : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400'
+                              }`}
+                            >
+                              <span className="font-mono text-[9px] font-bold block text-emerald-600 dark:text-emerald-400">{b.slot}</span>
+                              <span className="text-xs font-black block mt-0.5">{b.label}</span>
+                              <span className="text-[10px] font-mono text-zinc-500 block">{b.dates}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Status Kesiapan Blueprint */}
+                      <div>
+                        <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1.5">
+                          2. Kesiapan Dokumen Blueprint PRD (Prasyarat Scope-Lock) *
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setHasBlueprint('no')}
+                            className={`p-2.5 text-left border rounded-none transition cursor-pointer ${
+                              hasBlueprint === 'no'
+                                ? 'border-emerald-500 bg-emerald-500/10 text-zinc-900 dark:text-white'
+                                : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400'
+                            }`}
+                          >
+                            <span className="text-xs font-bold block">Belum Ada Blueprint</span>
+                            <span className="text-[10px] text-zinc-500 block mt-0.5">Wajib diawali PRD (Biaya Rp 2.5jt memotong DP 50%)</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setHasBlueprint('ready')}
+                            className={`p-2.5 text-left border rounded-none transition cursor-pointer ${
+                              hasBlueprint === 'ready'
+                                ? 'border-emerald-500 bg-emerald-500/10 text-zinc-900 dark:text-white'
+                                : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400'
+                            }`}
+                          >
+                            <span className="text-xs font-bold block">Sudah Ada Dokumen PRD</span>
+                            <span className="text-[10px] text-zinc-500 block mt-0.5">Langsung review kontrak & lock slot DP 50%</span>
+                          </button>
+                        </div>
+                        {hasBlueprint === 'ready' && (
+                          <div className="mt-2">
+                            <input
+                              type="text"
+                              value={blueprintSlug}
+                              onChange={(e) => setBlueprintSlug(e.target.value)}
+                              placeholder="Masukkan Slug Blueprint / ID Dokumen (Contoh: prd-nama-proyek)"
+                              className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-mono"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Slot Waktu Kickoff Sync */}
+                      <div>
+                        <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1.5">
+                          3. Pilihan Waktu Kickoff Sync dengan Lead Architect (15-30 Menit) *
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { id: 'Pagi (09:30 - 10:30 WIB)', label: 'Pagi', time: '09:30 WIB' },
+                            { id: 'Siang (13:30 - 14:30 WIB)', label: 'Siang', time: '13:30 WIB' },
+                            { id: 'Sore (16:00 - 17:00 WIB)', label: 'Sore', time: '16:00 WIB' },
+                          ].map((s) => (
+                            <button
+                              key={s.id}
+                              type="button"
+                              onClick={() => setKickoffSlot(s.id)}
+                              className={`p-2 text-center border rounded-none transition cursor-pointer font-mono text-[10px] font-bold ${
+                                kickoffSlot === s.id
+                                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                  : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400'
+                              }`}
+                            >
+                              <span className="block font-bold">{s.label}</span>
+                              <span className="block text-[9px] text-zinc-500 font-normal">{s.time}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 2. KHUSUS UMKM: PILIHAN KATEGORI USAHA & SUBSIDI */}
+                  {selectedPackage === 'umkm_starter' && (
+                    <div className="space-y-3 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                      <div>
+                        <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1.5">
+                          Kategori Bidang Usaha Anda *
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            'Toko Retail & Grosir',
+                            'Kuliner / Cafe & Resto (F&B)',
+                            'Jasa Profesional & Servis',
+                            'Yayasan & Komunitas Sosial',
+                          ].map((cat) => (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => setUmkmCategory(cat)}
+                              className={`p-2.5 text-left border rounded-none transition cursor-pointer font-sans text-xs ${
+                                umkmCategory === cat
+                                  ? 'border-amber-500 bg-amber-500/10 text-zinc-900 dark:text-white font-bold'
+                                  : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400'
+                              }`}
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-xs font-mono text-zinc-800 dark:text-zinc-200">
+                        <span className="font-bold text-amber-600 dark:text-amber-400 block mb-0.5">SKEMA SUBSIDI DITERAPKAN OTOMATIS:</span>
+                        <span>Investasi Normal Rp 7.500.000 dipotong 50% menjadi <strong>Rp 3.750.000</strong>. Skema pembayaran: DP 50% (Rp 1.875.000) saat mulai, pelunasan sisa 50% setelah live.</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. KHUSUS BLUEPRINT ADVISORY: DIRECT LINK CALLOUT */}
+                  {selectedPackage === 'blueprint_advisory' && (
+                    <div className="p-3 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-center space-y-2">
+                      <span className="text-xs text-zinc-600 dark:text-zinc-300 block">
+                        Ingin langsung mengisi 26 parameter kebutuhan teknis dan menerbitkan PRD sekarang?
+                      </span>
+                      <a
+                        href="/blueprint?package=blueprint_advisory"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-black font-mono text-xs font-black uppercase tracking-wider transition rounded-none shadow-xs"
+                      >
+                        <span>BUKA GENERATOR PRD LANGSUNG &rarr;</span>
+                      </a>
+                    </div>
+                  )}
+
+                  {/* FORM IDENTITAS INTI */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        Nama Lengkap *
+                        Nama Lengkap / PIC *
                       </label>
                       <input
                         type="text"
@@ -853,10 +990,9 @@ export default function ArchitecturePricingIsland({
                       />
                     </div>
 
-                    {/* Perusahaan / Usaha */}
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        Perusahaan / Bisnis
+                        Perusahaan / Bisnis *
                       </label>
                       <input
                         type="text"
@@ -864,13 +1000,13 @@ export default function ArchitecturePricingIsland({
                         value={formData.company}
                         onChange={handleInputChange}
                         placeholder="Contoh: PT Inovasi Maju"
+                        required
                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Email */}
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
                         Email Bisnis *
@@ -886,7 +1022,6 @@ export default function ArchitecturePricingIsland({
                       />
                     </div>
 
-                    {/* WhatsApp */}
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
                         No. WhatsApp *
@@ -917,33 +1052,18 @@ export default function ArchitecturePricingIsland({
                     </div>
                   </div>
 
-                  {/* Kode Voucher */}
+                  {/* Kode Voucher (Private / Partner Referral) */}
                   <div>
                     <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                      Kode Voucher Promosi (Opsional)
+                      Kode Promo / Voucher Partner (Opsional)
                     </label>
                     <input
                       type="text"
                       name="voucher_code"
                       value={formData.voucher_code}
                       onChange={(e) => setFormData(prev => ({ ...prev, voucher_code: e.target.value.toUpperCase() }))}
-                      placeholder="Contoh: UMKM-SUBSIDI-50 atau CORP-INNOVATION-15M"
-                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-mono"
-                    />
-                  </div>
-
-                  {/* Catatan / Kebutuhan */}
-                  <div>
-                    <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                      Ringkasan Kebutuhan / Ide Sistem
-                    </label>
-                    <textarea
-                      name="notes"
-                      rows="3"
-                      value={formData.notes}
-                      onChange={handleInputChange}
-                      placeholder="Jelaskan secara ringkas sistem yang ingin Anda bangun, target user, atau tantangan arsitektur yang dihadapi..."
-                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden"
+                      placeholder="Masukkan jika memiliki kode partner khusus"
+                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-mono"
                     />
                   </div>
 
@@ -951,17 +1071,27 @@ export default function ArchitecturePricingIsland({
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-md disabled:opacity-60"
+                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-md disabled:opacity-60 cursor-pointer"
                   >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>{isEn ? 'RECORDING TO CRM...' : 'MENCATAT KE CRM NERIAH...'}</span>
+                        <span>{isEn ? 'SECURING YOUR TIME SLOT...' : 'MENGUNCI SLOT JADWAL PROYEK...'}</span>
+                      </>
+                    ) : selectedPackage === 'full_mvp' ? (
+                      <>
+                        <Clock className="w-4 h-4" />
+                        <span>{isEn ? 'LOCK SPRINT BATCH & REVIEW CONTRACT (DP 50%)' : 'KUNCI SLOT BATCH & LANJUTKAN KONTRAK DP 50%'}</span>
+                      </>
+                    ) : selectedPackage === 'umkm_starter' ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>{isEn ? 'CLAIM 50% SUBSIDY & ACTIVATE ONBOARDING' : 'KLAIM SUBSIDI 50% & KONSULTASI ONBOARDING'}</span>
                       </>
                     ) : (
                       <>
                         <Send className="w-4 h-4" />
-                        <span>{isEn ? 'SUBMIT INQUIRY & CONNECT WHATSAPP' : 'KIRIM & KONSULTASI VIA WHATSAPP'}</span>
+                        <span>{isEn ? 'SUBMIT ADVISORY INQUIRY' : 'KIRIM INQUIRY ARSITEKTUR BLUEPRINT'}</span>
                       </>
                     )}
                   </button>

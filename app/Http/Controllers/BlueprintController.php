@@ -893,6 +893,11 @@ class BlueprintController extends Controller
             'budget_range' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:2000',
             'voucher_code' => 'nullable|string|max:50',
+            'sprint_batch' => 'nullable|string|max:100',
+            'kickoff_slot' => 'nullable|string|max:100',
+            'has_blueprint' => 'nullable|string|max:50',
+            'blueprint_slug' => 'nullable|string|max:100',
+            'umkm_category' => 'nullable|string|max:100',
         ]);
 
         $packageName = $request->input('package_tier') ?: $request->input('package');
@@ -900,6 +905,12 @@ class BlueprintController extends Controller
         $phoneInput = $validated['phone'];
         $countryCode = $request->input('country_code', '+62');
         $cleanPhone = str_starts_with($phoneInput, '+') ? $phoneInput : "{$countryCode}" . ltrim($phoneInput, '0');
+
+        $sprintBatch = $request->input('sprint_batch');
+        $kickoffSlot = $request->input('kickoff_slot');
+        $hasBlueprint = $request->input('has_blueprint');
+        $blueprintSlug = $request->input('blueprint_slug');
+        $umkmCategory = $request->input('umkm_category');
 
         $lead = \App\Models\LeadContact::create([
             'name' => $validated['name'],
@@ -911,6 +922,11 @@ class BlueprintController extends Controller
             'metadata' => [
                 'source' => 'Pricing & Promotion Page Consultation Form',
                 'package_interest' => $packageName,
+                'sprint_batch' => $sprintBatch,
+                'kickoff_slot' => $kickoffSlot,
+                'has_blueprint' => $hasBlueprint,
+                'blueprint_slug' => $blueprintSlug,
+                'umkm_category' => $umkmCategory,
                 'budget_range' => $validated['budget_range'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'voucher_code' => $validated['voucher_code'] ?? null,
@@ -926,11 +942,13 @@ class BlueprintController extends Controller
                 ->orWhereHas('roles', fn ($q) => $q->where('name', 'super_admin'))
                 ->get();
 
+            $batchInfo = $sprintBatch ? " [Batch: {$sprintBatch}]" : ($umkmCategory ? " [Kategori: {$umkmCategory}]" : "");
+
             foreach ($admins as $admin) {
                 \Filament\Notifications\Notification::make()
-                    ->title('🎯 Prospek Baru dari Halaman Pricing!')
-                    ->body("Klien {$validated['name']} ({$company}) tertarik pada paket: {$packageName}.")
-                    ->icon('heroicon-o-currency-dollar')
+                    ->title('🎯 Prospek Proyek / Reservasi Sprint Masuk!')
+                    ->body("Klien {$validated['name']} ({$company}) memilih: {$packageName}{$batchInfo}.")
+                    ->icon('heroicon-o-calendar-days')
                     ->actions([
                         \Filament\Notifications\Actions\Action::make('view_lead')
                             ->label('Buka Data Lead')
@@ -945,12 +963,36 @@ class BlueprintController extends Controller
         // Generate pre-filled WhatsApp direct message
         $settings = CmsGlobalSetting::getAllCached();
         $targetWa = $settings['company_whatsapp']->value ?? '628123456789';
-        $waMessage = "Halo Neriah Pro, saya {$validated['name']}" . (!empty($company) ? " dari {$company}" : "") . ". Saya baru saja melihat halaman Paket & Harga Neriah Pro dan tertarik untuk konsultasi mengenai *{$packageName}*." . (!empty($validated['notes']) ? "\n\nKebutuhan awal: " . $validated['notes'] : "") . (!empty($validated['voucher_code']) ? "\n\nKode Voucher: " . strtoupper($validated['voucher_code']) : "");
+
+        $waLines = [];
+        $waLines[] = "Halo Lead Architect Neriah Pro, saya *{$validated['name']}*" . (!empty($company) ? " dari *{$company}*" : "") . ".";
+        $waLines[] = "Saya ingin mengunci alokasi pengerjaan untuk paket: *{$packageName}*";
+
+        if ($sprintBatch) {
+            $waLines[] = "🗓️ *Pilihan Slot Batch:* " . $sprintBatch;
+        }
+        if ($kickoffSlot) {
+            $waLines[] = "⏰ *Waktu Kickoff Sync:* " . $kickoffSlot;
+        }
+        if ($hasBlueprint) {
+            $waLines[] = "📐 *Status PRD:* " . ($hasBlueprint === 'ready' ? "Sudah Ada (Ref: {$blueprintSlug})" : "Belum Ada (Perlu Penyusunan Blueprint)");
+        }
+        if ($umkmCategory) {
+            $waLines[] = "🏢 *Kategori Usaha:* " . $umkmCategory;
+        }
+        if (!empty($validated['notes'])) {
+            $waLines[] = "📝 *Ringkasan Kebutuhan:* " . $validated['notes'];
+        }
+        if (!empty($validated['voucher_code'])) {
+            $waLines[] = "🏷️ *Kode Voucher:* " . strtoupper($validated['voucher_code']);
+        }
+
+        $waMessage = implode("\n", $waLines);
         $waUrl = "https://wa.me/{$targetWa}?text=" . rawurlencode($waMessage);
 
         return response()->json([
             'success' => true,
-            'message' => 'Permintaan konsultasi Anda telah berhasil dicatat. Tim arsitek Neriah Pro akan segera menghubungi Anda.',
+            'message' => 'Reservasi jadwal & kebutuhan Anda telah berhasil dicatat. Lead Architect Neriah Pro akan segera mengonfirmasi jadwal.',
             'lead_id' => $lead->id,
             'whatsapp_url' => $waUrl,
         ]);

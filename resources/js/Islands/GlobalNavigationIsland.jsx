@@ -268,6 +268,11 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
               </div>
             )}
 
+            <a href="/pricing" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition flex items-center gap-1.5">
+              <span>{lang === 'id' ? 'Paket & Harga' : 'Pricing'}</span>
+              <span className="px-1 py-0.2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-bold">PROMO</span>
+            </a>
+
             <a href="#architecture" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
               {lang === 'id' ? 'Standar Rekayasa' : 'Engineering'}
             </a>
@@ -426,6 +431,10 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
               </a>
               <a href="/" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
                 Beranda
+              </a>
+              <a href="/pricing" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
+                <span>{lang === 'id' ? 'Paket & Biaya Layanan' : 'Pricing & Packages'}</span>
+                <span className="px-1.5 py-0.5 bg-emerald-500 text-black text-[9px] font-black">PROMO</span>
               </a>
               {isBlueprintEnabled && (
                 <a href="/blueprint" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900">

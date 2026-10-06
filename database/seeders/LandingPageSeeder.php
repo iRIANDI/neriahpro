@@ -54,15 +54,29 @@ class LandingPageSeeder extends Seeder
         // 2. Dedicated Pricing Page (/pricing)
         $pricingPage = CmsPage::firstOrNew(['slug' => 'pricing']);
         $pricingPage->title = [
-            'en' => 'Pricing & Plans // CV Pro Studio & AI Career Suite',
-            'id' => 'Pilihan Paket & Kelas Harga // CV Pro Studio & AI Career'
+            'en' => 'Software Architecture & Development Pricing // Neriah Pro',
+            'id' => 'Paket & Biaya Layanan Arsitektur Software // Neriah Pro'
         ];
         $pricingPage->meta_description = [
-            'en' => 'Choose your CV Pro plan. Free manual CV creation & PDF download, or unlock AI CV tailoring, mock interview simulator, and LinkedIn branding.',
-            'id' => 'Pilih paket CV Pro Anda. Buat CV manual dan download PDF gratis selamanya, atau buka otomatisasi AI penyesuaian loker dan simulasi wawancara.'
+            'en' => 'Transparent pricing for high-scale digital architecture: Standalone Advisory PRD Blueprint (Rp 2.5M), Full Rapid Monolith MVP (Rp 50M - 50% DP), and UMKM Stimulus Subsidies.',
+            'id' => 'Biaya investasi transparan arsitektur software berskala tinggi: Jasa Advisory Blueprint PRD (Rp 2.5 Juta), Full MVP Rapid Monolith (Rp 50 Juta - DP 50%), dan Program Subsidi UMKM.'
         ];
         $pricingPage->is_published = true;
         $pricingPage->plugins = [
+            [
+                'type' => 'architecture_pricing',
+                'is_active' => true,
+                'data' => [
+                    'headline' => [
+                        'id' => 'INVESTASI TRANSPARAN & TEPAT SASARAN',
+                        'en' => 'TRANSPARENT VALUE-BASED PRICING'
+                    ],
+                    'subheadline' => [
+                        'id' => 'Dua skenario solusi rekayasa perangkat lunak berskala tinggi: Mulai dari blueprint teknis siap eksekusi hingga pengembangan penuh sistem monolit modern tanpa drama pembengkakan biaya.',
+                        'en' => 'Two distinct high-scale software engineering scenarios: From production-ready technical blueprints to full modern monolith development without cost overruns.'
+                    ],
+                ]
+            ],
             [
                 'type' => 'cv_pricing_table',
                 'is_active' => true,
@@ -75,16 +89,6 @@ class LandingPageSeeder extends Seeder
                         'id' => 'Pilih paket yang sesuai dengan akselerasi karir Anda. Pengunjung gratis tetap dapat mengisi form secara manual dan mengunduh PDF secara cuma-cuma.',
                         'en' => 'Select the tier tailored to your career trajectory. Free tier includes full manual resume creation and complimentary PDF export.'
                     ],
-                ]
-            ],
-            [
-                'type' => 'feature_grid',
-                'is_active' => true,
-                'data' => [
-                    'title' => [
-                        'id' => 'Ekosistem Layanan Digital Terintegrasi.',
-                        'en' => 'Integrated Digital Services Ecosystem.'
-                    ]
                 ]
             ]
         ];

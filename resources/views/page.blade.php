@@ -66,14 +66,21 @@
     <meta name="twitter:image" content="{{ asset('favicon.ico') }}">
 
     <!-- Schema.org JSON-LD Structured Data -->
-    {!! \App\Services\Seo\SchemaOrgService::render([
-        \App\Services\Seo\SchemaOrgService::organization(),
-        \App\Services\Seo\SchemaOrgService::webSite(),
-        \App\Services\Seo\SchemaOrgService::breadcrumbs([
-            'Home' => url('/'),
-            $pageTitle => $currentUrl,
-        ])
-    ]) !!}
+    @php
+        $schemaList = [
+            \App\Services\Seo\SchemaOrgService::organization(),
+            \App\Services\Seo\SchemaOrgService::webSite(),
+            \App\Services\Seo\SchemaOrgService::breadcrumbs([
+                'Home' => url('/'),
+                $pageTitle => $currentUrl,
+            ])
+        ];
+        if (($page->slug ?? '') === 'pricing') {
+            $schemaList[] = \App\Services\Seo\SchemaOrgService::pricingServices();
+            $schemaList[] = \App\Services\Seo\SchemaOrgService::pricingFaq();
+        }
+    @endphp
+    {!! \App\Services\Seo\SchemaOrgService::render($schemaList) !!}
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -176,7 +183,9 @@
     @endphp
     @react('BreadcrumbIsland', ['paths' => $breadcrumbPaths])
 
-    <main>
+        @php
+            $hasRenderedPricing = false;
+        @endphp
         @foreach($page->plugins ?? [] as $plugin)
             @php
                 // Cast array to object if necessary
@@ -193,10 +202,15 @@
                     $pluginName = '';
                     if($type == 'hero_section') $pluginName = 'HeroIsland';
                     if($type == 'onboarding_form' && $featureFlags['enable_client_onboarding']) $pluginName = 'ClientOnboardingIsland';
-                    if($type == 'cv_pricing_table' || $type == 'pricing_section') {
-                        // Hide pricing table completely if CV Pro is disabled or in Midtrans strict mode
+                    if($type == 'architecture_pricing' || $type == 'pricing_section') {
+                        $pluginName = 'ArchitecturePricingIsland';
+                    }
+                    if($type == 'cv_pricing_table') {
+                        // In Midtrans strict mode or if CV Pro is disabled, fall back to architecture pricing
                         if (!$featureFlags['midtrans_mode'] && $featureFlags['enable_cv_pro'] && $featureFlags['enable_pricing']) {
                             $pluginName = 'CvPricingIsland';
+                        } else {
+                            $pluginName = 'ArchitecturePricingIsland';
                         }
                     }
                     // Resolve multilingual fields for current active locale
@@ -213,14 +227,39 @@
                 @endphp
                 
                 @if($pluginName)
+                    @php
+                        if ($pluginName === 'ArchitecturePricingIsland' || $pluginName === 'CvPricingIsland') {
+                            $hasRenderedPricing = true;
+                        }
+                    @endphp
                     @react($pluginName, array_merge($pluginData, [
                         'whatsappNumber' => $getSettingVal('company_whatsapp', '628123456789'),
                         'featureFlags' => $featureFlags,
                         'currentLocale' => $locale,
+                        'pricingSettings' => [
+                            'advisory_price' => $getSettingVal('pricing_advisory_price', '2.500.000'),
+                            'mvp_price' => $getSettingVal('pricing_mvp_price', '50.000.000'),
+                            'umkm_price' => $getSettingVal('pricing_umkm_price', '7.500.000'),
+                            'active_promo_banner' => $getSettingVal('pricing_active_promo_banner', 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!'),
+                        ]
                     ]))
                 @endif
             @endif
         @endforeach
+
+        @if(($page->slug ?? '') === 'pricing' && ! $hasRenderedPricing)
+            @react('ArchitecturePricingIsland', [
+                'whatsappNumber' => $getSettingVal('company_whatsapp', '628123456789'),
+                'featureFlags' => $featureFlags,
+                'currentLocale' => app()->getLocale(),
+                'pricingSettings' => [
+                    'advisory_price' => $getSettingVal('pricing_advisory_price', '2.500.000'),
+                    'mvp_price' => $getSettingVal('pricing_mvp_price', '50.000.000'),
+                    'umkm_price' => $getSettingVal('pricing_umkm_price', '7.500.000'),
+                    'active_promo_banner' => $getSettingVal('pricing_active_promo_banner', 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!'),
+                ]
+            ])
+        @endif
     </main>
 
     <!-- Global Footer -->

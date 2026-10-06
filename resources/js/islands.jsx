@@ -10,6 +10,7 @@ import BreadcrumbIsland from './Islands/BreadcrumbIsland.jsx';
 import ProjectBlueprintIsland from './Islands/ProjectBlueprintIsland.jsx';
 import CvProStudioIsland from './Islands/CvProStudioIsland.jsx';
 import CvPricingIsland from './Islands/CvPricingIsland.jsx';
+import ArchitecturePricingIsland from './Islands/ArchitecturePricingIsland.jsx';
 
 const islands = {
     ClientOnboardingIsland,
@@ -21,6 +22,7 @@ const islands = {
     ProjectBlueprintIsland,
     CvProStudioIsland,
     CvPricingIsland,
+    ArchitecturePricingIsland,
 };
 
 document.addEventListener('DOMContentLoaded', () => {

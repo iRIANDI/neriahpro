@@ -48,6 +48,7 @@ Route::get('/blueprint/{slug}/scaffold-preview', [BlueprintController::class, 'p
 Route::post('/api/blueprint/{slug}/presence', [BlueprintController::class, 'updatePresence'])->name('api.blueprint.presence.update');
 Route::get('/api/blueprint/{slug}/presence', [BlueprintController::class, 'getPresence'])->name('api.blueprint.presence.get');
 Route::post('/blueprint/{slug}/tasks/update', [BlueprintController::class, 'updateTasks'])->name('blueprint.tasks.update');
+Route::post('/api/pricing/inquiry', [BlueprintController::class, 'pricingInquiry'])->name('api.pricing.inquiry')->middleware('throttle:30,1');
 
 // Payment Gateway Webhooks (Midtrans DLQ Handler)
 Route::post('/api/webhook/midtrans', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('webhook.midtrans');

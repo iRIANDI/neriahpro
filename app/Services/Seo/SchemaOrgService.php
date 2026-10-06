@@ -199,6 +199,112 @@ class SchemaOrgService
     }
 
     /**
+     * Get Schema.org Service, Product & Offer structured data for Pricing Page
+     */
+    public static function pricingServices(): array
+    {
+        return \Illuminate\Support\Facades\Cache::rememberForever('seo_schema_pricing_services', function () {
+            $siteUrl = url('/');
+            $pricingUrl = url('/pricing');
+
+            return [
+                '@context' => 'https://schema.org',
+                '@type' => 'Service',
+                '@id' => $pricingUrl . '/#service',
+                'name' => 'Layanan Rekayasa Arsitektur Perangkat Lunak & Pengembangan Sistem Enterprise',
+                'provider' => [
+                    '@id' => $siteUrl . '/#organization',
+                ],
+                'serviceType' => 'Software Architecture & Development',
+                'description' => 'Layanan profesional perancangan Product Requirements Document (PRD 26 parameter), skema basis data PostgreSQL Strict ULID, alur kerja sistem, dan pengembangan modern monolith Laravel 13 & Filament v5 dengan protokol Scope Locked.',
+                'areaServed' => [
+                    '@type' => 'Country',
+                    'name' => 'Indonesia',
+                ],
+                'hasOfferCatalog' => [
+                    '@type' => 'OfferCatalog',
+                    'name' => 'Katalog Paket Layanan Neriah Pro',
+                    'itemListElement' => [
+                        [
+                            '@type' => 'Offer',
+                            'itemOffered' => [
+                                '@type' => 'Service',
+                                'name' => 'Project OS & Architecture PRD Blueprint (Advisory Only)',
+                                'description' => 'Perancangan cetak biru spesifikasi sistem lengkap: Ultimate PRD 26 parameter, skema ERD PostgreSQL Strict ULID, alur kerja, dan alokasi 5 sprint kerja siap serah terima ke tim developer in-house.',
+                            ],
+                            'price' => '2500000',
+                            'priceCurrency' => 'IDR',
+                            'availability' => 'https://schema.org/InStock',
+                            'url' => $pricingUrl,
+                        ],
+                        [
+                            '@type' => 'Offer',
+                            'itemOffered' => [
+                                '@type' => 'Service',
+                                'name' => 'Enterprise Rapid Monolith Development (Fase 1 MVP)',
+                                'description' => 'Pembangunan aplikasi bisnis komplit berbasis Modern Monolith (Laravel 13, Filament v5, PostgreSQL ULID, Redis, dedicated VPS) dengan penguncian kontrak hukum dan termin DP 50% Midtrans.',
+                            ],
+                            'price' => '50000000',
+                            'priceCurrency' => 'IDR',
+                            'availability' => 'https://schema.org/InStock',
+                            'url' => $pricingUrl,
+                        ],
+                        [
+                            '@type' => 'Offer',
+                            'itemOffered' => [
+                                '@type' => 'Service',
+                                'name' => 'UMKM Digital Starter (Program Subsidi & Hibah)',
+                                'description' => 'Akselerasi aplikasi toko, kasir, dan operasional bisnis bagi UMKM dengan dukungan voucher subsidi DP 50% dan hibah 100% free bypass.',
+                            ],
+                            'price' => '5000000',
+                            'priceCurrency' => 'IDR',
+                            'availability' => 'https://schema.org/InStock',
+                            'url' => $pricingUrl,
+                        ],
+                    ],
+                ],
+            ];
+        });
+    }
+
+    /**
+     * Get Schema.org FAQPage structured data for Google Rich Results on Pricing Page
+     */
+    public static function pricingFaq(): array
+    {
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => [
+                [
+                    '@type' => 'Question',
+                    'name' => 'Kapan saya sebaiknya memilih paket Advisory Blueprint (Rp 2,5 jt) vs Full MVP Development (Rp 50 jt)?',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'Paket Advisory Blueprint (Rp 2.500.000) adalah opsi ideal bagi founder, CTO, atau pemilik bisnis yang sudah memiliki tim programmer in-house atau vendor sendiri, namun membutuhkan dokumen arsitektur komprehensif (PRD 26 parameter, skema ERD PostgreSQL Strict ULID, dan alokasi 5 sprint) agar pengerjaan tidak salah bangun dan terhindar dari scope creep. Sedangkan paket Full MVP Development (Rp 50.000.000) adalah layanan tuntas di mana Neriah Pro membangun aplikasi dari nol hingga rilis di VPS dengan jaminan Scope Locked dan garansi 30 hari.',
+                    ],
+                ],
+                [
+                    '@type' => 'Question',
+                    'name' => 'Bagaimana mekanisme penguncian kontrak hukum dan pembayaran DP 50%?',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'Setelah dokumen PRD disetujui, sistem menerbitkan Surat Perjanjian Kerja Sama Digital dengan tanda tangan elektronik sah dan enkripsi kriptografi SHA-256. Pembayaran uang muka (DP 50%) dilakukan via Midtrans Snap (Kartu Kredit, QRIS, Virtual Account BCA/BRI/Mandiri/BNI) atau direct transfer. Pelunasan sisa 50% dilakukan setelah sistem serah terima di VPS.',
+                    ],
+                ],
+                [
+                    '@type' => 'Question',
+                    'name' => 'Bagaimana pelaku UMKM dapat memanfaatkan voucher subsidi atau hibah aplikasi gratis?',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'Pelaku usaha mikro dan kecil dapat menggunakan kode voucher UMKM-SUBSIDI-50 (diskon 50% DP) atau mengajukan program hibah 100% free bypass melalui kode UMKM-DIGITAL-100 saat mengisi form konsultasi di Neriah Pro.',
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
      * Get Custom Raw JSON-LD Schema from Backend Settings (Cached Forever)
      */
     public static function customJsonLd(): ?array

@@ -90,5 +90,40 @@ class CmsSeeder extends Seeder
             ['key' => 'midtrans_compliance_strict_mode'],
             ['value' => true]
         );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_advisory_price'],
+            ['value' => '2.500.000']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_mvp_price'],
+            ['value' => '50.000.000']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_umkm_price'],
+            ['value' => '7.500.000']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_active_promo_banner'],
+            ['value' => 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_sales_pic_email'],
+            ['value' => 'sales@neriahpro.com']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_consultation_sla'],
+            ['value' => 'Maksimal 2 Jam Kerja']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_enable_instant_whatsapp'],
+            ['value' => true]
+        );
     }
 }

@@ -482,6 +482,57 @@ class ManageSettings extends Page implements HasForms
                                             ->helperText('Format harus berupa JSON valid tanpa tag <script>. Seluruh entri di-cache permanen (Cache::rememberForever) dan otomatis direset saat disimpan.'),
                                     ]),
                             ]),
+
+                        Tabs\Tab::make('Project OS & Pricing Strategy')
+                            ->icon('heroicon-m-currency-dollar')
+                            ->badge('Layanan & CRM')
+                            ->schema([
+                                Section::make('Konfigurasi Tarif & Pilihan Paket Proyek')
+                                    ->description('Atur harga resmi layanan arsitektur perangkat lunak dan promosi aktif yang tampil di halaman publik /pricing.')
+                                    ->schema([
+                                        TextInput::make('pricing_advisory_price')
+                                            ->label('Tarif Jasa Advisory & Blueprint (Rp)')
+                                            ->helperText('Biaya one-time perancangan PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan WBS 5 sprint.')
+                                            ->default('2.500.000')
+                                            ->required(),
+                                        TextInput::make('pricing_mvp_price')
+                                            ->label('Tarif Kontrak Full MVP Monolith (Rp)')
+                                            ->helperText('Biaya pengembangan penuh enterprise modern monolith (DP 50% = Rp 25.000.000).')
+                                            ->default('50.000.000')
+                                            ->required(),
+                                        TextInput::make('pricing_umkm_price')
+                                            ->label('Tarif Paket UMKM Digital Starter (Rp)')
+                                            ->helperText('Biaya dasar paket digitalisasi UMKM sebelum dipotong kuota voucher subsidi.')
+                                            ->default('7.500.000')
+                                            ->required(),
+                                        TextInput::make('pricing_active_promo_banner')
+                                            ->label('Teks Pengumuman Banner Promosi & Voucher')
+                                            ->helperText('Pesan promosi yang tampil di bagian atas halaman paket & harga.')
+                                            ->default('Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!')
+                                            ->columnSpanFull(),
+                                    ])->columns(3),
+
+                                Section::make('Strategi Penjualan & World-Class CRM Lead Intake')
+                                    ->description('Pengaturan otomatisasi follow-up lead dan routing konsultasi teknis.')
+                                    ->schema([
+                                        TextInput::make('pricing_sales_pic_email')
+                                            ->label('Email Notifikasi Penjualan & Lead Intake')
+                                            ->email()
+                                            ->default('sales@neriahpro.com'),
+                                        TextInput::make('pricing_consultation_sla')
+                                            ->label('Komitmen SLA Respon Tim Teknis')
+                                            ->default('Maksimal 2 Jam Kerja'),
+                                        Toggle::make('pricing_enable_instant_whatsapp')
+                                            ->label('Buka WhatsApp Otomatis Setelah Submit')
+                                            ->helperText('Mengarahkan calon klien langsung ke chat WhatsApp resmi dengan teks template terisi otomatis.')
+                                            ->default(true),
+                                        Textarea::make('pricing_whatsapp_template')
+                                            ->label('Draft Pesan Awal WhatsApp Klien')
+                                            ->rows(3)
+                                            ->default('Halo Lead Architect Neriah Pro, saya tertarik memesan paket layanan arsitektur dan ingin mendiskusikan kebutuhan sistem kami...')
+                                            ->columnSpanFull(),
+                                    ])->columns(3),
+                            ]),
                     ])
                     ->columnSpan('full')
             ])
@@ -527,6 +578,10 @@ class ManageSettings extends Page implements HasForms
         \Illuminate\Support\Facades\Cache::forget('frontend_locale_settings');
         \Illuminate\Support\Facades\Cache::forget('developer_signature_settings');
         \Illuminate\Support\Facades\Cache::forget('cms_contract_developer_info');
+        \Illuminate\Support\Facades\Cache::forget('seo_schema_pricing_services');
+        \Illuminate\Support\Facades\Cache::forget('seo_schema_pricing_faq');
+        \Illuminate\Support\Facades\Cache::forget('cms_page_data_pricing');
+        \Illuminate\Support\Facades\Cache::forget('cms_page_pricing');
 
         Notification::make()
             ->title('Pengaturan & Schema.org Berhasil Disimpan')

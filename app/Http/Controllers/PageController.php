@@ -18,11 +18,6 @@ class PageController extends Controller
         $isCvPricingEnabled = (bool) ($globalSettings['feature_enable_cv_pricing']->value ?? true);
         $isMidtransStrict = (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? false);
 
-        // Guard /pricing when CV Pro is deactivated in Admin: immediately return 404 with noindex header
-        if ($slug === 'pricing' && (! $isCvProEnabled || ! $isCvPricingEnabled || $isMidtransStrict)) {
-            header('X-Robots-Tag: noindex, nofollow, noarchive');
-            abort(404);
-        }
 
         // Auto-seed superadmin, midtrans reviewer, and workflow data if missing
         try {
@@ -62,14 +57,14 @@ class PageController extends Controller
         $pageAttributes = \Illuminate\Support\Facades\Cache::rememberForever("cms_page_data_{$slug}", function () use ($slug) {
             $record = CmsPage::where('slug', $slug)->where('is_published', true)->first();
 
-            // Auto-seed default landing page if missing on fresh deployment
-            if (! $record && $slug === 'home') {
+            // Auto-seed default landing page or pricing page if missing on fresh deployment
+            if (! $record && in_array($slug, ['home', 'pricing'])) {
                 try {
                     Artisan::call('db:seed', [
                         '--class' => 'Database\\Seeders\\LandingPageSeeder',
                         '--force' => true,
                     ]);
-                    $record = CmsPage::where('slug', 'home')->first();
+                    $record = CmsPage::where('slug', $slug)->first();
                 } catch (\Throwable $e) {
                     // Ignore seed error and fallback gracefully
                 }

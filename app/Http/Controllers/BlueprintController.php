@@ -868,4 +868,91 @@ class BlueprintController extends Controller
             'timestamp' => now()->timestamp,
         ]);
     }
+
+    /**
+     * Handle public consultation and booking inquiry from the Pricing Page.
+     */
+    public function pricingInquiry(Request $request): JsonResponse
+    {
+        if ($request->filled('honeypot')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anti-bot security validation triggered.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:50',
+            'company' => 'nullable|string|max:255',
+            'company_name' => 'nullable|string|max:255',
+            'package_tier' => 'required_without:package|nullable|string|max:255',
+            'package' => 'required_without:package_tier|nullable|string|max:255',
+            'country_code' => 'nullable|string|max:10',
+            'budget_range' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:2000',
+            'voucher_code' => 'nullable|string|max:50',
+        ]);
+
+        $packageName = $request->input('package_tier') ?: $request->input('package');
+        $company = $request->input('company') ?: $request->input('company_name') ?: ($validated['name'] . ' Project');
+        $phoneInput = $validated['phone'];
+        $countryCode = $request->input('country_code', '+62');
+        $cleanPhone = str_starts_with($phoneInput, '+') ? $phoneInput : "{$countryCode}" . ltrim($phoneInput, '0');
+
+        $lead = \App\Models\LeadContact::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'company_name' => $company,
+            'job_title' => 'Project Initiator / Decision Maker',
+            'phone' => $cleanPhone,
+            'status' => 'lead',
+            'metadata' => [
+                'source' => 'Pricing & Promotion Page Consultation Form',
+                'package_interest' => $packageName,
+                'budget_range' => $validated['budget_range'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'voucher_code' => $validated['voucher_code'] ?? null,
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 255),
+                'submitted_at' => now()->toIso8601String(),
+            ],
+        ]);
+
+        // Send Filament notification to Admins
+        try {
+            $admins = \App\Models\User::where('email', 'yoseph.iriandi.tambunan@gmail.com')
+                ->orWhereHas('roles', fn ($q) => $q->where('name', 'super_admin'))
+                ->get();
+
+            foreach ($admins as $admin) {
+                \Filament\Notifications\Notification::make()
+                    ->title('🎯 Prospek Baru dari Halaman Pricing!')
+                    ->body("Klien {$validated['name']} ({$company}) tertarik pada paket: {$packageName}.")
+                    ->icon('heroicon-o-currency-dollar')
+                    ->actions([
+                        \Filament\Notifications\Actions\Action::make('view_lead')
+                            ->label('Buka Data Lead')
+                            ->url('/admin/lead-contacts'),
+                    ])
+                    ->sendToDatabase($admin);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Notification to admin failed: " . $e->getMessage());
+        }
+
+        // Generate pre-filled WhatsApp direct message
+        $settings = CmsGlobalSetting::getAllCached();
+        $targetWa = $settings['company_whatsapp']->value ?? '628123456789';
+        $waMessage = "Halo Neriah Pro, saya {$validated['name']}" . (!empty($company) ? " dari {$company}" : "") . ". Saya baru saja melihat halaman Paket & Harga Neriah Pro dan tertarik untuk konsultasi mengenai *{$packageName}*." . (!empty($validated['notes']) ? "\n\nKebutuhan awal: " . $validated['notes'] : "") . (!empty($validated['voucher_code']) ? "\n\nKode Voucher: " . strtoupper($validated['voucher_code']) : "");
+        $waUrl = "https://wa.me/{$targetWa}?text=" . rawurlencode($waMessage);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permintaan konsultasi Anda telah berhasil dicatat. Tim arsitek Neriah Pro akan segera menghubungi Anda.',
+            'lead_id' => $lead->id,
+            'whatsapp_url' => $waUrl,
+        ]);
+    }
 }

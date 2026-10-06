@@ -37,7 +37,10 @@ class WorkflowEndToEndSeeder extends Seeder
         // 5. SEED SETTLED DP TRANSACTION (PILAR 4: MIDTRANS PROOF)
         $this->seedTransaction($products['monolith'], $contract);
 
-        // 6. SEED CRM CLIENT INTAKE LEAD
+        // 6. SEED UNPAID / PENDING DP SAMPLE (FOR MIDTRANS REVIEWER SNAP POPUP DEMO)
+        $this->seedUnpaidBlueprintAndContract();
+
+        // 7. SEED CRM CLIENT INTAKE LEAD
         $this->seedLeadContacts();
 
         Schema::enableForeignKeyConstraints();
@@ -337,5 +340,119 @@ class WorkflowEndToEndSeeder extends Seeder
                 ],
             ]
         );
+    }
+
+    private function seedUnpaidBlueprintAndContract(): array
+    {
+        $blueprint = VisionBlueprint::updateOrCreate(
+            ['slug' => 'medika-prima-telehealth-prd'],
+            [
+                'client_name' => 'dr. Hendra Pratama, Sp.A',
+                'nama_bisnis' => 'Medika Prima Telehealth',
+                'email' => 'dr.hendra@medikaprima.id',
+                'phone' => '+62 811-2345-6789',
+                'masalah_utama' => 'Pencatatan rekam medis dan reservasi konsultasi telemedisin dokter spesialis masih manual via spreadsheet terpisah, menyebabkan tumpang tindih jadwal praktek dan pembukuan pembayaran pasien sering tidak akurat.',
+                'tujuan_utama' => 'Membangun platform portal konsultasi dokter online terenkripsi dengan integrasi rekam medis digital, pembayaran DP tindakan medis via Midtrans, dan resep digital otomatis.',
+                'target_audiens' => 'Pasien rawat jalan, dokter spesialis, staf administrasi klinik, dan apoteker mitra.',
+                'aktor_sistem' => '1. Superadmin Klinik (Manajemen Tarif & Dokter), 2. Dokter Spesialis (Telekonsultasi & E-Resep), 3. Pasien (Booking Jadwal & Pembayaran DP), 4. Apoteker (Verifikasi Obat).',
+                'fitur_wajib' => '1. Portal Booking Dokter & Kalender Jadwal, 2. Konsultasi Chat/Video Telemedisin, 3. Pembayaran Uang Muka (DP) & Pelunasan via Midtrans, 4. Rekam Medis Elektronik (RME) Standar Kemenkes SATUSEHAT.',
+                'fitur_tambahan' => '1. Notifikasi Pengingat Jadwal WhatsApp Gateway, 2. Modul Resep Obat Digital & Pengiriman Kurir.',
+                'alur_kerja' => 'Pasien Pilih Dokter -> Sistem Terbitkan Kode Booking -> Pasien Bayar DP 50% via Midtrans Snap -> Jadwal Terkonfirmasi -> Sesi Konsultasi Berlangsung -> Resep Terbit.',
+                'kebutuhan_integrasi' => 'Payment Gateway Midtrans Snap, WhatsApp Business API, SATUSEHAT Kemenkes API.',
+                'referensi_desain' => 'Halodoc, Alodokter & Linear.app: Clean clinical interface, high contrast, accessibility compliant.',
+                'kesiapan_aset' => 'Sudah Siap Lengkap',
+                'target_waktu' => '30 Hari Kerja',
+                'service_options' => ['Web Architecture', 'Rapid Monolith System', 'PostgreSQL ULID', 'Midtrans DP Ready'],
+                'project_status' => 'Awaiting DP Payment',
+                'is_published' => true,
+                'ip_address' => '180.252.120.44',
+                'signed_agreement' => true,
+                'signer_ip' => '180.252.120.44',
+                'signer_user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/128.0.0.0 Safari/537.36',
+                'document_sha256' => hash('sha256', 'NERIAHPRO-MEDIKA-CONTRACT-2026-PENDING-DP'),
+                'signed_at' => now()->subHours(6),
+                'staging_url' => null,
+                'user_metadata' => [
+                    'source' => 'Midtrans Reviewer Demonstration (Unpaid DP Sample)',
+                    'note' => 'Contoh proyek siap bayar DP 50% untuk pengujian Midtrans Snap Popup',
+                ],
+            ]
+        );
+
+        $blueprint->generateAndSavePrd();
+
+        $clauses = [
+            'pasal_1_ruang_lingkup' => [
+                'title' => 'Pasal 1: Ruang Lingkup Proyek (Scope Locked)',
+                'description' => 'Pihak Kedua (Neriah Pro) sepakat untuk merancang dan membangun arsitektur perangkat lunak Medika Prima Telehealth sesuai spesifikasi yang tertuang di dalam Dokumen Ultimate PRD ID: ' . strtoupper(substr($blueprint->id, 0, 10)) . '.',
+            ],
+            'pasal_2_timeline' => [
+                'title' => 'Pasal 2: Alokasi Waktu Pengerjaan (30 Hari Kerja - 5 Sprint)',
+                'description' => 'Pekerjaan dilaksanakan selama 30 (tiga puluh) hari kerja aktif yang dibagi ke dalam 5 Sprint terstruktur.',
+            ],
+            'pasal_3_pembayaran_dp' => [
+                'title' => 'Pasal 3: Nilai Kontrak & Ketentuan Uang Muka (DP 50%)',
+                'description' => 'Total nilai investasi proyek disepakati sebesar Rp 40.000.000 (Empat Puluh Juta Rupiah). Pembayaran dilakukan dalam 2 (dua) termin: Termin 1 Uang Muka (DP 50%) sebesar Rp 20.000.000 melalui payment gateway Midtrans sebelum pengerjaan sprint dimulai, dan Termin 2 Pelunasan (50%) sebesar Rp 20.000.000 saat serah terima sistem.',
+            ],
+            'pasal_4_scope_lock_cr' => [
+                'title' => 'Pasal 4: Penguncian Ruang Lingkup & Addendum',
+                'description' => 'Seluruh fitur di luar daftar MVP Fase 1 dinyatakan sebagai Change Request (CR) terpisah.',
+            ],
+            'pasal_5_tanda_tangan_elektronik' => [
+                'title' => 'Pasal 5: Tanda Tangan Elektronik & Integritas Dokumen (SHA-256)',
+                'description' => 'Dokumen ini telah disetujui dan ditandatangani secara digital oleh Klien (dr. Hendra Pratama, Sp.A) dan menunggu penyelesaian pembayaran Uang Muka (DP) 50% via Midtrans.',
+            ],
+        ];
+
+        $contract = Document::updateOrCreate(
+            ['title' => 'Perjanjian Kerja Sama Pengembangan Sistem - Medika Prima Telehealth'],
+            [
+                'document_type' => 'contract',
+                'related_type' => VisionBlueprint::class,
+                'related_id' => $blueprint->id,
+                'status' => 'signed',
+                'scope_locked' => true,
+                'contract_amount' => 40000000.00,
+                'dp_amount' => 20000000.00,
+                'midtrans_order_id' => 'NPRO-DP-MEDIKA-002',
+                'midtrans_payment_url' => null,
+                'signer_name' => 'dr. Hendra Pratama, Sp.A',
+                'signer_email' => 'dr.hendra@medikaprima.id',
+                'signer_ip_address' => '180.252.120.44',
+                'signed_at' => now()->subHours(6),
+                'document_hash' => hash('sha256', 'NERIAHPRO-MEDIKA-CONTRACT-2026-PENDING-DP'),
+                'digital_signature_image' => 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="100" viewBox="0 0 300 100"><path d="M 30 70 Q 70 20, 110 60 T 190 30 T 270 80" fill="none" stroke="#059669" stroke-width="3" stroke-linecap="round"/><text x="30" y="90" font-family="monospace" font-size="12" fill="#059669">Signed by dr. Hendra Pratama</text></svg>'),
+                'content_clauses' => $clauses,
+            ]
+        );
+
+        $reviewerUser = User::where('email', 'reviewer.midtrans@neriahpro.com')->first();
+        $product = Product::where('slug', 'rapid-mvp-monolith-system')->first() ?? Product::first();
+
+        if ($product) {
+            Transaction::updateOrCreate(
+                ['midtrans_order_id' => 'NPRO-DP-MEDIKA-002'],
+                [
+                    'user_id' => $reviewerUser?->id,
+                    'product_id' => $product->id,
+                    'midtrans_transaction_id' => null,
+                    'status' => 'pending',
+                    'total_idr' => 20000000.00,
+                    'original_currency' => 'IDR',
+                    'original_amount' => 20000000.00,
+                    'exchange_rate' => 1.0000,
+                    'customer_details' => [
+                        'first_name' => 'dr. Hendra',
+                        'last_name' => 'Pratama',
+                        'email' => 'dr.hendra@medikaprima.id',
+                        'phone' => '+62 811-2345-6789',
+                        'company' => 'Medika Prima Telehealth',
+                        'notes' => 'Menunggu Pembayaran Uang Muka (DP 50%) Kontrak Medika Prima Telehealth via Midtrans Snap',
+                    ],
+                ]
+            );
+        }
+
+        return [$blueprint, $contract];
     }
 }

@@ -40,9 +40,10 @@ class MultiAiModelManagerTest extends TestCase
 
     public function test_circuit_breaker_sets_exhausted_status_and_triggers_automatic_failover()
     {
-        // 1. Initially clear any cache
+        // 1. Initially clear any cache and set mock API key
         Cache::forget('ai_model_status_deepseek');
         Cache::forget('ai_cooldown_until_deepseek');
+        config(['ai.providers.deepseek.api_key' => 'mock-sk-deepseek-key-123']);
 
         // 2. Simulate 429 Rate Limit / Quota Exhaustion
         MultiAiModelManager::recordFailure('deepseek', '429 Too Many Requests - Token Limit Exceeded', 429);
@@ -82,5 +83,34 @@ class MultiAiModelManagerTest extends TestCase
                 'groq' => ['key', 'name', 'is_free', 'status', 'status_label', 'status_color'],
             ]
         ]);
+    }
+
+    public function test_unconfigured_providers_return_unconfigured_and_not_healthy()
+    {
+        // Clear all keys from config
+        config([
+            'ai.providers.anthropic.api_key' => null,
+            'ai.providers.openai.api_key' => null,
+            'ai.providers.groq.api_key' => null,
+            'ai.providers.openrouter.api_key' => null,
+        ]);
+
+        $catalog = MultiAiModelManager::getCatalog();
+
+        // Even though groq and openrouter have is_free_tier => true, without a key they must be unconfigured!
+        $this->assertFalse($catalog['groq']['has_key']);
+        $this->assertEquals('unconfigured', $catalog['groq']['status']);
+        $this->assertEquals('Belum Ada Key', $catalog['groq']['status_label']);
+        $this->assertEquals('zinc', $catalog['groq']['status_color']);
+
+        $this->assertFalse($catalog['openrouter']['has_key']);
+        $this->assertEquals('unconfigured', $catalog['openrouter']['status']);
+
+        $this->assertFalse($catalog['anthropic']['has_key']);
+        $this->assertEquals('unconfigured', $catalog['anthropic']['status']);
+
+        // When executing with only unconfigured providers, failover falls back to deterministic heuristic directly
+        $result = MultiAiModelManager::executeWithFailover('Test prompt', '', 'discovery');
+        $this->assertEquals('deterministic_heuristic', $result['provider']);
     }
 }

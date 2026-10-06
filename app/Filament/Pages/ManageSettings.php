@@ -166,16 +166,28 @@ class ManageSettings extends Page implements HasForms
                                     ->schema([
                                         Select::make('ai_default_provider')
                                             ->label('AI Provider Utama (Default)')
-                                            ->options([
-                                                'auto' => '⚡ Auto Failover (Rekomendasi: DeepSeek -> Gemini -> Claude -> OpenAI -> Grok -> Groq)',
-                                                'deepseek' => 'DeepSeek AI (DeepSeek-R1 SOTA Reasoning & Super Hemat)',
-                                                'gemini' => 'Google Gemini (Gemini 2.5 Pro / Flash 2M Context)',
-                                                'anthropic' => 'Anthropic Claude (Claude 3.7 Sonnet Hybrid Thinking)',
-                                                'openai' => 'OpenAI ChatGPT (GPT-4o / o3-mini)',
-                                                'xai' => 'xAI Grok (Grok-2 1212)',
-                                                'groq' => 'Groq LPU (Llama 3.3 70B - Super Fast & Free Tier)',
-                                                'openrouter' => 'OpenRouter Universal Hub (Akses Model Gratis)',
-                                            ])
+                                            ->options(function () {
+                                                $providers = [
+                                                    'deepseek' => 'DeepSeek AI (DeepSeek-R1 SOTA Reasoning)',
+                                                    'gemini' => 'Google Gemini (Gemini 2.5 Pro / Flash)',
+                                                    'anthropic' => 'Anthropic Claude (Claude 3.7 Sonnet)',
+                                                    'openai' => 'OpenAI ChatGPT (GPT-4o / o3-mini)',
+                                                    'xai' => 'xAI Grok (Grok-2)',
+                                                    'groq' => 'Groq LPU (Llama 3.3 70B)',
+                                                    'openrouter' => 'OpenRouter Universal Hub',
+                                                ];
+
+                                                $options = [
+                                                    'auto' => '⚡ Auto Failover (Otomatis beralih ke provider aktif yang sehat)',
+                                                ];
+
+                                                foreach ($providers as $key => $label) {
+                                                    $hasKey = !empty(\App\Services\Ai\MultiAiModelManager::getApiKey($key));
+                                                    $options[$key] = $hasKey ? "{$label} [✅ AKTIF]" : "{$label} [⚪ BELUM ADA KEY]";
+                                                }
+
+                                                return $options;
+                                            })
                                             ->default('auto')
                                             ->required(),
                                         Toggle::make('ai_enable_auto_failover')

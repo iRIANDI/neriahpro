@@ -18,14 +18,23 @@ class MultiAiModelManager
         try {
             $settingKey = "ai_{$provider}_api_key";
             $dbKey = CmsGlobalSetting::where('key', $settingKey)->value('value');
-            if (!empty($dbKey)) {
+            if (!empty($dbKey) && is_string($dbKey) && trim($dbKey) !== '') {
                 return trim($dbKey);
+            }
+
+            // Also check alternate alias if provider is xai / grok
+            if ($provider === 'xai') {
+                $grokKey = CmsGlobalSetting::where('key', 'ai_grok_api_key')->value('value');
+                if (!empty($grokKey) && is_string($grokKey) && trim($grokKey) !== '') {
+                    return trim($grokKey);
+                }
             }
         } catch (\Throwable $e) {
             // Database might be during migration or cached
         }
 
-        return config("ai.providers.{$provider}.api_key");
+        $envKey = config("ai.providers.{$provider}.api_key");
+        return (!empty($envKey) && is_string($envKey) && trim($envKey) !== '') ? trim($envKey) : null;
     }
 
     /**
@@ -41,8 +50,9 @@ class MultiAiModelManager
             $hasKey = !empty($apiKey);
             $cachedStatus = Cache::get("ai_model_status_{$key}");
 
-            // Determine status badge
-            if (!$hasKey && !$info['is_free_tier']) {
+            // STRICT RULE: If NO API Key is configured in backend admin, it is UNCONFIGURED.
+            // Under NO circumstance can a provider be 'healthy' or 'ready' without an API key!
+            if (!$hasKey) {
                 $status = 'unconfigured';
                 $statusLabel = 'Belum Ada Key';
                 $statusColor = 'zinc';
@@ -143,14 +153,38 @@ class MultiAiModelManager
         string $tier = 'discovery',
         ?string $preferredProvider = null
     ): array {
-        $chain = config('ai.failover_chain', ['deepseek', 'gemini', 'anthropic', 'openai', 'xai', 'groq', 'openrouter']);
+        $defaultChain = config('ai.failover_chain', ['deepseek', 'gemini', 'anthropic', 'openai', 'xai', 'groq', 'openrouter']);
 
-        // If preferred provider requested and valid, put it first in the pipeline
-        if ($preferredProvider && in_array($preferredProvider, $chain) && $preferredProvider !== 'auto') {
-            $chain = array_unique(array_merge([$preferredProvider], $chain));
+        // STRICT RULE: Only consider providers that actually have configured API keys in the backend admin / config
+        $configuredProviders = array_values(array_filter($defaultChain, fn($p) => !empty(self::getApiKey($p))));
+
+        // If preferred provider requested and configured, prioritize it; otherwise use configured chain
+        if ($preferredProvider && $preferredProvider !== 'auto' && in_array($preferredProvider, $configuredProviders)) {
+            $chain = array_unique(array_merge([$preferredProvider], $configuredProviders));
+        } else {
+            $chain = $configuredProviders;
         }
 
         $failedAttempts = [];
+
+        // If no providers are configured at all, return deterministic engine immediately without failing remote calls
+        if (empty($chain)) {
+            return [
+                'success' => false,
+                'text' => null,
+                'provider' => 'deterministic_heuristic',
+                'provider_name' => 'Neriah Pro Deterministic Architecture Engine',
+                'model' => 'expert-rule-engine-v1',
+                'fallback_occurred' => false,
+                'failed_attempts' => [
+                    [
+                        'provider' => 'none',
+                        'reason' => 'Belum ada API Key provider AI yang diisi di Admin Panel.',
+                    ]
+                ],
+                'notification' => 'Belum ada API Key provider AI yang dikonfigurasi di Admin Panel. Menggunakan Deterministic Architecture Engine.',
+            ];
+        }
 
         foreach ($chain as $provider) {
             $status = Cache::get("ai_model_status_{$provider}");
@@ -164,10 +198,6 @@ class MultiAiModelManager
 
             $apiKey = self::getApiKey($provider);
             if (empty($apiKey)) {
-                $failedAttempts[] = [
-                    'provider' => $provider,
-                    'reason' => 'API Key belum dikonfigurasi',
-                ];
                 continue;
             }
 

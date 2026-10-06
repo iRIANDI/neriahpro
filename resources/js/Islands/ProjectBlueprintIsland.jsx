@@ -437,6 +437,18 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       .catch(() => {});
   }, []);
 
+  // Derive list of strictly configured AI models (with active API keys from Admin Panel)
+  const configuredAiList = useMemo(() => {
+    return Object.values(aiModels).filter(m => !!m.has_key);
+  }, [aiModels]);
+
+  // Ensure selected AI model snaps to 'auto' if previously pointing to an unconfigured model
+  useEffect(() => {
+    if (selectedAiModel !== 'auto' && aiModels[selectedAiModel] && !aiModels[selectedAiModel].has_key) {
+      setSelectedAiModel('auto');
+    }
+  }, [selectedAiModel, aiModels]);
+
   // Proactive Guidance & Co-Pilot States
   const [proactiveSuggestions, setProactiveSuggestions] = useState(() => {
     return initialData.proactive_suggestions || [
@@ -2741,7 +2753,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 <button
                   type="button"
                   onClick={() => setSelectedAiModel('auto')}
-                  className={`p-2.5 text-left border rounded-none transition flex flex-col justify-between ${
+                  className={`p-2.5 text-left border rounded-none transition flex flex-col justify-between cursor-pointer ${
                     selectedAiModel === 'auto'
                       ? 'bg-emerald-500/15 border-emerald-500 text-zinc-900 dark:text-zinc-100 font-bold shadow-xs'
                       : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600'
@@ -2758,29 +2770,43 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       </span>
                     </div>
                     <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight">
-                      Mengalir otomatis ke DeepSeek, Claude, Gemini, ChatGPT, Grok, Groq jika token habis.
+                      {configuredAiList.length > 0
+                        ? (lang === 'en'
+                            ? `Cascades automatically through ${configuredAiList.map(m => m.name).join(' -> ')} if token runs out.`
+                            : `Mengalir otomatis ke ${configuredAiList.map(m => m.name).join(' -> ')} jika salah satu limit habis.`)
+                        : (lang === 'en'
+                            ? 'Deterministic Architecture Engine active (Configure AI keys in Admin Panel).'
+                            : 'Deterministic Architecture Engine aktif (Input API Key di Admin Panel untuk mengaktifkan AI).')
+                      }
                     </p>
                   </div>
                 </button>
 
-                {/* Dynamic models from getCatalog() */}
+                {/* Dynamic models from getCatalog() strictly based on Backend Admin Keys */}
                 {Object.entries(aiModels).map(([key, info]) => {
                   const isSelected = selectedAiModel === key;
+                  const hasKey = !!info.has_key;
                   const isExhausted = info.status === 'exhausted';
                   const isWarning = info.status === 'warning';
                   const isHealthy = info.status === 'healthy';
-                  const isFree = info.is_free;
+                  // ONLY show GRATIS if key is actually configured!
+                  const isFree = info.is_free && hasKey;
                   const isUltimatePrd = key === 'deepseek' || key === 'anthropic';
 
                   return (
                     <button
                       key={key}
                       type="button"
-                      onClick={() => setSelectedAiModel(key)}
+                      disabled={!hasKey}
+                      onClick={() => {
+                        if (hasKey) setSelectedAiModel(key);
+                      }}
                       className={`p-2.5 text-left border rounded-none transition flex flex-col justify-between ${
-                        isSelected
-                          ? 'bg-emerald-500/15 border-emerald-500 text-zinc-900 dark:text-zinc-100 font-bold shadow-xs'
-                          : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600'
+                        !hasKey
+                          ? 'opacity-40 bg-zinc-100 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed select-none'
+                          : isSelected
+                          ? 'bg-emerald-500/15 border-emerald-500 text-zinc-900 dark:text-zinc-100 font-bold shadow-xs cursor-pointer'
+                          : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600 cursor-pointer'
                       }`}
                     >
                       <div>
@@ -2796,7 +2822,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                             )}
                             <span
                               className={`text-[9px] font-mono font-bold px-1.5 py-0.2 border ${
-                                isHealthy
+                                !hasKey
+                                  ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-300 dark:border-zinc-700'
+                                  : isHealthy
                                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                                   : isWarning
                                   ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
@@ -2805,17 +2833,27 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                   : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'
                               }`}
                             >
-                              {isHealthy ? '🟢 SEHAT' : isWarning ? '🟡 MENIPIS' : isExhausted ? '🔴 HABIS' : '⚪ READY'}
+                              {!hasKey
+                                ? (lang === 'en' ? '⚪ NO API KEY' : '⚪ BELUM ADA KEY')
+                                : isHealthy
+                                ? '🟢 SEHAT'
+                                : isWarning
+                                ? '🟡 MENIPIS'
+                                : isExhausted
+                                ? '🔴 HABIS'
+                                : '⚪ READY'}
                             </span>
                           </div>
                         </div>
-                        {isUltimatePrd && (
+                        {hasKey && isUltimatePrd && (
                           <span className="text-[9px] font-mono text-amber-600 dark:text-amber-400 font-bold block mb-1">
                             {t.aiBestForPrdBadge}
                           </span>
                         )}
                         <p className="text-[10px] text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-tight">
-                          {info.recommended_for}
+                          {hasKey
+                            ? info.recommended_for
+                            : (lang === 'en' ? 'API Key not configured in Admin Panel.' : 'API Key belum diisi di Admin Panel.')}
                         </p>
                       </div>
                       {isExhausted && info.cooldown_sec > 0 && (

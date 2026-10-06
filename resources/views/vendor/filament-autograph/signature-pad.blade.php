@@ -50,18 +50,56 @@
             velocityFilterWeight: {{ $getVelocityFilterWeight() }},
         })"
     >
-        <canvas
-            x-ref="canvas"
-            wire:ignore
-            x-intersect.once="resizeCanvas()"
-            x-on:pointerenter.once="resizeCanvas()"
-            x-on:touchstart.once="resizeCanvas()"
-            @class([
-                'w-full h-36 rounded-lg border border-gray-300',
-                'dark:bg-gray-900 dark:border-white/10',
-                'opacity-75 bg-gray-50' => $isDisabled,
-            ])
-        ></canvas>
+        <div class="relative w-full">
+            <canvas
+                x-ref="canvas"
+                wire:ignore
+                x-init="window.setupAutographResizer($refs.canvas, () => signaturePad)"
+                x-on:pointerdown="window.setupAutographResizer($refs.canvas, () => signaturePad)"
+                @class([
+                    'w-full h-44 rounded-sm border-2 border-dashed border-zinc-400 dark:border-zinc-600 bg-white dark:bg-zinc-950 shadow-inner block transition-colors',
+                    'opacity-75 bg-gray-50' => $isDisabled,
+                ])
+            ></canvas>
+            <div class="absolute top-2 right-2 text-[10px] font-mono text-zinc-400 dark:text-zinc-500 select-none pointer-events-none uppercase">
+                Area Goresan Tanda Tangan
+            </div>
+        </div>
+
+        <script>
+            if (!window.setupAutographResizer) {
+                window.setupAutographResizer = function(canvasEl, getPad) {
+                    if (!canvasEl) return;
+                    const sync = function() {
+                        const rect = canvasEl.getBoundingClientRect();
+                        if (rect.width <= 0 || rect.height <= 0) return;
+                        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                        const targetW = Math.round(rect.width * ratio);
+                        const targetH = Math.round(rect.height * ratio);
+                        if (canvasEl.width !== targetW || canvasEl.height !== targetH) {
+                            const pad = getPad ? getPad() : null;
+                            const data = pad ? pad.toData() : null;
+                            canvasEl.width = targetW;
+                            canvasEl.height = targetH;
+                            const ctx = canvasEl.getContext('2d');
+                            if (ctx) {
+                                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                                ctx.scale(ratio, ratio);
+                            }
+                            if (pad && data && data.length > 0) {
+                                pad.fromData(data);
+                            }
+                        }
+                    };
+                    requestAnimationFrame(sync);
+                    setTimeout(sync, 150);
+                    if (window.ResizeObserver && !canvasEl._hasResizeObserver) {
+                        canvasEl._hasResizeObserver = true;
+                        new ResizeObserver(sync).observe(canvasEl);
+                    }
+                };
+            }
+        </script>
 
         <div class="flex items-center justify-end mt-3 space-x-2">
             @if ($isClearable)

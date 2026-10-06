@@ -161,6 +161,44 @@ class BlueprintDiscoveryTest extends TestCase
         $this->assertStringContainsString('function blueprintApp()', $content);
         $this->assertStringContainsString('openScaffoldModal()', $content);
     }
+
+    public function test_can_accurately_parse_and_synthesize_structured_brief_with_property_and_no_payment_gateway(): void
+    {
+        $brief = "Nama Bisnis\tBali Luxe Villa Living (atau nama usaha teman Anda)\n" .
+                 "Masalah Utama\tPemasaran sewa dan jual villa di Bali saat ini masih manual via grup WA dan feed Instagram yang berantakan, membuat calon penyewa/investor sulit melihat ketersediaan unit dan galeri detail villa.\n" .
+                 "Tujuan Utama\tMembangun website katalog katalog properti villa di Bali yang elegan, cepat dibuka di HP, dengan filter sewa/beli dan direct chat WhatsApp untuk survey lokasi.\n" .
+                 "Fitur Wajib\t1. Katalog Listing Villa (Sewa & Beli) dengan Filter Lokasi & Fasilitas\n" .
+                 "2. Halaman Detail Villa (Galeri Foto HD, Spesifikasi & Lokasi Maps)\n" .
+                 "3. Tombol Inquiry Cepat ke WhatsApp Broker/Owner\n" .
+                 "4. Dasbor Admin untuk Update Foto, Harga, & Status Villa\n" .
+                 "Aktor Sistem\tSuperadmin (Pengelola Villa), Pengunjung Web (Penyewa / Pembeli)\n" .
+                 "Kebutuhan Integrasi\tWhatsApp Click-to-Chat API, Google Maps Embed (tulis tanpa payment gateway)\n" .
+                 "Alokasi Budget (Field 21)\tRp 5.000.000 - Rp 7.000.000 (Starter Catalog & Lead Gen)\n" .
+                 "Target Waktu\t14 - 30 Hari Kerja";
+
+        $response = $this->postJson('/api/blueprint/analyze-idea', [
+            'idea_text' => $brief,
+            'locale' => 'id'
+        ]);
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+
+        $this->assertEquals('Bali Luxe Villa Living', $data['namaBisnis']);
+        $this->assertEquals('property', $data['domain']);
+        $this->assertStringContainsString('Pemasaran sewa dan jual villa di Bali', $data['masalahUtama']);
+        $this->assertStringContainsString('Katalog Listing Villa', $data['fiturWajib']);
+        $this->assertStringContainsString('Dasbor Admin', $data['fiturWajib']);
+        $this->assertStringContainsString('Superadmin (Pengelola Villa)', $data['aktorSistem']);
+        $this->assertStringContainsString('WhatsApp Click-to-Chat API', $data['kebutuhanIntegrasi']);
+        $this->assertStringContainsString('Google Maps Embed', $data['kebutuhanIntegrasi']);
+        $this->assertStringNotContainsString('Midtrans', $data['kebutuhanIntegrasi']);
+        $this->assertStringNotContainsString('payment gateway', strtolower($data['kebutuhanIntegrasi']));
+        $this->assertStringContainsString('5.000.000', $data['kisaranBudget']);
+        $this->assertStringContainsString('14 - 30 Hari Kerja', $data['targetWaktu']);
+        $this->assertEquals(100, $data['completeness']['score']);
+    }
 }
+
 
 

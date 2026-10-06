@@ -18,6 +18,7 @@ use Filament\Forms\Components\Textarea;
 use App\Models\CmsGlobalSetting;
 use Filament\Notifications\Notification;
 use Filament\Actions\Action;
+use Saade\FilamentAutograph\Forms\Components\SignaturePad;
 
 class ManageSettings extends Page implements HasForms
 {
@@ -50,6 +51,9 @@ class ManageSettings extends Page implements HasForms
     public function mount(): void
     {
         $settings = CmsGlobalSetting::all()->pluck('value', 'key')->toArray();
+        if (!empty($settings['developer_signature_image']) && str_starts_with($settings['developer_signature_image'], 'data:image')) {
+            $settings['developer_signature_pad'] = $settings['developer_signature_image'];
+        }
         $this->form->fill($settings);
     }
 
@@ -138,8 +142,18 @@ class ManageSettings extends Page implements HasForms
                                             ->label('Teks Segel Digital Korporat')
                                             ->default('NERIAH PRO VERIFIED ARCHITECT')
                                             ->required(),
-                                        \App\Support\FilamentCuratorHelper::picker('developer_signature_image', 'signatures', 'Tanda Tangan Digital Developer')
-                                            ->helperText('Unggah berkas gambar tanda tangan Anda (format PNG transparan direkomendasikan). Otomatis tersimpan secara rapi di folder dangkal "storage/signatures".'),
+                                        \App\Support\FilamentCuratorHelper::picker('developer_signature_image', 'signatures', 'Tanda Tangan Digital Developer (Opsi A: Upload Berkas / Curator)')
+                                            ->helperText('Opsi A: Unggah berkas gambar tanda tangan Anda (format PNG transparan direkomendasikan). Otomatis tersimpan secara rapi di folder dangkal "storage/signatures".'),
+                                        SignaturePad::make('developer_signature_pad')
+                                            ->label('Tanda Tangan Digital Developer (Opsi B: Goreskan Langsung / Canvas Pad)')
+                                            ->helperText('Opsi B: Goreskan tanda tangan Anda langsung di canvas menggunakan stylus pen, mouse, atau touchscreen jika tidak memiliki berkas gambar PNG.')
+                                            ->dotSize(2.0)
+                                            ->lineMinWidth(1.0)
+                                            ->lineMaxWidth(2.5)
+                                            ->penColor('blue')
+                                            ->backgroundColor('rgba(255, 255, 255, 1)')
+                                            ->clearable()
+                                            ->columnSpanFull(),
                                     ])->columns(2),
                             ]),
 
@@ -475,6 +489,11 @@ class ManageSettings extends Page implements HasForms
     public function submit(): void
     {
         $data = $this->form->getState();
+
+        if (!empty($data['developer_signature_pad'])) {
+            $data['developer_signature_image'] = $data['developer_signature_pad'];
+        }
+        unset($data['developer_signature_pad']);
         
         foreach ($data as $key => $value) {
             $safeValue = $value !== null ? $value : '';

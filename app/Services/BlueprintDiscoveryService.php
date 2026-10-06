@@ -117,11 +117,14 @@ class BlueprintDiscoveryService
         // 2. Anti-Spam & Sanity Verification
         $this->validateAntiSpam($rawIdeaText, $corpusText, !empty($uploadedFiles), $isEn);
 
+        // 2.5 Structured Key-Value Brief Parsing
+        $brief = $this->parseStructuredBrief($corpusText);
+
         // 3. Extract & Synthesize Architectural Blueprint
-        $result = $this->performArchitecturalAnalysis($rawIdeaText, $allDocsMarkdown, $corpusText, $fileSummaries, $isEn);
+        $result = $this->performArchitecturalAnalysis($rawIdeaText, $allDocsMarkdown, $corpusText, $fileSummaries, $isEn, $brief);
 
         // 3.5 Deep AI Enhancement across Multi-AI Providers (DeepSeek-R1, Claude 3.7, Gemini 2.5, ChatGPT, Grok, Groq)
-        $result = $this->enhanceWithMultiAi($result, $corpusText, $locale, $preferredAiProvider);
+        $result = $this->enhanceWithMultiAi($result, $corpusText, $locale, $preferredAiProvider, $brief);
 
         // If a business name was synthesized and differs from tempSlug, cleanly re-map folder
         $synthesizedName = $projectName ?: ($result['namaBisnis'] ?? null);
@@ -201,6 +204,124 @@ class BlueprintDiscoveryService
     }
 
     /**
+     * Parse structured key-value briefs (e.g. from spreadsheets, tables, or labeled prompts).
+     * Supports separators: tab (\t), colon (:), equals (=), dash (-/—).
+     */
+    public function parseStructuredBrief(string $corpus): array
+    {
+        $sectionMap = [
+            'namaBisnis' => ['nama bisnis', 'nama usaha', 'nama proyek', 'nama brand', 'nama aplikasi', 'nama platform', 'project name', 'business name', 'company name'],
+            'masalahUtama' => ['masalah utama', 'masalah', 'permasalahan', 'kendala', 'problem statement', 'pain points', 'core problem'],
+            'tujuanUtama' => ['tujuan utama', 'tujuan proyek', 'tujuan bisnis', 'tujuan', 'goals', 'goal', 'primary goal', 'kpi'],
+            'fiturWajib' => ['fitur wajib', 'fitur inti', 'fitur utama', 'fitur mvp', 'fitur fase 1', 'core features', 'mvp features', 'must-have'],
+            'fiturTambahan' => ['fitur tambahan', 'fitur fase 2', 'fitur lanjutan', 'roadmap', 'future features', 'nice-to-have'],
+            'aktorSistem' => ['aktor sistem', 'aktor & role', 'aktor', 'role pengguna', 'hak akses', 'user roles', 'system actors', 'rbac'],
+            'alurKerja' => ['alur kerja', 'alur bisnis', 'alur operasional', 'workflow', 'user journey', 'proses transaksi', 'user flow'],
+            'kebutuhanIntegrasi' => ['kebutuhan integrasi', 'integrasi api', 'integrasi', 'third party', 'third-party integrations', 'integrations'],
+            'outOfScope' => ['out of scope', 'batasan', 'ruang lingkup negatif', 'di luar lingkup', 'exclusions'],
+            'kisaranBudget' => ['alokasi budget', 'kisaran budget', 'budget range', 'budget', 'anggaran', 'estimasi investasi'],
+            'targetWaktu' => ['target waktu', 'target rilis', 'timeline', 'durasi kerja', 'durasi', 'target hari'],
+            'targetPlatform' => ['target platform', 'platform'],
+            'referensiDesain' => ['referensi desain', 'design reference'],
+        ];
+
+        $lines = preg_split('/\r\n|\r|\n/', $corpus);
+        $parsed = [];
+        $currentSection = null;
+
+        foreach ($lines as $line) {
+            $trimmed = trim($line);
+            if ($trimmed === '') {
+                continue;
+            }
+
+            $matchedSection = null;
+            $matchedValue = null;
+
+            if (preg_match('/^([A-Za-z0-9\s\/\(\)]+?)(?:\t|:\s*|\s*=\s*|\s+[-—]\s+)([\s\S]*)$/u', $trimmed, $m)) {
+                $headerCandidate = strtolower(trim(preg_replace('/\s*\([^)]*\)/', '', $m[1])));
+                foreach ($sectionMap as $secKey => $synonyms) {
+                    foreach ($synonyms as $syn) {
+                        if ($headerCandidate === $syn || str_starts_with($headerCandidate, $syn)) {
+                            $matchedSection = $secKey;
+                            $matchedValue = trim($m[2]);
+                            break 2;
+                        }
+                    }
+                }
+            }
+
+            if ($matchedSection) {
+                $currentSection = $matchedSection;
+                if ($currentSection === 'namaBisnis') {
+                    $matchedValue = trim(preg_replace('/\s*\([^)]*(?:teman|contoh|opsional|field)[^)]*\)/i', '', $matchedValue));
+                }
+                $parsed[$currentSection] = $matchedValue;
+            } elseif ($currentSection) {
+                if (!empty($parsed[$currentSection])) {
+                    $parsed[$currentSection] .= "\n" . $trimmed;
+                } else {
+                    $parsed[$currentSection] = $trimmed;
+                }
+            }
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * Clean and normalize multi-item strings into standardized numbered lists (1. ...\n2. ...).
+     */
+    protected function formatListIfNeeded(string $text): string
+    {
+        $text = trim($text);
+        if (empty($text)) {
+            return '';
+        }
+
+        $lines = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $text))));
+
+        // Multi-line numbered list
+        if (count($lines) > 1 && preg_match('/^\d+[\.\)]\s*/', $lines[0])) {
+            $formatted = [];
+            foreach ($lines as $i => $line) {
+                $clean = preg_replace('/^\d+[\.\)]\s*/', '', $line);
+                $formatted[] = ($i + 1) . '. ' . $clean;
+            }
+            return implode("\n", $formatted);
+        }
+
+        // Single line handling
+        if (count($lines) === 1) {
+            // Check internal inline numbering e.g. "1. Item A 2. Item B"
+            if (preg_match_all('/(?:\d+[\.\)]|\b[A-Za-z]\))\s*([^1-9]+?)(?=(?:\d+[\.\)]|\b[A-Za-z]\))|$)/u', $lines[0], $matches)) {
+                $items = array_values(array_filter(array_map('trim', $matches[1])));
+                if (count($items) > 1) {
+                    $formatted = [];
+                    foreach ($items as $i => $item) {
+                        $formatted[] = ($i + 1) . '. ' . $item;
+                    }
+                    return implode("\n", $formatted);
+                }
+            }
+
+            // Comma separated items e.g. "Superadmin, Visitor"
+            if (str_contains($lines[0], ',') && !str_starts_with($lines[0], '1.')) {
+                $parts = array_map('trim', explode(',', $lines[0]));
+                if (count($parts) >= 2 && mb_strlen($lines[0]) < 250) {
+                    $formatted = [];
+                    foreach ($parts as $i => $part) {
+                        $formatted[] = ($i + 1) . '. ' . $part;
+                    }
+                    return implode("\n", $formatted);
+                }
+            }
+        }
+
+        return $text;
+    }
+
+    /**
      * Comprehensive Architectural Analysis & Structuring
      */
     protected function performArchitecturalAnalysis(
@@ -208,60 +329,101 @@ class BlueprintDiscoveryService
         string $docsMarkdown, 
         string $corpus, 
         array $fileSummaries, 
-        bool $isEn
+        bool $isEn,
+        array $brief = []
     ): array {
         $textLower = strtolower($corpus);
+        $noPaymentGateway = (bool) preg_match('/(?:tanpa|tidak\s*pakai|tanpa\s*adanya|no|without)\s*(?:payment\s*gateway|midtrans|gerbang\s*pembayaran)/i', $corpus);
 
         // 1. Detect Domain & Industry
-        $domain = $this->detectDomain($textLower);
+        $domain = $this->detectDomain($textLower, $brief);
 
         // 2. Synthesize Business / Project Name
-        $namaBisnis = $this->extractProjectName($corpus, $domain, $isEn);
+        $namaBisnis = !empty($brief['namaBisnis']) ? $brief['namaBisnis'] : $this->extractProjectName($corpus, $domain, $isEn);
 
         // 3. Synthesize Core Problem
-        $masalahUtama = $this->synthesizeProblem($corpus, $domain, $isEn);
+        $masalahUtama = !empty($brief['masalahUtama']) ? $brief['masalahUtama'] : $this->synthesizeProblem($corpus, $domain, $isEn);
 
         // 4. Synthesize KPIs & Target Outcomes
-        $tujuanUtama = $this->synthesizeGoal($corpus, $domain, $isEn);
+        $tujuanUtama = !empty($brief['tujuanUtama']) ? $this->formatListIfNeeded($brief['tujuanUtama']) : $this->synthesizeGoal($corpus, $domain, $isEn);
 
         // 5. Target Audience & System Actors (RBAC)
-        $targetAudiens = $this->synthesizeAudience($corpus, $domain, $isEn);
-        $aktorSistem = $this->synthesizeActors($corpus, $domain, $isEn);
+        $targetAudiens = !empty($brief['targetAudiens']) ? $brief['targetAudiens'] : $this->synthesizeAudience($corpus, $domain, $isEn);
+        $aktorSistem = !empty($brief['aktorSistem']) ? $this->formatListIfNeeded($brief['aktorSistem']) : $this->synthesizeActors($corpus, $domain, $isEn);
 
         // 6. Decompose MVP Core Features (Fase 1)
-        $fiturWajib = $this->synthesizeMvpFeatures($corpus, $domain, $isEn);
+        $fiturWajib = !empty($brief['fiturWajib']) ? $this->formatListIfNeeded($brief['fiturWajib']) : $this->synthesizeMvpFeatures($corpus, $domain, $isEn);
 
         // 7. Decompose Phase 2 Roadmap Features
-        $fiturTambahan = $this->synthesizeRoadmapFeatures($corpus, $domain, $isEn);
+        $fiturTambahan = !empty($brief['fiturTambahan']) ? $this->formatListIfNeeded($brief['fiturTambahan']) : $this->synthesizeRoadmapFeatures($corpus, $domain, $isEn);
 
         // 8. User Workflow
-        $alurKerja = $this->synthesizeWorkflow($corpus, $domain, $isEn);
+        $alurKerja = !empty($brief['alurKerja']) ? $this->formatListIfNeeded($brief['alurKerja']) : $this->synthesizeWorkflow($corpus, $domain, $isEn);
 
         // 9. Third-party Integrations
-        $kebutuhanIntegrasi = $this->synthesizeIntegrations($corpus, $domain, $isEn);
+        if (!empty($brief['kebutuhanIntegrasi'])) {
+            $kebutuhanIntegrasi = $brief['kebutuhanIntegrasi'];
+        } else {
+            $kebutuhanIntegrasi = $this->synthesizeIntegrations($corpus, $domain, $isEn);
+        }
+
+        // Clean payment gateways if user specifically requested without payment gateway
+        if ($noPaymentGateway) {
+            $kebutuhanIntegrasi = preg_replace('/\s*\([^)]*(?:payment\s*gateway|midtrans|tanpa)[^)]*\)/i', '', $kebutuhanIntegrasi);
+            $kebutuhanIntegrasi = trim(preg_replace('/\b(?:midtrans(?:\s*snap)?|stripe|xendit|payment\s*gateway|qris\s*otomatis)[,\s]*/i', '', $kebutuhanIntegrasi), ", \t\n\r");
+            if (empty($kebutuhanIntegrasi)) {
+                $kebutuhanIntegrasi = $isEn ? 'WhatsApp Click-to-Chat API, Google Maps Embed' : 'WhatsApp Click-to-Chat API, Google Maps Embed';
+            }
+        }
 
         // 10. Design & Aesthetic References
-        $referensiDesain = $isEn
+        $referensiDesain = !empty($brief['referensiDesain']) ? $brief['referensiDesain'] : ($isEn
             ? "Clean Modern Monolith (Linear.app & Stripe inspired), sharp rectangular borders, dark/light mode fidelity, fast data table UX."
-            : "Modern Monolith Presisi Sharp (Inspirasi Linear.app & Stripe), sudut tipis elegan non-kapsul, dukungan dark/light mode, fokus kecepatan manipulasi data.";
+            : "Modern Monolith Presisi Sharp (Inspirasi Linear.app & Stripe), sudut tipis elegan non-kapsul, dukungan dark/light mode, fokus kecepatan manipulasi data.");
 
         // 11. Negative Scope Boundary (Out-of-Scope Anti Scope Creep)
-        $outOfScope = $this->synthesizeOutOfScope($corpus, $domain, $isEn);
+        $outOfScope = !empty($brief['outOfScope']) 
+            ? $this->formatListIfNeeded($brief['outOfScope']) 
+            : $this->synthesizeOutOfScope($corpus, $domain, $isEn);
+
+        if ($noPaymentGateway && !stripos($outOfScope, 'payment gateway')) {
+            $outOfScope = $this->appendNumberedItem($outOfScope, $isEn 
+                ? 'No online payment gateway integration in Phase 1 (leads and reservations routed directly via WhatsApp chat or bank transfer).'
+                : 'Tidak mencakup integrasi payment gateway otomatis di Fase 1 (seluruh inquiry dan reservasi diarahkan langsung via WhatsApp chat atau transfer manual).');
+        }
 
         // 12. Determine Timeline, User Scale & Budget
         $durasiHari = "30";
         $targetWaktu = $isEn ? "30 Working Days (Phase 1 MVP)" : "30 Hari Kerja (Fase 1 MVP)";
+
+        if (!empty($brief['targetWaktu'])) {
+            $targetWaktu = $brief['targetWaktu'];
+            if (preg_match('/(\d+)\s*(?:-|sampai|hingga)\s*(\d+)\s*hari/i', $targetWaktu, $dm)) {
+                $durasiHari = (string) $dm[2];
+            } elseif (preg_match('/(\d+)\s*hari/i', $targetWaktu, $dm)) {
+                $durasiHari = (string) $dm[1];
+            }
+        }
+
         $skalaPengguna = "0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)";
         $jangkauanPasar = $isEn 
             ? "Domestic Indonesia (IDR, WIB/WITA/WIT, PDP Act Compliance)"
             : "Domestik Indonesia (IDR, Zona WIB/WITA/WIT)";
         $kepatuhanKeamanan = "Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)";
+
         $kisaranBudget = "Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)";
+        if (!empty($brief['kisaranBudget'])) {
+            $kisaranBudget = $brief['kisaranBudget'];
+        } elseif (preg_match('/(?:rp\.?\s*[\d\.]+\s*(?:-|sampai|hingga)\s*rp\.?\s*[\d\.]+|budget\s*[:=]?\s*[\d\w\s\.\-]+)/i', $corpus, $bm)) {
+            $kisaranBudget = trim($bm[0]);
+        } elseif ($domain === 'property' && (str_contains($corpus, '5') || str_contains($corpus, '7'))) {
+            $kisaranBudget = "Rp 5.000.000 - Rp 7.000.000 (Starter Catalog & Lead Gen)";
+        }
 
         // 13. Critical Enterprise Architectural Parameters
-        $targetPlatform = $isEn
+        $targetPlatform = !empty($brief['targetPlatform']) ? $brief['targetPlatform'] : ($isEn
             ? "Responsive Modern Web Application & PWA (Optimized for Desktop, Tablet & Mobile Browser)"
-            : "Modern Web Application Responsive & PWA (Optimal untuk Browser Desktop, Tablet & Ponsel Lapangan)";
+            : "Modern Web Application Responsive & PWA (Optimal untuk Browser Desktop, Tablet & Ponsel Lapangan)");
 
         if (preg_match('/(android|ios|playstore|app store|mobile app|native app)/i', $corpus)) {
             $targetPlatform = $isEn
@@ -290,6 +452,12 @@ class BlueprintDiscoveryService
         $terminPembayaran = $isEn
             ? "Standard 50/50 Milestones: 50% Kickoff & Sprint Down Payment + 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap)"
             : "Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)";
+
+        if ($noPaymentGateway) {
+            $terminPembayaran = $isEn
+                ? "Standard 50/50 Milestones: 50% Kickoff Down Payment & 50% Final Settlement Post-UAT Acceptance & Key Handover (via Bank Transfer / Official Invoice)"
+                : "Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Transfer Bank Resmi / Invoice Manual)";
+        }
 
         // Extract contact clues if user typed email or phone in text
         $email = '';
@@ -357,21 +525,26 @@ class BlueprintDiscoveryService
         ]);
     }
 
-    protected function detectDomain(string $text): string
+    protected function detectDomain(string $text, array $brief = []): string
     {
+        $combinedText = $text;
+        if (!empty($brief)) {
+            $combinedText .= ' ' . strtolower(implode(' ', $brief));
+        }
+
         $patterns = [
+            'property' => ['villa', 'resort', 'homestay', 'properti', 'perumahan', 'apartemen', 'booking villa', 'kavling', 'tanah', 'kost', 'kontrakan', 'real estate', 'agen properti', 'katalog properti', 'listing villa', 'listing properti', 'sewa villa', 'jual villa'],
             'logistics' => ['logistik', 'ekspedisi', 'armada', 'truk', 'kontainer', 'pengiriman', 'gudang', 'cargo', 'resi', 'tracking', 'kurir', 'shipping', 'freight'],
-            'marketplace' => ['sewa', 'rental', 'marketplace', 'jual beli', 'toko online', 'ecommerce', 'e-commerce', 'katalog', 'produk', 'keranjang', 'checkout', 'vendor'],
             'clinic' => ['klinik', 'pasien', 'dokter', 'rekam medis', 'obat', 'apotek', 'rumah sakit', 'antrean', 'poliklinik', 'kesehatan', 'diagnosis', 'medical'],
             'finance' => ['keuangan', 'invoice', 'faktur', 'tagihan', 'pembayaran', 'akuntansi', 'kasir', 'pos', 'pembukuan', 'laporan keuangan', 'escrow'],
             'hr' => ['hrd', 'karyawan', 'rekrutmen', 'pelamar', 'lowongan', 'gaji', 'payroll', 'absensi', 'cuti', 'kinerja', 'talent'],
             'education' => ['sekolah', 'kursus', 'siswa', 'guru', 'kelas', 'ujian', 'materi', 'bimbel', 'lms', 'akademik', 'pembelajaran'],
-            'property' => ['properti', 'perumahan', 'apartemen', 'booking', 'kavling', 'agen', 'penyewa', 'kontrakan', 'real estate'],
+            'marketplace' => ['sewa', 'rental', 'marketplace', 'jual beli', 'toko online', 'ecommerce', 'e-commerce', 'katalog', 'produk', 'keranjang', 'checkout', 'vendor'],
         ];
 
         foreach ($patterns as $domain => $keywords) {
             foreach ($keywords as $kw) {
-                if (str_contains($text, $kw)) {
+                if (str_contains($combinedText, $kw)) {
                     return $domain;
                 }
             }
@@ -383,7 +556,7 @@ class BlueprintDiscoveryService
     protected function extractProjectName(string $corpus, string $domain, bool $isEn): string
     {
         // Try extracting explicit title or project name
-        if (preg_match('/(?:nama\s*(?:proyek|bisnis|aplikasi|platform)|project\s*name)\s*[:=]\s*([^\n\r,.]+)/i', $corpus, $m)) {
+        if (preg_match('/(?:nama\s*(?:proyek|bisnis|aplikasi|platform)|project\s*name)\s*[:=\t]\s*([^\n\r,.]+)/i', $corpus, $m)) {
             $name = trim($m[1]);
             if (mb_strlen($name) >= 3 && mb_strlen($name) <= 60) {
                 return $name;
@@ -406,7 +579,7 @@ class BlueprintDiscoveryService
             'finance' => 'Sistem Penagihan Terpadu & Otomatisasi Faktur Komersial',
             'hr' => 'Platform Manajemen Talenta & Rekrutmen Terpadu',
             'education' => 'Portal Pembelajaran & Administrasi Akademik Digital',
-            'property' => 'Platform Manajemen Aset Properti & Portal Penyewa',
+            'property' => 'Platform Katalog Properti & Reservasi Villa Terpadu',
             'custom_portal' => 'Platform Operasional & Portal Bisnis Terintegrasi',
         ];
 
@@ -417,7 +590,7 @@ class BlueprintDiscoveryService
             'finance' => 'Unified Commercial Invoicing & Financial Operations Hub',
             'hr' => 'Enterprise Talent Acquisition & People Operations Platform',
             'education' => 'Digital Academic Administration & Learning Portal',
-            'property' => 'Real Estate Asset Management & Tenant Operation Portal',
+            'property' => 'Real Estate Asset Management & Villa Catalog Portal',
             'custom_portal' => 'Centralized Enterprise Business Management Platform',
         ];
 
@@ -438,7 +611,7 @@ class BlueprintDiscoveryService
             'finance' => 'Penerbitan faktur dan penagihan piutang pelanggan sering terlambat karena proses validasi manual bertingkat, menyulitkan monitoring arus kas dan penutupan buku bulanan.',
             'hr' => 'Proses seleksi berkas pelamar dan evaluasi kinerja karyawan terhambat karena data tercecer di email, formulir terpisah, dan tidak adanya alur persetujuan (approval) berjenjang.',
             'education' => 'Distribusi materi, pelacakan absensi, dan administrasi nilai siswa sulit dikontrol terpusat oleh manajemen dan guru secara efisien.',
-            'property' => 'Pencatatan unit sewa, masa jatuh tempo kontrak, dan pelaporan keluhan pemeliharaan fasilitas sering terlewat karena tidak adanya portal digital mandiri bagi penyewa.',
+            'property' => 'Pemasaran dan penyewaan properti/villa saat ini masih terfragmentasi via media sosial dan chat instan yang berantakan, menyulitkan calon penyewa/investor memeriksa ketersediaan unit, galeri foto HD, spesifikasi, dan lokasi secara akurat.',
             'custom_portal' => 'Operasional bisnis masih mengandalkan rekap manual yang rentan human-error, data tercecer di berbagai platform, dan manajemen kesulitan mendapatkan visibilitas analitik secara real-time.',
         ];
 
@@ -449,7 +622,7 @@ class BlueprintDiscoveryService
             'finance' => 'Commercial billing and account receivables reconciliation suffer from slow multi-tier manual approvals, impacting monthly cash-flow reporting.',
             'hr' => 'Candidate screening and personnel evaluations are hindered by scattered resumes in email inboxes without structured pipeline tracking.',
             'education' => 'Course material distribution, student attendance tracking, and grading lack a centralized platform for faculty and administrators.',
-            'property' => 'Unit lease monitoring, contract expiration alerts, and maintenance request dispatches are frequently dropped due to lack of a tenant self-service portal.',
+            'property' => 'Property and villa marketing is fragmented across scattered social media feeds and messaging groups, preventing prospective tenants from inspecting live unit availability, HD galleries, and map locations.',
             'custom_portal' => 'Core business operations rely on error-prone manual spreadsheets, resulting in data silos and lack of real-time executive visibility.',
         ];
 
@@ -465,7 +638,7 @@ class BlueprintDiscoveryService
             'finance' => '1. Mengotomatiskan siklus penerbitan invoice dan pengingat jatuh tempo via WhatsApp & Email.\n2. Mempercepat rekonsiliasi piutang hingga 80% dengan integrasi payment gateway.\n3. Menyediakan dasbor laporan arus kas real-time yang siap diaudit.',
             'hr' => '1. Sentralisasi pendaftaran dan kurasi profil kandidat ke dalam basis data terstruktur.\n2. Mempercepat tahapan screening dan penugasan interview hingga 50%.\n3. Otomatisasi rekap evaluasi dan riwayat kepegawaian dalam format PDF resmi.',
             'education' => '1. Sentralisasi materi ajar, bank soal, dan rekaman evaluasi dalam satu portal terproteksi.\n2. Efisiensi absensi dan pelaporan akademik berkala kepada wali murid.',
-            'property' => '1. Dasbor manajemen unit sewa dengan pengingat otomatis perpanjangan kontrak.\n2. Tiketing perbaikan fasilitas yang transparan dan dapat dipantau langsung oleh penyewa.',
+            'property' => "1. Digitalisasi katalog unit villa/properti dengan galeri foto HD dan filter lokasi/fasilitas yang cepat dibuka di HP.\n2. Mempercepat proses inquiry dan jadwal survei calon penyewa langsung via direct chat WhatsApp.\n3. Dasbor admin terpadu untuk update ketersediaan unit, harga sewa/beli, dan foto secara real-time.",
             'custom_portal' => '1. Menghilangkan proses rekapitulasi data manual dan duplikasi input.\n2. Menjamin integritas data transaksi dengan sistem verifikasi berjenjang.\n3. Menghasilkan laporan analitik eksekutif otomatis format PDF dan Excel setiap hari.',
         ];
 
@@ -476,8 +649,7 @@ class BlueprintDiscoveryService
             'finance' => '1. Automated invoice generation and automated payment reminders via WhatsApp & Email.\n2. 80% faster accounts receivable reconciliation via instant payment webhooks.\n3. Real-time cash flow executive dashboard ready for financial audits.',
             'hr' => '1. Centralization of candidate submissions into a searchable talent repository.\n2. 50% faster recruitment pipeline turnaround.\n3. Automated personnel evaluation reporting in exportable PDF formats.',
             'education' => '1. Unified repository for learning resources, syllabus tracking, and student assessments.\n2. Automated attendance and academic progress reporting.',
-            'property' => '1. Unified property lease tracking with automated renewal notification workflows.\n2. Transparent maintenance ticket logging and resolution tracking for tenants.',
-            'custom_portal' => '1. Eliminate error-prone manual spreadsheets and redundant data entry.\n2. Guarantee transactional integrity with multi-tier validation workflows.\n3. Automated generation of executive analytics reports in PDF and Excel formats daily.',
+            'property' => "1. High-speed digital showcase for villa and property listings with HD photos and mobile filters.\n2. Accelerate prospective tenant inquiry turnaround with direct WhatsApp survey scheduling.\n3. Unified administrator control panel to manage unit pricing, photos, and live occupancy status.",
         ];
 
         return $isEn ? ($goalsEn[$domain] ?? $goalsEn['custom_portal']) : ($goalsId[$domain] ?? $goalsId['custom_portal']);
@@ -519,7 +691,7 @@ class BlueprintDiscoveryService
             'finance' => "1. Superadmin: Konfigurasi akun bank, payment gateway, dan audit log keuangan.\n2. Finance Operator: Penerbitan tagihan, kustomisasi termin pembayaran, dan input bukti bayar.\n3. Client Payer: Melihat rincian tagihan, melakukan pembayaran via VA/QRIS, dan unduh faktur.\n4. Accounting Auditor: Unduh laporan rekonsiliasi harian/bulanan format Excel dan PDF.",
             'hr' => "1. Superadmin: Pengaturan struktur organisasi dan otorisasi modul.\n2. HR Recruiter: Publikasi lowongan, seleksi berkas pelamar, dan penjadwalan interview.\n3. Hiring Manager: Memberikan feedback evaluasi kandidat dan approval rekrutmen.\n4. Pelamar: Mengunggah CV/dokumen, mengisi formulir profil, dan memantau status seleksi.",
             'education' => "1. Superadmin: Manajemen tahun ajaran, kurikulum, dan akun pengguna.\n2. Pengajar: Mengunggah materi ajar, membagikan tugas, dan menginput nilai siswa.\n3. Siswa / Peserta: Mengakses modul materi, mengumpulkan tugas, dan melihat kartu hasil studi.",
-            'property' => "1. Property Manager: Kelola data unit, jadwal sewa, dan master biaya pemeliharaan.\n2. Penyewa (Tenant): Melihat jadwal tagihan sewa, bayar tagihan, dan ajukan tiket perbaikan.\n3. Teknisi Pemeliharaan: Menerima tiket komplain dan memperbarui status penanganan fisik.",
+            'property' => "1. Superadmin (Pengelola Villa / Broker): Kendali penuh master listing villa, galeri foto HD via Curator, update tarif sewa/beli, dan nomor WhatsApp admin.\n2. Pengunjung Web (Calon Penyewa / Investor): Menjelajahi katalog villa, filter fasilitas & lokasi, serta mengajukan jadwal survei via WhatsApp.\n3. Staf Lapangan / Host: Menerima prospek survei fisik unit dan memperbarui status ketersediaan unit.",
             'custom_portal' => "1. Superadmin: Hak akses penuh ke seluruh pengaturan sistem dan audit keamanan.\n2. Operator / Staff: Penginputan dan verifikasi data transaksi harian.\n3. Approver / Supervisor: Otorisasi persetujuan data bertingkat sebelum eksekusi.\n4. Klien / Pengguna Umum: Pengisian formulir terarah dan pelacakan status transaksi mandiri.",
         ];
 
@@ -530,7 +702,7 @@ class BlueprintDiscoveryService
             'finance' => "1. Superadmin: Bank accounts, payment gateway webhooks, and security audit log.\n2. Finance Operator: Invoice drafting, installment scheduling, and receipt verifications.\n3. Client Payer: Reviews itemized billing, executes payments via VA/QRIS, downloads receipts.\n4. Accounting Auditor: Generates monthly reconciliation reports in Excel and PDF.",
             'hr' => "1. Superadmin: Company roles and access policy control.\n2. HR Recruiter: Job vacancy posting, candidate resume screening, and interview scheduling.\n3. Hiring Manager: Reviews candidates, submits evaluation notes, approves hires.\n4. Candidate: Profile submission, CV upload, and application status tracking.",
             'education' => "1. Superadmin: Academic calendar, user credentials, and curriculum control.\n2. Instructor: Uploads study materials, creates assignments, records student grades.\n3. Student: Reviews course materials, submits homework, checks academic report cards.",
-            'property' => "1. Property Manager: Unit catalog, lease expiration tracking, maintenance supervision.\n2. Tenant: Checks billing schedule, pays rent online, submits maintenance tickets.\n3. Maintenance Technician: Receives repair dispatches and updates resolution logs.",
+            'property' => "1. Superadmin (Villa Manager / Broker): Full administration over villa inventory, HD photo curation via Curator, pricing tiers, and WhatsApp routing.\n2. Web Visitor (Prospective Tenant / Buyer): Explores catalog, applies location/amenity filters, and initiates survey chats via WhatsApp.\n3. Field Host / Staff: Receives direct inquiry appointments and coordinates physical property walkthroughs.",
             'custom_portal' => "1. Superadmin: Full master administration, security audit trails, and configuration.\n2. Operational Staff: Day-to-day transaction input and verification.\n3. Supervisor / Approver: Multi-tier approval workflow authorization.\n4. External Client: Self-service submission and real-time status tracker.",
         ];
 
@@ -544,6 +716,7 @@ class BlueprintDiscoveryService
             'marketplace' => "1. Autentikasi & Verifikasi Akun: Login aman dengan pemisahan peran Pelanggan dan Vendor Mitra.\n2. Manajemen Katalog & Ketersediaan: Input detail layanan/unit sewa dengan galeri foto via Curator Picker dan tarif harian/bulanan.\n3. Alur Reservasi & Booking: Formulir pemilihan tanggal sewa, kalkulasi harga otomatis, dan konfirmasi ketersediaan.\n4. Integrasi Pembayaran Midtrans: Dukungan pembayaran multi-channel (Virtual Account, QRIS, Kartu Kredit) dengan webhook otomatis.\n5. Pusat Kendali Admin (Filament PHP): Audit pesanan masuk, verifikasi berkas legal vendor, dan pemantauan transaksi.\n6. Faktur Digital & Notifikasi: Penerbitan invoice resmi otomatis dan notifikasi status pesanan.",
             'clinic' => "1. Modul Autentikasi & Hak Akses Medis: Akses terisolasi untuk Resepsionis, Dokter, dan Apoteker.\n2. Pendaftaran Pasien & Antrean: Input data pasien dengan nomor rekam medis unik dan antrean digital poli.\n3. Rekam Medis Elektronik (RME): Form pencatatan keluhan, anamnesis, diagnosis standar ICD-10, dan resep obat digital.\n4. Manajemen Stok Apotek: Pencatatan otomatis pengurangan stok saat obat diresepkan serta peringatan stok menipis.\n5. Dasbor Manajemen & Kasir: Perhitungan total billing perawatan obat dan cetak kuitansi pembayaran.\n6. Laporan Medis & Keuangan: Ekspor data kunjungan pasien dan rekapitulasi penjualan farmasi ke PDF/Excel.",
             'finance' => "1. Autentikasi Finansial & Audit Trail: Hak akses ketat untuk Operator Keuangan dan Auditor dengan logging aktivitas.\n2. Pembuat Faktur Komersial: Pembuatan invoice dinamis dengan perhitungan PPN, diskon, dan skema termin bertahap.\n3. Gateway Pembayaran Terotomatisasi: Integrasi Midtrans Virtual Account dan QRIS dengan rekonsiliasi seketika.\n4. Portal Pembayaran Klien: Halaman khusus bagi klien untuk melihat rincian faktur dan melakukan pembayaran langsung.\n5. Dasbor Piutang & Aging Schedule: Pemantauan tagihan belum terbayar, jatuh tempo, dan metrik kas masuk.\n6. Ekspor Rekonsiliasi Akuntansi: Ekspor data jurnal transaksi siap import ke software akuntansi dalam format CSV dan PDF.",
+            'property' => "1. Autentikasi Pengguna & Dasbor Pengelola (Filament v5): Manajemen unit villa, upload galeri foto resolusi tinggi via Curator Picker, update tarif sewa/jual, dan status ketersediaan.\n2. Katalog Listing Villa Interaktif: Filter pencarian cepat berdasarkan lokasi di Bali, jumlah kamar, fasilitas unggulan, dan kategori (Sewa Harian/Bulanan/Tahunan atau Beli Hak Milik/Leasehold).\n3. Halaman Detail Villa Responsif: Tampilan galeri foto HD swipeable di HP, spesifikasi lengkap unit, fasilitas, harga transparan, dan sematan peta interaktif (Google Maps Embed).\n4. Direct WhatsApp Inquiry & Booking Lead: Tombol Click-to-Chat WhatsApp otomatis membawa detail nama villa, tanggal estimasi survei/sewa langsung ke broker/owner.\n5. Optimasi Mobile-First & Kecepatan Akses: Desain bersih ultra-cepat dibuka dari browser smartphone dengan O(1) query performa tanpa lag.\n6. Manajemen Pertanyaan & Status Prospek: Pencatatan ringkasan leads masuk dari pengunjung untuk evaluasi efektivitas listing.",
             'custom_portal' => "1. Autentikasi Modern & RBAC: Pengelolaan peran pengguna dengan ULID primary keys untuk skalabilitas jutaan data.\n2. Formulir Intake & Validasi Data: Input data terstruktur dengan validasi ketat dan proteksi Anti-Spam berjenjang.\n3. Dasbor Administrasi Filament v5: Pusat manajemen data dengan filter canggih, metrik analitik, dan tabel dinamis kilat.\n4. Alur Kerja Persetujuan (Workflow): Mekanisme review data bertingkat dengan pencatatan riwayat audit (audit trail).\n5. Sistem Notifikasi Terpadu: Notifikasi status via sistem internal dan template email resmi.\n6. Modul Laporan & Ekspor: Ekspor rekonsiliasi data komprehensif ke format PDF siap cetak dan spreadsheet Excel.",
         ];
 
@@ -552,6 +725,7 @@ class BlueprintDiscoveryService
             'marketplace' => "1. Verified User Profiles & RBAC: Dual-role onboarding for Customers and Verified Vendors.\n2. Service & Asset Availability Catalog: Media management via Curator Picker and dynamic tier pricing.\n3. Booking & Reservation Pipeline: Interactive calendar picker, pricing calculator, and confirmation lock.\n4. Midtrans Payment Engine: Multi-channel checkout (Virtual Account, QRIS, Cards) with automated webhook settlement.\n5. Command Center (Filament PHP): Booking inspection, vendor credential review, and revenue tracking.\n6. Digital Invoicing & Receipts: Automated PDF receipt generation and instant status notifications.",
             'clinic' => "1. Role-Segregated Clinical Auth: Isolated portals for Receptionists, Physicians, and Pharmacists.\n2. Patient Intake & Queue Management: Patient registration with automated medical record numbers.\n3. Electronic Medical Records (EMR): Diagnostic documentation, anamnesis logs, and digital prescription issuance.\n4. Pharmacy Dispensary & Inventory Sync: Automated real-time deduction upon prescription dispensing with low-stock alerts.\n5. Cashier & Billing Hub: Aggregated billing calculation and instant invoice receipt generation.\n6. Clinical & Revenue Analytics: Exportable patient visit metrics and pharmacy ledger in PDF and Excel formats.",
             'finance' => "1. Financial-Grade RBAC & Audit Trails: Timestamped activity logging for billing officers and auditors.\n2. Commercial Invoice Generator: Dynamic billing engine with multi-currency, tax calculation, and milestone stages.\n3. Automated Payment Gateway: Midtrans Virtual Account & QRIS webhooks with instant ledger reconciliation.\n4. Client Payment Hub: Direct client portal for invoice review and instant payment settlement.\n5. Accounts Receivable & Aging Dashboard: Overdue tracking, aging buckets, and cash inflow analytics.\n6. Financial Export Suite: Downloadable transaction audit journals in Excel and printable PDF formats.",
+            'property' => "1. Property Manager Admin Hub (Filament v5): Villa inventory management, HD media curation via Curator Picker, dynamic pricing (rental & sales), and live availability toggling.\n2. Interactive Villa Catalog & Listing: High-speed mobile filters by Bali location, bedroom count, luxury amenities, and transaction type (Daily/Monthly/Yearly Rent vs Freehold/Leasehold Sale).\n3. Responsive Property Showcase: Swipeable HD photo gallery, full architectural specs, transparent pricing, and Google Maps location embed.\n4. Direct WhatsApp Inquiry & Survey Leads: 1-click WhatsApp Click-to-Chat pre-filling villa name and prospective dates directly to the broker/owner.\n5. Ultra-Fast Mobile Optimization: Clean responsive layout optimized for mobile browsers with sub-second page loads.\n6. Lead Activity Logging: Basic prospective tenant inquiry tracking for marketing conversion visibility.",
             'custom_portal' => "1. Modern Authentication & RBAC: Role-based control with distributed PostgreSQL ULID identifiers.\n2. Structured Data Intake & Validation: Robust form validation with multi-layer anti-spam protection.\n3. Filament v5 Enterprise Dashboard: Instant filterable data tables, metric widgets, and bulk processing.\n4. Multi-Tier Approval Workflow: Step-by-step verification pipeline with complete audit trails.\n5. Unified Notification Engine: Email and in-app status updates for critical milestones.\n6. Reporting & Export Suite: Instant export of filtered data into standardized PDF reports and Excel workbooks.",
         ];
 
@@ -565,6 +739,7 @@ class BlueprintDiscoveryService
             'marketplace' => "1. Integrasi Escrow Multi-Vendor Otomatis: Pencairan dana otomatis ke rekening bank vendor setelah pesanan selesai.\n2. Notifikasi WhatsApp Bisnis: Notifikasi pengingat pembayaran dan konfirmasi penjemputan unit secara instan.\n3. Aplikasi Mobile PWA Teroptimasi: Akses offline dan notifikasi push untuk mitra di lapangan.",
             'clinic' => "1. Integrasi SatuSehat Kemenkes: Penyelarasan data riwayat medis pasien dengan platform SatuSehat nasional.\n2. Notifikasi Pengingat Kontrol WhatsApp: Pengingat otomatis jadwal kontrol ulang pasien dan resep rutin.\n3. Portal Pasien Mandiri (PWA): Pasien dapat melihat riwayat hasil lab dan mengunduh resep digital sendiri.",
             'finance' => "1. Auto-Debit Recurring Billing: Tagihan langganan otomatis via kartu kredit dan e-wallet.\n2. Rekonsiliasi Bank Otomatis (Open Finance API): Penarikan mutasi rekening koran BCA/Mandiri secara otomatis.\n3. Analisis Prediksi Arus Kas (AI Cashflow Forecast): Proyeksi potensi piutang macet berdasarkan riwayat pembayaran klien.",
+            'property' => "1. Integrasi Kalender Reservasi Real-Time (iCal Sync): Sinkronisasi ketersediaan unit otomatis dengan Airbnb, Booking.com, dan VRBO.\n2. Virtual Tour 360 Derajat: Penjelajahan unit villa interaktif 3D panoramic langsung dari browser calon penyewa.\n3. Multi-Currency & Multi-Language Toggle: Konversi mata uang otomatis (IDR, USD, AUD, EUR) dan dukungan multibahasa untuk wisman mancanegara.\n4. Integrasi Payment Gateway Booking Fee: Opsi pembayaran DP/booking fee otomatis jika di kemudian hari pemilik ingin menerima pembayaran online.",
             'custom_portal' => "1. Integrasi WhatsApp Cloud API: Otomatisasi pengiriman notifikasi dan alert transaksi penting ke ponsel klien.\n2. Aplikasi Mobile PWA Offline-Sync: Akses aplikasi cepat untuk operator lapangan dengan sinkronisasi otomatis saat online.\n3. AI Agentic Decision Engine: Analisis prediktif dan asisten cerdas untuk merangkum anomali data operasional.",
         ];
 
@@ -573,6 +748,7 @@ class BlueprintDiscoveryService
             'marketplace' => "1. Automated Multi-Vendor Escrow Payouts: Automated bank disbursements to vendor accounts upon verified completion.\n2. Official WhatsApp Notifications: Automated reminders for pending payments and booking pickup confirmations.\n3. Mobile PWA Field Companion: Offline-first access with background sync for mobile field coordinators.",
             'clinic' => "1. SatuSehat Ministry of Health Compliance: Bi-directional EMR synchronization with national health services.\n2. Automated WhatsApp Check-up Reminders: Proactive appointment reminders for recurring patient checkups.\n3. Patient Self-Service Portal (PWA): Direct access for patients to view test results and digital prescription history.",
             'finance' => "1. Automated Recurring Billing: Subscription auto-debit via credit cards and digital wallets.\n2. Open Finance Bank Feed Sync: Automated daily bank account statement ingestion and reconciliation.\n3. AI Predictive Cashflow Analytics: Automated risk scoring and payment delay probability indicators.",
+            'property' => "1. Real-Time Calendar Sync (iCal Engine): Two-way calendar synchronization with Airbnb, Booking.com, and VRBO to prevent double booking.\n2. 360-Degree Interactive Virtual Tour: Immersive 3D panoramic walkthroughs directly accessible within mobile browsers.\n3. Multi-Currency & Dual-Language Toggle: Real-time currency conversions (IDR, USD, AUD, EUR) and localized copy for international expatriates.\n4. Online Booking Fee Payment Gateway: Automated reservation deposit processing when the owner decides to enable direct digital checkout.",
             'custom_portal' => "1. WhatsApp Cloud API Webhooks: Automated delivery of high-priority operational alerts and status reports.\n2. PWA Offline-First Engine: Progressive web application with background synchronization for field workers.\n3. AI Agentic Decision Intelligence: Automated anomaly detection and executive summary generation.",
         ];
 
@@ -586,6 +762,7 @@ class BlueprintDiscoveryService
             'marketplace' => "1. Pengguna mencari layanan atau unit sewa yang tersedia sesuai tanggal.\n2. Pengguna mengisi detail durasi dan sistem menghitung total biaya secara transparan.\n3. Pengguna melakukan pembayaran melalui Virtual Account atau QRIS Midtrans.\n4. Pembayaran terverifikasi otomatis via webhook, vendor menerima notifikasi pesanan.\n5. Vendor menyerahkan unit/layanan dan menyelesaikan transaksi di dasbor.",
             'clinic' => "1. Pasien mendaftar online atau melalui staf resepsionis di lokasi klinik.\n2. Pasien dipanggil menuju ruang dokter sesuai nomor antrean digital.\n3. Dokter memeriksa pasien dan menginput diagnosis serta resep langsung di Rekam Medis Elektronik.\n4. Apotek menerima resep secara real-time dan menyiapkan obat.\n5. Pasien melakukan pembayaran di kasir dan menerima obat beserta kuitansi resmi.",
             'finance' => "1. Tim finance menyusun draf faktur dan menetapkan tanggal jatuh tempo.\n2. Invoice dikirim otomatis ke email dan WhatsApp klien dengan link pembayaran unik.\n3. Klien membuka portal faktur dan membayar melalui channel pembayaran pilihan.\n4. Sistem payment gateway mengirimkan callback dan status faktur berubah menjadi 'Lunas' seketika.\n5. Sistem mencatat jurnal pelunasan dan menghasilkan kuitansi pembayaran resmi.",
+            'property' => "1. Calon penyewa / investor membuka katalog web villa di browser smartphone atau desktop.\n2. Pengunjung memfilter properti berdasarkan lokasi di Bali, rentang harga, atau opsi sewa vs beli.\n3. Pengunjung membuka halaman detail villa untuk melihat foto HD, fasilitas, dan sematan Google Maps.\n4. Pengunjung menekan tombol 'Inquiry via WhatsApp' untuk langsung terhubung dengan tim broker/pengelola dengan pesan otomatis terisi detail villa.\n5. Pengelola villa / admin login ke dasbor Filament untuk memperbarui unit yang tersewa/terjual atau menambahkan listing baru.",
             'custom_portal' => "1. Pengguna mengakses portal dan mengisi data transaksi pada formulir terstruktur.\n2. Sistem memvalidasi data dan menyimpan rekaman dengan identifier unik terenkripsi.\n3. Staf / Operator menerima notifikasi dan melakukan verifikasi kelengkapan data di dasbor Filament.\n4. Supervisor menyetujui transaksi melalui alur persetujuan berjenjang.\n5. Sistem menghasilkan dokumen bukti resmi (PDF) dan memperbarui analitik operasional secara real-time.",
         ];
 
@@ -594,6 +771,7 @@ class BlueprintDiscoveryService
             'marketplace' => "1. User selects desired service or equipment availability for specified dates.\n2. User provides required details and system transparently calculates total pricing.\n3. User executes payment via Midtrans Virtual Account or QRIS.\n4. Settlement verifies via automated webhook, alerting the vendor partner instantly.\n5. Vendor delivers unit/service and confirms completion in the dashboard.",
             'clinic' => "1. Patient checks in online or via front-desk registration.\n2. Patient is queued and routed to physician examination room.\n3. Physician records examination notes, diagnosis, and digital prescriptions in EMR.\n4. Dispensary receives prescription instantly and prepares medication packages.\n5. Patient completes billing settlement at checkout and receives dispensed medicine.",
             'finance' => "1. Finance team drafts invoice and configures due dates and milestones.\n2. Invoice dispatches automatically to client via email and WhatsApp with a direct payment link.\n3. Client reviews itemized breakdown and completes checkout.\n4. Webhook callback verifies payment, instantly marking invoice as 'Paid'.\n5. System reconciles accounts receivable and issues official payment receipt.",
+            'property' => "1. Prospective tenant/investor opens the responsive villa catalog on mobile or desktop.\n2. Visitor filters listings by Bali region, budget range, and rent vs purchase requirements.\n3. Visitor inspects the detail showcase, reviewing HD galleries, amenities, and Google Maps pin.\n4. Visitor clicks 'Inquiry via WhatsApp', launching an instant WhatsApp chat with broker pre-populated with villa details.\n5. Villa manager logs into the Filament control panel to update availability, adjust rates, or add new listings.",
             'custom_portal' => "1. User submits transaction data through the structured form.\n2. System validates payload and persists record with encrypted ULID identifiers.\n3. Operational staff receives alert and inspects data in the Filament control panel.\n4. Supervisor reviews and authorizes record through multi-tier workflow.\n5. System generates official PDF summary and updates real-time analytics dashboards.",
         ];
 
@@ -607,6 +785,7 @@ class BlueprintDiscoveryService
             'marketplace' => 'Midtrans Snap Payment Gateway, WhatsApp Business Cloud API, Google Maps Autocomplete, Cloudflare R2.',
             'clinic' => 'SatuSehat Kemenkes API, Midtrans QRIS/VA, WhatsApp Gateway Pengingat Pasien, Cloud Backup Storage.',
             'finance' => 'Midtrans Core API (VA & QRIS), WhatsApp Notification Gateway, Mailgun Transactional Email, Jurnal/Xero Export API.',
+            'property' => 'WhatsApp Click-to-Chat API, Google Maps Embed, Cloudflare R2 / S3 Storage (Optimasi Foto HD), Mailgun Inquiry Notification.',
             'custom_portal' => 'Midtrans Payment Gateway, WhatsApp Cloud API, Mailgun SMTP, Cloudflare Object Storage R2.',
         ];
 
@@ -615,6 +794,7 @@ class BlueprintDiscoveryService
             'marketplace' => 'Midtrans Snap Payment Gateway, WhatsApp Business API, Google Places Autocomplete, Cloudflare R2.',
             'clinic' => 'SatuSehat MOH API, Midtrans QRIS/VA, Patient WhatsApp Dispatcher, Encrypted Cloud Storage.',
             'finance' => 'Midtrans Core API (VA & QRIS), WhatsApp Notification Gateway, Mailgun SMTP, Accounting Export Webhooks.',
+            'property' => 'WhatsApp Click-to-Chat API, Google Maps Embed API, Cloudflare R2 Storage (HD Photo CDN), Mailgun Notification Webhooks.',
             'custom_portal' => 'Midtrans Payment Gateway, WhatsApp Cloud API, Mailgun Transactional SMTP, Cloudflare R2.',
         ];
 
@@ -628,6 +808,7 @@ class BlueprintDiscoveryService
             'marketplace' => "1. Tidak menyediakan aplikasi native mobile store iOS/Android di rilis awal (menggunakan Web Responsive PWA performa tinggi).\n2. Tidak mengelola logistik fisik atau asuransi barang secara langsung (tanggung jawab vendor dan pihak ketiga).\n3. Tidak menyediakan skema kredit cicilan tanpa agunan (BNPL) pihak ketiga selain saluran pembayaran resmi Midtrans.",
             'clinic' => "1. Tidak menyediakan integrasi mesin radiologi / PACS imaging langsung di Fase 1 (fokus pada data rekam medis teks, diagnosa, dan laboratorium).\n2. Tidak mencakup aplikasi native mobile pasien di Google Play / App Store pada tahap MVP.\n3. Tidak melakukan pemotongan klaim BPJS otomatis secara langsung sebelum bridging resmi tersedia.",
             'finance' => "1. Tidak menyediakan software akuntansi full double-entry internal (fokus pada billing, invoicing, penagihan, dan ekspor jurnal).\n2. Tidak melayani fungsi perbankan simpan pinjam komersial.",
+            'property' => "1. Tidak mencakup integrasi payment gateway atau transaksi kartu kredit di Fase 1 (fokus pada katalog cepat dan direct inquiry WhatsApp).\n2. Tidak membangun aplikasi native Play Store / App Store khusus (fokus pada Progressive Web Application responsif yang ringan dibuka di browser smartphone).\n3. Tidak mengelola perizinan legalitas sertifikat tanah/IMB secara langsung (tanggung jawab pihak notaris dan broker rekanan).",
             'custom_portal' => "1. Tidak membangun aplikasi native mobile iOS/Android mandiri di Fase 1 MVP (difokuskan pada Progressive Web App berperforma tinggi dan responsif di semua perangkat).\n2. Tidak mencakup integrasi perangkat keras fisik Bluetooth/Thermal khusus tanpa API standar.\n3. Fitur di luar spesifikasi yang disetujui akan diakomodasi melalui Change Request (CR) terpisah.",
         ];
 
@@ -636,6 +817,7 @@ class BlueprintDiscoveryService
             'marketplace' => "1. No native mobile app store binaries in Phase 1 MVP (delivered as a fast Responsive Web PWA).\n2. Platform does not directly manage physical inventory custody or third-party transit insurance.\n3. No custom third-party Buy-Now-Pay-Later (BNPL) credit underwriting outside standard Midtrans channels.",
             'clinic' => "1. Excludes direct integration with physical radiology / PACS machinery in Phase 1 MVP (focus on text clinical records, diagnoses, and lab results).\n2. Excludes native mobile patient app store distribution in MVP release.\n3. Excludes direct unbridged national health insurance (BPJS) claim underwriting.",
             'finance' => "1. Excludes full internal double-entry ledger bookkeeping replacement (focuses on invoicing, automated receivables, and journal exports).\n2. Does not function as a licensed banking deposit/loan custodian.",
+            'property' => "1. No online payment gateway or credit card processing in Phase 1 (leads and bookings are routed directly to WhatsApp and bank transfer).\n2. No native iOS/Android binary store apps in Phase 1 (delivered as an ultra-fast responsive Web Application).\n3. Platform does not provide legal title underwriting or notary licensing services.",
             'custom_portal' => "1. No native mobile app store application development in Phase 1 MVP (focused on high-performance Responsive Web PWA).\n2. No direct proprietary physical hardware interfacing without standard web protocols.\n3. Any additions outside this scope will be accommodated through a formal Change Request (CR).",
         ];
 
@@ -974,15 +1156,28 @@ class BlueprintDiscoveryService
      * Deep Multi-Model AI Enhancement (DeepSeek-R1, Claude 3.7, Gemini 2.5, OpenAI, Grok, Groq)
      * with automatic failover and token circuit breaker.
      */
-    protected function enhanceWithMultiAi(array $result, string $corpus, string $locale, ?string $preferredProvider = null): array
+    protected function enhanceWithMultiAi(array $result, string $corpus, string $locale, ?string $preferredProvider = null, array $brief = []): array
     {
         $isEn = ($locale === 'en');
         $langName = $isEn ? 'English' : 'Indonesian';
+        $noPaymentGateway = (bool) preg_match('/(?:tanpa|tidak\s*pakai|tanpa\s*adanya|no|without)\s*(?:payment\s*gateway|midtrans|gerbang\s*pembayaran)/i', $corpus);
+
+        $briefGuidance = "";
+        if (!empty($brief)) {
+            $briefGuidance = "\nCLIENT EXPLICIT BRIEF (MUST HONOR, ADOPT, AND PRESERVE):\n";
+            foreach ($brief as $k => $v) {
+                if (is_string($v) && trim($v) !== '') {
+                    $briefGuidance .= "- {$k}: " . trim($v) . "\n";
+                }
+            }
+            $briefGuidance .= "CRITICAL INSTRUCTION: Adopt the client's explicit business name, core problem, goals, actors, and features directly. Elaborate on them with architectural rigor, but DO NOT overwrite or delete their specific items. If they explicitly requested 'tanpa payment gateway', DO NOT include any payment gateway in integrations or workflow.\n";
+        }
 
         $prompt = <<<PROMPT
 You are a Principal Software Solutions Architect synthesizing a client's project vision.
 Analyze the following idea text and attached document contents:
 {$corpus}
+{$briefGuidance}
 
 Provide an architectural synthesis in valid JSON format with keys:
 - "namaBisnis": Clean, professional project or company name.
@@ -993,7 +1188,7 @@ Provide an architectural synthesis in valid JSON format with keys:
 - "fiturWajib": Numbered list (1 to 6) of mission-critical Phase 1 MVP features.
 - "fiturTambahan": Numbered list (1 to 4) of Phase 2 roadmap features.
 - "alurKerja": Numbered step-by-step user and transaction workflow.
-- "kebutuhanIntegrasi": Comma-separated list of required third-party services and integrations (e.g. Midtrans, WhatsApp Gateway, Cloudflare R2, Postmark).
+- "kebutuhanIntegrasi": Comma-separated list of required third-party services and integrations (e.g. WhatsApp Click-to-Chat API, Google Maps Embed, Cloudflare R2).
 - "outOfScope": Clear boundaries of what is explicitly excluded in Phase 1 to prevent scope creep.
 - "strategicInsight": 1-2 sentence executive architectural verdict or technical competitive advantage.
 
@@ -1016,7 +1211,12 @@ PROMPT;
                 if (is_array($parsed)) {
                     foreach (['namaBisnis', 'masalahUtama', 'tujuanUtama', 'targetAudiens', 'kebutuhanIntegrasi', 'outOfScope'] as $field) {
                         if (!empty($parsed[$field]) && is_string($parsed[$field])) {
-                            $result[$field] = trim($parsed[$field]);
+                            // If user provided explicit brief for this field, do not overwrite if AI diverged drastically
+                            if (!empty($brief[$field]) && in_array($field, ['namaBisnis'])) {
+                                $result[$field] = $brief[$field];
+                            } else {
+                                $result[$field] = trim($parsed[$field]);
+                            }
                         }
                     }
 
@@ -1032,6 +1232,35 @@ PROMPT;
                                 $result[$listField] = trim($parsed[$listField]);
                             }
                         }
+                    }
+
+                    // Enforce constraints post-AI
+                    if ($noPaymentGateway) {
+                        $result['kebutuhanIntegrasi'] = preg_replace('/\s*\([^)]*(?:payment\s*gateway|midtrans|tanpa)[^)]*\)/i', '', $result['kebutuhanIntegrasi'] ?? '');
+                        $result['kebutuhanIntegrasi'] = trim(preg_replace('/\b(?:midtrans(?:\s*snap)?|stripe|xendit|payment\s*gateway|qris\s*otomatis)[,\s]*/i', '', $result['kebutuhanIntegrasi']), ", \t\n\r");
+                        if (empty($result['kebutuhanIntegrasi'])) {
+                            $result['kebutuhanIntegrasi'] = $isEn ? 'WhatsApp Click-to-Chat API, Google Maps Embed' : 'WhatsApp Click-to-Chat API, Google Maps Embed';
+                        }
+                        if (!empty($result['outOfScope']) && !stripos($result['outOfScope'], 'payment gateway')) {
+                            $result['outOfScope'] = $this->appendNumberedItem($result['outOfScope'], $isEn 
+                                ? 'No online payment gateway integration in Phase 1 (leads and bookings routed directly via WhatsApp chat).'
+                                : 'Tidak mencakup integrasi payment gateway otomatis di Fase 1 (seluruh inquiry dan reservasi diarahkan langsung via WhatsApp chat).');
+                        }
+                    }
+
+                    // If brief had explicit features, ensure they are present
+                    if (!empty($brief['fiturWajib']) && !empty($result['fiturWajib'])) {
+                        // User's explicit features are king
+                        $result['fiturWajib'] = $this->formatListIfNeeded($brief['fiturWajib']);
+                    }
+                    if (!empty($brief['namaBisnis'])) {
+                        $result['namaBisnis'] = $brief['namaBisnis'];
+                    }
+                    if (!empty($brief['kisaranBudget'])) {
+                        $result['kisaranBudget'] = $brief['kisaranBudget'];
+                    }
+                    if (!empty($brief['targetWaktu'])) {
+                        $result['targetWaktu'] = $brief['targetWaktu'];
                     }
 
                     $result['_meta']['ai_telemetry'] = [

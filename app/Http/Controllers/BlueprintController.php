@@ -99,7 +99,9 @@ class BlueprintController extends Controller
         $request->validate([
             'idea_text' => 'nullable|string|max:30000',
             'files.*' => 'nullable|file|max:15360|mimes:pdf,doc,docx,txt,md,rtf,csv,tsv,xlsx,pptx,png,jpg,jpeg,webp',
-            'locale' => 'nullable|string|in:id,en'
+            'locale' => 'nullable|string|in:id,en',
+            'ai_model' => 'nullable|string|max:50',
+            'ai_provider' => 'nullable|string|max:50',
         ]);
 
         $rawIdeaText = $request->input('idea_text', '') ?: '';
@@ -109,13 +111,17 @@ class BlueprintController extends Controller
         }
         $locale = $request->input('locale', app()->getLocale() ?: 'id');
         $projectName = $request->input('nama_bisnis') ?: $request->input('namaBisnis') ?: $request->input('project_name');
+        $aiModel = $request->input('ai_model') ?: $request->input('ai_provider');
 
         try {
-            $synthesized = $discoveryService->synthesize($rawIdeaText, $files, $locale, $projectName);
+            $synthesized = $discoveryService->synthesize($rawIdeaText, $files, $locale, $projectName, $aiModel);
 
             $draftId = (string) Str::ulid();
             Cache::put('blueprint_draft_' . $draftId, $synthesized, now()->addHours(24));
             session(['blueprint_draft' => $synthesized]);
+
+            $aiTelemetry = $synthesized['_meta']['ai_telemetry'] ?? null;
+            $failoverNotice = $aiTelemetry['notification'] ?? null;
 
             return response()->json([
                 'success' => true,
@@ -125,6 +131,8 @@ class BlueprintController extends Controller
                 'draft_id' => $draftId,
                 'redirect_url' => route('blueprint.create', ['draft_id' => $draftId]),
                 'converted_markdown' => $synthesized['_meta']['converted_markdown'] ?? '',
+                'ai_telemetry' => $aiTelemetry,
+                'notification' => $failoverNotice,
                 'data' => $synthesized
             ]);
         } catch (\InvalidArgumentException $e) {
@@ -148,21 +156,26 @@ class BlueprintController extends Controller
         $request->validate([
             'supplement_text' => 'required|string|max:5000',
             'blueprint' => 'required|array',
-            'locale' => 'nullable|string|in:id,en'
+            'locale' => 'nullable|string|in:id,en',
+            'ai_model' => 'nullable|string|max:50',
+            'ai_provider' => 'nullable|string|max:50',
         ]);
 
         $supplementText = $request->input('supplement_text');
         $currentBlueprint = $request->input('blueprint');
         $locale = $request->input('locale', 'id');
+        $aiModel = $request->input('ai_model') ?: $request->input('ai_provider');
 
         try {
-            $result = $discoveryService->supplementIdea($currentBlueprint, $supplementText, $locale);
+            $result = $discoveryService->supplementIdea($currentBlueprint, $supplementText, $locale, $aiModel);
 
             return response()->json([
                 'success' => true,
                 'message' => $result['message'],
                 'affected_fields' => $result['affected_fields'],
                 'data' => $result['data'],
+                'ai_telemetry' => $result['ai_telemetry'] ?? null,
+                'notification' => $result['notification'] ?? null,
             ]);
         } catch (\InvalidArgumentException $e) {
             return response()->json([

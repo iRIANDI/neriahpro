@@ -143,6 +143,74 @@ class ManageSettings extends Page implements HasForms
                                     ])->columns(2),
                             ]),
 
+                        Tabs\Tab::make('Multi-AI Model Hub')
+                            ->icon('heroicon-m-cpu-chip')
+                            ->badge('Failover Engine')
+                            ->schema([
+                                Section::make('Orkestrasi AI & Kebijakan Failover Otomatis')
+                                    ->description('Konfigurasikan model AI default untuk Project OS & PRD Generator. Jika model utama kehabisan token atau mengalami 429 rate-limit, sistem otomatis berpindah ke model alternatif yang masih sehat tanpa downtime.')
+                                    ->schema([
+                                        Select::make('ai_default_provider')
+                                            ->label('AI Provider Utama (Default)')
+                                            ->options([
+                                                'auto' => '⚡ Auto Failover (Rekomendasi: DeepSeek -> Gemini -> Claude -> OpenAI -> Grok -> Groq)',
+                                                'deepseek' => 'DeepSeek AI (DeepSeek-R1 SOTA Reasoning & Super Hemat)',
+                                                'gemini' => 'Google Gemini (Gemini 2.5 Pro / Flash 2M Context)',
+                                                'anthropic' => 'Anthropic Claude (Claude 3.7 Sonnet Hybrid Thinking)',
+                                                'openai' => 'OpenAI ChatGPT (GPT-4o / o3-mini)',
+                                                'xai' => 'xAI Grok (Grok-2 1212)',
+                                                'groq' => 'Groq LPU (Llama 3.3 70B - Super Fast & Free Tier)',
+                                                'openrouter' => 'OpenRouter Universal Hub (Akses Model Gratis)',
+                                            ])
+                                            ->default('auto')
+                                            ->required(),
+                                        Toggle::make('ai_enable_auto_failover')
+                                            ->label('Aktifkan Graceful Auto-Failover')
+                                            ->helperText('Otomatis mengalihkan ke model AI cadangan jika model aktif kehabisan token atau limit harian tercapai.')
+                                            ->default(true),
+                                    ])->columns(2),
+
+                                Section::make('Manajemen Kredensial API Keys Penyedia AI')
+                                    ->description('Kunci API yang Anda simpan di sini akan memprioritaskan konfigurasi di atas file .env dan langsung aktif tanpa restart server.')
+                                    ->schema([
+                                        TextInput::make('ai_deepseek_api_key')
+                                            ->label('DeepSeek API Key')
+                                            ->password()
+                                            ->revealable()
+                                            ->helperText('Dapatkan di platform.deepseek.com. Sangat hemat dan powerful untuk penalaran PRD.'),
+                                        TextInput::make('ai_gemini_api_key')
+                                            ->label('Google Gemini API Key')
+                                            ->password()
+                                            ->revealable()
+                                            ->helperText('Dapatkan di aistudio.google.com. Tersedia Free Tier kuota gratis.'),
+                                        TextInput::make('ai_anthropic_api_key')
+                                            ->label('Anthropic Claude API Key')
+                                            ->password()
+                                            ->revealable()
+                                            ->helperText('Dapatkan di console.anthropic.com untuk Claude 3.7 Sonnet.'),
+                                        TextInput::make('ai_openai_api_key')
+                                            ->label('OpenAI API Key')
+                                            ->password()
+                                            ->revealable()
+                                            ->helperText('Dapatkan di platform.openai.com untuk ChatGPT GPT-4o / o3-mini.'),
+                                        TextInput::make('ai_grok_api_key')
+                                            ->label('xAI Grok API Key')
+                                            ->password()
+                                            ->revealable()
+                                            ->helperText('Dapatkan di console.x.ai untuk Grok-2.'),
+                                        TextInput::make('ai_groq_api_key')
+                                            ->label('Groq API Key (Model Gratis & Cepat)')
+                                            ->password()
+                                            ->revealable()
+                                            ->helperText('Dapatkan di console.groq.com. Inferensi Llama 3.3 70B gratis & super cepat.'),
+                                        TextInput::make('ai_openrouter_api_key')
+                                            ->label('OpenRouter API Key')
+                                            ->password()
+                                            ->revealable()
+                                            ->helperText('Dapatkan di openrouter.ai untuk akses ratusan model open-source gratis.'),
+                                    ])->columns(2),
+                            ]),
+
                         Tabs\Tab::make('Multi-Language (2-Tier Locale)')
                             ->icon('heroicon-m-language')
                             ->badge('Tier 1 & Tier 2')

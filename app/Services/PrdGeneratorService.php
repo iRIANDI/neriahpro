@@ -10,7 +10,7 @@ class PrdGeneratorService
     /**
      * Generate an Ultimate PRD & Architecture Blueprint from blueprint questionnaire inputs.
      */
-    public static function generate(VisionBlueprint $blueprint): array
+    public static function generate(VisionBlueprint $blueprint, ?string $preferredAiProvider = null): array
     {
         $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name . "'s Project");
         $masalah = $blueprint->masalah_utama ?: 'Otomatisasi proses bisnis manual dan sentralisasi data.';
@@ -77,6 +77,7 @@ class PrdGeneratorService
         $mobileArchitecture = self::generateMobileAndSyncArchitecture($businessName, $extraContext['target_platform'] ?? '', $erdTables, $mvpItems);
         $developerEducation = self::getDeveloperEducationDeck($businessName);
         $itemizedEstimation = self::calculateItemizedEstimation($blueprint);
+        $aiTelemetry = self::synthesizeAiPrdTelemetry($blueprint, $businessName, $masalah, $tujuan, $preferredAiProvider);
 
         return [
             'meta' => [
@@ -84,6 +85,7 @@ class PrdGeneratorService
                 'version' => '1.0.0-PROPOSAL',
                 'generated_at' => now()->toIso8601String(),
                 'status' => 'Ultimate Vision Blueprint',
+                'ai_telemetry' => $aiTelemetry,
             ],
             'executive_summary' => [
                 'title' => 'Executive Technical Discovery & Blueprint',
@@ -3618,9 +3620,20 @@ PROMPT;
         $md .= "> **Client PIC**: {$blueprint->client_name} ({$blueprint->email})  \n";
         $md .= "> **Generated**: " . ($meta['generated_at'] ?? now()->toIso8601String()) . "  \n";
         $md .= "> **Target Timeline**: " . ($blueprint->target_waktu ?? '30 Hari Kerja') . "  \n";
-        $md .= "> **Architecture Standard**: Modern Monolith (Laravel 13 + Filament v5 + PostgreSQL Strict ULID)\n\n";
+        $md .= "> **Architecture Standard**: Modern Monolith (Laravel 13 + Filament v5 + PostgreSQL Strict ULID)  \n";
 
-        $md .= "---\n\n";
+        if (!empty($meta['ai_telemetry'])) {
+            $aiTel = $meta['ai_telemetry'];
+            $md .= "> **Multi-AI Engine**: `{$aiTel['provider_name']}` ({$aiTel['model']})  \n";
+            if (!empty($aiTel['fallback_occurred'])) {
+                $md .= "> **Failover Event**: `{$aiTel['notification']}`  \n";
+            }
+            if (!empty($aiTel['strategic_guidance'])) {
+                $md .= "> **AI Strategic Insights**: {$aiTel['strategic_guidance']}  \n";
+            }
+        }
+
+        $md .= "\n---\n\n";
 
         // 1. Executive Discovery
         $md .= "## 1. Executive Technical Discovery & Problem Statement\n\n";
@@ -4075,6 +4088,45 @@ PROMPT;
         $md .= "\n";
 
         return $md;
+    }
+
+    /**
+     * Synthesize high-impact AI strategic architecture guidance using Flagship PRD models
+     * (DeepSeek-R1 / Claude 3.7 Sonnet / Gemini 2.5 Pro / GPT-4o / Grok) with automatic failover.
+     */
+    protected static function synthesizeAiPrdTelemetry(
+        VisionBlueprint $blueprint,
+        string $businessName,
+        string $masalah,
+        string $tujuan,
+        ?string $preferredAiProvider = null
+    ): array {
+        $prompt = "You are a Principal Systems Solutions Architect writing an executive summary for an Ultimate PRD. Project: '{$businessName}'. Core Problem: '{$masalah}'. Success Metrics: '{$tujuan}'. Provide 2-3 concise sentences of deep strategic technical guidance on scalability, concurrency, and rapid deployment for this domain.";
+        $systemInstruction = "You are the world's leading Enterprise Systems Architect specializing in Laravel 13, Filament v5, PostgreSQL ULID, and high-concurrency systems.";
+
+        try {
+            $aiRes = \App\Services\Ai\MultiAiModelManager::executeWithFailover($prompt, $systemInstruction, 'prd', $preferredAiProvider);
+
+            return [
+                'provider' => $aiRes['provider'] ?? 'deepseek',
+                'provider_name' => $aiRes['provider_name'] ?? 'DeepSeek SOTA Reasoning',
+                'model' => $aiRes['model'] ?? 'deepseek-reasoner',
+                'fallback_occurred' => $aiRes['fallback_occurred'] ?? false,
+                'failed_attempts' => $aiRes['failed_attempts'] ?? [],
+                'notification' => $aiRes['notification'] ?? null,
+                'strategic_guidance' => $aiRes['text'] ?? null,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'provider' => 'deterministic_heuristic',
+                'provider_name' => 'Neriah Pro Deterministic Engine',
+                'model' => 'Standard Engineering Rules',
+                'fallback_occurred' => false,
+                'failed_attempts' => [],
+                'notification' => null,
+                'strategic_guidance' => 'Sistem dirancang dengan arsitektur Modern Monolith berkinerja tinggi, database PostgreSQL Strict ULID, dan keyset pagination O(1) untuk menjamin latensi rendah pada beban tinggi.',
+            ];
+        }
     }
 }
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\SecurityException;
 use App\Jobs\ProcessSecureDataset;
+use App\Services\Ai\MultiAiModelManager;
 use App\Services\MarkItDown\MarkItDownService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -21,10 +22,18 @@ class BlueprintDiscoveryService
      * @param string $rawIdeaText
      * @param array<UploadedFile> $uploadedFiles
      * @param string $locale 'id' | 'en'
+     * @param string|null $projectName
+     * @param string|null $preferredAiProvider
      * @return array
      * @throws \InvalidArgumentException
      */
-    public function synthesize(string $rawIdeaText, array $uploadedFiles = [], string $locale = 'id', ?string $projectName = null): array
+    public function synthesize(
+        string $rawIdeaText, 
+        array $uploadedFiles = [], 
+        string $locale = 'id', 
+        ?string $projectName = null,
+        ?string $preferredAiProvider = null
+    ): array
     {
         $isEn = ($locale === 'en');
 
@@ -110,6 +119,9 @@ class BlueprintDiscoveryService
 
         // 3. Extract & Synthesize Architectural Blueprint
         $result = $this->performArchitecturalAnalysis($rawIdeaText, $allDocsMarkdown, $corpusText, $fileSummaries, $isEn);
+
+        // 3.5 Deep AI Enhancement across Multi-AI Providers (DeepSeek-R1, Claude 3.7, Gemini 2.5, ChatGPT, Grok, Groq)
+        $result = $this->enhanceWithMultiAi($result, $corpusText, $locale, $preferredAiProvider);
 
         // If a business name was synthesized and differs from tempSlug, cleanly re-map folder
         $synthesizedName = $projectName ?: ($result['namaBisnis'] ?? null);
@@ -956,6 +968,109 @@ class BlueprintDiscoveryService
             'affected_fields' => $affectedFields,
             'data' => $data,
         ];
+    }
+
+    /**
+     * Deep Multi-Model AI Enhancement (DeepSeek-R1, Claude 3.7, Gemini 2.5, OpenAI, Grok, Groq)
+     * with automatic failover and token circuit breaker.
+     */
+    protected function enhanceWithMultiAi(array $result, string $corpus, string $locale, ?string $preferredProvider = null): array
+    {
+        $isEn = ($locale === 'en');
+        $langName = $isEn ? 'English' : 'Indonesian';
+
+        $prompt = <<<PROMPT
+You are a Principal Software Solutions Architect synthesizing a client's project vision.
+Analyze the following idea text and attached document contents:
+{$corpus}
+
+Provide an architectural synthesis in valid JSON format with keys:
+- "namaBisnis": Clean, professional project or company name.
+- "masalahUtama": Deep, compelling problem statement (pain points, root causes, inefficiencies).
+- "tujuanUtama": Clear measurable success metrics and target outcomes (KPIs, automation goals).
+- "targetAudiens": Key target audience demographics and user segments.
+- "aktorSistem": Numbered list of system actors and roles with RBAC responsibilities (e.g., 1. Superadmin, 2. Operator, 3. Customer).
+- "fiturWajib": Numbered list (1 to 6) of mission-critical Phase 1 MVP features.
+- "fiturTambahan": Numbered list (1 to 4) of Phase 2 roadmap features.
+- "alurKerja": Numbered step-by-step user and transaction workflow.
+- "kebutuhanIntegrasi": Comma-separated list of required third-party services and integrations (e.g. Midtrans, WhatsApp Gateway, Cloudflare R2, Postmark).
+- "outOfScope": Clear boundaries of what is explicitly excluded in Phase 1 to prevent scope creep.
+- "strategicInsight": 1-2 sentence executive architectural verdict or technical competitive advantage.
+
+Language: Strictly write values in {$langName}.
+Output JSON ONLY, no markdown fences or conversational text.
+PROMPT;
+
+        $systemInstruction = "You are an elite Enterprise Software Solutions Architect specializing in Laravel 13 Modern Monolith, PostgreSQL, and strict O(1) performance.";
+
+        try {
+            $aiRes = MultiAiModelManager::executeWithFailover($prompt, $systemInstruction, 'discovery', $preferredProvider);
+
+            if (!empty($aiRes['text'])) {
+                $jsonText = trim($aiRes['text']);
+                if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/', $jsonText, $m)) {
+                    $jsonText = trim($m[1]);
+                }
+                $parsed = json_decode($jsonText, true);
+
+                if (is_array($parsed)) {
+                    foreach (['namaBisnis', 'masalahUtama', 'tujuanUtama', 'targetAudiens', 'kebutuhanIntegrasi', 'outOfScope'] as $field) {
+                        if (!empty($parsed[$field]) && is_string($parsed[$field])) {
+                            $result[$field] = trim($parsed[$field]);
+                        }
+                    }
+
+                    foreach (['aktorSistem', 'fiturWajib', 'fiturTambahan', 'alurKerja'] as $listField) {
+                        if (!empty($parsed[$listField])) {
+                            if (is_array($parsed[$listField])) {
+                                $lines = [];
+                                foreach ($parsed[$listField] as $i => $item) {
+                                    $lines[] = ($i + 1) . '. ' . ltrim(preg_replace('/^\d+[\.\)]\s*/', '', (string)$item));
+                                }
+                                $result[$listField] = implode("\n", $lines);
+                            } elseif (is_string($parsed[$listField])) {
+                                $result[$listField] = trim($parsed[$listField]);
+                            }
+                        }
+                    }
+
+                    $result['_meta']['ai_telemetry'] = [
+                        'provider' => $aiRes['provider'],
+                        'provider_name' => $aiRes['provider_name'],
+                        'model' => $aiRes['model'],
+                        'fallback_occurred' => $aiRes['fallback_occurred'],
+                        'failed_attempts' => $aiRes['failed_attempts'],
+                        'notification' => $aiRes['notification'],
+                        'strategic_insight' => $parsed['strategicInsight'] ?? null,
+                    ];
+
+                    return $result;
+                }
+            }
+
+            $result['_meta']['ai_telemetry'] = [
+                'provider' => $aiRes['provider'] ?? 'deterministic_heuristic',
+                'provider_name' => $aiRes['provider_name'] ?? 'Neriah Pro Deterministic Engine',
+                'model' => $aiRes['model'] ?? 'Heuristic Rules',
+                'fallback_occurred' => false,
+                'failed_attempts' => $aiRes['failed_attempts'] ?? [],
+                'notification' => null,
+                'strategic_insight' => null,
+            ];
+        } catch (\Throwable $e) {
+            Log::warning('MultiAi enhancement notice: ' . $e->getMessage());
+            $result['_meta']['ai_telemetry'] = [
+                'provider' => 'deterministic_heuristic',
+                'provider_name' => 'Neriah Pro Deterministic Engine',
+                'model' => 'Heuristic Rules',
+                'fallback_occurred' => false,
+                'failed_attempts' => [],
+                'notification' => null,
+                'strategic_insight' => null,
+            ];
+        }
+
+        return $result;
     }
 
     protected function appendNumberedItem(string $existingText, string $newItem): string

@@ -20,6 +20,14 @@ Route::get('/document/{document}/sign', \App\Livewire\DocumentSignature::class)
     ->name('document.sign')
     ->middleware(['web']);
 
+// Multi-AI Model Orchestrator & Health Telemetry
+Route::get('/api/ai/models', function () {
+    return response()->json([
+        'success' => true,
+        'models' => \App\Services\Ai\MultiAiModelManager::getCatalog(),
+    ]);
+})->name('api.ai.models');
+
 // Project OS: Tech Proposal & Ultimate PRD Routes
 Route::post('/api/blueprint/analyze-idea', [BlueprintController::class, 'analyzeIdea'])->name('api.blueprint.analyze-idea')->middleware('throttle:15,1');
 Route::post('/api/blueprint/supplement-idea', [BlueprintController::class, 'supplementIdea'])->name('api.blueprint.supplement-idea')->middleware('throttle:30,1');

@@ -128,6 +128,7 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/api/cv-pro/interview/evaluate`: STAR method answer evaluation & scoring (POST).
 - `/api/cv-pro/outreach/generate`: Job application letter generator (Thank You, Follow-up, Cold Pitch) (POST).
 - `/api/cv-pro/upload-cv`: Microsoft MarkItDown multi-format CV scanner & parser (POST).
+- `/api/ai/models`: Endpoint GET telemetri kesehatan kuota dan katalog model AI multi-provider (`MultiAiModelManager::getCatalog`).
 - `/blueprint`: Halaman public kuesioner Project OS (`BlueprintController::create`).
 - `/api/blueprint/analyze-idea`: Endpoint POST sintesis ide awal & ekstraksi MarkItDown (`BlueprintController::analyzeIdea`).
 - `/api/blueprint/supplement-idea`: Endpoint POST asisten AI proaktif untuk membedah dan menempatkan ide tambahan klien (`BlueprintController::supplementIdea`).
@@ -158,6 +159,8 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 ## 5. Layanan Inti & Background Scheduler
 
+- **`App\Services\Ai\MultiAiModelManager`**:
+  Mesin orkestrator multi-AI terpadu dengan toleransi kegagalan otonom (Circuit Breaker & Automatic Graceful Token Failover): mengelola integrasi lintas penyedia (DeepSeek-R1, Anthropic Claude 3.7 Sonnet, Google Gemini 2.5 Pro/Flash, OpenAI GPT-4o/o3-mini, xAI Grok-2, Groq LPU Llama 3.3 70B, dan OpenRouter). Menyediakan telemetri real-time batas token (Sehat 🟢, Mendekati Limit 🟡, Limit Habis/Cooldown 🔴, dan badge Gratis 🏷️), membaca API key dinamis dari `CmsGlobalSetting` / admin panel, serta otomatis mengalihkan proses ke model alternatif sehat secara berjenjang saat terjadi error 429 atau kuota habis tanpa interupsi kegagalan pada pengguna.
 - **`App\Services\ScaffoldGeneratorService`**:
   Mesin sintesis boilerplate dan scaffold kode dari dokumen PRD/ERD: menghasilkan file `docker-compose.yml` (PHP 8.4, PostgreSQL 16, Redis 7, Nginx, Mailpit), `.env.example`, migrasi SQL `schema_complete.sql` lengkap dengan skema strict ULID (`VARCHAR(26)`), spesifikasi REST API OpenAPI 3.0 (`openapi.json` siap impor ke Postman/Swagger), routing web & API Laravel 13, serta Next.js App Router API route (`route.ts`). Mengemasnya ke dalam file `.zip` sekali klik via `ZipArchive`.
 - **`App\Services\PrdGeneratorService`**:

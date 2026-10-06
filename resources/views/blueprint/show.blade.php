@@ -1631,6 +1631,30 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $blueprint->kesiapan_aset ?? 'Sedang Disiapkan' }}</span>
                         </div>
                     </div>
+
+                    @php
+                        $aiTel = $blueprint->prd_content['meta']['ai_telemetry'] ?? null;
+                    @endphp
+                    @if($aiTel)
+                        <div class="mt-3 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 bg-emerald-500 rounded-none animate-pulse"></span>
+                                <span class="text-zinc-500 dark:text-zinc-400">ENGINE ARSITEKTUR:</span>
+                                <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $aiTel['provider_name'] ?? 'Multi-AI Orchestrator' }}</span>
+                                <span class="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-[10px] text-zinc-700 dark:text-zinc-300 font-bold border border-zinc-300 dark:border-zinc-700">{{ $aiTel['model'] ?? 'Flagship Reasoning' }}</span>
+                                @if(!empty($aiTel['fallback_occurred']))
+                                    <span class="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold border border-amber-500/30">FAILOVER AKTIF</span>
+                                @else
+                                    <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/30">🟢 KUOTA SEHAT</span>
+                                @endif
+                            </div>
+                            @if(!empty($aiTel['notification']))
+                                <span class="text-[11px] text-amber-600 dark:text-amber-400 font-sans italic">
+                                    {{ $aiTel['notification'] }}
+                                </span>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
             <!-- INTERACTIVE ARCHITECTURE INDEX & ACCORDION TABLE OF CONTENTS (QUICK JUMP) -->

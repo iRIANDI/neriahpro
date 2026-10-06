@@ -67,7 +67,17 @@ const TRANSLATIONS = {
     autoSaveSaving: "Menyimpan ke Cloud...",
     autoSaveLocal: "Tersimpan di Perangkat",
     readinessLabel: "Skor Kesiapan Spesifikasi:",
-    aiTierLabel: "AI Tier: Gemini Flash (Efisien & Zero-Boncos)",
+    aiTierLabel: "AI Multi-Model: Auto-Failover Shield Aktif",
+    aiSelectorTitle: "MULTI-AI ORCHESTRATOR // AUTO-FAILOVER TOKEN SHIELD",
+    aiSelectorSubtitle: "Pilih model AI spesifik atau gunakan Auto-Failover untuk proteksi otomatis saat limit habis.",
+    aiBadgeFree: "GRATIS",
+    aiBadgeHealthy: "SEHAT",
+    aiBadgeWarning: "MENDEKATI LIMIT",
+    aiBadgeExhausted: "LIMIT HABIS (COOLDOWN)",
+    aiBadgeUnconfigured: "BELUM ADA KEY",
+    aiBestForPrdBadge: "👑 Terbaik untuk PRD Ultimate",
+    aiAutoFailoverOption: "⚡ Auto-Failover (Direkomendasikan: Mengalir Otomatis jika Token Habis)",
+    aiAutoFailoverHelper: "Jika model pilihan kehabisan token (Rate Limit 429), sistem otomatis memunculkan helper dan beralih ke model sehat berikutnya tanpa gagal.",
 
     // Quick Idea & MarkItDown Studio
     studioToggleOpen: "Tutup Ruang Ide & Dokumen MarkItDown",
@@ -176,7 +186,17 @@ const TRANSLATIONS = {
     autoSaveSaving: "Saving to Cloud...",
     autoSaveLocal: "Saved on Device",
     readinessLabel: "Specification Readiness Score:",
-    aiTierLabel: "AI Tier: Gemini Flash (Token-Efficient & Zero-Waste)",
+    aiTierLabel: "Multi-AI Orchestrator: Auto-Failover Shield Active",
+    aiSelectorTitle: "MULTI-AI ORCHESTRATOR // AUTO-FAILOVER TOKEN SHIELD",
+    aiSelectorSubtitle: "Select specific AI model or keep Auto-Failover to prevent token exhaustion downtime.",
+    aiBadgeFree: "FREE TIER",
+    aiBadgeHealthy: "HEALTHY",
+    aiBadgeWarning: "LOW LIMIT",
+    aiBadgeExhausted: "TOKEN EXHAUSTED",
+    aiBadgeUnconfigured: "NO API KEY",
+    aiBestForPrdBadge: "👑 Ultimate for PRD",
+    aiAutoFailoverOption: "⚡ Auto-Failover (Recommended: Cascades automatically if token runs out)",
+    aiAutoFailoverHelper: "If the chosen model hits quota exhaustion (429 Rate Limit), the system issues a helper notice and auto-routes to the next healthy model.",
 
     // Quick Idea & MarkItDown Studio
     studioToggleOpen: "Collapse Idea Studio & Documents",
@@ -396,6 +416,22 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [analysisStep, setAnalysisStep] = useState('');
   const [analysisError, setAnalysisError] = useState(null);
   const [copySuccess, setCopySuccess] = useState(false);
+
+  // Multi-AI Model Selection & Token Limit Shield
+  const [aiModels, setAiModels] = useState({});
+  const [selectedAiModel, setSelectedAiModel] = useState('auto');
+  const [aiTelemetry, setAiTelemetry] = useState(() => initialData?._meta?.ai_telemetry || null);
+
+  useEffect(() => {
+    fetch('/api/ai/models')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.models) {
+          setAiModels(data.models);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Proactive Guidance & Co-Pilot States
   const [proactiveSuggestions, setProactiveSuggestions] = useState(() => {
@@ -1380,6 +1416,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       formDataUpload.append('_hp_check', honeypot);
       formDataUpload.append('_website', honeypotWebsite);
       formDataUpload.append('locale', lang);
+      formDataUpload.append('ai_model', selectedAiModel);
       if (formData.namaBisnis && formData.namaBisnis.trim()) {
         formDataUpload.append('nama_bisnis', formData.namaBisnis.trim());
       }
@@ -1407,6 +1444,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
       if (!response.ok || !result.success) {
         throw new Error(result.message || (lang === 'en' ? 'Failed to process idea.' : 'Gagal memproses ide.'));
+      }
+
+      if (result.ai_telemetry) {
+        setAiTelemetry(result.ai_telemetry);
+      }
+
+      if (result.notification) {
+        showLocalToast('warning', result.notification, 'AI TOKEN FAILOVER HELPER');
       }
 
       // Populate synthesized blueprint data into all 25 fields
@@ -2578,6 +2623,151 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   {t.tplRental}
                 </button>
               </div>
+            </div>
+
+            {/* Multi-AI Model Selection & Token Limit Shield */}
+            <div className="border border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/80 p-4 rounded-none">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                    <Cpu className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block">
+                      {t.aiSelectorTitle}
+                    </span>
+                    <span className="text-xs text-zinc-600 dark:text-zinc-400 font-sans">
+                      {t.aiSelectorSubtitle}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                  <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase tracking-wider">
+                    CIRCUIT BREAKER: AKTIF
+                  </span>
+                </div>
+              </div>
+
+              {/* Model Select Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-2.5">
+                {/* Option: Auto-Failover */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedAiModel('auto')}
+                  className={`p-2.5 text-left border rounded-none transition flex flex-col justify-between ${
+                    selectedAiModel === 'auto'
+                      ? 'bg-emerald-500/15 border-emerald-500 text-zinc-900 dark:text-zinc-100 font-bold shadow-xs'
+                      : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="text-xs font-mono font-bold flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-emerald-500" />
+                        Auto-Failover
+                      </span>
+                      <span className="text-[9px] font-mono px-1.5 py-0.2 bg-emerald-500 text-black font-black uppercase">
+                        REKOMENDASI
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight">
+                      Mengalir otomatis ke DeepSeek, Claude, Gemini, ChatGPT, Grok, Groq jika token habis.
+                    </p>
+                  </div>
+                </button>
+
+                {/* Dynamic models from getCatalog() */}
+                {Object.entries(aiModels).map(([key, info]) => {
+                  const isSelected = selectedAiModel === key;
+                  const isExhausted = info.status === 'exhausted';
+                  const isWarning = info.status === 'warning';
+                  const isHealthy = info.status === 'healthy';
+                  const isFree = info.is_free;
+                  const isUltimatePrd = key === 'deepseek' || key === 'anthropic';
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setSelectedAiModel(key)}
+                      className={`p-2.5 text-left border rounded-none transition flex flex-col justify-between ${
+                        isSelected
+                          ? 'bg-emerald-500/15 border-emerald-500 text-zinc-900 dark:text-zinc-100 font-bold shadow-xs'
+                          : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="text-xs font-mono font-bold truncate">
+                            {info.name}
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {isFree && (
+                              <span className="text-[9px] font-mono font-bold px-1 py-0.2 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
+                                GRATIS
+                              </span>
+                            )}
+                            <span
+                              className={`text-[9px] font-mono font-bold px-1.5 py-0.2 border ${
+                                isHealthy
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                  : isWarning
+                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                                  : isExhausted
+                                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                                  : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'
+                              }`}
+                            >
+                              {isHealthy ? '🟢 SEHAT' : isWarning ? '🟡 MENIPIS' : isExhausted ? '🔴 HABIS' : '⚪ READY'}
+                            </span>
+                          </div>
+                        </div>
+                        {isUltimatePrd && (
+                          <span className="text-[9px] font-mono text-amber-600 dark:text-amber-400 font-bold block mb-1">
+                            {t.aiBestForPrdBadge}
+                          </span>
+                        )}
+                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-tight">
+                          {info.recommended_for}
+                        </p>
+                      </div>
+                      {isExhausted && info.cooldown_sec > 0 && (
+                        <span className="text-[9px] font-mono text-rose-500 mt-1 block">
+                          Cooldown: {Math.ceil(info.cooldown_sec / 60)}m (Auto-Failover Aktif)
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Active Failover / Telemetry Alert if available */}
+              {aiTelemetry && aiTelemetry.notification && (
+                <div className="mt-2.5 p-2.5 bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-mono flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold uppercase tracking-wider block mb-0.5">INFO FAILOVER OTOMATIS:</span>
+                    <span>{aiTelemetry.notification}</span>
+                  </div>
+                </div>
+              )}
+
+              {aiTelemetry && aiTelemetry.strategic_insight && (
+                <div className="mt-2.5 p-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-mono flex items-start gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold uppercase tracking-wider block mb-0.5">
+                      AI ARCHITECTURAL VERDICT ({aiTelemetry.provider_name} - {aiTelemetry.model}):
+                    </span>
+                    <span className="italic font-sans">"{aiTelemetry.strategic_insight}"</span>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 mt-2 flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span>{t.aiAutoFailoverHelper}</span>
+              </p>
             </div>
 
             {/* Brain Dump Textarea */}

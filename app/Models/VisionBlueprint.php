@@ -89,9 +89,9 @@ class VisionBlueprint extends Model
     /**
      * Generate or regenerate the Ultimate PRD for this blueprint.
      */
-    public function generateAndSavePrd(): array
+    public function generateAndSavePrd(?string $preferredAiProvider = null): array
     {
-        $content = \App\Services\PrdGeneratorService::generate($this);
+        $content = \App\Services\PrdGeneratorService::generate($this, $preferredAiProvider);
         $this->update(['prd_content' => $content]);
 
         // Partitioned Project Storage: Save official PRD Markdown into dedicated project folder

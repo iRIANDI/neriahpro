@@ -27,12 +27,24 @@ class VisionBlueprintInfolist
                             ->placeholder('-'),
                         TextEntry::make('project_status')
                             ->badge()
-                            ->color(fn (string $state): string => match ($state) {
-                                'Prospecting' => 'gray',
-                                'Contract Signed' => 'warning',
-                                'In Progress' => 'info',
-                                'Completed' => 'success',
+                            ->color(fn (?string $state): string => match ($state) {
+                                'Prospecting', 'Draft' => 'gray',
+                                'Contract Created' => 'warning',
+                                'Awaiting DP Payment', 'Contract Signed' => 'info',
+                                'Active Sprint', 'In Development (DP Paid)', 'In Progress' => 'success',
+                                'In Development (Free Grant)' => 'purple',
+                                'Completed' => 'teal',
                                 default => 'primary',
+                            })
+                            ->icon(fn (?string $state): ?string => match ($state) {
+                                'Prospecting', 'Draft' => 'heroicon-o-document-text',
+                                'Contract Created' => 'heroicon-o-pencil-square',
+                                'Awaiting DP Payment' => 'heroicon-o-credit-card',
+                                'Contract Signed' => 'heroicon-o-document-check',
+                                'Active Sprint', 'In Development (DP Paid)', 'In Progress' => 'heroicon-o-bolt',
+                                'In Development (Free Grant)' => 'heroicon-o-gift',
+                                'Completed' => 'heroicon-o-check-badge',
+                                default => 'heroicon-o-clock',
                             }),
                         IconEntry::make('is_published')
                             ->label('Status Akses Publik')

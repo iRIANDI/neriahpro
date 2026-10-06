@@ -43,10 +43,13 @@ class VisionBlueprintForm
                                         Select::make('project_status')
                                             ->label('Status Proyek')
                                             ->options([
-                                                'Prospecting' => 'Prospecting',
-                                                'Contract Signed' => 'Contract Signed',
-                                                'In Progress' => 'In Progress',
-                                                'Completed' => 'Completed',
+                                                'Prospecting' => 'Prospecting (Draft PRD)',
+                                                'Contract Created' => 'Contract Created (Menunggu TTD Klien)',
+                                                'Awaiting DP Payment' => 'Awaiting DP Payment (Menunggu DP 50%)',
+                                                'Active Sprint' => 'Active Sprint (Dalam Pengerjaan)',
+                                                'In Development (DP Paid)' => 'In Development (DP Paid)',
+                                                'In Development (Free Grant)' => 'In Development (Free Grant)',
+                                                'Completed' => 'Completed (Selesai)',
                                             ])
                                             ->required()
                                             ->default('Prospecting'),

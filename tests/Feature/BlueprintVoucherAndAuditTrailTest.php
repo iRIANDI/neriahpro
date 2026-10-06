@@ -638,5 +638,45 @@ class BlueprintVoucherAndAuditTrailTest extends TestCase
             ->assertJson(['success' => true]);
         $this->assertNotEmpty($cartSnapRes->json('token'));
     }
+
+    public function test_umkm_and_enterprise_vouchers_seeded_properly(): void
+    {
+        // 1. UMKM Vouchers
+        $umkm100 = BlueprintVoucher::where('code', 'UMKM-DIGITAL-100')->first();
+        $this->assertNotNull($umkm100);
+        $this->assertEquals('free_bypass', $umkm100->discount_type);
+        $this->assertTrue($umkm100->isValid());
+        $this->assertEquals(25, $umkm100->max_uses);
+
+        $umkm50 = BlueprintVoucher::where('code', 'UMKM-SUBSIDI-50')->first();
+        $this->assertNotNull($umkm50);
+        $this->assertEquals('percent', $umkm50->discount_type);
+        $this->assertEquals(50.00, (float) $umkm50->discount_value);
+        $this->assertTrue($umkm50->isValid());
+
+        $umkm5m = BlueprintVoucher::where('code', 'UMKM-CASHBACK-5M')->first();
+        $this->assertNotNull($umkm5m);
+        $this->assertEquals('fixed', $umkm5m->discount_type);
+        $this->assertEquals(5000000.00, (float) $umkm5m->discount_value);
+        $this->assertTrue($umkm5m->isValid());
+
+        // 2. Enterprise Vouchers
+        $corp15m = BlueprintVoucher::where('code', 'CORP-INNOVATION-15M')->first();
+        $this->assertNotNull($corp15m);
+        $this->assertEquals('fixed', $corp15m->discount_type);
+        $this->assertEquals(15000000.00, (float) $corp15m->discount_value);
+        $this->assertTrue($corp15m->isValid());
+
+        $corp25 = BlueprintVoucher::where('code', 'ENTERPRISE-SPRINT-25')->first();
+        $this->assertNotNull($corp25);
+        $this->assertEquals('percent', $corp25->discount_type);
+        $this->assertEquals(25.00, (float) $corp25->discount_value);
+        $this->assertTrue($corp25->isValid());
+
+        $corpPilot = BlueprintVoucher::where('code', 'CORP-PILOT-SANDBOX')->first();
+        $this->assertNotNull($corpPilot);
+        $this->assertEquals('free_bypass', $corpPilot->discount_type);
+        $this->assertTrue($corpPilot->isValid());
+    }
 }
 

@@ -23,6 +23,7 @@ class CvProController extends Controller
             $user = auth()->user();
             $isSuperAdmin = $user && ($user->hasRole('super_admin') || $user->email === 'yoseph.iriandi.tambunan@gmail.com');
             if (! $isSuperAdmin) {
+                header('X-Robots-Tag: noindex, nofollow, noarchive');
                 abort(404);
             }
         }
@@ -158,6 +159,7 @@ class CvProController extends Controller
         $isMidtransStrict = (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? false);
 
         if ((! $isCvProEnabled || $isMidtransStrict) && ! auth()->user()?->isSuperAdmin()) {
+            header('X-Robots-Tag: noindex, nofollow, noarchive');
             abort(404);
         }
 

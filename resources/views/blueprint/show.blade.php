@@ -66,6 +66,31 @@
                 setTimeout(() => window.reRenderActiveMermaid(), 50);
             }
         }
+
+        window.printPrdDocument = function() {
+            const wasDark = document.documentElement.classList.contains('dark');
+            if (wasDark) {
+                document.documentElement.classList.remove('dark');
+            }
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => {
+                    if (wasDark && localStorage.getItem('neriah_theme') !== 'light') {
+                        document.documentElement.classList.add('dark');
+                    }
+                }, 300);
+            }, 120);
+        };
+
+        window.addEventListener('beforeprint', () => {
+            document.documentElement.classList.remove('dark');
+        });
+
+        window.addEventListener('afterprint', () => {
+            if (localStorage.getItem('neriah_theme') === 'dark' || (!localStorage.getItem('neriah_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        });
     </script>
 
     <style>
@@ -76,9 +101,55 @@
         #goog-gt-tt { display: none !important; }
         .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
         @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; color: black !important; }
-            .print-break-inside-avoid { break-inside: avoid; }
+            .no-print, [class*="no-print"], header, aside, footer, #goog-gt-tt, .skiptranslate, .goog-te-banner-frame, .fixed {
+                display: none !important;
+            }
+            html, body {
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                color: #0f172a !important;
+                font-size: 10pt !important;
+                line-height: 1.45 !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            *, *:before, *:after {
+                color: #0f172a !important;
+                text-shadow: none !important;
+                box-shadow: none !important;
+            }
+            .bg-white, .dark\:bg-zinc-900, .dark\:bg-zinc-950, .bg-zinc-900, .bg-zinc-950, .bg-zinc-800, .dark\:bg-zinc-800 {
+                background-color: #ffffff !important;
+                border-color: #cbd5e1 !important;
+            }
+            pre, code, th, .bg-zinc-100, .bg-zinc-50, .dark\:bg-zinc-800\/50, .bg-zinc-900\/50 {
+                background-color: #f8fafc !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                border-color: #cbd5e1 !important;
+            }
+            .max-w-\[1480px\], main, .max-w-4xl, .lg\:max-w-5xl {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+            section, article, .print-break-inside-avoid, table, tr, pre, .border {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            svg, img {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+            #section-10 {
+                display: block !important;
+                background-color: #ffffff !important;
+                border: 2px solid #059669 !important;
+                color: #0f172a !important;
+            }
         }
         .custom-prd-scrollbar {
             scrollbar-width: thin;
@@ -1080,16 +1151,16 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 @endif
 
                 <!-- Unified Document Actions: Print, PDF, MD -->
-                <div class="hidden sm:inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
-                    <button type="button" onclick="window.print()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Cetak PRD">
+                <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
+                    <button type="button" onclick="window.printPrdDocument()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Cetak PRD (Print)">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                         <span class="hidden md:inline">PRINT</span>
                     </button>
-                    <a href="{{ route('blueprint.download-pdf', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh PDF">
+                    <a href="{{ route('blueprint.download-pdf', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Dokumen PDF Resmi">
                         <span>PDF</span>
                     </a>
-                    <a href="{{ route('blueprint.download-md', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Markdown">
-                        <span>MD</span>
+                    <a href="{{ route('blueprint.download-md', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Markdown Asli (.MD)">
+                        <span class="hidden sm:inline">MD</span>
                     </a>
                 </div>
 
@@ -5606,7 +5677,7 @@ class ProcessSecureDataset implements ShouldQueue
             </section>
 
             <!-- SECTION 10: SCOPE FREEZE, DIGITAL CONTRACT & DP MIDTRANS (CRUCIAL) -->
-            <section id="section-10" class="bg-zinc-900 text-white border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none no-print scroll-mt-24">
+            <section id="section-10" class="bg-zinc-900 text-white border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none scroll-mt-24">
                 <!-- Staging Sandbox Environment Banner (If Provisioned) -->
                 @if($blueprint->staging_url)
                     <div class="mb-6 p-4 sm:p-5 bg-gradient-to-r from-emerald-950/80 via-zinc-950 to-zinc-950 border border-emerald-500 text-zinc-200">
@@ -5788,7 +5859,7 @@ class ProcessSecureDataset implements ShouldQueue
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-emerald-500/20">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-emerald-500/20 no-print">
                             @php
                                 $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
                             @endphp
@@ -5835,7 +5906,7 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
                 @elseif($blueprint->isContractSigned())
                     <!-- KONTRAK SUDAH DITANDATANGANI TAPI BELUM BAYAR DP -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 no-print">
                         @php
                             $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
                         @endphp
@@ -5873,7 +5944,7 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
                 @else
                     <!-- DRAFT: BELUM TANDATANGAN & BELUM BAYAR DP -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 no-print">
                         <form method="POST" action="{{ route('blueprint.generate-contract', $blueprint->slug) }}" class="m-0">
                             @csrf
                             <input type="hidden" name="tier" :value="selectedTier">

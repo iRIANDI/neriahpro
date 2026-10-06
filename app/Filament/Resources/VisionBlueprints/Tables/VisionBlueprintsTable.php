@@ -93,6 +93,13 @@ class VisionBlueprintsTable
                     ->url(fn ($record) => $record->public_url)
                     ->openUrlInNewTab(),
 
+                Action::make('download_pdf')
+                    ->label('Cetak PRD (PDF)')
+                    ->icon('heroicon-o-printer')
+                    ->color('success')
+                    ->url(fn ($record) => route('blueprint.download-pdf', $record->slug))
+                    ->openUrlInNewTab(),
+
                 Action::make('toggle_publish')
                     ->label(fn ($record) => $record->is_published ? 'Set Privat' : 'Set Publik')
                     ->icon(fn ($record) => $record->is_published ? 'heroicon-o-lock-closed' : 'heroicon-o-globe-alt')

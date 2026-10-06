@@ -108,5 +108,9 @@ Route::prefix('api/cv-pro')->group(function () {
     Route::post('/topup', [\App\Http\Controllers\Api\CvProApiController::class, 'topup'])->middleware('throttle:30,1');
 });
 
+// Dynamic Search Engine Architecture: Sitemap.xml & Robots.txt
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [\App\Http\Controllers\SitemapController::class, 'robots'])->name('robots');
+
 // Fallback dynamic route for CMS pages (Must be at the very bottom)
 Route::get('/{slug?}', [PageController::class, 'show'])->where('slug', '.*');

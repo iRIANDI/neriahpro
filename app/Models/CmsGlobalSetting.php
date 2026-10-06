@@ -87,6 +87,7 @@ class CmsGlobalSetting extends Model
             \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
             \Illuminate\Support\Facades\Cache::forget('cms_global_settings_data');
             \Illuminate\Support\Facades\Cache::forget('cms_global_setting_' . $setting->key);
+            \App\Http\Controllers\SitemapController::syncRobotsTxtFile();
         });
 
         static::deleted(function ($setting) {
@@ -98,6 +99,7 @@ class CmsGlobalSetting extends Model
             \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
             \Illuminate\Support\Facades\Cache::forget('cms_global_settings_data');
             \Illuminate\Support\Facades\Cache::forget('cms_global_setting_' . $setting->key);
+            \App\Http\Controllers\SitemapController::syncRobotsTxtFile();
         });
     }
 }

@@ -13,6 +13,17 @@ class PageController extends Controller
     {
         $slug = (empty($slug) || $slug === '/') ? 'home' : ltrim($slug, '/');
 
+        $globalSettings = CmsGlobalSetting::getAllCached();
+        $isCvProEnabled = (bool) ($globalSettings['feature_enable_cv_pro']->value ?? true);
+        $isCvPricingEnabled = (bool) ($globalSettings['feature_enable_cv_pricing']->value ?? true);
+        $isMidtransStrict = (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? false);
+
+        // Guard /pricing when CV Pro is deactivated in Admin: immediately return 404 with noindex header
+        if ($slug === 'pricing' && (! $isCvProEnabled || ! $isCvPricingEnabled || $isMidtransStrict)) {
+            header('X-Robots-Tag: noindex, nofollow, noarchive');
+            abort(404);
+        }
+
         // Auto-seed superadmin, midtrans reviewer, and workflow data if missing
         try {
             if (\App\Models\User::where('email', 'reviewer.midtrans@neriahpro.com')->doesntExist()) {

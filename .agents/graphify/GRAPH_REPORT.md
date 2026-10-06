@@ -87,7 +87,7 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 | `ResumeResource` | Career & CV Pro | Resume management, ATS score breakdown, Skills tags, Live view link | `ResumeForm`, `ResumesTable` |
 | `InterviewSessionResource` | Career & CV Pro | Mock interview recordings, STAR analysis, Confidence score, Transcript audit | `InterviewSessionsTable`, Infolist |
 | `SecurityThreatResource` | System & Security | AI-Shield threat interception dashboard, RCE monitoring, IP quarantine & unblock | `SecurityThreatsTable`, Infolist, `SecurityThreatStatsWidget` |
-| `VisionBlueprintResource` | Project Management | Discovery questionnaire, Sintesis PRD, Publikasi URL publik, Ikat Kontrak Digital | `VisionBlueprintForm`, `VisionBlueprintsTable` |
+| `VisionBlueprintResource` | Project Management | Discovery questionnaire, Sintesis PRD, Publikasi URL publik, Ikat Kontrak Digital, Cetak PRD (PDF) | `VisionBlueprintForm`, `VisionBlueprintsTable` |
 | `BlueprintVoucherResource` | Project Management | Voucher kode promo & pelayanan gratis bypass 100% (Rp 0), strict RBAC khusus Yoseph | `BlueprintVoucherForm`, `BlueprintVouchersTable` |
 | `DomainHostingAssetResource` | Project Management | Pencatatan domain/hosting, Expiration badge, Auto-renew, Widget analitik, Pengingat harian | `DomainHostingAssetForm`, `DomainHostingAssetsTable`, `DomainHostingStatsWidget` |
 | `DocumentResource` | Contracts & Legal | Digital contract viewer, Scope lock status, Midtrans order ID, Signature pad | `DocumentForm`, `DocumentsTable` |
@@ -148,6 +148,8 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/cart/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Cart DP checkout multi-item dengan kalkulasi subsidi voucher (`CartController::getSnapToken`).
 - `/document/{document}/preview`: Preview draft kontrak kerja sama digital.
 - `/document/{document}/sign`: Livewire signing page (`DocumentSignature`, Dual-Locale `id`/`en`, Dark/Light Mode, Printer-ready formatting, Dynamic Project OS clauses via `ContractLegalHelper`).
+- `/sitemap.xml`: Dynamic XML Sitemap terintegrasi status saklar feature flags (`SitemapController::index`).
+- `/robots.txt`: Dynamic robots.txt dengan proteksi crawl otomatis saat CV Pro dinonaktifkan (`SitemapController::robots`).
 - `/lang/{locale}`: Switcher bahasa (`id` / `en`) dengan persistensi session dan cookie.
 - `/admin`: Panel admin Filament v5 dengan database notifications (PostgreSQL `jsonb` schema).
 - `/admin/login`: Customized Enterprise Login Portal (`App\Filament\Pages\Auth\Login`) dengan Vision & Mission Pillars, 1-Click Demo Credential Assistant, dan System Telemetry (Split-Screen Desktop & Responsive Portrait).

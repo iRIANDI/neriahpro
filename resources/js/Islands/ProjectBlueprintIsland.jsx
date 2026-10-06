@@ -1450,8 +1450,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         setAiTelemetry(result.ai_telemetry);
       }
 
-      if (result.notification) {
-        showLocalToast('warning', result.notification, 'AI TOKEN FAILOVER HELPER');
+      if (result.notification && result.ai_telemetry?.fallback_occurred) {
+        showLocalToast('warning', result.notification, 'AI FAILOVER STATUS');
       }
 
       // Populate synthesized blueprint data into all 25 fields

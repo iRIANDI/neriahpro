@@ -184,11 +184,12 @@ class MultiAiModelManager
                 if (!empty($resultText)) {
                     self::recordSuccess($provider);
 
-                    $fallbackOccurred = count($failedAttempts) > 0;
+                    $realFailures = array_filter($failedAttempts, fn($f) => $f['reason'] !== 'API Key belum dikonfigurasi');
+                    $fallbackOccurred = count($realFailures) > 0;
                     $notification = null;
 
                     if ($fallbackOccurred) {
-                        $failedNames = implode(', ', array_map(fn($f) => strtoupper($f['provider']), $failedAttempts));
+                        $failedNames = implode(', ', array_map(fn($f) => strtoupper($f['provider']), $realFailures));
                         $notification = "Model [{$failedNames}] tidak tersedia / habis token. Sistem otomatis mengalihkan sintesis ke [{$providerConfig['name']} - {$modelName}]!";
                     }
 
@@ -212,16 +213,22 @@ class MultiAiModelManager
             }
         }
 
-        // All remote AI providers were exhausted, in cooldown, or failed
+        // All configured remote AI providers were exhausted, in cooldown, or failed
+        $realFailures = array_filter($failedAttempts, fn($f) => $f['reason'] !== 'API Key belum dikonfigurasi');
+        $fallbackOccurred = count($realFailures) > 0;
+        $notification = $fallbackOccurred
+            ? 'Seluruh remote AI model yang terkonfigurasi sedang cooldown / batas token tercapai. Sistem otomatis menggunakan Deterministic Architecture Engine berstandar industri tanpa downtime.'
+            : null;
+
         return [
             'success' => false,
             'text' => null,
             'provider' => 'deterministic_heuristic',
             'provider_name' => 'Neriah Pro Deterministic Architecture Engine',
             'model' => 'expert-rule-engine-v1',
-            'fallback_occurred' => true,
+            'fallback_occurred' => $fallbackOccurred,
             'failed_attempts' => $failedAttempts,
-            'notification' => 'Seluruh remote AI model sedang cooldown / batas token tercapai. Sistem otomatis menggunakan Deterministic Architecture Engine berstandar industri tanpa downtime.',
+            'notification' => $notification,
         ];
     }
 

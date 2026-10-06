@@ -1717,21 +1717,31 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         $aiTel = $blueprint->prd_content['meta']['ai_telemetry'] ?? null;
                     @endphp
                     @if($aiTel)
+                        @php
+                            $isDeterministic = ($aiTel['provider'] ?? '') === 'deterministic_heuristic' || str_contains(strtolower($aiTel['provider_name'] ?? ''), 'deterministic');
+                            $hasRealFailover = !empty($aiTel['fallback_occurred']) && !$isDeterministic;
+                        @endphp
                         <div class="mt-3 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono">
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
                                 <span class="w-2 h-2 bg-emerald-500 rounded-none animate-pulse"></span>
                                 <span class="text-zinc-500 dark:text-zinc-400">ENGINE ARSITEKTUR:</span>
                                 <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $aiTel['provider_name'] ?? 'Multi-AI Orchestrator' }}</span>
                                 <span class="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-[10px] text-zinc-700 dark:text-zinc-300 font-bold border border-zinc-300 dark:border-zinc-700">{{ $aiTel['model'] ?? 'Flagship Reasoning' }}</span>
-                                @if(!empty($aiTel['fallback_occurred']))
+                                @if($hasRealFailover)
                                     <span class="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold border border-amber-500/30">FAILOVER AKTIF</span>
+                                @elseif($isDeterministic)
+                                    <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/30">STANDAR DETERMINISTIK AKTIF</span>
                                 @else
                                     <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/30">🟢 KUOTA SEHAT</span>
                                 @endif
                             </div>
-                            @if(!empty($aiTel['notification']))
+                            @if($hasRealFailover && !empty($aiTel['notification']))
                                 <span class="text-[11px] text-amber-600 dark:text-amber-400 font-sans italic">
                                     {{ $aiTel['notification'] }}
+                                </span>
+                            @elseif($isDeterministic)
+                                <span class="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans">
+                                    Sistem beroperasi optimal menggunakan Deterministic Architecture Engine berstandar industri.
                                 </span>
                             @endif
                         </div>
@@ -2054,30 +2064,30 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             </div>
 
             <!-- DEVELOPER AI EXECUTION COCKPIT & SPRINT PLAYBOOK (HIGH-RETENTION HELPER FOR YOSEPH) -->
-            <div class="bg-zinc-900 text-white border-2 border-emerald-500/60 p-6 sm:p-8 mb-8 rounded-none shadow-xl print-break-inside-avoid">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-4 mb-6">
+            <div class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-2 border-emerald-500/60 p-6 sm:p-8 mb-8 rounded-none shadow-sm print-break-inside-avoid">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
                     <div class="flex items-start gap-3">
                         <span class="w-9 h-9 bg-emerald-500 text-black font-mono font-bold text-sm flex items-center justify-center shrink-0 rounded-none">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
                         </span>
                         <div>
                             <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold tracking-widest uppercase border border-emerald-500/40">
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold tracking-widest uppercase border border-emerald-500/40">
                                     DEV PLAYBOOK // KHUSUS DEVELOPER
                                 </span>
-                                <span class="text-[10px] text-zinc-400 font-mono hidden sm:inline">HIGH-RETENTION GUIDE</span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono hidden sm:inline">HIGH-RETENTION GUIDE</span>
                             </div>
-                            <h2 class="text-lg sm:text-xl font-black uppercase tracking-tight text-white mt-1">
+                            <h2 class="text-lg sm:text-xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mt-1">
                                 Panduan Eksekusi AI Coding Agent Dalam IDE (Start to Finish)
                             </h2>
-                            <p class="text-zinc-400 text-xs font-mono mt-0.5">
+                            <p class="text-zinc-600 dark:text-zinc-400 text-xs font-mono mt-0.5">
                                 Prosedur baku mengumpankan PRD ke Cursor / Claude Code / Antigravity agar tepat sasaran tanpa halusinasi.
                             </p>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button type="button" @click="devPlaybookOpen = !devPlaybookOpen" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-mono uppercase font-bold border border-zinc-700 transition flex items-center gap-1.5">
+                        <button type="button" @click="devPlaybookOpen = !devPlaybookOpen" class="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-mono uppercase font-bold border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5">
                             <span x-text="devPlaybookOpen ? 'SEMBUNYIKAN DETAIL' : 'TAMPILKAN PANDUAN'"></span>
                             <svg class="w-3.5 h-3.5 transition-transform" :class="devPlaybookOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
@@ -2087,136 +2097,136 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 <div x-show="devPlaybookOpen" x-transition.opacity.duration.200ms class="space-y-6">
                     <!-- Phase Navigation Buttons -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-xs">
-                        <button type="button" @click="activeDevPhase = 1" :class="activeDevPhase === 1 ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-750'" class="p-3 text-left border border-zinc-700 transition flex items-center justify-between">
+                        <button type="button" @click="activeDevPhase = 1" :class="activeDevPhase === 1 ? 'bg-emerald-500 text-black font-bold border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-750 border-zinc-300 dark:border-zinc-700'" class="p-3 text-left border transition flex items-center justify-between">
                             <span>1. PRODUKSI APLIKASI</span>
                             <span class="text-[10px] opacity-75">Vertical Slice</span>
                         </button>
-                        <button type="button" @click="activeDevPhase = 2" :class="activeDevPhase === 2 ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-750'" class="p-3 text-left border border-zinc-700 transition flex items-center justify-between">
+                        <button type="button" @click="activeDevPhase = 2" :class="activeDevPhase === 2 ? 'bg-emerald-500 text-black font-bold border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-750 border-zinc-300 dark:border-zinc-700'" class="p-3 text-left border transition flex items-center justify-between">
                             <span>2. QUALITY TESTING GATE</span>
                             <span class="text-[10px] opacity-75">Audit & Test</span>
                         </button>
-                        <button type="button" @click="activeDevPhase = 3" :class="activeDevPhase === 3 ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-750'" class="p-3 text-left border border-zinc-700 transition flex items-center justify-between">
+                        <button type="button" @click="activeDevPhase = 3" :class="activeDevPhase === 3 ? 'bg-emerald-500 text-black font-bold border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-750 border-zinc-300 dark:border-zinc-700'" class="p-3 text-left border transition flex items-center justify-between">
                             <span>3. DELIVERY & HANDOFF</span>
                             <span class="text-[10px] opacity-75">Deploy & Scope Lock</span>
                         </button>
                     </div>
 
                     <!-- Phase 1 Content -->
-                    <div x-show="activeDevPhase === 1" class="bg-black/40 border border-zinc-800 p-5 space-y-4 font-mono text-xs leading-relaxed">
-                        <div class="flex items-center gap-2 text-emerald-400 font-bold uppercase tracking-wider text-xs border-b border-zinc-800 pb-2">
+                    <div x-show="activeDevPhase === 1" class="bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 font-mono text-xs leading-relaxed">
+                        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-xs border-b border-zinc-200 dark:border-zinc-800 pb-2">
                             <span>Langkah Fase 1: Rekayasa Vertikal (Vertical Slice Prompting)</span>
                         </div>
                         <div class="grid md:grid-cols-2 gap-4">
-                            <div class="space-y-2 text-zinc-300">
-                                <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-emerald-400">1.1</span> Ekstraksi Directive Fitur dari PRD
+                            <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
+                                <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
+                                    <span class="text-emerald-600 dark:text-emerald-400">1.1</span> Ekstraksi Directive Fitur dari PRD
                                 </div>
-                                <p class="text-zinc-400 text-[11px]">
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
                                     Scroll ke <strong>Area 03 (Spesifikasi Rinci Fitur)</strong> di bawah. Klik tombol <strong>"SALIN PROMPT AGENT"</strong> pada salah satu kartu fitur. Jangan pernah memberikan seluruh dokumen PRD dalam satu prompt raksasa (cegah <em>context-rot</em>).
                                 </p>
                             </div>
-                            <div class="space-y-2 text-zinc-300">
-                                <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-emerald-400">1.2</span> Standar Primary Key ULID & JSON
+                            <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
+                                <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
+                                    <span class="text-emerald-600 dark:text-emerald-400">1.2</span> Standar Primary Key ULID & JSON
                                 </div>
-                                <p class="text-zinc-400 text-[11px]">
-                                    Instruksikan AI membuat tabel dengan <code class="text-amber-300">->ulid('id')->primary()</code> (VARCHAR 26) dan trait <code class="text-amber-300">HasUlids</code>. Gunakan casting <code class="text-amber-300">'array'</code> untuk field multi-bahasa (<code class="text-zinc-300">title->id</code>, <code class="text-zinc-300">title->en</code>).
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
+                                    Instruksikan AI membuat tabel dengan <code class="text-amber-600 dark:text-amber-300">->ulid('id')->primary()</code> (VARCHAR 26) dan trait <code class="text-amber-600 dark:text-amber-300">HasUlids</code>. Gunakan casting <code class="text-amber-600 dark:text-amber-300">'array'</code> untuk field multi-bahasa (<code class="text-zinc-700 dark:text-zinc-300">title->id</code>, <code class="text-zinc-700 dark:text-zinc-300">title->en</code>).
                                 </p>
                             </div>
-                            <div class="space-y-2 text-zinc-300">
-                                <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-emerald-400">1.3</span> Country Zone & Pemisah Ribuan
+                            <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
+                                <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
+                                    <span class="text-emerald-600 dark:text-emerald-400">1.3</span> Country Zone & Pemisah Ribuan
                                 </div>
-                                <p class="text-zinc-400 text-[11px]">
-                                    Untuk form intake nomor telepon, wajib gunakan selector <code class="text-emerald-300">config('country_zones')</code>. Untuk display angka/uang di atas 1.000, wajib ada pemisah ribuan otomatis (titik format ID / koma format EN).
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
+                                    Untuk form intake nomor telepon, wajib gunakan selector <code class="text-emerald-600 dark:text-emerald-300">config('country_zones')</code>. Untuk display angka/uang di atas 1.000, wajib ada pemisah ribuan otomatis (titik format ID / koma format EN).
                                 </p>
                             </div>
-                            <div class="space-y-2 text-zinc-300">
-                                <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-emerald-400">1.4</span> UI/UX Anti-AI-Slop & Icon Lokal
+                            <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
+                                <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
+                                    <span class="text-emerald-600 dark:text-emerald-400">1.4</span> UI/UX Anti-AI-Slop & Icon Lokal
                                 </div>
-                                <p class="text-zinc-400 text-[11px]">
-                                    Sudut border wajib tipis (<code class="text-emerald-300">rounded-sm/md</code>, dilarang pill <code class="text-rose-400">rounded-full</code>). Gunakan icon SVG FontAwesome lokal via <code class="text-emerald-300">\App\Support\FontAwesome::svg('name')</code> tanpa CDN luar.
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
+                                    Sudut border wajib tipis (<code class="text-emerald-600 dark:text-emerald-300">rounded-sm/md</code>, dilarang pill <code class="text-rose-600 dark:text-rose-400">rounded-full</code>). Gunakan icon SVG FontAwesome lokal via <code class="text-emerald-600 dark:text-emerald-300">\App\Support\FontAwesome::svg('name')</code> tanpa CDN luar.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Phase 2 Content -->
-                    <div x-show="activeDevPhase === 2" class="bg-black/40 border border-zinc-800 p-5 space-y-4 font-mono text-xs leading-relaxed">
-                        <div class="flex items-center gap-2 text-amber-400 font-bold uppercase tracking-wider text-xs border-b border-zinc-800 pb-2">
+                    <div x-show="activeDevPhase === 2" class="bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 font-mono text-xs leading-relaxed">
+                        <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider text-xs border-b border-zinc-200 dark:border-zinc-800 pb-2">
                             <span>Langkah Fase 2: Quality Testing Gate & Otomasi Verifikasi</span>
                         </div>
                         <div class="grid md:grid-cols-2 gap-4">
-                            <div class="space-y-2 text-zinc-300">
-                                <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-amber-400">2.1</span> Eksekusi Unit & Feature Tests
+                            <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
+                                <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
+                                    <span class="text-amber-600 dark:text-amber-400">2.1</span> Eksekusi Unit & Feature Tests
                                 </div>
-                                <p class="text-zinc-400 text-[11px]">
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
                                     Wajibkan AI menjalankan pengujian terminal lokal:
-                                    <pre class="bg-black p-2 text-emerald-400 text-[10px] mt-1 select-all">php artisan test --filter=[Model]Test</pre>
+                                    <pre class="bg-zinc-900 dark:bg-black p-2 text-emerald-400 text-[10px] mt-1 select-all border border-zinc-800">php artisan test --filter=[Model]Test</pre>
                                     Seluruh assertion wajib passed 100% sebelum beralih ke tugas berikutnya.
                                 </p>
                             </div>
-                            <div class="space-y-2 text-zinc-300">
-                                <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-amber-400">2.2</span> Frontend Vite Compilation Gate
+                            <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
+                                <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
+                                    <span class="text-amber-600 dark:text-amber-400">2.2</span> Frontend Vite Compilation Gate
                                 </div>
-                                <p class="text-zinc-400 text-[11px]">
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
                                     Validasi kompilasi bundle frontend React Islands & Tailwind:
-                                    <pre class="bg-black p-2 text-emerald-400 text-[10px] mt-1 select-all">npm run build</pre>
+                                    <pre class="bg-zinc-900 dark:bg-black p-2 text-emerald-400 text-[10px] mt-1 select-all border border-zinc-800">npm run build</pre>
                                     Memastikan tidak ada syntax error TypeScript/JSX dan manifest.json tersinkronisasi.
                                 </p>
                             </div>
-                            <div class="space-y-2 text-zinc-300">
-                                <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-amber-400">2.3</span> Audit Anti-AI Malware & CSP
+                            <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
+                                <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
+                                    <span class="text-amber-600 dark:text-amber-400">2.3</span> Audit Anti-AI Malware & CSP
                                 </div>
-                                <p class="text-zinc-400 text-[11px]">
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
                                     Pastikan middleware security memeriksa bot malicious, honeypot fields di form publik aktif, dan Content-Security-Policy tidak memblokir script internal.
                                 </p>
                             </div>
-                            <div class="space-y-2 text-zinc-300">
-                                <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-amber-400">2.4</span> Larangan Dialog JS Native
+                            <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
+                                <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
+                                    <span class="text-amber-600 dark:text-amber-400">2.4</span> Larangan Dialog JS Native
                                 </div>
-                                <p class="text-zinc-400 text-[11px]">
-                                    Grep codebase untuk memastikan <code class="text-rose-400">window.alert</code> atau <code class="text-rose-400">window.confirm</code> bernilai 0. Seluruh feedback aksi wajib menggunakan <code class="text-emerald-300">window.showToast</code>.
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
+                                    Grep codebase untuk memastikan <code class="text-rose-600 dark:text-rose-400">window.alert</code> atau <code class="text-rose-600 dark:text-rose-400">window.confirm</code> bernilai 0. Seluruh feedback aksi wajib menggunakan <code class="text-emerald-600 dark:text-emerald-300">window.showToast</code>.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Phase 3 Content -->
-                    <div x-show="activeDevPhase === 3" class="bg-black/40 border border-zinc-800 p-5 space-y-4 font-mono text-xs leading-relaxed">
-                        <div class="flex items-center gap-2 text-cyan-400 font-bold uppercase tracking-wider text-xs border-b border-zinc-800 pb-2">
+                    <div x-show="activeDevPhase === 3" class="bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 font-mono text-xs leading-relaxed">
+                        <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-wider text-xs border-b border-zinc-200 dark:border-zinc-800 pb-2">
                             <span>Langkah Fase 3: Deployment, Scope Lock & Serah Terima Klien</span>
                         </div>
                         <div class="grid md:grid-cols-2 gap-4">
-                            <div class="space-y-2 text-zinc-300">
-                                <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-cyan-400">3.1</span> Git Sync ke Repositori Resmi
+                            <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
+                                <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
+                                    <span class="text-cyan-600 dark:text-cyan-400">3.1</span> Git Sync ke Repositori Resmi
                                 </div>
-                                <p class="text-zinc-400 text-[11px]">
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
                                     Commit perubahan bersih dan push ke origin main:
-                                    <pre class="bg-black p-2 text-cyan-400 text-[10px] mt-1 select-all">git add . ; git commit -m "feat(modul): deskripsi" ; git push origin main</pre>
+                                    <pre class="bg-zinc-900 dark:bg-black p-2 text-cyan-400 text-[10px] mt-1 select-all border border-zinc-800">git add . ; git commit -m "feat(modul): deskripsi" ; git push origin main</pre>
                                 </p>
                             </div>
-                            <div class="space-y-2 text-zinc-300">
-                                <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-cyan-400">3.2</span> Eksekusi Deployment Script Server
+                            <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
+                                <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
+                                    <span class="text-cyan-600 dark:text-cyan-400">3.2</span> Eksekusi Deployment Script Server
                                 </div>
-                                <p class="text-zinc-400 text-[11px]">
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
                                     Di terminal SSH server (Coolify / VPS), jalankan nomor skenario yang sesuai:
-                                    <pre class="bg-black p-2 text-amber-400 text-[10px] mt-1 select-all">./deploy.sh 2   # Skenario 2: Migrasi Aman</pre>
+                                    <pre class="bg-zinc-900 dark:bg-black p-2 text-amber-400 text-[10px] mt-1 select-all border border-zinc-800">./deploy.sh 2   # Skenario 2: Migrasi Aman</pre>
                                 </p>
                             </div>
-                            <div class="space-y-2 text-zinc-300">
-                                <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-cyan-400">3.3</span> Kunci Scope Kontrak Digital
+                            <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
+                                <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
+                                    <span class="text-cyan-600 dark:text-cyan-400">3.3</span> Kunci Scope Kontrak Digital
                                 </div>
-                                <p class="text-zinc-400 text-[11px]">
-                                    Ubah status dokumen kontrak digital menjadi <code class="text-emerald-400">LOCKED_SIGNED</code> di admin panel untuk mengunci scope fitur agar terhindar dari scope creep yang tidak terbayar.
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
+                                    Ubah status dokumen kontrak digital menjadi <code class="text-emerald-600 dark:text-emerald-400">LOCKED_SIGNED</code> di admin panel untuk mengunci scope fitur agar terhindar dari scope creep yang tidak terbayar.
                                 </p>
                             </div>
                             <div class="space-y-2 text-zinc-300">
@@ -2370,11 +2380,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 <!-- 2-COLUMNS: KILLER ROI EQUATION vs COST OF INACTION -->
                 <div class="grid lg:grid-cols-12 gap-6 mb-8">
                     <!-- LEFT COLUMN (7 COLS): KILLER ROI EQUATION -->
-                    <div class="lg:col-span-7 bg-gradient-to-br from-emerald-950/20 via-zinc-950 to-zinc-950 p-6 border border-emerald-500/40 rounded-none flex flex-col justify-between">
+                    <div class="lg:col-span-7 bg-white dark:bg-zinc-950 p-6 border-2 border-emerald-500 rounded-none flex flex-col justify-between shadow-sm">
                         <div>
                             <div class="flex items-center justify-between gap-2 mb-3">
-                                <span class="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                                     <span x-text="locale === 'en' ? 'Deadly Sales ROI Equation' : 'Formula Balik Modal Cepat (Deadly ROI Angle)'">Formula Balik Modal Cepat (Deadly ROI Angle)</span>
                                 </span>
                                 <span class="text-[10px] font-mono px-2 py-0.5 bg-emerald-500 text-black font-extrabold uppercase">
@@ -2382,26 +2392,26 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </span>
                             </div>
 
-                            <h3 class="text-base sm:text-lg font-black text-white font-sans leading-snug mb-3">
+                            <h3 class="text-base sm:text-lg font-black text-zinc-900 dark:text-zinc-100 font-sans leading-snug mb-3">
                                 {{ $businessRoi['deadly_roi_equation']['headline'] ?? 'Balik Modal Cepat dari Transaksi Awal' }}
                             </h3>
 
                             <!-- FORMULA DISPLAY BOX -->
-                            <div class="p-3.5 bg-black/60 border border-emerald-500/50 rounded-none font-mono text-xs text-emerald-300 mb-4 leading-relaxed">
-                                <span class="text-[10px] text-zinc-400 block mb-1 font-sans uppercase font-bold tracking-wider">Perhitungan Matematis Nilai Transaksi:</span>
-                                <div class="font-bold text-white text-xs sm:text-sm">
+                            <div class="p-4 bg-zinc-50 dark:bg-zinc-900 border border-emerald-500/40 rounded-none font-mono text-xs mb-4 leading-relaxed">
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block mb-1 font-sans uppercase font-bold tracking-wider">Perhitungan Matematis Nilai Transaksi:</span>
+                                <div class="font-bold text-zinc-900 dark:text-emerald-300 text-xs sm:text-sm">
                                     {{ $businessRoi['deadly_roi_equation']['formula'] ?? '-' }}
                                 </div>
                             </div>
 
-                            <p class="text-zinc-300 text-xs sm:text-sm font-sans leading-relaxed mb-4">
+                            <p class="text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm font-sans leading-relaxed mb-4">
                                 {{ $businessRoi['deadly_roi_equation']['narrative'] ?? '' }}
                             </p>
                         </div>
 
-                        <div class="pt-4 border-t border-zinc-800 text-xs font-mono flex items-center justify-between">
-                            <span class="text-zinc-400">Estimasi Proyeksi ROI Tahun 1:</span>
-                            <span class="text-emerald-400 font-bold text-sm">{{ $businessRoi['deadly_roi_equation']['projected_annual_roi'] ?? '450%+' }}</span>
+                        <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 text-xs font-mono flex items-center justify-between">
+                            <span class="text-zinc-500 dark:text-zinc-400">Estimasi Proyeksi ROI Tahun 1:</span>
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold text-sm sm:text-base">{{ $businessRoi['deadly_roi_equation']['projected_annual_roi'] ?? '450%+' }}</span>
                         </div>
                     </div>
 
@@ -2874,8 +2884,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                                     <pre class="bg-black/60 p-2 text-[10px] text-zinc-300 overflow-x-auto select-all leading-tight">{{ $intData['request_schema'] ?? '{}' }}</pre>
                                                 </div>
                                                 <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
-                                                    <div class="text-[10px] text-emerald-400 font-bold mb-1">RESPONSE SUCCESS (200/201):</div>
-                                                    <pre class="bg-black/60 p-2 text-[10px] text-zinc-300 overflow-x-auto select-all leading-tight">{{ $intData['response_schema'] ?? '{}' }}</pre>
+                                                    <div class="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold mb-1">RESPONSE SUCCESS (200/201):</div>
+                                                    <pre class="bg-zinc-100 dark:bg-black/60 p-2 text-[10px] text-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 overflow-x-auto select-all leading-tight">{{ $intData['response_schema'] ?? '{}' }}</pre>
                                                 </div>
                                             </div>
                                             <div class="text-[10px] text-zinc-500 dark:text-zinc-400 pt-1">
@@ -2885,10 +2895,10 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     </div>
 
                                     <!-- Tab 5: AI Code Agent Directive Prompt -->
-                                    <div x-show="specTab === &apos;prompt&apos;" class="space-y-3 font-mono text-xs">
-                                        <div class="p-4 bg-zinc-950 border border-zinc-800 space-y-2">
-                                            <div class="flex items-center justify-between text-zinc-400 border-b border-zinc-800 pb-2">
-                                                <span class="text-emerald-400 font-bold uppercase text-[11px]">Prompt Directive Siap Di-Paste ke Cursor Composer / Claude Code / Antigravity:</span>
+                                    <div x-show="specTab === 'prompt'" class="space-y-3 font-mono text-xs">
+                                        <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                                            <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                                                <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase text-[11px]">Prompt Directive Siap Di-Paste ke Cursor Composer / Claude Code / Antigravity:</span>
                                                 <button 
                                                     type="button" 
                                                     onclick="copyFeaturePrompt(this, 'prompt-code-{{ $specIdx }}')" 
@@ -2897,7 +2907,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                                     SALIN PROMPT
                                                 </button>
                                             </div>
-                                            <pre id="prompt-code-{{ $specIdx }}" class="bg-black p-3 text-[11px] text-emerald-300/90 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap">{{ $spec['code_agent_directive'] ?? ($spec['agent_directive_prompt'] ?? '') }}</pre>
+                                            <pre id="prompt-code-{{ $specIdx }}" class="bg-zinc-950 p-3 text-[11px] text-emerald-300/90 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap font-mono border border-zinc-800">{{ $spec['code_agent_directive'] ?? ($spec['agent_directive_prompt'] ?? '') }}</pre>
                                         </div>
                                     </div>
                                 </div>
@@ -2921,43 +2931,43 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 </div>
 
                 <!-- Executive Warning & Rationale Against Prompt Dumping -->
-                <div class="p-5 bg-zinc-950 border border-zinc-800 font-mono text-xs mb-6 text-zinc-300 space-y-4">
-                    <div class="border-b border-zinc-800 pb-3">
-                        <div class="text-amber-400 font-bold uppercase text-xs sm:text-sm tracking-wide mb-1">
+                <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs mb-6 text-zinc-800 dark:text-zinc-300 space-y-4">
+                    <div class="border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                        <div class="text-amber-600 dark:text-amber-400 font-bold uppercase text-xs sm:text-sm tracking-wide mb-1">
                             Strategi Orkestrasi AI: Apakah PRD Diberikan Sekaligus atau Sedikit demi Sedikit?
                         </div>
-                        <div class="p-2.5 bg-rose-500/10 border-l-4 border-rose-500 text-rose-400 font-black text-xs sm:text-sm uppercase tracking-tight mt-2">
+                        <div class="p-2.5 bg-rose-50 dark:bg-rose-500/10 border-l-4 border-rose-500 text-rose-700 dark:text-rose-400 font-black text-xs sm:text-sm uppercase tracking-tight mt-2">
                             🚨 JAWABAN TEGAS: JANGAN PERNAH MEMBERIKAN SELURUH DOKUMEN PRD SEKALIGUS DALAM SATU PROMPT KODING!
                         </div>
                     </div>
 
-                    <p class="font-sans text-xs text-zinc-300 leading-relaxed">
+                    <p class="font-sans text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
                         Memberikan seluruh dokumen PRD (ribuan baris) ke dalam jendela obrolan AI yang sedang mengedit kode aktif adalah <strong>kesalahan paling fatal</strong> yang sering dilakukan developer. Ini adalah penyebab nomor satu mengapa kode menjadi berantakan, amnesia migrasi, dan banyak file terhapus secara tidak sengaja.
                     </p>
 
                     <!-- 4 Technical Breakdown Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                        <div class="p-3 bg-zinc-900/80 border border-zinc-800">
-                            <span class="text-rose-400 font-bold block mb-1">1. Attention Drift &amp; Context Rot:</span>
-                            <p class="font-sans text-[11px] text-zinc-400 leading-relaxed">
+                        <div class="p-3 bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                            <span class="text-rose-600 dark:text-rose-400 font-bold block mb-1">1. Attention Drift &amp; Context Rot:</span>
+                            <p class="font-sans text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
                                 Walaupun model AI modern memiliki context window besar (200K hingga 2M token), kemampuan penalaran logika menurun seiring bertambahnya token. AI akan mengalami <em>instruction dilution</em> (mengabaikan aturan-aturan kecil di tengah dokumen).
                             </p>
                         </div>
-                        <div class="p-3 bg-zinc-900/80 border border-zinc-800">
-                            <span class="text-amber-400 font-bold block mb-1">2. Shallow Code &amp; Mock Implementation:</span>
-                            <p class="font-sans text-[11px] text-zinc-400 leading-relaxed">
-                                Jika AI diminta mengimplementasikan 10 fitur sekaligus, AI akan kehabisan token output. Akibatnya, AI mulai memotong kode, meninggalkan komentar berbahaya seperti <code class="text-amber-300">// TODO: implement logic here</code>, atau membuat fungsi dummy/mock yang tidak bekerja.
+                        <div class="p-3 bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                            <span class="text-amber-600 dark:text-amber-400 font-bold block mb-1">2. Shallow Code &amp; Mock Implementation:</span>
+                            <p class="font-sans text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                Jika AI diminta mengimplementasikan 10 fitur sekaligus, AI akan kehabisan token output. Akibatnya, AI mulai memotong kode, meninggalkan komentar berbahaya seperti <code class="text-amber-600 dark:text-amber-300">// TODO: implement logic here</code>, atau membuat fungsi dummy/mock yang tidak bekerja.
                             </p>
                         </div>
-                        <div class="p-3 bg-zinc-900/80 border border-zinc-800">
-                            <span class="text-sky-400 font-bold block mb-1">3. Amnesia Migrasi &amp; Regresi:</span>
-                            <p class="font-sans text-[11px] text-zinc-400 leading-relaxed">
+                        <div class="p-3 bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                            <span class="text-sky-600 dark:text-sky-400 font-bold block mb-1">3. Amnesia Migrasi &amp; Regresi:</span>
+                            <p class="font-sans text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
                                 AI akan lupa relasi foreign key dari modul yang dibuat 5 menit lalu dan membuat duplikasi fungsi yang memecah kode sebelumnya.
                             </p>
                         </div>
-                        <div class="p-3 bg-zinc-900/80 border border-zinc-800">
-                            <span class="text-emerald-400 font-bold block mb-1">4. Audit Diff yang Mustahil:</span>
-                            <p class="font-sans text-[11px] text-zinc-400 leading-relaxed">
+                        <div class="p-3 bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold block mb-1">4. Audit Diff yang Mustahil:</span>
+                            <p class="font-sans text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
                                 Jika 1 prompt menghasilkan perubahan pada 40 file sekaligus, Anda sebagai manusia tidak akan bisa mereview bug secara teliti sebelum menekan Accept All.
                             </p>
                         </div>
@@ -2965,11 +2975,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                     <!-- ASCII Flowchart Diagram -->
                     <div class="pt-2">
-                        <div class="flex items-center justify-between text-zinc-400 mb-1.5">
-                            <span class="text-emerald-400 font-bold uppercase text-[11px]">Metodologi Terbaik: &quot;Vertical Slice Prompting&quot; (Per Fitur Vertikal)</span>
+                        <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400 mb-1.5">
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[11px]">Metodologi Terbaik: &quot;Vertical Slice Prompting&quot; (Per Fitur Vertikal)</span>
                             <span class="text-[10px] text-zinc-500 font-mono">STANDAR EMAS NERIAH PRO</span>
                         </div>
-                        <pre class="bg-black p-4 text-[11px] text-emerald-400/95 overflow-x-auto select-all leading-relaxed whitespace-pre font-mono border border-zinc-800">+---------------------------------------------------------------------------------+
+                        <pre class="bg-zinc-900 dark:bg-black p-4 text-[11px] text-emerald-400/95 overflow-x-auto select-all leading-relaxed whitespace-pre font-mono border border-zinc-800">+---------------------------------------------------------------------------------+
 |                        ALUR KERJA ORKESTRASI AI AGENT                           |
 +---------------------------------------------------------------------------------+
 |                                                                                 |
@@ -2994,43 +3004,43 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                     <!-- 3 Benefits Highlights -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-[11px]">
-                        <div class="p-2.5 bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
-                            <strong class="block text-emerald-400 font-bold mb-0.5">&check; Zero Context-Rot:</strong>
-                            <span class="text-zinc-300">AI fokus 100% pada satu masalah spesifik dalam batasan file yang ketat.</span>
+                        <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300">
+                            <strong class="block text-emerald-700 dark:text-emerald-400 font-bold mb-0.5">&check; Zero Context-Rot:</strong>
+                            <span class="text-zinc-700 dark:text-zinc-300">AI fokus 100% pada satu masalah spesifik dalam batasan file yang ketat.</span>
                         </div>
-                        <div class="p-2.5 bg-sky-950/40 border border-sky-500/30 text-sky-300">
-                            <strong class="block text-sky-400 font-bold mb-0.5">&check; Kualitas Kode Penuh:</strong>
-                            <span class="text-zinc-300">Tidak ada pemotongan kode atau // TODO. AI menuliskan validasi lengkap.</span>
+                        <div class="p-2.5 bg-sky-50 dark:bg-sky-950/40 border border-sky-300 dark:border-sky-500/30 text-sky-800 dark:text-sky-300">
+                            <strong class="block text-sky-700 dark:text-sky-400 font-bold mb-0.5">&check; Kualitas Kode Penuh:</strong>
+                            <span class="text-zinc-700 dark:text-zinc-300">Tidak ada pemotongan kode atau // TODO. AI menuliskan validasi lengkap.</span>
                         </div>
-                        <div class="p-2.5 bg-amber-950/40 border border-amber-500/30 text-amber-300">
-                            <strong class="block text-amber-400 font-bold mb-0.5">&check; Troubleshooting Mudah:</strong>
-                            <span class="text-zinc-300">Jika error, Anda tahu persis modul mana yang bermasalah. Riwayat Git rapi per fitur.</span>
+                        <div class="p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-500/30 text-amber-800 dark:text-amber-300">
+                            <strong class="block text-amber-700 dark:text-amber-400 font-bold mb-0.5">&check; Troubleshooting Mudah:</strong>
+                            <span class="text-zinc-700 dark:text-zinc-300">Jika error, Anda tahu persis modul mana yang bermasalah. Riwayat Git rapi per fitur.</span>
                         </div>
                     </div>
 
-                    <div class="text-[11px] text-zinc-400 italic pt-1 border-t border-zinc-800">
-                        &quot;Di dalam halaman <code class="text-emerald-400">show.blade.php</code> pada setiap kartu fitur (Bab 3), tim kami telah menyediakan tombol <strong>&apos;Salin Prompt Handoff AI Code Agent&apos;</strong> yang siap Anda gunakan untuk disalin ke AI Agent per fitur secara terpandu.&quot;
+                    <div class="text-[11px] text-zinc-600 dark:text-zinc-400 italic pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                        &quot;Di dalam halaman <code class="text-emerald-600 dark:text-emerald-400">show.blade.php</code> pada setiap kartu fitur (Bab 3), tim kami telah menyediakan tombol <strong>&apos;Salin Prompt Handoff AI Code Agent&apos;</strong> yang siap Anda gunakan untuk disalin ke AI Agent per fitur secara terpandu.&quot;
                     </div>
                 </div>
 
                 <!-- ========================================================================= -->
                 <!-- INTERACTIVE SPRINT EXECUTION COCKPIT (THE LIVE STEP-BY-STEP ORCHESTRATOR) -->
                 <!-- ========================================================================= -->
-                <div class="bg-zinc-950 border-2 border-emerald-500/60 p-5 sm:p-6 mb-8 rounded-none font-mono text-xs">
+                <div class="bg-white dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500/60 p-5 sm:p-6 mb-8 rounded-none font-mono text-xs text-zinc-900 dark:text-zinc-100 shadow-sm">
                     <!-- Cockpit Progress Top Bar -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-3 mb-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-emerald-500 inline-block animate-pulse"></span>
-                            <span class="font-bold text-white uppercase text-xs tracking-wider">COCKPIT PELAKSANAAN SPRINT AI DEVELOPER</span>
+                            <span class="font-bold text-zinc-900 dark:text-white uppercase text-xs tracking-wider">COCKPIT PELAKSANAAN SPRINT AI DEVELOPER</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="text-[11px] text-emerald-400 font-bold">
+                            <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">
                                 PROGRES SPRINT: <span x-text="getDevCompletedCount()"></span> / {{ $totalDevSteps }} TAHAP SELESAI (<span x-text="getDevProgressPercentage()"></span>%)
                             </span>
                             <button 
                                 type="button" 
                                 @click="resetDevProgress()" 
-                                class="text-[10px] text-zinc-500 hover:text-rose-400 underline transition"
+                                class="text-[10px] text-zinc-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 underline transition"
                                 title="Reset data pengerjaan sprint lokal"
                             >
                                 Reset Progres
@@ -3039,20 +3049,20 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
 
                     <!-- Visual Progress Bar -->
-                    <div class="w-full bg-zinc-900 border border-zinc-800 h-2.5 overflow-hidden mb-5">
-                        <div class="bg-gradient-to-r from-emerald-600 via-emerald-500 to-sky-400 h-full transition-all duration-300" :style="&apos;width: &apos; + getDevProgressPercentage() + &apos;%&apos;"></div>
+                    <div class="w-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 h-2.5 overflow-hidden mb-5">
+                        <div class="bg-gradient-to-r from-emerald-600 via-emerald-500 to-sky-400 h-full transition-all duration-300" :style="'width: ' + getDevProgressPercentage() + '%'"></div>
                     </div>
 
                     <!-- Step Selection Tabs (Horizontal Scrollable) -->
-                    <div class="flex items-center gap-1.5 overflow-x-auto pb-3 mb-5 border-b border-zinc-800 scrollbar-thin">
+                    <div class="flex items-center gap-1.5 overflow-x-auto pb-3 mb-5 border-b border-zinc-200 dark:border-zinc-800 scrollbar-thin">
                         <!-- Step 0: Fondasi Global -->
                         <button 
                             type="button" 
                             @click="devActiveStep = 0"
-                            :class="devActiveStep === 0 ? &apos;bg-emerald-500 text-black font-bold border-emerald-400&apos; : (isStepCompleted(&apos;step_foundation&apos;) ? &apos;bg-zinc-900 text-emerald-400 border-emerald-500/40&apos; : &apos;bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200&apos;)"
+                            :class="devActiveStep === 0 ? 'bg-emerald-500 text-black font-bold border-emerald-400' : (isStepCompleted('step_foundation') ? 'bg-emerald-50 dark:bg-zinc-900 text-emerald-700 dark:text-emerald-400 border-emerald-500/40' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200')"
                             class="px-3 py-1.5 border text-xs whitespace-nowrap flex items-center gap-1.5 transition shrink-0"
                         >
-                            <span x-show="isStepCompleted(&apos;step_foundation&apos;)" class="text-xs">&check;</span>
+                            <span x-show="isStepCompleted('step_foundation')" class="text-xs">&check;</span>
                             <span>01. FONDASI GLOBAL</span>
                         </button>
 
@@ -3064,10 +3074,10 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <button 
                                 type="button" 
                                 @click="devActiveStep = {{ $specIdx + 1 }}"
-                                :class="devActiveStep === {{ $specIdx + 1 }} ? &apos;bg-emerald-500 text-black font-bold border-emerald-400&apos; : (isStepCompleted(&apos;{{ $sKey }}&apos;) ? &apos;bg-zinc-900 text-emerald-400 border-emerald-500/40&apos; : &apos;bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200&apos;)"
+                                :class="devActiveStep === {{ $specIdx + 1 }} ? 'bg-emerald-500 text-black font-bold border-emerald-400' : (isStepCompleted('{{ $sKey }}') ? 'bg-emerald-50 dark:bg-zinc-900 text-emerald-700 dark:text-emerald-400 border-emerald-500/40' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200')"
                                 class="px-3 py-1.5 border text-xs whitespace-nowrap flex items-center gap-1.5 transition shrink-0"
                             >
-                                <span x-show="isStepCompleted(&apos;{{ $sKey }}&apos;)" class="text-xs">&check;</span>
+                                <span x-show="isStepCompleted('{{ $sKey }}')" class="text-xs">&check;</span>
                                 <span>{{ sprintf('%02d', $specIdx + 2) }}. {{ $spec['id'] ?? ('FITUR ' . ($specIdx + 1)) }}</span>
                             </button>
                         @endforeach
@@ -3076,10 +3086,10 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <button 
                             type="button" 
                             @click="devActiveStep = {{ $totalDevSteps - 1 }}"
-                            :class="devActiveStep === {{ $totalDevSteps - 1 }} ? &apos;bg-emerald-500 text-black font-bold border-emerald-400&apos; : (isStepCompleted(&apos;step_deployment&apos;) ? &apos;bg-zinc-900 text-emerald-400 border-emerald-500/40&apos; : &apos;bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200&apos;)"
+                            :class="devActiveStep === {{ $totalDevSteps - 1 }} ? 'bg-emerald-500 text-black font-bold border-emerald-400' : (isStepCompleted('step_deployment') ? 'bg-emerald-50 dark:bg-zinc-900 text-emerald-700 dark:text-emerald-400 border-emerald-500/40' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200')"
                             class="px-3 py-1.5 border text-xs whitespace-nowrap flex items-center gap-1.5 transition shrink-0"
                         >
-                            <span x-show="isStepCompleted(&apos;step_deployment&apos;)" class="text-xs">&check;</span>
+                            <span x-show="isStepCompleted('step_deployment')" class="text-xs">&check;</span>
                             <span>{{ sprintf('%02d', $totalDevSteps) }}. QUALITY GATE &amp; DEPLOY</span>
                         </button>
                     </div>
@@ -3090,75 +3100,75 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     
                     <!-- PANE 0: LANGKAH 1 - FONDASI GLOBAL (1 Kali di Awal) -->
                     <div x-show="devActiveStep === 0" class="space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                             <div>
                                 <span class="px-2 py-0.5 bg-emerald-500 text-black font-bold text-[10px] uppercase">TAHAP 01 // FONDASI ARSITEKTUR</span>
-                                <h3 class="text-sm sm:text-base font-black text-white mt-1 uppercase">LANGKAH 1: FONDASI GLOBAL &amp; SETUP BASIS DATA (1 KALI DI AWAL)</h3>
+                                <h3 class="text-sm sm:text-base font-black text-zinc-900 dark:text-white mt-1 uppercase">LANGKAH 1: FONDASI GLOBAL &amp; SETUP BASIS DATA (1 KALI DI AWAL)</h3>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button 
                                     type="button" 
-                                    @click="toggleStepCompleted(&apos;step_foundation&apos;, &apos;Langkah 1: Fondasi Global&apos;)"
-                                    :class="isStepCompleted(&apos;step_foundation&apos;) ? &apos;bg-emerald-500 text-black font-bold border-emerald-500&apos; : &apos;bg-zinc-900 text-zinc-300 border-zinc-700 hover:border-emerald-500&apos;"
+                                    @click="toggleStepCompleted('step_foundation', 'Langkah 1: Fondasi Global')"
+                                    :class="isStepCompleted('step_foundation') ? 'bg-emerald-500 text-black font-bold border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'"
                                     class="px-3 py-1.5 border text-xs font-mono flex items-center gap-1.5 transition"
                                 >
-                                    <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted(&apos;step_foundation&apos;) ? &apos;bg-black&apos; : &apos;bg-zinc-500&apos;"></span>
-                                    <span x-text="isStepCompleted(&apos;step_foundation&apos;) ? &apos;&check; TAHAP 1 TERVERIFIKASI &amp; COMMITTED&apos; : &apos;TANDAI TAHAP 1 SELESAI&apos;"></span>
+                                    <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted('step_foundation') ? 'bg-black' : 'bg-zinc-400 dark:bg-zinc-500'"></span>
+                                    <span x-text="isStepCompleted('step_foundation') ? '&check; TAHAP 1 TERVERIFIKASI &amp; COMMITTED' : 'TANDAI TAHAP 1 SELESAI'"></span>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Target Context Inputs -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div class="p-3 bg-zinc-900 border border-zinc-800">
-                                <span class="text-zinc-500 text-[10px] block font-bold mb-0.5">DOKUMEN INPUT KE AI:</span>
-                                <span class="text-zinc-200 text-xs font-bold block">Bab 5 (ERD PostgreSQL ULID)</span>
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block font-bold mb-0.5">DOKUMEN INPUT KE AI:</span>
+                                <span class="text-zinc-900 dark:text-zinc-200 text-xs font-bold block">Bab 5 (ERD PostgreSQL ULID)</span>
                                 @if($hasSync)
-                                    <span class="text-emerald-400 text-[10px] block mt-1">+ Bab 5.6 (Sync Engine Spec)</span>
+                                    <span class="text-emerald-600 dark:text-emerald-400 text-[10px] block mt-1">+ Bab 5.6 (Sync Engine Spec)</span>
                                 @endif
-                                <span class="text-sky-400 text-[10px] block mt-0.5">+ Bab 6 (Tech Stack &amp; VPS)</span>
+                                <span class="text-sky-600 dark:text-sky-400 text-[10px] block mt-0.5">+ Bab 6 (Tech Stack &amp; VPS)</span>
                             </div>
-                            <div class="p-3 bg-zinc-900 border border-zinc-800">
-                                <span class="text-zinc-500 text-[10px] block font-bold mb-0.5">TARGET BOUNDED FILES:</span>
-                                <span class="text-zinc-300 text-[11px] block font-mono">database/migrations/*_create_*.php</span>
-                                <span class="text-zinc-300 text-[11px] block font-mono">app/Models/*.php</span>
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block font-bold mb-0.5">TARGET BOUNDED FILES:</span>
+                                <span class="text-zinc-700 dark:text-zinc-300 text-[11px] block font-mono">database/migrations/*_create_*.php</span>
+                                <span class="text-zinc-700 dark:text-zinc-300 text-[11px] block font-mono">app/Models/*.php</span>
                             </div>
-                            <div class="p-3 bg-zinc-900 border border-zinc-800">
-                                <span class="text-zinc-500 text-[10px] block font-bold mb-0.5">TERMINAL VERIFICATION GATE:</span>
-                                <code class="text-emerald-400 text-[11px] block font-mono select-all">php artisan migrate:status</code>
-                                <code class="text-amber-400 text-[11px] block font-mono select-all">git commit -m &quot;chore(db): setup ULID migrations&quot;</code>
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block font-bold mb-0.5">TERMINAL VERIFICATION GATE:</span>
+                                <code class="text-emerald-600 dark:text-emerald-400 text-[11px] block font-mono select-all">php artisan migrate:status</code>
+                                <code class="text-amber-600 dark:text-amber-400 text-[11px] block font-mono select-all">git commit -m &quot;chore(db): setup ULID migrations&quot;</code>
                             </div>
                         </div>
 
                         <!-- Prompt Pre-Crafted Box -->
-                        <div class="p-3.5 bg-zinc-900/90 border border-zinc-800 space-y-2">
-                            <div class="flex items-center justify-between text-zinc-400">
-                                <span class="text-emerald-400 font-bold uppercase text-[11px]">Prompt Fondasi Global Siap Di-Paste ke AI Agent:</span>
+                        <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                            <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[11px]">Prompt Fondasi Global Siap Di-Paste ke AI Agent:</span>
                                 <div class="flex items-center gap-2">
                                     <button 
                                         type="button" 
-                                        onclick="copyCockpitStepPrompt(this, &apos;prompt-step-foundation&apos;)"
+                                        onclick="copyCockpitStepPrompt(this, 'prompt-step-foundation')"
                                         class="px-2.5 py-1 bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition"
                                     >
                                         SALIN PROMPT FONDASI (LANGKAH 1)
                                     </button>
                                 </div>
                             </div>
-                            <pre id="prompt-step-foundation" class="bg-black p-3 text-[11px] text-emerald-300/90 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap font-mono">{{ $foundationPrompt }}</pre>
+                            <pre id="prompt-step-foundation" class="bg-zinc-950 p-3 text-[11px] text-emerald-300/90 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap font-mono border border-zinc-800">{{ $foundationPrompt }}</pre>
                         </div>
 
                         <!-- Action Next Footer -->
-                        <div class="flex items-center justify-between pt-2 border-t border-zinc-800">
+                        <div class="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800">
                             <button 
                                 type="button" 
-                                @click="jumpTo(&apos;section-5&apos;)" 
-                                class="text-xs text-sky-400 hover:text-sky-300 underline font-mono flex items-center gap-1"
+                                @click="jumpTo('section-5')" 
+                                class="text-xs text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 underline font-mono flex items-center gap-1"
                             >
                                 <span>&rarr; Lihat Skema ERD di Bab 5</span>
                             </button>
                             <button 
                                 type="button" 
-                                @click="if (!isStepCompleted(&apos;step_foundation&apos;)) { toggleStepCompleted(&apos;step_foundation&apos;, &apos;Langkah 1: Fondasi Global&apos;); } devActiveStep = 1;" 
+                                @click="if (!isStepCompleted('step_foundation')) { toggleStepCompleted('step_foundation', 'Langkah 1: Fondasi Global'); } devActiveStep = 1;" 
                                 class="px-4 py-2 bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition flex items-center gap-2"
                             >
                                 <span>Lanjut ke Langkah 2 (Fitur MVP 01)</span>
@@ -3178,88 +3188,88 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             $promptCodeId = 'prompt-step-feat-' . $specIdx;
                         @endphp
                         <div x-show="devActiveStep === {{ $stepNum }}" class="space-y-4">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                                 <div>
                                     <div class="flex items-center gap-2 mb-1">
                                         <span class="px-2 py-0.5 bg-emerald-500 text-black font-bold text-[10px] uppercase">TAHAP 02.{{ sprintf('%02d', $stepNum) }} // VERTICAL SLICE</span>
-                                        <span class="px-2 py-0.5 bg-zinc-800 text-zinc-300 text-[10px]">{{ $spec['category'] ?? 'CORE DOMAIN' }}</span>
-                                        <span class="px-2 py-0.5 bg-sky-500/20 text-sky-300 text-[10px]">{{ $spec['complexity_label'] ?? 'Standard' }}</span>
+                                        <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[10px]">{{ $spec['category'] ?? 'CORE DOMAIN' }}</span>
+                                        <span class="px-2 py-0.5 bg-sky-500/10 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 text-[10px]">{{ $spec['complexity_label'] ?? 'Standard' }}</span>
                                     </div>
-                                    <h3 class="text-sm sm:text-base font-black text-white uppercase">{{ $featKey }}: {{ $featTitle }}</h3>
+                                    <h3 class="text-sm sm:text-base font-black text-zinc-900 dark:text-white uppercase">{{ $featKey }}: {{ $featTitle }}</h3>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <button 
                                         type="button" 
-                                        @click="toggleStepCompleted(&apos;{{ $featKey }}&apos;, &apos;{{ addslashes($featTitle) }}&apos;)"
-                                        :class="isStepCompleted(&apos;{{ $featKey }}&apos;) ? &apos;bg-emerald-500 text-black font-bold border-emerald-500&apos; : &apos;bg-zinc-900 text-zinc-300 border-zinc-700 hover:border-emerald-500&apos;"
+                                        @click="toggleStepCompleted('{{ $featKey }}', '{{ addslashes($featTitle) }}')"
+                                        :class="isStepCompleted('{{ $featKey }}') ? 'bg-emerald-500 text-black font-bold border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'"
                                         class="px-3 py-1.5 border text-xs font-mono flex items-center gap-1.5 transition"
                                     >
-                                        <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted(&apos;{{ $featKey }}&apos;) ? &apos;bg-black&apos; : &apos;bg-zinc-500&apos;"></span>
-                                        <span x-text="isStepCompleted(&apos;{{ $featKey }}&apos;) ? &apos;&check; FITUR TERVERIFIKASI &amp; COMMITTED&apos; : &apos;TANDAI FITUR SELESAI&apos;"></span>
+                                        <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted('{{ $featKey }}') ? 'bg-black' : 'bg-zinc-400 dark:bg-zinc-500'"></span>
+                                        <span x-text="isStepCompleted('{{ $featKey }}') ? '&check; FITUR TERVERIFIKASI &amp; COMMITTED' : 'TANDAI FITUR SELESAI'"></span>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Target Bounded Files & User Story -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-2">
-                                    <span class="text-amber-400 text-[10px] block font-bold">BOUNDED TARGET FILES (ISOLASI FILE AGENT):</span>
+                                <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                                    <span class="text-amber-600 dark:text-amber-400 text-[10px] block font-bold">BOUNDED TARGET FILES (ISOLASI FILE AGENT):</span>
                                     <div class="flex flex-wrap gap-1.5">
                                         @foreach($spec['target_files'] ?? [] as $tf)
-                                            <span class="px-2 py-0.5 bg-black text-zinc-300 text-[10px] font-mono border border-zinc-800 select-all">
+                                            <span class="px-2 py-0.5 bg-white dark:bg-black text-zinc-800 dark:text-zinc-300 text-[10px] font-mono border border-zinc-300 dark:border-zinc-800 select-all">
                                                 {{ $tf }}
                                             </span>
                                         @endforeach
                                     </div>
                                 </div>
-                                <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-2">
-                                    <span class="text-zinc-500 text-[10px] block font-bold">USER STORY:</span>
-                                    <p class="font-sans text-[11px] text-zinc-300 italic leading-relaxed">
+                                <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                                    <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block font-bold">USER STORY:</span>
+                                    <p class="font-sans text-[11px] text-zinc-700 dark:text-zinc-300 italic leading-relaxed">
                                         &quot;{{ $spec['user_story'] ?? 'Pengguna dapat menjalankan alur kerja ini dengan aman dan tervalidasi.' }}&quot;
                                     </p>
-                                    <div class="pt-1 border-t border-zinc-800 flex items-center justify-between text-[10px]">
-                                        <span class="text-zinc-500">VERIFIKASI TEST:</span>
-                                        <code class="text-emerald-400 font-mono select-all">{{ $testCmd }}</code>
+                                    <div class="pt-1 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[10px]">
+                                        <span class="text-zinc-500 dark:text-zinc-400">VERIFIKASI TEST:</span>
+                                        <code class="text-emerald-600 dark:text-emerald-400 font-mono select-all">{{ $testCmd }}</code>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Pre-Crafted Vertical Slice Prompt -->
-                            <div class="p-3.5 bg-zinc-900/90 border border-zinc-800 space-y-2">
-                                <div class="flex items-center justify-between text-zinc-400">
-                                    <span class="text-emerald-400 font-bold uppercase text-[11px]">Prompt Directive Siap Di-Paste ke Cursor / Claude Code / Antigravity:</span>
+                            <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                                <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[11px]">Prompt Directive Siap Di-Paste ke Cursor / Claude Code / Antigravity:</span>
                                     <button 
                                         type="button" 
-                                        onclick="copyCockpitStepPrompt(this, &apos;{{ $promptCodeId }}&apos;)"
+                                        onclick="copyCockpitStepPrompt(this, '{{ $promptCodeId }}')"
                                         class="px-2.5 py-1 bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition"
                                     >
                                         SALIN PROMPT FITUR INI
                                     </button>
                                 </div>
-                                <pre id="{{ $promptCodeId }}" class="bg-black p-3 text-[11px] text-emerald-300/90 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap font-mono">{{ $spec['code_agent_directive'] ?? ($spec['agent_directive_prompt'] ?? '') }}</pre>
+                                <pre id="{{ $promptCodeId }}" class="bg-zinc-950 p-3 text-[11px] text-emerald-300/90 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap font-mono border border-zinc-800">{{ $spec['code_agent_directive'] ?? ($spec['agent_directive_prompt'] ?? '') }}</pre>
                             </div>
 
                             <!-- Footer Nav -->
-                            <div class="flex items-center justify-between pt-2 border-t border-zinc-800">
+                            <div class="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800">
                                 <div class="flex items-center gap-3">
                                     <button 
                                         type="button" 
                                         @click="devActiveStep = {{ $stepNum - 1 }}" 
-                                        class="text-xs text-zinc-400 hover:text-zinc-200 underline font-mono"
+                                        class="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 underline font-mono"
                                     >
                                         &larr; Tahap Sebelumnya
                                     </button>
                                     <button 
                                         type="button" 
-                                        @click="jumpTo(&apos;card-feat-{{ $specIdx }}&apos;)" 
-                                        class="text-xs text-sky-400 hover:text-sky-300 underline font-mono"
+                                        @click="jumpTo('card-feat-{{ $specIdx }}')" 
+                                        class="text-xs text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 underline font-mono"
                                     >
                                         &loz; Lihat Kartu Spesifikasi Lengkap (Bab 3)
                                     </button>
                                 </div>
                                 <button 
                                     type="button" 
-                                    @click="if (!isStepCompleted(&apos;{{ $featKey }}&apos;)) { toggleStepCompleted(&apos;{{ $featKey }}&apos;, &apos;{{ addslashes($featTitle) }}&apos;); } devActiveStep = {{ $stepNum < count($mvpEngineeringSpecs) ? ($stepNum + 1) : ($totalDevSteps - 1) }};" 
+                                    @click="if (!isStepCompleted('{{ $featKey }}')) { toggleStepCompleted('{{ $featKey }}', '{{ addslashes($featTitle) }}'); } devActiveStep = {{ $stepNum < count($mvpEngineeringSpecs) ? ($stepNum + 1) : ($totalDevSteps - 1) }};" 
                                     class="px-4 py-2 bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition flex items-center gap-2"
                                 >
                                     <span>Tandai Selesai &amp; Lanjut</span>
@@ -3271,59 +3281,59 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                     <!-- PANE LAST: LANGKAH AKHIR - AUTOMATED QUALITY GATE & DEPLOYMENT -->
                     <div x-show="devActiveStep === {{ $totalDevSteps - 1 }}" class="space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                             <div>
                                 <span class="px-2 py-0.5 bg-emerald-500 text-black font-bold text-[10px] uppercase">TAHAP AKHIR // PRODUCTION VERIFICATION</span>
-                                <h3 class="text-sm sm:text-base font-black text-white mt-1 uppercase">LANGKAH 3: AUTOMATED QUALITY GATE &amp; PRODUCTION DEPLOYMENT</h3>
+                                <h3 class="text-sm sm:text-base font-black text-zinc-900 dark:text-white mt-1 uppercase">LANGKAH 3: AUTOMATED QUALITY GATE &amp; PRODUCTION DEPLOYMENT</h3>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button 
                                     type="button" 
-                                    @click="toggleStepCompleted(&apos;step_deployment&apos;, &apos;Langkah Akhir: Quality Gate &amp; Deployment&apos;)"
-                                    :class="isStepCompleted(&apos;step_deployment&apos;) ? &apos;bg-emerald-500 text-black font-bold border-emerald-500&apos; : &apos;bg-zinc-900 text-zinc-300 border-zinc-700 hover:border-emerald-500&apos;"
+                                    @click="toggleStepCompleted('step_deployment', 'Langkah Akhir: Quality Gate & Deployment')"
+                                    :class="isStepCompleted('step_deployment') ? 'bg-emerald-500 text-black font-bold border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'"
                                     class="px-3 py-1.5 border text-xs font-mono flex items-center gap-1.5 transition"
                                 >
-                                    <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted(&apos;step_deployment&apos;) ? &apos;bg-black&apos; : &apos;bg-zinc-500&apos;"></span>
-                                    <span x-text="isStepCompleted(&apos;step_deployment&apos;) ? &apos;&check; SELURUH SPRINT PRODUCTION READY&apos; : &apos;TANDAI QUALITY GATE SELESAI&apos;"></span>
+                                    <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted('step_deployment') ? 'bg-black' : 'bg-zinc-400 dark:bg-zinc-500'"></span>
+                                    <span x-text="isStepCompleted('step_deployment') ? '&check; SELURUH SPRINT PRODUCTION READY' : 'TANDAI QUALITY GATE SELESAI'"></span>
                                 </button>
                             </div>
                         </div>
 
                         <!-- 4 Quality Gate Verification Cards -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                            <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
-                                <span class="text-emerald-400 font-bold block">1. AUTOMATED TESTS</span>
-                                <code class="text-zinc-300 block text-[11px] font-mono select-all">php artisan test</code>
-                                <p class="text-[10px] text-zinc-400">Pastikan 100% assertions lulus dengan exit code 0.</p>
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold block">1. AUTOMATED TESTS</span>
+                                <code class="text-zinc-800 dark:text-zinc-300 block text-[11px] font-mono select-all">php artisan test</code>
+                                <p class="text-[10px] text-zinc-600 dark:text-zinc-400">Pastikan 100% assertions lulus dengan exit code 0.</p>
                             </div>
-                            <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
-                                <span class="text-sky-400 font-bold block">2. ASSET BUNDLE</span>
-                                <code class="text-zinc-300 block text-[11px] font-mono select-all">npm run build</code>
-                                <p class="text-[10px] text-zinc-400">Sinkronisasi public/build/manifest.json untuk produksi.</p>
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                <span class="text-sky-600 dark:text-sky-400 font-bold block">2. ASSET BUNDLE</span>
+                                <code class="text-zinc-800 dark:text-zinc-300 block text-[11px] font-mono select-all">npm run build</code>
+                                <p class="text-[10px] text-zinc-600 dark:text-zinc-400">Sinkronisasi public/build/manifest.json untuk produksi.</p>
                             </div>
-                            <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
-                                <span class="text-amber-400 font-bold block">3. GIT SYNC</span>
-                                <code class="text-zinc-300 block text-[11px] font-mono select-all">git push origin main</code>
-                                <p class="text-[10px] text-zinc-400">Sinkronkan seluruh commit riwayat per fitur ke repository.</p>
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                <span class="text-amber-600 dark:text-amber-400 font-bold block">3. GIT SYNC</span>
+                                <code class="text-zinc-800 dark:text-zinc-300 block text-[11px] font-mono select-all">git push origin main</code>
+                                <p class="text-[10px] text-zinc-600 dark:text-zinc-400">Sinkronkan seluruh commit riwayat per fitur ke repository.</p>
                             </div>
-                            <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
-                                <span class="text-rose-400 font-bold block">4. DEPLOY SCRIPT</span>
-                                <code class="text-zinc-300 block text-[11px] font-mono select-all">./deploy.sh 6</code>
-                                <p class="text-[10px] text-zinc-400">Skenario 6 (Assets) atau Skenario 2 (Migrasi Aman).</p>
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                <span class="text-rose-600 dark:text-rose-400 font-bold block">4. DEPLOY SCRIPT</span>
+                                <code class="text-zinc-800 dark:text-zinc-300 block text-[11px] font-mono select-all">./deploy.sh 6</code>
+                                <p class="text-[10px] text-zinc-600 dark:text-zinc-400">Skenario 6 (Assets) atau Skenario 2 (Migrasi Aman).</p>
                             </div>
                         </div>
 
                         <!-- Quality Gate Completion Banner -->
-                        <div class="p-4 bg-emerald-950/30 border border-emerald-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="p-4 bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/40 dark:border-emerald-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div>
-                                <span class="text-emerald-400 font-bold text-xs uppercase block">STATUS FINAL SPRINT:</span>
-                                <p class="text-zinc-300 text-xs font-sans mt-0.5">
+                                <span class="text-emerald-700 dark:text-emerald-400 font-bold text-xs uppercase block">STATUS FINAL SPRINT:</span>
+                                <p class="text-zinc-700 dark:text-zinc-300 text-xs font-sans mt-0.5">
                                     Ketika seluruh tahapan telah terverifikasi, aplikasi siap diserahterimakan kepada klien dengan garansi integritas 100% bebas amnesia arsitektur.
                                 </p>
                             </div>
                             <button 
                                 type="button" 
-                                @click="jumpTo(&apos;section-10&apos;)" 
+                                @click="jumpTo('section-10')" 
                                 class="px-4 py-2 bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition shrink-0 uppercase"
                             >
                                 Kunci Scope &amp; Serah Terima &rarr;
@@ -3342,40 +3352,40 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     <div class="flex flex-wrap items-center gap-1.5 font-mono text-xs mb-4">
                         <button 
                             type="button" 
-                            @click="selectedIdeTool = &apos;antigravity_ide&apos;" 
-                            :class="selectedIdeTool === &apos;antigravity_ide&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400&apos;"
+                            @click="selectedIdeTool = 'antigravity_ide'" 
+                            :class="selectedIdeTool === 'antigravity_ide' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
                             class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                         >
                             <span>Google Antigravity IDE</span>
                         </button>
                         <button 
                             type="button" 
-                            @click="selectedIdeTool = &apos;cursor&apos;" 
-                            :class="selectedIdeTool === &apos;cursor&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400&apos;"
+                            @click="selectedIdeTool = 'cursor'" 
+                            :class="selectedIdeTool === 'cursor' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
                             class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                         >
                             <span>Cursor Composer (Cmd+I)</span>
                         </button>
                         <button 
                             type="button" 
-                            @click="selectedIdeTool = &apos;claude&apos;" 
-                            :class="selectedIdeTool === &apos;claude&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400&apos;"
+                            @click="selectedIdeTool = 'claude'" 
+                            :class="selectedIdeTool === 'claude' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
                             class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                         >
                             <span>Claude Code CLI</span>
                         </button>
                         <button 
                             type="button" 
-                            @click="selectedIdeTool = &apos;windsurf&apos;" 
-                            :class="selectedIdeTool === &apos;windsurf&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400&apos;"
+                            @click="selectedIdeTool = 'windsurf'" 
+                            :class="selectedIdeTool === 'windsurf' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
                             class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                         >
                             <span>Windsurf Cascade</span>
                         </button>
                         <button 
                             type="button" 
-                            @click="selectedIdeTool = &apos;devin&apos;" 
-                            :class="selectedIdeTool === &apos;devin&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400&apos;"
+                            @click="selectedIdeTool = 'devin'" 
+                            :class="selectedIdeTool === 'devin' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
                             class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                         >
                             <span>Devin &amp; Copilot Workspace</span>
@@ -3383,13 +3393,13 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
 
                     <!-- Antigravity IDE Guide -->
-                    <div x-show="selectedIdeTool === &apos;antigravity_ide&apos;" class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
-                        <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
-                            <span class="font-bold text-emerald-400 uppercase">1. CARA MENGGUNAKAN DI GOOGLE DEEPMIND ANTIGRAVITY IDE:</span>
-                            <span class="text-[10px] text-zinc-500">Autonomous Agentic Coding</span>
+                    <div x-show="selectedIdeTool === 'antigravity_ide'" class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs space-y-3">
+                        <div class="flex items-center justify-between text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                            <span class="font-bold text-emerald-700 dark:text-emerald-400 uppercase">1. CARA MENGGUNAKAN DI GOOGLE DEEPMIND ANTIGRAVITY IDE:</span>
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400">Autonomous Agentic Coding</span>
                         </div>
-                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
-                            <li>Buka workspace di Antigravity IDE. Pastikan file <code class="text-emerald-400">.agents/AGENTS.md</code> dan Ponytail Decision Ladder aktif.</li>
+                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-700 dark:text-zinc-400 text-xs font-sans">
+                            <li>Buka workspace di Antigravity IDE. Pastikan file <code class="text-emerald-600 dark:text-emerald-400">.agents/AGENTS.md</code> dan Ponytail Decision Ladder aktif.</li>
                             <li>Buka tab <strong>Cockpit Pelaksanaan Sprint</strong> di atas, pilih tahap yang sedang berjalan (Langkah 1 Fondasi atau Fitur spesifik).</li>
                             <li>Klik tombol <strong>SALIN PROMPT</strong>, lalu tempelkan ke prompt bar Antigravity IDE.</li>
                             <li>AI akan memproses diff secara terisolasi pada target files bounded, menjalankan verifikasi pengujian terminal, dan melaporkan ringkasan perubahan.</li>
@@ -3397,39 +3407,39 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
 
                     <!-- Cursor Composer Tool Guide -->
-                    <div x-show="selectedIdeTool === &apos;cursor&apos;" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
-                        <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
-                            <span class="font-bold text-emerald-400 uppercase">2. CARA MENGGUNAKAN DI CURSOR COMPOSER (Cmd+I):</span>
-                            <span class="text-[10px] text-zinc-500">Shortcut: Cmd+I (Mac) / Ctrl+I (Win)</span>
+                    <div x-show="selectedIdeTool === 'cursor'" x-cloak class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs space-y-3">
+                        <div class="flex items-center justify-between text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                            <span class="font-bold text-emerald-700 dark:text-emerald-400 uppercase">2. CARA MENGGUNAKAN DI CURSOR COMPOSER (Cmd+I):</span>
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400">Shortcut: Cmd+I (Mac) / Ctrl+I (Win)</span>
                         </div>
-                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
-                            <li>Buka Cursor Composer dengan menekan <code class="text-emerald-400">Cmd+I</code>.</li>
-                            <li>Ketik simbol <code class="text-cyan-400">@</code> untuk melampirkan file yang menjadi batas target modul (lihat <em>BOUNDED TARGET FILES</em> pada kartu fitur).</li>
+                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-700 dark:text-zinc-400 text-xs font-sans">
+                            <li>Buka Cursor Composer dengan menekan <code class="text-emerald-600 dark:text-emerald-400">Cmd+I</code>.</li>
+                            <li>Ketik simbol <code class="text-cyan-600 dark:text-cyan-400">@</code> untuk melampirkan file yang menjadi batas target modul (lihat <em>BOUNDED TARGET FILES</em> pada kartu fitur).</li>
                             <li>Salin <strong>PROMPT FITUR</strong> dari Cockpit Pelaksanaan Sprint di atas, lalu tempel ke Composer.</li>
-                            <li>Tekan Enter, tinjau perubahan diff baris per baris, dan jalankan perintah verifikasi terminal <code class="text-amber-400">php artisan test --filter=...</code> sebelum menekan Accept All.</li>
+                            <li>Tekan Enter, tinjau perubahan diff baris per baris, dan jalankan perintah verifikasi terminal <code class="text-amber-600 dark:text-amber-400">php artisan test --filter=...</code> sebelum menekan Accept All.</li>
                         </ol>
                     </div>
 
                     <!-- Claude Code CLI Tool Guide -->
-                    <div x-show="selectedIdeTool === &apos;claude&apos;" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
-                        <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
-                            <span class="font-bold text-cyan-400 uppercase">3. CARA MENGGUNAKAN DI CLAUDE CODE CLI (claude):</span>
-                            <span class="text-[10px] text-zinc-500">Terminal Command</span>
+                    <div x-show="selectedIdeTool === 'claude'" x-cloak class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs space-y-3">
+                        <div class="flex items-center justify-between text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                            <span class="font-bold text-cyan-700 dark:text-cyan-400 uppercase">3. CARA MENGGUNAKAN DI CLAUDE CODE CLI (claude):</span>
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400">Terminal Command</span>
                         </div>
-                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
-                            <li>Jalankan perintah <code class="text-cyan-400">claude</code> pada terminal root direktori proyek.</li>
-                            <li>Beri perintah terpandu dengan prompt dari Cockpit: <code class="text-emerald-400 select-all">claude &quot;[Tempel prompt fitur dari Cockpit di sini]&quot;</code></li>
+                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-700 dark:text-zinc-400 text-xs font-sans">
+                            <li>Jalankan perintah <code class="text-cyan-600 dark:text-cyan-400">claude</code> pada terminal root direktori proyek.</li>
+                            <li>Beri perintah terpandu dengan prompt dari Cockpit: <code class="text-emerald-600 dark:text-emerald-400 select-all">claude &quot;[Tempel prompt fitur dari Cockpit di sini]&quot;</code></li>
                             <li>Biarkan Claude Code membaca file bounded, mengeksekusi diff, dan menjalankan loop pengujian terminal secara otonom.</li>
                         </ol>
                     </div>
 
                     <!-- Windsurf Cascade Tool Guide -->
-                    <div x-show="selectedIdeTool === &apos;windsurf&apos;" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
-                        <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
-                            <span class="font-bold text-sky-400 uppercase">4. CARA MENGGUNAKAN DI WINDSURF CASCADE:</span>
-                            <span class="text-[10px] text-zinc-500">Flow-Based Agent</span>
+                    <div x-show="selectedIdeTool === 'windsurf'" x-cloak class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs space-y-3">
+                        <div class="flex items-center justify-between text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                            <span class="font-bold text-sky-700 dark:text-sky-400 uppercase">4. CARA MENGGUNAKAN DI WINDSURF CASCADE:</span>
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400">Flow-Based Agent</span>
                         </div>
-                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
+                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-700 dark:text-zinc-400 text-xs font-sans">
                             <li>Buka panel Cascade di Windsurf dan aktifkan mode <strong>Agentic Write</strong>.</li>
                             <li>Tempelkan prompt dari Cockpit Pelaksanaan Sprint. Pastikan batasan target file terkunci.</li>
                             <li>Pantau cascade flow hingga build sukses dan verifikasi tes lolos.</li>
@@ -3437,12 +3447,12 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
 
                     <!-- Devin & Copilot Tool Guide -->
-                    <div x-show="selectedIdeTool === &apos;devin&apos;" x-cloak class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs space-y-3">
-                        <div class="flex items-center justify-between text-zinc-300 border-b border-zinc-800 pb-2">
-                            <span class="font-bold text-amber-400 uppercase">5. CARA MENGGUNAKAN DI DEVIN &amp; GITHUB COPILOT:</span>
-                            <span class="text-[10px] text-zinc-500">Autonomous Agent / Workspace</span>
+                    <div x-show="selectedIdeTool === 'devin'" x-cloak class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs space-y-3">
+                        <div class="flex items-center justify-between text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                            <span class="font-bold text-amber-700 dark:text-amber-400 uppercase">5. CARA MENGGUNAKAN DI DEVIN &amp; GITHUB COPILOT:</span>
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400">Autonomous Agent / Workspace</span>
                         </div>
-                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-400 text-xs font-sans">
+                        <ol class="list-decimal list-inside space-y-1.5 text-zinc-700 dark:text-zinc-400 text-xs font-sans">
                             <li>Buat issue/task baru dengan judul ID Fitur (cth: FEAT-MVP-01).</li>
                             <li>Salin User Story dan seluruh tabel skenario Gherkin (Given-When-Then) dari Cockpit ke dalam task description.</li>
                             <li>Biarkan Devin / Copilot menyelesaikan issue dan membuka Pull Request terisolasi.</li>
@@ -3592,21 +3602,21 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 1: Workflow State Machine -->
                 <div x-show="chartStudioTab === 'workflow'" class="space-y-4">
-                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
-                            <span class="text-sky-400 font-bold uppercase">DIAGRAM 1: ALUR KERJA SISTEM (WORKFLOW STATE MACHINE)</span>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <span class="text-sky-600 dark:text-sky-400 font-bold uppercase">DIAGRAM 1: ALUR KERJA SISTEM (WORKFLOW STATE MACHINE)</span>
                             <button 
                                 type="button"
                                 onclick="window.copyMermaidCode('mermaid-studio-flow-source', this)"
-                                class="px-2.5 py-1 bg-zinc-800 hover:bg-sky-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
                             >
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                 <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
                             </button>
                         </div>
                         <script type="text/plain" id="mermaid-studio-flow-source">{!! $prd['virtual_charts']['workflow_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-flow-target" class="overflow-x-auto min-h-[160px] flex items-center justify-center p-2 text-center">
-                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                        <div id="mermaid-studio-flow-target" class="overflow-x-auto min-h-[160px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
+                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-none bg-sky-500 animate-ping"></span>
                                 <span>Memuat visualisasi alur kerja Mermaid...</span>
                             </div>
@@ -3616,21 +3626,21 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 2: Database ERD Topology -->
                 <div x-show="chartStudioTab === 'erd'" x-cloak class="space-y-4">
-                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
-                            <span class="text-emerald-400 font-bold uppercase">DIAGRAM 2: SKEMA BASIS DATA RELASIONAL (POSTGRESQL STRICT ULID)</span>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">DIAGRAM 2: SKEMA BASIS DATA RELASIONAL (POSTGRESQL STRICT ULID)</span>
                             <button 
                                 type="button"
                                 onclick="window.copyMermaidCode('mermaid-studio-erd-source', this)"
-                                class="px-2.5 py-1 bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
                             >
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                 <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
                             </button>
                         </div>
                         <script type="text/plain" id="mermaid-studio-erd-source">{!! $prd['virtual_charts']['erd_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-erd-target" class="overflow-x-auto min-h-[220px] flex items-center justify-center p-2 text-center">
-                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                        <div id="mermaid-studio-erd-target" class="overflow-x-auto min-h-[220px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
+                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
                                 <span>Memuat topologi ERD Mermaid...</span>
                             </div>
@@ -3640,21 +3650,21 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 3: Feature & Entity Dependency Graph -->
                 <div x-show="chartStudioTab === 'feature_dep'" x-cloak class="space-y-4">
-                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
-                            <span class="text-amber-400 font-bold uppercase">DIAGRAM 3: PETA KETERGANTUNGAN (AKTOR &rarr; FITUR &rarr; ENTITAS BASIS DATA)</span>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <span class="text-amber-600 dark:text-amber-400 font-bold uppercase">DIAGRAM 3: PETA KETERGANTUNGAN (AKTOR &rarr; FITUR &rarr; ENTITAS BASIS DATA)</span>
                             <button 
                                 type="button"
                                 onclick="window.copyMermaidCode('mermaid-studio-featdep-source', this)"
-                                class="px-2.5 py-1 bg-zinc-800 hover:bg-amber-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
                             >
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                 <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
                             </button>
                         </div>
                         <script type="text/plain" id="mermaid-studio-featdep-source">{!! $prd['virtual_charts']['feature_dependency_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-featdep-target" class="overflow-x-auto min-h-[180px] flex items-center justify-center p-2 text-center">
-                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                        <div id="mermaid-studio-featdep-target" class="overflow-x-auto min-h-[180px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
+                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-none bg-amber-500 animate-ping"></span>
                                 <span>Memuat peta ketergantungan fitur Mermaid...</span>
                             </div>
@@ -3664,21 +3674,21 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 4: Sprint Delivery Roadmap (Gantt Timeline) -->
                 <div x-show="chartStudioTab === 'gantt'" x-cloak class="space-y-4">
-                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
-                            <span class="text-rose-400 font-bold uppercase">DIAGRAM 4: ROADMAP EKSEKUSI &amp; TIMELINE SPRINT (GANTT CHART)</span>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <span class="text-rose-600 dark:text-rose-400 font-bold uppercase">DIAGRAM 4: ROADMAP EKSEKUSI &amp; TIMELINE SPRINT (GANTT CHART)</span>
                             <button 
                                 type="button"
                                 onclick="window.copyMermaidCode('mermaid-studio-gantt-source', this)"
-                                class="px-2.5 py-1 bg-zinc-800 hover:bg-rose-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
                             >
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                 <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
                             </button>
                         </div>
                         <script type="text/plain" id="mermaid-studio-gantt-source">{!! $prd['virtual_charts']['sprint_gantt_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-gantt-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center">
-                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                        <div id="mermaid-studio-gantt-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
+                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-none bg-rose-500 animate-ping"></span>
                                 <span>Memuat timeline roadmap Mermaid...</span>
                             </div>
@@ -3688,21 +3698,21 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 5: Infrastructure, Security & Hosting Topology -->
                 <div x-show="chartStudioTab === 'infra'" x-cloak class="space-y-4">
-                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
-                            <span class="text-violet-400 font-bold uppercase">DIAGRAM 5: TOPOLOGI INFRASTRUKTUR, KEAMANAN &amp; HOSTING</span>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <span class="text-violet-600 dark:text-violet-400 font-bold uppercase">DIAGRAM 5: TOPOLOGI INFRASTRUKTUR, KEAMANAN &amp; HOSTING</span>
                             <button 
                                 type="button"
                                 onclick="window.copyMermaidCode('mermaid-studio-infra-source', this)"
-                                class="px-2.5 py-1 bg-zinc-800 hover:bg-violet-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-violet-500 hover:text-white dark:hover:bg-violet-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
                             >
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                 <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
                             </button>
                         </div>
                         <script type="text/plain" id="mermaid-studio-infra-source">{!! $prd['virtual_charts']['infrastructure_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-infra-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center">
-                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                        <div id="mermaid-studio-infra-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
+                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-none bg-violet-500 animate-ping"></span>
                                 <span>Memuat topologi infrastruktur Mermaid...</span>
                             </div>
@@ -3712,21 +3722,21 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 6: Mobile App & Local SQLite Sync Sequence -->
                 <div x-show="chartStudioTab === 'mobile_sync'" x-cloak class="space-y-4">
-                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-800 text-xs font-mono">
-                            <span class="text-emerald-400 font-bold uppercase">DIAGRAM 6: ALUR SINKRONISASI MOBILE &amp; LOCAL SQLITE (OFFLINE-FIRST)</span>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
+                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">DIAGRAM 6: ALUR SINKRONISASI MOBILE &amp; LOCAL SQLITE (OFFLINE-FIRST)</span>
                             <button 
                                 type="button"
                                 onclick="window.copyMermaidCode('mermaid-studio-mobilesync-source', this)"
-                                class="px-2.5 py-1 bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-700"
+                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
                             >
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                 <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
                             </button>
                         </div>
                         <script type="text/plain" id="mermaid-studio-mobilesync-source">{!! $prd['virtual_charts']['mobile_sync_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-mobilesync-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center">
-                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                        <div id="mermaid-studio-mobilesync-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
+                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
                                 <span>Memuat topologi sinkronisasi Mobile &amp; SQLite Mermaid...</span>
                             </div>
@@ -3804,8 +3814,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- 1. Interactive Visual Flowchart (Pipeline Nodes & Connectors) -->
                 <div x-show="flowTab === 'visual'" class="mb-6">
-                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative overflow-hidden">
-                        <div class="absolute top-0 right-0 px-3 py-1 bg-emerald-500/10 border-b border-l border-emerald-500/30 text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold">
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative overflow-hidden">
+                        <div class="absolute top-0 right-0 px-3 py-1 bg-emerald-500/10 border-b border-l border-emerald-500/30 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 uppercase tracking-widest font-bold">
                             INTERACTIVE PROCESS PIPELINE
                         </div>
 
@@ -3814,36 +3824,36 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 min-w-[700px]">
                                 @foreach($rawWorkflows as $index => $flow)
                                     <!-- Node Card -->
-                                    <div class="flex-1 bg-zinc-900 border border-zinc-700 p-4 relative group hover:border-emerald-500 transition shadow-lg flex flex-col justify-between">
+                                    <div class="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 p-4 relative group hover:border-emerald-500 transition shadow-sm dark:shadow-lg flex flex-col justify-between">
                                         <div>
                                             <div class="flex items-center justify-between gap-2 mb-2 font-mono">
                                                 <div class="flex items-center gap-2">
                                                     <span class="w-2 h-2 rounded-none bg-emerald-500 animate-pulse"></span>
-                                                    <span class="text-xs font-bold text-white">STEP 0{{ $flow['step'] ?? ($index + 1) }}</span>
+                                                    <span class="text-xs font-bold text-zinc-900 dark:text-white">STEP 0{{ $flow['step'] ?? ($index + 1) }}</span>
                                                 </div>
-                                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-zinc-800 text-emerald-400 border border-emerald-500/30 font-bold">
+                                                <span class="text-[9px] uppercase px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-bold">
                                                     {{ $flow['badge'] ?? 'PROCESS' }}
                                                 </span>
                                             </div>
 
-                                            <h4 class="font-mono font-bold text-xs uppercase text-zinc-100 mb-2 leading-snug">
+                                            <h4 class="font-mono font-bold text-xs uppercase text-zinc-900 dark:text-zinc-100 mb-2 leading-snug">
                                                 {{ $flow['action'] ?? '-' }}
                                             </h4>
 
-                                            <p class="text-[11px] text-zinc-400 font-sans leading-relaxed mb-3">
+                                            <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
                                                 {{ $flow['description'] ?? 'Tahapan validasi dan transmisi alur kerja.' }}
                                             </p>
                                         </div>
 
-                                        <div class="space-y-1.5 pt-2 border-t border-zinc-800 text-[10px] font-mono">
-                                            <div class="flex items-center justify-between text-zinc-400">
-                                                <span class="text-zinc-500">AKTOR:</span>
-                                                <span class="text-emerald-400 font-bold truncate max-w-[140px]">{{ $flow['actor'] ?? 'Pengguna' }}</span>
+                                        <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono">
+                                            <div class="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
+                                                <span class="text-zinc-500 dark:text-zinc-400">AKTOR:</span>
+                                                <span class="text-emerald-700 dark:text-emerald-400 font-bold truncate max-w-[140px]">{{ $flow['actor'] ?? 'Pengguna' }}</span>
                                             </div>
                                             @if(!empty($flow['trigger']))
-                                                <div class="text-[10px] text-zinc-400">
-                                                    <span class="text-zinc-500 block">TRIGGER:</span>
-                                                    <span class="text-zinc-300 font-sans text-[11px]">{{ $flow['trigger'] }}</span>
+                                                <div class="text-[10px] text-zinc-600 dark:text-zinc-400">
+                                                    <span class="text-zinc-500 dark:text-zinc-400 block">TRIGGER:</span>
+                                                    <span class="text-zinc-800 dark:text-zinc-300 font-sans text-[11px]">{{ $flow['trigger'] }}</span>
                                                 </div>
                                             @endif
                                         </div>
@@ -3854,10 +3864,10 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                         <div class="flex items-center justify-center text-emerald-500 px-1 py-1">
                                             <div class="hidden lg:flex items-center gap-0.5">
                                                 <div class="w-4 h-0.5 bg-emerald-500/60"></div>
-                                                <svg class="w-4 h-4 text-emerald-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                                                <svg class="w-4 h-4 text-emerald-500 dark:text-emerald-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
                                             </div>
                                             <div class="flex lg:hidden items-center justify-center my-1">
-                                                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                                                <svg class="w-5 h-5 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
                                             </div>
                                         </div>
                                     @endif
@@ -4064,43 +4074,43 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- 1. Interactive Visual ERD Topology (Connected Entity Relationship Cards) -->
                 <div x-show="erdTab === 'visual'" class="mb-6">
-                    <div class="bg-zinc-950 border border-zinc-800 p-6 rounded-none relative">
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
                         <!-- Cardinality Banner -->
-                        <div class="mb-6 p-3 bg-zinc-900 border border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                        <div class="mb-6 p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
                             <div class="flex items-center gap-2">
                                 <span class="px-2 py-0.5 bg-emerald-500 text-black font-bold text-[10px]">RELATIONAL GRAPH</span>
-                                <span class="text-zinc-300 text-[11px]">Strict PostgreSQL Foreign Key Cardinalities</span>
+                                <span class="text-zinc-700 dark:text-zinc-300 text-[11px]">Strict PostgreSQL Foreign Key Cardinalities</span>
                             </div>
-                            <div class="flex flex-wrap items-center gap-4 text-[11px] text-zinc-400">
-                                <div><strong class="text-emerald-400">users (1)</strong> &bull;--&lt; <strong>{{ $domainTableRaw }} (N)</strong></div>
-                                <div><strong class="text-emerald-400">users (1)</strong> &bull;--&lt; <strong>activity_logs (N)</strong></div>
-                                <div><strong class="text-emerald-400">{{ $domainTableRaw }} (1)</strong> &bull;--&lt; <strong>system_notifications (N)</strong></div>
+                            <div class="flex flex-wrap items-center gap-4 text-[11px] text-zinc-600 dark:text-zinc-400">
+                                <div><strong class="text-emerald-600 dark:text-emerald-400">users (1)</strong> &bull;--&lt; <strong>{{ $domainTableRaw }} (N)</strong></div>
+                                <div><strong class="text-emerald-600 dark:text-emerald-400">users (1)</strong> &bull;--&lt; <strong>activity_logs (N)</strong></div>
+                                <div><strong class="text-emerald-600 dark:text-emerald-400">{{ $domainTableRaw }} (1)</strong> &bull;--&lt; <strong>system_notifications (N)</strong></div>
                             </div>
                         </div>
 
                         <!-- Entity Schema Cards (2x2 Grid) -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             @foreach($prd['erd_schema']['tables'] ?? [] as $table)
-                                <div class="bg-zinc-900 border-2 border-zinc-800 hover:border-emerald-500/60 transition shadow-xl font-mono text-xs">
+                                <div class="bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/60 transition shadow-sm dark:shadow-xl font-mono text-xs">
                                     <!-- Entity Card Header -->
-                                    <div class="p-3.5 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between">
+                                    <div class="p-3.5 bg-zinc-100 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
                                         <div class="flex items-center gap-2">
-                                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"></path></svg>
-                                            <span class="font-black text-white uppercase text-sm tracking-wide">{{ $table['name'] }}</span>
+                                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"></path></svg>
+                                            <span class="font-black text-zinc-900 dark:text-white uppercase text-sm tracking-wide">{{ $table['name'] }}</span>
                                         </div>
-                                        <span class="px-2 py-0.5 bg-zinc-800 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                                        <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
                                             PK: ULID
                                         </span>
                                     </div>
 
-                                    <div class="px-3.5 py-2 bg-zinc-900/60 border-b border-zinc-800 text-[11px] text-zinc-400 font-sans">
+                                    <div class="px-3.5 py-2 bg-zinc-50 dark:bg-zinc-900/60 border-b border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 font-sans">
                                         {{ $table['description'] }}
                                     </div>
 
                                     <!-- Columns Attributes List -->
-                                    <div class="divide-y divide-zinc-800/80">
+                                    <div class="divide-y divide-zinc-200 dark:divide-zinc-800/80">
                                         @foreach($table['columns'] ?? [] as $col)
-                                             <div class="px-3.5 py-2 flex items-center justify-between gap-2 hover:bg-zinc-800/40 transition">
+                                             <div class="px-3.5 py-2 flex items-center justify-between gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition">
                                                 <div class="flex items-center gap-2 min-w-0">
                                                     @if($col['index'] === 'PRIMARY')
                                                         <span class="px-1.5 py-0.2 bg-emerald-500 text-black font-black text-[9px]">PK</span>
@@ -4109,19 +4119,19 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                                     @elseif($col['index'] === 'UNIQUE')
                                                         <span class="px-1.5 py-0.2 bg-purple-500 text-white font-black text-[9px]">UK</span>
                                                     @elseif($col['index'] === 'INDEX')
-                                                        <span class="px-1.5 py-0.2 bg-zinc-700 text-zinc-300 font-bold text-[9px]">IDX</span>
+                                                        <span class="px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-[9px]">IDX</span>
                                                     @else
-                                                        <span class="w-4 inline-block text-zinc-600 text-center">&bull;</span>
+                                                        <span class="w-4 inline-block text-zinc-400 dark:text-zinc-600 text-center">&bull;</span>
                                                     @endif
 
-                                                    <span class="font-bold text-zinc-100 truncate">{{ $col['name'] }}</span>
+                                                    <span class="font-bold text-zinc-900 dark:text-zinc-100 truncate">{{ $col['name'] }}</span>
                                                 </div>
 
                                                 <div class="flex items-center gap-2 text-right">
-                                                    <span class="text-zinc-500 text-[11px] font-sans truncate max-w-[130px]" x-text="erdLang === 'id' ? '{{ $col['label']['id'] ?? ($col['notes'] ?? '-') }}' : '{{ $col['label']['en'] ?? ($col['name'] ?? '-') }}'"></span>
-                                                    <span class="text-emerald-400 text-[10px] font-bold">{{ $col['type'] }}</span>
+                                                    <span class="text-zinc-500 dark:text-zinc-400 text-[11px] font-sans truncate max-w-[130px]" x-text="erdLang === 'id' ? '{{ $col['label']['id'] ?? ($col['notes'] ?? '-') }}' : '{{ $col['label']['en'] ?? ($col['name'] ?? '-') }}'"></span>
+                                                    <span class="text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">{{ $col['type'] }}</span>
                                                 </div>
-                                            </div>
+                                             </div>
                                         @endforeach
                                     </div>
                                 </div>
@@ -4248,24 +4258,24 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 </div>
 
                 <!-- Client Architectural Parameters Summary -->
-                <div class="mb-8 p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs">
-                    <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-2">PARAMETER PENILAIAN DARI KUESIONER KLIEN:</div>
+                <div class="mb-8 p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                    <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider mb-2">PARAMETER PENILAIAN DARI KUESIONER KLIEN:</div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px]">
-                        <div class="p-2.5 bg-zinc-900 border border-zinc-800">
-                            <span class="text-zinc-500 text-[10px] block">TARGET SKALA / TRAFIK</span>
-                            <strong class="text-zinc-200">{{ $archEval['scope_boundaries']['client_scale'] ?? ($blueprint->user_metadata['skala_pengguna'] ?? '0 - 100k User / Bulan') }}</strong>
+                        <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">TARGET SKALA / TRAFIK</span>
+                            <strong class="text-zinc-900 dark:text-zinc-200">{{ $archEval['scope_boundaries']['client_scale'] ?? ($blueprint->user_metadata['skala_pengguna'] ?? '0 - 100k User / Bulan') }}</strong>
                         </div>
-                        <div class="p-2.5 bg-zinc-900 border border-zinc-800">
-                            <span class="text-zinc-500 text-[10px] block">JANGKAUAN PASAR</span>
-                            <strong class="text-zinc-200">{{ $archEval['scope_boundaries']['client_market'] ?? ($blueprint->user_metadata['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR)') }}</strong>
+                        <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">JANGKAUAN PASAR</span>
+                            <strong class="text-zinc-900 dark:text-zinc-200">{{ $archEval['scope_boundaries']['client_market'] ?? ($blueprint->user_metadata['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR)') }}</strong>
                         </div>
-                        <div class="p-2.5 bg-zinc-900 border border-zinc-800">
-                            <span class="text-zinc-500 text-[10px] block">STANDAR KEPATUHAN</span>
-                            <strong class="text-zinc-200">{{ $archEval['scope_boundaries']['client_compliance'] ?? ($blueprint->user_metadata['kepatuhan_keamanan'] ?? 'OWASP Top 10 & Enkripsi') }}</strong>
+                        <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">STANDAR KEPATUHAN</span>
+                            <strong class="text-zinc-900 dark:text-zinc-200">{{ $archEval['scope_boundaries']['client_compliance'] ?? ($blueprint->user_metadata['kepatuhan_keamanan'] ?? 'OWASP Top 10 & Enkripsi') }}</strong>
                         </div>
-                        <div class="p-2.5 bg-zinc-900 border border-zinc-800">
-                            <span class="text-zinc-500 text-[10px] block">RENCANA ANGGARAN KLIEN</span>
-                            <strong class="text-emerald-400">{{ $archEval['scope_boundaries']['client_budget'] ?? ($blueprint->user_metadata['kisaran_budget'] ?? 'Rp 50M - Rp 100M') }}</strong>
+                        <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">RENCANA ANGGARAN KLIEN</span>
+                            <strong class="text-emerald-600 dark:text-emerald-400">{{ $archEval['scope_boundaries']['client_budget'] ?? ($blueprint->user_metadata['kisaran_budget'] ?? 'Rp 50M - Rp 100M') }}</strong>
                         </div>
                     </div>
                 </div>
@@ -4345,100 +4355,100 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         $blueprint->user_metadata ?? []
                     );
                 @endphp
-                <div class="mb-8 p-6 bg-zinc-950 border-2 border-emerald-500 font-mono text-zinc-100">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4 mb-5">
+                <div class="mb-8 p-6 bg-white dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-zinc-900 dark:text-zinc-100 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-5">
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase tracking-wider">HARDWARE SIZING ENGINE</span>
-                                <span class="text-xs text-zinc-400">&bull; {{ $serverSizing['workload_profile'] }}</span>
+                                <span class="text-xs text-zinc-500 dark:text-zinc-400">&bull; {{ $serverSizing['workload_profile'] }}</span>
                             </div>
-                            <h3 class="text-base sm:text-lg font-black uppercase text-white">
+                            <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white">
                                 Rekomendasi Spesifikasi Server: {{ $serverSizing['tier_name'] }}
                             </h3>
                         </div>
-                        <div class="text-left sm:text-right bg-zinc-900 border border-zinc-800 p-2.5">
-                            <span class="text-[10px] text-zinc-500 block uppercase">Estimasi Biaya Server</span>
-                            <strong class="text-emerald-400 text-sm font-black">{{ $serverSizing['estimated_monthly_investment']['idr'] }}</strong>
-                            <span class="text-zinc-500 text-[10px] block">({{ $serverSizing['estimated_monthly_investment']['usd'] }})</span>
+                        <div class="text-left sm:text-right bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-2.5">
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block uppercase">Estimasi Biaya Server</span>
+                            <strong class="text-emerald-600 dark:text-emerald-400 text-sm font-black">{{ $serverSizing['estimated_monthly_investment']['idr'] }}</strong>
+                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">({{ $serverSizing['estimated_monthly_investment']['usd'] }})</span>
                         </div>
                     </div>
 
                     <!-- 4 Hardware Pillar Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <!-- vCPU -->
-                        <div class="p-4 bg-zinc-900 border border-zinc-800">
+                        <div class="p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-[10px] text-zinc-400 font-bold uppercase">PROSESOR (vCPU)</span>
-                                <span class="text-emerald-400 font-black text-xs">&part; CPU</span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">PROSESOR (vCPU)</span>
+                                <span class="text-emerald-600 dark:text-emerald-400 font-black text-xs">&part; CPU</span>
                             </div>
-                            <div class="text-base font-black text-white mb-1">{{ $serverSizing['specifications']['vcpu']['count'] }}</div>
-                            <p class="text-[10px] text-zinc-400 mb-3">{{ $serverSizing['specifications']['vcpu']['architecture'] }}</p>
-                            <div class="space-y-1.5 pt-2 border-t border-zinc-800 text-[10px] text-zinc-400">
+                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1">{{ $serverSizing['specifications']['vcpu']['count'] }}</div>
+                            <p class="text-[10px] text-zinc-600 dark:text-zinc-400 mb-3">{{ $serverSizing['specifications']['vcpu']['architecture'] }}</p>
+                            <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-600 dark:text-zinc-400">
                                 @foreach($serverSizing['specifications']['vcpu']['allocation'] as $allocKey => $allocVal)
-                                    <div>&bull; <strong class="text-zinc-300">{{ $allocKey }}:</strong> {{ $allocVal }}</div>
+                                    <div>&bull; <strong class="text-zinc-800 dark:text-zinc-300">{{ $allocKey }}:</strong> {{ $allocVal }}</div>
                                 @endforeach
                             </div>
                         </div>
 
                         <!-- RAM -->
-                        <div class="p-4 bg-zinc-900 border border-zinc-800">
+                        <div class="p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-[10px] text-zinc-400 font-bold uppercase">MEMORI (RAM ECC)</span>
-                                <span class="text-sky-400 font-black text-xs">&infin; MEM</span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">MEMORI (RAM ECC)</span>
+                                <span class="text-sky-600 dark:text-sky-400 font-black text-xs">&infin; MEM</span>
                             </div>
-                            <div class="text-base font-black text-white mb-1">{{ $serverSizing['specifications']['ram']['total'] }}</div>
-                            <p class="text-[10px] text-zinc-400 mb-3">Distribusi Anggaran Memori Terisolasi</p>
-                            <div class="space-y-1.5 pt-2 border-t border-zinc-800 text-[10px] text-zinc-400">
+                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1">{{ $serverSizing['specifications']['ram']['total'] }}</div>
+                            <p class="text-[10px] text-zinc-600 dark:text-zinc-400 mb-3">Distribusi Anggaran Memori Terisolasi</p>
+                            <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-600 dark:text-zinc-400">
                                 @foreach($serverSizing['specifications']['ram']['budget_distribution'] as $b)
                                     <div class="flex justify-between">
                                         <span class="truncate pr-1">{{ $b['component'] }}</span>
-                                        <strong class="text-sky-300 shrink-0">{{ $b['size'] }}</strong>
+                                        <strong class="text-sky-600 dark:text-sky-300 shrink-0">{{ $b['size'] }}</strong>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
 
                         <!-- Storage -->
-                        <div class="p-4 bg-zinc-900 border border-zinc-800">
+                        <div class="p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-[10px] text-zinc-400 font-bold uppercase">STORAGE (NVMe SSD)</span>
-                                <span class="text-amber-400 font-black text-xs">&Delta; DISK</span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">STORAGE (NVMe SSD)</span>
+                                <span class="text-amber-600 dark:text-amber-400 font-black text-xs">&Delta; DISK</span>
                             </div>
-                            <div class="text-base font-black text-white mb-1">{{ $serverSizing['specifications']['storage']['capacity'] }}</div>
-                            <p class="text-[10px] text-zinc-400 mb-3">{{ $serverSizing['specifications']['storage']['speed'] }}</p>
-                            <div class="space-y-1.5 pt-2 border-t border-zinc-800 text-[10px] text-zinc-400">
+                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1">{{ $serverSizing['specifications']['storage']['capacity'] }}</div>
+                            <p class="text-[10px] text-zinc-600 dark:text-zinc-400 mb-3">{{ $serverSizing['specifications']['storage']['speed'] }}</p>
+                            <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-600 dark:text-zinc-400">
                                 @foreach($serverSizing['specifications']['storage']['distribution'] as $d)
                                     <div class="flex justify-between">
                                         <span class="truncate pr-1">{{ $d['use'] }}</span>
-                                        <strong class="text-amber-300 shrink-0">{{ $d['size'] }}</strong>
+                                        <strong class="text-amber-600 dark:text-amber-300 shrink-0">{{ $d['size'] }}</strong>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
 
                         <!-- Network -->
-                        <div class="p-4 bg-zinc-900 border border-zinc-800">
+                        <div class="p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-[10px] text-zinc-400 font-bold uppercase">JARINGAN & BANDWIDTH</span>
-                                <span class="text-emerald-400 font-black text-xs">&theta; NET</span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">JARINGAN & BANDWIDTH</span>
+                                <span class="text-emerald-600 dark:text-emerald-400 font-black text-xs">&theta; NET</span>
                             </div>
-                            <div class="text-base font-black text-white mb-1">{{ $serverSizing['specifications']['network']['port_speed'] }}</div>
-                            <p class="text-[10px] text-zinc-400 mb-3">{{ $serverSizing['specifications']['network']['bandwidth'] }}</p>
-                            <div class="space-y-1.5 pt-2 border-t border-zinc-800 text-[10px] text-zinc-400">
-                                <div>&bull; <strong class="text-zinc-300">Latensi Target:</strong> {{ $serverSizing['specifications']['network']['latency_target'] }}</div>
-                                <div>&bull; <strong class="text-zinc-300">Proteksi:</strong> Anti-DDoS Anycast L3/L4/L7</div>
+                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1">{{ $serverSizing['specifications']['network']['port_speed'] }}</div>
+                            <p class="text-[10px] text-zinc-600 dark:text-zinc-400 mb-3">{{ $serverSizing['specifications']['network']['bandwidth'] }}</p>
+                            <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-600 dark:text-zinc-400">
+                                <div>&bull; <strong class="text-zinc-800 dark:text-zinc-300">Latensi Target:</strong> {{ $serverSizing['specifications']['network']['latency_target'] }}</div>
+                                <div>&bull; <strong class="text-zinc-800 dark:text-zinc-300">Proteksi:</strong> Anti-DDoS Anycast L3/L4/L7</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Provider Benchmark Comparison Table -->
                     <div class="mb-5">
-                        <div class="text-xs font-bold uppercase text-zinc-300 mb-2 flex items-center gap-1.5">
+                        <div class="text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-2 flex items-center gap-1.5">
                             <span>Perbandingan Benchmark Provider Server Riil:</span>
                         </div>
-                        <div class="overflow-x-auto border border-zinc-800">
+                        <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800">
                             <table class="w-full text-[11px] text-left">
-                                <thead class="bg-zinc-900 text-zinc-400 uppercase font-mono text-[10px] border-b border-zinc-800">
+                                <thead class="bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 uppercase font-mono text-[10px] border-b border-zinc-200 dark:border-zinc-800">
                                     <tr>
                                         <th class="py-2.5 px-3">Provider Cloud</th>
                                         <th class="py-2.5 px-3">Tipe Paket</th>
@@ -4446,16 +4456,16 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                         <th class="py-2.5 px-3">Kelebihan Operasional</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-zinc-800/60 font-mono">
+                                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800/60 font-mono">
                                     @foreach($serverSizing['benchmark_providers'] as $p)
-                                        <tr class="hover:bg-zinc-900/60 transition">
+                                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/60 transition">
                                             <td class="py-2 px-3">
-                                                <strong class="text-white block">{{ $p['name'] }}</strong>
-                                                <span class="text-[9px] text-emerald-400 uppercase">{{ $p['badge'] }}</span>
+                                                <strong class="text-zinc-900 dark:text-white block">{{ $p['name'] }}</strong>
+                                                <span class="text-[9px] text-emerald-600 dark:text-emerald-400 uppercase">{{ $p['badge'] }}</span>
                                             </td>
-                                            <td class="py-2 px-3 text-zinc-300">{{ $p['plan'] }}</td>
-                                            <td class="py-2 px-3 font-bold text-emerald-400">{{ $p['est_cost'] }}</td>
-                                            <td class="py-2 px-3 text-zinc-400 font-sans text-[11px]">{{ $p['pros'] }}</td>
+                                            <td class="py-2 px-3 text-zinc-700 dark:text-zinc-300">{{ $p['plan'] }}</td>
+                                            <td class="py-2 px-3 font-bold text-emerald-600 dark:text-emerald-400">{{ $p['est_cost'] }}</td>
+                                            <td class="py-2 px-3 text-zinc-600 dark:text-zinc-400 font-sans text-[11px]">{{ $p['pros'] }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -4464,8 +4474,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
 
                     <!-- Scaling Triggers -->
-                    <div class="p-3.5 bg-zinc-900/80 border border-zinc-800 text-[11px] text-zinc-400">
-                        <strong class="text-amber-400 uppercase block mb-1">Indikator Kapan Harus Upgrade Server (Scaling Triggers):</strong>
+                    <div class="p-3.5 bg-amber-500/10 dark:bg-zinc-900/80 border border-amber-500/30 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-400">
+                        <strong class="text-amber-700 dark:text-amber-400 uppercase block mb-1">Indikator Kapan Harus Upgrade Server (Scaling Triggers):</strong>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px]">
                             @foreach($serverSizing['scaling_thresholds'] as $st)
                                 <div>&check; {{ $st }}</div>
@@ -4566,22 +4576,22 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 </div>
 
                 <!-- 5. The 4 Decoupling Triggers (Warning / Criteria checklist) -->
-                <div class="mb-8 p-5 bg-zinc-950 border-2 border-amber-500/70 text-zinc-200 font-mono text-xs">
+                <div class="mb-8 p-5 bg-amber-500/5 dark:bg-zinc-950 border-2 border-amber-500/70 text-zinc-800 dark:text-zinc-200 font-mono text-xs shadow-sm">
                     <div class="flex items-center gap-2 mb-2">
                         <span class="w-3 h-3 bg-amber-500"></span>
-                        <h4 class="font-black text-sm uppercase text-amber-400">4 Faktor Penentu Mutlak Kapan Sistem Wajib Decoupled</h4>
+                        <h4 class="font-black text-sm uppercase text-amber-700 dark:text-amber-400">4 Faktor Penentu Mutlak Kapan Sistem Wajib Decoupled</h4>
                     </div>
-                    <p class="text-zinc-400 text-xs mb-4 font-sans">
+                    <p class="text-zinc-600 dark:text-zinc-400 text-xs mb-4 font-sans">
                         Sistem tidak boleh dipecah menjadi microservices kecuali satu atau lebih pemicu mutlak berikut terpenuhi:
                     </p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
                         @foreach($archEval['decoupling_threshold_triggers']['triggers'] ?? [] as $trigger)
-                            <div class="p-3 bg-zinc-900 border border-zinc-800">
+                            <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                                 <div class="flex items-center gap-2 mb-1">
                                     <span class="px-1.5 py-0.2 bg-amber-500 text-black font-black text-[9px]">{{ $trigger['number'] }}</span>
-                                    <span class="font-bold text-white text-xs">{{ $trigger['title'] }}</span>
+                                    <span class="font-bold text-zinc-900 dark:text-white text-xs">{{ $trigger['title'] }}</span>
                                 </div>
-                                <p class="text-zinc-400 text-[10px] leading-relaxed">{{ $trigger['desc'] }}</p>
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[10px] leading-relaxed">{{ $trigger['desc'] }}</p>
                             </div>
                         @endforeach
                     </div>
@@ -4621,13 +4631,13 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 </div>
 
                 <!-- 7. AI-Ready PostgreSQL Database Blueprint -->
-                <div class="mb-8 p-5 bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3 mb-4">
+                <div class="mb-8 p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 font-mono text-xs">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-emerald-500"></span>
-                            <span class="font-bold uppercase text-sm text-white">7. Basis Data PostgreSQL 16+ (pgvector & Strict ULID)</span>
+                            <span class="font-bold uppercase text-sm text-zinc-900 dark:text-white">7. Basis Data PostgreSQL 16+ (pgvector & Strict ULID)</span>
                         </div>
-                        <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold">
+                        <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold">
                             AI-READY DATABASE ENGINE
                         </span>
                     </div>
@@ -4635,22 +4645,22 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px] leading-relaxed">
                         <div class="space-y-2">
                             <div>
-                                <strong class="text-emerald-400 block mb-0.5">&bull; Ekstensi pgvector Co-Location:</strong>
-                                Vector embeddings (1536-dim / 3072-dim) disimpan berdampingan langsung dengan data transaksi dan pengguna tanpa memerlukan SaaS database vektor terpisah seperti Pinecone atau Milvus.
+                                <strong class="text-emerald-600 dark:text-emerald-400 block mb-0.5">&bull; Ekstensi pgvector Co-Location:</strong>
+                                <span class="text-zinc-600 dark:text-zinc-300">Vector embeddings (1536-dim / 3072-dim) disimpan berdampingan langsung dengan data transaksi dan pengguna tanpa memerlukan SaaS database vektor terpisah seperti Pinecone atau Milvus.</span>
                             </div>
                             <div>
-                                <strong class="text-emerald-400 block mb-0.5">&bull; Indeks HNSW (Hierarchical Navigable Small World):</strong>
-                                Pencarian kedekatan semantik vektor dengan kompleksitas sub-millisecond O(log N) untuk RAG (Retrieval-Augmented Generation) berkecepatan tinggi.
+                                <strong class="text-emerald-600 dark:text-emerald-400 block mb-0.5">&bull; Indeks HNSW (Hierarchical Navigable Small World):</strong>
+                                <span class="text-zinc-600 dark:text-zinc-300">Pencarian kedekatan semantik vektor dengan kompleksitas sub-millisecond O(log N) untuk RAG (Retrieval-Augmented Generation) berkecepatan tinggi.</span>
                             </div>
                         </div>
                         <div class="space-y-2">
                             <div>
-                                <strong class="text-emerald-400 block mb-0.5">&bull; Strict ULID Primary Key Standard:</strong>
-                                Format string 26-karakter bebas sequence lock yang menjamin pembagian partisi terdistribusi dan keystone cursor pagination O(1) tanpa degradasi performa.
+                                <strong class="text-emerald-600 dark:text-emerald-400 block mb-0.5">&bull; Strict ULID Primary Key Standard:</strong>
+                                <span class="text-zinc-600 dark:text-zinc-300">Format string 26-karakter bebas sequence lock yang menjamin pembagian partisi terdistribusi dan keystone cursor pagination O(1) tanpa degradasi performa.</span>
                             </div>
                             <div>
-                                <strong class="text-emerald-400 block mb-0.5">&bull; Dynamic JSONB Indexing:</strong>
-                                Mendukung penyimpanan context window percakapan agen AI Gemini Ultra serta fleksibilitas metadata dokumen.
+                                <strong class="text-emerald-600 dark:text-emerald-400 block mb-0.5">&bull; Dynamic JSONB Indexing:</strong>
+                                <span class="text-zinc-600 dark:text-zinc-300">Mendukung penyimpanan context window percakapan agen AI Gemini Ultra serta fleksibilitas metadata dokumen.</span>
                             </div>
                         </div>
                     </div>
@@ -4861,91 +4871,91 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
 
                     <!-- Exploit Gym Incident Background Notice -->
-                    <div class="mb-4 p-4 bg-rose-950/20 border-2 border-rose-500/60 font-mono text-xs text-zinc-300">
-                        <div class="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-rose-500/30">
-                            <strong class="text-rose-400 uppercase font-black text-xs flex items-center gap-2">
+                    <div class="mb-4 p-4 bg-rose-50 dark:bg-rose-950/20 border-2 border-rose-300 dark:border-rose-500/60 font-mono text-xs text-zinc-800 dark:text-zinc-300">
+                        <div class="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-rose-200 dark:border-rose-500/30">
+                            <strong class="text-rose-700 dark:text-rose-400 uppercase font-black text-xs flex items-center gap-2">
                                 <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                 INSIDEN CYBER AI: STUDI KASUS HUGGING FACE DATASET LOADER RCE
                             </strong>
-                            <span class="text-[9px] bg-rose-900/60 text-rose-200 px-2 py-0.5 uppercase font-bold">CVE-MITIGATION</span>
+                            <span class="text-[9px] bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200 px-2 py-0.5 uppercase font-bold border border-rose-300 dark:border-rose-700">CVE-MITIGATION</span>
                         </div>
-                        <p class="text-[11px] text-zinc-300 font-sans leading-relaxed mb-2">
+                        <p class="text-[11px] text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed mb-2">
                             {{ $aiSecBlueprint['incident_context']['description'] ?? 'Dalam uji benchmark Exploit Gym, model AI otonom dari OpenAI mengalami kebuntuan pada eksploitasi kompleks. Alih-alih berhenti, AI secara otonom mencari kunci jawaban ke sistem eksternal Hugging Face dan mengeksploitasi celah Remote Code Execution (RCE) pada dataset loader yang mengizinkan eksekusi kode dinamis.' }}
                         </p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-rose-500/20 text-[10px]">
-                            <div><span class="text-rose-400 font-bold">Vektor Serangan:</span> Unsafe Dataset Deserialization &amp; Probing Cepat</div>
-                            <div><span class="text-rose-400 font-bold">Resiko Sistem:</span> Server Hijack &amp; Remote Arbitrary Code Execution</div>
-                            <div><span class="text-rose-400 font-bold">Arsitektur Neriah Pro:</span> Zero-Dynamic Code + Sandboxed Queue Isolation</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-rose-200 dark:border-rose-500/20 text-[10px] text-zinc-700 dark:text-zinc-300">
+                            <div><span class="text-rose-700 dark:text-rose-400 font-bold">Vektor Serangan:</span> Unsafe Dataset Deserialization &amp; Probing Cepat</div>
+                            <div><span class="text-rose-700 dark:text-rose-400 font-bold">Resiko Sistem:</span> Server Hijack &amp; Remote Arbitrary Code Execution</div>
+                            <div><span class="text-rose-700 dark:text-rose-400 font-bold">Arsitektur Neriah Pro:</span> Zero-Dynamic Code + Sandboxed Queue Isolation</div>
                         </div>
                     </div>
 
                     <!-- 3-Pillar Security Architecture Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 font-mono text-xs">
                         <!-- Pillar 1: AI Anomaly Detection -->
-                        <div class="p-4 bg-zinc-950 border border-zinc-800 flex flex-col justify-between">
+                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
                             <div>
                                 <div class="flex items-center justify-between gap-1 mb-2">
                                     <span class="px-1.5 py-0.2 bg-rose-500 text-black font-black text-[9px]">PILLAR 1</span>
                                     <span class="text-[9px] text-zinc-500">HTTP GATEWAY</span>
                                 </div>
-                                <h4 class="font-bold text-white text-xs mb-2">AiThreatShield Middleware</h4>
-                                <p class="text-[11px] text-zinc-400 font-sans leading-relaxed mb-3">
+                                <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">AiThreatShield Middleware</h4>
+                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
                                     Mencegat payload request berkecepatan tinggi sebelum menyentuh controller. Memblokir pola injeksi shell OS (system, exec, passthru, eval, __construct) dan memblokir IP secara otomatis selama 2 jam.
                                 </p>
                             </div>
-                            <div class="p-2 bg-zinc-900 border border-zinc-800 text-[10px] text-emerald-400">
+                            <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
                                 <code>App\Http\Middleware\AiThreatShield</code>
                             </div>
                         </div>
 
                         <!-- Pillar 2: Sandboxed Dataset Parser -->
-                        <div class="p-4 bg-zinc-950 border border-zinc-800 flex flex-col justify-between">
+                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
                             <div>
                                 <div class="flex items-center justify-between gap-1 mb-2">
                                     <span class="px-1.5 py-0.2 bg-emerald-500 text-black font-black text-[9px]">PILLAR 2</span>
                                     <span class="text-[9px] text-zinc-500">ASYNC WORKER</span>
                                 </div>
-                                <h4 class="font-bold text-white text-xs mb-2">ProcessSecureDataset Job</h4>
-                                <p class="text-[11px] text-zinc-400 font-sans leading-relaxed mb-3">
+                                <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">ProcessSecureDataset Job</h4>
+                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
                                     Pemrosesan unggahan file (CSV, JSON, XML) dipindahkan ke worker antrean terisolasi. Validasi MIME absolut via <code>finfo</code>, 0% native <code>unserialize()</code>, dan mematikan eksekusi entity external XML (Anti-XXE).
                                 </p>
                             </div>
-                            <div class="p-2 bg-zinc-900 border border-zinc-800 text-[10px] text-emerald-400">
+                            <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
                                 <code>App\Jobs\ProcessSecureDataset</code>
                             </div>
                         </div>
 
                         <!-- Pillar 3: Real-Time Intrusion Dashboard -->
-                        <div class="p-4 bg-zinc-950 border border-zinc-800 flex flex-col justify-between">
+                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
                             <div>
                                 <div class="flex items-center justify-between gap-1 mb-2">
                                     <span class="px-1.5 py-0.2 bg-sky-500 text-black font-black text-[9px]">PILLAR 3</span>
                                     <span class="text-[9px] text-zinc-500">AUDIT COCKPIT</span>
                                 </div>
-                                <h4 class="font-bold text-white text-xs mb-2">Filament Security Audit Hub</h4>
-                                <p class="text-[11px] text-zinc-400 font-sans leading-relaxed mb-3">
+                                <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">Filament Security Audit Hub</h4>
+                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
                                     Dasbor backend admin untuk mengawasi intrusi payload secara real-time, mendeteksi endpoint yang paling sering di-probing oleh bot AI liar, serta mengelola IP whitelist/blacklist terdesentralisasi.
                                 </p>
                             </div>
-                            <div class="p-2 bg-zinc-900 border border-zinc-800 text-[10px] text-emerald-400">
+                            <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
                                 <code>App\Models\SecurityThreatLog</code>
                             </div>
                         </div>
                     </div>
 
                     <!-- Interactive Code Viewer (AlpineJS Tab) -->
-                    <div x-data="{ codeTab: 'middleware' }" class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-xs">
-                        <div class="flex items-center justify-between gap-2 border-b border-zinc-800 pb-2 mb-3">
+                    <div x-data="{ codeTab: 'middleware' }" class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                        <div class="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">
                             <div class="flex items-center gap-1.5">
-                                <span class="text-zinc-500 text-[10px] uppercase font-bold">SOURCE CODE KONTROL:</span>
-                                <button type="button" @click="codeTab = 'middleware'" :class="codeTab === 'middleware' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2 py-0.5 text-[10px] uppercase transition cursor-pointer">
+                                <span class="text-zinc-600 dark:text-zinc-400 text-[10px] uppercase font-bold">SOURCE CODE KONTROL:</span>
+                                <button type="button" @click="codeTab = 'middleware'" :class="codeTab === 'middleware' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'" class="px-2 py-0.5 text-[10px] uppercase transition cursor-pointer">
                                     AiThreatShield.php
                                 </button>
-                                <button type="button" @click="codeTab = 'job'" :class="codeTab === 'job' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2 py-0.5 text-[10px] uppercase transition cursor-pointer">
+                                <button type="button" @click="codeTab = 'job'" :class="codeTab === 'job' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'" class="px-2 py-0.5 text-[10px] uppercase transition cursor-pointer">
                                     ProcessSecureDataset.php
                                 </button>
                             </div>
-                            <span class="text-[9px] text-emerald-400 hidden sm:inline">&bull; 100% PRODUCTION READY IN LARAVEL 13</span>
+                            <span class="text-[9px] text-emerald-600 dark:text-emerald-400 hidden sm:inline">&bull; 100% PRODUCTION READY IN LARAVEL 13</span>
                         </div>
 
                         <!-- Middleware Code -->
@@ -5109,21 +5119,21 @@ class ProcessSecureDataset implements ShouldQueue
 
                 <!-- 13. Scaffold & Boilerplate Exporter Starter Card -->
                 <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                    <div class="p-6 bg-zinc-950 border-2 border-emerald-500 font-mono text-xs flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="p-6 bg-zinc-50 dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
                         <div class="space-y-2">
                             <div class="flex items-center gap-2">
                                 <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase">1-CLICK EXPORTER</span>
-                                <span class="text-zinc-400 text-xs uppercase font-bold">DOCKER &bull; SQL MIGRATION &bull; ROUTING</span>
+                                <span class="text-zinc-600 dark:text-zinc-400 text-xs uppercase font-bold">DOCKER &bull; SQL MIGRATION &bull; ROUTING</span>
                             </div>
-                            <h3 class="text-base sm:text-lg font-black uppercase text-white">
+                            <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white">
                                 Ekspor Boilerplate &amp; Scaffold Kode Lengkap
                             </h3>
-                            <p class="text-zinc-400 font-sans text-xs max-w-2xl leading-relaxed">
+                            <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs max-w-2xl leading-relaxed">
                                 Blueprint ERD dan arsitektur PRD Anda dapat langsung diubah menjadi file kode nyata: <code>docker-compose.yml</code> (PHP 8.4, PostgreSQL 16, Redis 7), skrip <code>schema_complete.sql</code> (Strict ULID), dan struktur routing (Laravel 13 &amp; Next.js App Router).
                             </p>
                         </div>
                         <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
-                            <button type="button" @click="openScaffoldModal()" class="w-full sm:w-auto px-5 py-3 bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/60 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-lg">
+                            <button type="button" @click="openScaffoldModal()" class="w-full sm:w-auto px-5 py-3 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/60 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 <span>PREVIEW KODE</span>
                             </button>
@@ -5414,15 +5424,15 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
 
                 <!-- Mathematical Cost Formula Breakdown Banner -->
-                <div class="mb-6 p-4 bg-zinc-950 border border-zinc-800 text-zinc-300 font-mono text-xs">
-                    <div class="flex items-center justify-between gap-2 border-b border-zinc-800 pb-2 mb-3">
-                        <strong class="uppercase text-emerald-400 font-bold tracking-wider">FORMULA LEVEL BIAYA AKSELERASI SWARM AI:</strong>
-                        <span class="text-[10px] text-zinc-400">TRANSPARENT PRICING MODEL</span>
+                <div class="mb-6 p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-xs">
+                    <div class="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">
+                        <strong class="uppercase text-emerald-600 dark:text-emerald-400 font-bold tracking-wider">FORMULA LEVEL BIAYA AKSELERASI SWARM AI:</strong>
+                        <span class="text-[10px] text-zinc-500 dark:text-zinc-400">TRANSPARENT PRICING MODEL</span>
                     </div>
-                    <div class="p-3 bg-zinc-900 border border-zinc-800 font-mono text-center text-xs sm:text-sm text-emerald-400 font-bold mb-3 overflow-x-auto">
+                    <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-center text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-bold mb-3 overflow-x-auto shadow-xs">
                         Total Investasi = Base Engineering Fee + (&Delta; Velocity Factor &times; Sewa Swarm AI Ultra Cloud) + Dedicated Concurrency Squad
                     </div>
-                    <p class="text-zinc-400 text-[11px] leading-relaxed font-sans">
+                    <p class="text-zinc-600 dark:text-zinc-400 text-[11px] leading-relaxed font-sans">
                         Pengerjaan kilat tidak sekadar menambah jam kerja manusia, melainkan mengalokasikan <strong>Swarm AI Agent Parallel Workers (Gemini Ultra)</strong> dengan kuota inferensi jutaan token per menit untuk auto-synthesize skema database, unit test otomatis, dan refactoring real-time tanpa antrean cloud.
                     </p>
                 </div>
@@ -5677,15 +5687,15 @@ class ProcessSecureDataset implements ShouldQueue
             </section>
 
             <!-- SECTION 10: SCOPE FREEZE, DIGITAL CONTRACT & DP MIDTRANS (CRUCIAL) -->
-            <section id="section-10" class="bg-zinc-900 text-white border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none scroll-mt-24">
+            <section id="section-10" class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-2 border-emerald-600 dark:border-emerald-500 p-6 sm:p-8 mb-8 rounded-none scroll-mt-24 shadow-sm">
                 <!-- Staging Sandbox Environment Banner (If Provisioned) -->
                 @if($blueprint->staging_url)
-                    <div class="mb-6 p-4 sm:p-5 bg-gradient-to-r from-emerald-950/80 via-zinc-950 to-zinc-950 border border-emerald-500 text-zinc-200">
+                    <div class="mb-6 p-4 sm:p-5 bg-emerald-500/10 dark:bg-zinc-950 border border-emerald-500/40 text-zinc-800 dark:text-zinc-200">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div class="space-y-1">
                                 <div class="flex items-center gap-2">
-                                    <span class="w-2.5 h-2.5 rounded-none bg-emerald-400 animate-pulse"></span>
-                                    <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400">
+                                    <span class="w-2.5 h-2.5 rounded-none bg-emerald-500 animate-pulse"></span>
+                                    <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                                         <span x-show="locale === 'en'">ACTIVE STAGING DEMO SANDBOX PROVISIONED</span>
                                         <span x-show="locale !== 'en'">LINGKUNGAN DEMO STAGING TELAH DIAKTIFKAN</span>
                                     </span>
@@ -5695,13 +5705,13 @@ class ProcessSecureDataset implements ShouldQueue
                                         </span>
                                     @endif
                                 </div>
-                                <h4 class="text-lg font-black tracking-tight text-white font-mono">
-                                    <a href="{{ $blueprint->staging_url }}" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 underline decoration-emerald-500/50 underline-offset-4 flex items-center gap-1.5 break-all">
+                                <h4 class="text-lg font-black tracking-tight text-zinc-900 dark:text-white font-mono">
+                                    <a href="{{ $blueprint->staging_url }}" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-600 dark:hover:text-emerald-400 underline decoration-emerald-500/50 underline-offset-4 flex items-center gap-1.5 break-all">
                                         <span>{{ $blueprint->staging_url }}</span>
-                                        <svg class="w-4 h-4 flex-shrink-0 text-emerald-400 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                        <svg class="w-4 h-4 flex-shrink-0 text-emerald-600 dark:text-emerald-400 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                                     </a>
                                 </h4>
-                                <p class="text-xs text-zinc-400 font-sans">
+                                <p class="text-xs text-zinc-600 dark:text-zinc-400 font-sans">
                                     <span x-show="locale === 'en'">Isolated deployment container ready. Sprint milestones and live feature testing can be tracked directly here.</span>
                                     <span x-show="locale !== 'en'">Sandbox deployment terisolasi telah dialokasikan khusus. Progres sprint dan demo berkala dapat dipantau langsung di link ini.</span>
                                 </p>
@@ -5717,7 +5727,7 @@ class ProcessSecureDataset implements ShouldQueue
                                     <span x-show="locale !== 'en'">Buka Staging &rarr;</span>
                                 </a>
                                 @if($blueprint->staging_provisioned_at)
-                                    <span class="text-[10px] text-zinc-500">
+                                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400">
                                         Aktif: {{ $blueprint->staging_provisioned_at->format('d M Y H:i') }}
                                     </span>
                                 @endif
@@ -5726,7 +5736,7 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
                 @endif
 
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-6">
                     <div>
                         <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-widest bg-emerald-500 text-black inline-block mb-2 rounded-none">
                             LEGAL &amp; PAYMENT PROTOCOL
@@ -5736,82 +5746,82 @@ class ProcessSecureDataset implements ShouldQueue
                             <span x-show="locale === 'en'">Scope Lock, Digital Sign-Off &amp; Escrow</span>
                             <span x-show="locale !== 'en'">Kunci Scope Proyek, Persetujuan Digital &amp; DP</span>
                         </h3>
-                        <p class="text-zinc-400 text-xs mt-1 font-sans">
+                        <p class="text-zinc-600 dark:text-zinc-400 text-xs mt-1 font-sans">
                             <span x-show="locale === 'en'">Project officially kicks off upon digital contract sign-off, cryptographic hash lock, and DP confirmation or free voucher grant.</span>
                             <span x-show="locale !== 'en'">Pengerjaan proyek resmi dimulai setelah penandatanganan digital, penguncian hash SHA-256, dan konfirmasi DP via Midtrans atau voucher pelayanan.</span>
                         </p>
                     </div>
                     <div class="text-left sm:text-right font-mono">
-                        <span class="text-zinc-400 text-xs block">TERMIN TERPILIH: <span class="text-white font-bold" x-text="tierAmounts[selectedTier].name"></span></span>
+                        <span class="text-zinc-500 dark:text-zinc-400 text-xs block">TERMIN TERPILIH: <span class="text-zinc-900 dark:text-white font-bold" x-text="tierAmounts[selectedTier].name"></span></span>
                         @if($blueprint->is_free_grant)
-                            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-block mb-1">
+                            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-block mb-1">
                                 ✓ SUBSIDI KASIH (RP 0)
                             </span>
-                            <span class="text-xl font-black text-emerald-400 block">RP 0 (PELAYANAN KASIH)</span>
-                            <span class="text-[10px] text-zinc-400 block">VOUCHER: {{ $blueprint->voucher_code }}</span>
+                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">RP 0 (PELAYANAN KASIH)</span>
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">VOUCHER: {{ $blueprint->voucher_code }}</span>
                         @elseif($blueprint->isDpConfirmed())
-                            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1 mb-1">
-                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1 mb-1">
+                                <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                                 <span>DP TERKONFIRMASI // SPRINT AKTIF</span>
                             </span>
                             @php
                                 $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
                                 $paidDp = $contractDoc?->dp_amount;
                             @endphp
-                            <span class="text-xl font-black text-emerald-400 block">
+                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">
                                 {{ $paidDp ? 'Rp ' . number_format($paidDp, 0, ',', '.') : 'LUNAS (DP 50%)' }}
                             </span>
-                            <span class="text-[10px] text-zinc-400 block">
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">
                                 {{ $contractDoc?->contract_amount ? 'Total Kontrak: Rp ' . number_format($contractDoc->contract_amount, 0, ',', '.') : 'Kontrak Terkunci' }} &bull; SPRINT 1 IN PROGRESS
                             </span>
                         @else
-                            <span class="text-xl font-black text-emerald-400" x-text="'DP (50%): Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
-                            <span class="text-[10px] text-zinc-400 block" x-text="'Total Kontrak: Rp ' + tierAmounts[selectedTier].contract.toLocaleString('id-ID')"></span>
+                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400" x-text="'DP (50%): Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block" x-text="'Total Kontrak: Rp ' + tierAmounts[selectedTier].contract.toLocaleString('id-ID')"></span>
                         @endif
                     </div>
                 </div>
 
                 <!-- Digital Sign-Off Cryptographic Audit Trail Seal -->
-                <div class="p-4 bg-zinc-950 border border-zinc-800 text-xs font-mono mb-6 space-y-3">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/80 pb-3">
+                <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-mono mb-6 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800/80 pb-3">
                         <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                            <span class="font-bold text-white uppercase tracking-wider text-[11px]">
+                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <span class="font-bold text-zinc-900 dark:text-white uppercase tracking-wider text-[11px]">
                                 SHA-256 SPECIFICATION INTEGRITY SEAL
                             </span>
                             @if($blueprint->isDpConfirmed())
-                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold inline-flex items-center gap-1">
-                                    <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold inline-flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                                     SCOPE FROZEN &amp; DP CONFIRMED
                                 </span>
                             @elseif($blueprint->isContractSigned())
-                                <span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold inline-flex items-center gap-1">
-                                    <svg class="w-3 h-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 text-[10px] font-bold inline-flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     CONTRACT SIGNED &amp; SCOPE LOCKED
                                 </span>
                             @else
-                                <span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">
+                                <span class="px-2 py-0.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-[10px] font-bold">
                                     READY FOR SIGN-OFF
                                 </span>
                             @endif
                         </div>
-                        <div class="text-[10px] text-zinc-400">
+                        <div class="text-[10px] text-zinc-500 dark:text-zinc-400">
                             SINGLE SOURCE OF TRUTH (ANTI-DISPUTE)
                         </div>
                     </div>
 
-                    <div class="bg-zinc-900/90 p-3 border border-zinc-800 text-[11px] leading-relaxed">
-                        <div class="flex items-center justify-between text-zinc-400 mb-1">
-                            <span class="text-zinc-500 uppercase">Cryptographic Document Checksum (SHA-256):</span>
+                    <div class="bg-white dark:bg-zinc-900/90 p-3 border border-zinc-200 dark:border-zinc-800 text-[11px] leading-relaxed">
+                        <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400 mb-1">
+                            <span class="text-zinc-500 dark:text-zinc-400 uppercase">Cryptographic Document Checksum (SHA-256):</span>
                             <button 
                                 type="button" 
                                 @click="navigator.clipboard.writeText('{{ $blueprint->document_sha256 ?: $blueprint->calculatePrdHash() }}'); if(window.showToast) window.showToast({ type: 'success', title: 'SHA-256 DISALIN', message: 'Cryptographic hash berhasil disalin ke clipboard.' })"
-                                class="text-emerald-400 hover:text-emerald-300 text-[10px] font-bold uppercase underline"
+                                class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 text-[10px] font-bold uppercase underline"
                             >
                                 Salin Hash
                             </button>
                         </div>
-                        <code class="text-emerald-400 break-all select-all font-mono text-[11px] block">
+                        <code class="text-emerald-600 dark:text-emerald-400 break-all select-all font-mono text-[11px] block">
                             {{ $blueprint->document_sha256 ?: $blueprint->calculatePrdHash() }}
                         </code>
                         @php
@@ -5819,18 +5829,18 @@ class ProcessSecureDataset implements ShouldQueue
                             $hasAudit = ($blueprint->signed_agreement && $blueprint->signed_at) || ($contractDoc && $contractDoc->signed_at);
                         @endphp
                         @if($hasAudit)
-                            <div class="mt-2 pt-2 border-t border-zinc-800/80 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-zinc-400">
-                                <span>Penandatangan: <strong class="text-zinc-200">{{ $blueprint->client_name ?: ($contractDoc?->signer_name ?: $blueprint->nama_bisnis) }}</strong></span>
-                                <span>Waktu: <strong class="text-zinc-200">{{ ($blueprint->signed_at ?: $contractDoc?->signed_at)?->format('d M Y H:i:s T') }}</strong></span>
-                                <span>IP Audit: <strong class="text-zinc-200">{{ $blueprint->signer_ip ?: ($contractDoc?->signer_ip_address ?: 'Recorded') }}</strong></span>
+                            <div class="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800/80 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-zinc-600 dark:text-zinc-400">
+                                <span>Penandatangan: <strong class="text-zinc-900 dark:text-zinc-200">{{ $blueprint->client_name ?: ($contractDoc?->signer_name ?: $blueprint->nama_bisnis) }}</strong></span>
+                                <span>Waktu: <strong class="text-zinc-900 dark:text-zinc-200">{{ ($blueprint->signed_at ?: $contractDoc?->signed_at)?->format('d M Y H:i:s T') }}</strong></span>
+                                <span>IP Audit: <strong class="text-zinc-900 dark:text-zinc-200">{{ $blueprint->signer_ip ?: ($contractDoc?->signer_ip_address ?: 'Recorded') }}</strong></span>
                                 @if(!empty($blueprint->staging_url))
-                                    <span class="text-emerald-400 font-bold">Sandbox: <strong class="text-emerald-300 font-mono">{{ $blueprint->staging_url }}</strong></span>
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-bold">Sandbox: <strong class="text-emerald-700 dark:text-emerald-300 font-mono">{{ $blueprint->staging_url }}</strong></span>
                                 @endif
                             </div>
                         @endif
                     </div>
 
-                    <p class="text-zinc-400 text-xs font-sans leading-relaxed">
+                    <p class="text-zinc-600 dark:text-zinc-400 text-xs font-sans leading-relaxed">
                         Seluruh fitur dan arsitektur dalam PRD ini terikat secara kriptografis. Setiap perubahan di kemudian hari wajib melalui kesepakatan Change Request (CR) / Addendum tanpa mengubah basis dokumen utama.
                     </p>
                 </div>
@@ -5838,21 +5848,21 @@ class ProcessSecureDataset implements ShouldQueue
                 <!-- Action State Engine: Active Sprint Cockpit vs Sign & Pay Actions -->
                 @if($blueprint->isDpConfirmed())
                     <!-- PROYEK SUDAH BAYAR DP / AKTIF: Tampilkan Cockpit Kontrak & Status Sprint (Bukan Tombol Bayar / Cart) -->
-                    <div class="p-5 bg-emerald-950/20 border-2 border-emerald-500/50 rounded-none space-y-4">
+                    <div class="p-5 bg-emerald-500/10 dark:bg-emerald-950/20 border-2 border-emerald-500/50 rounded-none space-y-4">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                             <div class="flex items-center gap-3">
                                 <span class="w-10 h-10 bg-emerald-500 text-black flex items-center justify-center font-bold text-lg flex-shrink-0">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                                 </span>
                                 <div>
-                                    <div class="text-xs uppercase font-mono tracking-wider text-emerald-400 font-bold flex items-center gap-2">
+                                    <div class="text-xs uppercase font-mono tracking-wider text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-2">
                                         <span>STATUS: PEMBAYARAN DP TERVERIFIKASI &bull; SPRINT AKTIF</span>
-                                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                                     </div>
-                                    <h4 class="text-sm font-bold text-white font-sans mt-0.5">
+                                    <h4 class="text-sm font-bold text-zinc-900 dark:text-white font-sans mt-0.5">
                                         Ruang Lingkup (Scope) Resmi Dikunci &amp; Proyek Sedang Dikerjakan
                                     </h4>
-                                    <p class="text-xs text-zinc-300 font-sans mt-0.5">
+                                    <p class="text-xs text-zinc-600 dark:text-zinc-300 font-sans mt-0.5">
                                         Kontrak digital dan spesifikasi teknis PRD telah mengikat secara hukum. Anda tidak perlu membayar DP lagi atau menambahkan ke keranjang belanja.
                                     </p>
                                 </div>
@@ -5878,7 +5888,7 @@ class ProcessSecureDataset implements ShouldQueue
                                 <a 
                                     href="{{ $blueprint->staging_url }}"
                                     target="_blank"
-                                    class="bg-zinc-900 hover:bg-zinc-800 text-emerald-400 hover:text-emerald-300 border border-emerald-500/50 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                    class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-300 border border-emerald-500/50 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
                                 >
                                     <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                                     <span>Buka Sandbox Staging</span>
@@ -5887,19 +5897,19 @@ class ProcessSecureDataset implements ShouldQueue
 
                             <a 
                                 href="{{ route('blueprint.download-md', $blueprint->slug) }}"
-                                class="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
                                 title="Unduh File Asli Markdown (.MD) untuk AI Coding Agent"
                             >
-                                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 <span>Unduh PRD (.MD)</span>
                             </a>
 
                             <button 
                                 type="button" 
                                 @click="showAiPromptModal = true"
-                                class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                                class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                             >
-                                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                 <span>AI Agent Ingestion</span>
                             </button>
                         </div>
@@ -5935,10 +5945,10 @@ class ProcessSecureDataset implements ShouldQueue
                             <input type="hidden" name="tier" :value="selectedTier">
                             <button 
                                 type="submit" 
-                                class="w-full h-full bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2 cursor-pointer"
+                                class="w-full h-full bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center justify-center gap-2 cursor-pointer"
                             >
                                 <span>Tambahkan ke Cart</span>
-                                <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                <svg class="w-4 h-4 text-zinc-500 dark:text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                             </button>
                         </form>
                     </div>
@@ -5960,21 +5970,21 @@ class ProcessSecureDataset implements ShouldQueue
                         <button 
                             type="button" 
                             @click="paymentModalOpen = true"
-                            class="w-full h-full bg-zinc-800 hover:bg-zinc-700 text-white font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2 cursor-pointer"
+                            class="w-full h-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center justify-center gap-2 cursor-pointer"
                         >
                             <span>Bayar DP / Klaim Voucher</span>
-                            <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </button>
 
                         <form method="POST" action="{{ route('cart.add', $blueprint->slug) }}" class="m-0">
                             @csrf
                             <input type="hidden" name="tier" :value="selectedTier">
                             <button 
-                                type="submit"
-                                class="w-full h-full bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-700 transition flex items-center justify-center gap-2 cursor-pointer"
+                                type="submit" 
+                                class="w-full h-full bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-mono font-bold text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center justify-center gap-2 cursor-pointer"
                             >
                                 <span>Tambahkan ke Cart</span>
-                                <svg class="w-4 h-4 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                <svg class="w-4 h-4 text-zinc-500 dark:text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                             </button>
                         </form>
                     </div>

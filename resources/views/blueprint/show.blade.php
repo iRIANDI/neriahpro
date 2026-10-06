@@ -3129,7 +3129,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     class="px-3 py-1.5 border text-xs font-mono flex items-center gap-1.5 transition"
                                 >
                                     <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted('step_foundation') ? 'bg-black' : 'bg-zinc-400 dark:bg-zinc-500'"></span>
-                                    <span x-text="isStepCompleted('step_foundation') ? '&check; TAHAP 1 TERVERIFIKASI &amp; COMMITTED' : 'TANDAI TAHAP 1 SELESAI'"></span>
+                                    <span x-text="isStepCompleted('step_foundation') ? '✓ TAHAP 1 TERVERIFIKASI &amp; COMMITTED' : 'TANDAI TAHAP 1 SELESAI'"></span>
                                 </button>
                             </div>
                         </div>
@@ -3221,7 +3221,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                         class="px-3 py-1.5 border text-xs font-mono flex items-center gap-1.5 transition"
                                     >
                                         <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted('{{ $featKey }}') ? 'bg-black' : 'bg-zinc-400 dark:bg-zinc-500'"></span>
-                                        <span x-text="isStepCompleted('{{ $featKey }}') ? '&check; FITUR TERVERIFIKASI &amp; COMMITTED' : 'TANDAI FITUR SELESAI'"></span>
+                                        <span x-text="isStepCompleted('{{ $featKey }}') ? '✓ FITUR TERVERIFIKASI &amp; COMMITTED' : 'TANDAI FITUR SELESAI'"></span>
                                     </button>
                                 </div>
                             </div>
@@ -3310,7 +3310,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     class="px-3 py-1.5 border text-xs font-mono flex items-center gap-1.5 transition"
                                 >
                                     <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted('step_deployment') ? 'bg-black' : 'bg-zinc-400 dark:bg-zinc-500'"></span>
-                                    <span x-text="isStepCompleted('step_deployment') ? '&check; SELURUH SPRINT PRODUCTION READY' : 'TANDAI QUALITY GATE SELESAI'"></span>
+                                    <span x-text="isStepCompleted('step_deployment') ? '✓ SELURUH SPRINT PRODUCTION READY' : 'TANDAI QUALITY GATE SELESAI'"></span>
                                 </button>
                             </div>
                         </div>
@@ -5561,7 +5561,7 @@ class ProcessSecureDataset implements ShouldQueue
                                     : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'"
                                 class="w-full py-2 text-xs uppercase tracking-wider transition"
                             >
-                                <span x-text="selectedTier === '{{ $tierItem['id'] }}' ? '&check; PAKET TERPILIH' : 'PILIH PAKET'"></span>
+                                <span x-text="selectedTier === '{{ $tierItem['id'] }}' ? '✓ PAKET TERPILIH' : 'PILIH PAKET'"></span>
                             </button>
                         </div>
                     @endforeach

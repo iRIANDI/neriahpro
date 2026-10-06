@@ -561,21 +561,56 @@ export default function ArchitecturePricingIsland({
                 </tr>
                 <tr>
                   <td className="py-3 px-4 font-bold text-zinc-800 dark:text-zinc-200">PRD 26 Parameter</td>
-                  <td className="py-3 px-4 text-emerald-500 font-bold">&check; Lengkap (JSON & Markdown)</td>
-                  <td className="py-3 px-4 text-emerald-500 font-bold">&check; Lengkap + Terimplementasi</td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Lengkap (JSON &amp; Markdown)</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Lengkap + Terimplementasi</span>
+                    </span>
+                  </td>
                   <td className="py-3 px-4 text-zinc-500">Sederhana (Alur Inti)</td>
                 </tr>
                 <tr>
                   <td className="py-3 px-4 font-bold text-zinc-800 dark:text-zinc-200">PostgreSQL Strict ULID DDL</td>
-                  <td className="py-3 px-4 text-emerald-500 font-bold">&check; DDL Script Siap Import</td>
-                  <td className="py-3 px-4 text-emerald-500 font-bold">&check; Live di Server VPS</td>
-                  <td className="py-3 px-4 text-emerald-500 font-bold">&check; Database Transaksional</td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>DDL Script Siap Import</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Live di Server VPS</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Database Transaksional</span>
+                    </span>
+                  </td>
                 </tr>
                 <tr>
                   <td className="py-3 px-4 font-bold text-zinc-800 dark:text-zinc-200">Full-Stack Coding</td>
                   <td className="py-3 px-4 text-zinc-400 font-mono">Dikerjakan Tim Klien Sendiri</td>
-                  <td className="py-3 px-4 text-emerald-500 font-bold">&check; Dikerjakan 100% Neriah Pro</td>
-                  <td className="py-3 px-4 text-emerald-500 font-bold">&check; Dikerjakan 100% Neriah Pro</td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Dikerjakan 100% Neriah Pro</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Dikerjakan 100% Neriah Pro</span>
+                    </span>
+                  </td>
                 </tr>
                 <tr>
                   <td className="py-3 px-4 font-bold text-zinc-800 dark:text-zinc-200">Mekanisme Pembayaran</td>
@@ -584,16 +619,36 @@ export default function ArchitecturePricingIsland({
                   <td className="py-3 px-4 font-mono">DP 50% + Pelunasan UAT 50%</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 font-bold text-zinc-800 dark:text-zinc-200">Garansi & Bug Support</td>
+                  <td className="py-3 px-4 font-bold text-zinc-800 dark:text-zinc-200">Garansi &amp; Bug Support</td>
                   <td className="py-3 px-4 text-zinc-500">Revisi Dokumen 7 Hari</td>
-                  <td className="py-3 px-4 text-emerald-500 font-bold">&check; 3 Bulan Garansi Bug & Maintenance</td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>3 Bulan Garansi Bug &amp; Maintenance</span>
+                    </span>
+                  </td>
                   <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">1 Bulan Garansi</td>
                 </tr>
                 <tr>
                   <td className="py-3 px-4 font-bold text-zinc-800 dark:text-zinc-200">Hak Milik Source Code</td>
-                  <td className="py-3 px-4 text-emerald-500 font-bold">&check; 100% Klien</td>
-                  <td className="py-3 px-4 text-emerald-500 font-bold">&check; 100% Klien (No Vendor Lock-in)</td>
-                  <td className="py-3 px-4 text-emerald-500 font-bold">&check; 100% Klien</td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>100% Klien</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>100% Klien (No Vendor Lock-in)</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>100% Klien</span>
+                    </span>
+                  </td>
                 </tr>
               </tbody>
             </table>

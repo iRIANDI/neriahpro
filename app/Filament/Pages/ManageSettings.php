@@ -62,8 +62,13 @@ class ManageSettings extends Page implements HasForms
         return $form
             ->components([
                 Tabs::make('Settings')
+                    ->id('global-settings-tabs')
+                    ->persistTabInQueryString('tab')
+                    ->scrollable()
                     ->tabs([
                         Tabs\Tab::make('General Setup')
+                            ->key('general-setup')
+                            ->id('general-setup')
                             ->icon('heroicon-m-adjustments-horizontal')
                             ->schema([
                                 TextInput::make('company_whatsapp')
@@ -101,6 +106,8 @@ class ManageSettings extends Page implements HasForms
                             ]),
 
                         Tabs\Tab::make('Legal & Developer Signature')
+                            ->key('legal-developer-signature')
+                            ->id('legal-developer-signature')
                             ->icon('heroicon-m-pencil-square')
                             ->badge('Pihak Kedua')
                             ->schema([
@@ -158,6 +165,8 @@ class ManageSettings extends Page implements HasForms
                             ]),
 
                         Tabs\Tab::make('Multi-AI Model Hub')
+                            ->key('multi-ai-hub')
+                            ->id('multi-ai-hub')
                             ->icon('heroicon-m-cpu-chip')
                             ->badge('Failover Engine')
                             ->schema([
@@ -238,6 +247,8 @@ class ManageSettings extends Page implements HasForms
                             ]),
 
                         Tabs\Tab::make('Multi-Language (2-Tier Locale)')
+                            ->key('multi-language')
+                            ->id('multi-language')
                             ->icon('heroicon-m-language')
                             ->badge('Tier 1 & Tier 2')
                             ->schema([
@@ -288,6 +299,8 @@ class ManageSettings extends Page implements HasForms
                             ]),
 
                         Tabs\Tab::make('Frontend Feature Flags')
+                            ->key('feature-flags')
+                            ->id('feature-flags')
                             ->icon('heroicon-m-bolt')
                             ->badge('Live Controls')
                             ->schema([
@@ -360,6 +373,8 @@ class ManageSettings extends Page implements HasForms
                             ]),
 
                         Tabs\Tab::make('Navigation & Footer')
+                            ->key('navigation-footer')
+                            ->id('navigation-footer')
                             ->icon('heroicon-m-bars-3-bottom-left')
                             ->schema([
                                 Builder::make('navigation_format')
@@ -416,6 +431,8 @@ class ManageSettings extends Page implements HasForms
                             ]),
                             
                         Tabs\Tab::make('SEO Schema Markup')
+                            ->key('seo-schema')
+                            ->id('seo-schema')
                             ->icon('heroicon-m-magnifying-glass')
                             ->schema([
                                 Section::make('Organization / Local Business Data')
@@ -484,6 +501,8 @@ class ManageSettings extends Page implements HasForms
                             ]),
 
                         Tabs\Tab::make('Project OS & Pricing Strategy')
+                            ->key('pricing-strategy')
+                            ->id('pricing-strategy')
                             ->icon('heroicon-m-currency-dollar')
                             ->badge('Layanan & CRM')
                             ->schema([

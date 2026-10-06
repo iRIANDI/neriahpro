@@ -296,8 +296,13 @@ class VisionBlueprint extends Model
             return true;
         }
 
-        // 4. Any linked contract document with settled transaction
-        $docOrderIds = $this->documents()->whereNotNull('midtrans_order_id')->pluck('midtrans_order_id')->toArray();
+        // 4. Concrete foreign relationship check: Linked contract document with settled transaction
+        $docOrderIds = $this->documents()
+            ->whereNotNull('midtrans_order_id')
+            ->pluck('midtrans_order_id')
+            ->filter()
+            ->toArray();
+
         if (!empty($docOrderIds)) {
             $hasDocTx = \App\Models\Transaction::whereIn('midtrans_order_id', $docOrderIds)
                 ->whereIn('status', ['settlement', 'capture', 'success'])
@@ -307,22 +312,15 @@ class VisionBlueprint extends Model
             }
         }
 
-        // 5. Linked transaction matched by short ULID or customer details
-        $shortId = strtoupper(substr($this->id, 0, 8));
-        $hasSettledTx = \App\Models\Transaction::whereIn('status', ['settlement', 'capture', 'success'])
-            ->where(function ($q) use ($shortId) {
-                $q->where('midtrans_order_id', 'LIKE', "%{$shortId}%");
-                if ($this->email) {
-                    $q->orWhere('customer_details->email', $this->email);
-                }
+        // 5. Exact ULID matching for direct blueprint payment transactions
+        $hasExactTx = \App\Models\Transaction::whereIn('status', ['settlement', 'capture', 'success'])
+            ->where(function ($q) {
+                $q->where('midtrans_order_id', 'LIKE', 'NPRO-DP-' . $this->id . '-%')
+                  ->orWhere('midtrans_order_id', 'LIKE', 'NP-BP-' . $this->id . '-%');
             })
             ->exists();
-        if ($hasSettledTx) {
-            return true;
-        }
 
-        // 6. Showcase demo project: Apex Logistics Global is always confirmed active sprint
-        if ($this->slug === 'apex-logistics-global-prd' && ($this->signed_agreement || $this->documents()->exists())) {
+        if ($hasExactTx) {
             return true;
         }
 

@@ -128,12 +128,13 @@ class MidtransWebhookController extends Controller
             }
         }
 
-        // 2. Direct matching for NPRO-DP-{first8Id}-{time} or legacy NP-BP-{first8Id}-{time}
+        // 2. Direct matching for NPRO-DP-{fullOrShortId}-{time} or legacy NP-BP-{id}-{time}
         if (str_starts_with($orderId, 'NPRO-DP-') || str_starts_with($orderId, 'NP-BP-')) {
             $parts = explode('-', $orderId);
             if (isset($parts[2])) {
-                $shortId = $parts[2];
-                $blueprint = VisionBlueprint::where('id', 'LIKE', $shortId . '%')->first();
+                $targetId = $parts[2];
+                $blueprint = VisionBlueprint::find($targetId) 
+                    ?? (strlen($targetId) < 26 ? VisionBlueprint::where('id', 'LIKE', $targetId . '%')->first() : null);
                 if ($blueprint) {
                     $blueprint->update([
                         'project_status' => 'In Development (DP Paid)',

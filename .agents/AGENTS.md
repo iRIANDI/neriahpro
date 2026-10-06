@@ -33,6 +33,14 @@ For enterprise-grade scalability capable of handling millions of records without
 2. **Foreign Keys**: Always use `->foreignUlid('parent_id')` to match ULID primary keys. For relations pointing to vendor plugin tables, match the underlying foreign key type.
 3. **Pagination**: NEVER use standard paginate() (OFFSET-based). ALWAYS use Cursor Pagination (`cursorPaginate()`) with proper keyset/pointer fallbacks (e.g., `->orderBy('id', 'asc')`) to guarantee cursor stability.
 
+# Mandatory Rule: Strict Ban on Hardcoded Magic Strings & Fuzzy String Queries (Zero Tolerance for "Dosa Hardcode")
+- 🚫 **HARAM HUKUMNYA PAKAI HARDCODED STRING & DEMO PATTERNS**:
+  - NEVER use hardcoded entity names, company names, dummy slugs, or demo aliases in backend queries or business logic (e.g. `orWhere('midtrans_order_id', 'LIKE', '%APEX%')`, `if ($this->slug === 'apex-logistics-global-prd')`, or matching by filenames/folder names).
+  - Volatile strings like company names, person names, slugs, and filenames CAN and WILL change, rename, or collide in production. Relying on them corrupts global business state and causes false positives (such as treating unpaid projects as settled).
+- 🔒 **MANDATORY CONCRETE RELATIONS & DATABASE PRIMARY KEYS**:
+  - ALWAYS identify models, transactions, orders, and documents strictly via **Concrete Relational Foreign Keys** (e.g., `related_id`, `related_type`, `foreignUlid('blueprint_id')`) or **Exact Primary Key Lookups** (`find($id)`, `where('id', $ulid)`).
+  - Business states (such as DP Settlement, Contract Signing, Scope Freezing) MUST strictly derive from **concrete database status enums/columns** (e.g., `$transaction->status === 'settlement'`, `$document->scope_locked === true`, `$blueprint->project_status === 'Active Sprint'`), NEVER by fuzzy string searching (`LIKE '%...'`) on customer emails, notes, order descriptions, or dummy company names.
+
 # Deployment Workflow Rule
 After completing any task, you MUST always suggest which deployment script number the user should run on their SSH terminal using `./deploy.sh [number]`. Choose the number based on the following 6 deployment scenarios:
 1. Skenario Ringan: Hanya merubah tampilan (UI/Blade) atau logika PHP biasa. (`./deploy.sh 1`)

@@ -60,8 +60,8 @@ class ContractLegalHelper
     {
         $blueprint = $document->related instanceof \App\Models\VisionBlueprint ? $document->related : null;
 
-        $projectName = $blueprint?->nama_bisnis ?: ($blueprint?->client_name ?: ($document->signer_name ?: 'Apex Logistics Global'));
-        $clientPic = $document->signer_name ?: ($blueprint?->client_name ?: 'Alexander Wijaya');
+        $projectName = $blueprint?->nama_bisnis ?: ($blueprint?->client_name ?: ($document->signer_name ?: 'Proyek Rekayasa Perangkat Lunak'));
+        $clientPic = $document->signer_name ?: ($blueprint?->client_name ?: 'Klien / Mitra');
         $docId = strtoupper(substr($document->id, 0, 10));
         $targetWaktu = $blueprint?->target_waktu ?: '30 Hari Kerja';
         $targetTimelineEn = str_ireplace(['hari kerja', 'pekan', 'bulan'], ['Working Days', 'Weeks', 'Months'], $targetWaktu);

@@ -59,7 +59,7 @@ class PrdGeneratorService
             'jangkauan_pasar' => $metadata['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
             'out_of_scope' => $metadata['out_of_scope'] ?? null,
             'kepatuhan_keamanan' => $metadata['kepatuhan_keamanan'] ?? 'Standar Web Application & OWASP Top 10',
-            'kisaran_budget' => $metadata['kisaran_budget'] ?? 'Rp 50.000.000 - Rp 100.000.000 (Growth Production)',
+            'kisaran_budget' => $metadata['kisaran_budget'] ?? null,
             'target_platform' => $metadata['target_platform'] ?? 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)',
             'migrasi_data' => $metadata['migrasi_data'] ?? 'Database Baru Bersih (Input Mandiri & Template CSV)',
             'preferensi_hosting' => $metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup)',
@@ -182,7 +182,7 @@ class PrdGeneratorService
             'server_hardware_sizing' => self::calculateServerHardwareSizing($businessName, $masalah, $mvpItems, $extraContext),
             'itemized_cost_breakdown' => $itemizedEstimation,
             'business_roi_analysis' => self::generateBusinessRoiAnalysis($blueprint, $itemizedEstimation),
-            'velocity_pricing_options' => self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null, $businessName, $masalah) ?: ($itemizedEstimation['velocity_tiers'] ?? []),
+            'velocity_pricing_options' => !empty($itemizedEstimation['velocity_tiers']) ? $itemizedEstimation['velocity_tiers'] : (self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null, $businessName, $masalah) ?: []),
             'governance_and_sla' => [
                 'title' => 'Tata Kelola, Standar Kualitas & SLA Serah Terima (Strict Governance & Handoff)',
                 'definition_of_done' => [
@@ -1457,11 +1457,25 @@ class PrdGeneratorService
         $standardPelunasan = $standardContract - $standardDp;
 
         // Hitung 3 Velocity Tiers:
-        $fastTrackContract = round($standardContract * 1.4, -5);
+        $fastTrackContract = round($standardContract * 1.35, -5);
+
+        // Harmonize with existing signed contract document if present
+        $existingContract = $blueprint->getContractDocument();
+        if ($existingContract && $existingContract->status === 'signed' && (float)$existingContract->contract_amount > 0) {
+            $cAmount = (float)$existingContract->contract_amount;
+            if ($cAmount >= $standardContract) {
+                $fastTrackContract = $cAmount;
+            } else {
+                $standardContract = $cAmount;
+                $standardDp = (float)($existingContract->dp_amount ?: ($standardContract * 0.50));
+                $standardPelunasan = $standardContract - $standardDp;
+            }
+        }
+
         $fastTrackDp = $fastTrackContract * 0.50;
         $fastTrackPelunasan = $fastTrackContract - $fastTrackDp;
 
-        $hyperSprintContract = round($standardContract * 2.0, -5);
+        $hyperSprintContract = round(max($fastTrackContract * 1.35, $standardContract * 1.8), -5);
         $hyperSprintDp = $hyperSprintContract * 0.50;
         $hyperSprintPelunasan = $hyperSprintContract - $hyperSprintDp;
 
@@ -1488,16 +1502,16 @@ class PrdGeneratorService
             ],
             [
                 'id' => 'fast_track',
-                'name' => 'Fast-Track Velocity (14 Hari Kerja)',
+                'name' => 'Gemini Ultra Swarm Parallel Sprint',
                 'duration' => '14 Hari Kerja',
-                'badge' => 'RECOMMENDED // 2X_ACCELERATED',
-                'speed_multiplier' => '1.4x (Akselerasi 2 Pekan)',
+                'badge' => 'RECOMMENDED // ULTRA_SWARM',
+                'speed_multiplier' => '1.5x (Akselerasi 2 Pekan)',
                 'contract_amount' => $fastTrackContract,
                 'dp_amount' => $fastTrackDp,
                 'pelunasan_amount' => $fastTrackPelunasan,
-                'ai_quota_spec' => 'Gemini Ultra Parallel Swarm + High-Reasoning Token Pipeline',
-                'squad_allocation' => '2 Dedicated Senior Engineers + AI Agentic Pair Programming',
-                'cost_formula' => 'Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + Akselerasi Swarm AI (40%)',
+                'ai_quota_spec' => 'Gemini Ultra 8-Agent Swarm Cluster + High-Reasoning Token Pipeline',
+                'squad_allocation' => 'Lead Architect + 2 Dedicated Senior Engineers + AI Agentic Pair',
+                'cost_formula' => 'Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + Sewa Swarm AI Ultra Cluster (Rp ' . number_format(max(0, $fastTrackContract - $standardContract), 0, ',', '.') . ')',
                 'ai_swarm_specs' => [
                     'Seluruh cakupan rincian fitur paket Standard',
                     'Paralelisasi Frontend Island & Backend DB Migration serentak',
@@ -1508,16 +1522,16 @@ class PrdGeneratorService
             ],
             [
                 'id' => 'hyper_sprint',
-                'name' => 'Hyper-Sprint Emergency (7 Hari Kerja / 24/7 War Room)',
-                'duration' => '7 Hari Kerja',
+                'name' => 'Hyper-Sprint Emergency (24/7 War Room)',
+                'duration' => '7 Hari Kalender',
                 'badge' => 'TOP_SPEED // 24_7_WAR_ROOM',
-                'speed_multiplier' => '2.0x (Rilis 1 Pekan)',
+                'speed_multiplier' => '3.0x (Rilis 1 Pekan Kalender)',
                 'contract_amount' => $hyperSprintContract,
                 'dp_amount' => $hyperSprintDp,
                 'pelunasan_amount' => $hyperSprintPelunasan,
-                'ai_quota_spec' => 'Gemini Ultra 8-Agent Swarm + Dedicated 24/7 Shift Rotation',
+                'ai_quota_spec' => 'Gemini Ultra Uncapped Swarm + Dedicated 24/7 Engineering Shift',
                 'squad_allocation' => 'Dedicated Tri-Engineer War Room (24/7 Shift Rotation)',
-                'cost_formula' => 'Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + 24/7 War Room Shift (100%)',
+                'cost_formula' => 'Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + 24/7 War Room Shift Squad (Rp ' . number_format(max(0, $hyperSprintContract - $standardContract), 0, ',', '.') . ')',
                 'ai_swarm_specs' => [
                     'Rotasi engineer 24 jam non-stop dengan deployment kontinyu ke Staging',
                     'SLA Uptime & Respons Darurat 99.9% dengan dedicated DevOps on-call',
@@ -1918,12 +1932,37 @@ class PrdGeneratorService
      */
     public static function getPrimaryVelocityTiers(VisionBlueprint $blueprint): array
     {
-        // 1. If stored in prd_content['velocity_pricing_options'] and non-empty
+        // 1. If itemized breakdown has velocity tiers, use it directly (guarantees 100% mathematical harmony with the itemized scope table)
+        $itemized = $blueprint->prd_content['itemized_cost_breakdown'] ?? null;
+        if (!empty($itemized['velocity_tiers']) && is_array($itemized['velocity_tiers'])) {
+            $tiers = array_values($itemized['velocity_tiers']);
+            $existingContract = $blueprint->getContractDocument();
+            if ($existingContract && $existingContract->status === 'signed' && (float)$existingContract->contract_amount > 0) {
+                $cAmount = (float)$existingContract->contract_amount;
+                foreach ($tiers as &$t) {
+                    if (($t['id'] ?? '') === 'fast_track' || (str_contains(strtolower($t['name'] ?? ''), 'swarm') || str_contains(strtolower($t['name'] ?? ''), 'fast'))) {
+                        $t['contract_amount'] = $cAmount;
+                        $t['dp_amount'] = (float)($existingContract->dp_amount ?: ($cAmount * 0.50));
+                        $t['pelunasan_amount'] = $t['contract_amount'] - $t['dp_amount'];
+                        $t['cost_formula'] = 'Base Scope (Rp ' . number_format($itemized['base_subtotal'] ?? 0, 0, ',', '.') . ') + Sewa Swarm AI Ultra Cluster (Rp ' . number_format(max(0, $cAmount - ($itemized['base_subtotal'] ?? 0)), 0, ',', '.') . ')';
+                    }
+                }
+            }
+            return $tiers;
+        }
+
+        // 2. Fresh calculate itemized estimation
+        $fresh = self::calculateItemizedEstimation($blueprint);
+        if (!empty($fresh['velocity_tiers']) && is_array($fresh['velocity_tiers'])) {
+            return array_values($fresh['velocity_tiers']);
+        }
+
+        // 3. Fallback if stored in prd_content['velocity_pricing_options'] and non-empty
         if (!empty($blueprint->prd_content['velocity_pricing_options']) && is_array($blueprint->prd_content['velocity_pricing_options'])) {
             return array_values($blueprint->prd_content['velocity_pricing_options']);
         }
 
-        // 2. Derive from blueprint budget and context
+        // 4. Derive from blueprint budget and context
         $contextBudget = $blueprint->user_metadata['kisaran_budget'] 
             ?? ($blueprint->prd_content['engineering_specs']['budget_range'] ?? null);
 
@@ -1938,13 +1977,7 @@ class PrdGeneratorService
             return $generated;
         }
 
-        // 3. Fallback to itemized breakdown tiers
-        $itemized = $blueprint->prd_content['itemized_cost_breakdown'] ?? null;
-        if (empty($itemized) || empty($itemized['velocity_tiers'])) {
-            $itemized = self::calculateItemizedEstimation($blueprint);
-        }
-
-        return $itemized['velocity_tiers'] ?? [];
+        return [];
     }
 
     /**

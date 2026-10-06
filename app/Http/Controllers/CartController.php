@@ -64,13 +64,24 @@ class CartController extends Controller
                     $blueprint->refresh();
                 }
 
-                $tier = $item['tier'] ?? 'standard';
-                $resolvedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+                $existingContract = $blueprint->getContractDocument();
+                $isSignedContract = $existingContract && $existingContract->status === 'signed' && (float)$existingContract->contract_amount > 0;
 
-                $contractAmount = (float) ($resolvedTier['contract_amount'] ?? ($item['contract_amount'] ?? 25000000));
-                $dpAmount = (float) ($resolvedTier['dp_amount'] ?? ($item['dp_amount'] ?? ($contractAmount * 0.50)));
-                $tierName = $resolvedTier['name'] ?? ($item['tier_name'] ?? 'Standard Velocity (30 Hari)');
-                $targetWaktu = $resolvedTier['duration'] ?? ($item['target_waktu'] ?? ($blueprint->target_waktu ?: '30 Hari Kerja'));
+                if ($isSignedContract) {
+                    $contractAmount = (float) $existingContract->contract_amount;
+                    $dpAmount = (float) ($existingContract->dp_amount ?: ($contractAmount * 0.50));
+                    $tierName = $existingContract->title ?: 'Kontrak Tertandatangani (Sah Mengikat)';
+                    $targetWaktu = $blueprint->durasi_hari ? $blueprint->durasi_hari . ' Hari Kerja' : '14 Hari Kerja';
+                    $tier = 'signed_contract';
+                } else {
+                    $tier = $item['tier'] ?? 'standard';
+                    $resolvedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+
+                    $contractAmount = (float) ($resolvedTier['contract_amount'] ?? ($item['contract_amount'] ?? 25000000));
+                    $dpAmount = (float) ($resolvedTier['dp_amount'] ?? ($item['dp_amount'] ?? ($contractAmount * 0.50)));
+                    $tierName = $resolvedTier['name'] ?? ($item['tier_name'] ?? 'Standard Velocity (30 Hari)');
+                    $targetWaktu = $resolvedTier['duration'] ?? ($item['target_waktu'] ?? ($blueprint->target_waktu ?: '30 Hari Kerja'));
+                }
                 $itemizedItems = $item['itemized_items'] ?? ($blueprint->prd_content['itemized_cost_breakdown']['items'] ?? []);
 
                 // Auto-sync / heal cart session if amounts were previously mismatched
@@ -171,17 +182,28 @@ class CartController extends Controller
             $blueprint->refresh();
         }
 
-        $tier = $request->input('tier', 'standard');
-        $matchedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+        $existingContract = $blueprint->getContractDocument();
+        $isSignedContract = $existingContract && $existingContract->status === 'signed' && (float)$existingContract->contract_amount > 0;
+
+        if ($isSignedContract) {
+            $contractAmount = (float) $existingContract->contract_amount;
+            $dpAmount = (float) ($existingContract->dp_amount ?: ($contractAmount * 0.50));
+            $tierName = $existingContract->title ?: 'Kontrak Tertandatangani (Sah Mengikat)';
+            $targetWaktu = $blueprint->durasi_hari ? $blueprint->durasi_hari . ' Hari Kerja' : '14 Hari Kerja';
+            $tier = 'signed_contract';
+        } else {
+            $tier = $request->input('tier', 'standard');
+            $matchedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+            $contractAmount = (float) $matchedTier['contract_amount'];
+            $dpAmount = (float) $matchedTier['dp_amount'];
+            $targetWaktu = $matchedTier['duration'] ?? '30 Hari Kerja';
+            $tierName = $matchedTier['name'] ?? 'Standard Velocity (30 Hari Kerja)';
+        }
+
         $itemizedData = $blueprint->prd_content['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
 
-        $contractAmount = (float) $matchedTier['contract_amount'];
-        $dpAmount = (float) $matchedTier['dp_amount'];
-        $targetWaktu = $matchedTier['duration'] ?? '30 Hari Kerja';
-        $tierName = $matchedTier['name'] ?? 'Standard Velocity (30 Hari Kerja)';
-
-        // Allow explicit amount overrides if passed safely
-        if ($request->filled('contract_amount')) {
+        // Allow explicit amount overrides if passed safely (only if contract not signed)
+        if (!$isSignedContract && $request->filled('contract_amount')) {
             $contractAmount = (float) $request->input('contract_amount');
             $dpAmount = $contractAmount * 0.50;
         }
@@ -351,10 +373,17 @@ class CartController extends Controller
 
         foreach ($cart as $slug => $item) {
             $blueprint = VisionBlueprint::where('slug', $slug)->first();
-            $resolvedTier = $blueprint ? \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $item['tier'] ?? 'standard') : null;
+            $existingContract = $blueprint?->getContractDocument();
+            $isSignedContract = $existingContract && $existingContract->status === 'signed' && (float)$existingContract->contract_amount > 0;
 
-            $contractAmount = $resolvedTier ? (float) $resolvedTier['contract_amount'] : (float) ($item['contract_amount'] ?? 50000000);
-            $dpAmount = $resolvedTier ? (int) $resolvedTier['dp_amount'] : (int) ($item['dp_amount'] ?? ($contractAmount * 0.50));
+            if ($isSignedContract) {
+                $contractAmount = (float) $existingContract->contract_amount;
+                $dpAmount = (int) ($existingContract->dp_amount ?: ($contractAmount * 0.50));
+            } else {
+                $resolvedTier = $blueprint ? \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $item['tier'] ?? 'standard') : null;
+                $contractAmount = $resolvedTier ? (float) $resolvedTier['contract_amount'] : (float) ($item['contract_amount'] ?? 50000000);
+                $dpAmount = $resolvedTier ? (int) $resolvedTier['dp_amount'] : (int) ($item['dp_amount'] ?? ($contractAmount * 0.50));
+            }
             $totalContract += $contractAmount;
             $totalDp += $dpAmount;
 
@@ -432,6 +461,9 @@ class CartController extends Controller
                 if ($appliedVoucher) {
                     $bp->update(['voucher_code' => $appliedVoucher->code]);
                 }
+                $existingDoc = $bp->getContractDocument();
+                $isSigned = $existingDoc && $existingDoc->status === 'signed' && (float)$existingDoc->contract_amount > 0;
+
                 Document::updateOrCreate(
                     [
                         'related_type' => VisionBlueprint::class,
@@ -439,15 +471,15 @@ class CartController extends Controller
                         'document_type' => 'contract',
                     ],
                     [
-                        'title' => 'Perjanjian Kerja Sama - ' . ($bp->nama_bisnis ?: $bp->client_name),
-                        'status' => 'pending_signature',
-                        'scope_locked' => false,
-                        'contract_amount' => (float) ($item['contract_amount'] ?? 50000000),
-                        'dp_amount' => (float) ($item['dp_amount'] ?? 25000000),
+                        'title' => $existingDoc?->title ?: ('Perjanjian Kerja Sama - ' . ($bp->nama_bisnis ?: $bp->client_name)),
+                        'status' => $isSigned ? 'signed' : 'pending_signature',
+                        'scope_locked' => $isSigned ? true : false,
+                        'contract_amount' => (float) ($isSigned ? $existingDoc->contract_amount : ($item['contract_amount'] ?? 50000000)),
+                        'dp_amount' => (float) ($isSigned ? $existingDoc->dp_amount : ($item['dp_amount'] ?? 25000000)),
                         'midtrans_order_id' => $orderId,
-                        'signer_name' => $firstClientName ?: ($bp->nama_bisnis ?: $bp->client_name),
-                        'signer_email' => $firstEmail ?: $bp->email,
-                        'document_hash' => $bp->document_sha256 ?: $bp->calculatePrdHash(),
+                        'signer_name' => $isSigned ? $existingDoc->signer_name : ($firstClientName ?: ($bp->nama_bisnis ?: $bp->client_name)),
+                        'signer_email' => $isSigned ? $existingDoc->signer_email : ($firstEmail ?: $bp->email),
+                        'document_hash' => $isSigned ? $existingDoc->document_hash : ($bp->document_sha256 ?: $bp->calculatePrdHash()),
                     ]
                 );
             }
@@ -465,6 +497,8 @@ class CartController extends Controller
             'redirect_url' => $snapResponse['redirect_url'],
             'order_id' => $orderId,
             'gross_amount' => $finalDp,
+            'dp_amount' => $finalDp,
+            'contract_amount' => $finalContract,
             'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
         ]);
     }

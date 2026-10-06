@@ -361,8 +361,8 @@ class WorkflowEndToEndSeeder extends Seeder
                 'kebutuhan_integrasi' => 'Payment Gateway Midtrans Snap, WhatsApp Business API, SATUSEHAT Kemenkes API.',
                 'referensi_desain' => 'Halodoc, Alodokter & Linear.app: Clean clinical interface, high contrast, accessibility compliant.',
                 'kesiapan_aset' => 'Sudah Siap Lengkap',
-                'target_waktu' => '30 Hari Kerja',
-                'service_options' => ['Web Architecture', 'Rapid Monolith System', 'PostgreSQL ULID', 'Midtrans DP Ready'],
+                'target_waktu' => '14 Hari Kerja',
+                'service_options' => ['Web Architecture', 'Rapid Monolith System', 'PostgreSQL ULID', 'Midtrans DP Ready', 'Gemini Ultra Swarm'],
                 'project_status' => 'Awaiting DP Payment',
                 'is_published' => true,
                 'ip_address' => '180.252.120.44',
@@ -375,11 +375,10 @@ class WorkflowEndToEndSeeder extends Seeder
                 'user_metadata' => [
                     'source' => 'Midtrans Reviewer Demonstration (Unpaid DP Sample)',
                     'note' => 'Contoh proyek siap bayar DP 50% untuk pengujian Midtrans Snap Popup',
+                    'selected_velocity_tier' => 'fast_track',
                 ],
             ]
         );
-
-        $blueprint->generateAndSavePrd();
 
         $clauses = [
             'pasal_1_ruang_lingkup' => [
@@ -387,8 +386,8 @@ class WorkflowEndToEndSeeder extends Seeder
                 'description' => 'Pihak Kedua (Neriah Pro) sepakat untuk merancang dan membangun arsitektur perangkat lunak Medika Prima Telehealth sesuai spesifikasi yang tertuang di dalam Dokumen Ultimate PRD ID: ' . strtoupper(substr($blueprint->id, 0, 10)) . '.',
             ],
             'pasal_2_timeline' => [
-                'title' => 'Pasal 2: Alokasi Waktu Pengerjaan (30 Hari Kerja - 5 Sprint)',
-                'description' => 'Pekerjaan dilaksanakan selama 30 (tiga puluh) hari kerja aktif yang dibagi ke dalam 5 Sprint terstruktur.',
+                'title' => 'Pasal 2: Alokasi Waktu Pengerjaan (14 Hari Kerja - Gemini Ultra Swarm Parallel Sprint)',
+                'description' => 'Pekerjaan dilaksanakan selama 14 (empat belas) hari kerja aktif dengan akselerasi Gemini Ultra Swarm Parallel Sprint terstruktur.',
             ],
             'pasal_3_pembayaran_dp' => [
                 'title' => 'Pasal 3: Nilai Kontrak & Ketentuan Uang Muka (DP 50%)',
@@ -425,6 +424,10 @@ class WorkflowEndToEndSeeder extends Seeder
                 'content_clauses' => $clauses,
             ]
         );
+
+        // Regenerate PRD after contract creation so itemized calculation anchors to the signed contract
+        $blueprint->generateAndSavePrd();
+        $blueprint->refresh();
 
         $reviewerUser = User::where('email', 'reviewer.midtrans@neriahpro.com')->first();
         $product = Product::where('slug', 'rapid-mvp-monolith-system')->first() ?? Product::first();

@@ -566,9 +566,14 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
         };
     </script>
 @php
+    $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
+    $hasSignedContract = $contractDoc && $contractDoc->status === 'signed' && (float)$contractDoc->contract_amount > 0;
+
     $itemizedScope = $prd['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
     $pricingTiers = \App\Services\PrdGeneratorService::getPrimaryVelocityTiers($blueprint);
     $alpineTiers = [];
+    $matchedSignedTierKey = null;
+
     foreach ($pricingTiers as $t) {
         $alpineTiers[$t['id']] = [
             'contract' => (float)$t['contract_amount'],
@@ -576,9 +581,20 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             'days' => $t['duration'],
             'name' => $t['name'],
         ];
+        if ($hasSignedContract && (float)$t['contract_amount'] === (float)$contractDoc->contract_amount) {
+            $matchedSignedTierKey = $t['id'];
+        }
     }
     $tierKeys = array_keys($alpineTiers);
-    $defaultSelectedTier = count($tierKeys) >= 2 ? $tierKeys[1] : ($tierKeys[0] ?? '');
+
+    if ($hasSignedContract) {
+        $defaultSelectedTier = $matchedSignedTierKey ?? ($blueprint->user_metadata['selected_velocity_tier'] ?? (count($tierKeys) >= 2 ? $tierKeys[1] : ($tierKeys[0] ?? '')));
+    } else {
+        $preferredTier = $blueprint->user_metadata['selected_velocity_tier'] ?? null;
+        $defaultSelectedTier = ($preferredTier && isset($alpineTiers[$preferredTier])) 
+            ? $preferredTier 
+            : (count($tierKeys) >= 2 ? $tierKeys[1] : ($tierKeys[0] ?? ''));
+    }
 
     $mvpEngineeringSpecs = $prd['features']['mvp_phase1'] ?? ($prd['engineering_specs']['mvp_specs'] ?? []);
     $totalDevSteps = count($mvpEngineeringSpecs) + 2;
@@ -5752,7 +5768,16 @@ class ProcessSecureDataset implements ShouldQueue
                         </p>
                     </div>
                     <div class="text-left sm:text-right font-mono">
-                        <span class="text-zinc-500 dark:text-zinc-400 text-xs block">TERMIN TERPILIH: <span class="text-zinc-900 dark:text-white font-bold" x-text="tierAmounts[selectedTier].name"></span></span>
+                        <span class="text-zinc-500 dark:text-zinc-400 text-xs block">
+                            @if($blueprint->isDpConfirmed())
+                                TERMIN TERVERIFIKASI:
+                            @elseif(($contractDoc = $contractDocument ?? $blueprint->getContractDocument()) && $contractDoc->status === 'signed' && (float)$contractDoc->contract_amount > 0)
+                                TERMIN KONTRAK SAH:
+                            @else
+                                TERMIN TERPILIH:
+                            @endif
+                            <span class="text-zinc-900 dark:text-white font-bold" x-text="tierAmounts[selectedTier]?.name || 'Standard Velocity'"></span>
+                        </span>
                         @if($blueprint->is_free_grant)
                             <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-block mb-1">
                                 ✓ SUBSIDI KASIH (RP 0)
@@ -5774,9 +5799,20 @@ class ProcessSecureDataset implements ShouldQueue
                             <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">
                                 {{ $contractDoc?->contract_amount ? 'Total Kontrak: Rp ' . number_format($contractDoc->contract_amount, 0, ',', '.') : 'Kontrak Terkunci' }} &bull; SPRINT 1 IN PROGRESS
                             </span>
+                        @elseif(($contractDoc = $contractDocument ?? $blueprint->getContractDocument()) && $contractDoc->status === 'signed' && (float)$contractDoc->contract_amount > 0)
+                            <span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1 mb-1">
+                                <svg class="w-3 h-3 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>KONTRAK TERTANDATANGANI // MENUNGGU DP</span>
+                            </span>
+                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">
+                                DP (50%): Rp {{ number_format($contractDoc->dp_amount ?: ($contractDoc->contract_amount * 0.50), 0, ',', '.') }}
+                            </span>
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">
+                                Total Kontrak: Rp {{ number_format($contractDoc->contract_amount, 0, ',', '.') }} &bull; KONTRAK SAH MENGIKAT
+                            </span>
                         @else
-                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400" x-text="'DP (50%): Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
-                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block" x-text="'Total Kontrak: Rp ' + tierAmounts[selectedTier].contract.toLocaleString('id-ID')"></span>
+                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400" x-text="'DP (50%): Rp ' + (tierAmounts[selectedTier]?.dp || 0).toLocaleString('id-ID')"></span>
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block" x-text="'Total Kontrak: Rp ' + (tierAmounts[selectedTier]?.contract || 0).toLocaleString('id-ID')"></span>
                         @endif
                     </div>
                 </div>
@@ -6499,46 +6535,82 @@ class ProcessSecureDataset implements ShouldQueue
 
             <!-- Invoice Summary Card -->
             <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 mb-4 space-y-2 rounded-none">
-                <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
-                    <span>Opsi Velocity Terpilih</span>
-                    <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="tierAmounts[selectedTier].name"></span>
-                </div>
-                <div class="flex justify-between items-baseline text-zinc-600 dark:text-zinc-400">
-                    <span>Nilai Total Kontrak</span>
-                    <div>
-                        <span x-show="appliedVoucher" class="line-through text-zinc-400 text-xs mr-1.5" x-text="'Rp ' + tierAmounts[selectedTier].contract.toLocaleString('id-ID')"></span>
-                        <span class="font-bold text-zinc-900 dark:text-zinc-100" :class="appliedVoucher ? 'text-emerald-600 dark:text-emerald-400 font-black' : ''" x-text="'Rp ' + getDiscountedContract(selectedTier).toLocaleString('id-ID')"></span>
+                @php
+                    $contractDocModal = $contractDocument ?? $blueprint->getContractDocument();
+                    $hasSignedContractModal = $contractDocModal && $contractDocModal->status === 'signed' && (float)$contractDocModal->contract_amount > 0;
+                @endphp
+                @if($hasSignedContractModal)
+                    <div class="p-2.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-800 dark:text-cyan-300 text-xs mb-2">
+                        <strong class="font-bold flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            KONTRAK KERJA SAMA RESMI SAH &amp; TERIKAT
+                        </strong>
+                        <span class="text-[11px] block mt-0.5">Tagihan uang muka (DP 50%) disesuaikan secara otomatis dengan nilai kontrak yang telah disepakati dan ditandatangani.</span>
                     </div>
-                </div>
-                <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
-                    <span>Termin DP (Uang Muka)</span>
-                    <span class="font-bold text-emerald-600 dark:text-emerald-400">50% di Muka</span>
-                </div>
-
-                <!-- Voucher Status Row (If Applied) -->
-                <template x-if="appliedVoucher">
-                    <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold border-t border-dashed border-zinc-200 dark:border-zinc-800 pt-2 text-xs">
-                        <span x-text="'Subsidi Voucher (' + appliedVoucher.code + ')'"></span>
-                        <span x-text="appliedVoucher.is_free_bypass ? '-100% (FREE BYPASS)' : (appliedVoucher.discount_type === 'percent' ? '-' + appliedVoucher.discount_value + '% (-Rp ' + getDiscountAmount(selectedTier).toLocaleString('id-ID') + ')' : '-Rp ' + getDiscountAmount(selectedTier).toLocaleString('id-ID'))"></span>
+                    <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
+                        <span>Paket Kontrak Sah</span>
+                        <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="tierAmounts[selectedTier]?.name || '{{ $contractDocModal->title }}'"></span>
                     </div>
-                </template>
-
-                <div class="border-t border-zinc-200 dark:border-zinc-800 pt-2 flex justify-between items-baseline">
-                    <span class="font-bold uppercase text-zinc-900 dark:text-zinc-100">Total Tagihan DP</span>
-                    <template x-if="appliedVoucher && appliedVoucher.is_free_bypass">
-                        <span class="text-lg font-black text-emerald-500">RP 0 (GRATIS)</span>
-                    </template>
-                    <template x-if="!appliedVoucher || !appliedVoucher.is_free_bypass">
+                    <div class="flex justify-between items-baseline text-zinc-600 dark:text-zinc-400">
+                        <span>Nilai Total Kontrak</span>
+                        <span class="font-bold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($contractDocModal->contract_amount, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
+                        <span>Termin DP (Uang Muka)</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400">50% di Muka</span>
+                    </div>
+                    <div class="border-t border-zinc-200 dark:border-zinc-800 pt-2 flex justify-between items-baseline">
+                        <span class="font-bold uppercase text-zinc-900 dark:text-zinc-100">Total Tagihan DP</span>
                         <div class="text-right">
-                            <span x-show="appliedVoucher" class="line-through text-zinc-400 text-xs block" x-text="'Rp ' + tierAmounts[selectedTier].dp.toLocaleString('id-ID')"></span>
-                            <span class="text-lg font-black text-emerald-600 dark:text-emerald-400" x-text="'Rp ' + getDiscountedDp(selectedTier).toLocaleString('id-ID')"></span>
+                            <span class="text-lg font-black text-emerald-600 dark:text-emerald-400">Rp {{ number_format($contractDocModal->dp_amount ?: ($contractDocModal->contract_amount * 0.50), 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-zinc-400 pt-1 flex justify-between">
+                        <span>ORDER ID: {{ $contractDocModal->midtrans_order_id ?: ('NPRO-DP-' . strtoupper(substr($blueprint->id, 0, 8))) }}</span>
+                        <span>STATUS: KONTRAK SAH</span>
+                    </div>
+                @else
+                    <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
+                        <span>Opsi Velocity Terpilih</span>
+                        <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="tierAmounts[selectedTier]?.name || 'Standard Velocity'"></span>
+                    </div>
+                    <div class="flex justify-between items-baseline text-zinc-600 dark:text-zinc-400">
+                        <span>Nilai Total Kontrak</span>
+                        <div>
+                            <span x-show="appliedVoucher" class="line-through text-zinc-400 text-xs mr-1.5" x-text="'Rp ' + (tierAmounts[selectedTier]?.contract || 0).toLocaleString('id-ID')"></span>
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100" :class="appliedVoucher ? 'text-emerald-600 dark:text-emerald-400 font-black' : ''" x-text="'Rp ' + getDiscountedContract(selectedTier).toLocaleString('id-ID')"></span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
+                        <span>Termin DP (Uang Muka)</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400">50% di Muka</span>
+                    </div>
+
+                    <!-- Voucher Status Row (If Applied) -->
+                    <template x-if="appliedVoucher">
+                        <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold border-t border-dashed border-zinc-200 dark:border-zinc-800 pt-2 text-xs">
+                            <span x-text="'Subsidi Voucher (' + appliedVoucher.code + ')'"></span>
+                            <span x-text="appliedVoucher.is_free_bypass ? '-100% (FREE BYPASS)' : (appliedVoucher.discount_type === 'percent' ? '-' + appliedVoucher.discount_value + '% (-Rp ' + getDiscountAmount(selectedTier).toLocaleString('id-ID') + ')' : '-Rp ' + getDiscountAmount(selectedTier).toLocaleString('id-ID'))"></span>
                         </div>
                     </template>
-                </div>
-                <div class="text-[10px] text-zinc-400 pt-1 flex justify-between">
-                    <span>ORDER ID: NPRO-DP-{{ strtoupper(substr($blueprint->id, 0, 8)) }}</span>
-                    <span>SPEC ID: {{ strtoupper(substr($blueprint->id, 0, 8)) }}</span>
-                </div>
+
+                    <div class="border-t border-zinc-200 dark:border-zinc-800 pt-2 flex justify-between items-baseline">
+                        <span class="font-bold uppercase text-zinc-900 dark:text-zinc-100">Total Tagihan DP</span>
+                        <template x-if="appliedVoucher && appliedVoucher.is_free_bypass">
+                            <span class="text-lg font-black text-emerald-500">RP 0 (GRATIS)</span>
+                        </template>
+                        <template x-if="!appliedVoucher || !appliedVoucher.is_free_bypass">
+                            <div class="text-right">
+                                <span x-show="appliedVoucher" class="line-through text-zinc-400 text-xs block" x-text="'Rp ' + (tierAmounts[selectedTier]?.dp || 0).toLocaleString('id-ID')"></span>
+                                <span class="text-lg font-black text-emerald-600 dark:text-emerald-400" x-text="'Rp ' + getDiscountedDp(selectedTier).toLocaleString('id-ID')"></span>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="text-[10px] text-zinc-400 pt-1 flex justify-between">
+                        <span>ORDER ID: NPRO-DP-{{ strtoupper(substr($blueprint->id, 0, 8)) }}</span>
+                        <span>SPEC ID: {{ strtoupper(substr($blueprint->id, 0, 8)) }}</span>
+                    </div>
+                @endif
             </div>
 
             <!-- Voucher Promo / Pelayanan Input Block -->

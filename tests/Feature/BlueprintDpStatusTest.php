@@ -181,4 +181,66 @@ class BlueprintDpStatusTest extends TestCase
             ]);
         $this->assertGreaterThan(80000, $apiResponse->json('min_remaining_seconds'));
     }
+
+    public function test_signed_contract_amounts_are_consistent_across_blueprint_snap_and_cart(): void
+    {
+        $blueprint = VisionBlueprint::create([
+            'client_name' => 'dr. Hendra Pratama, Sp.A',
+            'nama_bisnis' => 'Medika Prima Telehealth',
+            'email' => 'dr.hendra@medikaprima.id',
+            'phone' => '081123456789',
+            'masalah_utama' => 'Rekam medis manual',
+            'tujuan_utama' => 'Telekonsultasi terintegrasi',
+            'fitur_wajib' => '1. Portal Booking Dokter, 2. Telemedisin Chat/Video, 3. Pembayaran DP Midtrans, 4. RME SATUSEHAT',
+            'project_status' => 'Awaiting DP Payment',
+            'signed_agreement' => true,
+            'is_published' => true,
+            'user_metadata' => [
+                'selected_velocity_tier' => 'fast_track',
+            ],
+        ]);
+
+        $contract = Document::create([
+            'title' => 'Perjanjian Kerja Sama Pengembangan Sistem - Medika Prima Telehealth',
+            'document_type' => 'contract',
+            'related_type' => VisionBlueprint::class,
+            'related_id' => $blueprint->id,
+            'status' => 'signed',
+            'scope_locked' => true,
+            'contract_amount' => 40000000.00,
+            'dp_amount' => 20000000.00,
+            'midtrans_order_id' => 'NPRO-DP-MEDIKA-002',
+            'signer_name' => 'dr. Hendra Pratama, Sp.A',
+            'signer_email' => 'dr.hendra@medikaprima.id',
+            'signed_at' => now()->subHours(2),
+        ]);
+
+        // 1. Blueprint View Page displays signed contract nominals (Rp 20.000.000 DP, Rp 40.000.000 Total)
+        $response = $this->get(route('blueprint.show', $blueprint->slug));
+        $response->assertStatus(200);
+        $response->assertSee('KONTRAK TERTANDATANGANI // MENUNGGU DP');
+        $response->assertSee('DP (50%): Rp 20.000.000', false);
+        $response->assertSee('Total Kontrak: Rp 40.000.000', false);
+
+        // 2. Blueprint Snap Token generation uses the signed contract DP (Rp 20.000.000)
+        $snapRes = $this->postJson(route('blueprint.snap-token', $blueprint->slug));
+        $snapRes->assertStatus(200);
+        $this->assertEquals(20000000, $snapRes->json('dp_amount'));
+        $this->assertEquals(40000000, $snapRes->json('contract_amount'));
+
+        // 3. Add to Cart uses the signed contract amounts
+        $cartAddRes = $this->post(route('cart.add', $blueprint->slug));
+        $cartAddRes->assertRedirect(route('cart.index'));
+
+        $cart = session()->get('neriah_cart', []);
+        $this->assertArrayHasKey($blueprint->slug, $cart);
+        $this->assertEquals(40000000.00, (float)$cart[$blueprint->slug]['contract_amount']);
+        $this->assertEquals(20000000.00, (float)$cart[$blueprint->slug]['dp_amount']);
+
+        // 4. Cart Snap Token uses Rp 20.000.000
+        $cartSnapRes = $this->postJson(route('cart.snap-token'));
+        $cartSnapRes->assertStatus(200);
+        $this->assertEquals(20000000, $cartSnapRes->json('dp_amount'));
+        $this->assertEquals(40000000, $cartSnapRes->json('contract_amount'));
+    }
 }

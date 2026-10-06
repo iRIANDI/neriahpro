@@ -114,12 +114,14 @@ class VisionBlueprint extends Model
     }
 
     /**
-     * Interconnection: Convert this Project OS PRD into an official Digital Contract.
+     * Convert this blueprint into a legally binding Digital Contract document.
      */
     public function convertToDigitalContract(array $overrides = []): Document
     {
-        $contractAmount = $overrides['contract_amount'] ?? 50000000.00;
-        $dpAmount = $overrides['dp_amount'] ?? ($contractAmount * 0.50);
+        $defaultAmount = $this->prd_content['itemized_cost_breakdown']['base_subtotal'] 
+            ?? (\App\Services\PrdGeneratorService::getPrimaryVelocityTiers($this)[0]['contract_amount'] ?? 50000000.00);
+        $contractAmount = isset($overrides['contract_amount']) ? (float)$overrides['contract_amount'] : (float)$defaultAmount;
+        $dpAmount = isset($overrides['dp_amount']) ? (float)$overrides['dp_amount'] : ($contractAmount * 0.50);
 
         $clauses = [
             'pasal_1_ruang_lingkup' => [

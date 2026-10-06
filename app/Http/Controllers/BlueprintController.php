@@ -373,11 +373,24 @@ class BlueprintController extends Controller
             $blueprint->refresh();
         }
 
-        $tier = $request->input('tier', 'standard');
-        $matchedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+        $existingContract = $blueprint->getContractDocument();
+        $isSignedContract = $existingContract && $existingContract->status === 'signed' && (float)$existingContract->contract_amount > 0;
 
-        $contractAmount = (float) $matchedTier['contract_amount'];
-        $tierLabel = $matchedTier['name'] ?? 'Standard Velocity';
+        if ($isSignedContract) {
+            $contractAmount = (float) $existingContract->contract_amount;
+            $tierLabel = $existingContract->title ?: 'Kontrak Tertandatangani';
+            $matchedTier = [
+                'id' => 'signed_contract',
+                'name' => $tierLabel,
+                'contract_amount' => $contractAmount,
+                'dp_amount' => (float)($existingContract->dp_amount ?: ($contractAmount * 0.50)),
+            ];
+        } else {
+            $tier = $request->input('tier', 'standard');
+            $matchedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+            $contractAmount = (float) $matchedTier['contract_amount'];
+            $tierLabel = $matchedTier['name'] ?? 'Standard Velocity';
+        }
 
         // Check for voucher discount
         $voucherCode = strtoupper(trim((string) $request->input('voucher_code', '')));
@@ -454,6 +467,9 @@ class BlueprintController extends Controller
         }
 
         // Attach/update Digital Contract Document with order_id for webhook fulfillment
+        $existingDoc = $blueprint->getContractDocument();
+        $isSigned = $existingDoc && $existingDoc->status === 'signed' && (float)$existingDoc->contract_amount > 0;
+
         Document::updateOrCreate(
             [
                 'related_type' => VisionBlueprint::class,
@@ -461,15 +477,15 @@ class BlueprintController extends Controller
                 'document_type' => 'contract',
             ],
             [
-                'title' => 'Perjanjian Kerja Sama - ' . ($blueprint->nama_bisnis ?: $blueprint->client_name),
-                'status' => 'pending_signature',
-                'scope_locked' => false,
+                'title' => $existingDoc?->title ?: ('Perjanjian Kerja Sama - ' . ($blueprint->nama_bisnis ?: $blueprint->client_name)),
+                'status' => $isSigned ? 'signed' : 'pending_signature',
+                'scope_locked' => $isSigned ? true : false,
                 'contract_amount' => $contractAmount,
                 'dp_amount' => $finalDpAmount,
                 'midtrans_order_id' => $orderId,
-                'signer_name' => $blueprint->client_name ?: $blueprint->nama_bisnis,
-                'signer_email' => $blueprint->email,
-                'document_hash' => $blueprint->document_sha256 ?: $blueprint->calculatePrdHash(),
+                'signer_name' => $isSigned ? $existingDoc->signer_name : ($blueprint->client_name ?: $blueprint->nama_bisnis),
+                'signer_email' => $isSigned ? $existingDoc->signer_email : $blueprint->email,
+                'document_hash' => $isSigned ? $existingDoc->document_hash : ($blueprint->document_sha256 ?: $blueprint->calculatePrdHash()),
             ]
         );
 
@@ -479,6 +495,8 @@ class BlueprintController extends Controller
             'redirect_url' => $snapResponse['redirect_url'],
             'order_id' => $orderId,
             'gross_amount' => $finalDpAmount,
+            'dp_amount' => $finalDpAmount,
+            'contract_amount' => $contractAmount,
             'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
             'document_sha256' => $blueprint->document_sha256 ?: $blueprint->calculatePrdHash(),
         ]);

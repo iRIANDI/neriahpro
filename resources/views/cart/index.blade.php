@@ -103,7 +103,7 @@
                 <div class="flex items-center gap-2 font-mono font-bold bg-amber-500 text-black px-3 py-1.5 whitespace-nowrap self-start sm:self-auto">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <span>SISA RESERVASI:</span>
-                    <span id="cart-master-countdown" class="text-sm">--:--:--</span>
+                    <span id="cart-master-countdown" class="text-sm" data-rem="{{ $minRemainingSeconds ?? 86400 }}">{{ gmdate('H:i:s', max(0, (int)($minRemainingSeconds ?? 86400))) }}</span>
                 </div>
             </div>
         @endif
@@ -135,7 +135,10 @@
                                 $tierBadge = 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40';
                             }
                         @endphp
-                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 item-row" data-expires="{{ $item['expires_at'] }}" x-data="{ showBreakdown: false }">
+                        @php
+                            $itemUnixExpiry = \Illuminate\Support\Carbon::parse($item['expires_at'])->timestamp;
+                        @endphp
+                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 item-row" data-expires="{{ $itemUnixExpiry }}" data-rem="{{ (int)$item['remaining_seconds'] }}" x-data="{ showBreakdown: false }">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-3">
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2 mb-1.5">
@@ -144,6 +147,10 @@
                                         </span>
                                         <span class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 font-bold {{ $tierBadge }}">
                                             {!! e($tierLabel) !!}
+                                        </span>
+                                        <span class="text-[10px] font-mono px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1 font-bold">
+                                            <span>⏱️</span>
+                                            <span class="item-countdown">{{ gmdate('H:i:s', max(0, (int)$item['remaining_seconds'])) }}</span>
                                         </span>
                                     </div>
                                     <h3 class="text-lg font-black uppercase text-zinc-900 dark:text-zinc-100 mt-1">
@@ -379,7 +386,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             function formatTime(seconds) {
-                if (seconds <= 0) return 'EXPIRED (00:00:00)';
+                if (seconds <= 0) return '00:00:00';
                 const h = Math.floor(seconds / 3600);
                 const m = Math.floor((seconds % 3600) / 60);
                 const s = Math.floor(seconds % 60);
@@ -396,33 +403,53 @@
                 const rows = document.querySelectorAll('.item-row');
 
                 rows.forEach(function(row) {
-                    const exp = parseInt(row.getAttribute('data-expires'), 10);
-                    if (!isNaN(exp)) {
-                        const rem = exp - now;
-                        const labelEl = row.querySelector('.item-countdown');
-                        if (labelEl) {
-                            labelEl.textContent = formatTime(rem);
-                            if (rem <= 0) {
-                                labelEl.classList.add('text-rose-500');
-                            }
+                    const rawExp = row.getAttribute('data-expires');
+                    let exp = null;
+                    if (rawExp) {
+                        if (/^\d+$/.test(rawExp)) {
+                            exp = parseInt(rawExp, 10);
+                        } else {
+                            exp = Math.floor(new Date(rawExp).getTime() / 1000);
                         }
-                        if (rem > 0 && (minRemaining === null || rem < minRemaining)) {
-                            minRemaining = rem;
+                    }
+
+                    let rem = 0;
+                    if (exp && !isNaN(exp)) {
+                        rem = exp - now;
+                    } else {
+                        const fallbackRem = parseInt(row.getAttribute('data-rem'), 10);
+                        if (!isNaN(fallbackRem)) {
+                            rem = fallbackRem;
                         }
+                    }
+
+                    const labelEl = row.querySelector('.item-countdown');
+                    if (labelEl) {
+                        labelEl.textContent = formatTime(rem);
+                        if (rem <= 0) {
+                            labelEl.classList.add('text-rose-500');
+                        } else {
+                            labelEl.classList.remove('text-rose-500');
+                        }
+                    }
+
+                    if (rem > 0 && (minRemaining === null || rem < minRemaining)) {
+                        minRemaining = rem;
                     }
                 });
 
                 const masterEl = document.getElementById('cart-master-countdown');
                 if (masterEl) {
-                    if (minRemaining !== null) {
+                    if (minRemaining !== null && minRemaining > 0) {
                         masterEl.textContent = formatTime(minRemaining);
                     } else if (rows.length > 0) {
-                        masterEl.textContent = 'EXPIRED (RELEASED)';
-                        masterEl.classList.add('text-rose-400');
-                        // Auto-refresh once after expiry to allow server-side cleanup
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 2500);
+                        const rawMasterRem = parseInt(masterEl.getAttribute('data-rem'), 10);
+                        if (!isNaN(rawMasterRem) && rawMasterRem > 0 && minRemaining === null) {
+                            masterEl.textContent = formatTime(rawMasterRem);
+                        } else {
+                            masterEl.textContent = '00:00:00 (EXPIRED)';
+                            masterEl.classList.add('text-rose-400');
+                        }
                     }
                 }
             }

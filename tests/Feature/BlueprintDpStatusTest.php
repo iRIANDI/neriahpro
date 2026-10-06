@@ -141,4 +141,44 @@ class BlueprintDpStatusTest extends TestCase
                 'message' => 'Uang muka (DP) untuk proyek ini sudah terkonfirmasi / lunas. Tidak memerlukan pembayaran ulang.',
             ]);
     }
+
+    public function test_cart_holds_unpaid_blueprint_with_valid_countdown(): void
+    {
+        $blueprint = VisionBlueprint::create([
+            'client_name' => 'dr. Hendra Pratama, Sp.A',
+            'nama_bisnis' => 'Medika Prima Telehealth',
+            'email' => 'dr.hendra@medikaprima.id',
+            'phone' => '081123456789',
+            'masalah_utama' => 'Rekam medis manual',
+            'tujuan_utama' => 'Telekonsultasi terintegrasi',
+            'project_status' => 'Awaiting DP Payment',
+            'signed_agreement' => true,
+            'is_published' => true,
+        ]);
+
+        $this->assertFalse($blueprint->isDpConfirmed());
+
+        // 1. Add to cart
+        $response = $this->post(route('cart.add', $blueprint->slug), [
+            'tier' => 'standard',
+        ]);
+        $response->assertRedirect(route('cart.index'));
+        $response->assertSessionHas('success');
+
+        // 2. Open cart page
+        $cartPage = $this->get(route('cart.index'));
+        $cartPage->assertStatus(200);
+        $cartPage->assertSee('Medika Prima Telehealth');
+        $cartPage->assertSee('ANTI-GHOST HOLD PROTOCOL');
+        $cartPage->assertSee('SISA RESERVASI');
+        $cartPage->assertDontSee('Cart Masih Kosong');
+
+        // 3. API cart endpoint returns positive remaining seconds
+        $apiResponse = $this->getJson(route('api.cart'));
+        $apiResponse->assertStatus(200)
+            ->assertJson([
+                'count' => 1,
+            ]);
+        $this->assertGreaterThan(80000, $apiResponse->json('min_remaining_seconds'));
+    }
 }

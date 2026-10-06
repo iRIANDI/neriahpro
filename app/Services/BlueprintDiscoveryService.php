@@ -941,6 +941,19 @@ class BlueprintDiscoveryService
     {
         $corpusLower = strtolower($corpus);
 
+        // 1. Analyze Payment Gateway Intent & Financial Rails
+        $isNoPaymentRequested = (bool) preg_match('/(?:tanpa|bebas|tidak\s+perlu|no)\s+(?:payment|gateway|pembayaran|pg|transaksi\s+online)|manual\s+transfer|cash\s+on\s+delivery|hanya\s+inquiry|inquiry\s+only|katalog\s+only/i', $corpusLower);
+        $hasBri = str_contains($corpusLower, 'bri') || str_contains($corpusLower, 'briva');
+        $hasBni = str_contains($corpusLower, 'bni');
+        $hasMandiri = str_contains($corpusLower, 'mandiri') || str_contains($corpusLower, 'livin');
+        $hasBca = str_contains($corpusLower, 'bca') || str_contains($corpusLower, 'klikpay') || str_contains($corpusLower, 'oneklik');
+        $hasStripe = str_contains($corpusLower, 'stripe');
+        $hasPaypal = str_contains($corpusLower, 'paypal');
+        $hasWise = str_contains($corpusLower, 'wise') || str_contains($corpusLower, 'transferwise');
+        $hasXendit = str_contains($corpusLower, 'xendit');
+        $hasMidtrans = str_contains($corpusLower, 'midtrans');
+        $isGlobalMarket = (bool) preg_match('/(?:global|internasional|international|usd|eur|aud|sgd|turis|foreigner|cross-border|ekspor|worldwide|mancanegara)/i', $corpusLower);
+
         $allSuggestions = [
             'whatsapp' => [
                 'id' => 'whatsapp_notif',
@@ -951,64 +964,214 @@ class BlueprintDiscoveryService
                 'addition' => $isEn ? 'Official WhatsApp Business Cloud API for automated customer alerts' : 'WhatsApp Cloud API untuk notifikasi transaksi & pembaruan status real-time',
                 'badge' => 'Integrasi',
             ],
-            'payment' => [
-                'id' => 'payment_midtrans',
-                'category' => 'integration',
-                'title' => $isEn ? 'Midtrans Payment Gateway (QRIS & VA)' : 'Midtrans Payment Gateway (QRIS & VA)',
-                'desc' => $isEn ? 'Enable instant checkout via Bank Virtual Accounts (BCA/Mandiri/BRI), QRIS, and Credit Cards.' : 'Dukungan pembayaran multi-channel otomatis via Virtual Account Bank, QRIS, dan Kartu Kredit.',
-                'target_field' => 'kebutuhanIntegrasi',
-                'addition' => $isEn ? 'Midtrans Payment Gateway (Snap API, Virtual Accounts, QRIS, Credit Card)' : 'Midtrans Payment Gateway (Snap API, QRIS, Virtual Account Bank BCA/Mandiri/BRI, Kartu Kredit)',
-                'badge' => 'Pembayaran',
-            ],
-            'excel_export' => [
-                'id' => 'excel_export',
-                'category' => 'feature',
-                'title' => $isEn ? 'Comprehensive Excel & PDF Reporting' : 'Ekspor Laporan Excel (.xlsx) & PDF',
-                'desc' => $isEn ? 'Allow managers to export audit reconciliations, financial ledgers, and operational tables to Excel.' : 'Fitur unduh laporan operasional, rekapitulasi data harian/bulanan, dan audit transaksi ke format Excel dan PDF.',
-                'target_field' => 'fiturWajib',
-                'addition' => $isEn ? 'Comprehensive Data Export Suite: One-click export of operational ledgers and metrics to Microsoft Excel (.xlsx) and printable PDF.' : 'Modul Ekspor Laporan Komprehensif: Unduh rekapitulasi operasional dan riwayat data ke format Microsoft Excel (.xlsx) dan PDF resmi siap cetak.',
-                'badge' => 'Fitur MVP',
-            ],
-            'approval_role' => [
-                'id' => 'approval_role',
-                'category' => 'actor',
-                'title' => $isEn ? 'Supervisor / Manager Approval Tier' : 'Tingkat Akses Supervisor / Approval',
-                'desc' => $isEn ? 'Prevent operational errors by requiring a manager authorization step before critical actions are executed.' : 'Cegah salah eksekusi dengan otorisasi persetujuan (approval) berjenjang oleh Supervisor atau Manajer.',
-                'target_field' => 'aktorSistem',
-                'addition' => $isEn ? 'Supervisor / Manager: Multi-tier review and authorization before high-value or critical transactions are executed.' : 'Supervisor / Manajer: Otorisasi persetujuan berjenjang sebelum transaksi bernilai tinggi atau perubahan data krusial dieksekusi.',
-                'badge' => 'Aktor & RBAC',
-            ],
-            'refund_flow' => [
-                'id' => 'refund_flow',
-                'category' => 'workflow',
-                'title' => $isEn ? 'Cancellation & Refund Workflow' : 'Alur Pembatalan & Pengembalian Dana',
-                'desc' => $isEn ? 'Establish transparent guidelines and automated steps for customer order cancellation and refund claims.' : 'Definisikan alur resmi penanganan pembatalan pesanan, verifikasi alasan, dan pencatatan pengembalian dana (refund).',
-                'target_field' => 'alurKerja',
-                'addition' => $isEn ? 'Cancellation & Refund Procedure: Client submits request with reason -> Admin inspects validity -> Automated refund ledger adjustment and notification dispatch.' : 'Alur Pembatalan & Pengembalian Dana: Klien mengajukan pembatalan dengan alasan -> Staf/Admin memverifikasi keabsahan -> Penyesuaian saldo dan pengiriman bukti refund otomatis.',
-                'badge' => 'Alur Kerja',
-            ],
-            'audit_trail' => [
-                'id' => 'audit_trail',
-                'category' => 'security',
-                'title' => $isEn ? 'Immutable Security Audit Trail' : 'Audit Trail & Rekam Jejak Keamanan',
-                'desc' => $isEn ? 'Record who created, edited, or deleted records with user ULID and timestamp to ensure high compliance.' : 'Pencatatan riwayat setiap kali data diubah atau dihapus, lengkap dengan identitas pengguna, IP, dan timestamp.',
-                'target_field' => 'kepatuhanKeamanan',
-                'addition' => $isEn ? 'Immutable Security Audit Trail: Complete forensic logging of who modified or deleted critical records with timestamps and IP records.' : 'Audit Trail & Rekam Jejak Forensik: Pencatatan otomatis setiap aksi perubahan/penghapusan data krusial lengkap dengan identitas pengguna dan timestamp.',
-                'badge' => 'Keamanan',
-            ],
-            'google_sso' => [
-                'id' => 'google_sso',
-                'category' => 'feature',
-                'title' => $isEn ? '1-Click Google Sign-In (OAuth)' : 'Login 1-Klik Google (Google SSO)',
-                'desc' => $isEn ? 'Allow users to register and sign in effortlessly using their Google account without memorizing passwords.' : 'Permudah klien dan staf masuk ke sistem dengan sekali klik menggunakan akun Google resmi tanpa menghafal password baru.',
-                'target_field' => 'fiturWajib',
-                'addition' => $isEn ? 'Single Sign-On (SSO): 1-click Google OAuth 2.0 authentication for frictionless client onboarding.' : 'Autentikasi 1-Klik Google Sign-In (OAuth 2.0) untuk mempercepat pendaftaran dan kenyamanan login pengguna.',
-                'badge' => 'Fitur MVP',
-            ],
         ];
 
-        if ($domain === 'logistics') {
-            $allSuggestions['pod_signature'] = [
+        // 2. Dynamic Payment Rails Recommendation (Strictly honest, non-assumptive)
+        if ($isNoPaymentRequested) {
+            $allSuggestions['payment_rail'] = [
+                'id' => 'manual_transfer_proof',
+                'category' => 'integration',
+                'title' => $isEn ? 'Manual Bank Transfer & WhatsApp Slip Verification' : 'Verifikasi Manual Bukti Transfer & WhatsApp',
+                'desc' => $isEn ? 'Direct manual bank wire with customer slip upload and automated WhatsApp dispatch to cashier.' : 'Pembayaran transfer manual bank dengan unggah bukti transfer/slip setoran dan verifikasi manual oleh staf/admin.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => $isEn ? 'Manual Bank Transfer Verification (Receipt Upload & WhatsApp Dispatch)' : 'Verifikasi Manual Bukti Transfer Bank (Upload Bukti Bayar & Konfirmasi WhatsApp)',
+                'badge' => 'Transaksi Manual',
+            ];
+        } elseif ($hasBri) {
+            $allSuggestions['payment_rail'] = [
+                'id' => 'payment_bri_api',
+                'category' => 'integration',
+                'title' => 'Bank BRI Open API (BRIVA & Direct Debit)',
+                'desc' => $isEn ? 'Direct Host-to-Host (H2H) Virtual Account & cash management via official BRI Open API.' : 'Integrasi direct Host-to-Host (H2H) Virtual Account BRIVA & Corporate API resmi Bank BRI.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'Bank BRI Open API (BRIVA Host-to-Host Virtual Account & Direct Debit API)',
+                'badge' => 'Bank API',
+            ];
+        } elseif ($hasBni) {
+            $allSuggestions['payment_rail'] = [
+                'id' => 'payment_bni_api',
+                'category' => 'integration',
+                'title' => 'Bank BNI Open API & Corporate VA',
+                'desc' => $isEn ? 'Direct bank integration with BNI Corporate API for instant automated account reconciliation.' : 'Integrasi direct API Bank BNI untuk Virtual Account corporate dan rekonsiliasi mutasi otomatis.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'Bank BNI Open API & Corporate Virtual Account H2H',
+                'badge' => 'Bank API',
+            ];
+        } elseif ($hasMandiri) {
+            $allSuggestions['payment_rail'] = [
+                'id' => 'payment_mandiri_api',
+                'category' => 'integration',
+                'title' => 'Bank Mandiri Direct API (MCM / Bill Payment)',
+                'desc' => $isEn ? 'Direct corporate integration via Mandiri Cash Management API.' : 'Integrasi direct Host-to-Host Virtual Account & Bill Payment Bank Mandiri.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'Bank Mandiri Direct API (Mandiri Cash Management & Corporate VA)',
+                'badge' => 'Bank API',
+            ];
+        } elseif ($hasBca) {
+            $allSuggestions['payment_rail'] = [
+                'id' => 'payment_bca_api',
+                'category' => 'integration',
+                'title' => 'BCA Open API (OneKlik & BCA Virtual Account)',
+                'desc' => $isEn ? 'Direct integration with Bank Central Asia API for instant settlements.' : 'Integrasi direct Host-to-Host BCA Virtual Account & OneKlik.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'BCA Open API (BCA Virtual Account H2H & OneKlik)',
+                'badge' => 'Bank API',
+            ];
+        } elseif ($hasStripe || $isGlobalMarket) {
+            $allSuggestions['payment_rail'] = [
+                'id' => 'payment_stripe',
+                'category' => 'integration',
+                'title' => $isEn ? 'Stripe Global Payments (Multi-Currency & Cards)' : 'Stripe Global Payments (Multi-Valas & Kartu Kredit)',
+                'desc' => $isEn ? 'Accept international payments via Visa, MasterCard, Amex, Apple Pay, and Google Pay in foreign currencies (USD/EUR).' : 'Dukungan pembayaran internasional (Kartu Kredit/Debit Visa/MasterCard, Apple Pay, Google Pay) dalam berbagai mata uang asing.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'Stripe Global Payments API (Multi-Currency Checkout, Visa/Mastercard/Amex, Apple Pay)',
+                'badge' => 'Pembayaran Global',
+            ];
+        } elseif ($hasPaypal) {
+            $allSuggestions['payment_rail'] = [
+                'id' => 'payment_paypal',
+                'category' => 'integration',
+                'title' => $isEn ? 'PayPal Commerce Platform' : 'PayPal Commerce Platform (Checkout Global)',
+                'desc' => $isEn ? 'Global digital wallet checkout trusted by international buyers.' : 'Pembayaran dompet digital global paling terpercaya untuk wisatawan & pembeli mancanegara.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'PayPal Commerce Platform API',
+                'badge' => 'Pembayaran Global',
+            ];
+        } elseif ($hasWise) {
+            $allSuggestions['payment_rail'] = [
+                'id' => 'payment_wise',
+                'category' => 'integration',
+                'title' => $isEn ? 'Wise Multi-Currency & Payouts API' : 'Wise Multi-Currency & Payouts API',
+                'desc' => $isEn ? 'Low-cost cross-border payments with real mid-market exchange rates.' : 'Transfer uang lintas negara dengan kurs riil pasar menengah tanpa markup biaya tersembunyi.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'Wise Business Multi-Currency API & International Payouts',
+                'badge' => 'Pembayaran Global',
+            ];
+        } elseif ($hasXendit) {
+            $allSuggestions['payment_rail'] = [
+                'id' => 'payment_xendit',
+                'category' => 'integration',
+                'title' => 'Xendit Payment Infrastructure (Multi-Channel)',
+                'desc' => $isEn ? 'Indonesian and SEA payment infrastructure for VA, QRIS, e-Wallets, and retail.' : 'Infrastruktur pembayaran digital untuk Virtual Account, QRIS Dinamis, e-Wallet, dan gerai retail.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'Xendit Payment Infrastructure (Virtual Account, QRIS Dinamis, e-Wallet)',
+                'badge' => 'Pembayaran',
+            ];
+        } elseif ($hasMidtrans) {
+            $allSuggestions['payment_rail'] = [
+                'id' => 'payment_midtrans',
+                'category' => 'integration',
+                'title' => 'Midtrans Payment Gateway (Snap API & QRIS)',
+                'desc' => $isEn ? 'Accept Bank Virtual Accounts, QRIS, and Credit Cards via Midtrans Snap.' : 'Pembayaran multi-channel otomatis via Virtual Account Bank, QRIS Dinamis, dan Kartu Kredit.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'Midtrans Payment Gateway (Snap API, QRIS, Virtual Account Multi-Bank)',
+                'badge' => 'Pembayaran',
+            ];
+        } else {
+            // General configurable payment rails (never lock into single vendor)
+            $allSuggestions['payment_rail'] = [
+                'id' => 'payment_multi_rail',
+                'category' => 'integration',
+                'title' => $isEn ? 'Payment Rails (Direct Bank API / QRIS / Global)' : 'Rel Pembayaran (Direct Bank API / QRIS / Global)',
+                'desc' => $isEn ? 'Configurable payment rails: Direct Bank API (BRI/BNI), QRIS Dinamis, or Global Gateway (Stripe/Wise).' : 'Dukungan gateway fleksibel sesuai pasar: Direct Bank API (BRI/BNI), QRIS Dinamis, atau Global (Stripe/Wise).',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'Integrasi Rel Pembayaran Terpilih (Direct Bank API BRI/BNI, QRIS Nasional, atau Global Stripe/Wise)',
+                'badge' => 'Pembayaran Fleksibel',
+            ];
+        }
+
+        // 3. Universal Enterprise Architecture Suggestions
+        $allSuggestions['excel_export'] = [
+            'id' => 'excel_export',
+            'category' => 'feature',
+            'title' => $isEn ? 'Comprehensive Excel & PDF Reporting' : 'Ekspor Laporan Excel (.xlsx) & PDF',
+            'desc' => $isEn ? 'Allow managers to export audit reconciliations, financial ledgers, and operational tables to Excel.' : 'Fitur unduh laporan operasional, rekapitulasi data harian/bulanan, dan audit transaksi ke format Excel dan PDF.',
+            'target_field' => 'fiturWajib',
+            'addition' => $isEn ? 'Comprehensive Data Export Suite: One-click export of operational ledgers and metrics to Microsoft Excel (.xlsx) and printable PDF.' : 'Modul Ekspor Laporan Komprehensif: Unduh rekapitulasi operasional dan riwayat data ke format Microsoft Excel (.xlsx) dan PDF resmi siap cetak.',
+            'badge' => 'Fitur MVP',
+        ];
+
+        $allSuggestions['approval_role'] = [
+            'id' => 'approval_role',
+            'category' => 'actor',
+            'title' => $isEn ? 'Supervisor / Manager Approval Tier' : 'Tingkat Akses Supervisor / Approval',
+            'desc' => $isEn ? 'Prevent operational errors by requiring a manager authorization step before critical actions are executed.' : 'Cegah salah eksekusi dengan otorisasi persetujuan (approval) berjenjang oleh Supervisor atau Manajer.',
+            'target_field' => 'aktorSistem',
+            'addition' => $isEn ? 'Supervisor / Manager: Multi-tier review and authorization before high-value or critical transactions are executed.' : 'Supervisor / Manajer: Otorisasi persetujuan berjenjang sebelum transaksi bernilai tinggi atau perubahan data krusial dieksekusi.',
+            'badge' => 'Aktor & RBAC',
+        ];
+
+        $allSuggestions['refund_flow'] = [
+            'id' => 'refund_flow',
+            'category' => 'workflow',
+            'title' => $isEn ? 'Cancellation & Refund Workflow' : 'Alur Pembatalan & Pengembalian Dana',
+            'desc' => $isEn ? 'Establish transparent guidelines and automated steps for customer order cancellation and refund claims.' : 'Definisikan alur resmi penanganan pembatalan pesanan, verifikasi alasan, dan pencatatan pengembalian dana (refund).',
+            'target_field' => 'alurKerja',
+            'addition' => $isEn ? 'Cancellation & Refund Procedure: Client submits request with reason -> Admin inspects validity -> Automated refund ledger adjustment and notification dispatch.' : 'Alur Pembatalan & Pengembalian Dana: Klien mengajukan pembatalan dengan alasan -> Staf/Admin memverifikasi keabsahan -> Penyesuaian saldo dan pengiriman bukti refund otomatis.',
+            'badge' => 'Alur Kerja',
+        ];
+
+        $allSuggestions['audit_trail'] = [
+            'id' => 'audit_trail',
+            'category' => 'security',
+            'title' => $isEn ? 'Immutable Security Audit Trail' : 'Audit Trail & Rekam Jejak Keamanan',
+            'desc' => $isEn ? 'Record who created, edited, or deleted records with user ULID and timestamp to ensure high compliance.' : 'Pencatatan riwayat setiap kali data diubah atau dihapus, lengkap dengan identitas pengguna, IP, dan timestamp.',
+            'target_field' => 'kepatuhanKeamanan',
+            'addition' => $isEn ? 'Immutable Security Audit Trail: Complete forensic logging of who modified or deleted critical records with timestamps and IP records.' : 'Audit Trail & Rekam Jejak Forensik: Pencatatan otomatis setiap aksi perubahan/penghapusan data krusial lengkap dengan identitas pengguna dan timestamp.',
+            'badge' => 'Keamanan',
+        ];
+
+        $allSuggestions['google_sso'] = [
+            'id' => 'google_sso',
+            'category' => 'feature',
+            'title' => $isEn ? '1-Click Google Sign-In (OAuth)' : 'Login 1-Klik Google (Google SSO)',
+            'desc' => $isEn ? 'Allow users to register and sign in effortlessly using their Google account without memorizing passwords.' : 'Permudah klien dan staf masuk ke sistem dengan sekali klik menggunakan akun Google resmi tanpa menghafal password baru.',
+            'target_field' => 'fiturWajib',
+            'addition' => $isEn ? 'Single Sign-On (SSO): 1-click Google OAuth 2.0 authentication for frictionless client onboarding.' : 'Autentikasi 1-Klik Google Sign-In (OAuth 2.0) untuk mempercepat pendaftaran dan kenyamanan login pengguna.',
+            'badge' => 'Fitur MVP',
+        ];
+
+        // 4. Domain-Specific Architectural Additions (Prioritized for Domain Relevance)
+        $domainSuggestions = [];
+        if ($domain === 'property') {
+            $domainSuggestions['google_maps'] = [
+                'id' => 'google_maps_embed',
+                'category' => 'integration',
+                'title' => $isEn ? 'Google Maps Embed & Amenities POI' : 'Google Maps Embed & Fasilitas Sekitar (POI)',
+                'desc' => $isEn ? 'Embed interactive maps with neighborhood POIs (beaches, airports, cafes) to help prospective buyers survey locations.' : 'Peta interaktif titik lokasi properti/villa dan jarak ke fasilitas terdekat (pantai, bandara, restoran) untuk survey.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'Google Maps Embed API & Geolocation Amenities POI',
+                'badge' => 'Maps & Lokasi',
+            ];
+            $domainSuggestions['channel_sync'] = [
+                'id' => 'ical_channel_sync',
+                'category' => 'integration',
+                'title' => $isEn ? 'Calendar & iCal Channel Sync' : 'Kalender Ketersediaan & Sinkronisasi iCal',
+                'desc' => $isEn ? 'Real-time booking calendar with 2-way iCal sync to Airbnb / Booking.com preventing double bookings.' : 'Kalender booking interaktif dengan sinkronisasi iCal dua arah (Airbnb/Booking.com) mencegah overbooking.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'iCal Two-Way Availability Calendar Sync (Pencegahan Double Booking)',
+                'badge' => 'Kalender & Sync',
+            ];
+            $domainSuggestions['currency_converter'] = [
+                'id' => 'currency_converter',
+                'category' => 'feature',
+                'title' => $isEn ? 'Multi-Currency Price Display (IDR/USD/AUD)' : 'Tampilan Multi-Valas (IDR, USD, AUD)',
+                'desc' => $isEn ? 'Live currency exchange display for foreign tourists & international investors surveying villa listings.' : 'Estimasi harga sewa/beli villa dalam valuta asing secara real-time untuk calon penyewa mancanegara.',
+                'target_field' => 'fiturWajib',
+                'addition' => 'Modul Konversi Kurs Multi-Valas (IDR, USD, AUD, EUR) Real-Time',
+                'badge' => 'Fitur MVP',
+            ];
+            $domainSuggestions['virtual_tour'] = [
+                'id' => 'virtual_tour_360',
+                'category' => 'feature',
+                'title' => $isEn ? '360° Virtual Tour & Video Walkthrough' : 'Tur Virtual 360° & Video Walkthrough',
+                'desc' => $isEn ? 'Interactive panorama viewer and HD video walkthrough for immersive remote property inspection.' : 'Penyematan tur panorama 360 derajat dan video walkthrough HD untuk inspeksi properti jarak jauh.',
+                'target_field' => 'fiturWajib',
+                'addition' => 'Modul Tur Virtual Interaktif Panorama 360° & Video Walkthrough HD',
+                'badge' => 'Fitur MVP',
+            ];
+        } elseif ($domain === 'logistics') {
+            $domainSuggestions['pod_signature'] = [
                 'id' => 'pod_signature',
                 'category' => 'feature',
                 'title' => $isEn ? 'Digital Signature on Delivery (e-POD)' : 'Tanda Tangan Digital Driver (e-POD)',
@@ -1018,7 +1181,7 @@ class BlueprintDiscoveryService
                 'badge' => 'Fitur MVP',
             ];
         } elseif ($domain === 'clinic') {
-            $allSuggestions['satusehat'] = [
+            $domainSuggestions['satusehat'] = [
                 'id' => 'satusehat_integration',
                 'category' => 'integration',
                 'title' => $isEn ? 'SatuSehat Kemenkes (FHIR API)' : 'Integrasi SatuSehat Kemenkes (FHIR)',
@@ -1028,7 +1191,7 @@ class BlueprintDiscoveryService
                 'badge' => 'Integrasi',
             ];
         } elseif ($domain === 'marketplace') {
-            $allSuggestions['courier_rates'] = [
+            $domainSuggestions['courier_rates'] = [
                 'id' => 'courier_rates',
                 'category' => 'integration',
                 'title' => $isEn ? 'Automated Courier Shipping Rates' : 'Kalkulasi Ongkir Kurir Otomatis',
@@ -1039,10 +1202,13 @@ class BlueprintDiscoveryService
             ];
         }
 
+        // Prioritize domain-specific suggestions before generic features
+        $orderedCatalog = array_merge($domainSuggestions, $allSuggestions);
+
         $suggestions = [];
-        foreach ($allSuggestions as $key => $item) {
+        foreach ($orderedCatalog as $key => $item) {
             $keyword = strtolower($item['id']);
-            if (!str_contains($corpusLower, $keyword) && count($suggestions) < 6) {
+            if (!str_contains($corpusLower, $keyword) && count($suggestions) < 8) {
                 $suggestions[] = $item;
             }
         }

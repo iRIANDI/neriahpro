@@ -373,6 +373,90 @@ function calculateCompleteness(data, lang) {
   return { score: Math.min(100, score), status, checklist };
 }
 
+const PAYMENT_RAIL_OPTIONS = [
+  {
+    id: 'bri_api',
+    name: 'Bank BRI Open API & BRIVA',
+    category: 'BUMN Direct Banking',
+    desc: 'Integrasi direct Host-to-Host (H2H) Virtual Account BRIVA & Corporate API resmi Bank BRI',
+    text: 'Bank BRI Open API (BRIVA Host-to-Host Virtual Account & Direct Debit API)',
+    badge: 'BUMN Direct',
+    badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30',
+  },
+  {
+    id: 'bni_api',
+    name: 'Bank BNI Open API & Corporate VA',
+    category: 'BUMN Direct Banking',
+    desc: 'Integrasi direct API Bank BNI untuk Virtual Account corporate dan rekonsiliasi mutasi otomatis',
+    text: 'Bank BNI Open API & Corporate Virtual Account H2H',
+    badge: 'BUMN Direct',
+    badgeClass: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/30',
+  },
+  {
+    id: 'mandiri_api',
+    name: 'Bank Mandiri Direct API (MCM)',
+    category: 'Enterprise Banking',
+    desc: 'Integrasi direct Host-to-Host Virtual Account & Bill Payment Bank Mandiri Cash Management',
+    text: 'Bank Mandiri Direct API (Mandiri Cash Management & Corporate VA)',
+    badge: 'Enterprise',
+    badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
+  },
+  {
+    id: 'bca_api',
+    name: 'BCA Open API (OneKlik & BCA VA)',
+    category: 'Private Banking',
+    desc: 'Integrasi direct Host-to-Host BCA Virtual Account & OneKlik untuk penyelesaian instan',
+    text: 'BCA Open API (BCA Virtual Account H2H & OneKlik)',
+    badge: 'Private Bank',
+    badgeClass: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30',
+  },
+  {
+    id: 'stripe',
+    name: 'Stripe Global Payments',
+    category: 'Global Cards & Multi-Currency',
+    desc: 'Penerimaan pembayaran internasional (Visa, MasterCard, Amex, Apple Pay, Google Pay) dalam USD/EUR/SGD',
+    text: 'Stripe Global Payments API (Multi-Currency Checkout, Visa/Mastercard/Amex, Apple Pay)',
+    badge: 'Global Valas',
+    badgeClass: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30',
+  },
+  {
+    id: 'wise',
+    name: 'Wise Multi-Currency & Payouts',
+    category: 'Cross-Border Real Mid-Market FX',
+    desc: 'Transfer uang lintas negara dengan kurs riil pasar menengah tanpa markup biaya valas tersembunyi',
+    text: 'Wise Business Multi-Currency API & International Payouts',
+    badge: 'Global FX',
+    badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+  },
+  {
+    id: 'paypal',
+    name: 'PayPal Commerce Platform',
+    category: 'Global Digital Wallet',
+    desc: 'Opsi pembayaran dompet digital global paling terpercaya untuk wisatawan & pembeli mancanegara',
+    text: 'PayPal Commerce Platform API',
+    badge: 'Global Wallet',
+    badgeClass: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30',
+  },
+  {
+    id: 'qris_national',
+    name: 'QRIS Dinamis & Multi-VA Nasional (Midtrans / Xendit)',
+    category: 'Domestic Aggregator',
+    desc: 'Infrastruktur pembayaran digital multi-bank instan via QRIS Dinamis & Virtual Account domestik',
+    text: 'Payment Gateway Domestik (QRIS Dinamis & Virtual Account Multi-Bank via Midtrans/Xendit)',
+    badge: 'Nasional',
+    badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30',
+  },
+  {
+    id: 'no_gateway',
+    name: 'Tanpa Payment Gateway (Manual Transfer / WhatsApp)',
+    category: 'Direct Settlement / Inquiry',
+    desc: 'Tidak memerlukan payment gateway online. Transaksi melalui invoice transfer manual atau survey WhatsApp',
+    text: 'Verifikasi Manual Bukti Transfer Bank (Upload Bukti Bayar & Konfirmasi WhatsApp Staf)',
+    badge: 'Tanpa Gateway',
+    badgeClass: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/30',
+  },
+];
+
 export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialData = {}, countries = [] }) {
   const [lang, setLang] = useState('id');
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -462,13 +546,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         badge: 'Integrasi',
       },
       {
-        id: 'payment_midtrans',
+        id: 'payment_multi_rail',
         category: 'integration',
-        title: 'Midtrans Payment Gateway (QRIS & VA)',
-        desc: lang === 'en' ? 'Multi-channel payment with automated webhooks' : 'Pembayaran otomatis via Virtual Account & QRIS',
+        title: lang === 'en' ? 'Payment Rails Selector (Bank API / Global / QRIS)' : 'Rel Pembayaran Fleksibel (BRI/BNI, Stripe, Wise, QRIS)',
+        desc: lang === 'en' ? 'Click to select: BRI/BNI Direct API, Stripe, Wise, PayPal, or National QRIS' : 'Klik untuk memilih: BRI/BNI Open API, Stripe, Wise, PayPal, atau QRIS Nasional',
         target_field: 'kebutuhanIntegrasi',
-        addition: 'Midtrans Payment Gateway (Snap API, QRIS, Virtual Account BCA/Mandiri/BRI)',
-        badge: 'Pembayaran',
+        addition: 'Rel Pembayaran Terpilih (Direct Bank API / Stripe / Wise / QRIS)',
+        badge: 'Rel Pembayaran',
+        is_payment_selector: true,
       },
       {
         id: 'excel_export',
@@ -521,6 +606,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [appliedSuggestionIds, setAppliedSuggestionIds] = useState(new Set());
   const [coPilotInput, setCoPilotInput] = useState('');
   const [isCoPilotLoading, setIsCoPilotLoading] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [pendingPaymentSuggestion, setPendingPaymentSuggestion] = useState(null);
 
   // In-Card Interactive Add Helpers
   const [activeAddKey, setActiveAddKey] = useState(null);
@@ -1630,8 +1717,19 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const handleApplySuggestion = (suggestion) => {
     if (appliedSuggestionIds.has(suggestion.id)) return;
 
+    // Interactive selector for payment rails (allowing user to select BRI, BNI, Stripe, Wise, PayPal, QRIS, or No Gateway)
+    if (suggestion.is_payment_selector || suggestion.id === 'payment_multi_rail' || suggestion.id.startsWith('payment_')) {
+      setPendingPaymentSuggestion(suggestion);
+      setPaymentModalOpen(true);
+      return;
+    }
+
+    applySuggestionDirectly(suggestion, suggestion.addition);
+  };
+
+  const applySuggestionDirectly = (suggestion, additionText) => {
     const targetField = suggestion.target_field || 'fiturWajib';
-    const addition = suggestion.addition;
+    const addition = additionText || suggestion.addition;
 
     setFormData(prev => {
       let updatedValue;
@@ -1650,6 +1748,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
     setAppliedSuggestionIds(prev => new Set([...prev, suggestion.id]));
     showLocalToast('success', `${suggestion.title} ${lang === 'en' ? 'added to blueprint!' : 'berhasil ditambahkan ke blueprint!'}`, 'SARAN PROAKTIF');
+  };
+
+  const handleSelectPaymentRail = (rail) => {
+    if (pendingPaymentSuggestion) {
+      applySuggestionDirectly(pendingPaymentSuggestion, rail.text);
+    }
+    setPaymentModalOpen(false);
+    setPendingPaymentSuggestion(null);
   };
 
   // In-Card: Add item to a numbered list
@@ -4095,6 +4201,89 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         </section>
 
       </form>
+
+      {/* Dynamic Payment Rails Selection Modal */}
+      {paymentModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl rounded-none">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold uppercase">
+                    ARUS KEUANGAN & PEMBAYARAN
+                  </span>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 font-mono">
+                    Pilih Rel Pembayaran yang Sesuai dengan Proyek Anda
+                  </h3>
+                </div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  Sistem tidak memaksakan satu vendor. Silakan pilih integrasi direct banking (BRI/BNI), kartu global (Stripe), valas (Wise), e-wallet (PayPal), atau tanpa gateway:
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentModalOpen(false);
+                  setPendingPaymentSuggestion(null);
+                }}
+                className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content / Options List */}
+            <div className="p-4 overflow-y-auto space-y-2 flex-1">
+              {PAYMENT_RAIL_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => handleSelectPaymentRail(opt)}
+                  className="w-full p-3 text-left border border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 bg-zinc-50 dark:bg-zinc-950 transition flex items-start justify-between gap-3 group cursor-pointer"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold font-mono text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
+                        {opt.name}
+                      </span>
+                      <span className={`text-[9px] font-mono px-1.5 py-0.2 border ${opt.badgeClass} font-bold uppercase`}>
+                        {opt.badge}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-tight">
+                      {opt.desc}
+                    </p>
+                    <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 mt-1 block truncate">
+                      → {opt.text}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0 font-bold group-hover:bg-emerald-500 group-hover:text-black transition">
+                    + Pasang Rel Ini
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-between">
+              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
+                Pilihan akan otomatis disematkan ke field <strong>Kebutuhan Integrasi</strong>.
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentModalOpen(false);
+                  setPendingPaymentSuggestion(null);
+                }}
+                className="px-4 py-1.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

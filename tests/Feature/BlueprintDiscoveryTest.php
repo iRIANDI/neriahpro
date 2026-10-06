@@ -231,6 +231,34 @@ class BlueprintDiscoveryTest extends TestCase
         $postResetResponse->assertStatus(200);
         $postResetResponse->assertViewHas('initialData', []);
     }
+
+    public function test_proactive_suggestions_are_dynamic_and_adapt_to_bri_bni_stripe_and_no_payment(): void
+    {
+        $service = app(\App\Services\BlueprintDiscoveryService::class);
+
+        // 1. When user requests BRI explicitly
+        $briSuggestions = $service->generateProactiveSuggestions('Sistem koperasi simpan pinjam terhubung rekening Bank BRI dan BRIVA.', 'finance', false);
+        $hasBri = collect($briSuggestions)->contains('id', 'payment_bri_api');
+        $hasMidtrans = collect($briSuggestions)->contains('id', 'payment_midtrans');
+        $this->assertTrue($hasBri, 'Must propose Bank BRI Open API when BRI is mentioned');
+        $this->assertFalse($hasMidtrans, 'Must NOT assume Midtrans when BRI is specifically requested');
+
+        // 2. When user mentions international/global tourists and USD
+        $globalSuggestions = $service->generateProactiveSuggestions('International travel booking portal for global tourists in Bali paying in USD/EUR.', 'property', true);
+        $hasStripe = collect($globalSuggestions)->contains('id', 'payment_stripe');
+        $hasMaps = collect($globalSuggestions)->contains('id', 'google_maps_embed');
+        $hasCalendar = collect($globalSuggestions)->contains('id', 'ical_channel_sync');
+        $this->assertTrue($hasStripe, 'Must propose Stripe for international USD cross-border transactions');
+        $this->assertTrue($hasMaps, 'Must propose Google Maps POI for property/travel domain');
+        $this->assertTrue($hasCalendar, 'Must propose iCal Channel Sync for booking/property domain');
+
+        // 3. When user explicitly states "tanpa payment gateway"
+        $noPgSuggestions = $service->generateProactiveSuggestions('Website katalog villa Bali Luxe Living. Kebutuhan integrasi WhatsApp dan Google Maps (tulis tanpa payment gateway).', 'property', false);
+        $hasAnyOnlinePg = collect($noPgSuggestions)->contains(function ($s) {
+            return in_array($s['id'], ['payment_midtrans', 'payment_xendit', 'payment_stripe', 'payment_paypal']);
+        });
+        $this->assertFalse($hasAnyOnlinePg, 'Must NOT propose any online payment gateway when user explicitly requests tanpa payment gateway');
+    }
 }
 
 

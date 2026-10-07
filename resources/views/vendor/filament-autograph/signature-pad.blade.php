@@ -21,6 +21,25 @@
         $downloadAction = $getAction('download');
         $undoAction = $getAction('undo');
         $doneAction = $getAction('done');
+
+        $padConfig = [
+            'backgroundColor' => $getBackgroundColor(),
+            'backgroundColorOnDark' => $getBackgroundColorOnDark(),
+            'confirmable' => (bool) $isConfirmable,
+            'disabled' => (bool) $isDisabled,
+            'dotSize' => $getDotSize(),
+            'exportBackgroundColor' => $getExportBackgroundColor(),
+            'exportPenColor' => $getExportPenColor(),
+            'filename' => (string) $getFilename(),
+            'maxWidth' => $getLineMaxWidth(),
+            'minDistance' => $getMinDistance(),
+            'minWidth' => $getLineMinWidth(),
+            'penColor' => $getPenColor(),
+            'penColorOnDark' => $getPenColorOnDark(),
+            'throttle' => $getThrottle(),
+            'velocityFilterWeight' => $getVelocityFilterWeight(),
+        ];
+        $encodedConfig = rawurlencode(json_encode($padConfig));
     @endphp
 
     <div
@@ -31,31 +50,17 @@
             x-load
         @endif
         x-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('filament-autograph-alpine', 'saade/filament-autograph') }}"
-        x-data="signaturePadFormComponent({
-            backgroundColor: @js($getBackgroundColor()),
-            backgroundColorOnDark: @js($getBackgroundColorOnDark()),
-            confirmable: @js($isConfirmable),
-            disabled: @js($isDisabled),
-            dotSize: {{ $getDotSize() }},
-            exportBackgroundColor: @js($getExportBackgroundColor()),
-            exportPenColor: @js($getExportPenColor()),
-            filename: '{{ $getFilename() }}',
-            maxWidth: {{ $getLineMaxWidth() }},
-            minDistance: {{ $getMinDistance() }},
-            minWidth: {{ $getLineMinWidth() }},
-            penColor: @js($getPenColor()),
-            penColorOnDark: @js($getPenColorOnDark()),
-            state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$getStatePath()}')") }},
-            throttle: {{ $getThrottle() }},
-            velocityFilterWeight: {{ $getVelocityFilterWeight() }},
-        })"
+        x-data="signaturePadFormComponent(Object.assign(
+            JSON.parse(decodeURIComponent('{{ $encodedConfig }}')),
+            { state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$getStatePath()}')") }} }
+        ))"
     >
         <div class="relative w-full">
             <canvas
                 x-ref="canvas"
                 wire:ignore
-                x-init="window.setupAutographResizer($refs.canvas, () => signaturePad)"
-                x-on:pointerdown="window.setupAutographResizer($refs.canvas, () => signaturePad)"
+                x-init="window.setupAutographResizer($refs.canvas, function() { return signaturePad; })"
+                x-on:pointerdown="window.setupAutographResizer($refs.canvas, function() { return signaturePad; })"
                 @class([
                     'w-full h-44 rounded-sm border-2 border-dashed border-zinc-400 dark:border-zinc-600 bg-white dark:bg-zinc-950 shadow-inner block transition-colors',
                     'opacity-75 bg-gray-50' => $isDisabled,

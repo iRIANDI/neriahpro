@@ -269,7 +269,7 @@ export default function ArchitecturePricingIsland({
               <FileText className="w-6 h-6" />
             </div>
             <h3 className="text-xl font-black uppercase text-zinc-900 dark:text-white">
-              CV Pro Studio &bull; Modul Dalam Pengembangan (Q4)
+              CV Pro Studio &bull; {isEn ? 'Module Under Active Development (Q4)' : 'Modul Dalam Pengembangan (Q4)'}
             </h3>
             <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
               {isEn 
@@ -282,7 +282,7 @@ export default function ArchitecturePricingIsland({
                 onClick={() => setActiveTab('software')}
                 className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs uppercase tracking-wider rounded-xs cursor-pointer transition"
               >
-                &larr; Lihat Layanan Aktif Project OS
+                &larr; {isEn ? 'View Active Project OS Services' : 'Lihat Layanan Aktif Project OS'}
               </button>
             </div>
           </div>
@@ -327,7 +327,9 @@ export default function ArchitecturePricingIsland({
             <div className="mb-8 p-3.5 sm:p-4 bg-amber-500/10 border border-amber-500/30 text-zinc-900 dark:text-zinc-100 rounded-xs shadow-xs">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-black font-black text-[10px] font-mono rounded-xs">⚠️ PENTING</span>
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-black font-black text-[10px] font-mono rounded-xs">
+                    {isEn ? '⚠️ IMPORTANT' : '⚠️ PENTING'}
+                  </span>
                   <span className="font-mono text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
                     {isEn ? 'TIERS 01-04: 100% SELF-SERVICE // ZERO NERIAH PRO CODING' : 'PAKET 01-04: 100% SELF-SERVICE // TANPA KODING DARI NERIAH PRO'}
                   </span>
@@ -337,9 +339,9 @@ export default function ArchitecturePricingIsland({
                 </span>
               </div>
               <p className="text-xs text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed">
-                {pricingSettings.retail_disclaimer || (isEn 
-                  ? 'All Instant Blueprint packages below are digital architectural deliverables (PRD, PostgreSQL ULID DDL, Mermaid diagrams, WBS, OpenAPI 3.1) for you and your developers to build on your own. For full turnkey coding by Neriah Pro engineers, see Studio Contracts below.' 
-                  : 'Seluruh paket Instant Blueprint di bawah ini adalah cetak biru spesifikasi arsitektur mandiri (100% Self-Service) untuk dikerjakan langsung oleh Anda atau tim developer Anda sendiri. Butuh tim Neriah Pro yang mengoding aplikasi siap pakai? Pilih Layanan Studio di bagian bawah.')}
+                {isEn 
+                  ? 'All Instant Blueprint packages below are digital architectural deliverables (PRD, PostgreSQL ULID DDL, Mermaid diagrams, WBS, OpenAPI 3.1) for you and your developers to build and code on your own. No coding or application building by Neriah Pro. For full turnkey coding by Neriah Pro engineers, see Studio Contracts below.' 
+                  : (pricingSettings.retail_disclaimer || 'Seluruh paket Instant Blueprint di bawah ini adalah cetak biru spesifikasi arsitektur mandiri (100% Self-Service) untuk dikerjakan langsung oleh Anda atau tim developer Anda sendiri. Tidak ada koding atau pembuatan aplikasi oleh Neriah Pro. Butuh tim Neriah Pro yang mengoding aplikasi siap pakai? Pilih Layanan Studio di bagian bawah.')}
               </p>
             </div>
 
@@ -352,7 +354,7 @@ export default function ArchitecturePricingIsland({
                     TIER 01 // AUDIT
                   </span>
                   <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-[9px] font-bold">
-                    FREE GUEST TIER
+                    {isEn ? 'FREE GUEST TIER' : 'GRATIS MODE TAMU'}
                   </span>
                 </div>
 
@@ -366,48 +368,70 @@ export default function ArchitecturePricingIsland({
 
                 <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
                   <div>
-                    <span className="text-[10px] text-zinc-500 font-mono block">Tarif Akses Digital:</span>
+                    <span className="text-[10px] text-zinc-500 font-mono block">
+                      {isEn ? 'Digital Access Fee:' : 'Tarif Akses Digital:'}
+                    </span>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
                         Rp {pricingSettings.retail_spark_price || '0'}
                       </span>
-                      <span className="text-[10px] font-mono text-emerald-500 font-bold">/ GRATIS</span>
+                      <span className="text-[10px] font-mono text-emerald-500 font-bold">
+                        {isEn ? '/ FREE' : '/ GRATIS'}
+                      </span>
                     </div>
                   </div>
 
                   <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1">
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Pengerjaan:</span>
-                      <span className="font-bold text-cyan-600 dark:text-cyan-400">100% Mandiri</span>
+                      <span>{isEn ? 'Execution:' : 'Pengerjaan:'}</span>
+                      <span className="font-bold text-cyan-600 dark:text-cyan-400">
+                        {isEn ? '100% Self-Service' : '100% Mandiri'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Batas Kuota:</span>
-                      <span className="font-bold text-zinc-900 dark:text-white">{pricingSettings.retail_spark_limit || '2x Audit / Bulan'}</span>
+                      <span>{isEn ? 'Quota Limit:' : 'Batas Kuota:'}</span>
+                      <span className="font-bold text-zinc-900 dark:text-white">
+                        {isEn ? '2 Idea Audits / Month' : (pricingSettings.retail_spark_limit || '2x Audit / Bulan')}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Siklus Reset:</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">Tiap Tgl 1 Awal Bulan</span>
+                      <span>{isEn ? 'Reset Cycle:' : 'Siklus Reset:'}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        {isEn ? '1st of Every Month' : 'Tiap Tgl 1 Awal Bulan'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Masa Berlaku:</span>
-                      <span className="font-bold text-zinc-700 dark:text-zinc-300">7 Hari Guest Session</span>
+                      <span>{isEn ? 'Validity Period:' : 'Masa Berlaku:'}</span>
+                      <span className="font-bold text-zinc-700 dark:text-zinc-300">
+                        {isEn ? '7-Day Guest Session' : '7 Hari Sesi Tamu'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Syarat Login:</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">Tanpa Login (Guest)</span>
+                      <span>{isEn ? 'Login Requirement:' : 'Syarat Login:'}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        {isEn ? 'No Login Required (Guest)' : 'Tanpa Login (Tamu)'}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2 mb-6">
-                  <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider block">OUTPUT DIDAPATKAN:</span>
-                  {[
+                  <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider block">
+                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT SPESIFIKASI DIDAPATKAN:'}
+                  </span>
+                  {(isEn ? [
+                    'Business Viability Analysis & Problem Framing',
+                    'Executive Summary & Target Audience Definition',
+                    'Top 5 Priority Essential MVP Features',
+                    'Complexity Rating & Initial TCO Estimation',
+                    'Export Markdown Summary to Local Device',
+                  ] : [
                     'Analisis Kelayakan Bisnis & Problem Framing',
                     'Executive Summary & Target Audiens',
                     '5 Fitur Esensial MVP Prioritas',
                     'Estimasi Kompleksitas & TCO Awal',
                     'Ekspor Ringkasan Markdown ke Lokal',
-                  ].map((f, i) => (
+                  ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-cyan-500 shrink-0 mt-0.5" />
                       <span className="text-[11px] leading-tight">{f}</span>
@@ -447,7 +471,9 @@ export default function ArchitecturePricingIsland({
 
                 <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
                   <div>
-                    <span className="text-[10px] text-zinc-500 font-mono block">Biaya Lisensi Digital:</span>
+                    <span className="text-[10px] text-zinc-500 font-mono block">
+                      {isEn ? 'Digital License Fee:' : 'Biaya Lisensi Digital:'}
+                    </span>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
                         Rp {pricingSettings.retail_lite_price || '99.000'}
@@ -458,37 +484,55 @@ export default function ArchitecturePricingIsland({
 
                   <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1">
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Pengerjaan:</span>
-                      <span className="font-bold text-cyan-600 dark:text-cyan-400">100% Mandiri</span>
+                      <span>{isEn ? 'Execution:' : 'Pengerjaan:'}</span>
+                      <span className="font-bold text-cyan-600 dark:text-cyan-400">
+                        {isEn ? '100% Self-Service' : '100% Mandiri'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Batas Kuota:</span>
-                      <span className="font-bold text-zinc-900 dark:text-white">{pricingSettings.retail_lite_limit || '1 Proyek PRD 26 Param'}</span>
+                      <span>{isEn ? 'Quota Limit:' : 'Batas Kuota:'}</span>
+                      <span className="font-bold text-zinc-900 dark:text-white">
+                        {isEn ? '1 Project (26-Param PRD)' : (pricingSettings.retail_lite_limit || '1 Proyek PRD 26 Param')}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Siklus Reset:</span>
-                      <span className="font-bold text-zinc-700 dark:text-zinc-300">Sekali Bayar (1 Proyek)</span>
+                      <span>{isEn ? 'Reset Cycle:' : 'Siklus Reset:'}</span>
+                      <span className="font-bold text-zinc-700 dark:text-zinc-300">
+                        {isEn ? 'One-Time License (1 Project)' : 'Sekali Bayar (1 Proyek)'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Masa Berlaku:</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">Unduh Selamanya + 30hr Rev</span>
+                      <span>{isEn ? 'Validity Period:' : 'Masa Berlaku:'}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        {isEn ? 'Lifetime Download + 30-Day Rev' : 'Unduh Selamanya + 30hr Rev'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Syarat Login:</span>
-                      <span className="font-bold text-amber-600 dark:text-amber-400">Wajib Login Akun</span>
+                      <span>{isEn ? 'Login Requirement:' : 'Syarat Login:'}</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">
+                        {isEn ? 'Account Login Required' : 'Wajib Login Akun'}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2 mb-6">
-                  <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider block">OUTPUT DIDAPATKAN:</span>
-                  {[
+                  <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider block">
+                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT SPESIFIKASI DIDAPATKAN:'}
+                  </span>
+                  {(isEn ? [
+                    'All Spark Tier Deliverables',
+                    'Full 26-Parameter PRD (JSON & Markdown)',
+                    'PostgreSQL Strict ULID DDL SQL Schema',
+                    'O(1) Keyset & Cursor Pagination Standard',
+                    'Work Breakdown Structure (WBS) 2 Sprints',
+                  ] : [
                     'Semua Output Spark Tier',
                     'PRD 26 Parameter Lengkap (JSON & MD)',
                     'Skema PostgreSQL Strict ULID DDL SQL',
                     'Standar Keyset O(1) Pagination Rules',
                     'Work Breakdown Structure (WBS) 2 Sprint',
-                  ].map((f, i) => (
+                  ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-cyan-500 shrink-0 mt-0.5" />
                       <span className="text-[11px] leading-tight">{f}</span>
@@ -510,7 +554,7 @@ export default function ArchitecturePricingIsland({
             {/* PRO PRD TIER (BEST VALUE) */}
             <div className="bg-white dark:bg-zinc-900 border-2 border-emerald-500 p-5 sm:p-6 flex flex-col justify-between rounded-none shadow-xl relative transform xl:-translate-y-1">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-black px-3 py-0.5 font-mono text-[9px] font-black uppercase tracking-widest shadow-xs">
-                BEST VALUE // DEVELOPER FAVORITE
+                {isEn ? 'BEST VALUE // DEVELOPER FAVORITE' : 'PILIHAN TERBAIK // FAVORIT DEVELOPER'}
               </div>
 
               <div>
@@ -519,7 +563,7 @@ export default function ArchitecturePricingIsland({
                     TIER 03 // PRODUCTION
                   </span>
                   <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-mono text-[9px] font-bold">
-                    STARTUP &amp; AGENCY
+                    {isEn ? 'STARTUP & AGENCY' : 'STARTUP & AGENSI'}
                   </span>
                 </div>
 
@@ -533,7 +577,9 @@ export default function ArchitecturePricingIsland({
 
                 <div className="mb-4 p-3 bg-emerald-500/5 border border-emerald-500/30 space-y-2">
                   <div>
-                    <span className="text-[10px] text-zinc-500 font-mono block">Biaya Lisensi Digital:</span>
+                    <span className="text-[10px] text-zinc-500 font-mono block">
+                      {isEn ? 'Digital License Fee:' : 'Biaya Lisensi Digital:'}
+                    </span>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
                         Rp {pricingSettings.retail_pro_price || '399.000'}
@@ -544,38 +590,57 @@ export default function ArchitecturePricingIsland({
 
                   <div className="pt-2 border-t border-emerald-500/20 text-[10px] font-mono space-y-1">
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Pengerjaan:</span>
-                      <span className="font-bold text-emerald-500">100% Mandiri</span>
+                      <span>{isEn ? 'Execution:' : 'Pengerjaan:'}</span>
+                      <span className="font-bold text-emerald-500">
+                        {isEn ? '100% Self-Service' : '100% Mandiri'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Batas Kuota:</span>
-                      <span className="font-bold text-zinc-900 dark:text-white">{pricingSettings.retail_pro_limit || '1 Proyek PRD + WBS 5 Sprint'}</span>
+                      <span>{isEn ? 'Quota Limit:' : 'Batas Kuota:'}</span>
+                      <span className="font-bold text-zinc-900 dark:text-white">
+                        {isEn ? '1 Project (PRD + 5 Sprints WBS)' : (pricingSettings.retail_pro_limit || '1 Proyek PRD + WBS 5 Sprint')}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Siklus Reset:</span>
-                      <span className="font-bold text-zinc-700 dark:text-zinc-300">Sekali Bayar (1 Proyek)</span>
+                      <span>{isEn ? 'Reset Cycle:' : 'Siklus Reset:'}</span>
+                      <span className="font-bold text-zinc-700 dark:text-zinc-300">
+                        {isEn ? 'One-Time License (1 Project)' : 'Sekali Bayar (1 Proyek)'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Masa Berlaku:</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">Unduh Selamanya + 6bln AI</span>
+                      <span>{isEn ? 'Validity Period:' : 'Masa Berlaku:'}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        {isEn ? 'Lifetime Download + 6 Months AI' : 'Unduh Selamanya + 6bln AI'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Syarat Login:</span>
-                      <span className="font-bold text-amber-600 dark:text-amber-400">Wajib Login Akun</span>
+                      <span>{isEn ? 'Login Requirement:' : 'Syarat Login:'}</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">
+                        {isEn ? 'Account Login Required' : 'Wajib Login Akun'}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2 mb-6">
-                  <span className="text-[10px] font-mono font-bold text-emerald-500 uppercase tracking-wider block">OUTPUT DIDAPATKAN:</span>
-                  {[
+                  <span className="text-[10px] font-mono font-bold text-emerald-500 uppercase tracking-wider block">
+                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT SPESIFIKASI DIDAPATKAN:'}
+                  </span>
+                  {(isEn ? [
+                    'All Lite Tier Deliverables',
+                    'Decoupled 2026+ Blueprint (Next.js 15, Cloudflare)',
+                    '6 Mermaid Diagrams (ERD, Data Flow, Sequence, Gantt)',
+                    'WBS 5 Sprints Linear / Jira Ready',
+                    'OpenAPI 3.1 & Idempotency Specification',
+                    'Anti-AI-Slop & UI Design Tokens Guidelines',
+                  ] : [
                     'Semua Output Lite Tier',
                     'Cetak Biru Decoupled 2026+ (Next.js 15, Cloudflare)',
                     '6 Diagram Mermaid (ERD, Data Flow, Sequence, Gantt)',
                     'WBS 5 Sprint Linear / Jira Ready',
                     'OpenAPI 3.1 & Idempotency Specification',
                     'Panduan Anti-AI-Slop & UI Design Tokens',
-                  ].map((f, i) => (
+                  ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
                       <span className="text-[11px] leading-tight">{f}</span>
@@ -602,7 +667,7 @@ export default function ArchitecturePricingIsland({
                     TIER 04 // ENTERPRISE
                   </span>
                   <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[9px] font-bold">
-                    + 1-ON-1 CALL
+                    {isEn ? '+ 1-ON-1 ARCHITECT CALL' : '+ SESI 1-ON-1 LEAD ARCHITECT'}
                   </span>
                 </div>
 
@@ -616,7 +681,9 @@ export default function ArchitecturePricingIsland({
 
                 <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
                   <div>
-                    <span className="text-[10px] text-zinc-500 font-mono block">Investasi Advisory:</span>
+                    <span className="text-[10px] text-zinc-500 font-mono block">
+                      {isEn ? 'Advisory Investment:' : 'Investasi Advisory:'}
+                    </span>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
                         Rp {pricingSettings.retail_ultimate_price || '1.490.000'}
@@ -627,38 +694,57 @@ export default function ArchitecturePricingIsland({
 
                   <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1">
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Pengerjaan:</span>
-                      <span className="font-bold text-amber-600 dark:text-amber-400">Mandiri + 1-on-1 Call</span>
+                      <span>{isEn ? 'Execution:' : 'Pengerjaan:'}</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">
+                        {isEn ? 'Self-Service + 1-on-1 Call' : 'Mandiri + Sesi 1-on-1'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Batas Kuota:</span>
-                      <span className="font-bold text-zinc-900 dark:text-white">{pricingSettings.retail_ultimate_limit || '1 Proyek Enterprise'}</span>
+                      <span>{isEn ? 'Quota Limit:' : 'Batas Kuota:'}</span>
+                      <span className="font-bold text-zinc-900 dark:text-white">
+                        {isEn ? '1 Enterprise Project' : (pricingSettings.retail_ultimate_limit || '1 Proyek Enterprise')}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Siklus Reset:</span>
-                      <span className="font-bold text-zinc-700 dark:text-zinc-300">Sekali Bayar (1 Proyek)</span>
+                      <span>{isEn ? 'Reset Cycle:' : 'Siklus Reset:'}</span>
+                      <span className="font-bold text-zinc-700 dark:text-zinc-300">
+                        {isEn ? 'One-Time License (1 Project)' : 'Sekali Bayar (1 Proyek)'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Masa Berlaku:</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">Unduh Selamanya + 1th Update</span>
+                      <span>{isEn ? 'Validity Period:' : 'Masa Berlaku:'}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        {isEn ? 'Lifetime Download + 1 Year Updates' : 'Unduh Selamanya + 1th Update'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Syarat Login:</span>
-                      <span className="font-bold text-amber-600 dark:text-amber-400">Wajib Akun Terverifikasi</span>
+                      <span>{isEn ? 'Login Requirement:' : 'Syarat Login:'}</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">
+                        {isEn ? 'Verified Account Required' : 'Wajib Akun Terverifikasi'}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2 mb-6">
-                  <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider block">OUTPUT DIDAPATKAN:</span>
-                  {[
+                  <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider block">
+                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT SPESIFIKASI DIDAPATKAN:'}
+                  </span>
+                  {(isEn ? [
+                    'All Pro Production Tier Deliverables',
+                    'AI Multi-Model Failover Token Shield Strategy',
+                    'Zero-Trust CORS & Anti-Malware Hardening',
+                    '1 Scheduled 60-Min Architecture Call (Google Meet)',
+                    'Validation & Review by Internal Engineering Team',
+                    'Corporate Non-Disclosure Agreement (NDA)',
+                  ] : [
                     'Semua Output Pro Production Tier',
                     'AI Multi-Model Failover Token Shield Strategy',
                     'Zero-Trust CORS & Anti-Malware Hardening',
                     '1 Sesi 60 Menit Architecture Call (Google Meet)',
                     'Validasi & Review Tim Engineering Internal',
                     'Non-Disclosure Agreement (NDA) Korporat',
-                  ].map((f, i) => (
+                  ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
                       <span className="text-[11px] leading-tight">{f}</span>
@@ -702,10 +788,10 @@ export default function ArchitecturePricingIsland({
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-mono text-xs font-black tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
-                    SKENARIO 1 // ADVISORY STUDIO
+                    {isEn ? 'SCENARIO 1 // ADVISORY STUDIO' : 'SKENARIO 1 // ADVISORY STUDIO'}
                   </span>
                   <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-[10px] font-bold">
-                    ONE-TIME INVESTMENT
+                    {isEn ? 'ONE-TIME INVESTMENT' : 'INVESTASI SATU KALI'}
                   </span>
                 </div>
 
@@ -720,18 +806,26 @@ export default function ArchitecturePricingIsland({
                 </p>
 
                 <div className="mb-6 p-4 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono block mb-1">Total Biaya Jasa Advisory:</span>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono block mb-1">
+                    {isEn ? 'Total Advisory Service Fee:' : 'Total Biaya Jasa Advisory:'}
+                  </span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl sm:text-4xl font-black font-mono text-zinc-900 dark:text-white">
                       Rp {pricingSettings.advisory_price || '2.500.000'}
                     </span>
-                    <span className="text-xs font-mono text-zinc-500">/ project</span>
+                    <span className="text-xs font-mono text-zinc-500">{isEn ? '/ project' : '/ proyek'}</span>
                   </div>
                   <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-bold mt-1 block">
                     &bull; {isEn ? 'Includes full PRD synthesis + ERD schema + Scoping Discovery' : 'Termasuk PRD 26 parameter + Skema DDL + Sesi Scoping'}
                   </span>
                   <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono text-zinc-500">
-                    <span>Pengerjaan Koding: <strong>Dieksekusi Tim Klien Sendiri (Biaya Rp 2.5jt memotong DP 50% jika lanjut Full MVP)</strong></span>
+                    <span>
+                      {isEn ? (
+                        <>Coding Execution: <strong>Executed by Client Dev Team (Advisory fee deducted from 50% Down Payment if continuing to Full MVP)</strong></>
+                      ) : (
+                        <>Pengerjaan Koding: <strong>Dieksekusi Tim Klien Sendiri (Biaya Rp 2.5jt memotong DP 50% jika lanjut Full MVP)</strong></>
+                      )}
+                    </span>
                   </div>
                 </div>
 
@@ -740,7 +834,15 @@ export default function ArchitecturePricingIsland({
                     {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT SPESIFIKASI DIDAPATKAN:'}
                   </div>
 
-                  {[
+                  {(isEn ? [
+                    'Comprehensive 26-Parameter PRD (Functional, Non-Functional, NFR)',
+                    'PostgreSQL Strict ULID Database Schema (Ready-to-Import DDL SQL)',
+                    'O(1) Keyset & Keyset Cursor Pagination Architectural Guide',
+                    'System Architecture & End-to-End Data Flow Diagrams',
+                    'Work Breakdown Structure (WBS) 5 Sprints Jira/Linear Ready',
+                    'Security, Anti-Malware & DDoS Hardening Checklist',
+                    '100% Intellectual Property Ownership & Corporate NDA',
+                  ] : [
                     'PRD 26 Parameter Lengkap (Fungsional, Non-Fungsional, NFR)',
                     'Skema Database PostgreSQL Strict ULID (DDL SQL Siap Pakai)',
                     'Standar O(1) Keyset & Cursor Pagination Guide',
@@ -748,7 +850,7 @@ export default function ArchitecturePricingIsland({
                     'Work Breakdown Structure (WBS) 5 Sprint Jira/Linear Ready',
                     'Security & Anti-Malware / DDoS Hardening Checklist',
                     '100% Hak Milik Dokumen & Non-Disclosure Agreement (NDA)',
-                  ].map((feat, idx) => (
+                  ]).map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                       <span>{feat}</span>
@@ -782,16 +884,16 @@ export default function ArchitecturePricingIsland({
               {/* Best Value Badge */}
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-500 text-black px-4 py-1 font-mono text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-md">
                 <Crown className="w-3.5 h-3.5" />
-                <span>{isEn ? 'DIKERJAKAN 100% OLEH NERIAH PRO // FULL MVP' : 'DIKERJAKAN 100% OLEH NERIAH PRO // FULL MVP'}</span>
+                <span>{isEn ? 'EXECUTED 100% BY NERIAH PRO // FULL MVP' : 'DIKERJAKAN 100% OLEH NERIAH PRO // FULL MVP'}</span>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-4 mt-2">
                   <span className="font-mono text-xs font-black tracking-wider uppercase text-emerald-600 dark:text-emerald-400">
-                    SKENARIO 2 // FULL MONOLITH
+                    {isEn ? 'SCENARIO 2 // FULL MONOLITH' : 'SKENARIO 2 // FULL MONOLITH'}
                   </span>
                   <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-mono text-[10px] font-bold">
-                    DP 50% MILESTONE
+                    {isEn ? '50% MILESTONE DP' : 'DP 50% MILESTONE'}
                   </span>
                 </div>
 
@@ -806,7 +908,9 @@ export default function ArchitecturePricingIsland({
                 </p>
 
                 <div className="mb-6 p-4 bg-emerald-500/5 border border-emerald-500/30">
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono block mb-1">Nilai Kontrak Pengembangan Penuh:</span>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono block mb-1">
+                    {isEn ? 'Full Development Contract Value:' : 'Nilai Kontrak Pengembangan Penuh:'}
+                  </span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl sm:text-4xl font-black font-mono text-zinc-900 dark:text-white">
                       Rp {pricingSettings.mvp_price || '50.000.000'}
@@ -814,17 +918,21 @@ export default function ArchitecturePricingIsland({
                   </div>
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-emerald-500/20">
                     <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                      Uang Muka (DP 50%):
+                      {isEn ? 'Down Payment (50% DP):' : 'Uang Muka (DP 50%):'}
                     </span>
                     <span className="text-sm font-mono font-black text-emerald-500">
                       Rp 25.000.000
                     </span>
                   </div>
                   <span className="text-[10px] text-zinc-500 font-mono mt-1 block">
-                    &bull; Pelunasan sisa 50% setelah UAT &amp; Live Production Deploy
+                    {isEn ? '• Remaining 50% settled upon UAT & Live Production Deploy' : '• Pelunasan sisa 50% setelah UAT & Live Production Deploy'}
                   </span>
                   <div className="mt-2 pt-2 border-t border-emerald-500/20 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                    <span>Pengerjaan Koding: 100% Dikerjakan oleh Software Architect &amp; Engineer Neriah Pro</span>
+                    <span>
+                      {isEn 
+                        ? 'Coding Execution: 100% Executed by Neriah Pro Senior Software Architects & Engineers' 
+                        : 'Pengerjaan Koding: 100% Dikerjakan oleh Software Architect & Engineer Neriah Pro'}
+                    </span>
                   </div>
                 </div>
 
@@ -834,7 +942,16 @@ export default function ArchitecturePricingIsland({
                     <span>{isEn ? 'EVERYTHING IN BLUEPRINT PLUS:' : 'SEMUA OUTPUT BLUEPRINT DITAMBAH:'}</span>
                   </div>
 
-                  {[
+                  {(isEn ? [
+                    'Full-Stack Modern Monolith (Laravel 13, Filament v5, React 19)',
+                    'Digital Scope-Locked Legal Contract & Security Architecture',
+                    'Secure 50% Milestone Down Payment via Midtrans / Bank Escrow',
+                    'Dedicated VPS Hardening, Nginx Tuning & Redis Setup',
+                    'Automated Test Suite (Pest PHP Unit & Feature Tests)',
+                    'Payment Gateway, WhatsApp API & Email Gateway Integration',
+                    '100% Source Code & Client Server Credentials Handover',
+                    'Full 3-Month Priority SLA Bug Warranty & Maintenance',
+                  ] : [
                     'Full-Stack Modern Monolith (Laravel 13, Filament v5, React 19)',
                     'Kontrak Hukum Digital Scope-Locked & Legal Security',
                     'Pembayaran DP 50% Aman via Midtrans / Bank Escrow',
@@ -843,7 +960,7 @@ export default function ArchitecturePricingIsland({
                     'Integrasi Payment Gateway, WhatsApp API, & Email Gateway',
                     '100% Penyerahan Source Code & Akun Server Klien',
                     'Garansi Perbaikan Bug & SLA Prioritas 3 Bulan Penuh',
-                  ].map((feat, idx) => (
+                  ]).map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                       <span>{feat}</span>
@@ -857,7 +974,7 @@ export default function ArchitecturePricingIsland({
                   onClick={() => openBookingModal('full_mvp')}
                   className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-lg cursor-pointer"
                 >
-                  <span>{isEn ? 'START 5 SPRINT DEVELOPMENT (DP 50%)' : 'RESERVASI SPRINT PROYEK (DP 50%)'}</span>
+                  <span>{isEn ? 'START 5 SPRINT DEVELOPMENT (50% DP)' : 'RESERVASI SPRINT PROYEK (DP 50%)'}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
 
@@ -876,10 +993,10 @@ export default function ArchitecturePricingIsland({
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-mono text-xs font-black tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
-                    PROGRAM STIMULUS // UMKM
+                    {isEn ? 'STIMULUS PROGRAM // LOCAL BUSINESS' : 'PROGRAM STIMULUS // UMKM'}
                   </span>
                   <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 font-mono text-[10px] font-bold">
-                    SUBSIDI 50% // DIKERJAKAN NERIAH PRO
+                    {isEn ? '50% SUBSIDY // EXECUTED BY NERIAH PRO' : 'SUBSIDI 50% // DIKERJAKAN NERIAH PRO'}
                   </span>
                 </div>
 
@@ -894,14 +1011,18 @@ export default function ArchitecturePricingIsland({
                 </p>
 
                 <div className="mb-6 p-4 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono block mb-1">Investasi Awal Normal:</span>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono block mb-1">
+                    {isEn ? 'Standard Initial Investment:' : 'Investasi Awal Normal:'}
+                  </span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl sm:text-3xl font-black font-mono text-zinc-900 dark:text-white">
                       Rp {pricingSettings.umkm_price || '7.500.000'}
                     </span>
                   </div>
                   <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-                    <span className="text-[11px] font-mono text-zinc-500">Dengan Subsidi UMKM (50%):</span>
+                    <span className="text-[11px] font-mono text-zinc-500">
+                      {isEn ? 'With Business Subsidy (50%):' : 'Dengan Subsidi UMKM (50%):'}
+                    </span>
                     <span className="text-xs font-mono font-black text-amber-500">
                       Rp 3.750.000
                     </span>
@@ -910,7 +1031,11 @@ export default function ArchitecturePricingIsland({
                     &bull; {isEn ? 'Limited community subsidy quota (2 business slots / month)' : 'Program subsidi terbatas (Alokasi 2 kuota usaha / bulan)'}
                   </span>
                   <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
-                    <span>Pengerjaan Koding: 100% Dikerjakan oleh Tim Neriah Pro sampai Siap Pakai</span>
+                    <span>
+                      {isEn 
+                        ? 'Coding Execution: 100% Executed by Neriah Pro Team Turnkey Ready' 
+                        : 'Pengerjaan Koding: 100% Dikerjakan oleh Tim Neriah Pro sampai Siap Pakai'}
+                    </span>
                   </div>
                 </div>
 
@@ -919,7 +1044,15 @@ export default function ArchitecturePricingIsland({
                     {isEn ? 'PACKAGE HIGHLIGHTS:' : 'FITUR UTAMA DIDAPATKAN:'}
                   </div>
 
-                  {[
+                  {(isEn ? [
+                    'Centralized Transaction Engine & Customer Database',
+                    'Automated QRIS & Bank Transfer Payment Integration',
+                    'Admin Dashboard Filament v5 (Bilingual Native ID/EN)',
+                    'Automated Sales Reports Export (Excel / PDF)',
+                    'Real-Time WhatsApp Order Confirmation Notifications',
+                    'Business Domain Setup (.id / .com) & Fast Cloud Hosting',
+                    'Dashboard Training Session via Zoom / Video Guide',
+                  ] : [
                     'Engine Transaksi & Database Pelanggan Terpusat',
                     'Integrasi Pembayaran Otomatis QRIS & Transfer Bank',
                     'Admin Dashboard Filament v5 Bahasa Indonesia',
@@ -927,7 +1060,7 @@ export default function ArchitecturePricingIsland({
                     'Notifikasi WhatsApp Konfirmasi Pesanan Real-Time',
                     'Setup Domain Bisnis (.id / .com) & Hosting Cepat',
                     'Pelatihan Penggunaan Dashboard via Zoom / Panduan Video',
-                  ].map((feat, idx) => (
+                  ]).map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                       <span>{feat}</span>
@@ -941,7 +1074,7 @@ export default function ArchitecturePricingIsland({
                   onClick={() => openBookingModal('umkm_starter', 'UMKM-SUBSIDI-50')}
                   className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-3 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-xs cursor-pointer"
                 >
-                  <span>{isEn ? 'APPLY UMKM SUBSIDY' : 'KLAIM SUBSIDI UMKM (50%)'}</span>
+                  <span>{isEn ? 'CLAIM 50% SUBSIDY' : 'KLAIM SUBSIDI UMKM (50%)'}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
 
@@ -952,7 +1085,7 @@ export default function ArchitecturePricingIsland({
                   className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2.5 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
                 >
                   <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
-                  <span>{isEn ? 'CHAT WITH ADVISOR' : 'KONSULTASI KEBUTUHAN UMKM'}</span>
+                  <span>{isEn ? 'CONSULT BUSINESS NEEDS' : 'KONSULTASI KEBUTUHAN UMKM'}</span>
                 </a>
               </div>
             </div>
@@ -975,7 +1108,9 @@ export default function ArchitecturePricingIsland({
             <table className="w-full text-left text-xs font-sans border-collapse">
               <thead>
                 <tr className="border-b-2 border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 font-mono text-[11px] uppercase tracking-wider">
-                  <th className="py-3 px-3 font-bold text-zinc-600 dark:text-zinc-400">Parameter Evaluasi</th>
+                  <th className="py-3 px-3 font-bold text-zinc-600 dark:text-zinc-400">
+                    {isEn ? 'Evaluation Parameter' : 'Parameter Evaluasi'}
+                  </th>
                   <th className="py-3 px-3 font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/5">
                     <div>Instant Blueprint</div>
                     <div className="text-[9px] font-normal text-zinc-500">Spark / Lite / Pro / Ultimate</div>
@@ -986,181 +1121,221 @@ export default function ArchitecturePricingIsland({
                   </th>
                   <th className="py-3 px-3 font-bold text-emerald-500">
                     <div>Full MVP Monolith</div>
-                    <div className="text-[9px] font-normal text-zinc-500">Rp 50.000.000 (DP 50%)</div>
+                    <div className="text-[9px] font-normal text-zinc-500">Rp 50.000.000 ({isEn ? '50% DP' : 'DP 50%'})</div>
                   </th>
                   <th className="py-3 px-3 font-bold text-amber-500">
                     <div>UMKM Starter</div>
-                    <div className="text-[9px] font-normal text-zinc-500">Rp 3.75 - 7.5 Jt</div>
+                    <div className="text-[9px] font-normal text-zinc-500">{isEn ? 'Rp 3.75 - 7.5 M' : 'Rp 3.75 - 7.5 Jt'}</div>
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 font-sans">
                 {/* 1. SIAPA YANG MELAKUKAN KODING */}
                 <tr className="bg-amber-500/5 dark:bg-amber-500/10">
-                  <td className="py-3 px-3 font-bold text-zinc-900 dark:text-white font-mono">Siapa yang Melakukan Koding?</td>
+                  <td className="py-3 px-3 font-bold text-zinc-900 dark:text-white font-mono">
+                    {isEn ? 'Who Executes Coding?' : 'Siapa yang Melakukan Koding?'}
+                  </td>
                   <td className="py-3 px-3 text-cyan-700 dark:text-cyan-300 font-mono font-bold bg-cyan-500/5">
-                    100% Mandiri oleh Developer / Tim Anda (Zero Neriah Pro Coding)
+                    {isEn 
+                      ? '100% Self-Service by You / Your Team (Zero Neriah Pro Coding)' 
+                      : '100% Mandiri oleh Developer / Tim Anda (Zero Neriah Pro Coding)'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 font-mono">
-                    Tim Klien Sendiri (Didampingi Scoping)
+                    {isEn ? 'Client Dev Team (Guided by Scoping)' : 'Tim Klien Sendiri (Didampingi Scoping)'}
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-mono font-bold">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>100% Dikerjakan Neriah Pro</span>
+                      <span>{isEn ? '100% Executed by Neriah Pro' : '100% Dikerjakan Neriah Pro'}</span>
                     </span>
                   </td>
                   <td className="py-3 px-3 text-amber-600 dark:text-amber-400 font-mono font-bold">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                      <span>100% Dikerjakan Neriah Pro</span>
+                      <span>{isEn ? '100% Executed by Neriah Pro' : '100% Dikerjakan Neriah Pro'}</span>
                     </span>
                   </td>
                 </tr>
 
                 {/* 2. PERSYARATAN AKUN & LOGIN */}
                 <tr>
-                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">Persyaratan Akun &amp; Login</td>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Account & Login Requirements' : 'Persyaratan Akun & Login'}
+                  </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                    Spark: <strong>Guest Mode (Tanpa Login)</strong><br />
-                    Lite, Pro, Ultimate: <strong>Wajib Login Akun</strong>
+                    {isEn ? (
+                      <>Spark: <strong>Guest Mode (No Login)</strong><br />Lite, Pro, Ultimate: <strong>Verified Account Required</strong></>
+                    ) : (
+                      <>Spark: <strong>Guest Mode (Tanpa Login)</strong><br />Lite, Pro, Ultimate: <strong>Wajib Login Akun</strong></>
+                    )}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                    Wajib Registrasi Akun Klien Resmi
+                    {isEn ? 'Official Client Registration Required' : 'Wajib Registrasi Akun Klien Resmi'}
                   </td>
                   <td className="py-3 px-3 text-zinc-800 dark:text-zinc-200 font-semibold">
-                    Kontrak Legal &amp; Akun Korporat
+                    {isEn ? 'Digital Contract & Corporate Account' : 'Kontrak Legal & Akun Korporat'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                    Registrasi Akun Klien UMKM
+                    {isEn ? 'Business Client Registration' : 'Registrasi Akun Klien UMKM'}
                   </td>
                 </tr>
 
                 {/* 3. BATAS KUOTA & SIKLUS RESET */}
                 <tr>
-                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">Batas Kuota &amp; Siklus Reset</td>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Quota Limit & Reset Cycle' : 'Batas Kuota & Siklus Reset'}
+                  </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                    Spark: <strong>2x Audit/Bulan (Reset tiap tgl 1)</strong><br />
-                    Lite/Pro/Ultimate: <strong>1 Proyek per Lisensi</strong>
+                    {isEn ? (
+                      <>Spark: <strong>2 Audits/Mo (Resets on 1st)</strong><br />Lite/Pro/Ultimate: <strong>1 Project per License</strong></>
+                    ) : (
+                      <>Spark: <strong>2x Audit/Bulan (Reset tiap tgl 1)</strong><br />Lite/Pro/Ultimate: <strong>1 Proyek per Lisensi</strong></>
+                    )}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                    1 Proyek Spesifikasi Terfokus
+                    {isEn ? '1 Focused Specification Project' : '1 Proyek Spesifikasi Terfokus'}
                   </td>
                   <td className="py-3 px-3 text-zinc-800 dark:text-zinc-200 font-semibold">
-                    1 Proyek Penuh (Kapasitas Maks. 2 Proyek/Siklus)
+                    {isEn ? '1 Full Project (Max 2 Projects/Cycle)' : '1 Proyek Penuh (Kapasitas Maks. 2 Proyek/Siklus)'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                    1 Sistem Usaha (Alokasi Subsidi Bulanan)
+                    {isEn ? '1 Business System (Monthly Subsidy)' : '1 Sistem Usaha (Alokasi Subsidi Bulanan)'}
                   </td>
                 </tr>
 
                 {/* 4. MASA BERLAKU & JENDELA REVISI */}
                 <tr>
-                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">Masa Berlaku &amp; Jendela Revisi</td>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Validity Period & Revision Window' : 'Masa Berlaku & Jendela Revisi'}
+                  </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                    Spark: 7hr Guest Session<br />
-                    Lite: Unduh Selamanya + 30hr Revisi<br />
-                    Pro: Unduh Selamanya + 6bln AI Regen<br />
-                    Ultimate: Selamanya + 1th Update + 60hr Meet
+                    {isEn ? (
+                      <>Spark: 7-Day Guest Session<br />Lite: Lifetime Download + 30-Day Revisions<br />Pro: Lifetime Download + 6-Mo AI Regen<br />Ultimate: Lifetime + 1-Yr Updates + 60-Day Meet</>
+                    ) : (
+                      <>Spark: 7hr Guest Session<br />Lite: Unduh Selamanya + 30hr Revisi<br />Pro: Unduh Selamanya + 6bln AI Regen<br />Ultimate: Selamanya + 1th Update + 60hr Meet</>
+                    )}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                    Dokumen Selamanya + 7 Hari Pendampingan Revisi
+                    {isEn ? 'Lifetime Document + 7-Day Revision Support' : 'Dokumen Selamanya + 7 Hari Pendampingan Revisi'}
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                    3 Bulan Garansi Bug &amp; SLA Maintenance Pasca Live
+                    {isEn ? '3-Month Bug Warranty & Post-Live SLA' : '3 Bulan Garansi Bug & SLA Maintenance Pasca Live'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                    1 Bulan Garansi Bug &amp; Panduan Operasional
+                    {isEn ? '1-Month Bug Warranty & Operations Guide' : '1 Bulan Garansi Bug & Panduan Operasional'}
                   </td>
                 </tr>
 
                 {/* 5. TARGET PERSONA */}
                 <tr>
-                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">Target Persona</td>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Target Persona' : 'Target Persona'}
+                  </td>
                   <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400 bg-cyan-500/5">
-                    Solo Dev, Tech Lead, Founder, Agensi yang Koding Sendiri
+                    {isEn ? 'Solo Devs, Tech Leads, Founders, In-House Teams' : 'Solo Dev, Tech Lead, Founder, Agensi yang Koding Sendiri'}
                   </td>
                   <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400">
-                    CTO &amp; Founder dengan Tim Dev Internal
+                    {isEn ? 'CTOs & Founders with Internal Dev Teams' : 'CTO & Founder dengan Tim Dev Internal'}
                   </td>
                   <td className="py-3 px-3 text-zinc-800 dark:text-zinc-200 font-semibold">
-                    Scale-Up, Korporasi, Investor Ready
+                    {isEn ? 'Scale-Ups, Enterprises, Investor-Ready Startups' : 'Scale-Up, Korporasi, Investor Ready'}
                   </td>
                   <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400">
-                    UMKM, Toko Retail, Usaha Jasa &amp; F&amp;B
+                    {isEn ? 'Local Businesses, Retail Shops, Services & F&B' : 'UMKM, Toko Retail, Usaha Jasa & F&B'}
                   </td>
                 </tr>
 
                 {/* 6. WAKTU PENGERJAAN */}
                 <tr>
-                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">Waktu Pengerjaan</td>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Delivery Timeline' : 'Waktu Pengerjaan'}
+                  </td>
                   <td className="py-3 px-3 font-mono text-cyan-600 dark:text-cyan-400 font-bold bg-cyan-500/5">
-                    Instan (Hitungan Detik via AI)
+                    {isEn ? 'Instant (Seconds via AI)' : 'Instan (Hitungan Detik via AI)'}
                   </td>
                   <td className="py-3 px-3 font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                    24 - 48 Jam Kerja
+                    {isEn ? '24 - 48 Business Hours' : '24 - 48 Jam Kerja'}
                   </td>
                   <td className="py-3 px-3 font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                    4 - 6 Minggu (5 Sprint)
+                    {isEn ? '4 - 6 Weeks (5 Sprints)' : '4 - 6 Minggu (5 Sprint)'}
                   </td>
                   <td className="py-3 px-3 font-mono text-zinc-600 dark:text-zinc-400">
-                    2 - 3 Minggu (2 Sprint)
+                    {isEn ? '2 - 3 Weeks (2 Sprints)' : '2 - 3 Minggu (2 Sprint)'}
                   </td>
                 </tr>
 
                 {/* 7. PRD 26 PARAMETER */}
                 <tr>
-                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">PRD 26 Parameter</td>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? '26-Parameter PRD' : 'PRD 26 Parameter'}
+                  </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                    Spark: Lean 5 Fitur<br />
-                    Lite, Pro, Ultimate: <strong>Lengkap (JSON &amp; MD)</strong>
+                    {isEn ? (
+                      <>Spark: Lean 5 Features<br />Lite, Pro, Ultimate: <strong>Full (JSON & MD)</strong></>
+                    ) : (
+                      <>Spark: Lean 5 Fitur<br />Lite, Pro, Ultimate: <strong>Lengkap (JSON & MD)</strong></>
+                    )}
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>Lengkap (JSON &amp; Markdown)</span>
+                      <span>{isEn ? 'Full (JSON & Markdown)' : 'Lengkap (JSON & Markdown)'}</span>
                     </span>
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>Lengkap + Terimplementasi</span>
+                      <span>{isEn ? 'Full + Fully Implemented' : 'Lengkap + Terimplementasi'}</span>
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-zinc-500">Sederhana (Alur Inti Usaha)</td>
+                  <td className="py-3 px-3 text-zinc-500">
+                    {isEn ? 'Lean (Core Business Workflow)' : 'Sederhana (Alur Inti Usaha)'}
+                  </td>
                 </tr>
 
                 {/* 8. POSTGRESQL STRICT ULID DDL */}
                 <tr>
-                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">PostgreSQL Strict ULID DDL</td>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'PostgreSQL Strict ULID DDL' : 'PostgreSQL Strict ULID DDL'}
+                  </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                    Lite, Pro, Ultimate: <strong>DDL SQL Siap Import</strong>
+                    {isEn ? (
+                      <>Lite, Pro, Ultimate: <strong>Ready-to-Import SQL DDL</strong></>
+                    ) : (
+                      <>Lite, Pro, Ultimate: <strong>DDL SQL Siap Import</strong></>
+                    )}
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>DDL Script Siap Import</span>
+                      <span>{isEn ? 'Ready-to-Import DDL Script' : 'DDL Script Siap Import'}</span>
                     </span>
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>Live di Server VPS</span>
+                      <span>{isEn ? 'Live on Production VPS Server' : 'Live di Server VPS'}</span>
                     </span>
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>Database Transaksional</span>
+                      <span>{isEn ? 'Live Transactional Database' : 'Database Transaksional'}</span>
                     </span>
                   </td>
                 </tr>
 
                 {/* 9. CETAK BIRU DECOUPLED 2026+ */}
                 <tr>
-                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">Cetak Biru Decoupled 2026+</td>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Decoupled Blueprint 2026+' : 'Cetak Biru Decoupled 2026+'}
+                  </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                    Pro &amp; Ultimate: <strong>Next.js 15, Cloudflare, OpenAPI 3.1</strong>
+                    {isEn ? (
+                      <>Pro & Ultimate: <strong>Next.js 15, Cloudflare, OpenAPI 3.1</strong></>
+                    ) : (
+                      <>Pro & Ultimate: <strong>Next.js 15, Cloudflare, OpenAPI 3.1</strong></>
+                    )}
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
                     <span className="inline-flex items-center gap-1">
@@ -1171,48 +1346,60 @@ export default function ArchitecturePricingIsland({
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>API Resources Terisolasi (Siap Headless)</span>
+                      <span>{isEn ? 'Isolated API Resources (Headless-Ready)' : 'API Resources Terisolasi (Siap Headless)'}</span>
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-zinc-500">API Webhook QRIS &amp; WhatsApp Terstandar</td>
+                  <td className="py-3 px-3 text-zinc-500">
+                    {isEn ? 'Standardized QRIS & WhatsApp Webhooks' : 'API Webhook QRIS & WhatsApp Terstandar'}
+                  </td>
                 </tr>
 
                 {/* 10. MEKANISME PEMBAYARAN */}
                 <tr>
-                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">Mekanisme Pembayaran</td>
-                  <td className="py-3 px-3 font-mono bg-cyan-500/5">
-                    Spark: Rp 0 | Berbayar: 100% Sekali Bayar
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Payment Structure' : 'Mekanisme Pembayaran'}
                   </td>
-                  <td className="py-3 px-4 font-mono">100% di Muka (Memotong DP 50%)</td>
-                  <td className="py-3 px-4 font-mono text-emerald-600 dark:text-emerald-400 font-bold">DP 50% + Pelunasan UAT 50%</td>
-                  <td className="py-3 px-4 font-mono">DP 50% + Pelunasan UAT 50%</td>
+                  <td className="py-3 px-3 font-mono bg-cyan-500/5">
+                    {isEn ? 'Spark: $0 | Paid: 100% One-Time' : 'Spark: Rp 0 | Berbayar: 100% Sekali Bayar'}
+                  </td>
+                  <td className="py-3 px-4 font-mono">
+                    {isEn ? '100% Upfront (Deducts 50% DP)' : '100% di Muka (Memotong DP 50%)'}
+                  </td>
+                  <td className="py-3 px-4 font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                    {isEn ? '50% DP + 50% Upon UAT Live' : 'DP 50% + Pelunasan UAT 50%'}
+                  </td>
+                  <td className="py-3 px-4 font-mono">
+                    {isEn ? '50% DP + 50% Upon UAT Live' : 'DP 50% + Pelunasan UAT 50%'}
+                  </td>
                 </tr>
 
                 {/* 11. HAK MILIK SOURCE CODE */}
                 <tr>
-                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">Hak Milik Dokumen / Kode</td>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Document & Code Ownership' : 'Hak Milik Dokumen / Kode'}
+                  </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold bg-cyan-500/5">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>100% Milik Klien</span>
+                      <span>{isEn ? '100% Client Ownership' : '100% Milik Klien'}</span>
                     </span>
                   </td>
                   <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>100% Klien (NDA)</span>
+                      <span>{isEn ? '100% Client (NDA)' : '100% Klien (NDA)'}</span>
                     </span>
                   </td>
                   <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>100% Klien (No Lock-in)</span>
+                      <span>{isEn ? '100% Client (No Lock-in)' : '100% Klien (No Lock-in)'}</span>
                     </span>
                   </td>
                   <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>100% Klien</span>
+                      <span>{isEn ? '100% Client' : '100% Klien'}</span>
                     </span>
                   </td>
                 </tr>
@@ -1383,14 +1570,14 @@ export default function ArchitecturePricingIsland({
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
                       <Crown className="w-3 h-3" />
-                      <span>100% SELF-SERVICE // + 1-ON-1 ARCHITECT CALL</span>
+                      <span>{isEn ? '100% SELF-SERVICE // + 1-ON-1 ARCHITECT CALL' : '100% SELF-SERVICE // + SESI 1-ON-1 ARCHITECT'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
                       Ultimate Advisory PRD (Rp {pricingSettings.retail_ultimate_price || '1.490.000'})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn 
-                        ? 'Self-service enterprise PRD with AI Failover Token Shield + 1 scheduled 60-min Google Meet architecture session. Koding tetap dilakukan mandiri oleh tim Anda.'
+                        ? 'Self-service enterprise PRD with AI Failover Token Shield + 1 scheduled 60-min Google Meet architecture session. Coding is executed independently by your team.'
                         : 'Paket PRD enterprise mandiri dengan AI Failover Shield + 1 sesi Google Meet 60 menit bersama Lead Architect. Pengerjaan koding tetap dieksekusi oleh tim developer Anda sendiri.'}
                     </p>
                   </>
@@ -1398,7 +1585,7 @@ export default function ArchitecturePricingIsland({
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
                       <Sparkles className="w-3 h-3" />
-                      <span>100% SELF-SERVICE // WAJIB LOGIN AKUN</span>
+                      <span>{isEn ? '100% SELF-SERVICE // VERIFIED ACCOUNT REQUIRED' : '100% SELF-SERVICE // WAJIB LOGIN AKUN'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
                       Pro Production PRD (Rp {pricingSettings.retail_pro_price || '399.000'})
@@ -1413,7 +1600,7 @@ export default function ArchitecturePricingIsland({
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
                       <Terminal className="w-3 h-3" />
-                      <span>100% SELF-SERVICE // WAJIB LOGIN AKUN</span>
+                      <span>{isEn ? '100% SELF-SERVICE // VERIFIED ACCOUNT REQUIRED' : '100% SELF-SERVICE // WAJIB LOGIN AKUN'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
                       Lite PRD Generator (Rp {pricingSettings.retail_lite_price || '99.000'})
@@ -1428,7 +1615,7 @@ export default function ArchitecturePricingIsland({
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
                       <Terminal className="w-3 h-3" />
-                      <span>100% SELF-SERVICE // GUEST ACCESS (NO LOGIN)</span>
+                      <span>{isEn ? '100% SELF-SERVICE // GUEST ACCESS (NO LOGIN)' : '100% SELF-SERVICE // AKSES TAMU (TANPA LOGIN)'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
                       Spark Free Idea Audit (Rp 0)
@@ -1484,7 +1671,7 @@ export default function ArchitecturePricingIsland({
                   {/* Pilihan Paket Switcher */}
                   <div>
                     <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                      Paket Layanan Terpilih *
+                      {isEn ? 'Selected Service Package *' : 'Paket Layanan Terpilih *'}
                     </label>
                     <select
                       value={selectedPackage}
@@ -1492,16 +1679,16 @@ export default function ArchitecturePricingIsland({
                       className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-sans"
                       required
                     >
-                      <optgroup label="INSTANT ARCHITECTURAL BLUEPRINT (100% SELF-SERVICE // ZERO NERIAH PRO CODING)">
-                        <option value="retail_spark">Spark Free Audit (Rp 0 - Guest Mode / Reset Tiap Bulan)</option>
-                        <option value="retail_lite">Lite PRD Generator (Rp {pricingSettings.retail_lite_price || '99.000'} - Wajib Login)</option>
-                        <option value="retail_pro">Pro Production PRD &amp; WBS (Rp {pricingSettings.retail_pro_price || '399.000'} - Wajib Login)</option>
-                        <option value="retail_ultimate">Ultimate Advisory + 1-on-1 Call (Rp {pricingSettings.retail_ultimate_price || '1.490.000'} - Akun Terverifikasi)</option>
+                      <optgroup label={isEn ? "INSTANT ARCHITECTURAL BLUEPRINT (100% SELF-SERVICE // ZERO NERIAH PRO CODING)" : "INSTANT ARCHITECTURAL BLUEPRINT (100% SELF-SERVICE // TANPA KODING NERIAH PRO)"}>
+                        <option value="retail_spark">{isEn ? 'Spark Free Audit (Free / Guest Mode - Monthly Reset)' : 'Spark Free Audit (Rp 0 - Guest Mode / Reset Tiap Bulan)'}</option>
+                        <option value="retail_lite">{isEn ? `Lite PRD Generator (Rp ${pricingSettings.retail_lite_price || '99.000'} - Login Required)` : `Lite PRD Generator (Rp ${pricingSettings.retail_lite_price || '99.000'} - Wajib Login)`}</option>
+                        <option value="retail_pro">{isEn ? `Pro Production PRD & WBS (Rp ${pricingSettings.retail_pro_price || '399.000'} - Login Required)` : `Pro Production PRD & WBS (Rp ${pricingSettings.retail_pro_price || '399.000'} - Wajib Login)`}</option>
+                        <option value="retail_ultimate">{isEn ? `Ultimate Advisory + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Verified Account)` : `Ultimate Advisory + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Akun Terverifikasi)`}</option>
                       </optgroup>
-                      <optgroup label="NERIAH PRO CUSTOM ENGINEERING STUDIO (DIKERJAKAN LANGSUNG OLEH NERIAH PRO)">
-                        <option value="full_mvp">Enterprise Rapid Monolith MVP (5 Sprint - DP 50% Rp 25.000.000)</option>
-                        <option value="umkm_starter">UMKM Digital Starter (Program Subsidi 50% - Rp 3.750.000)</option>
-                        <option value="blueprint_advisory">Blueprint &amp; PRD Architecture Advisory (Rp 2.500.000)</option>
+                      <optgroup label={isEn ? "NERIAH PRO CUSTOM ENGINEERING STUDIO (EXECUTED DIRECTLY BY NERIAH PRO)" : "NERIAH PRO CUSTOM ENGINEERING STUDIO (DIKERJAKAN LANGSUNG OLEH NERIAH PRO)"}>
+                        <option value="full_mvp">{isEn ? 'Enterprise Rapid Monolith MVP (5 Sprints - 50% DP Rp 25,000,000)' : 'Enterprise Rapid Monolith MVP (5 Sprint - DP 50% Rp 25.000.000)'}</option>
+                        <option value="umkm_starter">{isEn ? 'UMKM Digital Starter (50% Subsidy Program - Rp 3,750,000)' : 'UMKM Digital Starter (Program Subsidi 50% - Rp 3.750.000)'}</option>
+                        <option value="blueprint_advisory">{isEn ? 'Blueprint & PRD Architecture Advisory (Rp 2,500,000)' : 'Blueprint & PRD Architecture Advisory (Rp 2.500.000)'}</option>
                       </optgroup>
                     </select>
                   </div>
@@ -1512,15 +1699,15 @@ export default function ArchitecturePricingIsland({
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
                           <label className="text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase">
-                            1. Pilih Batch Waktu Sprint (Kapasitas Terkelola) *
+                            {isEn ? '1. Select Sprint Time Batch (Managed Capacity) *' : '1. Pilih Batch Waktu Sprint (Kapasitas Terkelola) *'}
                           </label>
                           <span className="text-[10px] font-mono text-emerald-500 font-bold">ANTI-COLLISION</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {[
-                            { id: 'Batch 1 (15 Okt - 25 Nov 2026)', label: 'Batch 1', dates: '15 Okt - 25 Nov', slot: 'SISA 1 SLOT', highlight: true },
-                            { id: 'Batch 2 (01 Des 2026 - 15 Jan 2027)', label: 'Batch 2', dates: '01 Des - 15 Jan', slot: 'TERSEDIA 2 SLOT', highlight: false },
-                            { id: 'Batch Q1 2027 (Mulai Feb 2027)', label: 'Batch Q1 2027', dates: 'Mulai Feb 2027', slot: 'RESERVASI AWAL', highlight: false },
+                            { id: 'Batch 1 (15 Okt - 25 Nov 2026)', label: 'Batch 1', dates: isEn ? 'Oct 15 - Nov 25' : '15 Okt - 25 Nov', slot: isEn ? '1 SLOT LEFT' : 'SISA 1 SLOT', highlight: true },
+                            { id: 'Batch 2 (01 Des 2026 - 15 Jan 2027)', label: 'Batch 2', dates: isEn ? 'Dec 01 - Jan 15' : '01 Des - 15 Jan', slot: isEn ? '2 SLOTS AVAILABLE' : 'TERSEDIA 2 SLOT', highlight: false },
+                            { id: 'Batch Q1 2027 (Mulai Feb 2027)', label: 'Batch Q1 2027', dates: isEn ? 'Starting Feb 2027' : 'Mulai Feb 2027', slot: isEn ? 'EARLY BIRD' : 'RESERVASI AWAL', highlight: false },
                           ].map((b) => (
                             <button
                               key={b.id}
@@ -1543,7 +1730,7 @@ export default function ArchitecturePricingIsland({
                       {/* Status Kesiapan Blueprint */}
                       <div>
                         <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1.5">
-                          2. Kesiapan Dokumen Blueprint PRD (Prasyarat Scope-Lock) *
+                          {isEn ? '2. Blueprint PRD Readiness (Scope-Lock Prerequisite) *' : '2. Kesiapan Dokumen Blueprint PRD (Prasyarat Scope-Lock) *'}
                         </label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <button
@@ -1555,8 +1742,8 @@ export default function ArchitecturePricingIsland({
                                 : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400'
                             }`}
                           >
-                            <span className="text-xs font-bold block">Belum Ada Blueprint</span>
-                            <span className="text-[10px] text-zinc-500 block mt-0.5">Wajib diawali PRD (Biaya Rp 2.5jt memotong DP 50%)</span>
+                            <span className="text-xs font-bold block">{isEn ? 'No Blueprint Yet' : 'Belum Ada Blueprint'}</span>
+                            <span className="text-[10px] text-zinc-500 block mt-0.5">{isEn ? 'PRD advisory required first (Fee Rp 2.5m deducts 50% DP)' : 'Wajib diawali PRD (Biaya Rp 2.5jt memotong DP 50%)'}</span>
                           </button>
                           <button
                             type="button"
@@ -1567,8 +1754,8 @@ export default function ArchitecturePricingIsland({
                                 : 'border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400'
                             }`}
                           >
-                            <span className="text-xs font-bold block">Sudah Ada Dokumen PRD</span>
-                            <span className="text-[10px] text-zinc-500 block mt-0.5">Langsung review kontrak & lock slot DP 50%</span>
+                            <span className="text-xs font-bold block">{isEn ? 'PRD Document Ready' : 'Sudah Ada Dokumen PRD'}</span>
+                            <span className="text-[10px] text-zinc-500 block mt-0.5">{isEn ? 'Direct contract review & lock 50% DP slot' : 'Langsung review kontrak & lock slot DP 50%'}</span>
                           </button>
                         </div>
                         {hasBlueprint === 'ready' && (
@@ -1577,7 +1764,7 @@ export default function ArchitecturePricingIsland({
                               type="text"
                               value={blueprintSlug}
                               onChange={(e) => setBlueprintSlug(e.target.value)}
-                              placeholder="Masukkan Slug Blueprint / ID Dokumen (Contoh: prd-nama-proyek)"
+                              placeholder={isEn ? 'Enter Blueprint Slug / Document ID (e.g. prd-project-name)' : 'Masukkan Slug Blueprint / ID Dokumen (Contoh: prd-nama-proyek)'}
                               className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-mono"
                             />
                           </div>
@@ -1587,13 +1774,13 @@ export default function ArchitecturePricingIsland({
                       {/* Slot Waktu Kickoff Sync */}
                       <div>
                         <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1.5">
-                          3. Pilihan Waktu Kickoff Sync dengan Lead Architect (15-30 Menit) *
+                          {isEn ? '3. Kickoff Sync Window with Lead Architect (15-30 Mins) *' : '3. Pilihan Waktu Kickoff Sync dengan Lead Architect (15-30 Menit) *'}
                         </label>
                         <div className="grid grid-cols-3 gap-2">
                           {[
-                            { id: 'Pagi (09:30 - 10:30 WIB)', label: 'Pagi', time: '09:30 WIB' },
-                            { id: 'Siang (13:30 - 14:30 WIB)', label: 'Siang', time: '13:30 WIB' },
-                            { id: 'Sore (16:00 - 17:00 WIB)', label: 'Sore', time: '16:00 WIB' },
+                            { id: 'Pagi (09:30 - 10:30 WIB)', label: isEn ? 'Morning' : 'Pagi', time: isEn ? '09:30 UTC+7' : '09:30 WIB' },
+                            { id: 'Siang (13:30 - 14:30 WIB)', label: isEn ? 'Afternoon' : 'Siang', time: isEn ? '13:30 UTC+7' : '13:30 WIB' },
+                            { id: 'Sore (16:00 - 17:00 WIB)', label: isEn ? 'Late Afternoon' : 'Sore', time: isEn ? '16:00 UTC+7' : '16:00 WIB' },
                           ].map((s) => (
                             <button
                               key={s.id}
@@ -1619,15 +1806,20 @@ export default function ArchitecturePricingIsland({
                     <div className="space-y-3 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                       <div>
                         <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1.5">
-                          Kategori Bidang Usaha Anda *
+                          {isEn ? 'Your Business Industry / Category *' : 'Kategori Bidang Usaha Anda *'}
                         </label>
                         <div className="grid grid-cols-2 gap-2">
-                          {[
+                          {(isEn ? [
+                            'Retail & Wholesale Stores',
+                            'Culinary / Cafe & Resto (F&B)',
+                            'Professional Services & Repair',
+                            'Non-Profit & Social Community',
+                          ] : [
                             'Toko Retail & Grosir',
                             'Kuliner / Cafe & Resto (F&B)',
                             'Jasa Profesional & Servis',
                             'Yayasan & Komunitas Sosial',
-                          ].map((cat) => (
+                          ]).map((cat) => (
                             <button
                               key={cat}
                               type="button"
@@ -1645,8 +1837,14 @@ export default function ArchitecturePricingIsland({
                       </div>
 
                       <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-xs font-mono text-zinc-800 dark:text-zinc-200">
-                        <span className="font-bold text-amber-600 dark:text-amber-400 block mb-0.5">SKEMA SUBSIDI DITERAPKAN OTOMATIS:</span>
-                        <span>Investasi Normal Rp 7.500.000 dipotong 50% menjadi <strong>Rp 3.750.000</strong>. Skema pembayaran: DP 50% (Rp 1.875.000) saat mulai, pelunasan sisa 50% setelah live.</span>
+                        <span className="font-bold text-amber-600 dark:text-amber-400 block mb-0.5">
+                          {isEn ? 'SUBSIDY SCHEME APPLIED AUTOMATICALLY:' : 'SKEMA SUBSIDI DITERAPKAN OTOMATIS:'}
+                        </span>
+                        <span>
+                          {isEn 
+                            ? 'Standard Investment of Rp 7,500,000 is 50% subsidized to Rp 3,750,000. Payment structure: 50% DP (Rp 1,875,000) at kickoff, remaining 50% upon live deployment.' 
+                            : 'Investasi Normal Rp 7.500.000 dipotong 50% menjadi Rp 3.750.000. Skema pembayaran: DP 50% (Rp 1.875.000) saat mulai, pelunasan sisa 50% setelah live.'}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -1655,13 +1853,15 @@ export default function ArchitecturePricingIsland({
                   {selectedPackage === 'blueprint_advisory' && (
                     <div className="p-3 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-center space-y-2">
                       <span className="text-xs text-zinc-600 dark:text-zinc-300 block">
-                        Ingin langsung mengisi 26 parameter kebutuhan teknis dan menerbitkan PRD sekarang?
+                        {isEn 
+                          ? 'Ready to define 26 technical parameters and generate your PRD now?' 
+                          : 'Ingin langsung mengisi 26 parameter kebutuhan teknis dan menerbitkan PRD sekarang?'}
                       </span>
                       <a
                         href="/blueprint?package=blueprint_advisory"
                         className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-black font-mono text-xs font-black uppercase tracking-wider transition rounded-none shadow-xs"
                       >
-                        <span>BUKA GENERATOR PRD LANGSUNG &rarr;</span>
+                        <span>{isEn ? 'OPEN PRD GENERATOR DIRECTLY →' : 'BUKA GENERATOR PRD LANGSUNG →'}</span>
                       </a>
                     </div>
                   )}
@@ -1691,14 +1891,14 @@ export default function ArchitecturePricingIsland({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        Nama Lengkap / PIC *
+                        {isEn ? 'Full Name / Contact Person *' : 'Nama Lengkap / PIC *'}
                       </label>
                       <input
                         type="text"
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        placeholder="Contoh: Budi Santoso"
+                        placeholder={isEn ? 'e.g. John Doe' : 'Contoh: Budi Santoso'}
                         required
                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden"
                       />
@@ -1706,14 +1906,14 @@ export default function ArchitecturePricingIsland({
 
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        Perusahaan / Bisnis *
+                        {isEn ? 'Company / Business Entity *' : 'Perusahaan / Bisnis *'}
                       </label>
                       <input
                         type="text"
                         name="company"
                         value={formData.company}
                         onChange={handleInputChange}
-                        placeholder="Contoh: PT Inovasi Maju"
+                        placeholder={isEn ? 'e.g. Acme Corp' : 'Contoh: PT Inovasi Maju'}
                         required
                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden"
                       />
@@ -1723,14 +1923,14 @@ export default function ArchitecturePricingIsland({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        Email Bisnis *
+                        {isEn ? 'Business Email *' : 'Email Bisnis *'}
                       </label>
                       <input
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        placeholder="budi@perusahaan.com"
+                        placeholder={isEn ? 'john@company.com' : 'budi@perusahaan.com'}
                         required
                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden"
                       />
@@ -1738,7 +1938,7 @@ export default function ArchitecturePricingIsland({
 
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        No. WhatsApp *
+                        {isEn ? 'WhatsApp Phone *' : 'No. WhatsApp *'}
                       </label>
                       <div className="flex">
                         <select
@@ -1769,14 +1969,14 @@ export default function ArchitecturePricingIsland({
                   {/* Kode Voucher (Private / Partner Referral) */}
                   <div>
                     <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                      Kode Promo / Voucher Partner (Opsional)
+                      {isEn ? 'Promo Code / Partner Voucher (Optional)' : 'Kode Promo / Voucher Partner (Opsional)'}
                     </label>
                     <input
                       type="text"
                       name="voucher_code"
                       value={formData.voucher_code}
                       onChange={(e) => setFormData(prev => ({ ...prev, voucher_code: e.target.value.toUpperCase() }))}
-                      placeholder="Masukkan jika memiliki kode partner khusus"
+                      placeholder={isEn ? 'Enter partner referral code if available' : 'Masukkan jika memiliki kode partner khusus'}
                       className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-mono"
                     />
                   </div>

@@ -20,15 +20,23 @@ class SetGlobalTimezone
         $timezone = Cache::rememberForever('app_timezone', function () {
             try {
                 $setting = CmsGlobalSetting::where('key', 'app_timezone')->first();
-                return $setting ? $setting->value : config('app.timezone', 'UTC');
+                $val = $setting ? $setting->value : null;
+                if (is_array($val)) {
+                    $val = reset($val);
+                }
+                return is_string($val) && trim($val) !== '' ? trim($val) : config('app.timezone', 'Asia/Jakarta');
             } catch (\Throwable) {
-                return config('app.timezone', 'UTC');
+                return config('app.timezone', 'Asia/Jakarta');
             }
         });
 
-        if ($timezone && in_array($timezone, timezone_identifiers_list())) {
+        if (is_string($timezone) && in_array($timezone, timezone_identifiers_list())) {
             config(['app.timezone' => $timezone]);
-            date_default_timezone_set($timezone);
+            try {
+                date_default_timezone_set($timezone);
+            } catch (\Throwable) {
+                date_default_timezone_set('Asia/Jakarta');
+            }
         }
 
         return $next($request);

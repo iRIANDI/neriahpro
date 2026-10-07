@@ -51,7 +51,7 @@ class ManageSettings extends Page implements HasForms
     public function mount(): void
     {
         $settings = CmsGlobalSetting::all()->pluck('value', 'key')->toArray();
-        if (!empty($settings['developer_signature_image']) && str_starts_with($settings['developer_signature_image'], 'data:image')) {
+        if (!empty($settings['developer_signature_image']) && is_string($settings['developer_signature_image']) && str_starts_with($settings['developer_signature_image'], 'data:image')) {
             $settings['developer_signature_pad'] = $settings['developer_signature_image'];
         }
         $this->form->fill($settings);
@@ -712,6 +712,9 @@ class ManageSettings extends Page implements HasForms
         
         foreach ($data as $key => $value) {
             $safeValue = $value !== null ? $value : '';
+            if ($key === 'app_timezone' && is_array($safeValue)) {
+                $safeValue = reset($safeValue) ?: 'Asia/Jakarta';
+            }
             CmsGlobalSetting::updateOrCreate(
                 ['key' => $key],
                 ['value' => $safeValue]

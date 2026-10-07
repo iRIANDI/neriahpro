@@ -145,5 +145,35 @@ class CmsSeeder extends Seeder
             ['key' => 'pricing_retail_ultimate_price'],
             ['value' => '1.490.000']
         );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_retail_spark_limit'],
+            ['value' => '2x Audit Ide / Bulan (Reset tiap tanggal 1)']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_retail_lite_limit'],
+            ['value' => '1 Proyek PRD (Revisi Form 30 Hari & Unduh Selamanya)']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_retail_pro_limit'],
+            ['value' => '1 Proyek PRD (Unlimited AI Regen & Revisi 6 Bulan)']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_retail_ultimate_limit'],
+            ['value' => '1 Proyek Enterprise (1 Tahun Prioritas & 1-on-1 Call 60 Menit)']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_retail_login_policy'],
+            ['value' => 'Guest Mode untuk Spark (Free). Wajib Login / Daftar Akun untuk paket Lite, Pro, & Ultimate guna proteksi dokumen & lisensi.']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_retail_disclaimer'],
+            ['value' => 'Paket Instant Architectural Blueprint 100% Self-Service: Dihasilkan instan oleh AI Project OS untuk Anda atau tim developer Anda kerjakan sendiri. Tidak ada koding atau pembuatan aplikasi oleh Neriah Pro.']
+        );
     }
 }

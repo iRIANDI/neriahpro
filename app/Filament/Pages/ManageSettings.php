@@ -532,27 +532,63 @@ class ManageSettings extends Page implements HasForms
                                     ])->columns(3),
 
                                 Section::make('Paket Eceran Project OS Self-Service (Micro-SaaS & Retail)')
-                                    ->description('Konfigurasi tarif paket generator PRD digital mandiri (self-service) yang fleksibel dan terjangkau untuk pasar eceran.')
+                                    ->description('Konfigurasi tarif, batasan kuota, siklus reset, dan syarat login untuk paket generator PRD digital mandiri (self-service).')
                                     ->schema([
                                         TextInput::make('pricing_retail_spark_price')
-                                            ->label('Tarif Paket Spark / Free (Rp)')
-                                            ->helperText('Akses audit ide cepat & lean PRD ringkas (Default: 0).')
+                                            ->label('Tarif Spark / Free (Rp)')
+                                            ->helperText('Akses audit ide cepat & lean PRD ringkas.')
                                             ->default('0')
                                             ->required(),
                                         TextInput::make('pricing_retail_lite_price')
-                                            ->label('Tarif Paket Lite PRD (Rp)')
-                                            ->helperText('PRD 26 parameter esensial + skema DDL PostgreSQL Strict ULID (Default: 99.000).')
+                                            ->label('Tarif Lite PRD (Rp)')
+                                            ->helperText('PRD 26 parameter esensial + skema DDL.')
                                             ->default('99.000')
                                             ->required(),
                                         TextInput::make('pricing_retail_pro_price')
-                                            ->label('Tarif Paket Pro Full PRD & WBS (Rp)')
-                                            ->helperText('PRD komprehensif, Mermaid diagrams, WBS 5 sprint, dan cetak biru arsitektur (Default: 399.000).')
+                                            ->label('Tarif Pro Full PRD & WBS (Rp)')
+                                            ->helperText('PRD komprehensif, Mermaid diagrams, WBS 5 sprint.')
                                             ->default('399.000')
                                             ->required(),
                                         TextInput::make('pricing_retail_ultimate_price')
-                                            ->label('Tarif Paket Ultimate Enterprise Advisory (Rp)')
-                                            ->helperText('PRD Ultimate + AI Pipeline & Failover Engine + 1-on-1 Architecture Scoping Call (Default: 1.490.000).')
+                                            ->label('Tarif Ultimate Advisory (Rp)')
+                                            ->helperText('PRD Ultimate + AI Failover + 1-on-1 Call 60 menit.')
                                             ->default('1.490.000')
+                                            ->required(),
+
+                                        TextInput::make('pricing_retail_spark_limit')
+                                            ->label('Batasan & Siklus Reset Spark')
+                                            ->helperText('Contoh: 2x Audit Ide / Bulan (Reset tiap tanggal 1)')
+                                            ->default('2x Audit Ide / Bulan (Reset tiap tanggal 1)')
+                                            ->required(),
+                                        TextInput::make('pricing_retail_lite_limit')
+                                            ->label('Batasan & Masa Berlaku Lite')
+                                            ->helperText('Contoh: 1 Proyek PRD (Revisi Form 30 Hari & Unduh Selamanya)')
+                                            ->default('1 Proyek PRD (Revisi Form 30 Hari & Unduh Selamanya)')
+                                            ->required(),
+                                        TextInput::make('pricing_retail_pro_limit')
+                                            ->label('Batasan & Masa Berlaku Pro')
+                                            ->helperText('Contoh: 1 Proyek PRD (Unlimited AI Regen & Revisi 6 Bulan)')
+                                            ->default('1 Proyek PRD (Unlimited AI Regen & Revisi 6 Bulan)')
+                                            ->required(),
+                                        TextInput::make('pricing_retail_ultimate_limit')
+                                            ->label('Batasan & Masa Berlaku Ultimate')
+                                            ->helperText('Contoh: 1 Proyek Enterprise (1 Tahun Prioritas & 1-on-1 Call)')
+                                            ->default('1 Proyek Enterprise (1 Tahun Prioritas & 1-on-1 Call 60 Menit)')
+                                            ->required(),
+
+                                        TextInput::make('pricing_retail_login_policy')
+                                            ->label('Kebijakan Login & Kepemilikan Akun')
+                                            ->helperText('Penjelasan syarat login bagi pengguna untuk berlangganan / menyimpan dokumen.')
+                                            ->default('Guest Mode untuk Spark (Free). Wajib Login / Daftar Akun untuk paket Lite, Pro, & Ultimate guna proteksi dokumen & lisensi.')
+                                            ->columnSpanFull()
+                                            ->required(),
+
+                                        Textarea::make('pricing_retail_disclaimer')
+                                            ->label('Disclaimer Penegasan 100% Self-Service (Bukan Koding Neriah Pro)')
+                                            ->helperText('Teks penegasan bahwa paket digital di atas dikerjakan sendiri oleh pelanggan tanpa keterlibatan coding oleh Neriah Pro.')
+                                            ->default('Paket Instant Architectural Blueprint 100% Self-Service: Dihasilkan instan oleh AI Project OS untuk Anda atau tim developer Anda kerjakan sendiri. Tidak ada koding atau pembuatan aplikasi oleh Neriah Pro.')
+                                            ->rows(2)
+                                            ->columnSpanFull()
                                             ->required(),
                                     ])->columns(4),
 

@@ -244,6 +244,12 @@
                             'retail_lite_price' => $getSettingVal('pricing_retail_lite_price', '99.000'),
                             'retail_pro_price' => $getSettingVal('pricing_retail_pro_price', '399.000'),
                             'retail_ultimate_price' => $getSettingVal('pricing_retail_ultimate_price', '1.490.000'),
+                            'retail_spark_limit' => $getSettingVal('pricing_retail_spark_limit', '2x Audit Ide / Bulan (Reset tiap tanggal 1)'),
+                            'retail_lite_limit' => $getSettingVal('pricing_retail_lite_limit', '1 Proyek PRD (Revisi Form 30 Hari & Unduh Selamanya)'),
+                            'retail_pro_limit' => $getSettingVal('pricing_retail_pro_limit', '1 Proyek PRD (Unlimited AI Regen & Revisi 6 Bulan)'),
+                            'retail_ultimate_limit' => $getSettingVal('pricing_retail_ultimate_limit', '1 Proyek Enterprise (1 Tahun Prioritas & 1-on-1 Call 60 Menit)'),
+                            'retail_login_policy' => $getSettingVal('pricing_retail_login_policy', 'Guest Mode untuk Spark (Free). Wajib Login / Daftar Akun untuk paket Lite, Pro, & Ultimate guna proteksi dokumen & lisensi.'),
+                            'retail_disclaimer' => $getSettingVal('pricing_retail_disclaimer', 'Paket Instant Architectural Blueprint 100% Self-Service: Dihasilkan instan oleh AI Project OS untuk Anda atau tim developer Anda kerjakan sendiri. Tidak ada koding atau pembuatan aplikasi oleh Neriah Pro.'),
                             'active_promo_banner' => $getSettingVal('pricing_active_promo_banner', 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!'),
                         ]
                     ]))
@@ -264,6 +270,12 @@
                     'retail_lite_price' => $getSettingVal('pricing_retail_lite_price', '99.000'),
                     'retail_pro_price' => $getSettingVal('pricing_retail_pro_price', '399.000'),
                     'retail_ultimate_price' => $getSettingVal('pricing_retail_ultimate_price', '1.490.000'),
+                    'retail_spark_limit' => $getSettingVal('pricing_retail_spark_limit', '2x Audit Ide / Bulan (Reset tiap tanggal 1)'),
+                    'retail_lite_limit' => $getSettingVal('pricing_retail_lite_limit', '1 Proyek PRD (Revisi Form 30 Hari & Unduh Selamanya)'),
+                    'retail_pro_limit' => $getSettingVal('pricing_retail_pro_limit', '1 Proyek PRD (Unlimited AI Regen & Revisi 6 Bulan)'),
+                    'retail_ultimate_limit' => $getSettingVal('pricing_retail_ultimate_limit', '1 Proyek Enterprise (1 Tahun Prioritas & 1-on-1 Call 60 Menit)'),
+                    'retail_login_policy' => $getSettingVal('pricing_retail_login_policy', 'Guest Mode untuk Spark (Free). Wajib Login / Daftar Akun untuk paket Lite, Pro, & Ultimate guna proteksi dokumen & lisensi.'),
+                    'retail_disclaimer' => $getSettingVal('pricing_retail_disclaimer', 'Paket Instant Architectural Blueprint 100% Self-Service: Dihasilkan instan oleh AI Project OS untuk Anda atau tim developer Anda kerjakan sendiri. Tidak ada koding atau pembuatan aplikasi oleh Neriah Pro.'),
                     'active_promo_banner' => $getSettingVal('pricing_active_promo_banner', 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!'),
                 ]
             ])

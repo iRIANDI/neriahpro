@@ -934,9 +934,7 @@ class ManageSettings extends Page implements HasForms
 
     protected function getActions(): array
     {
-        return [
-            $this->getDeveloperSignaturePadAction(),
-        ];
+        return [];
     }
 
     protected function getFormActions(): array

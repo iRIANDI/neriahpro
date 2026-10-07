@@ -1161,7 +1161,8 @@ class BlueprintController extends Controller
         ]);
 
         $packageName = $request->input('package_tier') ?: $request->input('package');
-        $company = $request->input('company') ?: $request->input('company_name') ?: ($validated['name'] . ' Project');
+        $isRetail = in_array($packageName, ['retail_spark', 'retail_lite', 'retail_pro', 'retail_ultimate']);
+        $company = $request->input('company') ?: $request->input('company_name') ?: ($isRetail ? ($validated['name'] . ' (Personal License)') : ($validated['name'] . ' Project'));
         $phoneInput = $validated['phone'];
         $countryCode = $request->input('country_code', '+62');
         $cleanPhone = str_starts_with($phoneInput, '+') ? $phoneInput : "{$countryCode}" . ltrim($phoneInput, '0');
@@ -1176,11 +1177,11 @@ class BlueprintController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'company_name' => $company,
-            'job_title' => 'Project Initiator / Decision Maker',
+            'job_title' => $isRetail ? 'Digital License Buyer' : 'Project Initiator / Decision Maker',
             'phone' => $cleanPhone,
             'status' => 'lead',
             'metadata' => [
-                'source' => 'Pricing & Promotion Page Consultation Form',
+                'source' => $isRetail ? 'Self-Service Retail License Checkout' : 'Pricing & Promotion Page Consultation Form',
                 'package_interest' => $packageName,
                 'sprint_batch' => $sprintBatch,
                 'kickoff_slot' => $kickoffSlot,
@@ -1206,7 +1207,6 @@ class BlueprintController extends Controller
             'blueprint_advisory' => 'Blueprint & PRD Architecture Advisory (Rp 2.500.000)',
         ];
         $displayPackage = $packageLabels[$packageName] ?? $packageName;
-        $isRetail = in_array($packageName, ['retail_spark', 'retail_lite', 'retail_pro', 'retail_ultimate']);
 
         // Send Filament notification to Admins
         try {
@@ -1382,7 +1382,7 @@ class BlueprintController extends Controller
             'success' => true,
             'message' => $successMsg,
             'lead_id' => $lead->id,
-            'whatsapp_url' => $waUrl,
+            'whatsapp_url' => $isRetail ? null : $waUrl,
             'is_paid_package' => $isPaidPackage,
             'snap_token' => $snapResponse['token'] ?? null,
             'redirect_url' => $snapResponse['redirect_url'] ?? null,

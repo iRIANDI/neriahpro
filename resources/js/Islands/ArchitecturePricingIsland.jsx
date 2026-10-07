@@ -37,7 +37,8 @@ export default function ArchitecturePricingIsland({
   whatsappNumber = '628123456789',
   featureFlags = {},
   currentLocale = 'id',
-  pricingSettings = {}
+  pricingSettings = {},
+  authUser = null
 }) {
   const isEn = currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
   
@@ -56,11 +57,11 @@ export default function ArchitecturePricingIsland({
   const [umkmCategory, setUmkmCategory] = useState('Toko Retail & Grosir');
 
   const [formData, setFormData] = useState({
-    name: '',
-    company: '',
-    email: '',
+    name: authUser?.name || '',
+    company: authUser?.company || '',
+    email: authUser?.email || '',
     country_code: '+62',
-    phone: '',
+    phone: authUser?.phone || '',
     voucher_code: '',
     notes: '',
     honeypot: ''
@@ -149,6 +150,10 @@ export default function ArchitecturePricingIsland({
     setSelectedPackage(packageTier);
     setFormData(prev => ({
       ...prev,
+      name: prev.name || authUser?.name || '',
+      email: prev.email || authUser?.email || '',
+      phone: prev.phone || authUser?.phone || '',
+      company: prev.company || authUser?.company || '',
       voucher_code: defaultVoucher || prev.voucher_code
     }));
     setSubmitSuccess(false);
@@ -163,6 +168,8 @@ export default function ArchitecturePricingIsland({
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const isRetailTier = ['retail_lite', 'retail_pro', 'retail_ultimate', 'retail_spark'].includes(selectedPackage);
 
   const handleSubmitInquiry = async (e) => {
     e.preventDefault();
@@ -181,7 +188,7 @@ export default function ArchitecturePricingIsland({
         },
         body: JSON.stringify({
           name: formData.name,
-          company: formData.company,
+          company: formData.company || (isRetailTier ? `${formData.name} (Personal)` : ''),
           email: formData.email,
           country_code: formData.country_code,
           phone: formData.phone,
@@ -199,12 +206,14 @@ export default function ArchitecturePricingIsland({
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.message || (isEn ? 'Failed to record reservation.' : 'Gagal mencatat reservasi jadwal.'));
+        throw new Error(result.message || (isEn ? 'Failed to process checkout.' : 'Gagal memproses checkout transaksi.'));
       }
 
       setSubmitSuccess(true);
-      if (result.whatsapp_url) {
+      if (result.whatsapp_url && !isRetailTier) {
         setSubmittedWaUrl(result.whatsapp_url);
+      } else {
+        setSubmittedWaUrl('');
       }
       setLastOrder(result);
 
@@ -212,12 +221,12 @@ export default function ArchitecturePricingIsland({
       if (result.is_paid_package && result.snap_token) {
         setTimeout(() => {
           triggerSnapPayment(result.snap_token, result.order_id);
-        }, 150);
-      } else if (result.whatsapp_url && selectedPackage === 'retail_spark') {
-        // Free Spark tier guest mode optional WhatsApp
+        }, 120);
+      } else if (selectedPackage === 'retail_spark') {
+        // Free Spark tier guest mode: launch blueprint generator
         setTimeout(() => {
-          window.open(result.whatsapp_url, '_blank');
-        }, 800);
+          window.location.href = '/blueprint?tier=spark';
+        }, 600);
       }
     } catch (err) {
       setSubmitError(err.message || (isEn ? 'An error occurred. Please try again.' : 'Terjadi kesalahan sistem. Silakan coba lagi.'));
@@ -1650,46 +1659,46 @@ export default function ArchitecturePricingIsland({
                 ) : selectedPackage === 'retail_ultimate' ? (
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
-                      <Crown className="w-3 h-3" />
-                      <span>{isEn ? '100% SELF-SERVICE // + 1-ON-1 ARCHITECT CALL' : '100% SELF-SERVICE // + SESI 1-ON-1 ARCHITECT'}</span>
+                      <CreditCard className="w-3 h-3" />
+                      <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      Ultimate Advisory PRD (Rp {pricingSettings.retail_ultimate_price || '1.490.000'})
+                      {isEn ? 'Checkout Ultimate Advisory PRD' : 'Checkout Lisensi Ultimate Advisory PRD'} (Rp {pricingSettings.retail_ultimate_price || '1.490.000'})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn 
-                        ? 'Self-service enterprise PRD with AI Failover Token Shield + 1 scheduled 60-min Google Meet architecture session. Coding is executed independently by your team.'
-                        : 'Paket PRD enterprise mandiri dengan AI Failover Shield + 1 sesi Google Meet 60 menit bersama Lead Architect. Pengerjaan koding tetap dieksekusi oleh tim developer Anda sendiri.'}
+                        ? 'Instant 100% self-service checkout via Midtrans Snap (QRIS, VA Bank, Credit Card). PRD license activates immediately + includes 1 scheduled 60-min Google Meet architecture session.'
+                        : 'Pembayaran instan 100% mandiri via Midtrans Snap (QRIS, Virtual Account, Kartu Kredit). Lisensi PRD langsung aktif di akun Anda + termasuk 1 sesi Google Meet 60 menit bersama Lead Architect.'}
                     </p>
                   </>
                 ) : selectedPackage === 'retail_pro' ? (
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
-                      <Sparkles className="w-3 h-3" />
-                      <span>{isEn ? '100% SELF-SERVICE // ONE-TIME DIGITAL LICENSE' : '100% SELF-SERVICE // LISENSI DIGITAL SEKALI BAYAR'}</span>
+                      <CreditCard className="w-3 h-3" />
+                      <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      Pro Production PRD (Rp {pricingSettings.retail_pro_price || '399.000'})
+                      {isEn ? 'Checkout Pro Production PRD' : 'Checkout Lisensi Pro Production PRD'} (Rp {pricingSettings.retail_pro_price || '399.000'})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn 
-                        ? 'Production blueprint, 6 Mermaid diagrams, Decoupled 2026+ matrix & WBS 5 Sprints. 100% self-service for your team to build.'
-                        : 'Cetak biru produksi, matriks Decoupled 2026+, 6 diagram Mermaid, WBS 5 sprint, dan OpenAPI 3.1. Digunakan mandiri oleh tim developer Anda (Neriah Pro tidak coding).'}
+                        ? 'Instant 100% self-service checkout via Midtrans Snap (QRIS, VA, Credit Card). Production blueprint, 6 Mermaid diagrams, Decoupled matrix & WBS 5 Sprints activate immediately.'
+                        : 'Pembayaran instan 100% mandiri via Midtrans Snap (QRIS, Virtual Account, Kartu Kredit). Cetak biru produksi, 6 diagram Mermaid, WBS 5 sprint, dan OpenAPI 3.1 langsung aktif di akun Anda.'}
                     </p>
                   </>
                 ) : selectedPackage === 'retail_lite' ? (
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
-                      <Terminal className="w-3 h-3" />
-                      <span>{isEn ? '100% SELF-SERVICE // ONE-TIME DIGITAL LICENSE' : '100% SELF-SERVICE // LISENSI DIGITAL SEKALI BAYAR'}</span>
+                      <CreditCard className="w-3 h-3" />
+                      <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      Lite PRD Generator (Rp {pricingSettings.retail_lite_price || '99.000'})
+                      {isEn ? 'Checkout Lite PRD Generator' : 'Checkout Lisensi Lite PRD Generator'} (Rp {pricingSettings.retail_lite_price || '99.000'})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn 
-                        ? 'Essential 26-parameter PRD + PostgreSQL Strict ULID DDL SQL. 100% self-service for your team or AI agents to build.'
-                        : 'Spesifikasi PRD 26 parameter esensial + skema SQL DDL PostgreSQL Strict ULID siap eksekusi. Digunakan mandiri oleh tim developer atau AI agent Anda.'}
+                        ? 'Instant 100% self-service checkout via Midtrans Snap (QRIS, Virtual Account, Credit Card). Essential 26-parameter PRD + PostgreSQL Strict ULID DDL SQL activate immediately.'
+                        : 'Pembayaran instan 100% mandiri via Midtrans Snap (QRIS, Virtual Account BCA/Mandiri/BRI, Kartu Kredit). Kunci lisensi dan akses unduh PRD 26 parameter langsung aktif seketika di akun Anda.'}
                     </p>
                   </>
                 ) : (
@@ -1767,7 +1776,7 @@ export default function ArchitecturePricingIsland({
                       </button>
                     ) : null}
 
-                    {submittedWaUrl && (
+                    {submittedWaUrl && !isRetailTier && (
                       <a
                         href={submittedWaUrl}
                         target="_blank"
@@ -2064,11 +2073,28 @@ export default function ArchitecturePricingIsland({
                     </div>
                   )}
 
+                  {/* ACCOUNT BADGE FOR LOGGED-IN USERS (RETAIL) */}
+                  {authUser && isRetailTier && (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <span className="text-zinc-900 dark:text-zinc-100">
+                          {isEn ? 'Connected Account:' : 'Akun Terverifikasi:'} <strong>{authUser.name}</strong> ({authUser.email})
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
+                        {isEn ? 'AUTO-LINKED TO DASHBOARD' : 'LISENSI OTOMATIS TERSIMPAN'}
+                      </span>
+                    </div>
+                  )}
+
                   {/* FORM IDENTITAS INTI */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        {isEn ? 'Full Name / Contact Person *' : 'Nama Lengkap / PIC *'}
+                        {isRetailTier 
+                          ? (isEn ? 'License Holder Full Name *' : 'Nama Lengkap Pemilik Lisensi *')
+                          : (isEn ? 'Full Name / Contact Person *' : 'Nama Lengkap / PIC *')}
                       </label>
                       <input
                         type="text"
@@ -2083,15 +2109,17 @@ export default function ArchitecturePricingIsland({
 
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        {isEn ? 'Company / Business Entity *' : 'Perusahaan / Bisnis *'}
+                        {isRetailTier
+                          ? (isEn ? 'Company / Brand (Optional)' : 'Perusahaan / Brand (Opsional)')
+                          : (isEn ? 'Company / Business Entity *' : 'Perusahaan / Bisnis *')}
                       </label>
                       <input
                         type="text"
                         name="company"
                         value={formData.company}
                         onChange={handleInputChange}
-                        placeholder={isEn ? 'e.g. Acme Corp' : 'Contoh: PT Inovasi Maju'}
-                        required
+                        placeholder={isEn ? 'e.g. Acme Corp / Freelance' : 'Contoh: PT Inovasi Maju / Mandiri'}
+                        required={!isRetailTier}
                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden"
                       />
                     </div>
@@ -2100,7 +2128,9 @@ export default function ArchitecturePricingIsland({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        {isEn ? 'Business Email *' : 'Email Bisnis *'}
+                        {isRetailTier
+                          ? (isEn ? 'Email (License & PRD Delivery) *' : 'Email (Kunci Lisensi & Unduhan PRD) *')
+                          : (isEn ? 'Business Email *' : 'Email Bisnis *')}
                       </label>
                       <input
                         type="email"
@@ -2120,7 +2150,9 @@ export default function ArchitecturePricingIsland({
 
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        {isEn ? 'WhatsApp Phone *' : 'No. WhatsApp *'}
+                        {isRetailTier
+                          ? (isEn ? 'Phone / Mobile (For Midtrans Payment Status) *' : 'No. Ponsel / HP (Notifikasi Pembayaran Midtrans) *')
+                          : (isEn ? 'WhatsApp Phone *' : 'No. WhatsApp *')}
                       </label>
                       <div className="flex">
                         <select
@@ -2147,7 +2179,7 @@ export default function ArchitecturePricingIsland({
                       </div>
                       {['retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage) && (
                         <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-1">
-                          {isEn ? '↳ Instant QRIS / VA payment link & invoice delivered here' : '↳ Link pembayaran QRIS / VA & faktur resmi dikirim ke sini'}
+                          {isEn ? '↳ Official Midtrans transaction receipts & status delivered here' : '↳ Status transaksi & invoice resmi Midtrans dikirimkan ke nomor ini'}
                         </span>
                       )}
                     </div>
@@ -2177,22 +2209,22 @@ export default function ArchitecturePricingIsland({
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>{isEn ? 'PROCESSING YOUR REQUEST...' : 'MEMPROSES PERMINTAAN ANDA...'}</span>
+                        <span>{isEn ? 'OPENING MIDTRANS PAYMENT SNAP...' : 'MEMBUKA GATEWAY PEMBAYARAN MIDTRANS...'}</span>
                       </>
                     ) : selectedPackage === 'retail_lite' ? (
                       <>
                         <CreditCard className="w-4 h-4" />
-                        <span>{isEn ? `ORDER LITE PRD LICENSE (RP ${pricingSettings.retail_lite_price || '99.000'}) →` : `PESAN LISENSI LITE PRD (RP ${pricingSettings.retail_lite_price || '99.000'}) →`}</span>
+                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.retail_lite_price || '99.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.retail_lite_price || '99.000'}) →`}</span>
                       </>
                     ) : selectedPackage === 'retail_pro' ? (
                       <>
                         <Sparkles className="w-4 h-4" />
-                        <span>{isEn ? `ORDER PRO PRODUCTION PRD (RP ${pricingSettings.retail_pro_price || '399.000'}) →` : `PESAN LISENSI PRO PRODUCTION PRD (RP ${pricingSettings.retail_pro_price || '399.000'}) →`}</span>
+                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.retail_pro_price || '399.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.retail_pro_price || '399.000'}) →`}</span>
                       </>
                     ) : selectedPackage === 'retail_ultimate' ? (
                       <>
                         <Crown className="w-4 h-4" />
-                        <span>{isEn ? `ORDER ULTIMATE PRD & ARCHITECT SESSION (RP ${pricingSettings.retail_ultimate_price || '1.490.000'}) →` : `PESAN ULTIMATE PRD & SESI ARCHITECT (RP ${pricingSettings.retail_ultimate_price || '1.490.000'}) →`}</span>
+                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.retail_ultimate_price || '1.490.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.retail_ultimate_price || '1.490.000'}) →`}</span>
                       </>
                     ) : selectedPackage === 'retail_spark' ? (
                       <>

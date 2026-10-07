@@ -96,16 +96,19 @@ class ManageSettingsLivewireTest extends TestCase
 
         $fakeBase64Sig = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
-        Livewire::test(ManageSettings::class)
-            ->callAction('open_developer_signature_pad', data: [
-                'modal_canvas_signature' => $fakeBase64Sig,
-            ])
-            ->assertHasNoActionErrors()
-            ->call('submit')
-            ->assertHasNoErrors();
+        $page = new ManageSettings();
+        $page->mount();
+        $action = $page->getDeveloperSignaturePadAction();
+        $action->livewire($page);
+        $action->call(['data' => ['modal_canvas_signature' => $fakeBase64Sig]]);
 
         $savedPath = CmsGlobalSetting::getVal('developer_signature_image');
+        $this->assertNotEmpty($savedPath);
         $this->assertStringStartsWith('signatures/developer_sig_', $savedPath);
         $this->assertTrue(\Illuminate\Support\Facades\Storage::disk('public')->exists($savedPath));
+
+        Livewire::test(ManageSettings::class)
+            ->call('submit')
+            ->assertHasNoErrors();
     }
 }

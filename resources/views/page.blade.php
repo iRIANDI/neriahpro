@@ -239,6 +239,13 @@
                         'whatsappNumber' => $getSettingVal('company_whatsapp', '628123456789'),
                         'featureFlags' => $featureFlags,
                         'currentLocale' => $locale,
+                        'authUser' => auth()->check() ? [
+                            'id' => auth()->id(),
+                            'name' => auth()->user()->name,
+                            'email' => auth()->user()->email,
+                            'phone' => auth()->user()->phone ?? '',
+                            'company' => auth()->user()->company ?? '',
+                        ] : null,
                         'pricingSettings' => [
                             'advisory_price' => $getSettingVal('pricing_advisory_price', '2.500.000'),
                             'mvp_price' => $getSettingVal('pricing_mvp_price', '50.000.000'),

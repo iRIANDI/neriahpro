@@ -4501,42 +4501,209 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 </div>
 
                 <!-- 3. Monolith vs Decoupled Assessment -->
+                @php
+                    $isDecoupled = $archEval['architecture_pattern_evaluation']['is_decoupled'] ?? false;
+                    $monolithInfo = $archEval['architecture_pattern_evaluation']['monolith'] ?? [];
+                    $decoupledInfo = $archEval['architecture_pattern_evaluation']['decoupled'] ?? [];
+                    $decoupledStrategy = $prd['decoupled_tooling_strategy'] ?? \App\Services\PrdGeneratorService::generateDecoupledToolingStrategy(
+                        $blueprint->nama_bisnis ?? $blueprint->client_name,
+                        $blueprint->user_metadata ?? [],
+                        $prd['erd_schema']['tables'] ?? [],
+                        $prd['features']['mvp_phase1'] ?? []
+                    );
+                @endphp
                 <div class="mb-8">
-                    <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-emerald-500"></span>
-                        3. Penilaian Pola Arsitektur: Modern Monolith vs Decoupled (Microservices)
-                    </h3>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-emerald-500"></span>
+                            3. Penilaian Pola Arsitektur: Modern Monolith vs Decoupled (Headless & Multi-Party)
+                        </h3>
+                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase border {{ $isDecoupled ? 'bg-sky-500/10 text-sky-400 border-sky-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' }}">
+                            {{ $archEval['architecture_pattern_evaluation']['verdict'] ?? 'ADAPTIVE' }}
+                        </span>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Modern Monolith -->
-                        <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-emerald-500/60 font-mono text-xs">
+                        <!-- Modern Monolith Card -->
+                        <div class="p-5 {{ !$isDecoupled ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500' : 'bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800' }} font-mono text-xs">
                             <div class="flex items-center justify-between gap-2 mb-2">
-                                <span class="font-bold uppercase text-zinc-900 dark:text-zinc-100">Modern Monolith (Laravel 13 + Filament v5)</span>
-                                <span class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-bold">REKOMENDASI FASE 1</span>
+                                <span class="font-bold uppercase {{ !$isDecoupled ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300' }}">
+                                    {{ $monolithInfo['title'] ?? 'Modern Monolith (Laravel 13 + Filament v5)' }}
+                                </span>
+                                <span class="px-2 py-0.5 text-[9px] font-bold uppercase {{ !$isDecoupled ? 'bg-emerald-500 text-black' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300' }}">
+                                    {{ $monolithInfo['status'] ?? (!$isDecoupled ? 'REKOMENDASI UTAMA' : 'OPSI ALTERNATIF') }}
+                                </span>
                             </div>
                             <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                <li>&bull; <strong>Zero Network Latency:</strong> Komunikasi antar modul berjalan intra-process O(1) tanpa overhead HTTP network antar-microservices.</li>
-                                <li>&bull; <strong>Pangkas Biaya Infrastruktur 60-70%:</strong> Satu kesatuan container deployment menghemat anggaran server staging & produksi dibanding kluster microservices.</li>
-                                <li>&bull; <strong>ACID Strict Integrity:</strong> Integritas transaksi finansial tanpa rumitnya distributed 2-phase commit.</li>
-                                <li>&bull; <strong>Rapid Time-to-Market:</strong> Sinkronisasi instan antara model bisnis Eloquent dan dashboard Filament.</li>
-                                <li>&bull; <strong>Island Architecture Frontend:</strong> Memberikan fluiditas interaksi 60fps setara SPA dengan stabilitas dan kecepatan SEO Server-Side Rendering.</li>
+                                @foreach($monolithInfo['reasons'] ?? [] as $reason)
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="{{ !$isDecoupled ? 'text-emerald-500' : 'text-zinc-400' }} font-bold">&bull;</span>
+                                        <span>{{ $reason }}</span>
+                                    </li>
+                                @endforeach
                             </ul>
                         </div>
 
-                        <!-- Decoupled -->
-                        <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                        <!-- Decoupled Card -->
+                        <div class="p-5 {{ $isDecoupled ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500' : 'bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800' }} font-mono text-xs">
                             <div class="flex items-center justify-between gap-2 mb-2">
-                                <span class="font-bold uppercase text-zinc-700 dark:text-zinc-300">Decoupled / Microservices Cluster</span>
-                                <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[9px] font-bold">FASE ROADMAP LANJUTAN</span>
+                                <span class="font-bold uppercase {{ $isDecoupled ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300' }}">
+                                    {{ $decoupledInfo['title'] ?? 'Enterprise Decoupled & Headless Architecture' }}
+                                </span>
+                                <span class="px-2 py-0.5 text-[9px] font-bold uppercase {{ $isDecoupled ? 'bg-emerald-500 text-black' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300' }}">
+                                    {{ $decoupledInfo['status'] ?? ($isDecoupled ? 'REKOMENDASI UTAMA' : 'SIAP ADAPSI') }}
+                                </span>
                             </div>
-                            <ul class="space-y-1.5 text-zinc-500 text-[11px]">
-                                <li>&bull; Hanya dianjurkan jika tim rekayasa sudah berkembang menjadi lebih dari 15-20 developer di repositori terpisah.</li>
-                                <li>&bull; Menambah biaya operasional server terpisah (Backend API server + Frontend Next.js node cluster terpisah).</li>
-                                <li>&bull; Meningkatkan latensi round-trip HTTP dan beban autentikasi token JWT di setiap request interaksi.</li>
-                                <li>&bull; Membutuhkan orkestrasi Kubernetes kompleks yang tidak efisien untuk peluncuran perdana (MVP).</li>
+                            <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 text-[11px]">
+                                @foreach($decoupledInfo['reasons'] ?? [] as $reason)
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="{{ $isDecoupled ? 'text-emerald-500' : 'text-zinc-400' }} font-bold">&bull;</span>
+                                        <span>{{ $reason }}</span>
+                                    </li>
+                                @endforeach
                             </ul>
                         </div>
                     </div>
                 </div>
+
+                <!-- 3.5 Cetak Biru Arsitektur Decoupled & Ekosistem Multi-Pihak (Modern 2026+ Standards) -->
+                @if(!empty($decoupledStrategy))
+                    <div class="mb-8 p-6 bg-white dark:bg-zinc-950 border-2 border-sky-600 dark:border-sky-500 font-mono text-zinc-900 dark:text-zinc-100 shadow-sm">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-5">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="px-2 py-0.5 bg-sky-500 text-black font-black text-[10px] uppercase tracking-wider">
+                                        {{ $decoupledStrategy['badge'] ?? 'DECOUPLED_ARCHITECTURE_2026' }}
+                                    </span>
+                                    <span class="text-xs text-zinc-500 dark:text-zinc-400">&bull; Multi-Party Tools, Cloud Sizing & Framework Protocols</span>
+                                </div>
+                                <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white">
+                                    {{ $decoupledStrategy['title'] ?? 'Cetak Biru Arsitektur Decoupled & Ekosistem Multi-Pihak' }}
+                                </h3>
+                            </div>
+                            <span class="px-2.5 py-1 text-xs font-bold uppercase bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/30 w-fit">
+                                {{ $isDecoupled ? 'ARSITEKTUR AKTIF' : 'ROADMAP SCALE-UP TERSEDIA' }}
+                            </span>
+                        </div>
+
+                        <p class="text-xs font-sans text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
+                            {{ $decoupledStrategy['summary'] ?? '' }}
+                        </p>
+
+                        <!-- A. Multi-Party Tools Matrix (5 Pillars) -->
+                        <div class="mb-6">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 mb-3 flex items-center gap-1.5">
+                                <span>A. Matriks Tools Multi-Pihak (Web, Mobile, Backend & API Contract)</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-[11px]">
+                                @foreach($decoupledStrategy['multi_party_tools_matrix'] ?? [] as $toolKey => $tool)
+                                    <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[9px] uppercase font-bold text-zinc-400 block mb-1">{{ $tool['category'] ?? ucfirst($toolKey) }}</span>
+                                            <strong class="text-zinc-900 dark:text-zinc-100 text-xs block mb-1.5 text-emerald-600 dark:text-emerald-400">
+                                                {{ $tool['primary'] ?? ($tool['specification'] ?? ($tool['strategy'] ?? '')) }}
+                                            </strong>
+                                            @if(!empty($tool['alternatives']))
+                                                <div class="text-[10px] text-zinc-500 mb-1.5">
+                                                    <strong>Alternatif:</strong> {{ $tool['alternatives'] }}
+                                                </div>
+                                            @endif
+                                            @if(!empty($tool['local_database']))
+                                                <div class="text-[10px] text-sky-600 dark:text-sky-400 mb-1.5">
+                                                    <strong>DB Lokal:</strong> {{ $tool['local_database'] }}
+                                                </div>
+                                            @endif
+                                            <p class="text-[10px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+                                                {{ $tool['role'] ?? ($tool['description'] ?? ($tool['justification'] ?? '')) }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- B. Server & Cloud Topology (6 Pillars) -->
+                        <div class="mb-6">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 mb-3 flex items-center gap-1.5">
+                                <span>B. Topologi Server, Cloud Edge & Efisiensi Biaya Operasional</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-[11px]">
+                                @foreach($decoupledStrategy['server_and_cloud_topology'] ?? [] as $srvKey => $srv)
+                                    <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                        <div class="flex items-center justify-between gap-1 mb-1">
+                                            <span class="text-[9px] uppercase font-bold text-zinc-400">{{ $srv['tier'] ?? ucfirst($srvKey) }}</span>
+                                            @if(!empty($srv['cost_range']))
+                                                <span class="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                                                    {{ $srv['cost_range'] }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <strong class="text-zinc-900 dark:text-zinc-100 text-xs block mb-1">
+                                            {{ $srv['provider'] ?? ($srv['tools'] ?? '') }}
+                                        </strong>
+                                        <p class="text-[10px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-1.5">
+                                            {{ $srv['specs'] ?? ($srv['coverage'] ?? ($srv['features'] ?? '')) }}
+                                        </p>
+                                        @if(!empty($srv['killer_feature']))
+                                            <div class="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-500/10 p-1.5 border border-emerald-500/30">
+                                                &check; {{ $srv['killer_feature'] }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- C. Framework Strategy & Protocols (4 Pillars) -->
+                        <div class="mb-5">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 mb-3 flex items-center gap-1.5">
+                                <span>C. Strategi Framework, Autentikasi Cross-Domain & Protokol Sinkronisasi</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                                <!-- Auth Strategy -->
+                                <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                    <strong class="text-zinc-900 dark:text-zinc-100 uppercase text-xs block mb-1 text-emerald-600 dark:text-emerald-400">
+                                        &bull; Autentikasi Web & Mobile (Dual-Mode)
+                                    </strong>
+                                    <p class="text-[10px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-1">
+                                        <strong>Web:</strong> {{ $decoupledStrategy['framework_strategy_and_protocols']['authentication']['web'] ?? '' }}
+                                    </p>
+                                    <p class="text-[10px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+                                        <strong>Mobile:</strong> {{ $decoupledStrategy['framework_strategy_and_protocols']['authentication']['mobile'] ?? '' }}
+                                    </p>
+                                </div>
+
+                                <!-- Delta Sync & Idempotency -->
+                                <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                    <strong class="text-zinc-900 dark:text-zinc-100 uppercase text-xs block mb-1 text-emerald-600 dark:text-emerald-400">
+                                        &bull; Idempotency Key & Keyset Cursor Pagination
+                                    </strong>
+                                    <p class="text-[10px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-1">
+                                        <strong>Idempotency:</strong> {{ $decoupledStrategy['framework_strategy_and_protocols']['data_sync_and_idempotency']['idempotency'] ?? '' }}
+                                    </p>
+                                    <p class="text-[10px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+                                        <strong>Keyset Pagination:</strong> {{ $decoupledStrategy['framework_strategy_and_protocols']['data_sync_and_idempotency']['keyset_pagination'] ?? '' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- D. Migration Playbook -->
+                        <div class="p-4 bg-sky-500/5 dark:bg-sky-950/20 border border-sky-500/30 text-[11px]">
+                            <strong class="text-sky-700 dark:text-sky-300 uppercase block mb-2 font-bold">
+                                {{ $decoupledStrategy['decoupling_migration_playbook']['title'] ?? 'Panduan Transisi Bertahap' }}
+                            </strong>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[10px]">
+                                @foreach($decoupledStrategy['decoupling_migration_playbook']['steps'] ?? [] as $step)
+                                    <div class="p-2 bg-white dark:bg-zinc-900 border border-sky-500/20">
+                                        <strong class="text-sky-600 dark:text-sky-400 block mb-0.5">{{ $step['phase'] }}</strong>
+                                        <p class="text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">{{ $step['desc'] }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- 3. Global Scale Analysis (Matrix) -->
                 <div class="mb-8">

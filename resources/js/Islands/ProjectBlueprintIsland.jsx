@@ -3441,6 +3441,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div className="flex flex-wrap gap-2 mb-2">
                 {[
                   lang === 'en'
+                    ? 'Decoupled Headless: Next.js 15 / Nuxt 3 Frontend + Headless Laravel 13 / NestJS REST & GraphQL API'
+                    : 'Decoupled Headless: Next.js 15 / Nuxt 3 Frontend + Headless Laravel 13 / NestJS REST & GraphQL API',
+                  lang === 'en'
                     ? 'Hybrid: Web App + Mobile Apps (Flutter / React Native - iOS & Android) + SQLite Local DB'
                     : 'Hybrid: Web App + Mobile Apps (Flutter / React Native - iOS & Android) + SQLite Local DB',
                   lang === 'en'
@@ -3784,6 +3787,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {[
+                  lang === 'en'
+                    ? 'Decoupled Edge & Cloud: Cloudflare Pages (Frontend) + Dedicated VPS Coolify (API Backend) + Cloudflare R2'
+                    : 'Topologi Decoupled: Cloudflare Pages (Frontend Edge) + Dedicated VPS Coolify (API Backend) + Cloudflare R2 ($0 Egress)',
                   lang === 'en'
                     ? 'Hybrid Topology: Central Cloud VPS (PostgreSQL 16+, Redis) + Mobile Client Local DB (SQLite Offline Sync)'
                     : 'Topologi Hybrid: Cloud Server PostgreSQL 16+ & Redis + Database Lokal Mobile SQLite (Offline-First Sync)',

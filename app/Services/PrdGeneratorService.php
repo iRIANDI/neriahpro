@@ -55,6 +55,7 @@ class PrdGeneratorService
         // Extract ultimate blueprint context from metadata
         $metadata = $blueprint->user_metadata ?? [];
         $extraContext = [
+            'architecture_preference' => $metadata['architecture_preference'] ?? null,
             'skala_pengguna' => $metadata['skala_pengguna'] ?? '0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)',
             'jangkauan_pasar' => $metadata['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
             'out_of_scope' => $metadata['out_of_scope'] ?? null,
@@ -67,6 +68,22 @@ class PrdGeneratorService
             'termin_pembayaran' => $metadata['termin_pembayaran'] ?? 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
         ];
 
+        // Dynamic Decoupled Architecture Detection
+        $targetPlatformLower = strtolower($extraContext['target_platform'] ?? '');
+        $hostingLower = strtolower($extraContext['preferensi_hosting'] ?? '');
+        $scaleLower = strtolower($extraContext['skala_pengguna'] ?? '');
+        $archPrefLower = strtolower($extraContext['architecture_preference'] ?? '');
+
+        $isDecoupledRequested = str_contains($targetPlatformLower, 'decoupled') ||
+                                str_contains($targetPlatformLower, 'headless') ||
+                                str_contains($targetPlatformLower, 'microservices') ||
+                                str_contains($hostingLower, 'decoupled') ||
+                                str_contains($hostingLower, 'multi-tier') ||
+                                str_contains($hostingLower, 'cloudflare pages') ||
+                                str_contains($archPrefLower, 'decoupled') ||
+                                str_contains($scaleLower, 'microservices') ||
+                                (str_contains($targetPlatformLower, 'mobile') && str_contains($targetPlatformLower, 'flutter') && str_contains($targetPlatformLower, 'web'));
+
         // Generate Virtual Architecture Charts (Mermaid Diagrams Suite)
         $workflowMermaid = self::generateWorkflowMermaid($workflowStages);
         $erdMermaid = self::generateErdMermaid($erdTables);
@@ -78,6 +95,86 @@ class PrdGeneratorService
         $developerEducation = self::getDeveloperEducationDeck($businessName);
         $itemizedEstimation = self::calculateItemizedEstimation($blueprint);
         $aiTelemetry = self::synthesizeAiPrdTelemetry($blueprint, $businessName, $masalah, $tujuan, $preferredAiProvider);
+
+        $techStack = $isDecoupledRequested ? [
+            'frontend' => [
+                'name' => 'Next.js 15 App Router (React 19 + Turbopack) / Nuxt 3',
+                'role' => 'Headless Consumer Web, Edge SSR & ISR, Sub-20ms Global TTFB, SEO Web Vitals Sempurna',
+            ],
+            'mobile_app' => [
+                'name' => 'Flutter 3.x / React Native (Expo SDK 52+)',
+                'role' => 'Native Mobile Client (Android & iOS), Offline-First UI, Background Sync Worker (WorkManager)',
+            ],
+            'backend' => [
+                'name' => 'Headless Laravel 13 RESTful API & Queue Engine',
+                'role' => 'Core Business Logic, Eloquent ORM, Strict ACID Transactions, Event Sourcing & Workers',
+            ],
+            'admin_panel' => [
+                'name' => 'Filament v5 Enterprise Backoffice',
+                'role' => 'Pusat Kendali Operasional Internal, Rekapitulasi Data, RBAC Shield & Metric Widgets',
+            ],
+            'api_contract' => [
+                'name' => 'OpenAPI 3.1 & Scalar Interactive Docs',
+                'role' => 'Kontrak API Terstandarisasi, Autogenerasi TypeScript Types (Zod), Zero Ambiguity Integration',
+            ],
+            'local_database' => [
+                'name' => 'SQLite 3 Encrypted (Drift / Room / WatermelonDB)',
+                'role' => 'Zero-Latency Offline-First Local Storage, Mutation Journal, Client-Side Keyset Cache',
+            ],
+            'database' => [
+                'name' => 'PostgreSQL 16+ Strict ULID & PgBouncer',
+                'role' => 'ACID Relational Storage, JSONB indexing, Keyset Cursor Pagination O(1), Source of Truth',
+            ],
+            'sync_protocol' => [
+                'name' => 'Bi-Directional Delta Sync with Idempotency Key (X-Idempotency-Key)',
+                'role' => 'Deterministic Sync Protocol (/api/v1/sync/push & pull), Last-Write-Wins (LWW) with ULID Timestamps',
+            ],
+            'cache_and_queue' => [
+                'name' => 'Redis 7+ Cluster & Kafka / RabbitMQ Event Broker',
+                'role' => 'Sub-millisecond Token Blacklist, Rate Limiting, & Event-Driven Asynchronous Messaging',
+            ],
+            'infrastructure' => [
+                'name' => 'Cloudflare Pages (Edge Frontend) + Dedicated VPS via Coolify (API Engine)',
+                'role' => '300+ Edge POPs (<20ms global latency) + 100% Resource Isolation Backend + Cloudflare R2 ($0 Egress)',
+            ],
+        ] : [
+            'backend' => [
+                'name' => 'Laravel 13 Modern Monolith',
+                'role' => 'Core Business Engine, Eloquent ORM, RESTful/Action Handlers, Queues',
+            ],
+            'admin_panel' => [
+                'name' => 'Filament v5 Enterprise Suite',
+                'role' => 'Admin Panel, Rapid Data Filtering, Metric Widgets, RBAC Shield',
+            ],
+            'frontend' => [
+                'name' => 'Island Architecture (React 19 + Framer Motion + Tailwind CSS)',
+                'role' => 'Ultra-fluid interactive forms, Canva-style canvas capability, 60fps micro-animations',
+            ],
+            'mobile_app' => [
+                'name' => 'Flutter 3.x / React Native (Cross-Platform iOS & Android)',
+                'role' => 'Native Mobile Client, Offline-First UI, Background Sync Worker (WorkManager)',
+            ],
+            'local_database' => [
+                'name' => 'SQLite (Drift / Room / WatermelonDB) Encrypted',
+                'role' => 'Zero-Latency Offline-First Local Storage, Mutation Journal, Client-Side Keyset Cache',
+            ],
+            'database' => [
+                'name' => 'PostgreSQL 16+ (Strict ULID Schema)',
+                'role' => 'ACID Relational Storage, JSONB indexing, Keyset Cursor Pagination, Central Source of Truth',
+            ],
+            'sync_protocol' => [
+                'name' => 'Bi-Directional Delta Sync with Idempotency Engine',
+                'role' => 'Deterministic Sync Protocol (/api/v1/sync/push & pull), Last-Write-Wins (LWW) with ULID Timestamps, Exponential Backoff Retries',
+            ],
+            'cache_and_queue' => [
+                'name' => 'Redis / Predis Engine',
+                'role' => 'High-throughput Session, Cache, & Async Background Queue Jobs',
+            ],
+            'infrastructure' => [
+                'name' => 'Dedicated VPS via Nixpacks & Docker',
+                'role' => 'Isolasi resource 100%, Cloudflare CDN fronting, Nginx HTTP/2 reverse-proxy',
+            ],
+        ];
 
         return [
             'meta' => [
@@ -104,7 +201,9 @@ class PrdGeneratorService
                 'market_reach' => $extraContext['jangkauan_pasar'],
                 'compliance_level' => $extraContext['kepatuhan_keamanan'],
                 'budget_range' => $extraContext['kisaran_budget'],
-                'architecture_philosophy' => 'Untuk menjamin efisiensi biaya server, ketahanan jangka panjang, dan kecepatan peluncuran (Rapid Time-to-Market), sistem ini dirancang menggunakan arsitektur Modern Monolith (Laravel 13 & Filament PHP). Seluruh tabel bisnis menggunakan Primary Key ULID untuk skalabilitas terdistribusi dan kompatibilitas penuh PostgreSQL.',
+                'architecture_philosophy' => $isDecoupledRequested
+                    ? 'Untuk mendukung tim rekayasa multi-disiplin, multi-channel mobile & web apps, serta performa edge global sub-20ms, sistem ini dirancang menggunakan arsitektur Enterprise Decoupled & Headless (Next.js 15 App Router / Nuxt 3, Flutter Mobile Client, dan Headless Laravel 13 RESTful/OpenAPI 3.1). Seluruh data transaksi diorkestrasi dengan PostgreSQL Strict ULID dan protokol sinkronisasi delta dengan proteksi idempotency.'
+                    : 'Untuk menjamin efisiensi biaya server, ketahanan jangka panjang, dan kecepatan peluncuran (Rapid Time-to-Market), sistem ini dirancang menggunakan arsitektur Modern Monolith (Laravel 13 & Filament PHP) yang Decoupled-Ready. Seluruh tabel bisnis menggunakan Primary Key ULID untuk skalabilitas terdistribusi dan kompatibilitas penuh PostgreSQL.',
             ],
             'system_actors' => $actorItems,
             'features' => [
@@ -134,49 +233,13 @@ class PrdGeneratorService
             ],
             'mobile_and_sync_architecture' => $mobileArchitecture,
             'developer_education' => $developerEducation,
-            'tech_stack' => [
-                'backend' => [
-                    'name' => 'Laravel 13 Modern Monolith',
-                    'role' => 'Core Business Engine, Eloquent ORM, RESTful/Action Handlers, Queues',
-                ],
-                'admin_panel' => [
-                    'name' => 'Filament v5 Enterprise Suite',
-                    'role' => 'Admin Panel, Rapid Data Filtering, Metric Widgets, RBAC Shield',
-                ],
-                'frontend' => [
-                    'name' => 'Island Architecture (React 19 + Framer Motion + Tailwind CSS)',
-                    'role' => 'Ultra-fluid interactive forms, Canva-style canvas capability, 60fps micro-animations',
-                ],
-                'mobile_app' => [
-                    'name' => 'Flutter 3.x / React Native (Cross-Platform iOS & Android)',
-                    'role' => 'Native Mobile Client, Offline-First UI, Background Sync Worker (WorkManager)',
-                ],
-                'local_database' => [
-                    'name' => 'SQLite (Drift / Room / WatermelonDB) Encrypted',
-                    'role' => 'Zero-Latency Offline-First Local Storage, Mutation Journal, Client-Side Keyset Cache',
-                ],
-                'database' => [
-                    'name' => 'PostgreSQL 16+ (Strict ULID Schema)',
-                    'role' => 'ACID Relational Storage, JSONB indexing, Keyset Cursor Pagination, Central Source of Truth',
-                ],
-                'sync_protocol' => [
-                    'name' => 'Bi-Directional Delta Sync with Idempotency Engine',
-                    'role' => 'Deterministic Sync Protocol (/api/v1/sync/push & pull), Last-Write-Wins (LWW) with ULID Timestamps, Exponential Backoff Retries',
-                ],
-                'cache_and_queue' => [
-                    'name' => 'Redis / Predis Engine',
-                    'role' => 'High-throughput Session, Cache, & Async Background Queue Jobs',
-                ],
-                'infrastructure' => [
-                    'name' => 'Dedicated VPS via Nixpacks & Docker',
-                    'role' => 'Isolasi resource 100%, Cloudflare CDN fronting, Nginx HTTP/2 reverse-proxy',
-                ],
-            ],
+            'tech_stack' => $techStack,
             'integrations' => [
                 'requested' => $integrasi,
                 'notes' => 'Akan dihubungkan melalui service providers terisolasi dengan fallback retry mechanism.',
             ],
             'architecture_evaluation' => self::evaluateArchitecture($businessName, $masalah, $mvpItems, $alurKerja, $extraContext),
+            'decoupled_tooling_strategy' => self::generateDecoupledToolingStrategy($businessName, $extraContext, $erdTables, $mvpItems),
             'ai_security_blueprint' => self::generateAiSecurityBlueprint($businessName, $extraContext),
             'agentic_ai_matrix' => self::generateAgenticAiConceptsMatrix($businessName, $mvpItems),
             'server_hardware_sizing' => self::calculateServerHardwareSizing($businessName, $masalah, $mvpItems, $extraContext),
@@ -716,14 +779,30 @@ class PrdGeneratorService
                         str_contains($rawDeclared, 'komunitas') ||
                         str_contains(strtolower($businessName), 'gereja');
 
+        // Dynamic Decoupled Architecture Detection
+        $targetPlatformLower = strtolower($extraContext['target_platform'] ?? '');
+        $hostingLower = strtolower($extraContext['preferensi_hosting'] ?? '');
+        $scaleLower = strtolower($extraContext['skala_pengguna'] ?? '');
+        $archPrefLower = strtolower($extraContext['architecture_preference'] ?? '');
+
+        $isDecoupledRequested = str_contains($targetPlatformLower, 'decoupled') ||
+                                str_contains($targetPlatformLower, 'headless') ||
+                                str_contains($targetPlatformLower, 'microservices') ||
+                                str_contains($hostingLower, 'decoupled') ||
+                                str_contains($hostingLower, 'multi-tier') ||
+                                str_contains($hostingLower, 'cloudflare pages') ||
+                                str_contains($archPrefLower, 'decoupled') ||
+                                str_contains($scaleLower, 'microservices') ||
+                                (str_contains($targetPlatformLower, 'mobile') && str_contains($targetPlatformLower, 'flutter') && str_contains($targetPlatformLower, 'web'));
+
         return [
             'hosting_evaluation' => [
                 'verdict' => $isLeanBudget 
                     ? 'Cloud Starter / Micro VPS (Fase 1) & Seamless VPS Scale-Up (Fase 2)' 
-                    : 'Dedicated VPS (Nixpacks & Docker Containerization)',
-                'verdict_badge' => $isLeanBudget ? 'LEAN_CLOUD_STARTER' : 'VPS_DEDICATED',
-                'recommendation' => $isLeanBudget ? 'CLOUD_STARTER_LEAN' : 'DEDICATED_VPS',
-                'compute_weight_score' => $isLeanBudget ? '70/100 (Lean Operational Footprint)' : '92/100 (High-Throughput Enterprise)',
+                    : ($isDecoupledRequested ? 'Multi-Tier Cloud Infrastructure (Cloudflare Pages Edge + Dedicated API VPS)' : 'Dedicated VPS (Nixpacks & Docker Containerization)'),
+                'verdict_badge' => $isLeanBudget ? 'LEAN_CLOUD_STARTER' : ($isDecoupledRequested ? 'MULTI_TIER_EDGE_CLOUD' : 'VPS_DEDICATED'),
+                'recommendation' => $isLeanBudget ? 'CLOUD_STARTER_LEAN' : ($isDecoupledRequested ? 'MULTI_TIER_DECOUPLED' : 'DEDICATED_VPS'),
+                'compute_weight_score' => $isLeanBudget ? '70/100 (Lean Operational Footprint)' : ($isDecoupledRequested ? '95/100 (Global Edge & Multi-Party API Scale)' : '92/100 (High-Throughput Enterprise)'),
                 'shared_hosting' => [
                     'status' => $isLeanBudget ? 'RECOMMENDED FOR LEAN PHASE 1 (HEMAT BIAYA)' : 'SUFFICIENT FOR STATICS / LIMITED FOR AI',
                     'title' => 'Cloud Starter / Shared Hosting Efisien (< Rp 100.000 / bln)',
@@ -745,13 +824,16 @@ class PrdGeneratorService
                 ],
             ],
             'architecture_pattern_evaluation' => [
-                'verdict' => 'Modern Monolith (Laravel 13 + Filament v5 + Island Architecture)',
-                'verdict_badge' => 'RAPID_MONOLITH',
-                'recommendation' => 'MODERN_MONOLITH',
-                'match_percentage' => '96% Optimal Architectural Match',
+                'verdict' => $isDecoupledRequested
+                    ? 'Enterprise Decoupled Headless (Next.js 15 / Nuxt 3 + Headless API Engine + Flutter/React Native)'
+                    : 'Modern Monolith (Laravel 13 + Filament v5 + Island Architecture)',
+                'verdict_badge' => $isDecoupledRequested ? 'DECOUPLED_ENTERPRISE' : 'RAPID_MONOLITH',
+                'recommendation' => $isDecoupledRequested ? 'DECOUPLED_HEADLESS' : 'MODERN_MONOLITH',
+                'match_percentage' => $isDecoupledRequested ? '98% Optimal Enterprise Architectural Match' : '96% Optimal Architectural Match',
+                'is_decoupled' => $isDecoupledRequested,
                 'monolith' => [
-                    'status' => 'OPTIMAL REKOMENDASI (96% MATCH)',
-                    'title' => 'Modern Monolith Architecture',
+                    'status' => $isDecoupledRequested ? 'OPSI ALTERNATIF (LEAN VELOCITY)' : 'OPTIMAL REKOMENDASI (96% MATCH)',
+                    'title' => 'Modern Monolith Architecture (Laravel 13 + Filament v5)',
                     'reasons' => [
                         'Eliminasi Network Latency: Komunikasi antar modul berjalan intra-process O(1) tanpa overhead HTTP network antar-microservices.',
                         'Pangkas Biaya Infrastruktur 60-80%: Satu kesatuan container deployment menghemat anggaran server staging & produksi dibanding kluster microservices.',
@@ -761,12 +843,14 @@ class PrdGeneratorService
                     ],
                 ],
                 'decoupled' => [
-                    'status' => 'NOT RECOMMENDED (OVERKILL UNTUK FASE 1)',
-                    'title' => 'Decoupled / Microservices Pattern',
+                    'status' => $isDecoupledRequested ? 'OPTIMAL REKOMENDASI (98% MATCH)' : 'OPSI ROADMAP SCALE-UP (TERSEDIA & SIAP ADAPSI)',
+                    'title' => 'Enterprise Decoupled & Headless Architecture (Next.js 15 + Mobile + Headless API)',
                     'reasons' => [
-                        'Hanya diperlukan jika tim pengembang berjumlah lebih dari 15-20 engineer yang bekerja di repositori terpisah.',
-                        'Menambah biaya operasional server terpisah (Backend API server + Frontend Next.js node cluster terpisah).',
-                        'Meningkatkan latensi round-trip HTTP dan beban autentikasi token JWT di setiap request interaksi.',
+                        'Independensi Frontend & Multi-Client: Tim Web (Next.js 15 / Nuxt 3) dan Tim Mobile (Flutter / React Native) dapat melakukan deploy dan iterasi tanpa ketergantungan deployment backend.',
+                        'Edge Caching Global (Sub-20ms TTFB): Frontend Next.js / Nuxt 3 di-hosting di Cloudflare Pages / Vercel Edge di 300+ kota dunia dengan zero egress bandwidth fee.',
+                        'Headless API Engine Berkinerja Tinggi: Core backend (Laravel 13 RESTful / NestJS / Go) fokus 100% pada logika bisnis, proteksi transaksi ACID, dan orkestrasi data.',
+                        'OpenAPI 3.1 & Strict Contract: Kontrak API terstandardisasi dengan Scalar / Swagger UI otomatis, memungkinkan autogenerasi SDK dan TypeScript types (Zod).',
+                        'BFF (Backend for Frontend) Pattern: Menjamin mobile app menerima payload terkompresi hemat baterai dan kuota seluler, sementara web portal menerima data densitas tinggi.',
                     ],
                 ],
             ],
@@ -898,41 +982,41 @@ class PrdGeneratorService
                 'title' => 'Analisis Anggaran Klien & Efisiensi Modal (TCO Comparison)',
                 'client_budget_declared' => $extraContext['kisaran_budget'] ?? 'Rp 15.000.000 - Rp 35.000.000',
                 'monolith_tco' => [
-                    'title' => 'Modern Monolith (Efisiensi Modal 90%)',
-                    'monthly_cost' => $isLeanBudget ? '< Rp 100.000 - Rp 250.000 / bulan' : 'Rp 350.000 - Rp 1.500.000 / bulan',
+                    'title' => 'Modern Monolith (Efisiensi Modal Maksimal)',
+                    'monthly_cost' => $isLeanBudget ? '< Rp 100.000 - Rp 250.000 / bulan' : 'Rp 350.000 - Rp 950.000 / bulan',
                     'devops_headcount' => '0 FTE (Automated Nixpacks CI/CD)',
                     'capital_efficiency' => '90% anggaran klien dialokasikan murni untuk fitur bisnis & akuisisi pengguna.',
                 ],
                 'decoupled_tco' => [
-                    'title' => 'Decoupled Microservices (Beban Modal Tinggi)',
-                    'monthly_cost' => 'Rp 8.000.000 - Rp 25.000.000+ / bulan',
-                    'devops_headcount' => '1-2 Dedicated DevOps Engineers (Rp 20-40 jt/bln)',
-                    'capital_efficiency' => '60% anggaran tersedot hanya untuk biaya operasional kluster Kubernetes, API Gateway, dan distributed tracing.',
+                    'title' => 'Modern Decoupled (Multi-Party Lean Ecosystem 2026+)',
+                    'monthly_cost' => 'Rp 500.000 - Rp 2.500.000 / bulan (Cloudflare Pages Rp 0 + Dedicated API VPS Rp 350rb-950rb + R2 Storage Rp 0 Egress)',
+                    'devops_headcount' => '0-0.5 FTE (Git Webhook Deploys via Coolify & Cloudflare Pages)',
+                    'capital_efficiency' => '85% efisiensi modal berkat Edge Caching gratis dan penghapusan biaya transfer data (Zero Egress).',
                 ],
             ],
             'decoupling_threshold_triggers' => [
-                'title' => '4 Faktor Penentu Mutlak Kapan Sistem Wajib Decoupled (The Decoupling Threshold)',
-                'subtitle' => 'Jangan pernah memecah sistem menjadi microservices kecuali 1 atau lebih pemicu mutlak berikut terpenuhi:',
+                'title' => '4 Faktor Kunci Strategi Adopsi Arsitektur Decoupled (The Decoupling Strategy)',
+                'subtitle' => 'Pola arsitektur Decoupled memberikan keunggulan masif ketika memenuhi 1 atau lebih faktor berikut:',
                 'triggers' => [
                     [
                         'number' => '01',
-                        'title' => "Conway's Law & Skala Organisasi Tim (>15-20 Engineer)",
-                        'desc' => 'Ketika jumlah tim pengembang internal sudah melebihi 15-20 orang dalam beberapa squad bisnis mandiri (misal Tim Checkout, Tim Logistik, Tim Fraud) yang sering mengalami antrean merge git dan bottleneck rilis bersama.',
+                        'title' => 'Aplikasi Multi-Client Mandiri (Web Consumer, Mobile Apps & POS Tablet)',
+                        'desc' => 'Ketika perusahaan membutuhkan aplikasi consumer-facing publik (Next.js 15), aplikasi native lapangan (Flutter Android/iOS untuk Driver & Staf), dan dasbor kasir POS yang semuanya mengonsumsi satu Headless API Engine terpusat.',
                     ],
                     [
                         'number' => '02',
-                        'title' => 'Beban Komputasi Asimetris Ekstrim (Asymmetric Compute Bottleneck)',
-                        'desc' => 'Ketika terdapat satu modul komputasi yang sangat berat (seperti video rendering 4K real-time, training model AI lokal, atau high-frequency stock stream) yang jika digabung akan membekukan thread web server utama.',
+                        'title' => 'Independensi Tim Rekayasa Multi-Disiplin (Separate Repositories)',
+                        'desc' => 'Ketika squad frontend web, tim mobile app, dan tim backend API bekerja di repositori terpisah dengan siklus rilis harian masing-masing tanpa saling memblokir proses deploy.',
                     ],
                     [
                         'number' => '03',
-                        'title' => 'Kepatuhan Regulasi Ketat & Blast-Radius Containment',
-                        'desc' => 'Ketika modul pembayaran kartu kredit harus tersertifikasi PCI-DSS Level 1 dan terisolasi di private network terpisah agar audit kepatuhan tidak mencakup seluruh kode aplikasi bisnis.',
+                        'title' => 'Global Edge Delivery & Latensi Sub-20ms Seluruh Dunia',
+                        'desc' => 'Ketika landing page dan katalog publik memerlukan distribusi CDN anycast global via Cloudflare Pages di 300+ kota dunia dengan biaya transfer data Rp 0 (Zero Egress).',
                     ],
                     [
                         'number' => '04',
-                        'title' => 'Kebutuhan Mutlak Polyglot Technology Stack',
-                        'desc' => 'Ketika ada modul spesifik yang mutlak harus ditulis dalam bahasa pemrograman lain dengan performa mikro-detik (misal Rust/C++ untuk engine kalkulasi matematika, atau Python untuk ekosistem PyTorch).',
+                        'title' => 'Integrasi API Terbuka Multi-Pihak & Ekosistem B2B (OpenAPI 3.1 Strict)',
+                        'desc' => 'Ketika sistem dirancang sebagai platform terbuka bagi developer pihak ketiga, mitra logistik, atau merchant perbankan dengan dokumentasi interaktif Scalar/Swagger otomatis.',
                     ],
                 ],
             ],
@@ -961,7 +1045,17 @@ class PrdGeneratorService
                     'Strict ULID Primary Key: Menjamin partisi data terdistribusi dan keystone cursor pagination O(1) tanpa sequence lock.',
                 ],
             ],
-            'recommended_tools' => [
+            'recommended_tools' => $isDecoupledRequested ? [
+                ['category' => 'Web Consumer Layer', 'name' => 'Next.js 15 App Router (React 19 + Turbopack)', 'desc' => 'Edge SSR, ISR sub-20ms TTFB, Server Components, Web Vitals SEO Sempurna'],
+                ['category' => 'Mobile Clients Layer', 'name' => 'Flutter 3.x / React Native Expo', 'desc' => 'Cross-Platform Native Apps, SQLite Offline-First, WorkManager Sync'],
+                ['category' => 'Backend API Engine', 'name' => 'Headless Laravel 13 (OpenAPI 3.1 & Queues)', 'desc' => 'Strict ACID Transactions, Eloquent ORM, Action Handlers, Sanctum/JWT Auth'],
+                ['category' => 'Admin & Operations', 'name' => 'Filament PHP v5 Enterprise Suite', 'desc' => 'Dasbor kendali instan, Filter Keyset, Export PDF/Excel, RBAC Shield'],
+                ['category' => 'API Contract & Docs', 'name' => 'OpenAPI 3.1 & Scalar Interactive Reference', 'desc' => 'Kontrak API type-safe, autogenerasi TypeScript types (Zod), zero ambiguity'],
+                ['category' => 'AI Database Engine', 'name' => 'PostgreSQL 16+ (pgvector)', 'desc' => 'Vector embeddings, HNSW semantic search, JSONB documents, ULID standard'],
+                ['category' => 'In-Memory Cache & Broker', 'name' => 'Redis 7+ & Kafka/RabbitMQ Event Broker', 'desc' => 'Zero-latency sessions, distributed rate limiting, asynchronous event messaging'],
+                ['category' => 'Hosting & Cloud Storage', 'name' => 'Cloudflare Pages (Frontend) + Dedicated VPS (API) + R2', 'desc' => '300+ Edge POPs global + 100% Resource Isolation + $0 Egress Bandwidth Storage'],
+                ['category' => 'AI Acceleration Engine', 'name' => 'Gemini Ultra / Pro API SDK', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
+            ] : [
                 ['category' => 'Backend Core', 'name' => 'Laravel 13 Modern Monolith', 'desc' => 'PHP 8.4/8.5 Property Hooks, Eloquent ORM, Action Handlers, Queues'],
                 ['category' => 'Admin & Operations', 'name' => 'Filament PHP v5 Enterprise', 'desc' => 'Dasbor kendali instan, Filter Keyset, Export PDF/Excel, RBAC Shield'],
                 ['category' => 'Frontend Layer', 'name' => 'Island Architecture (React 19 + Framer Motion)', 'desc' => 'Interaktivitas fluid 60fps, micro-animations, Canva-style canvas capability'],
@@ -1094,6 +1188,146 @@ class PrdGeneratorService
                 'RAM Saturation: Penggunaan memori riil konsisten di atas 85% dari total kapasitas.',
                 'Disk Capacity: Ruang kosong NVMe tersisa kurang dari 20%.',
                 'Pencegahan: Naikkan tier server hanya dalam 2 menit tanpa perlu memprogram ulang aplikasi (Seamless Vertical Scaling).',
+            ],
+        ];
+    }
+
+    /**
+     * Generate Comprehensive Modern Decoupled & Multi-Party Architecture Blueprint (2026+ Standards).
+     * Specifies exact frontend frameworks, mobile clients, headless APIs, cloud servers, and integration protocols.
+     */
+    public static function generateDecoupledToolingStrategy(string $businessName, array $extraContext = [], array $erdTables = [], array $mvpItems = []): array
+    {
+        $targetPlatform = $extraContext['target_platform'] ?? 'Modern Web & Mobile Cross-Platform';
+        $hostingPref = $extraContext['preferensi_hosting'] ?? 'Decoupled Multi-Tier Cloud';
+        $scale = $extraContext['skala_pengguna'] ?? 'Enterprise Scale';
+
+        return [
+            'title' => 'Cetak Biru Arsitektur Decoupled & Ekosistem Multi-Pihak (Modern 2026+ Standards)',
+            'badge' => 'ENTERPRISE_DECOUPLED_SUITE_2026',
+            'summary' => 'Panduan komprehensif bagi perusahaan yang memilih pola arsitektur terpisah (Decoupled Headless / Microservices). Memisahkan presentation consumer layer dari core transaction engine via kontrak terbuka OpenAPI 3.1, menjamin independensi rilis antar tim, zero-downtime micro-frontends, dan performa edge global.',
+            'multi_party_tools_matrix' => [
+                'web_consumer' => [
+                    'category' => 'Web Consumer & Landing Portal',
+                    'primary' => 'Next.js 15 (App Router, Turbopack, React 19 Server Components)',
+                    'alternatives' => 'Nuxt 3 (Vue 3 + Nitro) atau Astro 4 (Content-driven island architecture)',
+                    'role' => 'Menangani rendering SSR/SSG/ISR publik, portal checkout e-commerce, Web Vitals SEO sempurna, dan edge caching sub-20ms.',
+                    'justification' => 'Pemisahan repositori memungkinkan tim UI/UX frontend merilis perubahan visual setiap hari tanpa menyentuh atau membahayakan kestabilan kode backend transaksi.',
+                ],
+                'mobile_clients' => [
+                    'category' => 'Mobile Cross-Platform Clients (iOS & Android)',
+                    'primary' => 'Flutter 3.x (Dart 3) / React Native (Expo SDK 52+ New Architecture)',
+                    'local_database' => 'Drift / SQLite 3 Encrypted (Flutter) atau WatermelonDB (React Native)',
+                    'role' => 'Aplikasi native untuk Driver, Kurir, Operator Lapangan, Kasir POS Tablet, dan Customer Mobile.',
+                    'offline_strategy' => '100% Offline-First dengan mutation journal lokal. Pekerja lapangan tetap dapat input data dan cetak bukti transaksi di area blank spot internet.',
+                ],
+                'backend_core' => [
+                    'category' => 'Core Business Engine & Headless API',
+                    'primary' => 'Headless Laravel 13 (OpenAPI 3.1 RESTful Resource & Queues)',
+                    'admin_backoffice' => 'Filament v5 Enterprise Backoffice (Dedicated Internal Ops, RBAC Shield)',
+                    'high_concurrency_extensions' => 'Go (Fiber/Gin) untuk real-time WebSocket telemetri, Python (FastAPI) untuk AI Agent RAG orchestration.',
+                    'role' => 'Menjaga integritas data ACID, eksekusi state machine transaksi, mutasi finansial, dan audit logging terenkripsi.',
+                ],
+                'api_contracts' => [
+                    'category' => 'Standar Kontrak & Dokumentasi API Multi-Pihak',
+                    'specification' => 'OpenAPI 3.1 / JSON Schema Strict Contract',
+                    'interactive_docs' => 'Scalar Interactive API Reference & Swagger UI (/api/docs)',
+                    'codegen_support' => 'TypeSpec / openapi-typescript-codegen untuk autogenerasi TypeScript types & Zod validation schema pada Next.js secara instan.',
+                    'role' => 'Mencegah miskomunikasi antar tim frontend, mobile, dan backend developer; 100% type-safe end-to-end.',
+                ],
+                'bff_layer' => [
+                    'category' => 'BFF (Backend for Frontend) Pattern',
+                    'strategy' => 'Dedicated API Route Handlers per Consumer Client',
+                    'description' => 'Memisahkan payload desktop (data analitik padat) dengan payload mobile (data terkompresi Brotli ringan), memangkas konsumsi bandwidth seluler hingga 70% dan menghemat baterai perangkat pengguna.',
+                ],
+            ],
+            'server_and_cloud_topology' => [
+                'edge_frontend' => [
+                    'tier' => 'Lapisan Frontend & Edge CDN Global',
+                    'provider' => 'Cloudflare Pages / Vercel Edge Network',
+                    'coverage' => '300+ Point of Presence (POP) Anycast di seluruh dunia (Jakarta, Surabaya, Singapura, Tokyo, Frankfurt, dll).',
+                    'specs' => 'Sub-20ms TTFB, Unlimited Bandwidth, HTTP/3, TLS 1.3, Automasi SSL Zero-Config.',
+                    'cost_range' => 'Rp 0 - Rp 300.000 / bulan (Free Tier mencakup jutaan request)',
+                ],
+                'api_backend_vps' => [
+                    'tier' => 'Lapisan API Core & Background Workers',
+                    'provider' => 'Dedicated Cloud VPS via Coolify Docker Engine / AWS ECS Fargate',
+                    'specs' => '4 - 8 vCPU Dedicated High-Frequency, 8 - 16 GB ECC RAM, NVMe Gen 4 Storage.',
+                    'role' => 'Menjalankan container Docker API headless, worker Redis 24/7, scheduler cron, dan reverse proxy Nginx HTTP/2.',
+                    'cost_range' => 'Rp 350.000 - Rp 950.000 / bulan (Hemat 80% dibanding membakar anggaran di cloud hyperscaler)',
+                ],
+                'database_cluster' => [
+                    'tier' => 'Basis Data Relasional & AI Vector Hub',
+                    'provider' => 'Managed PostgreSQL 16+ dengan PgBouncer Connection Pooling',
+                    'features' => 'Primary Key ULID (skalabilitas terdistribusi), pgvector (HNSW search AI embeddings), JSONB indexing, Keyset Cursor Pagination O(1).',
+                    'cost_range' => 'Termasuk dalam VPS terdedikasi atau Rp 400.000 / bln untuk managed Supabase/Neon DB.',
+                ],
+                'cache_and_event_bus' => [
+                    'tier' => 'In-Memory Cache & Message Broker',
+                    'provider' => 'Redis 7+ Cluster / DragonFlyDB + Apache Kafka / RabbitMQ',
+                    'role' => 'Penyimpanan sesi token sub-millisecond, distributed rate limiting, dan antrean event-driven antar-layanan microservices.',
+                ],
+                'object_storage' => [
+                    'tier' => 'Penyimpanan Berkas Media & Dokumen',
+                    'provider' => 'Cloudflare R2 (100% S3 Compatible)',
+                    'killer_feature' => 'RP 0 BIAYA EGRESS BANDWIDTH (Eliminasi biaya transfer data keluar tak terduga yang menjadi momok AWS S3).',
+                    'cost_range' => 'Mulai Rp 0 / bulan (10 GB gratis pertama, $0.015 per GB tambahan)',
+                ],
+                'observability_apm' => [
+                    'tier' => 'Pemantauan & Audit Keamanan Real-Time',
+                    'tools' => 'OpenTelemetry tracing + Sentry exception tracker + BetterStack uptime ping + Grafana metrics.',
+                    'sla_target' => '99.9% Uptime dengan MTTR (Mean Time to Resolution) < 15 menit.',
+                ],
+            ],
+            'framework_strategy_and_protocols' => [
+                'authentication' => [
+                    'strategy' => 'Dual-Mode Authentication (HttpOnly Cookies & Stateless Asymmetric JWT)',
+                    'web' => 'HttpOnly, Secure, SameSite=Lax Cookie via Subdomain CNAME (api.bisnis.com & app.bisnis.com) -> Mencegah 100% pencurian kredensial via serangan XSS.',
+                    'mobile' => 'Stateless Asymmetric JWT (RS256) dengan Access Token 15 menit dan Sliding Refresh Token Rotation yang tersimpan aman di Android Keystore / iOS Keychain.',
+                ],
+                'data_sync_and_idempotency' => [
+                    'strategy' => 'Deterministic Delta Sync & Idempotency Key Engine',
+                    'idempotency' => 'Setiap request mutasi wajib mengirimkan header X-Idempotency-Key (UUIDv4). Server mengunci kunci selama 24 jam di Redis untuk mencegah double-order atau double-charge saat sinyal HP drop.',
+                    'keyset_pagination' => 'Seluruh endpoint listing wajib menggunakan cursorPaginate() dengan pointer ULID (WHERE id > ? LIMIT 20), mengeliminasi query OFFSET yang membeku pada jutaan baris data.',
+                    'conflict_resolution' => 'Last-Write-Wins (LWW) dengan stempel waktu ULID milidetik deterministik.',
+                ],
+                'cors_and_zero_trust' => [
+                    'strategy' => 'Strict Origin Whitelisting & Defense-in-Depth',
+                    'cors' => 'Origin whitelisting ketat (hanya domain frontend terdaftar). Dilarang keras menggunakan wildcard (*) pada endpoint terautentikasi.',
+                    'bot_defense' => 'Cloudflare Turnstile CAPTCHA tak kasat mata pada endpoint publik sensitif (registrasi, reset sandi, submit form).',
+                    'rate_limiting' => 'Token Bucket algorithm bertingkat berbasis Redis per IP dan per User ID.',
+                ],
+                'devsecops_cicd' => [
+                    'strategy' => 'Automated GitHub Actions Pipeline',
+                    'stages' => [
+                        '1. Static Code Analysis (PHPStan level 8, ESLint, Prettier, TypeScript check)',
+                        '2. Automated Unit & Integration Tests (Pest PHP & Jest/Vitest)',
+                        '3. Docker Multi-Stage Build & Security Vulnerability Scan (Trivy)',
+                        '4. Automated Database Migration Runner with Lock Guard',
+                        '5. Zero-Downtime Blue-Green Rolling Deployment via Coolify Webhook',
+                    ],
+                ],
+            ],
+            'decoupling_migration_playbook' => [
+                'title' => 'Panduan Transisi Bertahap: Dari Monolith Menuju Decoupled (Zero Risk)',
+                'steps' => [
+                    [
+                        'phase' => 'Langkah 1: Standardisasi API Resources',
+                        'desc' => 'Seluruh Controller bisnis diisolasi menggunakan Laravel API Resource (JsonResource) dengan format response JSON standar.',
+                    ],
+                    [
+                        'phase' => 'Langkah 2: Terbitkan Kontrak OpenAPI 3.1',
+                        'desc' => 'Generate spesifikasi OpenAPI 3.1 otomatis menggunakan Scalar/L5-Swagger sehingga tim frontend memiliki acuan kontrak resmi.',
+                    ],
+                    [
+                        'phase' => 'Langkah 3: Bangun Frontend Next.js 15 Terpisah',
+                        'desc' => 'Tim frontend membangun consumer portal Next.js 15 menggunakan types yang diautogenerasi dari kontrak OpenAPI 3.1.',
+                    ],
+                    [
+                        'phase' => 'Langkah 4: Deploy Frontend ke Cloudflare Pages',
+                        'desc' => 'Deploy frontend ke Cloudflare Pages dengan routing CNAME, mengalihkan trafik publik ke edge tanpa downtime backend.',
+                    ],
+                ],
             ],
         ];
     }
@@ -3941,13 +4175,54 @@ PROMPT;
         $md .= "3. **Idempotency Protection**: Header `X-Idempotency-Key` di-cache di Redis server selama 24 jam. Jika koneksi seluler putus saat pengiriman dan mobile app melakukan retry, server mendeteksi mutasi duplikat dan langsung mengembalikan status sukses tanpa memicu duplikasi data.\n\n";
 
         // 6. Technology Stack & Architecture Decision
-        $md .= "## 6. Keputusan Arsitektur & Rekomendasi Stack (Modern Monolith)\n\n";
+        $isDecoupled = ($prd['architecture_evaluation']['architecture_pattern_evaluation']['is_decoupled'] ?? false);
+        $archTitle = $isDecoupled ? 'Enterprise Decoupled & Headless Architecture' : 'Modern Monolith (Decoupled-Ready)';
+        $md .= "## 6. Keputusan Arsitektur & Rekomendasi Stack ({$archTitle})\n\n";
         $md .= "| Lapisan | Teknologi | Peran & Justifikasi Arsitektur |\n";
         $md .= "|---|---|---|\n";
         foreach ($tech as $layer => $info) {
             $md .= "| **" . ucfirst(str_replace('_', ' ', $layer)) . "** | " . ($info['name'] ?? '') . " | " . ($info['role'] ?? '') . " |\n";
         }
         $md .= "\n";
+
+        // 6.5 Cetak Biru Arsitektur Decoupled & Ekosistem Multi-Pihak (Modern 2026+ Standards)
+        if (!empty($prd['decoupled_tooling_strategy'])) {
+            $ds = $prd['decoupled_tooling_strategy'];
+            $md .= "## 6.5 Cetak Biru Arsitektur Decoupled & Ekosistem Multi-Pihak (2026+ Modern Tooling)\n\n";
+            $md .= "> " . $ds['summary'] . "\n\n";
+            $md .= "### A. Matriks Tools Multi-Pihak (Frontend, Mobile, Backend & API)\n\n";
+            $md .= "| Kategori Pihak | Rekomendasi Utama (2026+) | Alternatif / DB Lokal | Peran Arsitektur |\n";
+            $md .= "|---|---|---|---|\n";
+            foreach ($ds['multi_party_tools_matrix'] as $k => $tool) {
+                $tCat = $tool['category'] ?? ucfirst($k);
+                $tPri = $tool['primary'] ?? '';
+                $tAlt = $tool['alternatives'] ?? ($tool['local_database'] ?? ($tool['specification'] ?? ($tool['strategy'] ?? '-')));
+                $tRole = $tool['role'] ?? ($tool['description'] ?? '');
+                $md .= "| **{$tCat}** | `{$tPri}` | {$tAlt} | {$tRole} |\n";
+            }
+            $md .= "\n";
+
+            $md .= "### B. Topologi Server, Cloud Edge & Efisiensi Biaya\n\n";
+            $md .= "| Tingkatan Server | Provider / Teknologi | Spesifikasi & Cakupan | Estimasi Biaya |\n";
+            $md .= "|---|---|---|---|\n";
+            foreach ($ds['server_and_cloud_topology'] as $k => $srv) {
+                $sTier = $srv['tier'] ?? ucfirst($k);
+                $sProv = $srv['provider'] ?? ($srv['tools'] ?? '');
+                $sSpec = $srv['specs'] ?? ($srv['coverage'] ?? ($srv['features'] ?? ($srv['killer_feature'] ?? '')));
+                $sCost = $srv['cost_range'] ?? ($srv['sla_target'] ?? '-');
+                $md .= "| **{$sTier}** | `{$sProv}` | {$sSpec} | **{$sCost}** |\n";
+            }
+            $md .= "\n";
+
+            $md .= "### C. Protokol Keamanan, Autentikasi & Sinkronisasi\n\n";
+            $md .= "- **Autentikasi Web**: " . ($ds['framework_strategy_and_protocols']['authentication']['web'] ?? '') . "\n";
+            $md .= "- **Autentikasi Mobile**: " . ($ds['framework_strategy_and_protocols']['authentication']['mobile'] ?? '') . "\n";
+            $md .= "- **Proteksi Idempotency**: " . ($ds['framework_strategy_and_protocols']['data_sync_and_idempotency']['idempotency'] ?? '') . "\n";
+            $md .= "- **Paginasi Skalabilitas**: " . ($ds['framework_strategy_and_protocols']['data_sync_and_idempotency']['keyset_pagination'] ?? '') . "\n";
+            $md .= "- **Zero-Trust CORS**: " . ($ds['framework_strategy_and_protocols']['cors_and_zero_trust']['cors'] ?? '') . "\n";
+            $md .= "- **CI/CD Pipeline**: " . ($ds['framework_strategy_and_protocols']['devsecops_cicd']['strategy'] ?? '') . "\n\n";
+        }
+
 
         // 7. Anti-AI-Slop Frontend Design System
         $md .= "## 7. Panduan Rekayasa Frontend: Desain Sistem Anti-AI-Slop\n\n";

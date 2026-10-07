@@ -439,7 +439,7 @@ class BlueprintController extends Controller
         }
 
         // Guaranteed Order ID generation with full 26-character ULID for strict relational integrity
-        $orderId = 'NPRO-DP-' . $blueprint->id . '-' . time();
+        $orderId = 'NPRO-DP-' . $blueprint->id . '-' . time() . '-' . rand(1000, 9999);
 
         $itemName = 'DP (50%) - ' . ($blueprint->nama_bisnis ?: 'Proyek');
         if ($voucher) {

@@ -531,6 +531,31 @@ class ManageSettings extends Page implements HasForms
                                             ->columnSpanFull(),
                                     ])->columns(3),
 
+                                Section::make('Paket Eceran Project OS Self-Service (Micro-SaaS & Retail)')
+                                    ->description('Konfigurasi tarif paket generator PRD digital mandiri (self-service) yang fleksibel dan terjangkau untuk pasar eceran.')
+                                    ->schema([
+                                        TextInput::make('pricing_retail_spark_price')
+                                            ->label('Tarif Paket Spark / Free (Rp)')
+                                            ->helperText('Akses audit ide cepat & lean PRD ringkas (Default: 0).')
+                                            ->default('0')
+                                            ->required(),
+                                        TextInput::make('pricing_retail_lite_price')
+                                            ->label('Tarif Paket Lite PRD (Rp)')
+                                            ->helperText('PRD 26 parameter esensial + skema DDL PostgreSQL Strict ULID (Default: 99.000).')
+                                            ->default('99.000')
+                                            ->required(),
+                                        TextInput::make('pricing_retail_pro_price')
+                                            ->label('Tarif Paket Pro Full PRD & WBS (Rp)')
+                                            ->helperText('PRD komprehensif, Mermaid diagrams, WBS 5 sprint, dan cetak biru arsitektur (Default: 399.000).')
+                                            ->default('399.000')
+                                            ->required(),
+                                        TextInput::make('pricing_retail_ultimate_price')
+                                            ->label('Tarif Paket Ultimate Enterprise Advisory (Rp)')
+                                            ->helperText('PRD Ultimate + AI Pipeline & Failover Engine + 1-on-1 Architecture Scoping Call (Default: 1.490.000).')
+                                            ->default('1.490.000')
+                                            ->required(),
+                                    ])->columns(4),
+
                                 Section::make('Strategi Penjualan & World-Class CRM Lead Intake')
                                     ->description('Pengaturan otomatisasi follow-up lead dan routing konsultasi teknis.')
                                     ->schema([

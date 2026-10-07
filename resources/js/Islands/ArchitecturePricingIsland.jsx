@@ -174,6 +174,18 @@ export default function ArchitecturePricingIsland({
       a: isEn 
         ? 'Advisory Blueprint PRD is generated and finalized within 24 - 48 hours. Full MVP Rapid Monolith takes 4 to 6 weeks spanning 5 structured sprints.'
         : 'Paket Advisory Blueprint diselesaikan dalam 24 hingga 48 jam kerja setelah sesi discovery awal. Sedangkan Full MVP diselesaikan dalam rentang 4 hingga 6 minggu (5 sprint terstruktur).'
+    },
+    {
+      q: isEn ? 'Does Project OS support Decoupled / Headless architecture as well as Monolith?' : 'Apakah Project OS mendukung arsitektur Decoupled / Headless atau hanya Monolith?',
+      a: isEn
+        ? 'Yes, 100% supports both paradigms! Project OS evaluates your business domain: if your team requires independent frontends (Next.js 15 App Router / Nuxt 3) or mobile apps (Flutter / React Native) with headless APIs, it outputs a complete 2026+ Decoupled blueprint (Cloudflare Pages edge, Coolify VPS backend, Cloudflare R2 $0 egress, OpenAPI 3.1 & Scalar docs, X-Idempotency-Key guard, and Keyset O(1) pagination) with lean infrastructure costs.'
+        : 'Ya, 100% mendukung kedua paradigma! Project OS mengevaluasi domain bisnis Anda secara cerdas: jika tim Anda membutuhkan frontend independen (Next.js 15 App Router / Nuxt 3) atau mobile multi-platform (Flutter / React Native) dengan headless API, sistem otomatis menerbitkan cetak biru Decoupled 2026+ lengkap (Cloudflare Pages edge, Coolify VPS backend, Cloudflare R2 $0 egress, kontrak OpenAPI 3.1 & Scalar docs, proteksi X-Idempotency-Key, dan Keyset O(1) pagination) dengan biaya server yang sangat efisien.'
+    },
+    {
+      q: isEn ? 'What is the difference between Self-Service PRD packages and Advisory / Full MVP contracts?' : 'Apa perbedaan paket eceran self-service (Spark, Lite, Pro, Ultimate) dengan paket Advisory / MVP?',
+      a: isEn
+        ? 'Self-Service packages are designed for solo founders, developers, and agencies who want to generate instant, production-ready specifications and schemas starting from Rp 0 (Spark) to Rp 1.49M (Ultimate). Advisory (Rp 2.5M) and Full MVP (Rp 50M) include personal 1-on-1 discovery, digital legal contracts, and end-to-end coding by Neriah Pro architects.'
+        : 'Paket eceran self-service didesain bagi developer dan founder yang ingin langsung men-generate dokumen PRD spesifikasi teknis siap pakai secara instan mulai dari Rp 0 (Spark) hingga Rp 1,49 Jt (Ultimate). Sementara itu, paket Advisory Blueprint (Rp 2.5 Jt) dan Full MVP (Rp 50 Jt) mencakup pendampingan personal penuh, kontrak hukum digital, penulisan kode sumber end-to-end, dan konfigurasi server VPS produksi siap live oleh tim arsitek Neriah Pro.'
     }
   ];
 
@@ -468,6 +480,258 @@ export default function ArchitecturePricingIsland({
 
         </div>
 
+        {/* 2.5 PROJECT OS DIGITAL SELF-SERVICE PRD TIERS (RETAIL / MICRO-SAAS) */}
+        <div className="mb-16">
+          <div className="text-center max-w-3xl mx-auto mb-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 font-mono text-xs uppercase tracking-wider font-bold mb-3 rounded-none">
+              <Terminal className="w-3.5 h-3.5" />
+              <span>{isEn ? 'PROJECT OS // SELF-SERVICE PRD ENGINE' : 'PROJECT OS // GENERATOR PRD DIGITAL & MANDIRI'}</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2 font-sans">
+              {isEn ? 'Instant Architectural Blueprint Packages' : 'Pilihan Paket Generator Dokumen Blueprint'}
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+              {isEn
+                ? 'Generate enterprise-grade specifications instantly without hiring an architect. Ranging from free vision audits to production-grade Decoupled and Monolith blueprints with Jira/Linear WBS.'
+                : 'Hasilkan dokumen spesifikasi arsitektur enterprise berkualitas Principal Architect secara mandiri: Mulai dari audit ide gratis hingga cetak biru siap bangun dengan WBS 5 sprint dan rekomendasi arsitektur Decoupled 2026+.'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 items-stretch">
+            {/* SPARK / FREE TIER */}
+            <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex flex-col justify-between rounded-none hover:border-cyan-500/60 transition group relative">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-zinc-500">
+                    TIER 01 // AUDIT
+                  </span>
+                  <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-[9px] font-bold">
+                    FREE TIER
+                  </span>
+                </div>
+
+                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1">
+                  Spark / Free Audit
+                </h3>
+
+                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
+                  {isEn ? 'Quick idea sanity check, core problem statement & lean MVP scoping.' : 'Audit cepat kelayakan ide bisnis, pemetaan masalah utama, dan cakupan lean MVP.'}
+                </p>
+
+                <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                  <span className="text-[10px] text-zinc-500 font-mono block">Biaya Akses:</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                      Rp {pricingSettings.retail_spark_price || '0'}
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-500 font-bold">/ GRATIS</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-6">
+                  <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider block">OUTPUT:</span>
+                  {[
+                    'Analisis Kelayakan Bisnis & Problem Framing',
+                    'Executive Summary & Target Audiens',
+                    '5 Fitur Esensial MVP Prioritas',
+                    'Estimasi Kompleksitas & TCO Awal',
+                  ].map((f, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
+                      <Check className="w-3.5 h-3.5 text-cyan-500 shrink-0 mt-0.5" />
+                      <span className="text-[11px] leading-tight">{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <a
+                href="/blueprint?tier=spark"
+                className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
+              >
+                <span>{isEn ? 'TRY LIVE FREE' : 'COBA GRATIS SEKARANG'}</span>
+                <ArrowRight className="w-3 h-3" />
+              </a>
+            </div>
+
+            {/* LITE PRD TIER */}
+            <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex flex-col justify-between rounded-none hover:border-cyan-500/60 transition group relative">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-zinc-500">
+                    TIER 02 // ESSENTIAL
+                  </span>
+                  <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-[9px] font-bold">
+                    SOLO / DEV
+                  </span>
+                </div>
+
+                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1">
+                  Lite PRD Generator
+                </h3>
+
+                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
+                  {isEn ? '26 Structured Parameters PRD + PostgreSQL Strict ULID DDL schema.' : 'Spesifikasi PRD 26 parameter lengkap + skema SQL DDL PostgreSQL Strict ULID siap eksekusi.'}
+                </p>
+
+                <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                  <span className="text-[10px] text-zinc-500 font-mono block">Biaya Lisensi Digital:</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                      Rp {pricingSettings.retail_lite_price || '99.000'}
+                    </span>
+                    <span className="text-[10px] font-mono text-zinc-500">/ project</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-6">
+                  <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider block">OUTPUT:</span>
+                  {[
+                    'Semua Output Spark Tier',
+                    'PRD 26 Parameter Lengkap (JSON & MD)',
+                    'Skema PostgreSQL Strict ULID DDL SQL',
+                    'Standar Keyset O(1) Pagination Rules',
+                    'Work Breakdown Structure (WBS) 2 Sprint',
+                  ].map((f, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
+                      <Check className="w-3.5 h-3.5 text-cyan-500 shrink-0 mt-0.5" />
+                      <span className="text-[11px] leading-tight">{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => openBookingModal('retail_lite')}
+                className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
+              >
+                <span>{isEn ? 'GET LITE PRD' : 'PILIH PAKET LITE'}</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {/* PRO PRD TIER (BEST VALUE) */}
+            <div className="bg-white dark:bg-zinc-900 border-2 border-emerald-500 p-5 sm:p-6 flex flex-col justify-between rounded-none shadow-xl relative transform xl:-translate-y-1">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-black px-3 py-0.5 font-mono text-[9px] font-black uppercase tracking-widest shadow-xs">
+                POPULAR CHOICE
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3 mt-1">
+                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-emerald-600 dark:text-emerald-400">
+                    TIER 03 // PRODUCTION
+                  </span>
+                  <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-mono text-[9px] font-bold">
+                    STARTUP &amp; AGENCY
+                  </span>
+                </div>
+
+                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1">
+                  Pro Production PRD
+                </h3>
+
+                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
+                  {isEn ? 'Production blueprint, 6 Mermaid diagrams, Decoupled & Monolith matrix, WBS 5 Sprints.' : 'Cetak biru produksi, 6 diagram Mermaid, matriks arsitektur Decoupled & Monolith, serta WBS 5 sprint.'}
+                </p>
+
+                <div className="mb-4 p-3 bg-emerald-500/5 border border-emerald-500/30">
+                  <span className="text-[10px] text-zinc-500 font-mono block">Biaya Lisensi Digital:</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                      Rp {pricingSettings.retail_pro_price || '399.000'}
+                    </span>
+                    <span className="text-[10px] font-mono text-zinc-500">/ project</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-6">
+                  <span className="text-[10px] font-mono font-bold text-emerald-500 uppercase tracking-wider block">OUTPUT:</span>
+                  {[
+                    'Semua Output Lite Tier',
+                    'Cetak Biru Decoupled 2026+ (Next.js 15, Cloudflare)',
+                    '6 Diagram Mermaid (ERD, Data Flow, Sequence, Gantt)',
+                    'WBS 5 Sprint Linear / Jira Ready',
+                    'OpenAPI 3.1 & Idempotency Specification',
+                    'Panduan Anti-AI-Slop & UI Design Tokens',
+                  ].map((f, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                      <span className="text-[11px] leading-tight">{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => openBookingModal('retail_pro')}
+                className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-2.5 px-3 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none shadow-md cursor-pointer"
+              >
+                <span>{isEn ? 'GET PRO BLUEPRINT' : 'PILIH PAKET PRO'}</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {/* ULTIMATE ENTERPRISE ADVISORY */}
+            <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex flex-col justify-between rounded-none hover:border-amber-500/60 transition group relative">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-zinc-500">
+                    TIER 04 // ENTERPRISE
+                  </span>
+                  <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[9px] font-bold">
+                    + 1-ON-1 CALL
+                  </span>
+                </div>
+
+                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1">
+                  Ultimate Advisory
+                </h3>
+
+                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
+                  {isEn ? 'Full PRD, Multi-AI Failover Hub, Threat Shield, and 1-on-1 Scoping Consultation.' : 'PRD Ultimate, Multi-AI Failover Hub, Threat Shield, dan 1 sesi konsultasi langsung dengan Lead Architect.'}
+                </p>
+
+                <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                  <span className="text-[10px] text-zinc-500 font-mono block">Investasi Advisory:</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                      Rp {pricingSettings.retail_ultimate_price || '1.490.000'}
+                    </span>
+                    <span className="text-[10px] font-mono text-zinc-500">/ project</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-6">
+                  <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider block">OUTPUT:</span>
+                  {[
+                    'Semua Output Pro Production Tier',
+                    'AI Multi-Model Failover Token Shield Strategy',
+                    'Zero-Trust CORS & Anti-Malware Hardening',
+                    '1 Sesi 60 Menit Architecture Call (Google Meet)',
+                    'Validasi & Review Tim Engineering Internal',
+                    'Non-Disclosure Agreement (NDA) Korporat',
+                  ].map((f, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
+                      <Check className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                      <span className="text-[11px] leading-tight">{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => openBookingModal('retail_ultimate')}
+                className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
+              >
+                <span>{isEn ? 'BOOK ULTIMATE ADVISORY' : 'PESAN ULTIMATE ADVISORY'}</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* 3. TECHNICAL SPECIFICATION COMPARISON MATRIX */}
         <div className="mb-16 border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-none shadow-xs">
           <div className="mb-6">
@@ -593,6 +857,42 @@ export default function ArchitecturePricingIsland({
                       <span>100% Klien</span>
                     </span>
                   </td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-bold text-zinc-800 dark:text-zinc-200">Pilihan Pola Arsitektur</td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span>Modern Monolith ATAU Decoupled Headless (Next.js 15 + Headless Laravel 13)</span>
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span>Rapid Modern Monolith (Laravel 13, Filament v5, React 19) + API Decoupled Ready</span>
+                  </td>
+                  <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Lean Monolith (Fast Time-to-Market)</td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-bold text-zinc-800 dark:text-zinc-200">Cetak Biru Decoupled 2026+</td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Lengkap: Tools Matrix, Server Topology, OpenAPI 3.1 &amp; Idempotency</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>API Resources Terisolasi (Siap Ekstrak Headless)</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-zinc-500">API Webhook QRIS &amp; WhatsApp Terstandar</td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-bold text-zinc-800 dark:text-zinc-200">Efisiensi Biaya Cloud &amp; Server</td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span>TCO Optimal: Cloudflare Pages (Rp 0) + Dedicated VPS (Rp 350rb-950rb/bln) + R2 ($0 Egress)</span>
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span>1 Server Dedicated VPS Terpadu (All-in-One Docker / Coolify)</span>
+                  </td>
+                  <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Server Cloud Ringan &amp; Skalabel</td>
                 </tr>
               </tbody>
             </table>
@@ -809,7 +1109,11 @@ export default function ArchitecturePricingIsland({
                     >
                       <option value="full_mvp">Enterprise Rapid Monolith MVP (5 Sprint - DP 50% Rp 25.000.000)</option>
                       <option value="umkm_starter">UMKM Digital Starter (Program Subsidi 50% - Rp 3.750.000)</option>
-                      <option value="blueprint_advisory">Blueprint & PRD Architecture Only (Rp 2.500.000)</option>
+                      <option value="blueprint_advisory">Blueprint &amp; PRD Architecture Advisory (Rp 2.500.000)</option>
+                      <option value="retail_ultimate">Project OS Ultimate Advisory PRD (Rp {pricingSettings.retail_ultimate_price || '1.490.000'})</option>
+                      <option value="retail_pro">Project OS Pro Production PRD &amp; WBS (Rp {pricingSettings.retail_pro_price || '399.000'})</option>
+                      <option value="retail_lite">Project OS Lite Essential PRD (Rp {pricingSettings.retail_lite_price || '99.000'})</option>
+                      <option value="retail_spark">Project OS Spark Free Tier (Rp 0)</option>
                     </select>
                   </div>
 

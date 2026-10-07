@@ -125,5 +125,25 @@ class CmsSeeder extends Seeder
             ['key' => 'pricing_enable_instant_whatsapp'],
             ['value' => true]
         );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_retail_spark_price'],
+            ['value' => '0']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_retail_lite_price'],
+            ['value' => '99.000']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_retail_pro_price'],
+            ['value' => '399.000']
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'pricing_retail_ultimate_price'],
+            ['value' => '1.490.000']
+        );
     }
 }

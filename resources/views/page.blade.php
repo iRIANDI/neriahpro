@@ -240,6 +240,10 @@
                             'advisory_price' => $getSettingVal('pricing_advisory_price', '2.500.000'),
                             'mvp_price' => $getSettingVal('pricing_mvp_price', '50.000.000'),
                             'umkm_price' => $getSettingVal('pricing_umkm_price', '7.500.000'),
+                            'retail_spark_price' => $getSettingVal('pricing_retail_spark_price', '0'),
+                            'retail_lite_price' => $getSettingVal('pricing_retail_lite_price', '99.000'),
+                            'retail_pro_price' => $getSettingVal('pricing_retail_pro_price', '399.000'),
+                            'retail_ultimate_price' => $getSettingVal('pricing_retail_ultimate_price', '1.490.000'),
                             'active_promo_banner' => $getSettingVal('pricing_active_promo_banner', 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!'),
                         ]
                     ]))
@@ -256,6 +260,10 @@
                     'advisory_price' => $getSettingVal('pricing_advisory_price', '2.500.000'),
                     'mvp_price' => $getSettingVal('pricing_mvp_price', '50.000.000'),
                     'umkm_price' => $getSettingVal('pricing_umkm_price', '7.500.000'),
+                    'retail_spark_price' => $getSettingVal('pricing_retail_spark_price', '0'),
+                    'retail_lite_price' => $getSettingVal('pricing_retail_lite_price', '99.000'),
+                    'retail_pro_price' => $getSettingVal('pricing_retail_pro_price', '399.000'),
+                    'retail_ultimate_price' => $getSettingVal('pricing_retail_ultimate_price', '1.490.000'),
                     'active_promo_banner' => $getSettingVal('pricing_active_promo_banner', 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!'),
                 ]
             ])

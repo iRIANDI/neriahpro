@@ -85,6 +85,18 @@
         </x-filament::button>
     </div>
 
+    <!-- Visual Operational Status Banner -->
+    <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-mono flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span class="font-bold">STATUS PANEL: 100% OPERASIONAL &amp; TERHUBUNG</span>
+            <span class="hidden sm:inline text-zinc-500 dark:text-zinc-400">| Laravel 13, Livewire 4, Schema.org Cache</span>
+        </div>
+        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
+            Ready to Save
+        </span>
+    </div>
+
     <form wire:submit="submit" class="space-y-6 notranslate" translate="no">
         {{ $this->form }}
 

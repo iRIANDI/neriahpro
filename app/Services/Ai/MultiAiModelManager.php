@@ -186,7 +186,17 @@ class MultiAiModelManager
         string $tier = 'discovery',
         ?string $preferredProvider = null
     ): array {
-        $defaultChain = config('ai.failover_chain', ['deepseek', 'gemini', 'anthropic', 'openai', 'xai', 'groq', 'openrouter']);
+        // Auto-detect preferred provider from backend admin settings if not explicitly passed
+        if (empty($preferredProvider) || $preferredProvider === 'auto') {
+            try {
+                $savedDefault = CmsGlobalSetting::where('key', 'ai_default_provider')->value('value');
+                if (!empty($savedDefault) && $savedDefault !== 'auto') {
+                    $preferredProvider = $savedDefault;
+                }
+            } catch (\Throwable) {}
+        }
+
+        $defaultChain = config('ai.failover_chain', ['deepseek', 'gemini', 'anthropic', 'openai', 'relayrouter', 'xai', 'groq', 'openrouter']);
 
         // STRICT RULE: Only consider providers that actually have configured API keys in the backend admin / config
         $configuredProviders = array_values(array_filter($defaultChain, fn($p) => !empty(self::getApiKey($p))));

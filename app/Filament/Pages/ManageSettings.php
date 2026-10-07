@@ -63,6 +63,7 @@ class ManageSettings extends Page implements HasForms
             ->components([
                 Tabs::make('Settings')
                     ->id('global-settings-tabs')
+                    ->persistTab()
                     ->persistTabInQueryString('tab')
                     ->scrollable()
                     ->tabs([
@@ -248,6 +249,7 @@ class ManageSettings extends Page implements HasForms
                                                 return $options;
                                             })
                                             ->default('auto')
+                                            ->helperText('Pilih "RelayRouter AI" jika Anda ingin 1 kunci API dari Shopee/RelayRouter otomatis menangani seluruh sintesis PRD dan discovery.')
                                             ->required(),
                                         Toggle::make('ai_enable_auto_failover')
                                             ->label('Aktifkan Graceful Auto-Failover')
@@ -302,6 +304,82 @@ class ManageSettings extends Page implements HasForms
 
                                 Section::make('Universal Router Configuration (RelayRouter / Shopee 1-Key Multi-Model)')
                                     ->description('Sesuaikan Base URL dan alokasi model AI untuk kunci API universal/sharing (1 Key untuk semua model) seperti RelayRouter.ai, OpenRouter, atau OneAPI.')
+                                    ->headerActions([
+                                        Action::make('testRelayRouter')
+                                            ->label('⚡ Tes Koneksi RelayRouter ($1 Kuota)')
+                                            ->color('success')
+                                            ->icon('heroicon-m-bolt')
+                                            ->action(function ($livewire) {
+                                                $formData = $livewire->data ?? [];
+                                                $apiKey = !empty($formData['ai_relayrouter_api_key'])
+                                                    ? trim($formData['ai_relayrouter_api_key'])
+                                                    : \App\Services\Ai\MultiAiModelManager::getApiKey('relayrouter');
+
+                                                if (empty($apiKey)) {
+                                                    Notification::make()
+                                                        ->title('RelayRouter API Key Masih Kosong')
+                                                        ->body('Silakan ketik atau tempel (paste) API Key RelayRouter Anda pada field di atas, klik "Save Settings", lalu klik tombol ini lagi.')
+                                                        ->warning()
+                                                        ->persistent()
+                                                        ->send();
+                                                    return;
+                                                }
+
+                                                $baseUrl = !empty($formData['ai_relayrouter_base_url'])
+                                                    ? rtrim(trim($formData['ai_relayrouter_base_url']), '/')
+                                                    : \App\Services\Ai\MultiAiModelManager::getBaseUrl('relayrouter');
+
+                                                $model = !empty($formData['ai_relayrouter_discovery_model'])
+                                                    ? trim($formData['ai_relayrouter_discovery_model'])
+                                                    : 'gpt-4o-mini';
+
+                                                try {
+                                                    $response = \Illuminate\Support\Facades\Http::timeout(15)
+                                                        ->withHeaders([
+                                                            'Authorization' => "Bearer {$apiKey}",
+                                                            'Content-Type' => 'application/json',
+                                                        ])
+                                                        ->post("{$baseUrl}/chat/completions", [
+                                                            'model' => $model,
+                                                            'messages' => [
+                                                                ['role' => 'user', 'content' => 'Ping test. Reply in 5 words with "PONG - RelayRouter OK" and model name.'],
+                                                            ],
+                                                            'max_tokens' => 30,
+                                                            'temperature' => 0.1,
+                                                        ]);
+
+                                                    if ($response->successful()) {
+                                                        $reply = $response->json('choices.0.message.content', 'OK');
+                                                        \App\Services\Ai\MultiAiModelManager::recordSuccess('relayrouter');
+
+                                                        Notification::make()
+                                                            ->title('✅ RelayRouter AI Berhasil Terhubung!')
+                                                            ->body("Respon [{$model}]: \"{$reply}\". Kunci API dan pulsa $1 aktif siap digunakan!")
+                                                            ->success()
+                                                            ->persistent()
+                                                            ->send();
+                                                    } else {
+                                                        $status = $response->status();
+                                                        $errJson = $response->json();
+                                                        $errMsg = $errJson['error']['message'] ?? $errJson['message'] ?? $response->body();
+
+                                                        Notification::make()
+                                                            ->title("❌ Gagal Terhubung ke RelayRouter (HTTP {$status})")
+                                                            ->body("Pesan dari RelayRouter: {$errMsg}")
+                                                            ->danger()
+                                                            ->persistent()
+                                                            ->send();
+                                                    }
+                                                } catch (\Throwable $e) {
+                                                    Notification::make()
+                                                        ->title('❌ Koneksi RelayRouter Error / Timeout')
+                                                        ->body($e->getMessage())
+                                                        ->danger()
+                                                        ->persistent()
+                                                        ->send();
+                                                }
+                                            }),
+                                    ])
                                     ->schema([
                                         TextInput::make('ai_relayrouter_base_url')
                                             ->label('RelayRouter Base URL')

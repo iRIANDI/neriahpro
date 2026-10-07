@@ -20,6 +20,34 @@
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Browser Extension Noise Shield -->
+    <script>
+        (function() {
+            var isNoise = function(v) {
+                if (!v) return false;
+                var s = typeof v === 'string' ? v : (v.message || String(v));
+                return s.indexOf('Could not establish connection') !== -1 ||
+                       s.indexOf('Receiving end does not exist') !== -1 ||
+                       s.indexOf('message port closed') !== -1;
+            };
+            var _err = console.error;
+            console.error = function() {
+                for (var i = 0; i < arguments.length; i++) {
+                    if (isNoise(arguments[i])) return;
+                }
+                return _err.apply(console, arguments);
+            };
+            window.addEventListener('unhandledrejection', function(e) {
+                if (isNoise(e ? e.reason : '')) {
+                    e.preventDefault();
+                    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                    if (e.stopPropagation) e.stopPropagation();
+                    return false;
+                }
+            }, true);
+        })();
+    </script>
+
     <!-- Alpine.js & Tab Navigation Support -->
     <style>
         [x-cloak] { display: none !important; }
@@ -62,7 +90,11 @@
 
                 setTab(tab) {
                     this.currentTab = tab;
-                    window.location.hash = tab;
+                    if (window.history && window.history.replaceState) {
+                        window.history.replaceState(null, '', '#' + tab);
+                    } else {
+                        window.location.hash = tab;
+                    }
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 },
 

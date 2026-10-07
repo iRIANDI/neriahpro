@@ -1,6 +1,35 @@
 <x-filament-panels::page>
     <script>
         (function() {
+            // 1. Force manual scroll restoration so Chrome never restores old bottom scroll position
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
+            window.scrollTo(0, 0);
+
+            // 2. Shield against unwanted automatic scrollIntoView calls during initial DOM/editor hydration
+            var originalScrollIntoView = Element.prototype.scrollIntoView;
+            var allowAutoScroll = false;
+            setTimeout(function() {
+                allowAutoScroll = true;
+            }, 1800);
+
+            Element.prototype.scrollIntoView = function() {
+                if (!allowAutoScroll) {
+                    return;
+                }
+                return originalScrollIntoView.apply(this, arguments);
+            };
+
+            window.addEventListener('DOMContentLoaded', function() {
+                window.scrollTo(0, 0);
+            });
+            window.addEventListener('load', function() {
+                window.scrollTo(0, 0);
+                setTimeout(function() { window.scrollTo(0, 0); }, 100);
+            });
+
+            // 3. Browser extension communication failure filter
             var isNoise = function(v) {
                 if (!v) return false;
                 var s = typeof v === 'string' ? v : (v.message || String(v));
@@ -19,6 +48,8 @@
                 if (isNoise(e ? e.reason : '')) {
                     e.preventDefault();
                     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                    if (e.stopPropagation) e.stopPropagation();
+                    return false;
                 }
             }, true);
         })();

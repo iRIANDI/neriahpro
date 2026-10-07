@@ -23,10 +23,8 @@
     <meta name="twitter:description" content="Platform pembuatan resume ATS-friendly dengan Microsoft MarkItDown document scan, skor ATS real-time, dan simulasi mock interview suara.">
     <meta name="twitter:image" content="{{ asset('favicon.ico') }}">
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Lato:ital,wght@0,300;0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Local Fonts (Zero External Latency) -->
+    <link rel="stylesheet" href="{{ asset('fonts/instrument-sans/instrument-sans.css') }}">
 
     <!-- Schema.org JSON-LD Structured Data -->
     {!! \App\Services\Seo\SchemaOrgService::render([

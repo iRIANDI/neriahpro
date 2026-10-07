@@ -43,9 +43,8 @@
         ]),
     ]) !!}
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700,800" rel="stylesheet" />
+    <!-- Local Fonts (Zero External Latency) -->
+    <link rel="stylesheet" href="{{ asset('fonts/instrument-sans/instrument-sans.css') }}">
 
     <!-- Vite React and CSS -->
     @viteReactRefresh
@@ -173,9 +172,9 @@
             background: #34d399;
         }
     </style>
-    <!-- Alpine.js & Mermaid UMD Bundle -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <!-- Alpine.js & Mermaid UMD Bundle (Local Vendor JS) -->
+    <script defer src="{{ asset('js/vendor/alpine.min.js') }}"></script>
+    <script src="{{ asset('js/vendor/mermaid.min.js') }}"></script>
     <!-- Midtrans Snap JS (In-Page Popup Modal) -->
     <script src="{{ config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/snap.js') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
     <script>

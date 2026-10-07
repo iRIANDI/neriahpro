@@ -56,7 +56,10 @@ class CustomerDashboardTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Acme Logistics SaaS');
         $response->assertSee('customerDashboardApp()');
-        $response->assertSee('cdn.jsdelivr.net/npm/alpinejs');
+        $response->assertSee('js/vendor/alpine.min.js');
+        $response->assertSee('fonts/instrument-sans/instrument-sans.css');
+        $response->assertDontSee('fonts.bunny.net');
+        $response->assertDontSee('cdn.jsdelivr.net');
         $response->assertSee('x-cloak');
         $response->assertSee('Overview');
         $response->assertSee('Studio Projects');

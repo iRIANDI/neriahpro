@@ -76,19 +76,18 @@
     <title>neriahpro.com - {{ $isEn ? 'Client Portal & Project Workspace' : 'Portal Pelanggan & Workspace Proyek' }}</title>
     <meta name="description" content="{{ $isEn ? 'Unified client workspace to track software sprints, access lifetime license downloads, and view tax invoices.' : 'Workspace terpadu pelanggan untuk memantau sprint software, mengunduh lisensi seumur hidup, dan mengakses faktur pajak.' }}">
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700,800" rel="stylesheet" />
+    <!-- Local Fonts (Zero External Latency) -->
+    <link rel="stylesheet" href="{{ asset('fonts/instrument-sans/instrument-sans.css') }}">
 
     <!-- Vite Styles & Scripts -->
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Alpine.js & Tab Navigation Support -->
+    <!-- Alpine.js & Tab Navigation Support (Local Vendor JS) -->
     <style>
         [x-cloak] { display: none !important; }
     </style>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="{{ asset('js/vendor/alpine.min.js') }}"></script>
 
     <script>
         if (localStorage.getItem('neriah_theme') === 'dark' || (!localStorage.getItem('neriah_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {

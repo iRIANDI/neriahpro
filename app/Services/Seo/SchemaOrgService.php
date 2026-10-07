@@ -294,10 +294,26 @@ class SchemaOrgService
                 ],
                 [
                     '@type' => 'Question',
-                    'name' => 'Bagaimana pelaku UMKM dapat memanfaatkan voucher subsidi atau hibah aplikasi gratis?',
+                    'name' => 'Bagaimana kebijakan pengembalian dana (refund) dan garansi jika terjadi ketidaksesuaian hasil?',
                     'acceptedAnswer' => [
                         '@type' => 'Answer',
-                        'text' => 'Pelaku usaha mikro dan kecil dapat menggunakan kode voucher UMKM-SUBSIDI-50 (diskon 50% DP) atau mengajukan program hibah 100% free bypass melalui kode UMKM-DIGITAL-100 saat mengisi form konsultasi di Neriah Pro.',
+                        'text' => 'Produk cetak biru digital mandiri (Spark, Lite, Pro, Ultimate) bersifat non-refundable setelah diunduh/dibuka karena sifat produk digital instan, kecuali terjadi kendala teknis valid dalam 7 hari. Untuk layanan Custom Engineering Studio, Neriah Pro menyediakan Garansi SLA 30 Hari pasca-live untuk perbaikan bug gratis. Jika terjadi pemutusan kerja sama sebelum sprint dimulai, DP dikembalikan 100% (dikurangi biaya gateway payment). Jika pembatalan terjadi di tengah sprint, pengembalian dihitung proporsional berdasarkan sisa deliverable sprint yang belum diserahterimakan.',
+                    ],
+                ],
+                [
+                    '@type' => 'Question',
+                    'name' => 'Bagaimana penanganan jika terjadi pesanan ganda (double payment) atau kelebihan transfer?',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'Sistem Neriah Pro dilengkapi Anti-Collision Engine dengan ULID unik per pesanan dan webhook Midtrans idempotency. Jika terjadi debet ganda dari rekening/e-wallet Anda akibat lag jaringan, sistem otomatis mendeteksi transaksi ganda dan menandai dana untuk refund 100% ke rekening asal dalam 1x24 jam kerja, atau dialokasikan sebagai kredit pelunasan termin berikutnya sesuai konfirmasi klien.',
+                    ],
+                ],
+                [
+                    '@type' => 'Question',
+                    'name' => 'Bagaimana prosedur dan syarat pembatalan pesanan (order cancellation)?',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'Pesanan dengan status Awaiting Payment otomatis kadaluarsa (dibatalkan) setelah 24 jam jika tidak ada pembayaran. Untuk pesanan aktif, pembatalan dapat diajukan melalui portal klien atau email support@neriahpro.com sebelum kickoff sprint dimulai tanpa penalti. Setelah sprint dimulai, pembatalan tunduk pada serah terima kode dan aset yang telah selesai dikerjakan.',
                     ],
                 ],
             ],

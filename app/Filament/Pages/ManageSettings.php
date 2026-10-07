@@ -162,6 +162,55 @@ class ManageSettings extends Page implements HasForms
                                             ->clearable()
                                             ->columnSpanFull(),
                                     ])->columns(2),
+
+                                Section::make('Kepatuhan Midtrans, Syarat & Ketentuan, serta Kebijakan Refund & Double-Payment')
+                                    ->description('Konfigurasi teks persetujuan checkout pembayaran Midtrans Snap, jaminan garansi SLA, penanganan double payment, dan klausul pembatalan dalam 2 bahasa (Tier 1: ID & EN).')
+                                    ->schema([
+                                        Toggle::make('midtrans_terms_mandatory')
+                                            ->label('Wajibkan Centang Syarat & Ketentuan di Modal Pembayaran')
+                                            ->helperText('Jika aktif, tombol bayar Midtrans Snap terkunci hingga pelanggan mencentang persetujuan.')
+                                            ->default(true),
+                                        TextInput::make('midtrans_terms_checkbox_label_id')
+                                            ->label('Label Checkbox Persetujuan (Indonesia)')
+                                            ->default('Saya telah membaca dan menyetujui Syarat & Ketentuan Layanan, Kebijakan Pengembalian Dana, Penanganan Pembayaran Ganda, dan Ketentuan Pembatalan Neriah Pro.')
+                                            ->required(),
+                                        TextInput::make('midtrans_terms_checkbox_label_en')
+                                            ->label('Label Checkbox Persetujuan (English)')
+                                            ->default('I have read and agree to the Terms of Service, Refund Policy, Double-Payment Protection, and Project Cancellation Terms of Neriah Pro.')
+                                            ->required(),
+                                        Textarea::make('midtrans_terms_content_id')
+                                            ->label('Syarat & Ketentuan Layanan (Indonesia)')
+                                            ->rows(4)
+                                            ->default("1. Lisensi & Hak Cipta: Setiap blueprint dan kode sumber yang telah dilunasi menjadi hak milik penuh klien.\n2. Batasan Revisi: Revisi spesifikasi gratis dibatasi sesuai tier yang dipilih (Spark 2x/bln, Lite 30 hari, Pro 6 bulan, Ultimate 1 tahun).\n3. Penguncian Scope: Setelah uang muka (DP) 50% atau pelunasan terkonfirmasi, ruang lingkup proyek dikunci (scope frozen) untuk menjaga ketepatan waktu sprint engineering."),
+                                        Textarea::make('midtrans_terms_content_en')
+                                            ->label('Terms of Service (English)')
+                                            ->rows(4)
+                                            ->default("1. License & Intellectual Property: Blueprints and source code settled in full are 100% owned by the client.\n2. Revision Window: Free AI revisions are limited by tier (Spark 2x/mo, Lite 30 days, Pro 6 months, Ultimate 1 year).\n3. Scope Locking: Once 50% DP or full settlement is confirmed, project scope is frozen to ensure engineering milestone delivery."),
+                                        Textarea::make('midtrans_refund_policy_id')
+                                            ->label('Kebijakan Jaminan Garansi & Pengembalian Dana / Refund (Indonesia)')
+                                            ->rows(4)
+                                            ->default("1. Garansi SLA: Paket Turnkey Studio MVP dilindungi 30 Hari Garansi Bug pasca peluncuran resmi.\n2. Jaminan Refund 100%: Pengembalian dana penuh 100% berlaku jika terjadi kegagalan teknis fatal dari pihak Neriah Pro sebelum dimulainya sprint pengembangan.\n3. Non-Refundable Post-Delivery: Karena produk digital dan blueprint arsitektur bersifat kekayaan intelektual langsung pakai, pembayaran yang telah diselesaikan setelah serah terima berkas tidak dapat dikembalikan sepihak."),
+                                        Textarea::make('midtrans_refund_policy_en')
+                                            ->label('Warranty & Refund Policy (English)')
+                                            ->rows(4)
+                                            ->default("1. SLA Warranty: Studio MVP Turnkey packages include a 30-Day Bug Warranty after official deployment.\n2. 100% Refund Guarantee: Full 100% refund applies if critical technical failure occurs on Neriah Pro's side prior to sprint commencement.\n3. Non-Refundable Post-Delivery: Due to the intellectual nature of digital blueprints, fees paid after document delivery are non-refundable for unilateral client cancellations."),
+                                        Textarea::make('midtrans_double_payment_policy_id')
+                                            ->label('Kebijakan Penanganan Pembayaran Ganda / Double Payment (Indonesia)')
+                                            ->rows(4)
+                                            ->default("1. Deteksi Idempotency: Sistem Neriah Pro mendeteksi setiap transaksi menggunakan ID pesanan unik untuk mencegah duplikasi.\n2. Reversal Otomatis: Jika pelanggan tidak sengaja melakukan transfer ganda melalui gateway bank, sistem otomatis mencatat di Dead Letter Queue (DLQ).\n3. Pengembalian Dana: Kelebihan pembayaran akan diverifikasi dan dikembalikan ke rekening asal dalam 3 - 5 hari kerja tanpa potongan biaya sistem."),
+                                        Textarea::make('midtrans_double_payment_policy_en')
+                                            ->label('Double-Payment Anti-Collision Policy (English)')
+                                            ->rows(4)
+                                            ->default("1. Idempotency Detection: Neriah Pro utilizes unique order IDs to prevent duplicate transaction charges.\n2. Automated Reversal: If duplicate transfers occur due to bank network retries, the event is trapped in the Dead Letter Queue (DLQ).\n3. Refund Timeline: Excess payments are verified and reimbursed to the source account within 3 - 5 business days with zero deduction."),
+                                        Textarea::make('midtrans_cancellation_policy_id')
+                                            ->label('Kebijakan Pembatalan Proyek (Indonesia)')
+                                            ->rows(4)
+                                            ->default("1. Sebelum Kickoff / DP: Pembatalan pesanan dapat dilakukan kapan saja tanpa penalti biaya.\n2. Pasca Pembayaran DP 50%: Jika klien membatalkan proyek secara sepihak saat sprint pengembangan telah berlangsung, DP yang telah dibayarkan dialokasikan untuk kompensasi jam kerja arsitek (non-refundable), namun seluruh berkas blueprint dan kode yang telah dikerjakan tetap diserahkan kepada klien."),
+                                        Textarea::make('midtrans_cancellation_policy_en')
+                                            ->label('Project Cancellation Policy (English)')
+                                            ->rows(4)
+                                            ->default("1. Prior to Kickoff / DP: Orders can be cancelled anytime with zero penalty.\n2. Post-DP 50% Kickoff: If the client cancels unilaterally while development sprints are active, the DP is allocated toward incurred engineering hours (non-refundable), while all produced blueprints and source code remain delivered to the client."),
+                                    ])->columns(2),
                             ]),
 
                         Tabs\Tab::make('Multi-AI Model Hub')
@@ -184,6 +233,7 @@ class ManageSettings extends Page implements HasForms
                                                     'xai' => 'xAI Grok (Grok-2)',
                                                     'groq' => 'Groq LPU (Llama 3.3 70B)',
                                                     'openrouter' => 'OpenRouter Universal Hub',
+                                                    'relayrouter' => 'RelayRouter AI (Universal Aggregator Shopee API Key)',
                                                 ];
 
                                                 $options = [
@@ -228,6 +278,11 @@ class ManageSettings extends Page implements HasForms
                                             ->password()
                                             ->revealable()
                                             ->helperText('Dapatkan di platform.openai.com untuk ChatGPT GPT-4o / o3-mini.'),
+                                        TextInput::make('ai_relayrouter_api_key')
+                                            ->label('RelayRouter API Key (Shopee Multi-Model Key)')
+                                            ->password()
+                                            ->revealable()
+                                            ->helperText('Kunci API RelayRouter (relayrouter.ai / akun Shopee). Mendukung Claude 3.7, GPT-4o, dan DeepSeek dalam 1 ID.'),
                                         TextInput::make('ai_grok_api_key')
                                             ->label('xAI Grok API Key')
                                             ->password()
@@ -658,6 +713,7 @@ class ManageSettings extends Page implements HasForms
         \Illuminate\Support\Facades\Cache::forget('frontend_locale_settings');
         \Illuminate\Support\Facades\Cache::forget('developer_signature_settings');
         \Illuminate\Support\Facades\Cache::forget('cms_contract_developer_info');
+        \Illuminate\Support\Facades\Cache::forget('midtrans_compliance_settings');
         \Illuminate\Support\Facades\Cache::forget('seo_schema_pricing_services');
         \Illuminate\Support\Facades\Cache::forget('seo_schema_pricing_faq');
         \Illuminate\Support\Facades\Cache::forget('cms_page_data_pricing');

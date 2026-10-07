@@ -131,15 +131,15 @@
             color: #10b981;
         }
 
-        /* Floating Nav: Floats under Filament Topbar without overlapping */
+        /* Floating Nav: Docks flush directly beneath Filament Topbar */
         .sg-floating-nav {
             position: sticky;
-            top: calc(var(--topbar-height, 4rem) + 8px);
-            z-index: 25;
+            top: var(--topbar-height, 4rem);
+            z-index: 20;
             background: var(--sg-nav-bg);
             backdrop-filter: blur(12px);
             border: 1px solid var(--sg-nav-border);
-            border-radius: 4px;
+            border-radius: 0 0 4px 4px;
             padding: 8px 12px;
             margin-bottom: 24px;
             display: flex;

@@ -85,6 +85,17 @@ return [
             ],
             'is_free_tier' => true,
         ],
+        'relayrouter' => [
+            'name' => 'RelayRouter AI (Universal Aggregator / Shopee Key)',
+            'api_key' => env('RELAYROUTER_API_KEY'),
+            'base_url' => env('RELAYROUTER_BASE_URL', 'https://api.relayrouter.ai/v1'),
+            'models' => [
+                'discovery' => env('RELAYROUTER_DISCOVERY_MODEL', 'gpt-4o-mini'),
+                'prd' => env('RELAYROUTER_PRD_MODEL', 'claude-3-7-sonnet-20250219'),
+                'fallback' => 'deepseek-chat',
+            ],
+            'is_free_tier' => false,
+        ],
     ],
 
     /*
@@ -99,6 +110,7 @@ return [
         'gemini',
         'anthropic',
         'openai',
+        'relayrouter',
         'xai',
         'groq',
         'openrouter',

@@ -105,6 +105,7 @@ class MultiAiModelManager
             'xai' => 'Grok-2 (Real-Time Knowledge & High Accuracy Reasoning)',
             'groq' => 'Groq LPU Llama 3.3 70B (Inference 500 Tokens/Detik & Free Tier)',
             'openrouter' => 'OpenRouter Hub (Akses Model Gratis & Fleksibilitas Tinggi)',
+            'relayrouter' => 'RelayRouter AI (Universal Aggregator Shopee API Key: Akses Fleksibel Claude 3.7, GPT-4o & DeepSeek dalam 1 Key)',
             default => 'General AI Engine',
         };
     }

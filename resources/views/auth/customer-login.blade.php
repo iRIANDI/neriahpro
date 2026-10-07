@@ -61,6 +61,7 @@
                 tier2Open: false,
 
                 // Visual Sequence PIN Captcha Data
+                isCaptchaModalOpen: false,
                 captchaCatalog: [
                     { id: 'shield', icon: '🛡️', label_id: 'Perisai', label_en: 'Shield' },
                     { id: 'bolt', icon: '⚡', label_id: 'Petir', label_en: 'Lightning' },
@@ -79,6 +80,17 @@
 
                 init() {
                     this.generateCaptcha();
+                },
+
+                openCaptchaModal() {
+                    this.isCaptchaModalOpen = true;
+                    if (!this.isCaptchaVerified && this.targetCaptchaSequence.length === 0) {
+                        this.generateCaptcha();
+                    }
+                },
+
+                closeCaptchaModal() {
+                    this.isCaptchaModalOpen = false;
                 },
 
                 generateCaptcha() {
@@ -123,9 +135,13 @@
                                 window.showToast({
                                     type: 'success',
                                     title: this.lang === 'en' ? 'Captcha Verified' : 'Captcha Berhasil',
-                                    message: this.lang === 'en' ? 'Visual sequence verified! Login button is now active.' : 'Urutan gambar terverifikasi! Tombol login kini aktif.'
+                                    message: this.lang === 'en' ? 'Visual sequence verified! Login button is now unlocked.' : 'Urutan gambar terverifikasi! Tombol login kini aktif.'
                                 });
                             }
+                            // Auto close modal smoothly after success
+                            setTimeout(() => {
+                                this.closeCaptchaModal();
+                            }, 600);
                         } else {
                             this.isCaptchaVerified = false;
                             this.captchaError = this.lang === 'en' ? 'Incorrect sequence. Resetting...' : 'Urutan gambar tidak cocok dengan contoh. Mengulang...';
@@ -214,7 +230,13 @@
 
                 async requestOtp() {
                     if (!this.email || this.isLoading) return;
-                    if (this.mode !== 'forgot_password' && (!this.password || !this.isCaptchaVerified)) return;
+                    if (this.mode !== 'forgot_password' && !this.password) return;
+                    
+                    // Trigger Snap Modal if Captcha is not yet completed
+                    if (this.mode !== 'forgot_password' && !this.isCaptchaVerified) {
+                        this.openCaptchaModal();
+                        return;
+                    }
 
                     this.isLoading = true;
                     this.alertMessage = '';
@@ -414,7 +436,7 @@
                            ? (lang === 'en' ? 'Fill in your details, solve the visual captcha pin, then verify your email with OTP.' : 'Lengkapi data, selesaikan pin captcha visual, lalu verifikasi email dengan OTP.')
                            : (mode === 'forgot_password'
                                ? (lang === 'en' ? 'Enter your registered email to receive a password reset OTP code.' : 'Masukkan email terdaftar untuk menerima kode OTP pemulihan kata sandi.')
-                               : (lang === 'en' ? 'Enter email & password, pin the visual captcha in order, then input the OTP code.' : 'Masukkan email & kata sandi, pin gambar captcha berurutan, lalu masukkan kode OTP.')))">{{ $isEn ? 'Enter email & password, pin the visual captcha in order, then input the OTP code.' : 'Masukkan email & kata sandi, pin gambar captcha berurutan, lalu masukkan kode OTP.' }}</p>
+                               : (lang === 'en' ? 'Enter email & password, complete snap captcha in modal, then input OTP code.' : 'Masukkan email & kata sandi, selesaikan snap captcha, lalu masukkan kode OTP.')))">{{ $isEn ? 'Enter email & password, complete snap captcha in modal, then input OTP code.' : 'Masukkan email & kata sandi, selesaikan snap captcha, lalu masukkan kode OTP.' }}</p>
             </div>
 
             <!-- Mode Switcher Tabs (Only visible on Step 1) -->
@@ -522,12 +544,12 @@
                     </div>
                 </div>
 
-                <!-- VISUAL SEQUENCE PIN CAPTCHA (INTERACTIVE IMAGE ORDER CHALLENGE) -->
-                <div x-show="mode !== 'forgot_password'" class="pt-3 pb-1 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+                <!-- VISUAL SEQUENCE PIN CAPTCHA (SNAP MODAL TRIGGER BAR) -->
+                <div x-show="mode !== 'forgot_password'" class="pt-2.5 pb-0.5 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
                     <div class="flex items-center justify-between">
                         <span class="text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-                            <span class="w-1.5 h-1.5 rounded-none bg-emerald-500"></span>
-                            <span x-text="lang === 'en' ? 'Security Captcha: Pin Images In Order *' : 'Keamanan Captcha: Pin Gambar Berurutan *'">{{ $isEn ? 'Security Captcha: Pin Images In Order *' : 'Keamanan Captcha: Pin Gambar Berurutan *' }}</span>
+                            <span class="w-1.5 h-1.5 rounded-none" :class="isCaptchaVerified ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+                            <span x-text="lang === 'en' ? 'Security Challenge (Captcha) *' : 'Tantangan Keamanan (Captcha) *'">{{ $isEn ? 'Security Challenge (Captcha) *' : 'Tantangan Keamanan (Captcha) *' }}</span>
                         </span>
                         <span x-show="isCaptchaVerified" x-cloak class="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                             <span>✅</span>
@@ -535,76 +557,34 @@
                         </span>
                     </div>
 
-                    <!-- Target Reference Box -->
-                    <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-none space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-mono text-zinc-500 uppercase font-bold"
-                                  x-text="lang === 'en' ? 'Click icons below in this exact order:' : 'Pin gambar di bawah sesuai urutan contoh:'">
-                                {{ $isEn ? 'Click icons below in this exact order:' : 'Pin gambar di bawah sesuai urutan contoh:' }}
+                    <!-- Trigger Button for Snap Modal -->
+                    <button 
+                        type="button" 
+                        @click="openCaptchaModal()"
+                        :class="isCaptchaVerified ? 'border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/30' : 'border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 hover:border-emerald-500 hover:bg-emerald-500/5 text-zinc-700 dark:text-zinc-300'"
+                        class="w-full flex items-center justify-between p-3 border rounded-none transition group cursor-pointer text-left"
+                    >
+                        <div class="flex items-center gap-3">
+                            <span class="w-7 h-7 flex items-center justify-center border font-mono text-sm shadow-xs rounded-none transition"
+                                  :class="isCaptchaVerified ? 'border-emerald-500 bg-emerald-500 text-black' : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 group-hover:border-emerald-500'">
+                                <span x-show="!isCaptchaVerified">🛡️</span>
+                                <span x-show="isCaptchaVerified" x-cloak>✓</span>
                             </span>
-                            <button 
-                                type="button" 
-                                @click="generateCaptcha()" 
-                                class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
-                                title="Acak Ulang Contoh"
-                            >
-                                <span>🔄</span>
-                                <span x-text="lang === 'en' ? 'Refresh Sequence' : 'Acak Ulang'">{{ $isEn ? 'Refresh Sequence' : 'Acak Ulang' }}</span>
-                            </button>
-                        </div>
-
-                        <!-- Reference Example Icons Sequence -->
-                        <div class="flex items-center justify-center gap-1.5 sm:gap-2 py-1 min-h-[46px]">
-                            <template x-for="(item, idx) in targetCaptchaSequence" :key="item.id">
-                                <div class="flex items-center gap-1.5 sm:gap-2">
-                                    <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 shadow-xs font-mono">
-                                        <span class="text-xs font-black text-emerald-500" x-text="(idx + 1) + '.'"></span>
-                                        <span class="text-lg" x-text="item.icon"></span>
-                                        <span class="text-[10px] font-bold text-zinc-800 dark:text-zinc-200 hidden sm:inline" x-text="lang === 'en' ? item.label_en : item.label_id"></span>
-                                    </div>
-                                    <span x-show="idx < targetCaptchaSequence.length - 1" class="text-zinc-400 text-xs font-bold">➔</span>
+                            <div class="font-mono">
+                                <div class="text-xs font-bold" x-text="isCaptchaVerified ? (lang === 'en' ? 'Visual Sequence Verified' : 'Urutan Gambar Terverifikasi') : (lang === 'en' ? 'Verify Visual Sequence PIN' : 'Verifikasi Urutan Gambar PIN')">
+                                    {{ $isEn ? 'Verify Visual Sequence PIN' : 'Verifikasi Urutan Gambar PIN' }}
                                 </div>
-                            </template>
+                                <div class="text-[10px] text-zinc-500 dark:text-zinc-400" x-text="isCaptchaVerified ? (lang === 'en' ? 'Challenge passed! Click to view or reset' : 'Tantangan lolos! Klik untuk melihat atau mereset') : (lang === 'en' ? 'Click to open snap challenge modal' : 'Klik untuk membuka snap modal tantangan')">
+                                    {{ $isEn ? 'Click to open snap challenge modal' : 'Klik untuk membuka snap modal tantangan' }}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Candidate Interactive Grid -->
-                    <div class="grid grid-cols-4 gap-2 min-h-[120px]">
-                        <template x-for="item in candidateCaptchaGrid" :key="item.id">
-                            <button
-                                type="button"
-                                @click="pinCaptchaItem(item)"
-                                :disabled="isCaptchaVerified"
-                                :class="{
-                                    'border-emerald-500 bg-emerald-500/15 dark:bg-emerald-500/20 ring-1 ring-emerald-500 shadow-sm': getPinIndex(item) !== null,
-                                    'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-500': getPinIndex(item) === null,
-                                    'opacity-60 cursor-default': isCaptchaVerified
-                                }"
-                                class="relative p-2 flex flex-col items-center justify-center border rounded-none transition cursor-pointer group"
-                            >
-                                <!-- Pinned Sequence Order Badge -->
-                                <span 
-                                    x-show="getPinIndex(item) !== null"
-                                    class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-500 text-black font-mono font-black text-[9px] flex items-center justify-center rounded-none shadow-xs"
-                                    x-text="getPinIndex(item)"
-                                ></span>
-
-                                <span class="text-xl sm:text-2xl group-hover:scale-110 transition-transform" x-text="item.icon"></span>
-                                <span class="text-[9px] font-mono text-zinc-600 dark:text-zinc-400 mt-1 truncate max-w-full font-bold" x-text="lang === 'en' ? item.label_en : item.label_id"></span>
-                            </button>
-                        </template>
-                    </div>
-
-                    <!-- Captcha Feedback status -->
-                    <div x-show="captchaError" x-cloak class="p-2 bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[11px] font-mono flex items-center justify-between">
-                        <span x-text="captchaError"></span>
-                        <button type="button" @click="generateCaptcha()" class="underline font-bold" x-text="lang === 'en' ? 'Reset' : 'Ulangi'"></button>
-                    </div>
-
-                    <div x-show="isCaptchaVerified" x-cloak class="p-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-mono flex items-center gap-1.5">
-                        <span>✅</span>
-                        <span x-text="lang === 'en' ? 'Visual verification complete! Login button is unlocked.' : 'Verifikasi urutan gambar berhasil! Tombol login siap digunakan.'"></span>
-                    </div>
+                        <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                            <span x-text="isCaptchaVerified ? (lang === 'en' ? 'VERIFIED ✓' : 'TERVERIFIKASI ✓') : (lang === 'en' ? 'OPEN MODAL ➔' : 'BUKA MODAL ➔')">
+                                {{ $isEn ? 'OPEN MODAL ➔' : 'BUKA MODAL ➔' }}
+                            </span>
+                        </span>
+                    </button>
                 </div>
 
                 <!-- Forgot Password Back Link -->
@@ -618,19 +598,20 @@
                     </button>
                 </div>
 
-                <!-- Submit Button Step 1 (Enabled only after Captcha is verified) -->
+                <!-- Submit Button Step 1 (Enabled / Unlocked after Captcha is verified, or opens modal if clicked when ready) -->
                 <button 
                     type="submit" 
-                    :disabled="isLoading || !email || (mode !== 'forgot_password' && (!password || !isCaptchaVerified))"
+                    :disabled="isLoading || !email || (mode !== 'forgot_password' && !password)"
                     :class="{
                         'bg-emerald-500 hover:bg-emerald-400 text-black border-emerald-600 shadow-md cursor-pointer animate-pulse': isCaptchaVerified || mode === 'forgot_password',
-                        'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-300 dark:border-zinc-700 cursor-not-allowed': !isCaptchaVerified && mode !== 'forgot_password'
+                        'bg-zinc-800 hover:bg-zinc-700 text-emerald-400 border-zinc-700 shadow-sm cursor-pointer': !isCaptchaVerified && mode !== 'forgot_password' && email && password,
+                        'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-300 dark:border-zinc-700 cursor-not-allowed': !isCaptchaVerified && mode !== 'forgot_password' && (!email || !password)
                     }"
                     class="w-full flex justify-center items-center gap-2 py-3 px-4 border text-xs font-mono font-black uppercase tracking-wider rounded-none transition-all"
                 >
                     <span x-show="!isLoading && !isCaptchaVerified && mode !== 'forgot_password'" class="flex items-center gap-1.5">
-                        <span>🔒</span>
-                        <span x-text="lang === 'en' ? 'PIN 3 ICONS IN ORDER TO UNLOCK LOGIN' : 'PIN 3 GAMBAR BERURUTAN UNTUK LOGIN'">{{ $isEn ? 'PIN 3 ICONS IN ORDER TO UNLOCK LOGIN' : 'PIN 3 GAMBAR BERURUTAN UNTUK LOGIN' }}</span>
+                        <span>🛡️</span>
+                        <span x-text="lang === 'en' ? 'SOLVE SNAP CAPTCHA TO CONTINUE →' : 'SELESAIKAN SNAP CAPTCHA UNTUK LANJUT →'">{{ $isEn ? 'SOLVE SNAP CAPTCHA TO CONTINUE →' : 'SELESAIKAN SNAP CAPTCHA UNTUK LANJUT →' }}</span>
                     </span>
                     <span x-show="!isLoading && (isCaptchaVerified || mode === 'forgot_password')" x-cloak>
                         <span x-text="mode === 'register' ? (lang === 'en' ? 'REGISTER & SEND 2FA OTP →' : 'DAFTAR & KIRIM KODE OTP →') : (mode === 'forgot_password' ? (lang === 'en' ? 'SEND RESET OTP CODE →' : 'KIRIM KODE OTP RESET →') : (lang === 'en' ? 'VERIFY PASSWORD & GET OTP →' : 'VERIFIKASI KATA SANDI & KIRIM OTP →'))">{{ $isEn ? 'VERIFY PASSWORD & GET OTP →' : 'VERIFIKASI KATA SANDI & KIRIM OTP →' }}</span>
@@ -748,6 +729,150 @@
     <footer class="border-t border-zinc-200 dark:border-zinc-800 py-4 bg-white/50 dark:bg-zinc-900/50 text-center font-mono text-[11px] text-zinc-500">
         <p>&copy; {{ date('Y') }} Neriah Pro. <span x-text="lang === 'en' ? 'All rights reserved. Secure Dual-Factor Client Workspace.' : 'Hak cipta dilindungi. Sistem Autentikasi Ganda 2-FA Portal Klien.'">{{ $isEn ? 'All rights reserved. Secure Dual-Factor Client Workspace.' : 'Hak cipta dilindungi. Sistem Autentikasi Ganda 2-FA Portal Klien.' }}</span></p>
     </footer>
+
+    <!-- ===================================================================== -->
+    <!-- VISUAL SEQUENCE PIN CAPTCHA SNAP MODAL DIALOG                         -->
+    <!-- ===================================================================== -->
+    <div 
+        x-show="isCaptchaModalOpen" 
+        x-cloak 
+        @keydown.escape.window="closeCaptchaModal()" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md transition-all duration-200"
+        role="dialog"
+        aria-modal="true"
+    >
+        <!-- Modal Backdrop Click Dismiss -->
+        <div class="absolute inset-0" @click="closeCaptchaModal()"></div>
+
+        <!-- Modal Dialog Box -->
+        <div 
+            class="relative w-full max-w-md bg-white dark:bg-zinc-900 border-2 border-emerald-500/60 shadow-2xl p-5 sm:p-6 space-y-4 font-sans z-10 rounded-none animate-in fade-in zoom-in-95 duration-200"
+            @click.stop
+        >
+            <!-- Modal Header -->
+            <div class="flex items-start justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-none bg-emerald-500 animate-pulse"></span>
+                        <span x-text="lang === 'en' ? 'SECURITY CHALLENGE // SNAP CAPTCHA' : 'TANTANGAN KEAMANAN // SNAP CAPTCHA'">TANTANGAN KEAMANAN // SNAP CAPTCHA</span>
+                    </div>
+                    <h3 class="text-base font-black uppercase text-zinc-900 dark:text-white font-sans tracking-tight"
+                        x-text="lang === 'en' ? 'Pin 3 Images in Sequence' : 'Pin 3 Gambar Berurutan'">
+                        {{ $isEn ? 'Pin 3 Images in Sequence' : 'Pin 3 Gambar Berurutan' }}
+                    </h3>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mt-0.5"
+                       x-text="lang === 'en' ? 'Click 3 icons in candidate grid matching example below.' : 'Klik 3 gambar di bawah sesuai urutan contoh untuk verifikasi.'">
+                        {{ $isEn ? 'Click 3 icons in candidate grid matching example below.' : 'Klik 3 gambar di bawah sesuai urutan contoh untuk verifikasi.' }}
+                    </p>
+                </div>
+                <button 
+                    type="button" 
+                    @click="closeCaptchaModal()" 
+                    class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-lg font-mono p-1 rounded-none cursor-pointer"
+                    title="Tutup / Close"
+                >
+                    ✕
+                </button>
+            </div>
+
+            <!-- Target Reference Example Box -->
+            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-none space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-mono text-zinc-500 uppercase font-bold"
+                          x-text="lang === 'en' ? 'Target sequence example:' : 'Contoh urutan target:'">
+                        {{ $isEn ? 'Target sequence example:' : 'Contoh urutan target:' }}
+                    </span>
+                    <button 
+                        type="button" 
+                        @click="generateCaptcha()" 
+                        class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer font-bold"
+                        title="Acak Ulang Contoh"
+                    >
+                        <span>🔄</span>
+                        <span x-text="lang === 'en' ? 'Refresh Target' : 'Acak Ulang'">{{ $isEn ? 'Refresh Target' : 'Acak Ulang' }}</span>
+                    </button>
+                </div>
+
+                <!-- Reference Example Icons Sequence -->
+                <div class="flex items-center justify-center gap-1.5 sm:gap-2 py-1 min-h-[46px]">
+                    <template x-for="(item, idx) in targetCaptchaSequence" :key="item.id">
+                        <div class="flex items-center gap-1.5 sm:gap-2">
+                            <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 shadow-xs font-mono">
+                                <span class="text-xs font-black text-emerald-500" x-text="(idx + 1) + '.'"></span>
+                                <span class="text-lg" x-text="item.icon"></span>
+                                <span class="text-[10px] font-bold text-zinc-800 dark:text-zinc-200 hidden sm:inline" x-text="lang === 'en' ? item.label_en : item.label_id"></span>
+                            </div>
+                            <span x-show="idx < targetCaptchaSequence.length - 1" class="text-zinc-400 text-xs font-bold">➔</span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Candidate Interactive Grid -->
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-[10px] font-mono text-zinc-500 uppercase font-bold">
+                    <span x-text="lang === 'en' ? 'Select candidates in order:' : 'Pilih gambar berurutan:'">{{ $isEn ? 'Select candidates in order:' : 'Pilih gambar berurutan:' }}</span>
+                    <span class="text-emerald-600 dark:text-emerald-400" x-text="pinnedCaptchaSequence.length + ' / ' + targetCaptchaSequence.length + ' ' + (lang === 'en' ? 'PINNED' : 'TERPIN')"></span>
+                </div>
+                
+                <div class="grid grid-cols-4 gap-2 min-h-[120px]">
+                    <template x-for="item in candidateCaptchaGrid" :key="item.id">
+                        <button
+                            type="button"
+                            @click="pinCaptchaItem(item)"
+                            :disabled="isCaptchaVerified"
+                            :class="{
+                                'border-emerald-500 bg-emerald-500/15 dark:bg-emerald-500/20 ring-1 ring-emerald-500 shadow-sm': getPinIndex(item) !== null,
+                                'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 hover:border-zinc-400 dark:hover:border-zinc-500': getPinIndex(item) === null,
+                                'opacity-60 cursor-default': isCaptchaVerified
+                            }"
+                            class="relative p-2.5 flex flex-col items-center justify-center border rounded-none transition cursor-pointer group"
+                        >
+                            <!-- Pinned Sequence Order Badge -->
+                            <span 
+                                x-show="getPinIndex(item) !== null"
+                                class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-500 text-black font-mono font-black text-[9px] flex items-center justify-center rounded-none shadow-xs"
+                                x-text="getPinIndex(item)"
+                            ></span>
+
+                            <span class="text-2xl group-hover:scale-110 transition-transform" x-text="item.icon"></span>
+                            <span class="text-[9px] font-mono text-zinc-600 dark:text-zinc-400 mt-1 truncate max-w-full font-bold" x-text="lang === 'en' ? item.label_en : item.label_id"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Feedback Messages in Modal -->
+            <div x-show="captchaError" x-cloak class="p-2.5 bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[11px] font-mono flex items-center justify-between">
+                <span x-text="captchaError"></span>
+                <button type="button" @click="generateCaptcha()" class="underline font-bold" x-text="lang === 'en' ? 'Reset' : 'Ulangi'">Ulangi</button>
+            </div>
+
+            <div x-show="isCaptchaVerified" x-cloak class="p-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-mono flex items-center gap-1.5 font-bold">
+                <span>✅</span>
+                <span x-text="lang === 'en' ? 'Sequence verified! Closing snap modal...' : 'Urutan cocok terverifikasi! Menutup modal...'"></span>
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                <button 
+                    type="button" 
+                    @click="closeCaptchaModal()" 
+                    class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white rounded-none cursor-pointer"
+                >
+                    <span x-text="lang === 'en' ? 'Cancel' : 'Batal'">{{ $isEn ? 'Cancel' : 'Batal' }}</span>
+                </button>
+                <button 
+                    type="button" 
+                    @click="generateCaptcha()" 
+                    class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-none cursor-pointer flex items-center gap-1"
+                >
+                    <span>🔄</span>
+                    <span x-text="lang === 'en' ? 'Reset Tiles' : 'Reset Urutan'">{{ $isEn ? 'Reset Tiles' : 'Reset Urutan' }}</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     @if($googleTranslateEnabled)
     <!-- Google Translate Container & Bridge (Tier 2) -->

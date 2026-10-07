@@ -208,87 +208,122 @@ export default function ArchitecturePricingIsland({
   ];
 
   return (
-    <div className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-12 sm:py-20 transition-colors">
+    <div className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-10 sm:py-16 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
-        {/* 1. HEADER SECTION & VALUE PROPOSITION */}
-        <div className="text-center max-w-4xl mx-auto mb-10 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold mb-4 rounded-none">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{isEn ? 'TRANSPARENT VALUE-BASED PRICING' : 'SKEMA INVESTASI TRANSPARAN & TERSTANDAR'}</span>
-          </div>
-          
-          <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight font-sans text-zinc-900 dark:text-white mb-4">
-            {headline}
-          </h1>
-          
-          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed max-w-3xl mx-auto">
-            {subheadline}
-          </p>
+        {/* DYNAMIC MODULE SWITCHER (PROJECT OS VS UPCOMING CV PRO) */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="inline-flex p-1 bg-zinc-200 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs shadow-inner font-mono text-xs">
+            <button
+              type="button"
+              onClick={() => setActiveTab('software')}
+              className={`px-4 py-2 font-bold uppercase tracking-wider transition rounded-xs flex items-center gap-2 cursor-pointer ${
+                activeTab === 'software'
+                  ? 'bg-zinc-900 text-white dark:bg-emerald-500 dark:text-black shadow-xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+              }`}
+            >
+              <Cpu className="w-3.5 h-3.5 text-emerald-500 dark:text-black" />
+              <span>Project OS // Digital Architecture</span>
+              <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-700 dark:text-black font-black text-[9px]">ACTIVE</span>
+            </button>
 
-          {/* ENGINEERING DISCIPLINE & ASSURANCE BAR (CLEAN, SOLID, NO GRADIENTS, NO VOUCHER DUMP) */}
-          <div className="mt-8 py-3 px-4 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-around gap-4 text-xs font-mono text-zinc-600 dark:text-zinc-400">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>{isEn ? 'Legal Scope-Locked Digital Contract' : 'Kontrak Hukum Digital Scope-Locked'}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>{isEn ? '50% Milestone DP via Midtrans' : 'DP 50% Milestone Terproteksi'}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>{isEn ? 'Strict Sprint Capacity: Max 2 Projects / Cycle' : 'Kapasitas Terjadwal: Maks. 2 Proyek / Siklus'}</span>
-            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('cv')}
+              className={`px-4 py-2 font-bold uppercase tracking-wider transition rounded-xs flex items-center gap-2 cursor-pointer ${
+                activeTab === 'cv'
+                  ? 'bg-zinc-900 text-white dark:bg-purple-500 dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5 text-purple-400" />
+              <span>CV Pro Studio</span>
+              <span className="px-1.5 py-0.2 bg-zinc-300 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold text-[9px]">UPCOMING</span>
+            </button>
           </div>
         </div>
 
-        {/* 2. INSTANT ARCHITECTURAL BLUEPRINT PACKAGES (100% SELF-SERVICE // NO NERIAH PRO CODING) */}
-        <div className="mb-20">
-          <div className="text-center max-w-3xl mx-auto mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 font-mono text-xs uppercase tracking-wider font-bold mb-3 rounded-none">
-              <Terminal className="w-3.5 h-3.5" />
-              <span>{isEn ? 'PROJECT OS // 100% SELF-SERVICE DIGITAL BLUEPRINT' : 'PROJECT OS // 100% SELF-SERVICE DIGITAL GENERATOR'}</span>
+        {/* IF CV TAB IS CLICKED: SHOW CLEAN UPCOMING PREVIEW */}
+        {activeTab === 'cv' ? (
+          <div className="max-w-2xl mx-auto my-12 p-8 bg-zinc-100 dark:bg-zinc-900 border-2 border-dashed border-purple-500/40 rounded-xs text-center space-y-4">
+            <div className="w-12 h-12 mx-auto rounded-xs bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-500">
+              <FileText className="w-6 h-6" />
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2 font-sans">
-              {isEn ? 'Instant Architectural Blueprint Packages' : 'Pilihan Paket Instant Architectural Blueprint'}
-            </h2>
-            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
-              {isEn
-                ? 'Generate enterprise-grade specifications instantly without hiring an architect. Ranging from free vision audits to production-grade Decoupled and Monolith blueprints with Jira/Linear WBS. Built for developers and founders to execute on their own.'
-                : 'Hasilkan dokumen spesifikasi arsitektur enterprise berkualitas Principal Architect secara instan dan mandiri: Mulai dari audit ide gratis hingga cetak biru siap bangun dengan WBS 5 sprint dan rekomendasi arsitektur Decoupled 2026+.'}
+            <h3 className="text-xl font-black uppercase text-zinc-900 dark:text-white">
+              CV Pro Studio &bull; Modul Dalam Pengembangan (Q4)
+            </h3>
+            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              {isEn 
+                ? 'CV Pro Studio is currently under active sprint development for Q4 release. During our Midtrans merchant compliance review, only Project OS digital architecture services are actively processed for transactions.'
+                : 'Modul CV Pro Studio sedang dalam persiapan rilis Q4. Selama periode review kepatuhan merchant Midtrans, hanya layanan rekayasa arsitektur Project OS yang aktif diproses untuk transaksi.'}
             </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('software')}
+                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs uppercase tracking-wider rounded-xs cursor-pointer transition"
+              >
+                &larr; Lihat Layanan Aktif Project OS
+              </button>
+            </div>
           </div>
+        ) : (
+          <>
+            {/* 1. CLEAN & CONCISE SINGLE HEADER SECTION */}
+            <div className="text-center max-w-3xl mx-auto mb-8">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold mb-3 rounded-xs">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>{isEn ? 'TRANSPARENT VALUE-BASED PRICING' : 'SKEMA INVESTASI TRANSPARAN & TERSTANDAR'}</span>
+              </div>
+              
+              <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight font-sans text-zinc-900 dark:text-white mb-2">
+                {isEn ? 'Digital Architecture & Engineering Pricing' : 'Investasi Layanan Rekayasa Sistem'}
+              </h1>
+              
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+                {isEn 
+                  ? 'Standardized software engineering investment: From instant self-service architectural blueprints to full turnkey Monolith MVP contracts.' 
+                  : 'Pilihan investasi rekayasa perangkat lunak terstandarisasi untuk founder & pengembang: Dari cetak biru mandiri (Self-Service) hingga koding penuh turnkey Studio Monolith MVP.'}
+              </p>
 
-          {/* PROMINENT DISCLAIMER: 100% SELF-SERVICE // ZERO NERIAH PRO CODING */}
-          <div className="mb-8 p-4 sm:p-5 bg-amber-500/10 border-2 border-amber-500/30 text-zinc-900 dark:text-zinc-100 rounded-none shadow-xs">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-2">
-              <div className="flex items-center gap-2">
-                <span className="p-1 px-2 bg-amber-500 text-black font-black text-xs font-mono">⚠️ PENTING</span>
-                <span className="font-mono text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  {isEn ? '100% SELF-SERVICE // ZERO NERIAH PRO CODING' : '100% SELF-SERVICE // TIDAK ADA KODING DARI NERIAH PRO'}
+              {/* COMPACT ENGINEERING ASSURANCE STRIP */}
+              <div className="mt-4 py-2 px-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-center gap-4 text-[11px] font-mono text-zinc-600 dark:text-zinc-400 rounded-xs">
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>{isEn ? 'Legal Scope-Locked Contract' : 'Kontrak Hukum Scope-Locked'}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>{isEn ? '50% Milestone DP via Midtrans' : 'DP 50% via Midtrans Snap'}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>{isEn ? 'Capacity: Max 2 Projects / Cycle' : 'Kapasitas: Maks. 2 Proyek / Siklus'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-20">
+              {/* 2. PUNCHY & STREAMLINED 100% SELF-SERVICE NOTICE */}
+            <div className="mb-8 p-3.5 sm:p-4 bg-amber-500/10 border border-amber-500/30 text-zinc-900 dark:text-zinc-100 rounded-xs shadow-xs">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-black font-black text-[10px] font-mono rounded-xs">⚠️ PENTING</span>
+                  <span className="font-mono text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                    {isEn ? 'TIERS 01-04: 100% SELF-SERVICE // ZERO NERIAH PRO CODING' : 'PAKET 01-04: 100% SELF-SERVICE // TANPA KODING DARI NERIAH PRO'}
+                  </span>
+                </div>
+                <span className="font-mono text-[10px] px-2 py-0.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold uppercase rounded-xs">
+                  {isEn ? 'CLIENT-EXECUTED' : 'DIKERJAKAN OLEH DEVELOPER ANDA'}
                 </span>
               </div>
-              <span className="font-mono text-[10px] px-2 py-0.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold uppercase">
-                {isEn ? 'SELF-EXECUTED BY CLIENT' : 'DIKERJAKAN OLEH DEVELOPER ANDA'}
-              </span>
+              <p className="text-xs text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed">
+                {pricingSettings.retail_disclaimer || (isEn 
+                  ? 'All Instant Blueprint packages below are digital architectural deliverables (PRD, PostgreSQL ULID DDL, Mermaid diagrams, WBS, OpenAPI 3.1) for you and your developers to build on your own. For full turnkey coding by Neriah Pro engineers, see Studio Contracts below.' 
+                  : 'Seluruh paket Instant Blueprint di bawah ini adalah cetak biru spesifikasi arsitektur mandiri (100% Self-Service) untuk dikerjakan langsung oleh Anda atau tim developer Anda sendiri. Butuh tim Neriah Pro yang mengoding aplikasi siap pakai? Pilih Layanan Studio di bagian bawah.')}
+              </p>
             </div>
-            <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed">
-              {pricingSettings.retail_disclaimer || (isEn 
-                ? 'All Instant Architectural Blueprint packages below are 100% self-service digital deliverables (PRD, PostgreSQL Strict ULID DDL SQL, Mermaid diagrams, Jira WBS, OpenAPI 3.1 contracts). They are used directly by you, your in-house engineering team, freelancers, or AI coding agents to build your own application. Neriah Pro does NOT write application code for these packages.' 
-                : 'Seluruh paket Instant Architectural Blueprint di bawah ini adalah produk spesifikasi arsitektur digital mandiri (100% Self-Service). Dihasilkan secara instan oleh AI Project OS untuk digunakan langsung oleh Anda, tim in-house programmer, agensi, atau AI coding agent Anda dalam membangun sistem sendiri. Neriah Pro sama sekali TIDAK terlibat dalam penulisan koding untuk paket ini.')}
-            </p>
-            <div className="mt-3 pt-3 border-t border-amber-500/20 flex flex-wrap items-center justify-between gap-y-2 text-[11px] font-mono text-zinc-600 dark:text-zinc-400">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span><strong>{isEn ? 'Access & Login Policy:' : 'Kebijakan Akses & Login:'}</strong> {pricingSettings.retail_login_policy || 'Guest Mode untuk Spark (Free). Wajib Login / Akun untuk paket Lite, Pro, & Ultimate guna proteksi dokumen & lisensi.'}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
-                <ArrowRight className="w-3.5 h-3.5 shrink-0" />
-                <span>{isEn ? 'Need Neriah Pro to build & code the app? See Studio Contracts below.' : 'Ingin Neriah Pro yang mengoding & mendeploy aplikasi? Lihat Layanan Studio di bawah.'}</span>
-              </div>
-            </div>
-          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 items-stretch">
             {/* SPARK / FREE TIER */}
@@ -1246,6 +1281,8 @@ export default function ArchitecturePricingIsland({
             </a>
           </div>
         </div>
+          </>
+        )}
 
       </div>
 

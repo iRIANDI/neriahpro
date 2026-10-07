@@ -68,26 +68,26 @@ class LandingPageSeeder extends Seeder
                 'is_active' => true,
                 'data' => [
                     'headline' => [
-                        'id' => 'INVESTASI TRANSPARAN & TEPAT SASARAN',
-                        'en' => 'TRANSPARENT VALUE-BASED PRICING'
+                        'id' => 'INVESTASI LAYANAN REKAYASA SISTEM // NERIAH PRO',
+                        'en' => 'SOFTWARE ARCHITECTURE & STUDIO PRICING'
                     ],
                     'subheadline' => [
-                        'id' => 'Dua skenario solusi rekayasa perangkat lunak berskala tinggi: Mulai dari blueprint teknis siap eksekusi hingga pengembangan penuh sistem monolit modern tanpa drama pembengkakan biaya.',
-                        'en' => 'Two distinct high-scale software engineering scenarios: From production-ready technical blueprints to full modern monolith development without cost overruns.'
+                        'id' => 'Skema investasi transparan untuk founder & developer: dari cetak biru mandiri (Self-Service) hingga koding penuh turnkey Studio Monolith MVP.',
+                        'en' => 'Standardized engineering investment for founders: From instant self-service blueprints to full turnkey Monolith MVP contracts.'
                     ],
                 ]
             ],
             [
                 'type' => 'cv_pricing_table',
-                'is_active' => true,
+                'is_active' => false,
                 'data' => [
                     'headline' => [
-                        'id' => 'INVESTASI KARIR IMPIAN // PILIHAN KELAS & KUOTA CV PRO',
-                        'en' => 'CAREER ACCELERATION INVESTMENT // CV PRO TIERS & QUOTA'
+                        'id' => 'INVESTASI KARIR IMPIAN // CV PRO STUDIO (SEGERA HADIR)',
+                        'en' => 'CAREER ACCELERATION // CV PRO STUDIO (UPCOMING)'
                     ],
                     'subheadline' => [
-                        'id' => 'Pilih paket yang sesuai dengan akselerasi karir Anda. Pengunjung gratis tetap dapat mengisi form secara manual dan mengunduh PDF secara cuma-cuma.',
-                        'en' => 'Select the tier tailored to your career trajectory. Free tier includes full manual resume creation and complimentary PDF export.'
+                        'id' => 'Modul studio resume visual & portofolio klien sedang dalam pengembangan aktif untuk rilis Q4.',
+                        'en' => 'Visual resume & portfolio studio module is currently under active development for Q4 release.'
                     ],
                 ]
             ]

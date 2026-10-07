@@ -32,7 +32,7 @@ class SmartGuideRetentionAccessTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Executive Smart Guide');
         $response->assertSee('Pay-Per-Project');
-        $response->assertSee('Gross Margin: 98.6%');
+        $response->assertSee('GROSS MARGIN: 98.6%');
         $response->assertSee('Trojan Horse');
         $response->assertSee('Studio MVP');
     }

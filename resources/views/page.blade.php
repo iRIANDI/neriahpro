@@ -203,14 +203,15 @@
                     if($type == 'hero_section') $pluginName = 'HeroIsland';
                     if($type == 'onboarding_form' && $featureFlags['enable_client_onboarding']) $pluginName = 'ClientOnboardingIsland';
                     if($type == 'architecture_pricing' || $type == 'pricing_section') {
+                        if ($hasRenderedPricing) continue;
                         $pluginName = 'ArchitecturePricingIsland';
                     }
                     if($type == 'cv_pricing_table') {
-                        // In Midtrans strict mode or if CV Pro is disabled, fall back to architecture pricing
+                        if ($hasRenderedPricing) continue;
                         if (!$featureFlags['midtrans_mode'] && $featureFlags['enable_cv_pro'] && $featureFlags['enable_pricing']) {
                             $pluginName = 'CvPricingIsland';
                         } else {
-                            $pluginName = 'ArchitecturePricingIsland';
+                            continue; // Skip CV pricing when Midtrans strict review is active
                         }
                     }
                     // Resolve multilingual fields for current active locale
@@ -288,6 +289,42 @@
         'featureFlags' => $featureFlags,
         'whatsappNumber' => $getSettingVal('company_whatsapp', '628123456789')
     ])
+
+    @php
+        $googleTranslateEnabled = (bool) $getSettingVal('google_translate_enabled', true);
+        $rawAllowed = $getSettingVal('google_translate_allowed_languages', ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es']);
+        $allowedLangList = is_array($rawAllowed) ? $rawAllowed : (is_string($rawAllowed) ? json_decode($rawAllowed, true) : ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es']);
+        if (empty($allowedLangList)) $allowedLangList = ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es'];
+    @endphp
+
+    @if($googleTranslateEnabled)
+    <!-- Google Translate Container & Bridge (Tier 2) -->
+    <div id="google_translate_element" class="hidden"></div>
+    <script>
+        function googleTranslateElementInit() {
+            try {
+                new google.translate.TranslateElement({
+                    pageLanguage: '{{ app()->getLocale() ?: "id" }}',
+                    includedLanguages: '{{ implode(",", $allowedLangList) }}',
+                    autoDisplay: false
+                }, 'google_translate_element');
+            } catch(e) {}
+        }
+
+        window.translateLanguage = function(langCode) {
+            const select = document.querySelector('.goog-te-combo');
+            if (select) {
+                select.value = langCode;
+                select.dispatchEvent(new Event('change'));
+            } else {
+                document.cookie = 'googtrans=/id/' + langCode + '; path=/; domain=' + window.location.hostname;
+                document.cookie = 'googtrans=/id/' + langCode + '; path=/;';
+                location.reload();
+            }
+        };
+    </script>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
+    @endif
 
 </body>
 </html>

@@ -33,6 +33,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
   const [cartDropdownOpen, setCartDropdownOpen] = useState(false);
+  const [globalLangOpen, setGlobalLangOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
   // Cart state & Real-time Anti-Ghost Hold countdown
@@ -284,6 +285,88 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
           {/* Action CTAs */}
           <div className="hidden sm:flex items-center gap-3">
+            {/* Tier 1 Native Language Switcher (ID / EN) */}
+            <div className="flex items-center border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-[11px] font-mono font-bold rounded-xs overflow-hidden">
+              <button
+                type="button"
+                onClick={() => changeLanguage('id')}
+                className={`px-2.5 py-1.5 transition cursor-pointer ${lang === 'id' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
+                title="Bahasa Indonesia (Native Tier 1)"
+              >
+                ID
+              </button>
+              <button
+                type="button"
+                onClick={() => changeLanguage('en')}
+                className={`px-2.5 py-1.5 transition cursor-pointer ${lang === 'en' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
+                title="English (Native Tier 1)"
+              >
+                EN
+              </button>
+            </div>
+
+            {/* Tier 2 Global Whitelist Language Dropdown (Google Translate) */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setGlobalLangOpen(true)}
+              onMouseLeave={() => setGlobalLangOpen(false)}
+            >
+              <button
+                type="button"
+                className="flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 py-1.5 px-2.5 text-[11px] font-mono font-bold rounded-xs transition cursor-pointer"
+                title="Global Plugin Translation (Tier 2)"
+              >
+                <Globe className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="hidden lg:inline uppercase">Global</span>
+                <ChevronDown className="w-3 h-3 text-zinc-400" />
+              </button>
+
+              <AnimatePresence>
+                {globalLangOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full right-0 mt-1 w-44 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl p-2 z-50 font-sans text-xs space-y-1 rounded-xs"
+                  >
+                    <div className="px-2 py-1 text-[10px] font-mono text-zinc-400 uppercase font-bold border-b border-zinc-200 dark:border-zinc-800 mb-1">
+                      Translate (Tier 2)
+                    </div>
+                    {[
+                      { code: 'en', name: 'English (US)', flag: '🇺🇸' },
+                      { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
+                      { code: 'ja', name: '日本語 (Japanese)', flag: '🇯🇵' },
+                      { code: 'zh-CN', name: '中文 (Chinese)', flag: '🇨🇳' },
+                      { code: 'ar', name: 'العربية (Arabic)', flag: '🇸🇦' },
+                      { code: 'de', name: 'Deutsch (German)', flag: '🇩🇪' },
+                      { code: 'fr', name: 'Français (French)', flag: '🇫🇷' },
+                      { code: 'es', name: 'Español (Spanish)', flag: '🇪🇸' },
+                    ].map((item) => (
+                      <button
+                        key={item.code}
+                        type="button"
+                        onClick={() => {
+                          if (window.translateLanguage) {
+                            window.translateLanguage(item.code);
+                          } else {
+                            changeLanguage(item.code === 'en' ? 'en' : 'id');
+                          }
+                          setGlobalLangOpen(false);
+                        }}
+                        className="w-full text-left px-2 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-200 transition text-xs rounded-none cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span>{item.flag}</span>
+                          <span>{item.name}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Cart Button with Anti-Ghost Hold Countdown */}
             <div 
               className="relative"
@@ -429,6 +512,41 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                   </span>
                 )}
               </a>
+              {/* Mobile Tier 1 & Tier 2 Language Selector */}
+              <div className="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                <span className="text-[10px] text-zinc-500 font-bold uppercase">BAHASA // LANG:</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-[10px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => changeLanguage('id')}
+                      className={`px-2 py-1 ${lang === 'id' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-600 dark:text-zinc-400'}`}
+                    >
+                      ID
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => changeLanguage('en')}
+                      className={`px-2 py-1 ${lang === 'en' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-600 dark:text-zinc-400'}`}
+                    >
+                      EN
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.translateLanguage) {
+                        window.translateLanguage(lang === 'en' ? 'id' : 'en');
+                      }
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 border border-zinc-300 dark:border-zinc-700 text-[10px] text-zinc-600 dark:text-zinc-400"
+                  >
+                    <Globe className="w-3 h-3 text-emerald-500" />
+                    <span>Global</span>
+                  </button>
+                </div>
+              </div>
+
               <a href="/" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
                 Beranda
               </a>

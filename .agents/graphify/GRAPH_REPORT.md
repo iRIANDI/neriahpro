@@ -157,9 +157,12 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/sitemap.xml`: Dynamic XML Sitemap terintegrasi status saklar feature flags (`SitemapController::index`).
 - `/robots.txt`: Dynamic robots.txt dengan proteksi crawl otomatis saat CV Pro dinonaktifkan (`SitemapController::robots`).
 - `/lang/{locale}`: Switcher bahasa (`id` / `en`) dengan persistensi session dan cookie.
+- `/customer/dashboard`: Portal Klien & Customer Workspace terpadu (`CustomerDashboardController::index`) dengan 6 tab interaktif (Ringkasan Akun, Proyek Studio Live Sprint Roadmap, Lisensi & Unduhan Selamanya, Faktur Pajak & Kwitansi Resmi, Domain & VPS Hosting, Pengaturan Akun). Terintegrasi penuh dengan auto-sync checkpoint PRD dan navigasi URL hash.
+- `/portal`: Alias redirect instan menuju `/customer/dashboard`.
+- `/api/blueprint/{slug}/checkpoint`: API persistensi progres sprint engineering dev checkpoints & kalkulasi persentase penyelesaian (`BlueprintController::updateCheckpoint`).
 - `/admin`: Panel admin Filament v5 dengan database notifications (PostgreSQL `jsonb` schema).
 - `/admin/login`: Customized Enterprise Login Portal (`App\Filament\Pages\Auth\Login`) dengan Vision & Mission Pillars, 1-Click Demo Credential Assistant, dan System Telemetry (Split-Screen Desktop & Responsive Portrait).
-- `/admin/settings`: Pengaturan Global (`ManageSettings.php`) dengan tab General, Multi-Language (2-Tier Locale: Native ID/EN & Google Translate Whitelist), Frontend Feature Flags (toggle saklar on/off untuk CV Pro, Job Hub, Keuangan Pro, Mock Interview, LinkedIn Suite, Vision Blueprint, dsb), Navigation & Footer, dan SEO Schema Markup.
+- `/admin/settings`: Pengaturan Global (`ManageSettings.php`) dengan tab terisolasi rapi (General, Legal & Developer Signature, Multi-AI Model Hub, Multi-Language 2-Tier Locale, Frontend Feature Flags, Navigation & Footer, SEO Schema Markup, Anti-Malware Shield, Project OS & Pricing Strategy) dengan pre-populasi defaults kebal validasi lintas tab dan quick action top save bar.
 - `/{slug?}`: Fallback dinamis CMS page (`PageController::show`).
 - `api/vision-blueprint`: Endpoint POST penyimpanan form Project OS dengan Honeypot anti-spam (`throttle:30,1`), normalisasi nomor WhatsApp internasional dengan selector kode negara dari `config/countries.php`, dan filter anti-awalan 0.
 

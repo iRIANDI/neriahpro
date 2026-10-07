@@ -26,7 +26,7 @@
     <style>
         /* Bulletproof stability for Global Settings Tabs (anti-collapse & anti-vanishing) */
         #global-settings-tabs {
-            min-height: 540px;
+            min-height: 480px;
             width: 100%;
         }
 
@@ -37,13 +37,37 @@
             opacity: 1 !important;
         }
 
+        /* CRITICAL: Strictly isolate tabs so ONLY the active tab is visible, eliminating vertical page sprawl */
+        #global-settings-tabs .fi-sc-tabs-tab {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
+            position: absolute !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
         #global-settings-tabs .fi-sc-tabs-tab.fi-active {
-            min-height: 480px;
             display: block !important;
             visibility: visible !important;
-            position: relative !important;
             height: auto !important;
+            overflow: visible !important;
+            position: relative !important;
             opacity: 1 !important;
+            pointer-events: auto !important;
+            min-height: 420px;
+        }
+
+        /* Graceful fallback: If no tab has fi-active assigned yet on boot, display the first tab panel */
+        #global-settings-tabs:not(:has(.fi-sc-tabs-tab.fi-active)) .fi-sc-tabs-tab:first-of-type {
+            display: block !important;
+            visibility: visible !important;
+            height: auto !important;
+            position: relative !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            min-height: 420px;
         }
     </style>
 

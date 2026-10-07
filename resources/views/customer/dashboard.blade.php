@@ -20,6 +20,12 @@
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Alpine.js & Tab Navigation Support -->
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <script>
         if (localStorage.getItem('neriah_theme') === 'dark' || (!localStorage.getItem('neriah_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -36,6 +42,50 @@
                 localStorage.setItem('neriah_theme', 'dark');
             }
         }
+
+        function customerDashboardApp() {
+            return {
+                currentTab: (window.location.hash ? window.location.hash.replace('#', '') : 'overview'),
+                
+                init() {
+                    const allowed = ['overview', 'projects', 'licenses', 'billing', 'assets', 'account'];
+                    if (!allowed.includes(this.currentTab)) {
+                        this.currentTab = 'overview';
+                    }
+                    window.addEventListener('hashchange', () => {
+                        const hash = window.location.hash.replace('#', '');
+                        if (allowed.includes(hash)) {
+                            this.currentTab = hash;
+                        }
+                    });
+                },
+
+                setTab(tab) {
+                    this.currentTab = tab;
+                    window.location.hash = tab;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                async logoutCustomer() {
+                    try {
+                        await fetch('/api/customer/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                            }
+                        });
+                        window.location.href = '/customer/login';
+                    } catch(e) {
+                        window.location.href = '/';
+                    }
+                }
+            };
+        }
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('customerDashboardApp', customerDashboardApp);
+        });
     </script>
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen transition-colors duration-200" x-data="customerDashboardApp()">
@@ -894,47 +944,5 @@
     <footer class="mt-20 border-t border-zinc-200 dark:border-zinc-800 py-8 bg-white dark:bg-zinc-900 text-center font-mono text-xs text-zinc-500">
         <p>&copy; {{ date('Y') }} Neriah Pro. {{ $isEn ? 'All rights reserved. Modular Software Architecture OS.' : 'Hak cipta dilindungi. Sistem Operasi Arsitektur Perangkat Lunak Skala Enterprise.' }}</p>
     </footer>
-
-    <script>
-    function customerDashboardApp() {
-        return {
-            currentTab: (window.location.hash ? window.location.hash.replace('#', '') : 'overview'),
-            
-            init() {
-                const allowed = ['overview', 'projects', 'licenses', 'billing', 'assets', 'account'];
-                if (!allowed.includes(this.currentTab)) {
-                    this.currentTab = 'overview';
-                }
-                window.addEventListener('hashchange', () => {
-                    const hash = window.location.hash.replace('#', '');
-                    if (allowed.includes(hash)) {
-                        this.currentTab = hash;
-                    }
-                });
-            },
-
-            setTab(tab) {
-                this.currentTab = tab;
-                window.location.hash = tab;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            },
-
-            async logoutCustomer() {
-                try {
-                    await fetch('/api/customer/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                        }
-                    });
-                    window.location.href = '/customer/login';
-                } catch(e) {
-                    window.location.href = '/';
-                }
-            }
-        };
-    }
-    </script>
 </body>
 </html>

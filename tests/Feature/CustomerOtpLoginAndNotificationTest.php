@@ -245,4 +245,22 @@ class CustomerOtpLoginAndNotificationTest extends TestCase
         $response->assertSee('customer-email');
         $response->assertSee('otp-code');
     }
+
+    /**
+     * Test customer dashboard renders cleanly for authenticated user.
+     */
+    public function test_customer_dashboard_renders_cleanly(): void
+    {
+        $user = User::create([
+            'name' => 'John Doe',
+            'email' => 'john@doe.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        $response = $this->actingAs($user)->get('/customer/dashboard');
+
+        $response->assertStatus(200);
+        $response->assertSee('Neriah');
+        $response->assertSee('john@doe.com');
+    }
 }

@@ -22,19 +22,43 @@ class CustomerDashboardController extends Controller
         }
 
         $user = Auth::user();
+        if (! $user) {
+            session(['url.intended' => route('customer.dashboard')]);
+            return redirect()->route('customer.login');
+        }
+
+        $email = strtolower(trim($user->email ?? ''));
+        $userId = $user->id;
         $globalSettings = CmsGlobalSetting::getAllCached();
 
         // Retrieve blueprints owned by or registered to this customer
-        $blueprints = VisionBlueprint::where('email', $user->email)
-            ->orWhere('user_metadata->user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $blueprints = VisionBlueprint::where(function ($q) use ($email, $userId) {
+            if ($email) {
+                $q->whereRaw('LOWER(email) = ?', [$email]);
+            }
+            if ($userId) {
+                $q->orWhere('user_metadata->user_id', $userId);
+            }
+        })->orderBy('created_at', 'desc')->get();
 
-        // Retrieve payment transactions
-        $transactions = Transaction::where('user_id', $user->id)
-            ->orWhere('customer_details->email', $user->email)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        // Retrieve payment transactions (resilient across PostgreSQL & MySQL)
+        $transactions = Transaction::where(function ($q) use ($email, $userId) {
+            if ($userId) {
+                $q->where('user_id', $userId);
+            }
+            if ($email) {
+                $q->orWhere(function ($sub) use ($email) {
+                    $sub->whereNotNull('customer_details')
+                        ->where('customer_details', 'LIKE', '%"' . $email . '"%');
+                });
+            }
+        })->orderBy('created_at', 'desc')->get();
+
+        // Retrieve linked domain & hosting assets if any
+        $blueprintIds = $blueprints->pluck('id')->filter()->toArray();
+        $hostingAssets = !empty($blueprintIds) 
+            ? \App\Models\DomainHostingAsset::whereIn('vision_blueprint_id', $blueprintIds)->orderBy('expiration_date', 'asc')->get()
+            : collect();
 
         // Categorize into Retail Self-Service Licenses vs Studio Custom Projects
         $retailTiers = ['retail_spark', 'retail_lite', 'retail_pro', 'retail_ultimate'];
@@ -63,13 +87,14 @@ class CustomerDashboardController extends Controller
             'retailLicenses' => $retailLicenses,
             'studioProjects' => $studioProjects,
             'transactions' => $transactions,
+            'hostingAssets' => $hostingAssets,
             'globalSettings' => $globalSettings,
             'metrics' => [
                 'total_blueprints' => $totalBlueprints,
                 'total_retail' => $totalRetail,
                 'total_studio' => $totalStudio,
                 'active_studio' => $activeStudio,
-                'total_spend_idr' => $transactions->whereIn('status', ['settlement', 'capture', 'success'])->sum('total_idr'),
+                'total_spend_idr' => (float) $transactions->whereIn('status', ['settlement', 'capture', 'success'])->sum('total_idr'),
             ],
         ]);
     }

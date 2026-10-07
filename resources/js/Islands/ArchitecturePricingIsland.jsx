@@ -1498,7 +1498,7 @@ export default function ArchitecturePricingIsland({
       {/* 6. INTERACTIVE SPRINT CAPACITY & DIRECT SELECTION MODAL (ANTI-COLLISION TIME MANAGEMENT) */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 z-50 overflow-y-auto p-4 sm:p-6 flex items-start justify-center min-h-full py-10 sm:py-16">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -1513,7 +1513,7 @@ export default function ArchitecturePricingIsland({
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative w-full max-w-xl bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-emerald-500 shadow-2xl p-6 sm:p-8 z-10 font-sans my-8"
+              className="relative w-full max-w-xl bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-emerald-500 shadow-2xl p-6 sm:p-8 pt-8 z-10 font-sans my-auto"
             >
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -1523,8 +1523,7 @@ export default function ArchitecturePricingIsland({
               </button>
 
               {/* Dynamic Header Based on Selected Package */}
-              {/* Dynamic Header Based on Selected Package */}
-              <div className="mb-6">
+              <div className="mb-6 pt-2 pr-8">
                 {selectedPackage === 'full_mvp' ? (
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">

@@ -44,23 +44,22 @@
 
     <div
         wire:ignore
-        @if (FilamentView::hasSpaMode())
-            {{-- format-ignore-start --}}x-load="visible || event (ax-modal-opened)"{{-- format-ignore-end --}}
-        @else
-            x-load
-        @endif
+        x-load="visible || event (ax-modal-opened)"
         x-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('filament-autograph-alpine', 'saade/filament-autograph') }}"
         x-data="signaturePadFormComponent(Object.assign(
             JSON.parse(decodeURIComponent('{{ $encodedConfig }}')),
             { state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$getStatePath()}')") }} }
         ))"
+        style="overflow-anchor: none;"
     >
-        <div class="relative w-full">
+        <div class="relative w-full" style="overflow-anchor: none;">
             <canvas
                 x-ref="canvas"
                 wire:ignore
-                x-init="window.setupAutographResizer($refs.canvas, function() { return signaturePad; })"
-                x-on:pointerdown="window.setupAutographResizer($refs.canvas, function() { return signaturePad; })"
+                x-init="if (window.setupAutographResizer) window.setupAutographResizer($refs.canvas, function() { return signaturePad; })"
+                x-intersect.once="if (window.setupAutographResizer) window.setupAutographResizer($refs.canvas, function() { return signaturePad; })"
+                x-on:pointerdown="if (window.setupAutographResizer) window.setupAutographResizer($refs.canvas, function() { return signaturePad; })"
+                style="overflow-anchor: none;"
                 @class([
                     'w-full h-44 rounded-sm border-2 border-dashed border-zinc-400 dark:border-zinc-600 bg-white dark:bg-zinc-950 shadow-inner block transition-colors',
                     'opacity-75 bg-gray-50' => $isDisabled,
@@ -75,18 +74,18 @@
             if (!window.setupAutographResizer) {
                 window.setupAutographResizer = function(canvasEl, getPad) {
                     if (!canvasEl) return;
-                    const sync = function() {
-                        const rect = canvasEl.getBoundingClientRect();
+                    var sync = function() {
+                        var rect = canvasEl.getBoundingClientRect();
                         if (rect.width <= 0 || rect.height <= 0) return;
-                        const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                        const targetW = Math.round(rect.width * ratio);
-                        const targetH = Math.round(rect.height * ratio);
-                        if (canvasEl.width !== targetW || canvasEl.height !== targetH) {
-                            const pad = getPad ? getPad() : null;
-                            const data = pad ? pad.toData() : null;
+                        var ratio = Math.max(window.devicePixelRatio || 1, 1);
+                        var targetW = Math.round(rect.width * ratio);
+                        var targetH = Math.round(rect.height * ratio);
+                        if (Math.abs(canvasEl.width - targetW) > 2 || Math.abs(canvasEl.height - targetH) > 2) {
+                            var pad = getPad ? getPad() : null;
+                            var data = pad ? pad.toData() : null;
                             canvasEl.width = targetW;
                             canvasEl.height = targetH;
-                            const ctx = canvasEl.getContext('2d');
+                            var ctx = canvasEl.getContext('2d');
                             if (ctx) {
                                 ctx.setTransform(1, 0, 0, 1, 0, 0);
                                 ctx.scale(ratio, ratio);
@@ -97,11 +96,6 @@
                         }
                     };
                     requestAnimationFrame(sync);
-                    setTimeout(sync, 150);
-                    if (window.ResizeObserver && !canvasEl._hasResizeObserver) {
-                        canvasEl._hasResizeObserver = true;
-                        new ResizeObserver(sync).observe(canvasEl);
-                    }
                 };
             }
         </script>

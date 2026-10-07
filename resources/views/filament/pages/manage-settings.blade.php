@@ -1,101 +1,108 @@
 <x-filament-panels::page>
+    @script
     <script>
-        (function() {
-            // 1. Force manual scroll restoration so browser never restores bottom scroll position
-            if ('scrollRestoration' in history) {
-                history.scrollRestoration = 'manual';
+        // 1. Force manual scroll restoration so browser never restores old scroll positions
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
+
+        // 2. Intercept HTMLElement.prototype.focus to ALWAYS prevent auto-scrolling
+        var originalFocus = HTMLElement.prototype.focus;
+        HTMLElement.prototype.focus = function(options) {
+            if (typeof options === 'object' && options !== null) {
+                if (options.preventScroll === undefined) {
+                    options.preventScroll = true;
+                }
+            } else {
+                options = { preventScroll: true };
             }
+            return originalFocus.call(this, options);
+        };
+
+        // 3. Shield against unwanted automatic scrollIntoView calls during component hydration
+        var originalScrollIntoView = Element.prototype.scrollIntoView;
+        Element.prototype.scrollIntoView = function() {
+            var isValidationError = this.hasAttribute && (
+                this.hasAttribute('data-validation-error') || 
+                (this.querySelector && this.querySelector('[data-validation-error], .fi-fo-field-wrp-error-message')) ||
+                (this.closest && this.closest('[data-validation-error], .fi-fo-field-wrp-error-message'))
+            );
+            var isUserGesture = window.event && window.event.isTrusted;
+            if (!isValidationError && !isUserGesture) {
+                return;
+            }
+            return originalScrollIntoView.apply(this, arguments);
+        };
+
+        // 4. Pin scroll position to top during DOM load, Livewire hydration, and navigation
+        var pinTop = function() {
             window.scrollTo(0, 0);
+            var mainContent = document.querySelector('.fi-main') || document.querySelector('.fi-page') || document.documentElement;
+            if (mainContent && mainContent.scrollTop > 0) {
+                mainContent.scrollTop = 0;
+            }
+        };
 
-            // 2. Intercept HTMLElement.prototype.focus to ALWAYS prevent auto-scrolling
-            var originalFocus = HTMLElement.prototype.focus;
-            HTMLElement.prototype.focus = function(options) {
-                if (typeof options === 'object' && options !== null) {
-                    if (options.preventScroll === undefined) {
-                        options.preventScroll = true;
-                    }
-                } else {
-                    options = { preventScroll: true };
+        pinTop();
+        setTimeout(pinTop, 50);
+        setTimeout(pinTop, 150);
+        setTimeout(pinTop, 400);
+
+        document.addEventListener('livewire:navigated', pinTop);
+        document.addEventListener('DOMContentLoaded', pinTop);
+
+        // 5. Enterprise Browser Extension Noise Shield (MV3 Ephemeral Service Worker Protection)
+        var isNoise = function(v) {
+            if (!v) return false;
+            var s = typeof v === 'string' ? v : (v.message || v.stack || v.description || String(v));
+            return s.indexOf('Could not establish connection') !== -1 ||
+                   s.indexOf('Receiving end does not exist') !== -1 ||
+                   s.indexOf('message port closed') !== -1 ||
+                   s.indexOf('Extension context invalidated') !== -1 ||
+                   s.indexOf('chrome-extension://') !== -1 ||
+                   s.indexOf('moz-extension://') !== -1;
+        };
+
+        ['error', 'warn', 'log'].forEach(function(method) {
+            var _orig = console[method];
+            if (typeof _orig !== 'function') return;
+            console[method] = function() {
+                for (var i = 0; i < arguments.length; i++) {
+                    if (isNoise(arguments[i])) return;
                 }
-                return originalFocus.call(this, options);
+                return _orig.apply(console, arguments);
             };
+        });
 
-            // 3. Shield against unwanted automatic scrollIntoView calls during component hydration
-            var originalScrollIntoView = Element.prototype.scrollIntoView;
-            Element.prototype.scrollIntoView = function() {
-                var isValidationError = this.hasAttribute && (
-                    this.hasAttribute('data-validation-error') || 
-                    (this.querySelector && this.querySelector('[data-validation-error], .fi-fo-field-wrp-error-message')) ||
-                    (this.closest && this.closest('[data-validation-error], .fi-fo-field-wrp-error-message'))
-                );
-                var isUserGesture = window.event && window.event.isTrusted;
-                if (!isValidationError && !isUserGesture) {
-                    return;
-                }
-                return originalScrollIntoView.apply(this, arguments);
-            };
+        window.addEventListener('unhandledrejection', function(e) {
+            if (isNoise(e ? e.reason : '')) {
+                e.preventDefault();
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                if (e.stopPropagation) e.stopPropagation();
+                return false;
+            }
+        }, true);
 
-            // 4. Pin scroll position to top during DOM load and Livewire hydration
-            window.addEventListener('DOMContentLoaded', function() {
-                window.scrollTo(0, 0);
-            });
-            window.addEventListener('load', function() {
-                window.scrollTo(0, 0);
-                setTimeout(function() { window.scrollTo(0, 0); }, 50);
-                setTimeout(function() { window.scrollTo(0, 0); }, 250);
-                setTimeout(function() { window.scrollTo(0, 0); }, 800);
-            });
-
-            // 5. Enterprise Browser Extension Noise Shield (MV3 Ephemeral Service Worker Protection)
-            var isNoise = function(v) {
-                if (!v) return false;
-                var s = typeof v === 'string' ? v : (v.message || v.stack || v.description || String(v));
-                return s.indexOf('Could not establish connection') !== -1 ||
-                       s.indexOf('Receiving end does not exist') !== -1 ||
-                       s.indexOf('message port closed') !== -1 ||
-                       s.indexOf('Extension context invalidated') !== -1 ||
-                       s.indexOf('chrome-extension://') !== -1 ||
-                       s.indexOf('moz-extension://') !== -1;
-            };
-
-            ['error', 'warn', 'log'].forEach(function(method) {
-                var _orig = console[method];
-                if (typeof _orig !== 'function') return;
-                console[method] = function() {
-                    for (var i = 0; i < arguments.length; i++) {
-                        if (isNoise(arguments[i])) return;
-                    }
-                    return _orig.apply(console, arguments);
-                };
-            });
-
-            window.addEventListener('unhandledrejection', function(e) {
-                if (isNoise(e ? e.reason : '')) {
-                    e.preventDefault();
-                    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-                    if (e.stopPropagation) e.stopPropagation();
-                    return false;
-                }
-            }, true);
-
-            window.addEventListener('error', function(e) {
-                var text = (e ? e.message : '') + ' ' + (e && e.error ? (e.error.message || e.error.stack) : '');
-                if (isNoise(text)) {
-                    e.preventDefault();
-                    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-                    if (e.stopPropagation) e.stopPropagation();
-                    return false;
-                }
-            }, true);
-        })();
+        window.addEventListener('error', function(e) {
+            var text = (e ? e.message : '') + ' ' + (e && e.error ? (e.error.message || e.error.stack) : '');
+            if (isNoise(text)) {
+                e.preventDefault();
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                if (e.stopPropagation) e.stopPropagation();
+                return false;
+            }
+        }, true);
     </script>
+    @endscript
+
     <style>
         /* Neutralize Chromium Scroll Anchoring (prevents auto-jumping on dynamic DOM expansion) */
-        html, body, .fi-main, .fi-page, #global-settings-tabs, .fi-sc-tabs {
+        html, body, .fi-main, .fi-page, #global-settings-tabs, .fi-sc-tabs, .fi-sc-tabs-tab {
             overflow-anchor: none !important;
         }
 
-        /* Bulletproof stability for Global Settings Tabs (anti-collapse & anti-vanishing) */
+        /* Bulletproof stability for Global Settings Tabs */
         #global-settings-tabs {
             min-height: 480px;
             width: 100%;
@@ -106,39 +113,6 @@
             display: flex !important;
             visibility: visible !important;
             opacity: 1 !important;
-        }
-
-        /* CRITICAL: Strictly isolate tabs so ONLY the active tab is visible, eliminating vertical page sprawl */
-        #global-settings-tabs .fi-sc-tabs-tab {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-            overflow: hidden !important;
-            position: absolute !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-        }
-
-        #global-settings-tabs .fi-sc-tabs-tab.fi-active {
-            display: block !important;
-            visibility: visible !important;
-            height: auto !important;
-            overflow: visible !important;
-            position: relative !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            min-height: 420px;
-        }
-
-        /* Graceful fallback: If no tab has fi-active assigned yet on boot, display the first tab panel */
-        #global-settings-tabs:not(:has(.fi-sc-tabs-tab.fi-active)) .fi-sc-tabs-tab:first-of-type {
-            display: block !important;
-            visibility: visible !important;
-            height: auto !important;
-            position: relative !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            min-height: 420px;
         }
     </style>
 

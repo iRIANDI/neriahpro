@@ -88,4 +88,24 @@ class ManageSettingsLivewireTest extends TestCase
 
         $this->assertEquals('en', app()->getLocale());
     }
+
+    public function test_developer_signature_modal_action_applies_and_saves(): void
+    {
+        $superadmin = User::where('email', 'yoseph.iriandi.tambunan@gmail.com')->firstOrFail();
+        $this->actingAs($superadmin);
+
+        $fakeBase64Sig = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+        Livewire::test(ManageSettings::class)
+            ->callAction('open_developer_signature_pad', data: [
+                'modal_canvas_signature' => $fakeBase64Sig,
+            ])
+            ->assertHasNoActionErrors()
+            ->call('submit')
+            ->assertHasNoErrors();
+
+        $savedPath = CmsGlobalSetting::getVal('developer_signature_image');
+        $this->assertStringStartsWith('signatures/developer_sig_', $savedPath);
+        $this->assertTrue(\Illuminate\Support\Facades\Storage::disk('public')->exists($savedPath));
+    }
 }

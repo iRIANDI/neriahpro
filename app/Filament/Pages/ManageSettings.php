@@ -8,6 +8,8 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Actions;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Builder;
@@ -154,7 +156,14 @@ class ManageSettings extends Page implements HasForms
         }
 
         if (!empty($settings['developer_signature_image']) && is_string($settings['developer_signature_image']) && str_starts_with($settings['developer_signature_image'], 'data:image')) {
-            $settings['developer_signature_pad'] = $settings['developer_signature_image'];
+            $rawBase64 = preg_replace('/^data:image\/\w+;base64,/', '', $settings['developer_signature_image']);
+            $decoded = base64_decode($rawBase64);
+            if ($decoded !== false) {
+                $filename = 'signatures/developer_sig_migrated.png';
+                \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $decoded);
+                $settings['developer_signature_image'] = $filename;
+                CmsGlobalSetting::updateOrCreate(['key' => 'developer_signature_image'], ['value' => $filename]);
+            }
         }
         $this->form->fill($settings);
     }
@@ -236,7 +245,7 @@ class ManageSettings extends Page implements HasForms
                                     ])->columns(2),
 
                                 Section::make('Penanggung Jawab Teknis & Tanda Tangan Developer')
-                                    ->description('Unggah gambar tanda tangan Anda selaku developer / arsitek sistem untuk dibubuhkan otomatis pada dokumen kontrak digital Pihak Kedua.')
+                                    ->description('Unggah gambar tanda tangan Anda atau goreskan langsung pada canvas pad modal untuk dibubuhkan otomatis pada dokumen kontrak digital Pihak Kedua.')
                                     ->schema([
                                         TextInput::make('developer_pic_name')
                                             ->label('Nama Lengkap Penanggung Jawab (PIC)')
@@ -250,19 +259,25 @@ class ManageSettings extends Page implements HasForms
                                         TextInput::make('developer_seal_text')
                                             ->label('Teks Segel Digital Korporat')
                                             ->default('NERIAH PRO VERIFIED ARCHITECT')
-                                            ->required(),
-                                        \App\Support\FilamentCuratorHelper::picker('developer_signature_image', 'signatures', 'Tanda Tangan Digital Developer (Opsi A: Upload Berkas / Curator)')
-                                            ->helperText('Opsi A: Unggah berkas gambar tanda tangan Anda (format PNG transparan direkomendasikan). Otomatis tersimpan secara rapi di folder dangkal "storage/signatures".'),
-                                        SignaturePad::make('developer_signature_pad')
-                                            ->label('Tanda Tangan Digital Developer (Opsi B: Goreskan Langsung / Canvas Pad)')
-                                            ->helperText('Opsi B: Goreskan tanda tangan Anda langsung di canvas menggunakan stylus pen, mouse, atau touchscreen jika tidak memiliki berkas gambar PNG.')
-                                            ->dotSize(2.0)
-                                            ->lineMinWidth(1.0)
-                                            ->lineMaxWidth(2.5)
-                                            ->penColor('blue')
-                                            ->backgroundColor('rgba(255, 255, 255, 1)')
-                                            ->clearable()
+                                            ->required()
                                             ->columnSpanFull(),
+                                        \App\Support\FilamentCuratorHelper::picker('developer_signature_image', 'signatures', 'Tanda Tangan Digital Developer (Opsi A: Upload Berkas / Curator)')
+                                            ->helperText('Opsi A: Unggah berkas gambar tanda tangan Anda (format PNG transparan direkomendasikan). Otomatis tersimpan secara rapi di folder dangkal "storage/signatures".')
+                                            ->columnSpan(1),
+                                        Placeholder::make('developer_signature_preview')
+                                            ->label('Pratinjau Tanda Tangan Aktif')
+                                            ->content(function ($get) {
+                                                $sig = $get('developer_signature_image');
+                                                if (blank($sig)) {
+                                                    return new \Illuminate\Support\HtmlString('<div class="p-3 border-2 border-dashed border-zinc-200 dark:border-zinc-700 text-center rounded-sm text-xs text-zinc-400 italic">Belum ada tanda tangan. Unggah berkas PNG di sebelah kiri atau gunakan tombol Goreskan Tanda Tangan di bawah.</div>');
+                                                }
+                                                $src = str_starts_with($sig, 'data:image') ? e($sig) : (str_starts_with($sig, 'http') ? e($sig) : ('/storage/' . ltrim(e($sig), '/')));
+                                                return new \Illuminate\Support\HtmlString('<div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-sm inline-block"><img src="' . $src . '" alt="Tanda Tangan Developer" class="max-h-24 max-w-full object-contain" /></div>');
+                                            })
+                                            ->columnSpan(1),
+                                        Actions::make([
+                                            $this->getDeveloperSignaturePadAction(),
+                                        ])->columnSpanFull(),
                                     ])->columns(2),
 
                                 Section::make('Kepatuhan Midtrans, Syarat & Ketentuan, serta Kebijakan Refund & Double-Payment')
@@ -870,6 +885,60 @@ class ManageSettings extends Page implements HasForms
             ->statePath('data');
     }
 
+    public function getDeveloperSignaturePadAction(): Action
+    {
+        return Action::make('open_developer_signature_pad')
+            ->label('✍️ Goreskan Tanda Tangan Langsung (Opsi B: Canvas Pad Modal)')
+            ->icon('heroicon-m-pencil-square')
+            ->color('primary')
+            ->button()
+            ->modalHeading('Goreskan Tanda Tangan Digital Developer')
+            ->modalDescription('Gunakan mouse, stylus pen, atau touchscreen untuk membubuhkan tanda tangan Anda langsung di canvas pad.')
+            ->modalSubmitActionLabel('Terapkan Tanda Tangan ke Pengaturan')
+            ->form([
+                SignaturePad::make('modal_canvas_signature')
+                    ->label('Canvas Pad Tanda Tangan')
+                    ->helperText('Goreskan tanda tangan Anda pada area putih di bawah ini. Klik Clear jika ingin mengulang.')
+                    ->dotSize(2.0)
+                    ->lineMinWidth(1.0)
+                    ->lineMaxWidth(2.5)
+                    ->penColor('blue')
+                    ->backgroundColor('rgba(255, 255, 255, 1)')
+                    ->clearable()
+                    ->required(),
+            ])
+            ->action(function (array $data): void {
+                if (!empty($data['modal_canvas_signature'])) {
+                    $raw = $data['modal_canvas_signature'];
+                    if (is_string($raw) && str_starts_with($raw, 'data:image')) {
+                        $rawBase64 = preg_replace('/^data:image\/\w+;base64,/', '', $raw);
+                        $decoded = base64_decode($rawBase64);
+                        if ($decoded !== false) {
+                            $filename = 'signatures/developer_sig_' . time() . '.png';
+                            \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $decoded);
+                            $this->data['developer_signature_image'] = [$filename];
+                            CmsGlobalSetting::updateOrCreate(['key' => 'developer_signature_image'], ['value' => $filename]);
+                        }
+                    } else {
+                        $this->data['developer_signature_image'] = is_array($raw) ? $raw : [$raw];
+                        CmsGlobalSetting::updateOrCreate(['key' => 'developer_signature_image'], ['value' => is_array($raw) ? reset($raw) : $raw]);
+                    }
+                    Notification::make()
+                        ->title('Tanda Tangan Diterapkan')
+                        ->body('Goresan tanda tangan berhasil disimpan sebagai berkas PNG dan dipasang.')
+                        ->success()
+                        ->send();
+                }
+            });
+    }
+
+    protected function getActions(): array
+    {
+        return [
+            $this->getDeveloperSignaturePadAction(),
+        ];
+    }
+
     protected function getFormActions(): array
     {
         return [
@@ -890,9 +959,24 @@ class ManageSettings extends Page implements HasForms
         $data = $this->form->getState();
 
         if (!empty($data['developer_signature_pad'])) {
-            $data['developer_signature_image'] = $data['developer_signature_pad'];
+            $raw = $data['developer_signature_pad'];
+            if (is_string($raw) && str_starts_with($raw, 'data:image')) {
+                $rawBase64 = preg_replace('/^data:image\/\w+;base64,/', '', $raw);
+                $decoded = base64_decode($rawBase64);
+                if ($decoded !== false) {
+                    $filename = 'signatures/developer_sig_' . time() . '.png';
+                    \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $decoded);
+                    $data['developer_signature_image'] = $filename;
+                }
+            } else {
+                $data['developer_signature_image'] = is_array($raw) ? reset($raw) : $raw;
+            }
         }
         unset($data['developer_signature_pad']);
+
+        if (isset($data['developer_signature_image']) && is_array($data['developer_signature_image'])) {
+            $data['developer_signature_image'] = reset($data['developer_signature_image']) ?: '';
+        }
         
         foreach ($data as $key => $value) {
             $safeValue = $value !== null ? $value : '';

@@ -299,6 +299,23 @@ class ManageSettings extends Page implements HasForms
                                             ->revealable()
                                             ->helperText('Dapatkan di openrouter.ai untuk akses ratusan model open-source gratis.'),
                                     ])->columns(2),
+
+                                Section::make('Universal Router Configuration (RelayRouter / Shopee 1-Key Multi-Model)')
+                                    ->description('Sesuaikan Base URL dan alokasi model AI untuk kunci API universal/sharing (1 Key untuk semua model) seperti RelayRouter.ai, OpenRouter, atau OneAPI.')
+                                    ->schema([
+                                        TextInput::make('ai_relayrouter_base_url')
+                                            ->label('RelayRouter Base URL')
+                                            ->default('https://api.relayrouter.ai/v1')
+                                            ->helperText('Endpoint proxy OpenAI-compatible (standar: https://api.relayrouter.ai/v1).'),
+                                        TextInput::make('ai_relayrouter_discovery_model')
+                                            ->label('Model Discovery / Audit Cepat')
+                                            ->default('gpt-4o-mini')
+                                            ->helperText('Model respons cepat & hemat untuk audit ide dan triage arsitektur awal (contoh: gpt-4o-mini, deepseek-chat, claude-3-5-haiku).'),
+                                        TextInput::make('ai_relayrouter_prd_model')
+                                            ->label('Model PRD & Arsitektur Kompleks')
+                                            ->default('claude-3-7-sonnet-20250219')
+                                            ->helperText('Model penalaran kelas atas untuk PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan diagram Mermaid (contoh: claude-3-7-sonnet-20250219, gpt-4o, deepseek-reasoner).'),
+                                    ])->columns(3),
                             ]),
 
                         Tabs\Tab::make('Multi-Language (2-Tier Locale)')

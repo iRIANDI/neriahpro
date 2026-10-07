@@ -38,6 +38,38 @@ class MultiAiModelManager
     }
 
     /**
+     * Get model name for a provider and tier, checking CmsGlobalSetting first.
+     */
+    public static function getModel(string $provider, string $tier = 'discovery'): string
+    {
+        try {
+            $dbModel = CmsGlobalSetting::where('key', "ai_{$provider}_{$tier}_model")->value('value');
+            if (!empty($dbModel) && is_string($dbModel) && trim($dbModel) !== '') {
+                return trim($dbModel);
+            }
+        } catch (\Throwable) {}
+
+        $providerConfig = config("ai.providers.{$provider}");
+        return $providerConfig['models'][$tier] ?? ($providerConfig['models']['discovery'] ?? 'default');
+    }
+
+    /**
+     * Get base URL for an AI provider, checking CmsGlobalSetting first.
+     */
+    public static function getBaseUrl(string $provider): string
+    {
+        try {
+            $dbUrl = CmsGlobalSetting::where('key', "ai_{$provider}_base_url")->value('value');
+            if (!empty($dbUrl) && is_string($dbUrl) && trim($dbUrl) !== '') {
+                return rtrim(trim($dbUrl), '/');
+            }
+        } catch (\Throwable) {}
+
+        $config = config("ai.providers.{$provider}");
+        return rtrim($config['base_url'] ?? 'https://api.openai.com/v1', '/');
+    }
+
+    /**
      * Get real-time health and token limit status for all AI models.
      */
     public static function getCatalog(): array
@@ -203,7 +235,7 @@ class MultiAiModelManager
             }
 
             $providerConfig = config("ai.providers.{$provider}");
-            $modelName = $providerConfig['models'][$tier] ?? ($providerConfig['models']['discovery'] ?? 'default');
+            $modelName = self::getModel($provider, $tier);
 
             try {
                 $resultText = match ($provider) {
@@ -341,8 +373,7 @@ class MultiAiModelManager
      */
     protected static function callOpenAiCompatible(string $provider, string $apiKey, string $model, string $prompt, string $system, string $tier): ?string
     {
-        $config = config("ai.providers.{$provider}");
-        $baseUrl = rtrim($config['base_url'] ?? 'https://api.openai.com/v1', '/');
+        $baseUrl = self::getBaseUrl($provider);
         $url = "{$baseUrl}/chat/completions";
 
         $maxTokens = $tier === 'prd' ? 4000 : 800;

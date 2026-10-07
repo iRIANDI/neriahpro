@@ -98,7 +98,7 @@ class LeadContactsTable
                     ->label('Kirim Email')
                     ->icon('heroicon-o-paper-airplane')
                     ->color('primary')
-                    ->visible(fn () => auth()->user()?->hasRole('super_admin') || auth()->user()?->email === 'yoseph.iriandi.tambunan@gmail.com')
+                    ->visible(fn () => auth()->user()?->hasAnyRole(['super_admin', 'developer']))
                     ->form([
                         TextInput::make('sender_name')
                             ->label('Nama Pengirim (Display Name)')

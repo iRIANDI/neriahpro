@@ -7,16 +7,30 @@ use Illuminate\Database\Eloquent\Model;
 trait AuditableByMidtransReviewer
 {
     /**
-     * Check if the authenticated user is the primary superadmin.
+     * Check if the authenticated user is a superadmin.
      */
     public static function isSuperAdmin(): bool
     {
         $user = auth()->user();
-        if (! $user) {
-            return false;
-        }
+        return $user && $user->hasRole('super_admin');
+    }
 
-        return $user->hasRole('super_admin') || $user->email === 'yoseph.iriandi.tambunan@gmail.com';
+    /**
+     * Check if the authenticated user is a developer.
+     */
+    public static function isDeveloper(): bool
+    {
+        $user = auth()->user();
+        return $user && $user->hasRole('developer');
+    }
+
+    /**
+     * Check if the authenticated user is an investor.
+     */
+    public static function isInvestor(): bool
+    {
+        $user = auth()->user();
+        return $user && $user->hasRole('investor');
     }
 
     /**
@@ -25,19 +39,18 @@ trait AuditableByMidtransReviewer
     public static function isMidtransReviewer(): bool
     {
         $user = auth()->user();
-        if (! $user) {
-            return false;
-        }
-
-        return $user->hasRole('midtrans_reviewer') || $user->email === 'reviewer.midtrans@neriahpro.com';
+        return $user && $user->hasRole('midtrans_reviewer');
     }
 
     /**
-     * Both superadmin and midtrans reviewer have view access.
+     * Superadmin, developer, investor, and midtrans reviewer have view access.
      */
     public static function canViewAny(): bool
     {
-        return static::isSuperAdmin() || static::isMidtransReviewer();
+        return static::isSuperAdmin() 
+            || static::isDeveloper() 
+            || static::isInvestor() 
+            || static::isMidtransReviewer();
     }
 
     public static function canAccess(): bool
@@ -52,15 +65,15 @@ trait AuditableByMidtransReviewer
 
     public static function canView(Model $record): bool
     {
-        return static::isSuperAdmin() || static::isMidtransReviewer();
+        return static::canViewAny();
     }
 
     /**
-     * Reviewers have strictly read-only audit access to protect production data.
+     * Only superadmin and team developers can create records. Reviewers and investors are strictly read-only.
      */
     public static function canCreate(): bool
     {
-        return static::isSuperAdmin();
+        return static::isSuperAdmin() || static::isDeveloper();
     }
 
     public static function canEdit(Model $record): bool

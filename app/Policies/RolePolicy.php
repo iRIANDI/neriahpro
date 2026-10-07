@@ -14,11 +14,11 @@ class RolePolicy
     
     public function before(AuthUser $authUser, string $ability): ?bool
     {
-        if ($authUser->hasRole('midtrans_reviewer') || $authUser->email === 'reviewer.midtrans@neriahpro.com') {
+        if ($authUser->hasRole('midtrans_reviewer')) {
             return false;
         }
 
-        if ($authUser->email === 'yoseph.iriandi.tambunan@gmail.com' || $authUser->hasRole('super_admin')) {
+        if (method_exists($authUser, 'isSuperAdmin') ? $authUser->isSuperAdmin() : $authUser->hasRole('super_admin')) {
             return true;
         }
 

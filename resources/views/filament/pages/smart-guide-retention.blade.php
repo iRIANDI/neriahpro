@@ -264,7 +264,7 @@
                 🔒 <span x-text="t[lang].confidential_badge"></span>
             </div>
             <div class="sg-badge-active">
-                ✅ <span x-text="t[lang].access_verified"></span>: yoseph.iriandi.tambunan@gmail.com
+                ✅ <span x-text="t[lang].access_verified"></span>: {{ auth()->user()?->name }} ({{ auth()->user()?->roles->pluck('name')->map(fn($r) => strtoupper(str_replace('_', ' ', $r)))->implode(', ') ?: 'AUTHORIZED' }})
             </div>
         </div>
         <h2 style="font-size: 18px; font-weight: 800; color: #ffffff; margin: 4px 0 8px 0;" x-text="t[lang].founder_title"></h2>
@@ -570,10 +570,10 @@ function smartGuideApp() {
                 nav_matrix: 'Matriks Batasan',
                 nav_playbook: 'Playbook CS',
                 search_placeholder: 'Cari topik / formula margin...',
-                confidential_badge: 'RAHASIA FOUNDER // HANYA YOSEPH IRIANDI TAMBUNAN',
+                confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
                 founder_title: 'Sistem Perlindungan Margin & Panduan Retensi Bisnis Neriah Pro',
-                founder_desc: 'Halaman ini memuat rumus unit economics, strategi trojan horse upsell Studio Rp 50 Juta, dan penegakan batasan teknis per paket. Reviewer Midtrans dan staf lainnya diblokir 100% dari URL ini dengan HTTP 403 Forbidden.',
+                founder_desc: 'Halaman ini memuat validasi unit economics 98%+ margin, kalkulator laba kas, dan playbook retensi/upsell untuk evaluasi Founder dan Due Diligence Calon Investor. Reviewer Midtrans dan Pelanggan dilarang keras mengakses dokumen ini.',
                 sec1_q: '“Kalau Lifetime Itu Apa Gak Rugi Saya? Bagaimana Marginnya? Apa Mereka Tidak Bayar Lagi?”',
                 sec1_p1_title: 'Prinsip Pay-Per-Project',
                 sec1_p1_text: 'Bukan Langganan Bikin Proyek Unlimited! 1 pembelian lisensi (Rp 399.000) strictly hanya berlaku untuk 1 Entitas Proyek. Klien yang ingin membuat proyek sistem baru wajib membeli lisensi baru.',
@@ -636,10 +636,10 @@ function smartGuideApp() {
                 nav_matrix: 'Limit Matrix',
                 nav_playbook: 'Sales Playbook',
                 search_placeholder: 'Search topic / margin formula...',
-                confidential_badge: 'CONFIDENTIAL // FOUNDER YOSEPH IRIANDI TAMBUNAN ONLY',
+                confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
                 founder_title: 'Neriah Pro Margin Shield & Retention Playbook',
-                founder_desc: 'This page details the unit economics formulas, the Trojan horse upsell strategy to Rp 50M Studio contracts, and technical tier limits. Midtrans reviewers and other staff are blocked with HTTP 403 Forbidden.',
+                founder_desc: 'This document presents the 98%+ margin unit economics validation, net cash simulator, and retention playbook for Founder governance and prospective Investor Due Diligence. Midtrans reviewers and regular clients are strictly forbidden.',
                 sec1_q: '“Does Lifetime Access Cause Us Losses? What Is the Margin? Will Clients Never Pay Again?”',
                 sec1_p1_title: 'Pay-Per-Project Model',
                 sec1_p1_text: 'NOT Unlimited Project Creation! 1 license (Rp 399,000) strictly applies to 1 Project Entity only. When clients want to architect a new software system next month, they MUST purchase a new license.',

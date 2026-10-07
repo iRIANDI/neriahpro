@@ -17,8 +17,10 @@ class SmartGuideRetentionPage extends Page
     protected string $view = 'filament.pages.smart-guide-retention';
 
     /**
-     * Strictly restricted ONLY to Super Admin Yoseph Iriandi Tambunan.
-     * Midtrans QA reviewers, test staff, and other accounts are strictly blocked.
+     * Dynamic RBAC Gatekeeper for Executive Smart Guide:
+     * - Allowed: Super Admin (Founder) and Calon Investor (for Due Diligence & Unit Economics audit).
+     * - Allowed: Any actor with explicit 'view_executive_smart_guide' permission (e.g. Lead Developer).
+     * - Strictly Denied: Midtrans QA Reviewer and Clients (Retail & Partner).
      */
     public static function canAccess(): bool
     {
@@ -27,13 +29,14 @@ class SmartGuideRetentionPage extends Page
             return false;
         }
 
-        // Midtrans reviewer or any secondary account is strictly DENIED
-        if ($user->hasRole('midtrans_reviewer') || $user->email === 'reviewer.midtrans@neriahpro.com') {
+        // Reviewer Midtrans dan Pelanggan dilarang keras mengakses rahasia margin & playbook unit economics
+        if ($user->hasAnyRole(['midtrans_reviewer', 'client_retail', 'client_partner', 'client'])) {
             return false;
         }
 
-        // HANYA super admin yoseph.iriandi.tambunan@gmail.com
-        return $user->email === 'yoseph.iriandi.tambunan@gmail.com';
+        // Dinamis berbasis Role & Permission (Super Admin, Calon Investor, atau permission khusus)
+        return $user->can('view_executive_smart_guide')
+            || $user->hasAnyRole(['super_admin', 'investor']);
     }
 
     public function getHeading(): string | Htmlable

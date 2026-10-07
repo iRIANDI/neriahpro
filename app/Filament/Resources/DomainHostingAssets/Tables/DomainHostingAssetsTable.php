@@ -160,7 +160,7 @@ class DomainHostingAssetsTable
                     ->label('Perpanjang (Renew)')
                     ->icon('heroicon-o-arrow-path')
                     ->color('success')
-                    ->visible(fn () => auth()->user()?->hasRole('super_admin') || auth()->user()?->email === 'yoseph.iriandi.tambunan@gmail.com')
+                    ->visible(fn () => auth()->user()?->hasAnyRole(['super_admin', 'developer']))
                     ->form([
                         Select::make('months')
                             ->label('Durasi Perpanjangan')
@@ -190,7 +190,7 @@ class DomainHostingAssetsTable
                     ->label('Picu Pengingat')
                     ->icon('heroicon-o-bell-alert')
                     ->color('warning')
-                    ->visible(fn () => auth()->user()?->hasRole('super_admin') || auth()->user()?->email === 'yoseph.iriandi.tambunan@gmail.com')
+                    ->visible(fn () => auth()->user()?->hasAnyRole(['super_admin', 'developer']))
                     ->requiresConfirmation()
                     ->modalHeading('Kirim Pengingat Jatuh Tempo Sekarang')
                     ->modalDescription(fn ($record) => "Kirimkan notifikasi peringatan jatuh tempo untuk aset '{$record->domain_name}' ({$record->expiration_label}) ke seluruh Superadmin?")

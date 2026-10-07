@@ -31,26 +31,47 @@ class BlueprintVoucherResource extends Resource
     protected static ?string $recordTitleAttribute = 'code';
 
     /**
-     * Strict RBAC Gatekeeper: ONLY yoseph.iriandi.tambunan@gmail.com can access, view, or manage vouchers.
+     * Dynamic RBAC Gatekeeper: Super Admin and users with manage_vouchers permission.
+     * Reviewers and clients are strictly forbidden.
      */
     public static function canViewAny(): bool
     {
-        return auth()->user()?->email === 'yoseph.iriandi.tambunan@gmail.com';
+        $user = auth()->user();
+        if (! $user || $user->hasRole('midtrans_reviewer')) {
+            return false;
+        }
+
+        return $user->isSuperAdmin() || $user->can('ViewAny:BlueprintVoucher') || $user->can('manage_vouchers');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->email === 'yoseph.iriandi.tambunan@gmail.com';
+        $user = auth()->user();
+        if (! $user || $user->hasRole('midtrans_reviewer')) {
+            return false;
+        }
+
+        return $user->isSuperAdmin() || $user->can('Create:BlueprintVoucher') || $user->can('manage_vouchers');
     }
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()?->email === 'yoseph.iriandi.tambunan@gmail.com';
+        $user = auth()->user();
+        if (! $user || $user->hasRole('midtrans_reviewer')) {
+            return false;
+        }
+
+        return $user->isSuperAdmin() || $user->can('Update:BlueprintVoucher') || $user->can('manage_vouchers');
     }
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()?->email === 'yoseph.iriandi.tambunan@gmail.com';
+        $user = auth()->user();
+        if (! $user || $user->hasRole('midtrans_reviewer')) {
+            return false;
+        }
+
+        return $user->isSuperAdmin() || $user->can('Delete:BlueprintVoucher') || $user->can('manage_vouchers');
     }
 
     public static function form(Schema $schema): Schema

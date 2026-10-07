@@ -76,6 +76,76 @@ class SmartGuideRetentionAccessTest extends TestCase
     }
 
     /**
+     * Test that Calon Investor CAN access Smart Guide Retention for Due Diligence.
+     */
+    public function test_calon_investor_can_access_smart_guide_for_due_diligence(): void
+    {
+        $investor = User::create([
+            'name' => 'Venture Capital Partner',
+            'email' => 'investor@venturefund.com',
+            'password' => bcrypt('InvestorSecurePass2026#'),
+        ]);
+        $investor->assignRole('investor');
+
+        $this->actingAs($investor);
+
+        $this->assertTrue(\App\Filament\Pages\SmartGuideRetentionPage::canAccess());
+
+        $response = $this->get(\App\Filament\Pages\SmartGuideRetentionPage::getUrl());
+
+        $response->assertStatus(200);
+        $response->assertSee('Executive Smart Guide');
+        $response->assertSee('GROSS MARGIN: 98.6%');
+    }
+
+    /**
+     * Test that Retail and Partner Clients are STRICTLY FORBIDDEN from internal unit economics.
+     */
+    public function test_clients_are_strictly_forbidden_from_smart_guide(): void
+    {
+        $retailClient = User::create([
+            'name' => 'Retail Customer',
+            'email' => 'retail@client.com',
+            'password' => bcrypt('pass12345'),
+        ]);
+        $retailClient->assignRole('client_retail');
+
+        $partnerClient = User::create([
+            'name' => 'Enterprise Partner',
+            'email' => 'partner@company.com',
+            'password' => bcrypt('pass12345'),
+        ]);
+        $partnerClient->assignRole('client_partner');
+
+        $this->actingAs($retailClient);
+        $this->assertFalse(\App\Filament\Pages\SmartGuideRetentionPage::canAccess());
+
+        $this->actingAs($partnerClient);
+        $this->assertFalse(\App\Filament\Pages\SmartGuideRetentionPage::canAccess());
+    }
+
+    /**
+     * Test that Team Developer access is dynamically governed by permission.
+     */
+    public function test_developer_access_is_governed_by_permission(): void
+    {
+        $dev = User::create([
+            'name' => 'Backend Engineer',
+            'email' => 'dev@neriahpro.com',
+            'password' => bcrypt('DevPass2026#'),
+        ]);
+        $dev->assignRole('developer');
+
+        // Without executive guide permission -> forbidden
+        $this->actingAs($dev);
+        $this->assertFalse(\App\Filament\Pages\SmartGuideRetentionPage::canAccess());
+
+        // When granted permission by superadmin -> allowed
+        $dev->givePermissionTo('view_executive_smart_guide');
+        $this->assertTrue(\App\Filament\Pages\SmartGuideRetentionPage::canAccess());
+    }
+
+    /**
      * Test that unauthenticated guest is redirected to login.
      */
     public function test_guest_is_redirected_to_login(): void

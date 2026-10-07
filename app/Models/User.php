@@ -35,10 +35,17 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->hasRole('super_admin') 
-            || $this->email === 'yoseph.iriandi.tambunan@gmail.com'
-            || $this->hasRole('midtrans_reviewer')
-            || $this->email === 'reviewer.midtrans@neriahpro.com';
+        if ($panel->getId() === 'admin') {
+            return $this->isSuperAdmin()
+                || $this->hasAnyRole([
+                    'developer',
+                    'investor',
+                    'midtrans_reviewer',
+                ])
+                || ($this->email && $this->email === 'reviewer.midtrans@neriahpro.com');
+        }
+
+        return false;
     }
 
     public function resumes(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -63,6 +70,26 @@ class User extends Authenticatable implements FilamentUser
 
     public function isSuperAdmin(): bool
     {
-        return $this->hasRole('super_admin') || $this->email === 'yoseph.iriandi.tambunan@gmail.com';
+        return $this->hasRole('super_admin') || ($this->email && $this->email === 'yoseph.iriandi.tambunan@gmail.com');
+    }
+
+    public function isDeveloper(): bool
+    {
+        return $this->hasRole('developer');
+    }
+
+    public function isInvestor(): bool
+    {
+        return $this->hasRole('investor');
+    }
+
+    public function isMidtransReviewer(): bool
+    {
+        return $this->hasRole('midtrans_reviewer');
+    }
+
+    public function isClient(): bool
+    {
+        return $this->hasAnyRole(['client_retail', 'client_partner', 'client']);
     }
 }

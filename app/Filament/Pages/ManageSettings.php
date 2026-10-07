@@ -39,11 +39,11 @@ class ManageSettings extends Page implements HasForms
             return false;
         }
 
-        if ($user->hasRole('midtrans_reviewer') || $user->email === 'reviewer.midtrans@neriahpro.com') {
+        if ($user->hasRole('midtrans_reviewer')) {
             return false;
         }
 
-        return $user->hasRole('super_admin') || $user->email === 'yoseph.iriandi.tambunan@gmail.com';
+        return $user->hasRole('super_admin') || $user->can('manage_settings');
     }
 
     public ?array $data = [];

@@ -15,10 +15,25 @@ class SuperAdminSeeder extends Seeder
      */
     public function run(): void
     {
+        // 5 Dynamic Core RBAC Roles
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $developerRole = Role::firstOrCreate(['name' => 'developer', 'guard_name' => 'web']);
+        $investorRole = Role::firstOrCreate(['name' => 'investor', 'guard_name' => 'web']);
         $reviewerRole = Role::firstOrCreate(['name' => 'midtrans_reviewer', 'guard_name' => 'web']);
+        $clientRetailRole = Role::firstOrCreate(['name' => 'client_retail', 'guard_name' => 'web']);
+        $clientPartnerRole = Role::firstOrCreate(['name' => 'client_partner', 'guard_name' => 'web']);
 
-        // 1. Primary Superadmin (Full Access to Everything)
+        // Explicit Global & Executive Permissions
+        $executiveGuidePerm = Permission::firstOrCreate(['name' => 'view_executive_smart_guide', 'guard_name' => 'web']);
+        $manageSettingsPerm = Permission::firstOrCreate(['name' => 'manage_settings', 'guard_name' => 'web']);
+        $manageVouchersPerm = Permission::firstOrCreate(['name' => 'manage_vouchers', 'guard_name' => 'web']);
+
+        // Grant Due Diligence permissions to Investor & Superadmin
+        if (!$investorRole->hasPermissionTo($executiveGuidePerm)) {
+            $investorRole->givePermissionTo($executiveGuidePerm);
+        }
+
+        // 1. Primary Superadmin (Founder & Chief Architect - Yoseph Iriandi Tambunan)
         $admin = User::updateOrCreate(
             ['email' => 'yoseph.iriandi.tambunan@gmail.com'],
             [
@@ -74,6 +89,54 @@ class SuperAdminSeeder extends Seeder
             $perm = Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
             if (!$reviewerRole->hasPermissionTo($perm)) {
                 $reviewerRole->givePermissionTo($perm);
+            }
+        }
+
+        // 3. Team Developer Permissions
+        $developerPermissions = [
+            'ViewAny:VisionBlueprint',
+            'View:VisionBlueprint',
+            'Create:VisionBlueprint',
+            'Update:VisionBlueprint',
+            'ViewAny:Document',
+            'View:Document',
+            'Create:Document',
+            'Update:Document',
+            'ViewAny:DomainHostingAsset',
+            'View:DomainHostingAsset',
+            'Create:DomainHostingAsset',
+            'Update:DomainHostingAsset',
+            'ViewAny:Product',
+            'View:Product',
+            'ViewAny:Transaction',
+            'View:Transaction',
+            'ViewAny:LeadContact',
+            'View:LeadContact',
+        ];
+
+        foreach ($developerPermissions as $permName) {
+            $perm = Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
+            if (!$developerRole->hasPermissionTo($perm)) {
+                $developerRole->givePermissionTo($perm);
+            }
+        }
+
+        // 4. Calon Investor Permissions (Due Diligence Read-Only)
+        $investorPermissions = [
+            'ViewAny:Product',
+            'View:Product',
+            'ViewAny:DomainHostingAsset',
+            'View:DomainHostingAsset',
+            'ViewAny:LegalPolicy',
+            'View:LegalPolicy',
+            'ViewAny:VisionBlueprint',
+            'View:VisionBlueprint',
+        ];
+
+        foreach ($investorPermissions as $permName) {
+            $perm = Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
+            if (!$investorRole->hasPermissionTo($perm)) {
+                $investorRole->givePermissionTo($perm);
             }
         }
     }

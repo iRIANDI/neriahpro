@@ -14,14 +14,14 @@ trait RestrictedToSuperAdmin
         }
 
         // Reviewer midtrans is strictly prohibited from non-Project OS features
-        if ($user->hasRole('midtrans_reviewer') || $user->email === 'reviewer.midtrans@neriahpro.com') {
+        if ($user->hasRole('midtrans_reviewer')) {
             return false;
         }
 
         // If compliance strict mode is active, only super admin can see
         try {
             $strictMode = CmsGlobalSetting::where('key', 'midtrans_compliance_strict_mode')->value('value');
-            if ($strictMode && ! ($user->hasRole('super_admin') || $user->email === 'yoseph.iriandi.tambunan@gmail.com')) {
+            if ($strictMode && ! $user->hasRole('super_admin')) {
                 return false;
             }
         } catch (\Throwable $e) {
@@ -29,7 +29,7 @@ trait RestrictedToSuperAdmin
         }
 
         // Superadmin has full access
-        return $user->hasRole('super_admin') || $user->email === 'yoseph.iriandi.tambunan@gmail.com';
+        return $user->hasRole('super_admin');
     }
 
     public static function canAccess(): bool

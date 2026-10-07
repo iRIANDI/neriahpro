@@ -63,7 +63,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make()
-                    ->registerNavigation(fn () => auth()->user()?->hasRole('super_admin') || auth()->user()?->email === 'yoseph.iriandi.tambunan@gmail.com'),
+                    ->registerNavigation(fn () => auth()->user()?->hasRole('super_admin')),
             ])
             ->authMiddleware([
                 Authenticate::class,

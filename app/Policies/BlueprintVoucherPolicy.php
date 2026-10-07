@@ -13,44 +13,68 @@ class BlueprintVoucherPolicy
     use HandlesAuthorization;
 
     /**
-     * Strict RBAC Gatekeeper: ONLY yoseph.iriandi.tambunan@gmail.com can manage project vouchers.
+     * Dynamic RBAC Gatekeeper: Super Admin and authorized staff can manage project vouchers.
+     * Reviewers and clients are strictly forbidden.
      */
     public function before(AuthUser $authUser, string $ability): ?bool
     {
-        if ($authUser->email === 'yoseph.iriandi.tambunan@gmail.com') {
+        if ($authUser->hasRole('midtrans_reviewer')) {
+            return false;
+        }
+
+        if ($this->checkSuperAdmin($authUser)) {
             return true;
         }
 
-        return false;
+        return null;
+    }
+
+    private function checkSuperAdmin(AuthUser $authUser): bool
+    {
+        return method_exists($authUser, 'isSuperAdmin') 
+            ? $authUser->isSuperAdmin() 
+            : ($authUser->hasRole('super_admin') || $authUser->email === 'yoseph.iriandi.tambunan@gmail.com');
     }
 
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->email === 'yoseph.iriandi.tambunan@gmail.com';
+        if ($authUser->hasRole('midtrans_reviewer')) return false;
+        if ($this->checkSuperAdmin($authUser)) return true;
+        return $authUser->can('ViewAny:BlueprintVoucher') || $authUser->can('manage_vouchers');
     }
 
     public function view(AuthUser $authUser, BlueprintVoucher $voucher): bool
     {
-        return $authUser->email === 'yoseph.iriandi.tambunan@gmail.com';
+        if ($authUser->hasRole('midtrans_reviewer')) return false;
+        if ($this->checkSuperAdmin($authUser)) return true;
+        return $authUser->can('View:BlueprintVoucher') || $authUser->can('manage_vouchers');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->email === 'yoseph.iriandi.tambunan@gmail.com';
+        if ($authUser->hasRole('midtrans_reviewer')) return false;
+        if ($this->checkSuperAdmin($authUser)) return true;
+        return $authUser->can('Create:BlueprintVoucher') || $authUser->can('manage_vouchers');
     }
 
     public function update(AuthUser $authUser, BlueprintVoucher $voucher): bool
     {
-        return $authUser->email === 'yoseph.iriandi.tambunan@gmail.com';
+        if ($authUser->hasRole('midtrans_reviewer')) return false;
+        if ($this->checkSuperAdmin($authUser)) return true;
+        return $authUser->can('Update:BlueprintVoucher') || $authUser->can('manage_vouchers');
     }
 
     public function delete(AuthUser $authUser, BlueprintVoucher $voucher): bool
     {
-        return $authUser->email === 'yoseph.iriandi.tambunan@gmail.com';
+        if ($authUser->hasRole('midtrans_reviewer')) return false;
+        if ($this->checkSuperAdmin($authUser)) return true;
+        return $authUser->can('Delete:BlueprintVoucher') || $authUser->can('manage_vouchers');
     }
 
     public function deleteAny(AuthUser $authUser): bool
     {
-        return $authUser->email === 'yoseph.iriandi.tambunan@gmail.com';
+        if ($authUser->hasRole('midtrans_reviewer')) return false;
+        if ($this->checkSuperAdmin($authUser)) return true;
+        return $authUser->can('DeleteAny:BlueprintVoucher') || $authUser->can('manage_vouchers');
     }
 }

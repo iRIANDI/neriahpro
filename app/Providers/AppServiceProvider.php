@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(function ($user, $ability) {
-            if ($user->email === 'yoseph.iriandi.tambunan@gmail.com' || $user->hasRole('super_admin')) {
+            if (method_exists($user, 'isSuperAdmin') ? $user->isSuperAdmin() : $user->hasRole('super_admin')) {
                 return true;
             }
             return null;

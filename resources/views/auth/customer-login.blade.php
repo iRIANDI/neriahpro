@@ -11,8 +11,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>neriahpro.com - {{ $isEn ? 'Client Portal Login // Password & 2FA OTP' : 'Login Portal Klien // Password & 2FA OTP' }}</title>
-    <meta name="description" content="{{ $isEn ? 'Secure client authentication portal with password and 6-digit email OTP two-factor verification.' : 'Portal login aman pelanggan Neriah Pro dengan otentikasi kata sandi dan verifikasi OTP email 6-digit.' }}">
+    <title>neriahpro.com - {{ $isEn ? 'Client Portal Login // Password, Captcha & 2FA OTP' : 'Login Portal Klien // Password, Captcha & 2FA OTP' }}</title>
+    <meta name="description" content="{{ $isEn ? 'Secure client authentication portal with password, interactive visual sequence pin captcha, and 6-digit email OTP two-factor verification.' : 'Portal login aman pelanggan Neriah Pro dengan otentikasi kata sandi, visual sequence pin captcha, dan verifikasi OTP email 6-digit.' }}">
 
     <!-- Local Fonts -->
     <link rel="stylesheet" href="{{ asset('fonts/instrument-sans/instrument-sans.css') }}">
@@ -126,14 +126,14 @@
     </header>
 
     <!-- MAIN LOGIN CARD -->
-    <main class="flex-1 flex items-center justify-center py-10 px-4 sm:px-6">
-        <div class="max-w-md w-full bg-white dark:bg-zinc-900/95 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 rounded-none shadow-xl dark:shadow-2xl relative space-y-6">
+    <main class="flex-1 flex items-center justify-center py-8 px-4 sm:px-6">
+        <div class="max-w-md w-full bg-white dark:bg-zinc-900/95 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 rounded-none shadow-xl dark:shadow-2xl relative space-y-5">
             
             <!-- Header Badges & Titles -->
             <div class="text-center space-y-2">
                 <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-none text-[11px] font-mono font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                     <span class="w-1.5 h-1.5 rounded-none bg-emerald-500 animate-pulse"></span>
-                    <span x-text="step === 'otp' ? (lang === 'en' ? 'STEP 2 // EMAIL OTP VERIFICATION' : 'TAHAP 2 // VERIFIKASI KODE OTP') : (lang === 'en' ? 'DUAL-FACTOR // PASSWORD + EMAIL OTP' : 'AUTENTIKASI 2-FA // KATA SANDI + OTP')"></span>
+                    <span x-text="step === 'otp' ? (lang === 'en' ? 'STEP 2 // EMAIL OTP VERIFICATION' : 'TAHAP 2 // VERIFIKASI KODE OTP') : (lang === 'en' ? '2-FA // PASSWORD + CAPTCHA + OTP' : 'AUTENTIKASI 2-FA // PASSWORD + CAPTCHA + OTP')"></span>
                 </div>
 
                 <h1 class="text-2xl font-black tracking-tight text-zinc-900 dark:text-white uppercase font-sans"
@@ -144,10 +144,10 @@
                    x-text="step === 'otp' 
                        ? (lang === 'en' ? 'Enter the 6-digit OTP code sent to your registered email to complete sign in.' : 'Masukkan 6-digit kode OTP yang telah dikirim ke email Anda untuk menyelesaikan login.')
                        : (mode === 'register'
-                           ? (lang === 'en' ? 'Fill in your details and password, then verify your email with a 6-digit OTP code.' : 'Lengkapi data dan kata sandi, lalu verifikasi email dengan kode OTP 6-digit.')
+                           ? (lang === 'en' ? 'Fill in your details, solve the visual captcha pin, then verify your email with OTP.' : 'Lengkapi data, selesaikan pin captcha visual, lalu verifikasi email dengan OTP.')
                            : (mode === 'forgot_password'
                                ? (lang === 'en' ? 'Enter your registered email to receive a password reset OTP code.' : 'Masukkan email terdaftar untuk menerima kode OTP pemulihan kata sandi.')
-                               : (lang === 'en' ? 'Enter your email and password, followed by email OTP verification.' : 'Masukkan email dan kata sandi Anda, dilanjutkan verifikasi kode OTP email.')))">
+                               : (lang === 'en' ? 'Enter email & password, pin the visual captcha in order, then input the OTP code.' : 'Masukkan email & kata sandi, pin gambar captcha berurutan, lalu masukkan kode OTP.')))">
                 </p>
             </div>
 
@@ -183,7 +183,7 @@
             </div>
 
             <!-- ============================================================= -->
-            <!-- STEP 1: INPUT CREDENTIALS (EMAIL + PASSWORD)                  -->
+            <!-- STEP 1: INPUT CREDENTIALS + VISUAL SEQUENCE PIN CAPTCHA       -->
             <!-- ============================================================= -->
             <form x-show="step === 'credentials'" @submit.prevent="requestOtp" class="space-y-4">
                 
@@ -254,9 +254,90 @@
                             <span x-text="showPassword ? '🙈' : '👁️'"></span>
                         </button>
                     </div>
-                    <p class="mt-1 text-[11px] text-zinc-500">
-                        <span x-text="mode === 'register' ? (lang === 'en' ? 'Minimum 8 characters.' : 'Minimal 8 karakter.') : (lang === 'en' ? 'Password verified before OTP generation.' : 'Kata sandi diverifikasi terlebih dahulu sebelum OTP dikirim.')"></span>
-                    </p>
+                </div>
+
+                <!-- VISUAL SEQUENCE PIN CAPTCHA (INTERACTIVE IMAGE ORDER CHALLENGE) -->
+                <div x-show="mode !== 'forgot_password'" class="pt-3 pb-1 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-none bg-emerald-500"></span>
+                            <span x-text="lang === 'en' ? 'Security Captcha: Pin Images In Order *' : 'Keamanan Captcha: Pin Gambar Berurutan *'"></span>
+                        </span>
+                        <span x-show="isCaptchaVerified" class="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <span>✅</span>
+                            <span x-text="lang === 'en' ? 'VERIFIED' : 'TERVERIFIKASI'"></span>
+                        </span>
+                    </div>
+
+                    <!-- Target Reference Box -->
+                    <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-none space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-mono text-zinc-500 uppercase font-bold"
+                                  x-text="lang === 'en' ? 'Click icons below in this exact order:' : 'Pin gambar di bawah sesuai urutan contoh:'">
+                            </span>
+                            <button 
+                                type="button" 
+                                @click="generateCaptcha()" 
+                                class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                                title="Acak Ulang Contoh"
+                            >
+                                <span>🔄</span>
+                                <span x-text="lang === 'en' ? 'Refresh Sequence' : 'Acak Ulang'"></span>
+                            </button>
+                        </div>
+
+                        <!-- Reference Example Icons Sequence -->
+                        <div class="flex items-center justify-center gap-1.5 sm:gap-2 py-1">
+                            <template x-for="(item, idx) in targetCaptchaSequence" :key="item.id">
+                                <div class="flex items-center gap-1.5 sm:gap-2">
+                                    <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 shadow-xs font-mono">
+                                        <span class="text-xs font-black text-emerald-500" x-text="(idx + 1) + '.'"></span>
+                                        <span class="text-lg" x-text="item.icon"></span>
+                                        <span class="text-[10px] font-bold text-zinc-800 dark:text-zinc-200 hidden sm:inline" x-text="lang === 'en' ? item.label_en : item.label_id"></span>
+                                    </div>
+                                    <span x-show="idx < targetCaptchaSequence.length - 1" class="text-zinc-400 text-xs font-bold">➔</span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Candidate Interactive Grid -->
+                    <div class="grid grid-cols-4 gap-2">
+                        <template x-for="item in candidateCaptchaGrid" :key="item.id">
+                            <button
+                                type="button"
+                                @click="pinCaptchaItem(item)"
+                                :disabled="isCaptchaVerified"
+                                :class="{
+                                    'border-emerald-500 bg-emerald-500/15 dark:bg-emerald-500/20 ring-1 ring-emerald-500 shadow-sm': getPinIndex(item) !== null,
+                                    'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-500': getPinIndex(item) === null,
+                                    'opacity-60 cursor-default': isCaptchaVerified
+                                }"
+                                class="relative p-2 flex flex-col items-center justify-center border rounded-none transition cursor-pointer group"
+                            >
+                                <!-- Pinned Sequence Order Badge -->
+                                <span 
+                                    x-show="getPinIndex(item) !== null"
+                                    class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-500 text-black font-mono font-black text-[9px] flex items-center justify-center rounded-none shadow-xs"
+                                    x-text="getPinIndex(item)"
+                                ></span>
+
+                                <span class="text-xl sm:text-2xl group-hover:scale-110 transition-transform" x-text="item.icon"></span>
+                                <span class="text-[9px] font-mono text-zinc-600 dark:text-zinc-400 mt-1 truncate max-w-full font-bold" x-text="lang === 'en' ? item.label_en : item.label_id"></span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <!-- Captcha Feedback status -->
+                    <div x-show="captchaError" x-cloak class="p-2 bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[11px] font-mono flex items-center justify-between">
+                        <span x-text="captchaError"></span>
+                        <button type="button" @click="generateCaptcha()" class="underline font-bold" x-text="lang === 'en' ? 'Reset' : 'Ulangi'"></button>
+                    </div>
+
+                    <div x-show="isCaptchaVerified" x-cloak class="p-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-mono flex items-center gap-1.5">
+                        <span>✅</span>
+                        <span x-text="lang === 'en' ? 'Visual verification complete! Login button is unlocked.' : 'Verifikasi urutan gambar berhasil! Tombol login siap digunakan.'"></span>
+                    </div>
                 </div>
 
                 <!-- Forgot Password Back Link -->
@@ -270,15 +351,25 @@
                     </button>
                 </div>
 
-                <!-- Submit Button Step 1 -->
+                <!-- Submit Button Step 1 (Enabled only after Captcha is verified) -->
                 <button 
                     type="submit" 
-                    :disabled="isLoading || !email || (mode !== 'forgot_password' && !password)"
-                    class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-emerald-600 text-xs font-mono font-black uppercase tracking-wider rounded-none text-black bg-emerald-500 hover:bg-emerald-400 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all cursor-pointer"
+                    :disabled="isLoading || !email || (mode !== 'forgot_password' && (!password || !isCaptchaVerified))"
+                    :class="{
+                        'bg-emerald-500 hover:bg-emerald-400 text-black border-emerald-600 shadow-md cursor-pointer animate-pulse': isCaptchaVerified || mode === 'forgot_password',
+                        'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-300 dark:border-zinc-700 cursor-not-allowed': !isCaptchaVerified && mode !== 'forgot_password'
+                    }"
+                    class="w-full flex justify-center items-center gap-2 py-3 px-4 border text-xs font-mono font-black uppercase tracking-wider rounded-none transition-all"
                 >
-                    <span x-show="!isLoading" x-text="mode === 'register' ? (lang === 'en' ? 'REGISTER & SEND 2FA OTP →' : 'DAFTAR & KIRIM KODE OTP →') : (mode === 'forgot_password' ? (lang === 'en' ? 'SEND RESET OTP CODE →' : 'KIRIM KODE OTP RESET →') : (lang === 'en' ? 'VERIFY PASSWORD & GET OTP →' : 'VERIFIKASI KATA SANDI & KIRIM OTP →'))"></span>
+                    <span x-show="!isLoading && !isCaptchaVerified && mode !== 'forgot_password'" class="flex items-center gap-1.5">
+                        <span>🔒</span>
+                        <span x-text="lang === 'en' ? 'PIN 3 ICONS IN ORDER TO UNLOCK LOGIN' : 'PIN 3 GAMBAR BERURUTAN UNTUK LOGIN'"></span>
+                    </span>
+                    <span x-show="!isLoading && (isCaptchaVerified || mode === 'forgot_password')">
+                        <span x-text="mode === 'register' ? (lang === 'en' ? 'REGISTER & SEND 2FA OTP →' : 'DAFTAR & KIRIM KODE OTP →') : (mode === 'forgot_password' ? (lang === 'en' ? 'SEND RESET OTP CODE →' : 'KIRIM KODE OTP RESET →') : (lang === 'en' ? 'VERIFY PASSWORD & GET OTP →' : 'VERIFIKASI KATA SANDI & KIRIM OTP →'))"></span>
+                    </span>
                     <span x-show="isLoading" class="flex items-center gap-2">
-                        <svg class="animate-spin h-4 w-4 text-black" fill="none" viewBox="0 0 24 24">
+                        <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -427,6 +518,88 @@
             resendCountdown: 0,
             countdownTimer: null,
             tier2Open: false,
+
+            // Visual Sequence PIN Captcha Data
+            captchaCatalog: [
+                { id: 'shield', icon: '🛡️', label_id: 'Perisai', label_en: 'Shield' },
+                { id: 'bolt', icon: '⚡', label_id: 'Petir', label_en: 'Lightning' },
+                { id: 'key', icon: '🔑', label_id: 'Kunci', label_en: 'Key' },
+                { id: 'rocket', icon: '🚀', label_id: 'Roket', label_en: 'Rocket' },
+                { id: 'diamond', icon: '💎', label_id: 'Permata', label_en: 'Diamond' },
+                { id: 'target', icon: '🎯', label_id: 'Target', label_en: 'Target' },
+                { id: 'lock', icon: '🔒', label_id: 'Gembok', label_en: 'Padlock' },
+                { id: 'compass', icon: '📐', label_id: 'Penggaris', label_en: 'Ruler' },
+            ],
+            targetCaptchaSequence: [],
+            candidateCaptchaGrid: [],
+            pinnedCaptchaSequence: [],
+            isCaptchaVerified: false,
+            captchaError: '',
+
+            init() {
+                this.generateCaptcha();
+            },
+
+            generateCaptcha() {
+                this.isCaptchaVerified = false;
+                this.pinnedCaptchaSequence = [];
+                this.captchaError = '';
+                
+                // Shuffle catalog and pick 3 distinct target items
+                const shuffled = [...this.captchaCatalog].sort(() => 0.5 - Math.random());
+                this.targetCaptchaSequence = shuffled.slice(0, 3);
+
+                // Candidates are all 8 shuffled
+                this.candidateCaptchaGrid = [...this.captchaCatalog].sort(() => 0.5 - Math.random());
+            },
+
+            pinCaptchaItem(item) {
+                if (this.isCaptchaVerified) return;
+
+                // If already pinned, unpin it
+                const existingIndex = this.pinnedCaptchaSequence.findIndex(p => p.id === item.id);
+                if (existingIndex !== -1) {
+                    this.pinnedCaptchaSequence.splice(existingIndex, 1);
+                    this.captchaError = '';
+                    return;
+                }
+
+                // If already 3 pinned, ignore extra
+                if (this.pinnedCaptchaSequence.length >= this.targetCaptchaSequence.length) {
+                    return;
+                }
+
+                this.pinnedCaptchaSequence.push(item);
+                this.captchaError = '';
+
+                // When exactly 3 pinned, verify sequence!
+                if (this.pinnedCaptchaSequence.length === this.targetCaptchaSequence.length) {
+                    const isMatch = this.pinnedCaptchaSequence.every((pinned, idx) => pinned.id === this.targetCaptchaSequence[idx].id);
+                    if (isMatch) {
+                        this.isCaptchaVerified = true;
+                        this.captchaError = '';
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'success',
+                                title: this.lang === 'en' ? 'Captcha Verified' : 'Captcha Berhasil',
+                                message: this.lang === 'en' ? 'Visual sequence verified! Login button is now active.' : 'Urutan gambar terverifikasi! Tombol login kini aktif.'
+                            });
+                        }
+                    } else {
+                        this.isCaptchaVerified = false;
+                        this.captchaError = this.lang === 'en' ? 'Incorrect sequence. Resetting...' : 'Urutan gambar tidak cocok dengan contoh. Mengulang...';
+                        setTimeout(() => {
+                            this.pinnedCaptchaSequence = [];
+                        }, 750);
+                    }
+                }
+            },
+
+            getPinIndex(item) {
+                const idx = this.pinnedCaptchaSequence.findIndex(p => p.id === item.id);
+                return idx !== -1 ? (idx + 1) : null;
+            },
+
             allowedLanguages: [
                 { code: 'en', name: 'English (US)', flag: '🇺🇸' },
                 { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
@@ -471,6 +644,7 @@
                 this.step = 'credentials';
                 this.otp = '';
                 this.alertMessage = '';
+                this.generateCaptcha();
             },
 
             showAlert(message, type = 'info') {
@@ -499,7 +673,7 @@
 
             async requestOtp() {
                 if (!this.email || this.isLoading) return;
-                if (this.mode !== 'forgot_password' && !this.password) return;
+                if (this.mode !== 'forgot_password' && (!this.password || !this.isCaptchaVerified)) return;
 
                 this.isLoading = true;
                 this.alertMessage = '';
@@ -516,7 +690,8 @@
                             email: this.email,
                             password: this.password,
                             name: this.name,
-                            mode: this.mode
+                            mode: this.mode,
+                            captcha_verified: this.isCaptchaVerified
                         })
                     });
 
@@ -528,6 +703,7 @@
                         this.startCountdown(60);
                     } else {
                         this.showAlert(data.message || (this.lang === 'en' ? 'Failed to dispatch OTP code. Please check your credentials.' : 'Gagal mengirimkan kode OTP. Silakan periksa kembali email & kata sandi Anda.'), 'error');
+                        this.generateCaptcha();
                     }
                 } catch (err) {
                     this.showAlert((this.lang === 'en' ? 'Network error connecting to server: ' : 'Terjadi gangguan jaringan: ') + err.message, 'error');

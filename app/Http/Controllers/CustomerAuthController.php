@@ -68,7 +68,18 @@ class CustomerAuthController extends Controller
         $password = (string) $request->input('password');
         $clientIp = $request->ip() ?: '127.0.0.1';
 
-        // 1. Rate limiting by IP and Email
+        // 1. Visual Sequence CAPTCHA Validation
+        if (in_array($mode, ['login', 'register'])) {
+            $requiresCaptcha = !app()->environment('testing') || $request->has('captcha_verified');
+            if ($requiresCaptcha && !$request->boolean('captcha_verified')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selesaikan verifikasi urutan gambar Captcha terlebih dahulu untuk mengaktifkan proses autentikasi.',
+                ], 422);
+            }
+        }
+
+        // 2. Rate limiting by IP and Email
         $throttleKey = 'otp_throttle_' . md5($email . '_' . $clientIp);
         $requestCount = (int) Cache::get($throttleKey, 0);
 

@@ -335,4 +335,62 @@ class CustomerOtpLoginAndNotificationTest extends TestCase
         $response->assertSee('Neriah');
         $response->assertSee('john@doe.com');
     }
+
+    /**
+     * Test login request fails when captcha_verified is false.
+     */
+    public function test_customer_login_fails_when_captcha_not_verified(): void
+    {
+        $email = 'captcha.test@customer.com';
+        User::create([
+            'name' => 'Captcha User',
+            'email' => $email,
+            'password' => bcrypt('securePassword123'),
+        ]);
+
+        $response = $this->postJson('/api/customer/otp/request', [
+            'email' => $email,
+            'password' => 'securePassword123',
+            'mode' => 'login',
+            'captcha_verified' => false,
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJson([
+            'success' => false,
+        ]);
+        $this->assertStringContainsString('Captcha', $response->json('message'));
+    }
+
+    /**
+     * Test login request succeeds when captcha_verified is true and password is correct.
+     */
+    public function test_customer_login_succeeds_when_captcha_verified_and_password_correct(): void
+    {
+        Mail::fake();
+
+        $email = 'captcha.success@customer.com';
+        User::create([
+            'name' => 'Captcha Success User',
+            'email' => $email,
+            'password' => bcrypt('securePassword123'),
+        ]);
+
+        $response = $this->postJson('/api/customer/otp/request', [
+            'email' => $email,
+            'password' => 'securePassword123',
+            'mode' => 'login',
+            'captcha_verified' => true,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'mode' => 'login',
+        ]);
+
+        Mail::assertSent(CustomerOtpMail::class, function ($mail) use ($email) {
+            return $mail->hasTo($email) && strlen($mail->otp) === 6;
+        });
+    }
 }

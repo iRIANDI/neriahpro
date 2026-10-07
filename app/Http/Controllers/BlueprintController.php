@@ -138,7 +138,7 @@ class BlueprintController extends Controller
         $user = auth()->user();
         $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
         $identifier = $user ? $user->email : ($request->ip() ?: '127.0.0.1');
-        $monthKey = 'spark_quota_' . md5($identifier) . '_' . date('Y_m');
+        $monthKey = 'spark_quota_' . md5($identifier) . '_' . now()->format('Y_m');
         $currentUsage = (int) Cache::get($monthKey, 0);
 
         if (! $isExempt) {
@@ -218,14 +218,24 @@ class BlueprintController extends Controller
         $locale = $request->input('locale', 'id');
         $aiModel = $request->input('ai_model') ?: $request->input('ai_provider');
 
-        // Revision Window Enforcement for Existing Blueprints
+        // Revision Window & Scope Lock Enforcement for Existing Blueprints
         $editingSlug = $currentBlueprint['_meta']['is_editing_slug'] ?? $request->input('slug');
         if ($editingSlug) {
             $existingRecord = VisionBlueprint::where('slug', $editingSlug)->first();
-            if ($existingRecord && $existingRecord->created_at) {
+            if ($existingRecord) {
                 $user = auth()->user();
                 $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
-                if (! $isExempt) {
+
+                // Studio MVP / Scope Lock Enforcement
+                if (! $isExempt && $existingRecord->isScopeFrozen()) {
+                    return response()->json([
+                        'success' => false,
+                        'error_code' => 'SCOPE_LOCKED',
+                        'message' => 'Ruang lingkup (scope) proyek ini telah dikunci (frozen) sesuai kontrak/DP aktif. Penambahan atau modifikasi ide memerlukan addendum kontrak resmi.',
+                    ], 403);
+                }
+
+                if ($existingRecord->created_at && ! $isExempt) {
                     $tier = strtolower($existingRecord->user_metadata['retail_tier'] ?? 'lite');
                     $allowedDays = match ($tier) {
                         'lite' => 30,
@@ -290,6 +300,16 @@ class BlueprintController extends Controller
                 if ($record) {
                     $user = auth()->user();
                     $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
+
+                    // Studio MVP / Scope Lock Enforcement
+                    if (! $isExempt && $record->isScopeFrozen()) {
+                        return response()->json([
+                            'success' => false,
+                            'error_code' => 'SCOPE_LOCKED',
+                            'message' => 'Ruang lingkup (scope) proyek ini telah dikunci (frozen) sesuai kontrak/DP aktif. Penambahan atau modifikasi ide memerlukan addendum kontrak resmi.',
+                        ], 403);
+                    }
+
                     if (! $isExempt && $record->created_at) {
                         $tier = strtolower($record->user_metadata['retail_tier'] ?? 'lite');
                         $allowedDays = match ($tier) {

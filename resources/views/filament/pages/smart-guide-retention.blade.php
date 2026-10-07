@@ -1,36 +1,110 @@
 <x-filament-panels::page>
 <div class="smart-guide-root" x-data="smartGuideApp()" x-init="initScrollSpy()">
 
-    <!-- Scoped Resilient Styling for Filament v5 Compatibility -->
+    <!-- Scoped Adaptive Styling for Filament v5 (Full Light & Dark Theme Fidelity) -->
     <style>
         .smart-guide-root {
+            /* Light Theme Tokens (Default) */
+            --sg-bg: #f8fafc;
+            --sg-card-bg: #ffffff;
+            --sg-subcard-bg: #f8fafc;
+            --sg-border: #e2e8f0;
+            --sg-border-subtle: #f1f5f9;
+            --sg-text-title: #0f172a;
+            --sg-text-body: #334155;
+            --sg-text-muted: #64748b;
+            --sg-nav-bg: rgba(255, 255, 255, 0.94);
+            --sg-nav-border: #cbd5e1;
+            --sg-nav-btn-color: #64748b;
+            --sg-nav-btn-hover-bg: #f1f5f9;
+            --sg-nav-btn-hover-color: #0f172a;
+            --sg-search-bg: #ffffff;
+            --sg-search-border: #cbd5e1;
+            --sg-search-text: #0f172a;
+            --sg-table-th-bg: #f1f5f9;
+            --sg-table-th-text: #1e293b;
+            --sg-table-td-border: #e2e8f0;
+            --sg-table-td-text: #334155;
+            --sg-table-tr-hover: rgba(0, 0, 0, 0.02);
+            --sg-quote-bg: #f8fafc;
+            --sg-quote-border: #e2e8f0;
+            --sg-quote-text: #334155;
+            --sg-trojan-bg: rgba(99, 102, 241, 0.05);
+            --sg-trojan-border: rgba(99, 102, 241, 0.3);
+            --sg-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #f4f4f5;
-            background: #09090b;
+            color: var(--sg-text-body);
+            background: var(--sg-bg);
             padding: 24px;
             border-radius: 4px;
-            border: 1px solid #27272a;
+            border: 1px solid var(--sg-border);
             position: relative;
+            transition: background-color 0.2s, border-color 0.2s, color 0.2s;
         }
+
+        /* Dark Theme Tokens (Filament v5 dark mode integration) */
+        :is(.dark, html.dark, body.dark) .smart-guide-root {
+            --sg-bg: #09090b;
+            --sg-card-bg: #121215;
+            --sg-subcard-bg: #09090b;
+            --sg-border: #27272a;
+            --sg-border-subtle: #1f1f23;
+            --sg-text-title: #ffffff;
+            --sg-text-body: #e4e4e7;
+            --sg-text-muted: #a1a1aa;
+            --sg-nav-bg: rgba(18, 18, 21, 0.95);
+            --sg-nav-border: #3f3f46;
+            --sg-nav-btn-color: #a1a1aa;
+            --sg-nav-btn-hover-bg: #27272a;
+            --sg-nav-btn-hover-color: #ffffff;
+            --sg-search-bg: #09090b;
+            --sg-search-border: #3f3f46;
+            --sg-search-text: #ffffff;
+            --sg-table-th-bg: #09090b;
+            --sg-table-th-text: #d4d4d8;
+            --sg-table-td-border: #1f1f23;
+            --sg-table-td-text: #e4e4e7;
+            --sg-table-tr-hover: rgba(255, 255, 255, 0.02);
+            --sg-quote-bg: #18181b;
+            --sg-quote-border: #27272a;
+            --sg-quote-text: #d4d4d8;
+            --sg-trojan-bg: rgba(99, 102, 241, 0.04);
+            --sg-trojan-border: rgba(99, 102, 241, 0.4);
+            --sg-card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
         .sg-card {
-            background: #121215;
-            border: 1px solid #27272a;
+            background: var(--sg-card-bg);
+            border: 1px solid var(--sg-border);
             border-radius: 4px;
             padding: 24px;
             margin-bottom: 24px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-            transition: border-color 0.2s;
+            box-shadow: var(--sg-card-shadow);
+            transition: border-color 0.2s, background-color 0.2s;
         }
         .sg-card:hover {
+            border-color: #94a3b8;
+        }
+        :is(.dark, html.dark, body.dark) .sg-card:hover {
             border-color: #3f3f46;
         }
+
+        .sg-subcard {
+            background: var(--sg-subcard-bg);
+            border: 1px solid var(--sg-border);
+            border-radius: 3px;
+            padding: 18px;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
         .sg-badge-confidential {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             background: rgba(245, 158, 11, 0.15);
-            color: #f59e0b;
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #d97706;
+            border: 1px solid rgba(245, 158, 11, 0.35);
             font-family: ui-monospace, monospace;
             font-size: 11px;
             font-weight: 700;
@@ -39,23 +113,32 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+        :is(.dark, html.dark, body.dark) .sg-badge-confidential {
+            color: #f59e0b;
+        }
+
         .sg-badge-active {
             background: rgba(16, 185, 129, 0.15);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.35);
             font-family: ui-monospace, monospace;
             font-size: 11px;
             font-weight: 700;
             padding: 4px 10px;
             border-radius: 2px;
         }
+        :is(.dark, html.dark, body.dark) .sg-badge-active {
+            color: #10b981;
+        }
+
+        /* Floating Nav: Floats under Filament Topbar without overlapping */
         .sg-floating-nav {
             position: sticky;
-            top: 16px;
-            z-index: 40;
-            background: rgba(18, 18, 21, 0.95);
+            top: calc(var(--topbar-height, 4rem) + 8px);
+            z-index: 25;
+            background: var(--sg-nav-bg);
             backdrop-filter: blur(12px);
-            border: 1px solid #3f3f46;
+            border: 1px solid var(--sg-nav-border);
             border-radius: 4px;
             padding: 8px 12px;
             margin-bottom: 24px;
@@ -64,7 +147,8 @@
             justify-content: space-between;
             gap: 12px;
             flex-wrap: wrap;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+            box-shadow: var(--sg-card-shadow);
+            transition: background-color 0.2s, border-color 0.2s;
         }
         .sg-nav-links {
             display: flex;
@@ -81,36 +165,43 @@
             border-radius: 2px;
             white-space: nowrap;
             background: transparent;
-            color: #a1a1aa;
+            color: var(--sg-nav-btn-color);
             border: 1px solid transparent;
             cursor: pointer;
             transition: all 0.15s ease;
             text-decoration: none;
         }
         .sg-nav-btn:hover {
-            color: #ffffff;
-            background: #27272a;
+            color: var(--sg-nav-btn-hover-color);
+            background: var(--sg-nav-btn-hover-bg);
         }
         .sg-nav-btn.active {
+            color: #0284c7;
+            background: rgba(14, 165, 233, 0.12);
+            border-color: rgba(14, 165, 233, 0.4);
+            font-weight: 700;
+        }
+        :is(.dark, html.dark, body.dark) .sg-nav-btn.active {
             color: #38bdf8;
             background: rgba(56, 189, 248, 0.15);
             border-color: rgba(56, 189, 248, 0.4);
-            font-weight: 700;
         }
+
         .sg-search-bar {
             display: flex;
             align-items: center;
-            background: #09090b;
-            border: 1px solid #3f3f46;
+            background: var(--sg-search-bg);
+            border: 1px solid var(--sg-search-border);
             border-radius: 2px;
             padding: 4px 10px;
             width: 260px;
+            transition: border-color 0.2s;
         }
         .sg-search-input {
             background: transparent;
             border: none;
             outline: none;
-            color: #ffffff;
+            color: var(--sg-search-text);
             font-size: 12px;
             width: 100%;
         }
@@ -121,9 +212,9 @@
             padding: 4px 10px;
             border-radius: 2px;
             cursor: pointer;
-            border: 1px solid #3f3f46;
-            background: #09090b;
-            color: #a1a1aa;
+            border: 1px solid var(--sg-search-border);
+            background: var(--sg-search-bg);
+            color: var(--sg-text-muted);
             transition: all 0.15s;
         }
         .sg-lang-btn.active {
@@ -131,6 +222,7 @@
             color: #ffffff;
             border-color: #6366f1;
         }
+
         .sg-table {
             width: 100%;
             border-collapse: collapse;
@@ -138,34 +230,29 @@
             margin-top: 16px;
         }
         .sg-table th {
-            background: #09090b;
-            color: #d4d4d8;
+            background: var(--sg-table-th-bg);
+            color: var(--sg-table-th-text);
             font-family: ui-monospace, monospace;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #27272a;
+            border-bottom: 1px solid var(--sg-border);
         }
         .sg-table td {
             padding: 12px;
-            border-bottom: 1px solid #1f1f23;
-            color: #e4e4e7;
+            border-bottom: 1px solid var(--sg-table-td-border);
+            color: var(--sg-table-td-text);
         }
         .sg-table tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
+            background: var(--sg-table-tr-hover);
         }
+
         .sg-grid-3 {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 16px;
             margin-top: 16px;
-        }
-        .sg-subcard {
-            background: #09090b;
-            border: 1px solid #27272a;
-            border-radius: 3px;
-            padding: 18px;
         }
         .sg-accent-num {
             font-family: ui-monospace, monospace;
@@ -194,7 +281,7 @@
     <div class="sg-floating-nav">
         <!-- Floating Index with ScrollSpy Effect -->
         <div class="sg-nav-links">
-            <span style="font-size: 11px; font-family: ui-monospace, monospace; font-weight: 700; color: #71717a; margin-right: 4px;">INDEX:</span>
+            <span style="font-size: 11px; font-family: ui-monospace, monospace; font-weight: 700; color: var(--sg-text-muted); margin-right: 4px;">INDEX:</span>
             <a href="#sec-overview" @click.prevent="scrollTo('sec-overview')" :class="activeSection === 'sec-overview' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 01. <span x-text="t[lang].nav_overview"></span>
             </a>
@@ -219,7 +306,7 @@
         <div style="display: flex; align-items: center; gap: 10px;">
             <!-- Realtime Search Filter -->
             <div class="sg-search-bar">
-                <span style="color: #71717a; margin-right: 6px; font-size: 12px;">🔍</span>
+                <span style="color: var(--sg-text-muted); margin-right: 6px; font-size: 12px;">🔍</span>
                 <input 
                     type="text" 
                     x-model="searchQuery" 
@@ -229,7 +316,7 @@
                 <button 
                     x-show="searchQuery" 
                     @click="searchQuery = ''" 
-                    style="color: #a1a1aa; background: transparent; border: none; cursor: pointer; font-size: 11px;"
+                    style="color: var(--sg-text-muted); background: transparent; border: none; cursor: pointer; font-size: 12px;"
                 >&times;</button>
             </div>
 
@@ -252,9 +339,9 @@
     </div>
 
     <!-- Active Search Filter Counter Banner -->
-    <div x-show="searchQuery.trim() !== ''" style="margin-bottom: 16px; padding: 8px 14px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 2px; font-size: 12px; color: #38bdf8;">
+    <div x-show="searchQuery.trim() !== ''" style="margin-bottom: 16px; padding: 8px 14px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 2px; font-size: 12px; color: #0284c7;">
         Menyaring topik dengan kata kunci: "<strong x-text="searchQuery"></strong>" &bull; 
-        <button @click="searchQuery = ''" style="text-decoration: underline; color: #ffffff; cursor: pointer; background: transparent; border: none; font-size: 12px;">Reset Pencarian</button>
+        <button @click="searchQuery = ''" style="text-decoration: underline; color: var(--sg-text-title); cursor: pointer; background: transparent; border: none; font-size: 12px;">Reset Pencarian</button>
     </div>
 
     <!-- 00. Confidential Founder Security Notice -->
@@ -267,18 +354,18 @@
                 ✅ <span x-text="t[lang].access_verified"></span>: {{ auth()->user()?->name }} ({{ auth()->user()?->roles->pluck('name')->map(fn($r) => strtoupper(str_replace('_', ' ', $r)))->implode(', ') ?: 'AUTHORIZED' }})
             </div>
         </div>
-        <h2 style="font-size: 18px; font-weight: 800; color: #ffffff; margin: 4px 0 8px 0;" x-text="t[lang].founder_title"></h2>
-        <p style="font-size: 12px; color: #a1a1aa; line-height: 1.6; margin: 0;" x-text="t[lang].founder_desc"></p>
+        <h2 style="font-size: 18px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 8px 0;" x-text="t[lang].founder_title"></h2>
+        <p style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.6; margin: 0;" x-text="t[lang].founder_desc"></p>
     </div>
 
     <!-- 01. Section Overview & Jawaban Strategis Founder -->
     <div id="sec-overview" class="sg-card" x-show="matchesSearch(t[lang].sec1_title + ' ' + t[lang].sec1_q + ' ' + t[lang].sec1_p1_text + ' ' + t[lang].sec1_p2_text + ' ' + t[lang].sec1_p3_text)">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #27272a; padding-bottom: 12px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px;">
             <div>
-                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #818cf8; text-transform: uppercase; font-weight: 700;">
+                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #6366f1; text-transform: uppercase; font-weight: 700;">
                     01 // EXECUTIVE SUMMARY
                 </span>
-                <h3 style="font-size: 16px; font-weight: 800; color: #ffffff; margin: 4px 0 0 0;" x-text="t[lang].sec1_q"></h3>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec1_q"></h3>
             </div>
             <span style="font-family: ui-monospace, monospace; font-size: 12px; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 2px;">
                 GROSS MARGIN: 98.6%
@@ -287,31 +374,31 @@
 
         <div class="sg-grid-3">
             <div class="sg-subcard">
-                <div class="sg-accent-num" style="color: #818cf8;">01</div>
-                <h4 style="font-size: 13px; font-weight: 700; color: #ffffff; margin-bottom: 6px;" x-text="t[lang].sec1_p1_title"></h4>
-                <p style="font-size: 12px; color: #a1a1aa; line-height: 1.5; margin: 0;" x-text="t[lang].sec1_p1_text"></p>
+                <div class="sg-accent-num" style="color: #6366f1;">01</div>
+                <h4 style="font-size: 13px; font-weight: 700; color: var(--sg-text-title); margin-bottom: 6px;" x-text="t[lang].sec1_p1_title"></h4>
+                <p style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5; margin: 0;" x-text="t[lang].sec1_p1_text"></p>
             </div>
             <div class="sg-subcard">
-                <div class="sg-accent-num" style="color: #38bdf8;">02</div>
-                <h4 style="font-size: 13px; font-weight: 700; color: #ffffff; margin-bottom: 6px;" x-text="t[lang].sec1_p2_title"></h4>
-                <p style="font-size: 12px; color: #a1a1aa; line-height: 1.5; margin: 0;" x-text="t[lang].sec1_p2_text"></p>
+                <div class="sg-accent-num" style="color: #0284c7;">02</div>
+                <h4 style="font-size: 13px; font-weight: 700; color: var(--sg-text-title); margin-bottom: 6px;" x-text="t[lang].sec1_p2_title"></h4>
+                <p style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5; margin: 0;" x-text="t[lang].sec1_p2_text"></p>
             </div>
             <div class="sg-subcard">
-                <div class="sg-accent-num" style="color: #34d399;">03</div>
-                <h4 style="font-size: 13px; font-weight: 700; color: #ffffff; margin-bottom: 6px;" x-text="t[lang].sec1_p3_title"></h4>
-                <p style="font-size: 12px; color: #a1a1aa; line-height: 1.5; margin: 0;" x-text="t[lang].sec1_p3_text"></p>
+                <div class="sg-accent-num" style="color: #10b981;">03</div>
+                <h4 style="font-size: 13px; font-weight: 700; color: var(--sg-text-title); margin-bottom: 6px;" x-text="t[lang].sec1_p3_title"></h4>
+                <p style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5; margin: 0;" x-text="t[lang].sec1_p3_text"></p>
             </div>
         </div>
     </div>
 
     <!-- 02. Section Unit Economics & COGS Riil -->
     <div id="sec-cogs" class="sg-card" x-show="matchesSearch(t[lang].sec2_title + ' ' + t[lang].sec2_desc + ' spark lite pro ultimate cogs margin')">
-        <div style="border-bottom: 1px solid #27272a; padding-bottom: 12px; margin-bottom: 16px;">
-            <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #38bdf8; text-transform: uppercase; font-weight: 700;">
+        <div style="border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px;">
+            <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #0284c7; text-transform: uppercase; font-weight: 700;">
                 02 // UNIT ECONOMICS BREAKDOWN
             </span>
-            <h3 style="font-size: 16px; font-weight: 800; color: #ffffff; margin: 4px 0 0 0;" x-text="t[lang].sec2_title"></h3>
-            <p style="font-size: 12px; color: #a1a1aa; margin: 4px 0 0 0;" x-text="t[lang].sec2_desc"></p>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec2_title"></h3>
+            <p style="font-size: 12px; color: var(--sg-text-muted); margin: 4px 0 0 0;" x-text="t[lang].sec2_desc"></p>
         </div>
 
         <div style="overflow-x: auto;">
@@ -329,40 +416,40 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="font-weight: 700; color: #ffffff;">Spark (Lead Magnet)</td>
-                        <td style="font-family: ui-monospace, monospace; color: #a1a1aa;">Rp 0</td>
-                        <td style="font-family: ui-monospace, monospace; color: #a1a1aa;">~Rp 500 (10k tok)</td>
-                        <td style="font-family: ui-monospace, monospace; color: #a1a1aa;">Rp 0</td>
-                        <td style="font-family: ui-monospace, monospace; color: #f59e0b;">-Rp 500 (CAC)</td>
-                        <td style="font-family: ui-monospace, monospace; color: #71717a;">Free Tier</td>
-                        <td style="color: #a1a1aa;" x-text="t[lang].tb_spark_cycle"></td>
+                        <td style="font-weight: 700; color: var(--sg-text-title);">Spark (Lead Magnet)</td>
+                        <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">Rp 0</td>
+                        <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">~Rp 500 (10k tok)</td>
+                        <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">Rp 0</td>
+                        <td style="font-family: ui-monospace, monospace; color: #d97706;">-Rp 500 (CAC)</td>
+                        <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">Free Tier</td>
+                        <td style="color: var(--sg-text-muted);" x-text="t[lang].tb_spark_cycle"></td>
                     </tr>
                     <tr>
-                        <td style="font-weight: 700; color: #38bdf8;">Lite Blueprint</td>
-                        <td style="font-family: ui-monospace, monospace; font-weight: 700; color: #38bdf8;">Rp 99.000</td>
-                        <td style="font-family: ui-monospace, monospace; color: #a1a1aa;">~Rp 1.000 (20k tok)</td>
-                        <td style="font-family: ui-monospace, monospace; color: #a1a1aa;">~Rp 2.000 (Midtrans)</td>
+                        <td style="font-weight: 700; color: #0284c7;">Lite Blueprint</td>
+                        <td style="font-family: ui-monospace, monospace; font-weight: 700; color: #0284c7;">Rp 99.000</td>
+                        <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">~Rp 1.000 (20k tok)</td>
+                        <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">~Rp 2.000 (Midtrans)</td>
                         <td style="font-family: ui-monospace, monospace; font-weight: 700; color: #10b981;">Rp 96.000</td>
                         <td style="font-family: ui-monospace, monospace; font-weight: 700; color: #10b981;">97.0%</td>
-                        <td style="color: #a1a1aa;" x-text="t[lang].tb_paid_cycle"></td>
+                        <td style="color: var(--sg-text-muted);" x-text="t[lang].tb_paid_cycle"></td>
                     </tr>
-                    <tr style="background: rgba(79, 70, 229, 0.08); border-left: 3px solid #6366f1;">
-                        <td style="font-weight: 800; color: #a5b4fc;">★ Pro Blueprint (Core)</td>
-                        <td style="font-family: ui-monospace, monospace; font-weight: 800; color: #818cf8;">Rp 399.000</td>
-                        <td style="font-family: ui-monospace, monospace; color: #a1a1aa;">~Rp 1.500 (30k tok)</td>
-                        <td style="font-family: ui-monospace, monospace; color: #a1a1aa;">~Rp 4.000 (Midtrans)</td>
+                    <tr style="background: rgba(99, 102, 241, 0.08); border-left: 3px solid #6366f1;">
+                        <td style="font-weight: 800; color: #6366f1;">★ Pro Blueprint (Core)</td>
+                        <td style="font-family: ui-monospace, monospace; font-weight: 800; color: #6366f1;">Rp 399.000</td>
+                        <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">~Rp 1.500 (30k tok)</td>
+                        <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">~Rp 4.000 (Midtrans)</td>
                         <td style="font-family: ui-monospace, monospace; font-weight: 800; color: #10b981;">Rp 393.500</td>
                         <td style="font-family: ui-monospace, monospace; font-weight: 800; color: #10b981;">98.6%</td>
-                        <td style="color: #a1a1aa;" x-text="t[lang].tb_paid_cycle"></td>
+                        <td style="color: var(--sg-text-muted);" x-text="t[lang].tb_paid_cycle"></td>
                     </tr>
                     <tr>
-                        <td style="font-weight: 700; color: #c084fc;">Ultimate Enterprise</td>
-                        <td style="font-family: ui-monospace, monospace; font-weight: 700; color: #c084fc;">Rp 1.490.000</td>
-                        <td style="font-family: ui-monospace, monospace; color: #a1a1aa;">~Rp 3.000 (60k tok)</td>
-                        <td style="font-family: ui-monospace, monospace; color: #a1a1aa;">~Rp 6.000 (Midtrans)</td>
+                        <td style="font-weight: 700; color: #9333ea;">Ultimate Enterprise</td>
+                        <td style="font-family: ui-monospace, monospace; font-weight: 700; color: #9333ea;">Rp 1.490.000</td>
+                        <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">~Rp 3.000 (60k tok)</td>
+                        <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">~Rp 6.000 (Midtrans)</td>
                         <td style="font-family: ui-monospace, monospace; font-weight: 700; color: #10b981;">Rp 1.481.000</td>
                         <td style="font-family: ui-monospace, monospace; font-weight: 700; color: #10b981;">99.4%</td>
-                        <td style="color: #a1a1aa;" x-text="t[lang].tb_ultimate_cycle"></td>
+                        <td style="color: var(--sg-text-muted);" x-text="t[lang].tb_ultimate_cycle"></td>
                     </tr>
                 </tbody>
             </table>
@@ -371,45 +458,45 @@
 
     <!-- 03. Section Pay-Per-Project Mechanics -->
     <div id="sec-pay-per-project" class="sg-card" x-show="matchesSearch(t[lang].sec3_title + ' pay per project lifetime lisensi entitas')">
-        <div style="border-bottom: 1px solid #27272a; padding-bottom: 12px; margin-bottom: 16px;">
-            <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #a855f7; text-transform: uppercase; font-weight: 700;">
+        <div style="border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px;">
+            <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #9333ea; text-transform: uppercase; font-weight: 700;">
                 03 // LEGAL & BUSINESS DEFINITION
             </span>
-            <h3 style="font-size: 16px; font-weight: 800; color: #ffffff; margin: 4px 0 0 0;" x-text="t[lang].sec3_title"></h3>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec3_title"></h3>
         </div>
 
         <div class="sg-grid-3">
             <div class="sg-subcard">
-                <h4 style="font-size: 13px; font-weight: 700; color: #38bdf8; margin-bottom: 6px;" x-text="t[lang].sec3_b1_title"></h4>
-                <p style="font-size: 12px; color: #a1a1aa; line-height: 1.5; margin: 0;" x-text="t[lang].sec3_b1_text"></p>
+                <h4 style="font-size: 13px; font-weight: 700; color: #0284c7; margin-bottom: 6px;" x-text="t[lang].sec3_b1_title"></h4>
+                <p style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5; margin: 0;" x-text="t[lang].sec3_b1_text"></p>
             </div>
             <div class="sg-subcard">
-                <h4 style="font-size: 13px; font-weight: 700; color: #f59e0b; margin-bottom: 6px;" x-text="t[lang].sec3_b2_title"></h4>
-                <p style="font-size: 12px; color: #a1a1aa; line-height: 1.5; margin: 0;" x-text="t[lang].sec3_b2_text"></p>
+                <h4 style="font-size: 13px; font-weight: 700; color: #d97706; margin-bottom: 6px;" x-text="t[lang].sec3_b2_title"></h4>
+                <p style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5; margin: 0;" x-text="t[lang].sec3_b2_text"></p>
             </div>
             <div class="sg-subcard">
                 <h4 style="font-size: 13px; font-weight: 700; color: #10b981; margin-bottom: 6px;" x-text="t[lang].sec3_b3_title"></h4>
-                <p style="font-size: 12px; color: #a1a1aa; line-height: 1.5; margin: 0;" x-text="t[lang].sec3_b3_text"></p>
+                <p style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5; margin: 0;" x-text="t[lang].sec3_b3_text"></p>
             </div>
         </div>
     </div>
 
     <!-- 04. Section Live Interactive Margin & Pipeline Simulator -->
     <div id="sec-simulator" class="sg-card" x-show="matchesSearch(t[lang].sec4_title + ' simulator kalkulator proyeksi laba omzet')">
-        <div style="border-bottom: 1px solid #27272a; padding-bottom: 12px; margin-bottom: 16px;">
+        <div style="border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px;">
             <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #10b981; text-transform: uppercase; font-weight: 700;">
                 04 // REAL-TIME FINANCIAL SIMULATOR
             </span>
-            <h3 style="font-size: 16px; font-weight: 800; color: #ffffff; margin: 4px 0 0 0;" x-text="t[lang].sec4_title"></h3>
-            <p style="font-size: 12px; color: #a1a1aa; margin: 4px 0 0 0;" x-text="t[lang].sec4_desc"></p>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec4_title"></h3>
+            <p style="font-size: 12px; color: var(--sg-text-muted); margin: 4px 0 0 0;" x-text="t[lang].sec4_desc"></p>
         </div>
 
         <div class="sg-simulator-box">
             <!-- Left: Slider & Direct Blueprint Revenue -->
             <div class="sg-subcard">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span style="font-size: 12px; font-weight: 700; color: #d4d4d8;" x-text="t[lang].sim_sales_label"></span>
-                    <span style="font-family: ui-monospace, monospace; font-size: 14px; font-weight: 900; color: #818cf8;" x-text="salesVolume + ' ' + t[lang].unit_projects"></span>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--sg-text-body);" x-text="t[lang].sim_sales_label"></span>
+                    <span style="font-family: ui-monospace, monospace; font-size: 14px; font-weight: 900; color: #6366f1;" x-text="salesVolume + ' ' + t[lang].unit_projects"></span>
                 </div>
                 <input 
                     type="range" 
@@ -421,37 +508,37 @@
                 />
                 
                 <div style="space-y: 8px; font-size: 12px;">
-                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #1f1f23;">
-                        <span style="color: #a1a1aa;" x-text="t[lang].sim_gross_rev"></span>
-                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #ffffff;" x-text="formatCurrency(salesVolume * 399000)"></span>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--sg-border-subtle);">
+                        <span style="color: var(--sg-text-muted);" x-text="t[lang].sim_gross_rev"></span>
+                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: var(--sg-text-title);" x-text="formatCurrency(salesVolume * 399000)"></span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #1f1f23;">
-                        <span style="color: #a1a1aa;" x-text="t[lang].sim_ai_cost"></span>
-                        <span style="font-family: ui-monospace, monospace; color: #f87171;" x-text="formatCurrency(salesVolume * 1500)"></span>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--sg-border-subtle);">
+                        <span style="color: var(--sg-text-muted);" x-text="t[lang].sim_ai_cost"></span>
+                        <span style="font-family: ui-monospace, monospace; color: #ef4444;" x-text="formatCurrency(salesVolume * 1500)"></span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #1f1f23;">
-                        <span style="color: #a1a1aa;" x-text="t[lang].sim_midtrans_cost"></span>
-                        <span style="font-family: ui-monospace, monospace; color: #f87171;" x-text="formatCurrency(salesVolume * 4000)"></span>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--sg-border-subtle);">
+                        <span style="color: var(--sg-text-muted);" x-text="t[lang].sim_midtrans_cost"></span>
+                        <span style="font-family: ui-monospace, monospace; color: #ef4444;" x-text="formatCurrency(salesVolume * 4000)"></span>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; font-weight: 800;">
-                        <span style="color: #34d399;" x-text="t[lang].sim_net_cash"></span>
-                        <span style="font-family: ui-monospace, monospace; color: #34d399;" x-text="formatCurrency(salesVolume * 393500)"></span>
+                        <span style="color: #10b981;" x-text="t[lang].sim_net_cash"></span>
+                        <span style="font-family: ui-monospace, monospace; color: #10b981;" x-text="formatCurrency(salesVolume * 393500)"></span>
                     </div>
                 </div>
             </div>
 
             <!-- Right: Studio MVP Upsell Pipeline -->
-            <div class="sg-subcard" style="border: 1px solid rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.04);">
-                <div style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; color: #a5b4fc; text-transform: uppercase; margin-bottom: 4px;">
+            <div class="sg-subcard" style="border: 1px solid var(--sg-trojan-border); background: var(--sg-trojan-bg);">
+                <div style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; color: #6366f1; text-transform: uppercase; margin-bottom: 4px;">
                     THE TROJAN HORSE EFFECT
                 </div>
-                <h4 style="font-size: 14px; font-weight: 800; color: #ffffff; margin-bottom: 8px;" x-text="t[lang].sim_upsell_title"></h4>
-                <p style="font-size: 12px; color: #a1a1aa; line-height: 1.5; margin-bottom: 12px;" x-text="t[lang].sim_upsell_desc"></p>
+                <h4 style="font-size: 14px; font-weight: 800; color: var(--sg-text-title); margin-bottom: 8px;" x-text="t[lang].sim_upsell_title"></h4>
+                <p style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5; margin-bottom: 12px;" x-text="t[lang].sim_upsell_desc"></p>
 
-                <div style="background: #09090b; padding: 12px; border: 1px solid #27272a; border-radius: 2px;">
+                <div style="background: var(--sg-card-bg); padding: 12px; border: 1px solid var(--sg-border); border-radius: 2px;">
                     <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
-                        <span style="color: #a1a1aa;" x-text="t[lang].sim_upsell_clients"></span>
-                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #818cf8;" x-text="Math.floor(salesVolume * 0.05) + ' Klien'"></span>
+                        <span style="color: var(--sg-text-muted);" x-text="t[lang].sim_upsell_clients"></span>
+                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #6366f1;" x-text="Math.floor(salesVolume * 0.05) + ' Klien'"></span>
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 900; color: #10b981;">
                         <span x-text="t[lang].sim_upsell_pipeline"></span>
@@ -464,12 +551,12 @@
 
     <!-- 05. Section Technical Limits & Enforcement Matrix -->
     <div id="sec-matrix" class="sg-card" x-show="matchesSearch(t[lang].sec5_title + ' batasan kuota reset spark lite pro ultimate window otp')">
-        <div style="border-bottom: 1px solid #27272a; padding-bottom: 12px; margin-bottom: 16px;">
-            <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #f59e0b; text-transform: uppercase; font-weight: 700;">
+        <div style="border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px;">
+            <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #d97706; text-transform: uppercase; font-weight: 700;">
                 05 // BACKEND ENFORCEMENT MATRIX
             </span>
-            <h3 style="font-size: 16px; font-weight: 800; color: #ffffff; margin: 4px 0 0 0;" x-text="t[lang].sec5_title"></h3>
-            <p style="font-size: 12px; color: #a1a1aa; margin: 4px 0 0 0;" x-text="t[lang].sec5_desc"></p>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec5_title"></h3>
+            <p style="font-size: 12px; color: var(--sg-text-muted); margin: 4px 0 0 0;" x-text="t[lang].sec5_desc"></p>
         </div>
 
         <div style="overflow-x: auto;">
@@ -486,40 +573,40 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="font-weight: 700; color: #a1a1aa;">Spark (Free)</td>
-                        <td style="color: #fca5a5;" x-text="t[lang].m_self"></td>
+                        <td style="font-weight: 700; color: var(--sg-text-title);">Spark (Free)</td>
+                        <td style="color: #ef4444;" x-text="t[lang].m_self"></td>
                         <td>2x Analisis Ide</td>
-                        <td style="color: #38bdf8;">Auto-Reset tgl 1 tiap bulan</td>
+                        <td style="color: #0284c7;">Auto-Reset tgl 1 tiap bulan</td>
                         <td>7 Hari Sesi Tamu</td>
                         <td style="color: #10b981;">Bebas (Guest Mode)</td>
                     </tr>
                     <tr>
-                        <td style="font-weight: 700; color: #38bdf8;">Lite (Rp 99k)</td>
-                        <td style="color: #fca5a5;" x-text="t[lang].m_self"></td>
+                        <td style="font-weight: 700; color: #0284c7;">Lite (Rp 99k)</td>
+                        <td style="color: #ef4444;" x-text="t[lang].m_self"></td>
                         <td>1 Entitas Proyek</td>
                         <td>Pay-Per-Project</td>
                         <td>30 Hari Jendela Revisi Form</td>
-                        <td style="color: #f59e0b;">Wajib Login (OTP Email)</td>
+                        <td style="color: #d97706;">Wajib Login (OTP Email)</td>
                     </tr>
-                    <tr style="background: rgba(79, 70, 229, 0.08);">
-                        <td style="font-weight: 800; color: #818cf8;">Pro (Rp 399k)</td>
-                        <td style="color: #fca5a5;" x-text="t[lang].m_self"></td>
+                    <tr style="background: rgba(99, 102, 241, 0.08);">
+                        <td style="font-weight: 800; color: #6366f1;">Pro (Rp 399k)</td>
+                        <td style="color: #ef4444;" x-text="t[lang].m_self"></td>
                         <td>1 Entitas Proyek</td>
                         <td>Pay-Per-Project</td>
                         <td>6 Bulan Unlimited AI Re-prompt</td>
-                        <td style="color: #f59e0b;">Wajib Login (OTP Email)</td>
+                        <td style="color: #d97706;">Wajib Login (OTP Email)</td>
                     </tr>
                     <tr>
-                        <td style="font-weight: 700; color: #c084fc;">Ultimate (Rp 1.49M)</td>
-                        <td style="color: #fca5a5;" x-text="t[lang].m_self"></td>
+                        <td style="font-weight: 700; color: #9333ea;">Ultimate (Rp 1.49M)</td>
+                        <td style="color: #ef4444;" x-text="t[lang].m_self"></td>
                         <td>1 Entitas Enterprise</td>
                         <td>Pay-Per-Project</td>
                         <td>1 Tahun Prioritas & 60 Hari Call</td>
-                        <td style="color: #f59e0b;">Wajib Akun Terverifikasi</td>
+                        <td style="color: #d97706;">Wajib Akun Terverifikasi</td>
                     </tr>
                     <tr style="background: rgba(16, 185, 129, 0.08); border-top: 2px solid #10b981;">
-                        <td style="font-weight: 800; color: #34d399;">Studio MVP (Rp 50M)</td>
-                        <td style="font-weight: 800; color: #34d399;" x-text="t[lang].m_neriah"></td>
+                        <td style="font-weight: 800; color: #10b981;">Studio MVP (Rp 50M)</td>
+                        <td style="font-weight: 800; color: #10b981;" x-text="t[lang].m_neriah"></td>
                         <td>Turnkey Monolith System</td>
                         <td>Milestone 50/50 DP</td>
                         <td>SLA 30 Hari Garansi Bug</td>
@@ -532,21 +619,21 @@
 
     <!-- 06. Section CS & Sales Playbook -->
     <div id="sec-playbook" class="sg-card" x-show="matchesSearch(t[lang].sec6_title + ' playbook script cs sales jawaban komplain')">
-        <div style="border-bottom: 1px solid #27272a; padding-bottom: 12px; margin-bottom: 16px;">
-            <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #ec4899; text-transform: uppercase; font-weight: 700;">
+        <div style="border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px;">
+            <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #db2777; text-transform: uppercase; font-weight: 700;">
                 06 // SALES & CS OBJECTION SCRIPTS
             </span>
-            <h3 style="font-size: 16px; font-weight: 800; color: #ffffff; margin: 4px 0 0 0;" x-text="t[lang].sec6_title"></h3>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec6_title"></h3>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
             <div class="sg-subcard">
-                <div style="font-size: 12px; font-weight: 700; color: #f59e0b; margin-bottom: 6px;" x-text="t[lang].sec6_q1"></div>
-                <div style="font-size: 12px; color: #d4d4d8; font-style: italic; background: #18181b; padding: 12px; border: 1px solid #27272a; border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a1"></div>
+                <div style="font-size: 12px; font-weight: 700; color: #d97706; margin-bottom: 6px;" x-text="t[lang].sec6_q1"></div>
+                <div style="font-size: 12px; color: var(--sg-quote-text); font-style: italic; background: var(--sg-quote-bg); padding: 12px; border: 1px solid var(--sg-quote-border); border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a1"></div>
             </div>
             <div class="sg-subcard">
                 <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 6px;" x-text="t[lang].sec6_q2"></div>
-                <div style="font-size: 12px; color: #d4d4d8; font-style: italic; background: #18181b; padding: 12px; border: 1px solid #27272a; border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a2"></div>
+                <div style="font-size: 12px; color: var(--sg-quote-text); font-style: italic; background: var(--sg-quote-bg); padding: 12px; border: 1px solid var(--sg-quote-border); border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a2"></div>
             </div>
         </div>
     </div>
@@ -709,7 +796,13 @@ function smartGuideApp() {
             this.activeSection = id;
             const el = document.getElementById(id);
             if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const navHeight = 120;
+                const elementPosition = el.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - navHeight;
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
             }
         },
 
@@ -721,7 +814,7 @@ function smartGuideApp() {
                     const el = document.getElementById(id);
                     if (el) {
                         const rect = el.getBoundingClientRect();
-                        if (rect.top <= 180 && rect.bottom >= 180) {
+                        if (rect.top <= 200 && rect.bottom >= 120) {
                             current = id;
                             break;
                         }

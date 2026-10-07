@@ -1047,6 +1047,18 @@ class BlueprintController extends Controller
             ],
         ]);
 
+        $packageLabels = [
+            'retail_spark' => 'Spark Free Idea Audit (Rp 0 - Guest Mode)',
+            'retail_lite' => 'Lite PRD Generator (Rp 99.000 - Self-Service License)',
+            'retail_pro' => 'Pro Production PRD (Rp 399.000 - Self-Service License)',
+            'retail_ultimate' => 'Ultimate Advisory PRD + 1-on-1 Call (Rp 1.490.000)',
+            'full_mvp' => 'Enterprise Rapid Monolith MVP (5 Sprints - DP 50%)',
+            'umkm_starter' => 'UMKM Digital Starter (Program Subsidi 50%)',
+            'blueprint_advisory' => 'Blueprint & PRD Architecture Advisory (Rp 2.500.000)',
+        ];
+        $displayPackage = $packageLabels[$packageName] ?? $packageName;
+        $isRetail = in_array($packageName, ['retail_spark', 'retail_lite', 'retail_pro', 'retail_ultimate']);
+
         // Send Filament notification to Admins
         try {
             $admins = \App\Models\User::where('email', 'yoseph.iriandi.tambunan@gmail.com')
@@ -1054,12 +1066,16 @@ class BlueprintController extends Controller
                 ->get();
 
             $batchInfo = $sprintBatch ? " [Batch: {$sprintBatch}]" : ($umkmCategory ? " [Kategori: {$umkmCategory}]" : "");
+            $notifTitle = $isRetail ? '💳 Pesanan Lisensi Digital Masuk!' : '🎯 Prospek Proyek / Reservasi Sprint Masuk!';
+            $notifBody = $isRetail
+                ? "Pembeli {$validated['name']} ({$company}) memesan lisensi: {$displayPackage}. Email: {$validated['email']} / WA: {$cleanPhone}."
+                : "Klien {$validated['name']} ({$company}) memilih: {$displayPackage}{$batchInfo}.";
 
             foreach ($admins as $admin) {
                 \Filament\Notifications\Notification::make()
-                    ->title('🎯 Prospek Proyek / Reservasi Sprint Masuk!')
-                    ->body("Klien {$validated['name']} ({$company}) memilih: {$packageName}{$batchInfo}.")
-                    ->icon('heroicon-o-calendar-days')
+                    ->title($notifTitle)
+                    ->body($notifBody)
+                    ->icon($isRetail ? 'heroicon-o-credit-card' : 'heroicon-o-calendar-days')
                     ->actions([
                         \Filament\Notifications\Actions\Action::make('view_lead')
                             ->label('Buka Data Lead')
@@ -1076,34 +1092,52 @@ class BlueprintController extends Controller
         $targetWa = $settings['company_whatsapp']->value ?? '628123456789';
 
         $waLines = [];
-        $waLines[] = "Halo Lead Architect Neriah Pro, saya *{$validated['name']}*" . (!empty($company) ? " dari *{$company}*" : "") . ".";
-        $waLines[] = "Saya ingin mengunci alokasi pengerjaan untuk paket: *{$packageName}*";
+        if ($isRetail) {
+            $waLines[] = "Halo Tim Lisensi Neriah Pro, saya *{$validated['name']}*" . (!empty($company) ? " dari *{$company}*" : "") . ".";
+            $waLines[] = "Saya ingin memesan lisensi mandiri: *{$displayPackage}*";
+            $waLines[] = "Mohon tautan invoice resmi dan instruksi pembayaran (QRIS / Virtual Account) untuk mengaktifkan akses unduh cetak biru proyek kami.";
+            if (!empty($validated['voucher_code'])) {
+                $waLines[] = "🏷️ *Kode Voucher/Promo:* " . strtoupper($validated['voucher_code']);
+            }
+            if (!empty($validated['notes'])) {
+                $waLines[] = "📝 *Catatan Ide/Kebutuhan:* " . $validated['notes'];
+            }
+            $waLines[] = "📧 *Email Terdaftar:* " . $validated['email'];
+            $waLines[] = "📱 *WhatsApp:* " . $cleanPhone;
+        } else {
+            $waLines[] = "Halo Lead Architect Neriah Pro, saya *{$validated['name']}*" . (!empty($company) ? " dari *{$company}*" : "") . ".";
+            $waLines[] = "Saya ingin mengunci alokasi pengerjaan untuk paket: *{$displayPackage}*";
 
-        if ($sprintBatch) {
-            $waLines[] = "🗓️ *Pilihan Slot Batch:* " . $sprintBatch;
-        }
-        if ($kickoffSlot) {
-            $waLines[] = "⏰ *Waktu Kickoff Sync:* " . $kickoffSlot;
-        }
-        if ($hasBlueprint) {
-            $waLines[] = "📐 *Status PRD:* " . ($hasBlueprint === 'ready' ? "Sudah Ada (Ref: {$blueprintSlug})" : "Belum Ada (Perlu Penyusunan Blueprint)");
-        }
-        if ($umkmCategory) {
-            $waLines[] = "🏢 *Kategori Usaha:* " . $umkmCategory;
-        }
-        if (!empty($validated['notes'])) {
-            $waLines[] = "📝 *Ringkasan Kebutuhan:* " . $validated['notes'];
-        }
-        if (!empty($validated['voucher_code'])) {
-            $waLines[] = "🏷️ *Kode Voucher:* " . strtoupper($validated['voucher_code']);
+            if ($sprintBatch) {
+                $waLines[] = "🗓️ *Pilihan Slot Batch:* " . $sprintBatch;
+            }
+            if ($kickoffSlot) {
+                $waLines[] = "⏰ *Waktu Kickoff Sync:* " . $kickoffSlot;
+            }
+            if ($hasBlueprint) {
+                $waLines[] = "📐 *Status PRD:* " . ($hasBlueprint === 'ready' ? "Sudah Ada (Ref: {$blueprintSlug})" : "Belum Ada (Perlu Penyusunan Blueprint)");
+            }
+            if ($umkmCategory) {
+                $waLines[] = "🏢 *Kategori Usaha:* " . $umkmCategory;
+            }
+            if (!empty($validated['notes'])) {
+                $waLines[] = "📝 *Ringkasan Kebutuhan:* " . $validated['notes'];
+            }
+            if (!empty($validated['voucher_code'])) {
+                $waLines[] = "🏷️ *Kode Voucher:* " . strtoupper($validated['voucher_code']);
+            }
         }
 
         $waMessage = implode("\n", $waLines);
         $waUrl = "https://wa.me/{$targetWa}?text=" . rawurlencode($waMessage);
 
+        $successMsg = $isRetail
+            ? 'Pesanan lisensi digital mandiri Anda telah berhasil dicatat. Petunjuk pembayaran resmi dan faktur lisensi telah disiapkan.'
+            : 'Reservasi jadwal & kebutuhan Anda telah berhasil dicatat. Lead Architect Neriah Pro akan segera mengonfirmasi jadwal.';
+
         return response()->json([
             'success' => true,
-            'message' => 'Reservasi jadwal & kebutuhan Anda telah berhasil dicatat. Lead Architect Neriah Pro akan segera mengonfirmasi jadwal.',
+            'message' => $successMsg,
             'lead_id' => $lead->id,
             'whatsapp_url' => $waUrl,
         ]);

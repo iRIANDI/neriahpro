@@ -66,6 +66,21 @@ Route::post('/cart/claim-free-grant', [\App\Http\Controllers\CartController::cla
 
 Route::get('/invite/{slug}', \App\Livewire\ClientInviteForm::class)->name('invite');
 
+// Customer Passwordless OTP Authentication Routes
+Route::get('/customer/login', function () {
+    if (auth()->check()) {
+        return redirect()->to('/blueprint');
+    }
+    return view('auth.customer-login');
+})->name('customer.login');
+
+Route::prefix('api/customer')->group(function () {
+    Route::post('/otp/request', [\App\Http\Controllers\CustomerAuthController::class, 'requestOtp'])->middleware('throttle:10,1');
+    Route::post('/otp/verify', [\App\Http\Controllers\CustomerAuthController::class, 'verifyOtp'])->middleware('throttle:15,1');
+    Route::get('/status', [\App\Http\Controllers\CustomerAuthController::class, 'status']);
+    Route::post('/logout', [\App\Http\Controllers\CustomerAuthController::class, 'logout'])->name('customer.logout');
+});
+
 // Authentication Aliases for Standard Web Routes
 Route::get('/login', function () {
     return redirect()->to('/admin/login');

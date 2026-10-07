@@ -134,8 +134,39 @@ class BlueprintController extends Controller
         $projectName = $request->input('nama_bisnis') ?: $request->input('namaBisnis') ?: $request->input('project_name');
         $aiModel = $request->input('ai_model') ?: $request->input('ai_provider');
 
+        // 3. Spark Free Tier Quota Enforcement (2x per month per IP/Guest, auto-reset 1st of month)
+        $user = auth()->user();
+        $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
+        $identifier = $user ? $user->email : ($request->ip() ?: '127.0.0.1');
+        $monthKey = 'spark_quota_' . md5($identifier) . '_' . date('Y_m');
+        $currentUsage = (int) Cache::get($monthKey, 0);
+
+        if (! $isExempt) {
+            $sparkLimitRaw = \App\Models\CmsGlobalSetting::getVal('pricing_retail_spark_limit', '2x Audit/Bulan');
+            $maxSparkLimit = 2;
+            if (preg_match('/(\d+)/', (string) $sparkLimitRaw, $matches)) {
+                $maxSparkLimit = (int) $matches[1];
+            }
+
+            if ($currentUsage >= $maxSparkLimit) {
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'SPARK_QUOTA_EXCEEDED',
+                    'message' => 'Batas kuota gratis paket Spark (' . $maxSparkLimit . 'x analisis per bulan) telah tercapai untuk bulan ini. Kuota Anda akan di-reset otomatis pada awal bulan depan. Silakan login atau upgrade ke paket Lite / Pro untuk akses tak terbatas.',
+                    'limit' => $maxSparkLimit,
+                    'current_usage' => $currentUsage,
+                    'reset_at' => now()->startOfMonth()->addMonth()->format('d M Y'),
+                ], 429);
+            }
+        }
+
         try {
             $synthesized = $discoveryService->synthesize($rawIdeaText, $files, $locale, $projectName, $aiModel);
+
+            // Increment Spark quota usage upon successful synthesis
+            if (! $isExempt) {
+                Cache::put($monthKey, $currentUsage + 1, now()->endOfMonth()->addDay());
+            }
 
             $draftId = (string) Str::ulid();
             Cache::put('blueprint_draft_' . $draftId, $synthesized, now()->addHours(24));
@@ -187,6 +218,34 @@ class BlueprintController extends Controller
         $locale = $request->input('locale', 'id');
         $aiModel = $request->input('ai_model') ?: $request->input('ai_provider');
 
+        // Revision Window Enforcement for Existing Blueprints
+        $editingSlug = $currentBlueprint['_meta']['is_editing_slug'] ?? $request->input('slug');
+        if ($editingSlug) {
+            $existingRecord = VisionBlueprint::where('slug', $editingSlug)->first();
+            if ($existingRecord && $existingRecord->created_at) {
+                $user = auth()->user();
+                $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
+                if (! $isExempt) {
+                    $tier = strtolower($existingRecord->user_metadata['retail_tier'] ?? 'lite');
+                    $allowedDays = match ($tier) {
+                        'lite' => 30,
+                        'pro' => 180,
+                        'ultimate' => 365,
+                        default => 30,
+                    };
+                    $expirationDate = $existingRecord->created_at->copy()->addDays($allowedDays);
+                    if (now()->greaterThan($expirationDate)) {
+                        return response()->json([
+                            'success' => false,
+                            'error_code' => 'REVISION_WINDOW_EXPIRED',
+                            'message' => 'Jendela revisi ' . $allowedDays . ' hari untuk paket ' . ucfirst($tier) . ' telah berakhir pada ' . $expirationDate->format('d M Y') . '. Silakan upgrade paket atau hubungi Lead Architect Neriah Pro untuk perpanjangan.',
+                            'expired_at' => $expirationDate->toIso8601String(),
+                        ], 403);
+                    }
+                }
+            }
+        }
+
         try {
             $result = $discoveryService->supplementIdea($currentBlueprint, $supplementText, $locale, $aiModel);
 
@@ -229,6 +288,27 @@ class BlueprintController extends Controller
             if ($slug) {
                 $record = VisionBlueprint::where('slug', $slug)->first();
                 if ($record) {
+                    $user = auth()->user();
+                    $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
+                    if (! $isExempt && $record->created_at) {
+                        $tier = strtolower($record->user_metadata['retail_tier'] ?? 'lite');
+                        $allowedDays = match ($tier) {
+                            'lite' => 30,
+                            'pro' => 180,
+                            'ultimate' => 365,
+                            default => 30,
+                        };
+                        $expirationDate = $record->created_at->copy()->addDays($allowedDays);
+                        if (now()->greaterThan($expirationDate)) {
+                            return response()->json([
+                                'success' => false,
+                                'error_code' => 'REVISION_WINDOW_EXPIRED',
+                                'message' => 'Jendela revisi ' . $allowedDays . ' hari untuk paket ' . ucfirst($tier) . ' telah berakhir pada ' . $expirationDate->format('d M Y') . '.',
+                                'expired_at' => $expirationDate->toIso8601String(),
+                            ], 403);
+                        }
+                    }
+
                     $meta = $record->user_metadata ?? [];
                     $meta['target_platform'] = $blueprint['targetPlatform'] ?? ($meta['target_platform'] ?? null);
                     $meta['migrasi_data'] = $blueprint['migrasiData'] ?? ($meta['migrasi_data'] ?? null);
@@ -633,6 +713,17 @@ class BlueprintController extends Controller
                 'signed_at' => now(),
                 'document_hash' => $blueprint->document_sha256,
             ]);
+        }
+
+        // Send Email Notification to Customer
+        if (!empty($blueprint->email) && filter_var($blueprint->email, FILTER_VALIDATE_EMAIL) && !str_contains($blueprint->email, '@example.com')) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($blueprint->email)->send(
+                    new \App\Mail\BlueprintReadyNotificationMail($blueprint, 'Free Grant // Voucher')
+                );
+            } catch (\Throwable $mailEx) {
+                \Illuminate\Support\Facades\Log::warning('Gagal kirim notifikasi claim voucher: ' . $mailEx->getMessage());
+            }
         }
 
         return response()->json([

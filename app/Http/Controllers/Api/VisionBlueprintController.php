@@ -138,6 +138,17 @@ class VisionBlueprintController extends Controller
             // Synthesize and attach Ultimate PRD
             $vision->generateAndSavePrd();
 
+            // Send Email Notification to Customer if valid email provided
+            if (!empty($vision->email) && filter_var($vision->email, FILTER_VALIDATE_EMAIL) && !str_contains($vision->email, '@example.com')) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($vision->email)->send(
+                        new \App\Mail\BlueprintReadyNotificationMail($vision)
+                    );
+                } catch (\Throwable $mailEx) {
+                    \Illuminate\Support\Facades\Log::warning('Gagal mengirimkan email notifikasi blueprint: ' . $mailEx->getMessage());
+                }
+            }
+
             // Clear draft from session and cache once successfully submitted ("kalau sudah beres")
             session()->forget('blueprint_draft');
             if ($draftId = $request->input('draft_id')) {

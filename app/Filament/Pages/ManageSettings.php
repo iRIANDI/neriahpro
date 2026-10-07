@@ -111,6 +111,24 @@ class ManageSettings extends Page implements HasForms
                     'url' => 'https://neriahpro.com',
                 ],
             ],
+            'pricing_advisory_price' => '2.500.000',
+            'pricing_mvp_price' => '50.000.000',
+            'pricing_umkm_price' => '7.500.000',
+            'pricing_active_promo_banner' => 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!',
+            'pricing_retail_spark_price' => '0',
+            'pricing_retail_lite_price' => '99.000',
+            'pricing_retail_pro_price' => '399.000',
+            'pricing_retail_ultimate_price' => '1.490.000',
+            'pricing_retail_spark_limit' => '2x Audit Ide / Bulan (Reset tiap tanggal 1)',
+            'pricing_retail_lite_limit' => '1 Proyek PRD (Revisi Form 30 Hari & Unduh Selamanya)',
+            'pricing_retail_pro_limit' => '1 Proyek PRD (Unlimited AI Regen & Revisi 6 Bulan)',
+            'pricing_retail_ultimate_limit' => '1 Proyek Enterprise (1 Tahun Prioritas & 1-on-1 Call 60 Menit)',
+            'pricing_retail_login_policy' => 'Guest Mode untuk Spark (Free). Wajib Login / Daftar Akun untuk paket Lite, Pro, & Ultimate guna proteksi dokumen & lisensi.',
+            'pricing_retail_disclaimer' => 'Paket Instant Architectural Blueprint 100% Self-Service: Dihasilkan instan oleh AI Project OS untuk Anda atau tim developer Anda kerjakan sendiri. Tidak ada koding atau pembuatan aplikasi oleh Neriah Pro.',
+            'pricing_sales_pic_email' => 'sales@neriahpro.com',
+            'pricing_consultation_sla' => 'Maksimal 2 Jam Kerja',
+            'pricing_enable_instant_whatsapp' => true,
+            'pricing_whatsapp_template' => 'Halo Lead Architect Neriah Pro, saya tertarik memesan paket layanan arsitektur dan ingin mendiskusikan kebutuhan sistem kami...',
         ];
 
         // Filter out null or empty strings from database so defaults prevail
@@ -717,9 +735,9 @@ class ManageSettings extends Page implements HasForms
                                         Repeater::make('seo_schema.sameAs')
                                             ->label('Social Media URLs')
                                             ->schema([
-                                                TextInput::make('url')->label('Profile URL')->url()->required(),
+                                                TextInput::make('url')->label('Profile URL')->url(),
                                             ])
-                                            ->defaultItems(1)
+                                            ->defaultItems(0)
                                     ]),
 
                                 Section::make('Kustom Schema.org JSON-LD (Ekstensi Fleksibel)')

@@ -59,6 +59,17 @@ class ManageSettingsLivewireTest extends TestCase
         $this->assertEquals(['en', 'id', 'ja'], CmsGlobalSetting::getVal('google_translate_allowed_languages'));
     }
 
+    public function test_saving_without_manually_filling_all_tabs(): void
+    {
+        $superadmin = User::where('email', 'yoseph.iriandi.tambunan@gmail.com')->firstOrFail();
+        $this->actingAs($superadmin);
+
+        Livewire::test(ManageSettings::class)
+            ->set('data.default_frontend_locale', 'en')
+            ->call('submit')
+            ->assertHasNoErrors();
+    }
+
     public function test_save_action_alias_and_locale_middleware_fallback(): void
     {
         $superadmin = User::where('email', 'yoseph.iriandi.tambunan@gmail.com')->firstOrFail();

@@ -50,7 +50,78 @@ class ManageSettings extends Page implements HasForms
 
     public function mount(): void
     {
-        $settings = CmsGlobalSetting::all()->pluck('value', 'key')->toArray();
+        $dbSettings = CmsGlobalSetting::all()->pluck('value', 'key')->toArray();
+
+        $defaults = [
+            'company_whatsapp' => '628123456789',
+            'app_timezone' => 'Asia/Jakarta',
+            'developer_entity_name' => 'Neriah Pro',
+            'developer_support_email' => 'support@neriahpro.com',
+            'developer_phone' => '+628123456789',
+            'developer_location' => 'Jakarta, Indonesia',
+            'developer_pic_name' => 'Yoseph Iriandi Tambunan',
+            'developer_pic_title' => 'Lead Software Architect & Tech Lead',
+            'developer_seal_text' => 'NERIAH PRO VERIFIED ARCHITECT',
+            'midtrans_terms_mandatory' => true,
+            'midtrans_terms_checkbox_label_id' => 'Saya telah membaca dan menyetujui Syarat & Ketentuan Layanan, Kebijakan Pengembalian Dana, Penanganan Pembayaran Ganda, dan Ketentuan Pembatalan Neriah Pro.',
+            'midtrans_terms_checkbox_label_en' => 'I have read and agree to the Terms of Service, Refund Policy, Double-Payment Protection, and Project Cancellation Terms of Neriah Pro.',
+            'midtrans_terms_content_id' => "1. Lisensi & Hak Cipta: Setiap blueprint dan kode sumber yang telah dilunasi menjadi hak milik penuh klien.\n2. Batasan Revisi: Revisi spesifikasi gratis dibatasi sesuai tier yang dipilih (Spark 2x/bln, Lite 30 hari, Pro 6 bulan, Ultimate 1 tahun).\n3. Penguncian Scope: Setelah uang muka (DP) 50% atau pelunasan terkonfirmasi, ruang lingkup proyek dikunci (scope frozen) untuk menjaga ketepatan waktu sprint engineering.",
+            'midtrans_terms_content_en' => "1. License & Intellectual Property: Blueprints and source code settled in full are 100% owned by the client.\n2. Revision Window: Free AI revisions are limited by tier (Spark 2x/mo, Lite 30 days, Pro 6 months, Ultimate 1 year).\n3. Scope Locking: Once 50% DP or full settlement is confirmed, project scope is frozen to ensure engineering milestone delivery.",
+            'midtrans_refund_policy_id' => "1. Garansi SLA: Paket Turnkey Studio MVP dilindungi 30 Hari Garansi Bug pasca peluncuran resmi.\n2. Jaminan Refund 100%: Pengembalian dana penuh 100% berlaku jika terjadi kegagalan teknis fatal dari pihak Neriah Pro sebelum dimulainya sprint pengembangan.\n3. Non-Refundable Post-Delivery: Karena produk digital dan blueprint arsitektur bersifat kekayaan intelektual langsung pakai, pembayaran yang telah diselesaikan setelah serah terima berkas tidak dapat dikembalikan sepihak.",
+            'midtrans_refund_policy_en' => "1. SLA Warranty: Studio MVP Turnkey packages include a 30-Day Bug Warranty after official deployment.\n2. 100% Refund Guarantee: Full 100% refund applies if critical technical failure occurs on Neriah Pro's side prior to sprint commencement.\n3. Non-Refundable Post-Delivery: Due to the intellectual nature of digital blueprints, fees paid after document delivery are non-refundable for unilateral client cancellations.",
+            'midtrans_double_payment_policy_id' => "1. Deteksi Idempotency: Sistem Neriah Pro mendeteksi setiap transaksi menggunakan ID pesanan unik untuk mencegah duplikasi.\n2. Reversal Otomatis: Jika pelanggan tidak sengaja melakukan transfer ganda melalui gateway bank, sistem otomatis mencatat di Dead Letter Queue (DLQ).\n3. Pengembalian Dana: Kelebihan pembayaran akan diverifikasi dan dikembalikan ke rekening asal dalam 3 - 5 hari kerja tanpa potongan biaya sistem.",
+            'midtrans_double_payment_policy_en' => "1. Idempotency Detection: Neriah Pro utilizes unique order IDs to prevent duplicate transaction charges.\n2. Automated Reversal: If duplicate transfers occur due to bank network retries, the event is trapped in the Dead Letter Queue (DLQ).\n3. Refund Timeline: Excess payments are verified and reimbursed to the source account within 3 - 5 business days with zero deduction.",
+            'midtrans_cancellation_policy_id' => "1. Sebelum Kickoff / DP: Pembatalan pesanan dapat dilakukan kapan saja tanpa penalti biaya.\n2. Pasca Pembayaran DP 50%: Jika klien membatalkan proyek secara sepihak saat sprint pengembangan telah berlangsung, DP yang telah dibayarkan dialokasikan untuk kompensasi jam kerja arsitek (non-refundable), namun seluruh berkas blueprint dan kode yang telah dikerjakan tetap diserahkan kepada klien.",
+            'midtrans_cancellation_policy_en' => "1. Prior to Kickoff / DP: Orders can be cancelled anytime with zero penalty.\n2. Post-DP 50% Kickoff: If the client cancels unilaterally while development sprints are active, the DP is allocated toward incurred engineering hours (non-refundable), while all produced blueprints and source code remain delivered to the client.",
+            'ai_default_provider' => 'relayrouter',
+            'default_frontend_locale' => 'id',
+            'google_translate_enabled' => true,
+            'google_translate_allowed_languages' => ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es'],
+            'feature_enable_cv_pro' => true,
+            'feature_enable_cv_pricing' => true,
+            'feature_enable_cv_job_hub' => true,
+            'feature_enable_cv_keuangan' => true,
+            'feature_enable_cv_mock_interview' => true,
+            'feature_enable_cv_linkedin_suite' => true,
+            'site_tagline_id' => 'Arsitektur Perangkat Lunak Skala Jutaan Pengguna',
+            'site_tagline_en' => 'Enterprise Software Architecture Operating System',
+            'seo_meta_title_id' => 'neriahpro.com - Digital Services Hub',
+            'seo_meta_title_en' => 'neriahpro.com - Digital Services Hub',
+            'seo_meta_description_id' => 'Jasa arsitektur perangkat lunak skala enterprise, cetak biru PRD 26 parameter, dan kontrak SPK digital.',
+            'seo_meta_description_en' => 'Enterprise software architecture services, 26-parameter PRD blueprints, and digital contracts.',
+            'seo_schema' => [
+                'organization' => [
+                    'type' => 'Organization',
+                    'name' => 'Neriah Pro',
+                    'legal_name' => 'Neriah Pro Studio',
+                    'url' => 'https://neriahpro.com',
+                    'logo' => 'https://neriahpro.com/favicon.ico',
+                    'email' => 'support@neriahpro.com',
+                    'telephone' => '+628123456789',
+                    'address' => [
+                        'street' => 'Jakarta Cyber Tower',
+                        'city' => 'Jakarta',
+                        'region' => 'DKI Jakarta',
+                        'postal_code' => '12950',
+                        'country' => 'ID',
+                    ],
+                ],
+                'website' => [
+                    'name' => 'Neriah Pro',
+                    'url' => 'https://neriahpro.com',
+                ],
+            ],
+        ];
+
+        // Filter out null or empty strings from database so defaults prevail
+        $filteredDb = [];
+        foreach ($dbSettings as $k => $v) {
+            if ($v !== null && $v !== '') {
+                $filteredDb[$k] = $v;
+            }
+        }
+
+        $settings = array_replace_recursive($defaults, $filteredDb);
 
         // Defensive normalization for scalar & array settings
         if (isset($settings['default_frontend_locale']) && is_array($settings['default_frontend_locale'])) {

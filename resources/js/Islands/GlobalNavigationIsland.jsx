@@ -278,6 +278,11 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
               {lang === 'id' ? 'Standar Rekayasa' : 'Engineering'}
             </a>
 
+            <a href="/customer/dashboard" className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-none bg-emerald-500"></span>
+              <span>{lang === 'id' ? 'Portal Klien' : 'Client Portal'}</span>
+            </a>
+
             <a href="/admin/login" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
               Portal Admin
             </a>
@@ -571,6 +576,10 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
               )}
               <a href="#architecture" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
                 Standar Arsitektur Enterprise
+              </a>
+              <a href="/customer/dashboard" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
+                <span>{lang === 'id' ? 'Portal Klien (Dashboard)' : 'Client Portal (Dashboard)'}</span>
+                <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 text-[9px] font-bold">AKUN</span>
               </a>
               <a href="/admin/login" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold">
                 Login Administrator

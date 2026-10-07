@@ -180,7 +180,7 @@ class CustomerAuthController extends Controller
                 'email' => $user->email,
                 'is_super_admin' => $user->isSuperAdmin(),
             ],
-            'redirect_url' => session()->pull('url.intended', '/blueprint'),
+            'redirect_url' => session()->pull('url.intended', route('customer.dashboard')),
         ]);
     }
 

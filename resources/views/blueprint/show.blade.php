@@ -800,26 +800,51 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 devEducationMode: 'step_by_step',
                 devActiveStep: 0,
                 devCompletedSteps: (() => {
+                    const dbSteps = @json($blueprint->user_metadata['dev_checkpoints'] ?? []);
+                    const normalized = {};
+                    for (const [k, v] of Object.entries(dbSteps)) {
+                        normalized[k] = typeof v === 'object' ? !!v.completed : !!v;
+                    }
                     try {
-                        return JSON.parse(localStorage.getItem('neriah_dev_progress_{{ $blueprint->slug }}') || '{}');
+                        const local = JSON.parse(localStorage.getItem('neriah_dev_progress_{{ $blueprint->slug }}') || '{}');
+                        return Object.assign({}, local, normalized);
                     } catch(e) {
-                        return {};
+                        return normalized;
                     }
                 })(),
                 isStepCompleted(k) {
                     return !!this.devCompletedSteps[k];
                 },
-                toggleStepCompleted(k, label) {
+                async toggleStepCompleted(k, label) {
                     this.devCompletedSteps[k] = !this.devCompletedSteps[k];
+                    const isNowDone = this.devCompletedSteps[k];
                     try {
                         localStorage.setItem('neriah_dev_progress_{{ $blueprint->slug }}', JSON.stringify(this.devCompletedSteps));
                     } catch(e){}
+
+                    // Persist to server database & synchronize customer dashboard timeline
+                    try {
+                        fetch('/api/blueprint/{{ $blueprint->slug }}/checkpoint', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                step_key: k,
+                                is_completed: isNowDone,
+                                notes: (label || k) + (isNowDone ? ' terverifikasi selesai.' : ' dikembalikan ke antrean.')
+                            })
+                        }).catch(() => {});
+                    } catch(e){}
+
                     if (window.showToast) {
-                        if (this.devCompletedSteps[k]) {
+                        if (isNowDone) {
                             window.showToast({
                                 type: 'success',
-                                title: 'TAHAP TERVERIFIKASI',
-                                message: (label || k) + ' ditandai selesai & disimpan ke riwayat sprint.'
+                                title: 'CHECKPOINT DISINKRONKAN',
+                                message: (label || k) + ' ditandai selesai. Timeline proyek di dashboard pelanggan telah otomatis terupdate!'
                             });
                         } else {
                             window.showToast({
@@ -2272,6 +2297,55 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <span>SALIN MASTER PROMPT AI IDE</span>
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- EXECUTIVE AI AGENT EXECUTION WIZARD & TIMELINE SYNC BANNER -->
+            <div class="mb-8 p-5 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border-2 border-emerald-500 rounded-none shadow-xl text-white font-mono space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-zinc-800 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-3 h-3 bg-emerald-500 animate-pulse"></span>
+                        <div>
+                            <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">AI AGENT EXECUTION WIZARD // ROADMAP &amp; CHECKPOINT ENGINE</span>
+                            <h3 class="text-sm sm:text-base font-black uppercase text-white">Panduan Terpandu Eksekusi AI Coding Agent (Cursor / Claude Code / Antigravity IDE)</h3>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-zinc-400">Progres Sprint:</span>
+                        <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-xs">
+                            <span x-text="getDevProgressPercentage()"></span>% Selesai
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div class="p-3 bg-zinc-900/90 border border-zinc-800 space-y-1">
+                        <span class="text-emerald-400 font-bold block text-[11px]">1. JANGAN PROMPT DUMPING:</span>
+                        <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
+                            Jangan salin ribuan baris PRD sekaligus ke AI chat. Eksekusi per fitur vertikal (Vertical Slice) agar AI tidak amnesia kode atau memotong logika.
+                        </p>
+                    </div>
+                    <div class="p-3 bg-zinc-900/90 border border-zinc-800 space-y-1">
+                        <span class="text-cyan-400 font-bold block text-[11px]">2. TOLAK UKUR MUTU (DoD):</span>
+                        <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
+                            Jalankan perintah verifikasi terminal (misal: <code>php artisan migrate:status</code> &amp; <code>php artisan test</code>) sebelum menandai checkpoint selesai.
+                        </p>
+                    </div>
+                    <div class="p-3 bg-zinc-900/90 border border-zinc-800 space-y-1">
+                        <span class="text-amber-400 font-bold block text-[11px]">3. SINKRONISASI DASHBOARD:</span>
+                        <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
+                            Tiap tahap yang dicentang otomatis tersimpan ke server database dan mengupdate timeline progres pengerjaan di dashboard pelanggan secara live.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-800">
+                    <div class="text-[11px] text-zinc-400">
+                        ⚡ Urutan eksekusi teruji: <strong>Fondasi Global (DB ULID) &rarr; Fitur MVP 01..N &rarr; Quality Gate &amp; Deploy</strong>
+                    </div>
+                    <a href="#section-3-5" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold uppercase text-xs flex items-center gap-1.5 transition">
+                        <span>BUKA WIZARD COCKPIT &amp; CHECKPOINT SPRINT &rarr;</span>
+                    </a>
                 </div>
             </div>
 

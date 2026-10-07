@@ -48,6 +48,7 @@ Route::get('/blueprint/{slug}/scaffold-preview', [BlueprintController::class, 'p
 Route::post('/api/blueprint/{slug}/presence', [BlueprintController::class, 'updatePresence'])->name('api.blueprint.presence.update');
 Route::get('/api/blueprint/{slug}/presence', [BlueprintController::class, 'getPresence'])->name('api.blueprint.presence.get');
 Route::post('/blueprint/{slug}/tasks/update', [BlueprintController::class, 'updateTasks'])->name('blueprint.tasks.update');
+Route::post('/api/blueprint/{slug}/checkpoint', [BlueprintController::class, 'updateCheckpoint'])->name('api.blueprint.checkpoint');
 Route::post('/api/pricing/inquiry', [BlueprintController::class, 'pricingInquiry'])->name('api.pricing.inquiry')->middleware('throttle:30,1');
 
 // Payment Gateway Webhooks (Midtrans DLQ Handler)
@@ -66,10 +67,14 @@ Route::post('/cart/claim-free-grant', [\App\Http\Controllers\CartController::cla
 
 Route::get('/invite/{slug}', \App\Livewire\ClientInviteForm::class)->name('invite');
 
+// Customer & Client Dashboard Portal
+Route::get('/customer/dashboard', [\App\Http\Controllers\CustomerDashboardController::class, 'index'])->name('customer.dashboard');
+Route::get('/portal', fn () => redirect()->route('customer.dashboard'))->name('portal');
+
 // Customer Passwordless OTP Authentication Routes
 Route::get('/customer/login', function () {
     if (auth()->check()) {
-        return redirect()->to('/blueprint');
+        return redirect()->route('customer.dashboard');
     }
     return view('auth.customer-login');
 })->name('customer.login');

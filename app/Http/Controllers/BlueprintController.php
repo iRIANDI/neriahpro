@@ -876,6 +876,58 @@ class BlueprintController extends Controller
     }
 
     /**
+     * Update and persist developer/architect execution checkpoints for a blueprint.
+     * Synchronizes live progress with the customer dashboard.
+     */
+    public function updateCheckpoint(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+
+        $validated = $request->validate([
+            'step_key' => 'required|string|max:100',
+            'is_completed' => 'required|boolean',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $stepKey = $validated['step_key'];
+        $isCompleted = (bool) $validated['is_completed'];
+        $notes = $validated['notes'] ?? null;
+
+        $metadata = $blueprint->user_metadata ?? [];
+        $checkpoints = $metadata['dev_checkpoints'] ?? [];
+
+        $checkpoints[$stepKey] = [
+            'completed' => $isCompleted,
+            'completed_at' => $isCompleted ? now()->toIso8601String() : null,
+            'notes' => $notes,
+            'updated_by' => auth()->user()?->name ?? 'Lead Architect / AI Agent',
+        ];
+
+        $metadata['dev_checkpoints'] = $checkpoints;
+
+        // Calculate progress percentage based on total steps
+        $totalSteps = 6;
+        $completedCount = count(array_filter($checkpoints, fn ($c) => !empty($c['completed'])));
+        $progressPercent = min(100, (int) round(($completedCount / max(1, $totalSteps)) * 100));
+
+        $metadata['dev_progress_percent'] = $progressPercent;
+        $metadata['dev_last_checkpoint_at'] = now()->toIso8601String();
+
+        $blueprint->user_metadata = $metadata;
+        $blueprint->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Checkpoint {$stepKey} berhasil disinkronkan ke database dan timeline pelanggan.",
+            'step_key' => $stepKey,
+            'is_completed' => $isCompleted,
+            'completed_count' => $completedCount,
+            'progress_percent' => $progressPercent,
+            'updated_at' => now()->format('d M Y, H:i') . ' WIB',
+        ]);
+    }
+
+    /**
      * Download Project Scaffold & Boilerplate ZIP Archive.
      */
     public function exportScaffold(string $slug)

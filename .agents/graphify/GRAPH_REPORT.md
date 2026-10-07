@@ -19,7 +19,10 @@ graph TD
     WebRoutes --> BlueprintCtrl[BlueprintController /blueprint]
     WebRoutes --> PageCtrl[PageController Dynamic CMS]
     WebRoutes --> DocCtrl[DocumentController Digital Contract]
+    WebRoutes --> CustomerDashboardCtrl[CustomerDashboardController /customer/dashboard]
     
+    CustomerDashboardCtrl --> VisionModel
+    CustomerDashboardCtrl --> TransModel
     BlueprintCtrl --> VisionModel[VisionBlueprint (ULID)]
     VisionModel --> PrdService[PrdGeneratorService (PRD & ERD Engine)]
     VisionModel --> DocModel[Document (Digital Contract & Scope Lock)]
@@ -138,6 +141,9 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/blueprint/{slug}/export/scaffold`: Endpoint ekspor 1-click arsip zip berisikan docker-compose.yml, schema_complete.sql (strict ULID), dan struktur routing Laravel 13 / Next.js (`BlueprintController::exportScaffold`).
 - `/blueprint/{slug}/scaffold/preview`: Endpoint AJAX JSON preview source code berkas scaffold (`BlueprintController::previewScaffold`).
 - `/api/blueprint/{slug}/presence`: Endpoint POST & GET sinkronisasi kehadiran kolaborator real-time (Lead Architect & Klien) dan koordinat kursor langsung (`BlueprintController::updatePresence`, `BlueprintController::getPresence`).
+- `/api/blueprint/{slug}/checkpoint`: Endpoint POST sinkronisasi progress checkpoint sprint developer ke database (`BlueprintController::updateCheckpoint`) yang otomatis merefleksikan persentase dan fase terkini ke timeline portal klien secara real-time.
+- `/customer/dashboard`: Client Portal & Customer Dashboard (`CustomerDashboardController::index`) menampilkan 4 KPI ringkasan akun, Roadmap Sprint Proyek 6-fase live terhubung ke PRD checkpoints, Pusat Unduh Lisensi Retail Seumur Hidup (PDF, MD, ZIP Scaffold, SQL DDL), Pelacak Garansi Revisi 30 Hari, dan Tabel Faktur Pajak & Kwitansi Resmi reimbursement kantor.
+- `/portal`: Alias redirect cepat ke `/customer/dashboard`.
 - `/blueprint/{slug}/download/pdf`: Endpoint unduh dokumen PRD format PDF (`BlueprintController::downloadPdf`).
 - `/blueprint/{slug}/snap-token`: Endpoint AJAX pembuatan Midtrans Snap Token untuk Blueprint DP dengan kalkulasi diskon voucher otomatis (`BlueprintController::getSnapToken`).
 - `/blueprint/{slug}/voucher/validate`: Validasi kode voucher promo / subsidi (`BlueprintController::validateVoucher`).

@@ -9,6 +9,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <!-- Enterprise Browser Extension Noise Shield (Early Inception - Placed at Top of Head) -->
+    <script>
+        (function() {
+            var isNoise = function(v) {
+                if (!v) return false;
+                var s = typeof v === 'string' ? v : (v.message || v.stack || v.description || String(v));
+                return s.indexOf('Could not establish connection') !== -1 ||
+                       s.indexOf('Receiving end does not exist') !== -1 ||
+                       s.indexOf('message port closed') !== -1 ||
+                       s.indexOf('Extension context invalidated') !== -1 ||
+                       s.indexOf('A listener indicated an asynchronous response') !== -1 ||
+                       s.indexOf('chrome.runtime.sendMessage') !== -1 ||
+                       s.indexOf('chrome-extension://') !== -1 ||
+                       s.indexOf('moz-extension://') !== -1;
+            };
+
+            // Intercept console logging
+            ['error', 'warn', 'log'].forEach(function(method) {
+                var _orig = console[method];
+                if (typeof _orig !== 'function') return;
+                console[method] = function() {
+                    for (var i = 0; i < arguments.length; i++) {
+                        if (isNoise(arguments[i])) return;
+                    }
+                    return _orig.apply(console, arguments);
+                };
+            });
+
+            // Intercept unhandled promise rejections (captured before browser devtools)
+            window.addEventListener('unhandledrejection', function(e) {
+                if (isNoise(e ? e.reason : '')) {
+                    e.preventDefault();
+                    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                    if (e.stopPropagation) e.stopPropagation();
+                    return false;
+                }
+            }, true);
+
+            // Intercept uncaught runtime error events
+            window.addEventListener('error', function(e) {
+                var text = (e ? e.message : '') + ' ' + (e && e.error ? (e.error.message || e.error.stack) : '');
+                if (isNoise(text)) {
+                    e.preventDefault();
+                    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                    if (e.stopPropagation) e.stopPropagation();
+                    return false;
+                }
+            }, true);
+
+            // Intercept window.onerror fallback
+            var _origOnError = window.onerror;
+            window.onerror = function(message, source, lineno, colno, error) {
+                var msg = (message || '') + ' ' + (error ? (error.message || '' + error.stack) : '');
+                if (isNoise(msg) || (source && isNoise(source))) {
+                    return true;
+                }
+                if (typeof _origOnError === 'function') {
+                    return _origOnError.apply(this, arguments);
+                }
+                return false;
+            };
+        })();
+    </script>
+
     <title>neriahpro.com - {{ $isEn ? 'Client Portal & Project Workspace' : 'Portal Pelanggan & Workspace Proyek' }}</title>
     <meta name="description" content="{{ $isEn ? 'Unified client workspace to track software sprints, access lifetime license downloads, and view tax invoices.' : 'Workspace terpadu pelanggan untuk memantau sprint software, mengunduh lisensi seumur hidup, dan mengakses faktur pajak.' }}">
 
@@ -19,34 +83,6 @@
     <!-- Vite Styles & Scripts -->
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <!-- Browser Extension Noise Shield -->
-    <script>
-        (function() {
-            var isNoise = function(v) {
-                if (!v) return false;
-                var s = typeof v === 'string' ? v : (v.message || String(v));
-                return s.indexOf('Could not establish connection') !== -1 ||
-                       s.indexOf('Receiving end does not exist') !== -1 ||
-                       s.indexOf('message port closed') !== -1;
-            };
-            var _err = console.error;
-            console.error = function() {
-                for (var i = 0; i < arguments.length; i++) {
-                    if (isNoise(arguments[i])) return;
-                }
-                return _err.apply(console, arguments);
-            };
-            window.addEventListener('unhandledrejection', function(e) {
-                if (isNoise(e ? e.reason : '')) {
-                    e.preventDefault();
-                    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-                    if (e.stopPropagation) e.stopPropagation();
-                    return false;
-                }
-            }, true);
-        })();
-    </script>
 
     <!-- Alpine.js & Tab Navigation Support -->
     <style>
@@ -91,7 +127,9 @@
                 setTab(tab) {
                     this.currentTab = tab;
                     if (window.history && window.history.replaceState) {
-                        window.history.replaceState(null, '', '#' + tab);
+                        try {
+                            window.history.replaceState(null, '', '#' + tab);
+                        } catch(e) {}
                     } else {
                         window.location.hash = tab;
                     }

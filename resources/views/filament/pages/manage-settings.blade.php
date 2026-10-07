@@ -1,51 +1,86 @@
 <x-filament-panels::page>
     <script>
         (function() {
-            // 1. Force manual scroll restoration so Chrome never restores old bottom scroll position
+            // 1. Force manual scroll restoration so browser never restores bottom scroll position
             if ('scrollRestoration' in history) {
                 history.scrollRestoration = 'manual';
             }
             window.scrollTo(0, 0);
 
-            // 2. Shield against unwanted automatic scrollIntoView calls during initial DOM/editor hydration
-            var originalScrollIntoView = Element.prototype.scrollIntoView;
-            var allowAutoScroll = false;
-            setTimeout(function() {
-                allowAutoScroll = true;
-            }, 1800);
+            // 2. Intercept HTMLElement.prototype.focus to ALWAYS prevent auto-scrolling
+            var originalFocus = HTMLElement.prototype.focus;
+            HTMLElement.prototype.focus = function(options) {
+                if (typeof options === 'object' && options !== null) {
+                    if (options.preventScroll === undefined) {
+                        options.preventScroll = true;
+                    }
+                } else {
+                    options = { preventScroll: true };
+                }
+                return originalFocus.call(this, options);
+            };
 
+            // 3. Shield against unwanted automatic scrollIntoView calls during component hydration
+            var originalScrollIntoView = Element.prototype.scrollIntoView;
             Element.prototype.scrollIntoView = function() {
-                if (!allowAutoScroll) {
+                var isValidationError = this.hasAttribute && (
+                    this.hasAttribute('data-validation-error') || 
+                    (this.querySelector && this.querySelector('[data-validation-error], .fi-fo-field-wrp-error-message')) ||
+                    (this.closest && this.closest('[data-validation-error], .fi-fo-field-wrp-error-message'))
+                );
+                var isUserGesture = window.event && window.event.isTrusted;
+                if (!isValidationError && !isUserGesture) {
                     return;
                 }
                 return originalScrollIntoView.apply(this, arguments);
             };
 
+            // 4. Pin scroll position to top during DOM load and Livewire hydration
             window.addEventListener('DOMContentLoaded', function() {
                 window.scrollTo(0, 0);
             });
             window.addEventListener('load', function() {
                 window.scrollTo(0, 0);
-                setTimeout(function() { window.scrollTo(0, 0); }, 100);
+                setTimeout(function() { window.scrollTo(0, 0); }, 50);
+                setTimeout(function() { window.scrollTo(0, 0); }, 250);
+                setTimeout(function() { window.scrollTo(0, 0); }, 800);
             });
 
-            // 3. Browser extension communication failure filter
+            // 5. Enterprise Browser Extension Noise Shield (MV3 Ephemeral Service Worker Protection)
             var isNoise = function(v) {
                 if (!v) return false;
-                var s = typeof v === 'string' ? v : (v.message || String(v));
+                var s = typeof v === 'string' ? v : (v.message || v.stack || v.description || String(v));
                 return s.indexOf('Could not establish connection') !== -1 ||
                        s.indexOf('Receiving end does not exist') !== -1 ||
-                       s.indexOf('message port closed') !== -1;
+                       s.indexOf('message port closed') !== -1 ||
+                       s.indexOf('Extension context invalidated') !== -1 ||
+                       s.indexOf('chrome-extension://') !== -1 ||
+                       s.indexOf('moz-extension://') !== -1;
             };
-            var _err = console.error;
-            console.error = function() {
-                for (var i = 0; i < arguments.length; i++) {
-                    if (isNoise(arguments[i])) return;
-                }
-                return _err.apply(console, arguments);
-            };
+
+            ['error', 'warn', 'log'].forEach(function(method) {
+                var _orig = console[method];
+                if (typeof _orig !== 'function') return;
+                console[method] = function() {
+                    for (var i = 0; i < arguments.length; i++) {
+                        if (isNoise(arguments[i])) return;
+                    }
+                    return _orig.apply(console, arguments);
+                };
+            });
+
             window.addEventListener('unhandledrejection', function(e) {
                 if (isNoise(e ? e.reason : '')) {
+                    e.preventDefault();
+                    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                    if (e.stopPropagation) e.stopPropagation();
+                    return false;
+                }
+            }, true);
+
+            window.addEventListener('error', function(e) {
+                var text = (e ? e.message : '') + ' ' + (e && e.error ? (e.error.message || e.error.stack) : '');
+                if (isNoise(text)) {
                     e.preventDefault();
                     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
                     if (e.stopPropagation) e.stopPropagation();
@@ -55,6 +90,11 @@
         })();
     </script>
     <style>
+        /* Neutralize Chromium Scroll Anchoring (prevents auto-jumping on dynamic DOM expansion) */
+        html, body, .fi-main, .fi-page, #global-settings-tabs, .fi-sc-tabs {
+            overflow-anchor: none !important;
+        }
+
         /* Bulletproof stability for Global Settings Tabs (anti-collapse & anti-vanishing) */
         #global-settings-tabs {
             min-height: 480px;

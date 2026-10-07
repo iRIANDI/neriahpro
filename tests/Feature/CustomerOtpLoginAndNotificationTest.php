@@ -43,8 +43,15 @@ class CustomerOtpLoginAndNotificationTest extends TestCase
         Mail::fake();
 
         $email = 'founder@startup.co.id';
+        User::create([
+            'name' => 'Startup Founder',
+            'email' => $email,
+            'password' => bcrypt('secret123'),
+        ]);
+
         $response = $this->postJson('/api/customer/otp/request', [
             'email' => $email,
+            'password' => 'secret123',
         ]);
 
         $response->assertStatus(200);
@@ -72,14 +79,20 @@ class CustomerOtpLoginAndNotificationTest extends TestCase
         Mail::fake();
         $email = 'rate.limit@test.com';
 
-        // 3 allowed requests
-        for ($i = 0; $i < 3; $i++) {
-            $response = $this->postJson('/api/customer/otp/request', ['email' => $email]);
+        User::create([
+            'name' => 'Rate Limit Test',
+            'email' => $email,
+            'password' => bcrypt('secret123'),
+        ]);
+
+        // 5 allowed requests
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->postJson('/api/customer/otp/request', ['email' => $email, 'password' => 'secret123']);
             $response->assertStatus(200);
         }
 
-        // 4th request must be throttled with 429
-        $response = $this->postJson('/api/customer/otp/request', ['email' => $email]);
+        // 6th request must be throttled with 429
+        $response = $this->postJson('/api/customer/otp/request', ['email' => $email, 'password' => 'secret123']);
         $response->assertStatus(429);
         $response->assertJson([
             'success' => false,
@@ -241,9 +254,68 @@ class CustomerOtpLoginAndNotificationTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Masuk ke Portal Klien');
-        $response->assertSee('Zero-Password');
+        $response->assertSee('2-FA');
         $response->assertSee('customer-email');
+        $response->assertSee('customer-password');
         $response->assertSee('otp-code');
+    }
+
+    /**
+     * Test login with wrong password fails before dispatching OTP.
+     */
+    public function test_customer_login_with_wrong_password_fails(): void
+    {
+        Mail::fake();
+
+        $user = User::create([
+            'name' => 'Existing Customer',
+            'email' => 'existing@customer.com',
+            'password' => bcrypt('correctPassword123'),
+        ]);
+
+        $response = $this->postJson('/api/customer/otp/request', [
+            'email' => 'existing@customer.com',
+            'password' => 'wrongPassword',
+            'mode' => 'login',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJson([
+            'success' => false,
+        ]);
+        $this->assertStringContainsString('Kata sandi yang Anda masukkan salah', $response->json('message'));
+
+        Mail::assertNothingSent();
+    }
+
+    /**
+     * Test login with correct password sends OTP and allows subsequent verification.
+     */
+    public function test_customer_login_with_correct_password_sends_otp(): void
+    {
+        Mail::fake();
+
+        $user = User::create([
+            'name' => 'Existing Customer',
+            'email' => 'existing2@customer.com',
+            'password' => bcrypt('correctPassword123'),
+        ]);
+
+        $response = $this->postJson('/api/customer/otp/request', [
+            'email' => 'existing2@customer.com',
+            'password' => 'correctPassword123',
+            'mode' => 'login',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'mode' => 'login',
+        ]);
+
+        Mail::assertSent(CustomerOtpMail::class, function ($mail) {
+            return $mail->hasTo('existing2@customer.com') && strlen($mail->otp) === 6;
+        });
     }
 
     /**

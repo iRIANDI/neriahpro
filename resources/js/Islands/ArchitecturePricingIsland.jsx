@@ -28,7 +28,8 @@ import {
   ChevronUp, 
   Server, 
   Cpu,
-  CreditCard
+  CreditCard,
+  ExternalLink
 } from 'lucide-react';
 
 export default function ArchitecturePricingIsland({ 
@@ -80,67 +81,123 @@ export default function ArchitecturePricingIsland({
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const triggerSnapPayment = (token, orderId) => {
-    if (!token) return;
-    if (typeof window !== 'undefined' && window.snap && typeof window.snap.pay === 'function') {
-      window.snap.pay(token, {
-        onSuccess: function (resultSnap) {
-          setPaymentStatus('success');
-          if (window.showToast) {
-            window.showToast({
-              type: 'success',
-              title: isEn ? 'PAYMENT SUCCESSFUL!' : 'PEMBAYARAN BERHASIL!',
-              message: isEn
-                ? 'Your order has been verified. Redirecting to your dashboard...'
-                : 'Pembayaran Anda telah diverifikasi! Mengarahkan ke Dashboard...',
-              duration: 4000
-            });
-          }
-          setTimeout(() => {
-            window.location.href = ['retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage)
-              ? '/customer/dashboard#licenses'
-              : '/customer/dashboard#projects';
-          }, 1800);
-        },
-        onPending: function (resultSnap) {
-          setPaymentStatus('pending');
-          if (window.showToast) {
-            window.showToast({
-              type: 'info',
-              title: isEn ? 'WAITING FOR PAYMENT' : 'MENUNGGU PEMBAYARAN',
-              message: isEn
-                ? 'Please complete payment using the displayed QRIS / Virtual Account.'
-                : 'Silakan selesaikan pembayaran sesuai instruksi QRIS / Virtual Account.',
-              duration: 6000
-            });
-          }
-        },
-        onError: function (resultSnap) {
-          setPaymentStatus('error');
-          if (window.showToast) {
-            window.showToast({
-              type: 'error',
-              title: isEn ? 'PAYMENT FAILED' : 'PEMBAYARAN GAGAL',
-              message: isEn ? 'Payment was cancelled or rejected.' : 'Pembayaran dibatalkan atau ditolak.'
-            });
-          }
-        },
-        onClose: function () {
-          if (window.showToast) {
-            window.showToast({
-              type: 'info',
-              title: isEn ? 'PAYMENT WINDOW CLOSED' : 'PROMPT DITUTUP',
-              message: isEn ? 'You can click "Pay with Midtrans Snap" anytime to continue.' : 'Anda dapat menekan tombol bayar kapan saja untuk melanjutkan.'
-            });
-          }
+  const ensureSnapReady = (snapUrl, clientKey) => {
+    return new Promise((resolve) => {
+      if (typeof window !== 'undefined' && window.snap && typeof window.snap.pay === 'function') {
+        return resolve(true);
+      }
+      if (typeof document === 'undefined') return resolve(false);
+
+      const src = snapUrl || 'https://app.sandbox.midtrans.com/snap/snap.js';
+      let script = document.querySelector(`script[src*="snap.js"]`) || document.getElementById('midtrans-snap-script');
+      if (!script) {
+        script = document.createElement('script');
+        script.id = 'midtrans-snap-script';
+        script.src = src;
+        if (clientKey) script.setAttribute('data-client-key', clientKey);
+        document.head.appendChild(script);
+      }
+
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (typeof window !== 'undefined' && window.snap && typeof window.snap.pay === 'function') {
+          clearInterval(interval);
+          resolve(true);
+        } else if (attempts > 30) {
+          clearInterval(interval);
+          resolve(false);
         }
-      });
+      }, 150);
+    });
+  };
+
+  const triggerSnapPayment = async (token, orderId, redirectUrl = null, snapUrl = null, clientKey = null) => {
+    if (!token) {
+      if (redirectUrl) {
+        window.open(redirectUrl, '_blank') || (window.location.href = redirectUrl);
+      }
+      return;
+    }
+
+    const ready = await ensureSnapReady(snapUrl, clientKey);
+
+    if (ready && typeof window !== 'undefined' && window.snap && typeof window.snap.pay === 'function') {
+      try {
+        window.snap.pay(token, {
+          onSuccess: function (resultSnap) {
+            setPaymentStatus('success');
+            if (window.showToast) {
+              window.showToast({
+                type: 'success',
+                title: isEn ? 'PAYMENT SUCCESSFUL!' : 'PEMBAYARAN BERHASIL!',
+                message: isEn
+                  ? 'Your order has been verified. Redirecting to your dashboard...'
+                  : 'Pembayaran Anda telah diverifikasi! Mengarahkan ke Dashboard...',
+                duration: 4000
+              });
+            }
+            setTimeout(() => {
+              window.location.href = ['retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage)
+                ? '/customer/dashboard#licenses'
+                : '/customer/dashboard#projects';
+            }, 1800);
+          },
+          onPending: function (resultSnap) {
+            setPaymentStatus('pending');
+            if (window.showToast) {
+              window.showToast({
+                type: 'info',
+                title: isEn ? 'WAITING FOR PAYMENT' : 'MENUNGGU PEMBAYARAN',
+                message: isEn
+                  ? 'Please complete payment using the displayed QRIS / Virtual Account.'
+                  : 'Silakan selesaikan pembayaran sesuai instruksi QRIS / Virtual Account.',
+                duration: 6000
+              });
+            }
+          },
+          onError: function (resultSnap) {
+            setPaymentStatus('error');
+            if (window.showToast) {
+              window.showToast({
+                type: 'error',
+                title: isEn ? 'PAYMENT FAILED' : 'PEMBAYARAN GAGAL',
+                message: isEn ? 'Payment was cancelled or rejected.' : 'Pembayaran dibatalkan atau ditolak.'
+              });
+            }
+          },
+          onClose: function () {
+            if (window.showToast) {
+              window.showToast({
+                type: 'info',
+                title: isEn ? 'PAYMENT WINDOW CLOSED' : 'PROMPT DITUTUP',
+                message: isEn ? 'You can click "Pay with Midtrans Snap" anytime to continue.' : 'Anda dapat menekan tombol bayar kapan saja untuk melanjutkan.'
+              });
+            }
+          }
+        });
+        return;
+      } catch (e) {
+        console.error('Midtrans Snap pay error:', e);
+      }
+    }
+
+    // Direct fallback if popup failed or blocked:
+    if (redirectUrl) {
+      if (window.showToast) {
+        window.showToast({
+          type: 'info',
+          title: isEn ? 'OPENING MIDTRANS PAYMENT' : 'MEMBUKA GATEWAY PEMBAYARAN',
+          message: isEn ? 'Redirecting to Midtrans secure payment window...' : 'Membuka jendela pembayaran resmi Midtrans...'
+        });
+      }
+      window.open(redirectUrl, '_blank') || (window.location.href = redirectUrl);
     } else {
       if (window.showToast) {
         window.showToast({
           type: 'warning',
           title: isEn ? 'LOADING MIDTRANS' : 'MEMUAT MIDTRANS',
-          message: isEn ? 'Snap is loading, please wait a moment...' : 'Sistem Snap sedang dimuat, silakan tunggu sebentar...'
+          message: isEn ? 'Snap is loading, please click Pay again in a moment.' : 'Sistem Snap sedang dimuat, silakan klik tombol bayar sekali lagi.'
         });
       }
     }
@@ -220,8 +277,14 @@ export default function ArchitecturePricingIsland({
       // If it's a paid package with a Midtrans Snap token, launch Snap payment modal directly!
       if (result.is_paid_package && result.snap_token) {
         setTimeout(() => {
-          triggerSnapPayment(result.snap_token, result.order_id);
-        }, 120);
+          triggerSnapPayment(
+            result.snap_token, 
+            result.order_id, 
+            result.redirect_url, 
+            result.snap_url, 
+            result.client_key
+          );
+        }, 150);
       } else if (selectedPackage === 'retail_spark') {
         // Free Spark tier guest mode: launch blueprint generator
         setTimeout(() => {
@@ -1766,14 +1829,33 @@ export default function ArchitecturePricingIsland({
                         <span>{isEn ? 'OPEN CLIENT DASHBOARD →' : 'BUKA DASHBOARD PELANGGAN →'}</span>
                       </a>
                     ) : lastOrder?.snap_token ? (
-                      <button
-                        type="button"
-                        onClick={() => triggerSnapPayment(lastOrder.snap_token, lastOrder.order_id)}
-                        className="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2 transition cursor-pointer shadow-lg rounded-none"
-                      >
-                        <CreditCard className="w-4 h-4" />
-                        <span>{isEn ? 'PAY VIA MIDTRANS SNAP NOW →' : 'BAYAR VIA MIDTRANS SNAP (QRIS / VA) →'}</span>
-                      </button>
+                      <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                        <button
+                          type="button"
+                          onClick={() => triggerSnapPayment(
+                            lastOrder.snap_token, 
+                            lastOrder.order_id, 
+                            lastOrder.redirect_url, 
+                            lastOrder.snap_url, 
+                            lastOrder.client_key
+                          )}
+                          className="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2 transition cursor-pointer shadow-lg rounded-none"
+                        >
+                          <CreditCard className="w-4 h-4" />
+                          <span>{isEn ? 'PAY VIA MIDTRANS SNAP NOW →' : 'BAYAR VIA MIDTRANS SNAP (QRIS / VA) →'}</span>
+                        </button>
+                        {lastOrder.redirect_url && (
+                          <a
+                            href={lastOrder.redirect_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full sm:w-auto px-4 py-3 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-emerald-400 font-mono text-xs font-bold uppercase tracking-wider inline-flex items-center justify-center gap-1.5 border border-emerald-500/40 rounded-none transition"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>{isEn ? 'DIRECT PAYMENT TAB ↗' : 'TAB PEMBAYARAN LANGSUNG ↗'}</span>
+                          </a>
+                        )}
+                      </div>
                     ) : null}
 
                     {submittedWaUrl && !isRetailTier && (
@@ -2012,37 +2094,22 @@ export default function ArchitecturePricingIsland({
                     </div>
                   )}
 
-                  {/* 4. KHUSUS PAKET SELF-SERVICE BERBAYAR: EDUKASI NILAI LISENSI & KEUNTUNGAN AKUN */}
+                  {/* 4. KHUSUS PAKET SELF-SERVICE BERBAYAR: RINGKASAN LISENSI CEPAT */}
                   {['retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage) && (
-                    <div className="p-3.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-sans space-y-2.5">
-                      <div className="flex items-center gap-1.5 font-mono font-bold text-xs text-zinc-900 dark:text-white uppercase">
-                        <Terminal className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
-                        <span>{isEn ? '100% SELF-SERVICE // ZERO NERIAH PRO CODING' : '100% SELF-SERVICE // ZERO KODING NERIAH PRO'}</span>
-                      </div>
-                      <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                        {isEn
-                          ? 'This is a specification license designed for your own engineering team or AI coding agents to implement. Neriah Pro does not perform code development on this tier.'
-                          : 'Paket ini adalah lisensi cetak biru arsitektur mandiri untuk dibangun oleh tim developer atau AI coding agent Anda sendiri. Neriah Pro tidak melakukan penulisan kode pada paket ini.'}
-                      </p>
-
-                      <div className="pt-2 border-t border-zinc-200 dark:border-zinc-700/80">
-                        <span className="block font-mono text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
-                          {isEn ? 'WHY YOUR CONTACT & ACCOUNT DETAILS ARE REQUIRED:' : 'MENGAPA DATA KONTAK & AKUN DIBUTUHKAN?'}
-                        </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] font-mono">
-                          <div className="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-0.5">
-                            <span className="font-bold text-emerald-600 dark:text-emerald-400 block">📦 {isEn ? 'Lifetime Access' : 'Akses Selamanya'}</span>
-                            <span className="text-zinc-500 leading-tight block">{isEn ? 'PRD & DDL SQL tied to your account for unlimited downloads.' : 'PRD & DDL SQL terikat ke akun untuk unduh tak terbatas.'}</span>
-                          </div>
-                          <div className="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-0.5">
-                            <span className="font-bold text-cyan-600 dark:text-cyan-400 block">🧾 {isEn ? 'Official Invoice' : 'Faktur & Kwitansi'}</span>
-                            <span className="text-zinc-500 leading-tight block">{isEn ? 'Instant tax invoice issued for corporate expense reimbursement.' : 'Diterbitkan resmi untuk klaim/reimbursement kantor.'}</span>
-                          </div>
-                          <div className="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-0.5">
-                            <span className="font-bold text-amber-600 dark:text-amber-400 block">🔄 {isEn ? '30-Day Revisions' : 'Garansi 30 Hari'}</span>
-                            <span className="text-zinc-500 leading-tight block">{isEn ? 'Refine parameters & regenerate outputs anytime for 30 days.' : 'Bebas perbarui parameter & generate ulang selama 30 hari.'}</span>
-                          </div>
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400 uppercase text-xs">
+                          <Terminal className="w-3.5 h-3.5 shrink-0" />
+                          <span>{isEn ? 'DIRECT DIGITAL LICENSE CHECKOUT' : 'CHECKOUT LISENSI DIGITAL INSTAN'}</span>
                         </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                          MIDTRANS SNAP
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5 text-[10px] text-zinc-600 dark:text-zinc-300">
+                        <span className="p-1.5 bg-white/60 dark:bg-zinc-900/60 border border-emerald-500/20 block text-center font-bold">📦 {isEn ? 'Lifetime Access' : 'Akses Selamanya'}</span>
+                        <span className="p-1.5 bg-white/60 dark:bg-zinc-900/60 border border-emerald-500/20 block text-center font-bold">🧾 {isEn ? 'Official Invoice' : 'Faktur Pajak'}</span>
+                        <span className="p-1.5 bg-white/60 dark:bg-zinc-900/60 border border-emerald-500/20 block text-center font-bold">⚡ {isEn ? 'Instant QRIS / VA' : 'QRIS / VA Instan'}</span>
                       </div>
                     </div>
                   )}

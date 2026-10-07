@@ -1314,6 +1314,18 @@ class BlueprintController extends Controller
 
             $snapResponse = MidtransSnapService::createSnapToken($params);
 
+            if (empty($snapResponse['token'])) {
+                $errorMsg = $snapResponse['error'] ?? 'Sistem gagal menghubungi server Midtrans Snap untuk membuat token pembayaran.';
+                \Illuminate\Support\Facades\Log::error("Pricing Inquiry Midtrans Snap Failed for order {$orderId}: {$errorMsg}");
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal memproses sesi pembayaran Midtrans: ' . $errorMsg,
+                    'is_paid_package' => true,
+                    'order_id' => $orderId,
+                ], 422);
+            }
+
             // Store cached checkout details for webhook reconciliation
             Cache::put('pricing_order_' . $orderId, [
                 'lead_id' => $lead->id,

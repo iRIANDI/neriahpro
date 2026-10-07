@@ -31,9 +31,26 @@ class SetAppLocale
         elseif ($request->hasCookie('neriah_locale') && in_array($request->cookie('neriah_locale'), ['id', 'en'])) {
             $locale = $request->cookie('neriah_locale');
         }
-        // 4. Default fallback
+        // 4. Default fallback from CMS Global Settings Tier 1
         else {
-            $locale = config('app.locale', 'id');
+            try {
+                $cmsLocale = \App\Models\CmsGlobalSetting::getVal('default_frontend_locale');
+                if (is_array($cmsLocale)) {
+                    $cmsLocale = reset($cmsLocale);
+                }
+                $locale = (is_string($cmsLocale) && in_array($cmsLocale, ['id', 'en']))
+                    ? $cmsLocale
+                    : config('app.locale', 'id');
+            } catch (\Throwable) {
+                $locale = config('app.locale', 'id');
+            }
+        }
+
+        if (is_array($locale)) {
+            $locale = reset($locale) ?: 'id';
+        }
+        if (!is_string($locale) || !in_array($locale, ['id', 'en'])) {
+            $locale = 'id';
         }
 
         App::setLocale($locale);

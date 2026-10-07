@@ -1,7 +1,11 @@
 @php
     $googleTranslateEnabled = (bool) \App\Models\CmsGlobalSetting::getVal('google_translate_enabled', true);
     $rawAllowed = \App\Models\CmsGlobalSetting::getVal('google_translate_allowed_languages', ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es']);
-    $allowedLangList = is_array($rawAllowed) ? $rawAllowed : ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es'];
+    if (is_string($rawAllowed)) {
+        $decoded = json_decode($rawAllowed, true);
+        $rawAllowed = is_array($decoded) ? $decoded : [$rawAllowed];
+    }
+    $allowedLangList = is_array($rawAllowed) && !empty($rawAllowed) ? $rawAllowed : ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es'];
     $langLabels = [
         'en' => ['flag' => '🇬🇧', 'name' => 'English'],
         'id' => ['flag' => '🇮🇩', 'name' => 'Indonesia'],

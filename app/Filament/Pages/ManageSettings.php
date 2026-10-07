@@ -51,6 +51,19 @@ class ManageSettings extends Page implements HasForms
     public function mount(): void
     {
         $settings = CmsGlobalSetting::all()->pluck('value', 'key')->toArray();
+
+        // Defensive normalization for scalar & array settings
+        if (isset($settings['default_frontend_locale']) && is_array($settings['default_frontend_locale'])) {
+            $settings['default_frontend_locale'] = reset($settings['default_frontend_locale']) ?: 'id';
+        }
+        if (isset($settings['app_timezone']) && is_array($settings['app_timezone'])) {
+            $settings['app_timezone'] = reset($settings['app_timezone']) ?: 'Asia/Jakarta';
+        }
+        if (isset($settings['google_translate_allowed_languages']) && is_string($settings['google_translate_allowed_languages'])) {
+            $decoded = json_decode($settings['google_translate_allowed_languages'], true);
+            $settings['google_translate_allowed_languages'] = is_array($decoded) ? $decoded : [$settings['google_translate_allowed_languages']];
+        }
+
         if (!empty($settings['developer_signature_image']) && is_string($settings['developer_signature_image']) && str_starts_with($settings['developer_signature_image'], 'data:image')) {
             $settings['developer_signature_pad'] = $settings['developer_signature_image'];
         }
@@ -63,7 +76,6 @@ class ManageSettings extends Page implements HasForms
             ->components([
                 Tabs::make('Settings')
                     ->id('global-settings-tabs')
-                    ->persistTab()
                     ->persistTabInQueryString('tab')
                     ->scrollable()
                     ->tabs([
@@ -779,6 +791,11 @@ class ManageSettings extends Page implements HasForms
         ];
     }
 
+    public function save(): void
+    {
+        $this->submit();
+    }
+
     public function submit(): void
     {
         $data = $this->form->getState();
@@ -793,6 +810,26 @@ class ManageSettings extends Page implements HasForms
             if ($key === 'app_timezone' && is_array($safeValue)) {
                 $safeValue = reset($safeValue) ?: 'Asia/Jakarta';
             }
+            if ($key === 'default_frontend_locale') {
+                if (is_array($safeValue)) {
+                    $safeValue = reset($safeValue) ?: 'id';
+                }
+                $safeValue = in_array($safeValue, ['id', 'en']) ? $safeValue : 'id';
+            }
+            if ($key === 'google_translate_allowed_languages') {
+                if (is_string($safeValue)) {
+                    $decoded = json_decode($safeValue, true);
+                    $safeValue = is_array($decoded) ? $decoded : [$safeValue];
+                }
+                if (!is_array($safeValue) || empty($safeValue)) {
+                    $safeValue = ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es'];
+                }
+                $safeValue = array_values(array_filter($safeValue));
+            }
+            if ($key === 'google_translate_enabled') {
+                $safeValue = (bool) $safeValue;
+            }
+
             CmsGlobalSetting::updateOrCreate(
                 ['key' => $key],
                 ['value' => $safeValue]

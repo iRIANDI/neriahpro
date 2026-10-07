@@ -21,16 +21,6 @@
             height: auto !important;
             opacity: 1 !important;
         }
-
-        /* Fallback: If no tab has fi-active due to Alpine timing or query desync, keep first tab visible */
-        #global-settings-tabs:not(:has(.fi-sc-tabs-tab.fi-active)) .fi-sc-tabs-tab:first-of-type {
-            min-height: 480px;
-            display: block !important;
-            visibility: visible !important;
-            position: relative !important;
-            height: auto !important;
-            opacity: 1 !important;
-        }
     </style>
 
     <form wire:submit="submit" class="space-y-6">

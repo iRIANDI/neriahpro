@@ -83,6 +83,9 @@
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Midtrans Snap JS (In-Page Popup Modal) -->
+    <script src="{{ config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/snap.js') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
+
     <!-- Alpine.js & Tab Navigation Support (Local Vendor JS) -->
     <style>
         [x-cloak] { display: none !important; }
@@ -90,6 +93,91 @@
     <script defer src="{{ asset('js/vendor/alpine.min.js') }}"></script>
 
     <script>
+        window.payPelunasanSnap = async function(slug, onStart, onFinish) {
+            if (onStart) onStart();
+            try {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'info',
+                        title: 'MEMBUAT SESI PELUNASAN',
+                        message: 'Menghubungkan ke gateway Midtrans Sandbox...'
+                    });
+                }
+                const res = await fetch('/blueprint/' + encodeURIComponent(slug) + '/pelunasan-snap-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'Accept': 'application/json',
+                    }
+                });
+                const data = await res.json();
+                if (!data.success || !data.token) {
+                    throw new Error(data.message || 'Gagal membuat sesi token pelunasan.');
+                }
+
+                if (window.snap && typeof window.snap.pay === 'function') {
+                    window.snap.pay(data.token, {
+                        onSuccess: function(result) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: 'PELUNASAN BERHASIL!',
+                                    message: 'Pembayaran pelunasan 50% berhasil diverifikasi. Memperbarui status proyek...',
+                                    duration: 3500
+                                });
+                            }
+                            setTimeout(function() { window.location.reload(); }, 1800);
+                        },
+                        onPending: function(result) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'warning',
+                                    title: 'MENUNGGU PEMBAYARAN',
+                                    message: 'Instruksi pembayaran pelunasan telah dibuat. Silakan transfer sesuai rincian.',
+                                    duration: 5000
+                                });
+                            }
+                            setTimeout(function() { window.location.reload(); }, 2200);
+                        },
+                        onError: function(result) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'error',
+                                    title: 'PELUNASAN GAGAL',
+                                    message: 'Transaksi pelunasan dibatalkan atau ditolak.'
+                                });
+                            }
+                            if (onFinish) onFinish();
+                        },
+                        onClose: function() {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'info',
+                                    title: 'PROMPT DITUTUP',
+                                    message: 'Anda dapat menekan tombol bayar pelunasan kembali untuk melanjutkan.'
+                                });
+                            }
+                            if (onFinish) onFinish();
+                        }
+                    });
+                } else if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    throw new Error('Midtrans Snap tidak tersedia. Silakan periksa koneksi internet Anda.');
+                }
+            } catch (err) {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'KENDALA PELUNASAN',
+                        message: err.message || 'Terjadi kesalahan sistem saat menghubungi gateway Midtrans.'
+                    });
+                }
+                if (onFinish) onFinish();
+            }
+        };
+
         if (localStorage.getItem('neriah_theme') === 'dark' || (!localStorage.getItem('neriah_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -681,6 +769,75 @@
                                     @endforeach
                                 </div>
                             </div>
+
+                            <!-- Milestone 2 & Final Settlement (Pelunasan 50%) Section -->
+                            @if($isDpPaid)
+                                @if($project->isPelunasanConfirmed())
+                                    <div class="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between flex-wrap gap-3">
+                                        <div class="flex items-center gap-3">
+                                            <span class="w-8 h-8 bg-emerald-500 text-black flex items-center justify-center font-bold text-sm">✓</span>
+                                            <div>
+                                                <span class="font-mono text-xs font-black uppercase text-emerald-600 dark:text-emerald-400 block">
+                                                    {{ $isEn ? 'ALL PAYMENTS FULLY SETTLED (100% LUNAS)' : 'SELURUH TERMIN PEMBAYARAN TELAH LUNAS (100%)' }}
+                                                </span>
+                                                <span class="text-[11px] text-zinc-500 dark:text-zinc-400 block mt-0.5">
+                                                    {{ $isEn ? 'Source code repository, production database, VPS infrastructure credentials, and 30-day bug warranty are fully active.' : 'Seluruh hak source code, database produksi, kredensial VPS server, dan garansi SLA 30 hari aktif penuh.' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <span class="px-3 py-1 bg-emerald-500 text-black font-mono text-[10px] font-black uppercase tracking-wider">
+                                            {{ $isEn ? 'FULLY SETTLED' : 'LUNAS 100%' }}
+                                        </span>
+                                    </div>
+                                @else
+                                    <div class="mt-4 p-4 bg-zinc-50 dark:bg-zinc-800/80 border-2 {{ $progressPercent >= 100 ? 'border-amber-500 bg-amber-500/5' : 'border-zinc-300 dark:border-zinc-700' }} flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-mono text-xs font-black uppercase {{ $progressPercent >= 100 ? 'text-amber-500' : 'text-zinc-800 dark:text-zinc-200' }}">
+                                                    {{ $progressPercent >= 100 
+                                                        ? ($isEn ? '⚡ ALL SPRINT PHASES COMPLETED // FINAL SETTLEMENT READY' : '⚡ SEMUA TAHAPAN SPRINT SELESAI // SIAP PELUNASAN 50%') 
+                                                        : ($isEn ? 'MILESTONE 2: FINAL SETTLEMENT 50%' : 'TERMIN 2: PELUNASAN SISA 50%') }}
+                                                </span>
+                                                <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-700 font-mono text-[10px] font-bold text-zinc-900 dark:text-white">
+                                                    Rp {{ number_format($project->getFinalPelunasanAmount(), 0, ',', '.') }}
+                                                </span>
+                                            </div>
+                                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 max-w-xl leading-relaxed">
+                                                {{ $isEn 
+                                                    ? 'DP 50% was verified. Settle the remaining 50% balance via Midtrans Sandbox (QRIS / Virtual Account) for official production handover, VPS deployment, and source code transfer.' 
+                                                    : 'Uang Muka (DP 50%) telah terverifikasi. Selesaikan pelunasan sisa 50% via Midtrans Sandbox (QRIS / Virtual Account) untuk serah terima produksi, deployment VPS, dan transfer kepemilikan source code.' }}
+                                            </p>
+                                        </div>
+                                        <div class="shrink-0">
+                                            <button
+                                                type="button"
+                                                onclick="window.payPelunasanSnap('{{ $project->slug }}')"
+                                                class="w-full sm:w-auto px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer shadow-md rounded-none"
+                                            >
+                                                <span>💳</span>
+                                                <span>{{ $isEn ? 'PAY FINAL SETTLEMENT (MIDTRANS) →' : 'BAYAR PELUNASAN 50% (MIDTRANS SNAP) →' }}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                            @else
+                                <div class="mt-4 p-4 bg-red-500/5 border border-red-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div>
+                                        <span class="font-mono text-xs font-black uppercase text-red-600 dark:text-red-400 block">
+                                            {{ $isEn ? 'AWAITING 50% DOWN PAYMENT (DP)' : 'MENUNGGU PEMBAYARAN UANG MUKA (DP 50%)' }}
+                                        </span>
+                                        <span class="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                            {{ $isEn ? 'Sprint execution begins immediately once the 50% DP is confirmed by Midtrans.' : 'Pengerjaan sprint dimulai segera setelah DP 50% terkonfirmasi oleh Midtrans.' }}
+                                        </span>
+                                    </div>
+                                    <a 
+                                        href="/blueprint/{{ $project->slug }}" 
+                                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider rounded-none transition text-center shrink-0"
+                                    >
+                                        {{ $isEn ? 'PAY DP VIA SNAP →' : 'BAYAR DP VIA MIDTRANS SNAP →' }}
+                                    </a>
+                                </div>
+                            @endif
 
                         </div>
                     @endforeach

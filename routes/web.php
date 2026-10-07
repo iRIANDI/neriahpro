@@ -37,6 +37,7 @@ Route::get('/blueprint', [BlueprintController::class, 'create'])->name('blueprin
 Route::get('/blueprint/{slug}', [BlueprintController::class, 'show'])->name('blueprint.show');
 Route::post('/blueprint/{slug}/generate-contract', [BlueprintController::class, 'generateContract'])->name('blueprint.generate-contract');
 Route::post('/blueprint/{slug}/snap-token', [BlueprintController::class, 'getSnapToken'])->name('blueprint.snap-token');
+Route::post('/blueprint/{slug}/pelunasan-snap-token', [BlueprintController::class, 'getPelunasanSnapToken'])->name('blueprint.pelunasan-snap-token');
 Route::post('/blueprint/{slug}/voucher/validate', [BlueprintController::class, 'validateVoucher'])->name('blueprint.voucher.validate');
 Route::post('/blueprint/{slug}/voucher/claim', [BlueprintController::class, 'claimVoucher'])->name('blueprint.voucher.claim');
 Route::get('/blueprint/{slug}/download/pdf', [BlueprintController::class, 'downloadPdf'])->name('blueprint.download-pdf');

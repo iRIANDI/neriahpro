@@ -204,5 +204,128 @@ class MidtransWebhookController extends Controller
                 }
             }
         }
+
+        // 4. Final Settlement / Pelunasan 50% fulfillment: NPRO-FINAL-{id}-{time}
+        if (str_starts_with($orderId, 'NPRO-FINAL-')) {
+            $parts = explode('-', $orderId);
+            if (isset($parts[2])) {
+                $targetId = $parts[2];
+                $blueprint = VisionBlueprint::find($targetId);
+                if ($blueprint) {
+                    $blueprint->update([
+                        'project_status' => 'Completed & Fully Settled',
+                    ]);
+
+                    $doc = Document::where('related_id', $blueprint->id)
+                        ->where('related_type', VisionBlueprint::class)
+                        ->first();
+                    if ($doc) {
+                        $clauses = $doc->content_clauses ?: [];
+                        $clauses['is_fully_settled'] = true;
+                        $clauses['pelunasan_settled_at'] = now()->toIso8601String();
+                        $clauses['pelunasan_order_id'] = $orderId;
+                        $doc->update([
+                            'content_clauses' => $clauses,
+                        ]);
+                    }
+
+                    // Record Transaction
+                    \App\Models\Transaction::create([
+                        'user_id' => $blueprint->user_id,
+                        'midtrans_order_id' => $orderId,
+                        'status' => 'settlement',
+                        'total_idr' => $request->input('gross_amount', 0),
+                        'customer_details' => [
+                            'name' => $blueprint->client_name,
+                            'email' => $blueprint->email,
+                            'phone' => $blueprint->phone,
+                            'type' => 'pelunasan_50_percent',
+                            'blueprint_slug' => $blueprint->slug,
+                        ],
+                    ]);
+                }
+            }
+        }
+
+        // 5. Retail Digital Licenses & Package consultation orders: NPRO-LIC- or NPRO-PKG-
+        if (str_starts_with($orderId, 'NPRO-LIC-') || str_starts_with($orderId, 'NPRO-PKG-')) {
+            $cachedOrder = Cache::get('pricing_order_' . $orderId);
+            $parts = explode('-', $orderId);
+            $leadId = $parts[2] ?? null;
+            $lead = $leadId ? \App\Models\LeadContact::find($leadId) : null;
+
+            $email = $cachedOrder['email'] ?? $lead?->email;
+            $name = $cachedOrder['name'] ?? $lead?->name ?? 'Licensed Client';
+            $phone = $cachedOrder['phone'] ?? $lead?->phone;
+            $company = $cachedOrder['company'] ?? $lead?->company_name ?? ($name . ' Project');
+            $packageTier = $cachedOrder['package_tier'] ?? $lead?->metadata['package_interest'] ?? 'retail_lite';
+            $isRetail = str_starts_with($orderId, 'NPRO-LIC-') || ($cachedOrder['is_retail'] ?? false);
+            $grossAmount = $cachedOrder['gross_amount'] ?? $request->input('gross_amount', 0);
+
+            if ($email) {
+                // Find or create customer User
+                $user = \App\Models\User::firstOrCreate(
+                    ['email' => $email],
+                    [
+                        'name' => $name,
+                        'password' => bcrypt(\Illuminate\Support\Str::random(16)),
+                    ]
+                );
+
+                if (method_exists($user, 'assignRole') && !$user->hasRole('client_retail') && !$user->hasRole('super_admin')) {
+                    $user->assignRole('client_retail');
+                }
+
+                // Provision VisionBlueprint representing their active license/project
+                $slug = \Illuminate\Support\Str::slug($company . '-' . $packageTier . '-' . \Illuminate\Support\Str::random(5));
+                $blueprint = VisionBlueprint::create([
+                    'slug' => $slug,
+                    'nama_bisnis' => $company,
+                    'client_name' => $name,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'project_status' => $isRetail ? 'Retail License' : 'In Development (DP Paid)',
+                    'is_free_grant' => false,
+                    'user_metadata' => [
+                        'user_id' => $user->id,
+                        'retail_tier' => $packageTier,
+                        'package_tier' => $packageTier,
+                        'order_id' => $orderId,
+                        'gross_amount' => $grossAmount,
+                        'purchased_at' => now()->toIso8601String(),
+                        'lead_id' => $leadId,
+                    ],
+                ]);
+
+                // Record Transaction
+                \App\Models\Transaction::create([
+                    'user_id' => $user->id,
+                    'midtrans_order_id' => $orderId,
+                    'status' => 'settlement',
+                    'total_idr' => $grossAmount,
+                    'customer_details' => [
+                        'name' => $name,
+                        'email' => $email,
+                        'phone' => $phone,
+                        'package_tier' => $packageTier,
+                        'blueprint_slug' => $blueprint->slug,
+                    ],
+                ]);
+
+                if ($lead) {
+                    $lead->update(['status' => 'customer']);
+                }
+
+                // Consume voucher if used
+                $voucherCode = $cachedOrder['voucher_code'] ?? null;
+                if (!empty($voucherCode) && !in_array($voucherCode, $processedVouchers)) {
+                    $v = BlueprintVoucher::where('code', $voucherCode)->first();
+                    if ($v) {
+                        $v->incrementUsage();
+                        $processedVouchers[] = $voucherCode;
+                    }
+                }
+            }
+        }
     }
 }

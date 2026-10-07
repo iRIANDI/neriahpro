@@ -357,11 +357,49 @@ class VisionBlueprint extends Model
     }
 
     /**
+     * Check if final settlement (pelunasan 50%) has been confirmed.
+     */
+    public function isPelunasanConfirmed(): bool
+    {
+        if ($this->project_status === 'Completed & Fully Settled') {
+            return true;
+        }
+
+        $contract = $this->getContractDocument();
+        if ($contract && (!empty($contract->content_clauses['is_fully_settled']) || in_array($contract->status, ['fully_settled', 'completed'], true))) {
+            return true;
+        }
+
+        return \App\Models\Transaction::whereIn('status', ['settlement', 'capture', 'success'])
+            ->where('midtrans_order_id', 'LIKE', 'NPRO-FINAL-' . $this->id . '-%')
+            ->exists();
+    }
+
+    /**
      * Get the primary contract document if it exists.
      */
     public function getContractDocument(): ?Document
     {
         return $this->documents()->where('document_type', 'contract')->latest()->first();
+    }
+
+    /**
+     * Calculate remaining 50% pelunasan balance.
+     */
+    public function getFinalPelunasanAmount(): float
+    {
+        $contract = $this->getContractDocument();
+        if ($contract && $contract->total_amount > 0) {
+            $total = (float)$contract->total_amount;
+            return round($total * 0.50, 2);
+        }
+
+        $baseSubtotal = (float)($this->prd_content['itemized_cost_breakdown']['base_subtotal'] ?? 0);
+        if ($baseSubtotal > 0) {
+            return round($baseSubtotal * 0.50, 2);
+        }
+
+        return 25000000.0;
     }
 }
 

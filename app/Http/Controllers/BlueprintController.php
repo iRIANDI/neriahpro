@@ -624,6 +624,103 @@ class BlueprintController extends Controller
     }
 
     /**
+     * Get Midtrans Snap Token for Final Project Settlement / Pelunasan 50% (Milestone 2).
+     */
+    public function getPelunasanSnapToken(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+
+        if (!$blueprint->isDpConfirmed()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tahap Uang Muka (DP 50%) belum diselesaikan. Silakan selesaikan DP terlebih dahulu.',
+            ], 400);
+        }
+
+        if ($blueprint->isPelunasanConfirmed()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pelunasan akhir untuk proyek ini sudah lunas terverifikasi. Seluruh akses sistem dan lisensi telah aktif.',
+            ], 400);
+        }
+
+        // Resolve contract amount & pelunasan amount
+        $existingContract = $blueprint->getContractDocument();
+        if ($existingContract && (float)$existingContract->contract_amount > 0) {
+            $contractAmount = (float) $existingContract->contract_amount;
+            $dpAmount = (float) ($existingContract->dp_amount ?: ($contractAmount * 0.50));
+            $pelunasanAmount = max(0, $contractAmount - $dpAmount);
+        } else {
+            $tier = $blueprint->user_metadata['package_tier'] ?? 'standard';
+            $resolvedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+            $contractAmount = (float) ($resolvedTier['contract_amount'] ?? 50000000);
+            $dpAmount = (float) ($resolvedTier['dp_amount'] ?? ($contractAmount * 0.50));
+            $pelunasanAmount = max(0, $contractAmount - $dpAmount);
+        }
+
+        if ($pelunasanAmount <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sisa tagihan pelunasan bernilai Rp 0.',
+            ], 400);
+        }
+
+        $orderId = 'NPRO-FINAL-' . $blueprint->id . '-' . time() . '-' . rand(1000, 9999);
+        $itemName = 'Pelunasan (50%) - ' . ($blueprint->nama_bisnis ?: 'Proyek');
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => (int) $pelunasanAmount,
+            ],
+            'customer_details' => [
+                'first_name' => $blueprint->client_name ?: ($blueprint->nama_bisnis ?: 'Client'),
+                'email' => $blueprint->email ?: 'client@neriahpro.com',
+                'phone' => $blueprint->phone ?: '08123456789',
+            ],
+            'item_details' => [
+                [
+                    'id' => 'PELUNASAN-50',
+                    'price' => (int) $pelunasanAmount,
+                    'quantity' => 1,
+                    'name' => substr($itemName, 0, 50),
+                ]
+            ],
+        ];
+
+        $snapResponse = MidtransSnapService::createSnapToken($params);
+
+        if (!$snapResponse['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $snapResponse['error'] ?? 'Gagal membuat sesi transaksi Midtrans untuk pelunasan.',
+            ], $snapResponse['status_code'] ?? 500);
+        }
+
+        if ($existingContract) {
+            $clauses = $existingContract->content_clauses ?: [];
+            $clauses['pelunasan_order_id'] = $orderId;
+            $clauses['pelunasan_requested_at'] = now()->toIso8601String();
+            $existingContract->update([
+                'content_clauses' => $clauses,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'token' => $snapResponse['token'],
+            'redirect_url' => $snapResponse['redirect_url'],
+            'order_id' => $orderId,
+            'gross_amount' => (int) $pelunasanAmount,
+            'pelunasan_amount' => (int) $pelunasanAmount,
+            'formatted_pelunasan_amount' => 'Rp ' . number_format($pelunasanAmount, 0, ',', '.'),
+            'contract_amount' => (int) $contractAmount,
+            'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
+            'snap_url' => $snapResponse['snap_url'] ?? config('midtrans.snap_url'),
+        ]);
+    }
+
+    /**
      * Validate a promo voucher code for a blueprint proposal.
      */
     public function validateVoucher(Request $request, string $slug): JsonResponse
@@ -1139,15 +1236,109 @@ class BlueprintController extends Controller
             \Illuminate\Support\Facades\Log::warning("Notification to admin failed: " . $e->getMessage());
         }
 
-        // Generate pre-filled WhatsApp direct message
+        $defaultPrices = [
+            'retail_spark' => 0,
+            'retail_lite' => 99000,
+            'retail_pro' => 399000,
+            'retail_ultimate' => 1490000,
+            'blueprint_advisory' => 2500000,
+            'full_mvp' => 25000000,
+            'umkm_starter' => 3750000,
+        ];
+
+        $settingKey = match($packageName) {
+            'retail_lite' => 'pricing_retail_lite_price',
+            'retail_pro' => 'pricing_retail_pro_price',
+            'retail_ultimate' => 'pricing_retail_ultimate_price',
+            'retail_spark' => 'pricing_retail_spark_price',
+            default => null,
+        };
+
+        $basePrice = $defaultPrices[$packageName] ?? 99000;
+        if ($settingKey) {
+            $rawVal = CmsGlobalSetting::getVal($settingKey, null);
+            if (!empty($rawVal)) {
+                $cleaned = (int) preg_replace('/[^\d]/', '', (string)$rawVal);
+                if ($cleaned > 0) {
+                    $basePrice = $cleaned;
+                }
+            }
+        }
+
+        // Voucher Calculation
+        $voucherCode = strtoupper(trim((string) ($validated['voucher_code'] ?? '')));
+        $voucher = null;
+        $discountAmount = 0;
+        if (!empty($voucherCode)) {
+            $voucher = BlueprintVoucher::where('code', $voucherCode)->first();
+            if ($voucher && $voucher->isValid()) {
+                if ($voucher->discount_type === 'percent') {
+                    $discountAmount = (int) round($basePrice * ((float) $voucher->discount_value / 100));
+                } elseif ($voucher->discount_type === 'fixed') {
+                    $discountAmount = min($basePrice, (int) $voucher->discount_value);
+                } elseif ($voucher->discount_type === 'free_bypass') {
+                    $discountAmount = $basePrice;
+                }
+            }
+        }
+
+        $finalAmount = max(0, $basePrice - $discountAmount);
+        $isPaidPackage = ($finalAmount > 0 && $packageName !== 'retail_spark');
+
+        $snapResponse = null;
+        $orderId = null;
+
+        if ($isPaidPackage) {
+            $orderPrefix = $isRetail ? 'NPRO-LIC-' : 'NPRO-PKG-';
+            $orderId = $orderPrefix . $lead->id . '-' . time() . '-' . rand(1000, 9999);
+
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $orderId,
+                    'gross_amount' => $finalAmount,
+                ],
+                'customer_details' => [
+                    'first_name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'phone' => $cleanPhone,
+                ],
+                'item_details' => [
+                    [
+                        'id' => strtoupper($packageName),
+                        'price' => $finalAmount,
+                        'quantity' => 1,
+                        'name' => substr($displayPackage, 0, 50),
+                    ]
+                ],
+            ];
+
+            $snapResponse = MidtransSnapService::createSnapToken($params);
+
+            // Store cached checkout details for webhook reconciliation
+            Cache::put('pricing_order_' . $orderId, [
+                'lead_id' => $lead->id,
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $cleanPhone,
+                'company' => $company,
+                'package_tier' => $packageName,
+                'is_retail' => $isRetail,
+                'display_package' => $displayPackage,
+                'gross_amount' => $finalAmount,
+                'voucher_code' => $voucher?->code,
+                'created_at' => now()->toIso8601String(),
+            ], now()->addDays(3));
+        }
+
+        // Generate pre-filled WhatsApp direct message as optional secondary support
         $settings = CmsGlobalSetting::getAllCached();
         $targetWa = $settings['company_whatsapp']->value ?? '628123456789';
 
         $waLines = [];
         if ($isRetail) {
             $waLines[] = "Halo Tim Lisensi Neriah Pro, saya *{$validated['name']}*" . (!empty($company) ? " dari *{$company}*" : "") . ".";
-            $waLines[] = "Saya ingin memesan lisensi mandiri: *{$displayPackage}*";
-            $waLines[] = "Mohon tautan invoice resmi dan instruksi pembayaran (QRIS / Virtual Account) untuk mengaktifkan akses unduh cetak biru proyek kami.";
+            $waLines[] = "Saya memesan lisensi mandiri: *{$displayPackage}*" . ($orderId ? " (Order ID: {$orderId})" : "");
+            $waLines[] = "Mohon panduan aktivasi lisensi resmi untuk akses unduh cetak biru proyek kami.";
             if (!empty($validated['voucher_code'])) {
                 $waLines[] = "🏷️ *Kode Voucher/Promo:* " . strtoupper($validated['voucher_code']);
             }
@@ -1158,7 +1349,7 @@ class BlueprintController extends Controller
             $waLines[] = "📱 *WhatsApp:* " . $cleanPhone;
         } else {
             $waLines[] = "Halo Lead Architect Neriah Pro, saya *{$validated['name']}*" . (!empty($company) ? " dari *{$company}*" : "") . ".";
-            $waLines[] = "Saya ingin mengunci alokasi pengerjaan untuk paket: *{$displayPackage}*";
+            $waLines[] = "Saya mengonfirmasi reservasi paket: *{$displayPackage}*" . ($orderId ? " (Ref: {$orderId})" : "");
 
             if ($sprintBatch) {
                 $waLines[] = "🗓️ *Pilihan Slot Batch:* " . $sprintBatch;
@@ -1184,14 +1375,25 @@ class BlueprintController extends Controller
         $waUrl = "https://wa.me/{$targetWa}?text=" . rawurlencode($waMessage);
 
         $successMsg = $isRetail
-            ? 'Pesanan lisensi digital mandiri Anda telah berhasil dicatat. Petunjuk pembayaran resmi dan faktur lisensi telah disiapkan.'
-            : 'Reservasi jadwal & kebutuhan Anda telah berhasil dicatat. Lead Architect Neriah Pro akan segera mengonfirmasi jadwal.';
+            ? 'Pesanan lisensi digital mandiri Anda telah diproses. Sesi pembayaran Midtrans resmi telah dibuka.'
+            : 'Reservasi jadwal & paket Anda telah diproses. Sesi pembayaran Midtrans resmi telah disiapkan.';
 
         return response()->json([
             'success' => true,
             'message' => $successMsg,
             'lead_id' => $lead->id,
             'whatsapp_url' => $waUrl,
+            'is_paid_package' => $isPaidPackage,
+            'snap_token' => $snapResponse['token'] ?? null,
+            'redirect_url' => $snapResponse['redirect_url'] ?? null,
+            'order_id' => $orderId,
+            'gross_amount' => $finalAmount,
+            'net_price' => $finalAmount,
+            'formatted_net_price' => 'Rp ' . number_format($finalAmount, 0, ',', '.'),
+            'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
+            'snap_url' => $snapResponse['snap_url'] ?? config('midtrans.snap_url'),
+            'package_tier' => $packageName,
+            'is_retail' => $isRetail,
         ]);
     }
 }

@@ -275,6 +275,97 @@
             }
         };
 
+        window.payPelunasanSnap = async function(slug, onStart, onFinish) {
+            if (onStart) onStart();
+            try {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'info',
+                        title: 'MEMBUAT SESI PELUNASAN',
+                        message: 'Menghubungkan ke gateway Midtrans Sandbox...'
+                    });
+                }
+                const res = await fetch('/blueprint/' + encodeURIComponent(slug) + '/pelunasan-snap-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    }
+                });
+                const data = await res.json();
+                if (!data.success || !data.token) {
+                    throw new Error(data.message || 'Gagal memproses sesi Snap Midtrans untuk pelunasan.');
+                }
+                if (window.snap && window.snap.pay) {
+                    window.snap.pay(data.token, {
+                        onSuccess: function(result) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: 'PELUNASAN BERHASIL',
+                                    message: 'Pelunasan proyek 50% berhasil diverifikasi oleh Midtrans! Memperbarui proposal...',
+                                    duration: 3500
+                                });
+                            }
+                            setTimeout(function() { window.location.reload(); }, 1800);
+                        },
+                        onPending: function(result) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'warning',
+                                    title: 'MENUNGGU PEMBAYARAN',
+                                    message: 'Instruksi pembayaran pelunasan telah dibuat. Silakan transfer sesuai rincian.',
+                                    duration: 5000
+                                });
+                            }
+                            setTimeout(function() { window.location.reload(); }, 2200);
+                        },
+                        onError: function(result) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'error',
+                                    title: 'PELUNASAN DIBATALKAN',
+                                    message: 'Sesi transaksi pelunasan dibatalkan atau ditolak.'
+                                });
+                            }
+                            if (onFinish) onFinish();
+                        },
+                        onClose: function() {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'info',
+                                    title: 'PROMPT DITUTUP',
+                                    message: 'Prompt pembayaran ditutup. Anda dapat menekan tombol bayar kembali untuk melanjutkan.'
+                                });
+                            }
+                            if (onFinish) onFinish();
+                        }
+                    });
+                } else if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'error',
+                            title: 'KONEKSI SNAP MIDTRANS',
+                            message: 'Snap script belum selesai dimuat. Silakan periksa koneksi internet Anda.'
+                        });
+                    }
+                    if (onFinish) onFinish();
+                }
+            } catch (err) {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'KENDALA PELUNASAN',
+                        message: err.message || 'Terjadi kesalahan sistem saat menghubungi gateway Midtrans.'
+                    });
+                }
+                if (onFinish) onFinish();
+            }
+        };
+
         window.validateBlueprintVoucher = async function(slug, code, onStart, onFinish) {
             if (onStart) onStart();
             try {
@@ -6953,22 +7044,53 @@ class ProcessSecureDataset implements ShouldQueue
 
             <!-- Actions -->
             @if($blueprint->isDpConfirmed())
-                <div class="p-4 bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 text-center space-y-2 rounded-none">
-                    <div class="font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-1.5">
-                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                        <span>PEMBAYARAN DP SUDAH TERKONFIRMASI</span>
+                @if($blueprint->isPelunasanConfirmed())
+                    <div class="p-4 bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 text-center space-y-2 rounded-none">
+                        <div class="font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-1.5">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            <span>PROYEK LUNAS 100% (SETTLEMENT COMPLETED)</span>
+                        </div>
+                        <p class="text-xs text-zinc-300 font-sans">
+                            Seluruh termin pembayaran (DP 50% &amp; Pelunasan 50%) telah lunas terverifikasi. Seluruh hak source code, repositori, dan server produksi aktif penuh.
+                        </p>
+                        <button 
+                            type="button" 
+                            @click="paymentModalOpen = false" 
+                            class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3 px-4 text-xs uppercase cursor-pointer rounded-none"
+                        >
+                            Tutup Modal
+                        </button>
                     </div>
-                    <p class="text-xs text-zinc-300 font-sans">
-                        Uang muka (DP) untuk proyek ini sudah lunas terverifikasi dan masuk tahap pengerjaan. Tidak perlu melakukan pembayaran ulang.
-                    </p>
-                    <button 
-                        type="button" 
-                        @click="paymentModalOpen = false" 
-                        class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3 px-4 text-xs uppercase cursor-pointer rounded-none"
-                    >
-                        Tutup Modal
-                    </button>
-                </div>
+                @else
+                    <div class="p-4 bg-zinc-900 border border-amber-500/50 text-center space-y-3 rounded-none">
+                        <div class="font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-1.5 text-emerald-400">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            <span>PEMBAYARAN DP SUDAH TERKONFIRMASI</span>
+                        </div>
+                        <p class="text-xs text-zinc-300 font-sans">
+                            Uang muka (DP 50%) telah terverifikasi. Apabila tahapan pengerjaan sprint telah selesai atau siap serah terima final, Anda dapat menyelesaikan Pelunasan sisa 50% di bawah ini.
+                        </p>
+                        <div class="p-2.5 bg-black/50 border border-zinc-800 font-mono text-xs flex items-center justify-between">
+                            <span class="text-zinc-400">Nilai Pelunasan 50%:</span>
+                            <span class="font-bold text-amber-400 text-sm">Rp {{ number_format($blueprint->getFinalPelunasanAmount(), 0, ',', '.') }}</span>
+                        </div>
+                        <button 
+                            type="button" 
+                            @click="window.payPelunasanSnap('{{ $blueprint->slug }}')" 
+                            class="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-3.5 px-4 text-xs uppercase tracking-wider cursor-pointer rounded-none transition shadow-lg flex items-center justify-center gap-2"
+                        >
+                            <span>💳</span>
+                            <span>Bayar Pelunasan 50% via Midtrans Snap &rarr;</span>
+                        </button>
+                        <button 
+                            type="button" 
+                            @click="paymentModalOpen = false" 
+                            class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2.5 px-4 text-xs uppercase cursor-pointer rounded-none"
+                        >
+                            Tutup Modal
+                        </button>
+                    </div>
+                @endif
             @else
                 <div class="space-y-2">
                     <!-- Free Voucher Bypass Claim Button -->

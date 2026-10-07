@@ -69,12 +69,80 @@ export default function ArchitecturePricingIsland({
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submittedWaUrl, setSubmittedWaUrl] = useState('');
+  const [lastOrder, setLastOrder] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState('idle'); // 'idle' | 'pending' | 'success' | 'error'
 
   // FAQ Accordion State
   const [openFaq, setOpenFaq] = useState(null);
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
+  };
+
+  const triggerSnapPayment = (token, orderId) => {
+    if (!token) return;
+    if (typeof window !== 'undefined' && window.snap && typeof window.snap.pay === 'function') {
+      window.snap.pay(token, {
+        onSuccess: function (resultSnap) {
+          setPaymentStatus('success');
+          if (window.showToast) {
+            window.showToast({
+              type: 'success',
+              title: isEn ? 'PAYMENT SUCCESSFUL!' : 'PEMBAYARAN BERHASIL!',
+              message: isEn
+                ? 'Your order has been verified. Redirecting to your dashboard...'
+                : 'Pembayaran Anda telah diverifikasi! Mengarahkan ke Dashboard...',
+              duration: 4000
+            });
+          }
+          setTimeout(() => {
+            window.location.href = ['retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage)
+              ? '/customer/dashboard#licenses'
+              : '/customer/dashboard#projects';
+          }, 1800);
+        },
+        onPending: function (resultSnap) {
+          setPaymentStatus('pending');
+          if (window.showToast) {
+            window.showToast({
+              type: 'info',
+              title: isEn ? 'WAITING FOR PAYMENT' : 'MENUNGGU PEMBAYARAN',
+              message: isEn
+                ? 'Please complete payment using the displayed QRIS / Virtual Account.'
+                : 'Silakan selesaikan pembayaran sesuai instruksi QRIS / Virtual Account.',
+              duration: 6000
+            });
+          }
+        },
+        onError: function (resultSnap) {
+          setPaymentStatus('error');
+          if (window.showToast) {
+            window.showToast({
+              type: 'error',
+              title: isEn ? 'PAYMENT FAILED' : 'PEMBAYARAN GAGAL',
+              message: isEn ? 'Payment was cancelled or rejected.' : 'Pembayaran dibatalkan atau ditolak.'
+            });
+          }
+        },
+        onClose: function () {
+          if (window.showToast) {
+            window.showToast({
+              type: 'info',
+              title: isEn ? 'PAYMENT WINDOW CLOSED' : 'PROMPT DITUTUP',
+              message: isEn ? 'You can click "Pay with Midtrans Snap" anytime to continue.' : 'Anda dapat menekan tombol bayar kapan saja untuk melanjutkan.'
+            });
+          }
+        }
+      });
+    } else {
+      if (window.showToast) {
+        window.showToast({
+          type: 'warning',
+          title: isEn ? 'LOADING MIDTRANS' : 'MEMUAT MIDTRANS',
+          message: isEn ? 'Snap is loading, please wait a moment...' : 'Sistem Snap sedang dimuat, silakan tunggu sebentar...'
+        });
+      }
+    }
   };
 
   const openBookingModal = (packageTier, defaultVoucher = '') => {
@@ -86,6 +154,8 @@ export default function ArchitecturePricingIsland({
     setSubmitSuccess(false);
     setSubmittedWaUrl('');
     setSubmitError(null);
+    setLastOrder(null);
+    setPaymentStatus('idle');
     setIsModalOpen(true);
   };
 
@@ -133,10 +203,18 @@ export default function ArchitecturePricingIsland({
       }
 
       setSubmitSuccess(true);
-
-      // Open WhatsApp chat in new window & save URL
       if (result.whatsapp_url) {
         setSubmittedWaUrl(result.whatsapp_url);
+      }
+      setLastOrder(result);
+
+      // If it's a paid package with a Midtrans Snap token, launch Snap payment modal directly!
+      if (result.is_paid_package && result.snap_token) {
+        setTimeout(() => {
+          triggerSnapPayment(result.snap_token, result.order_id);
+        }, 150);
+      } else if (result.whatsapp_url && selectedPackage === 'retail_spark') {
+        // Free Spark tier guest mode optional WhatsApp
         setTimeout(() => {
           window.open(result.whatsapp_url, '_blank');
         }, 800);
@@ -1633,41 +1711,80 @@ export default function ArchitecturePricingIsland({
               </div>
 
               {submitSuccess ? (
-                <div className="p-6 bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3">
+                <div className="p-6 bg-emerald-500/10 border border-emerald-500/30 text-center space-y-4">
                   <div className="w-12 h-12 bg-emerald-500 text-black flex items-center justify-center mx-auto">
-                    <Check className="w-6 h-6" />
+                    {paymentStatus === 'success' ? <Check className="w-6 h-6" /> : <CreditCard className="w-6 h-6" />}
                   </div>
-                  <h4 className="font-bold text-sm text-zinc-900 dark:text-white uppercase font-mono">
-                    {['retail_spark', 'retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage)
-                      ? (isEn ? 'DIGITAL LICENSE ORDER RECORDED!' : 'PESANAN LISENSI DIGITAL DITERIMA!')
-                      : (isEn ? 'RESERVATION RECORDED SUCCESSFULLY!' : 'RESERVASI JADWAL BERHASIL TERCATAT!')}
-                  </h4>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
-                    {['retail_spark', 'retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage)
+
+                  <div>
+                    <h4 className="font-bold text-sm text-zinc-900 dark:text-white uppercase font-mono">
+                      {paymentStatus === 'success'
+                        ? (isEn ? 'PAYMENT CONFIRMED & ACCESS UNLOCKED!' : 'PEMBAYARAN LUNAS & AKSES AKTIF!')
+                        : lastOrder?.is_paid_package
+                          ? (isEn ? 'ORDER ISSUED // READY FOR MIDTRANS PAYMENT' : 'PESANAN TERBIT // SIAP DIBAYAR VIA MIDTRANS')
+                          : (isEn ? 'INQUIRY SUBMITTED SUCCESSFULLY!' : 'PERMINTAAN KONSULTASI TERCATAT!')}
+                    </h4>
+
+                    {lastOrder?.order_id && (
+                      <span className="inline-block mt-1 font-mono text-[11px] text-zinc-500">
+                        Order ID: <strong className="text-zinc-800 dark:text-zinc-200">{lastOrder.order_id}</strong>
+                        {lastOrder.formatted_net_price ? ` // Total: ${lastOrder.formatted_net_price}` : ''}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans max-w-lg mx-auto">
+                    {paymentStatus === 'success'
                       ? (isEn 
-                          ? 'Your digital license specification order has been recorded. Payment instructions (QRIS / Midtrans Virtual Account) and official invoice are opening via WhatsApp.'
-                          : 'Pesanan lisensi digital mandiri Anda telah tercatat. Instruksi pembayaran resmi (QRIS / Midtrans VA) dan faktur lisensi proyek sedang kami kirimkan via WhatsApp.')
-                      : (isEn 
-                          ? 'Your slot and timeline requirements have been logged into our CRM. WhatsApp coordination is opening automatically.'
-                          : 'Slot jadwal dan spesifikasi kebutuhan Anda telah tercatat rapi di CRM Neriah Pro. Obrolan WhatsApp resmi dengan Lead Architect sedang dibuka otomatis.')}
+                          ? 'Your payment was successfully verified! Blueprint specification files, SQL schemas, and official invoices are available in your Customer Dashboard.' 
+                          : 'Pembayaran Anda telah sukses diverifikasi! Dokumen spesifikasi PRD, skema SQL DDL, dan faktur resmi telah aktif di Dashboard Pelanggan Anda.')
+                      : lastOrder?.is_paid_package
+                        ? (isEn 
+                            ? 'Complete your payment securely via Midtrans Snap (QRIS, BCA/Mandiri/BRI Virtual Account, Credit Card). Your digital license will activate immediately upon payment.' 
+                            : 'Selesaikan pembayaran via Midtrans Snap (QRIS, BCA/Mandiri/BRI Virtual Account, Kartu Kredit). Lisensi spesifikasi digital langsung aktif otomatis setelah pembayaran.')
+                        : (isEn 
+                            ? 'Your slot and timeline requirements have been logged into our CRM. Our Lead Architect will review and contact you promptly.' 
+                            : 'Slot jadwal dan spesifikasi kebutuhan Anda telah tercatat di CRM Neriah Pro. Lead Architect kami akan segera meninjau dan menghubungi Anda.')}
                   </p>
+
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+                    {paymentStatus === 'success' ? (
+                      <a
+                        href={['retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage) ? '/customer/dashboard#licenses' : '/customer/dashboard#projects'}
+                        className="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        <span>{isEn ? 'OPEN CLIENT DASHBOARD →' : 'BUKA DASHBOARD PELANGGAN →'}</span>
+                      </a>
+                    ) : lastOrder?.snap_token ? (
+                      <button
+                        type="button"
+                        onClick={() => triggerSnapPayment(lastOrder.snap_token, lastOrder.order_id)}
+                        className="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2 transition cursor-pointer shadow-lg rounded-none"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        <span>{isEn ? 'PAY VIA MIDTRANS SNAP NOW →' : 'BAYAR VIA MIDTRANS SNAP (QRIS / VA) →'}</span>
+                      </button>
+                    ) : null}
+
                     {submittedWaUrl && (
                       <a
                         href={submittedWaUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full sm:w-auto px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-black font-mono text-xs font-bold uppercase tracking-wider inline-flex items-center justify-center gap-1.5"
+                        className="w-full sm:w-auto px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-300 font-mono text-xs font-bold uppercase tracking-wider inline-flex items-center justify-center gap-1.5 border border-zinc-700 rounded-none transition"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
-                        <span>{isEn ? 'OPEN WHATSAPP CHAT' : 'BUKA WHATSAPP SEKARANG'}</span>
+                        <span>{isEn ? 'WhatsApp Help (Optional)' : 'Bantuan WhatsApp (Opsional)'}</span>
                       </a>
                     )}
+
                     <button
+                      type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="w-full sm:w-auto px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider cursor-pointer"
+                      className="w-full sm:w-auto px-4 py-2.5 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-800 dark:text-zinc-200 font-mono text-xs font-bold uppercase tracking-wider cursor-pointer rounded-none transition"
                     >
-                      {isEn ? 'CLOSE WINDOW' : 'TUTUP JENDELA'}
+                      {isEn ? 'CLOSE' : 'TUTUP'}
                     </button>
                   </div>
                 </div>

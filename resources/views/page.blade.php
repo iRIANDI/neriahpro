@@ -89,6 +89,9 @@
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/islands.jsx'])
 
+    <!-- Midtrans Snap In-Page Checkout Modal -->
+    <script src="{{ config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/snap.js') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
+
     <script>
         // Init theme before DOM paint to prevent flash
         if (localStorage.getItem('neriah_theme') === 'dark' || (!localStorage.getItem('neriah_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {

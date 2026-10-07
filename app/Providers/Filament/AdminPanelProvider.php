@@ -33,6 +33,21 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogoHeight('2.25rem')
             ->login(\App\Filament\Pages\Auth\Login::class)
             ->renderHook(
+                \Filament\View\PanelsRenderHook::HEAD_START,
+                fn () => new \Illuminate\Support\HtmlString(
+                    '<meta name="google" content="notranslate">' . PHP_EOL .
+                    '<script>' . PHP_EOL .
+                    'window.addEventListener("unhandledrejection", function(event) {' . PHP_EOL .
+                    '    var msg = (event && event.reason && event.reason.message) ? event.reason.message : "";' . PHP_EOL .
+                    '    if (msg.includes("Could not establish connection") || msg.includes("Receiving end does not exist") || msg.includes("message port closed")) {' . PHP_EOL .
+                    '        event.preventDefault();' . PHP_EOL .
+                    '        event.stopImmediatePropagation();' . PHP_EOL .
+                    '    }' . PHP_EOL .
+                    '});' . PHP_EOL .
+                    '</script>'
+                )
+            )
+            ->renderHook(
                 \Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
                 fn () => view('filament.auth.login-after')
             )

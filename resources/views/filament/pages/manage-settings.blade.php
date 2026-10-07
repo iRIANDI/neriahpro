@@ -23,7 +23,7 @@
         }
     </style>
 
-    <form wire:submit="submit" class="space-y-6">
+    <form wire:submit="submit" class="space-y-6 notranslate" translate="no">
         {{ $this->form }}
 
         <div class="fi-form-actions mt-6 flex items-center justify-between">

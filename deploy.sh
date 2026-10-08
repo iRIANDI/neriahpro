@@ -111,6 +111,7 @@ case $1 in
         echo "--- Menjalankan Skenario 6: Build Assets (Vite/Tailwind) ---"
         npm install
         npm run build
+        php artisan db:seed --class=LandingPageSeeder --force 2>/dev/null || true
         php artisan config:clear
         php artisan route:clear
         php artisan view:clear

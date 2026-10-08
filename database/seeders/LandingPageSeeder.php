@@ -99,6 +99,13 @@ class LandingPageSeeder extends Seeder
         ];
         $pricingPage->save();
         
+        // Explicitly purge all CMS page caches to guarantee immediate update
+        \Illuminate\Support\Facades\Cache::forget('cms_page_home');
+        \Illuminate\Support\Facades\Cache::forget('cms_page_data_home');
+        \Illuminate\Support\Facades\Cache::forget('cms_page_pricing');
+        \Illuminate\Support\Facades\Cache::forget('cms_page_data_pricing');
+        \Illuminate\Support\Facades\Cache::forget('cms_pages_all');
+
         $this->command->info('Landing Page & Pricing Page seeded successfully with Dual-Track Retail & Project OS data!');
     }
 }

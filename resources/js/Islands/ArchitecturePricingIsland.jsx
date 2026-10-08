@@ -545,22 +545,6 @@ export default function ArchitecturePricingIsland({
                   ? 'Standardized software engineering investment: From instant self-service architectural blueprints to full turnkey Monolith MVP contracts.' 
                   : 'Pilihan investasi rekayasa perangkat lunak terstandarisasi untuk founder & pengembang: Dari cetak biru mandiri (Self-Service) hingga koding penuh turnkey Studio Monolith MVP.'}
               </p>
-
-              {/* COMPACT ENGINEERING ASSURANCE STRIP */}
-              <div className="mt-4 py-2 px-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-center gap-4 text-[11px] font-mono text-zinc-600 dark:text-zinc-400 rounded-xs">
-                <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>{isEn ? 'Legal Scope-Locked Contract' : 'Kontrak Hukum Scope-Locked'}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>{isEn ? '50% Milestone DP via Midtrans' : 'DP 50% via Midtrans Snap'}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>{isEn ? 'Capacity: Max 2 Projects / Cycle' : 'Kapasitas: Maks. 2 Proyek / Siklus'}</span>
-                </div>
-              </div>
             </div>
 
             <div className="mb-20">

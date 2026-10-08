@@ -25,6 +25,9 @@ class ScaffoldGeneratorService
         $schemaSql = self::generateDatabaseMigrationsSql($blueprint, $erdTables);
         return [
             'docker-compose.yml' => self::generateDockerCompose($blueprint, $slug),
+            '.cursorrules' => PrdGeneratorService::toCursorrules($blueprint, $prd),
+            'CLAUDE.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
+            'AGENTS.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
             '.env.example' => self::generateEnvExample($blueprint, $slug),
             'README.md' => self::generateReadme($blueprint, $projectName, $slug),
             'openapi.json' => self::generateOpenApiSpec($blueprint, $erdTables),

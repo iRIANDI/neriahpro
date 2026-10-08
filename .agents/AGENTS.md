@@ -60,6 +60,14 @@ After completing any task, you MUST always suggest which deployment script numbe
 - 📐 **SUBTLE & THIN CORNERS**: UI/UX border radius MUST be subtle and thin (`rounded-none`, `rounded-xs`, `rounded-sm`, max `rounded-md`).
 - 🚫 **STRICT BAN ON CAPSULE/PILL BUTTONS**: NEVER use `rounded-full` or thick capsule shapes on buttons, cards, or inputs. Excessive rounding looks like generic "AI slop" templates and wastes clickable bounding areas.
 
+# Mandatory Rule: Clean Solid Brutalist Theme (Strict Ban on Gaudy Multi-Color Gradients)
+- 🚫 **HINDARI GRADIENT STYLE**: Hindari gradient style dalam membuat theme UI.
+- 🎨 **SOLID, MONOCHROME & SHARP BRUTALISM**: Gunakan warna solid, sleek monochrome, border presisi tajam (`border-zinc-200 dark:border-zinc-800`), dan background solid (`bg-white dark:bg-zinc-950`). Jangan gunakan background gradien warna-warni yang mencolok yang terkesan "AI slop / template murahan".
+
+# Mandatory Rule: Comprehensive Dark & Light Mode Fidelity
+- 🌓 **100% DARK & LIGHT MODE COMPLIANCE**: Selalu buat theme dark / light dan pastikan setiap komponen yang dibuat comply dengan theme ini.
+- 🎨 **SEAMLESS CONTRAST & LEGIBILITY**: Gunakan pasangan class Tailwind secara disiplin (`bg-white dark:bg-zinc-950`, `text-zinc-900 dark:text-zinc-100`, `border-zinc-200 dark:border-zinc-800`, `hover:bg-zinc-100 dark:hover:bg-zinc-900`). Dilarang keras membuat komponen yang hanya terlihat bagus di salah satu mode (misal teks hitam di background gelap).
+
 # Mandatory Rule: Schema.org Structured Data & Dynamic Admin Control
 - 🌐 **MANDATORY SCHEMA.ORG**: All public-facing views must emit valid Schema.org JSON-LD (Organization, WebSite, SoftwareApplication, Product, Breadcrumbs).
 - ⚙️ **ADMIN BACKEND ADJUSTMENTS**: Schema.org data must be editable via admin settings (`ManageSettings`).
@@ -75,6 +83,11 @@ After completing any task, you MUST always suggest which deployment script numbe
 - 🚀 **MILLIONS OF RECORDS & VIEWERS**: CMS pages and global configurations must leverage Redis or `Cache::rememberForever()` to guarantee O(1) response times sub-10ms.
 - 🔄 **EVENT-DRIVEN CACHE INVALIDATION**: Model observers (`booted()` on `CmsPage` and `CmsGlobalSetting`) must automatically forget page and setting caches immediately upon creation, update, or deletion.
 
+# Mandatory Rule: Bulletproof Table & List Scalability (Millions of Records & Viewers)
+- 📊 **TABEL WAJIB SEARCH & PAGINATION O(1)**: Tabel wajib menggunakan search berindeks dan pagination yang bulletproof untuk skalabilitas jutaan data dan viewer: Keyset Cursor Pagination O(1) (`cursorPaginate()`). Dilarang keras menggunakan offset-based pagination (`paginate()`).
+- 🔲 **DUAL VIEW (GRID & LIST VIEW)**: Setiap membuat list data, pastikan selalu sediakan search, pagination, dan tampilan Grid View dan List View switcher untuk menjamin fleksibilitas dan kenyamanan pengguna dalam melihat data berskala besar.
+- ✖️ **INSTANT CLEAR BUTTON ("X") PADA SEARCH FIELD**: Field search selalu wajib ada icon "X" (tombol hapus instan) untuk menghapus teks yang sudah ada di dalam textfield search secara instan dengan satu klik tanpa harus menekan tombol backspace berulang kali.
+
 # Mandatory Rule: SEO Browser Tab Title Standard
 - 🏷️ **BROWSER TAB TITLE FORMAT**: Browser page titles must strictly follow the format: `[NAMA DOMAIN - NAMA PAGE]` (e.g. `neriahpro.com - Digital Services Hub`).
 
@@ -85,17 +98,22 @@ After completing any task, you MUST always suggest which deployment script numbe
 - 🤖 **AGENTIC DECISION INTELLIGENCE**: Backend admin features must integrate AI Agentic capabilities:
   - Structured Knowledge Base
   - Retrieval-Augmented Generation (RAG) to eliminate hallucinations
-# Mandatory Rule: Multi-Language 2-Tier Architecture (Frontend & Backend Native JSON)
-- 🌐 **BACKEND DUAL-LOCALE**: Filament v5 must support English and Indonesia natively. Multilingual database columns MUST be formatted as JSON (`{"id": "...", "en": "..."}`) and cast as `'array'`.
-- 🌐 **FRONTEND 2-TIER LOCALE**:
-  - **Tier 1 (Native Precise)**: UI and UX support English & Indonesian native language toggle.
-  - **Tier 2 (Global Plugin)**: Google Translate plugin in frontend with selectable language whitelist managed centrally from backend admin settings.
+
+# Mandatory Rule: Multi-Language 2-Tier Architecture (Database Native JSON & Whitelisted Global Plugin)
+- 🌐 **BACKEND DUAL-LOCALE & DATABASE NATIVE JSON (TIER 1)**:
+  - Selalu sediakan multi bahasa Tier 1 dari database di mana kolomnya adalah JSON (bukan string biasa tunggal) dan di-cast sebagai `'array'` (`{"id": "...", "en": "..."}`).
+  - Memungkinkan backend admin Filament membuat dan mengedit dua versi bahasa (ID & EN) secara resmi dan terstruktur.
+- 🌐 **FRONTEND GLOBAL TRANSLATE PLUGIN (TIER 2)**:
+  - Ditenagai oleh plugin Google Translate di frontend.
+  - Whitelist opsi bahasa disimpan di database backend admin (`CmsGlobalSetting`) dan dapat ditentukan bahasa apa saja yang dimunculkan ke publik.
+- 🌐 **SINGLE UNIFIED NAVBAR DROPDOWN**:
+  - Di navigasi, dilarang membuat switch bahasa redundant (misal dobel tombol ID/EN dan tombol Global berdampingan). Cukup gunakan SATU dropdown terpadu yang memuat dua list group: Tier 1 (Native Precise) dan Tier 2 (Global Translate).
 
 # Mandatory Rule: Country Zone Dialing Code Standard
-- 📞 **COUNTRY ZONE INPUTS**: Every phone and WhatsApp input must use Country Zone selector (`config/country_zones.php`, e.g. +62, +65, +1, +44, +81) to enforce international E.164 compliance and eliminate invalid phone numbers.
+- 📞 **COUNTRY ZONE INPUTS**: Setiap membuat input nomor telepon atau WhatsApp, WAJIB menggunakan country code dropdown yang bisa di-search (`config/country_zones.php`, e.g. +62, +65, +1, +44, +81) untuk menegakkan standar E.164 internasional dan mengeliminasi nomor telepon tidak valid.
 
 # Mandatory Rule: Thousand Separators on Numbers & Currencies
-- 🔢 **THOUSAND SEPARATORS**: Any numeric input, currency, or metric display reaching thousands (>= 1,000) MUST format thousands with proper separators (dot `.` for ID / comma `,` for EN) across UI/UX components.
+- 🔢 **THOUSAND SEPARATORS**: Setiap membuat input atau tampilan nominal angka atau currency yang mencapai ribuan (>= 1.000), WAJIB memformat pemisah ribuan (titik `.` untuk ID / koma `,` untuk EN) di seluruh komponen UI/UX.
 
 # Mandatory Rule: Local FontAwesome Icons (Zero CDN Latency)
 - 🎨 **LOCAL FONTAWESOME LIBRARY**: Representative icons for navigation, footer, global alert, and plugins MUST use local SVGs (`config/fontawesome.php` and `\App\Support\FontAwesome::svg('name')`) to prevent third-party CDN latency, blocking, or offline broken layouts.
@@ -115,11 +133,11 @@ After completing any task, you MUST always suggest which deployment script numbe
 - 🛡️ **DEFENSIVE VIEW GUARD**: Views accessing cached models must always guard against `__PHP_Incomplete_Class` and self-heal from database if invalid.
 
 # Mandatory Rule: AlpineJS HTML Escaping & Extraction Standard (Attribute Parsing & Raw Code Leak Prevention)
-- 🚫 **ZERO TOLERANCE FOR RAW QUOTES IN INLINE ALPINE ATTRIBUTES**: When writing inline JavaScript within Alpine.js attributes (such as `x-data="..."`, `x-init="..."`, `x-on:...`, `@click="..."`), NEVER use raw double quotes (`"`) or single quotes (`'`) inside string literals or JSON outputs (`@json()`). Raw quotes prematurely close the HTML attribute (e.g. `x-data="{ "`), causing the browser's HTML parser to break and misinterpret any subsequent `>` (such as in arrow functions `() =>`) as the closing bracket of the HTML tag, spilling the entire JavaScript code onto the screen as raw text.
+- 🚫 **ZERO TOLERANCE FOR RAW QUOTES IN INLINE ALPINE ATTRIBUTES**: Ketika menulis inline JavaScript di dalam atribut Alpine.js (seperti `x-data="..."`, `x-init="..."`, `x-on:...`, `@click="..."`), JANGAN PERNAH gunakan raw double quotes (`"`) atau single quotes (`'`) di dalam string literals atau output JSON (`@json()`). Raw quotes akan menutup atribut HTML secara prematur (misal `x-data="{ "`), menyebabkan parser HTML browser rusak dan salah menafsirkan karakter `>` (seperti arrow function `() =>`) sebagai penutup tag HTML, yang menumpahkan seluruh kode JavaScript ke layar pengguna sebagai teks mentah.
 - 🔤 **MANDATORY HTML ENTITY ENCODING**:
   - Tanda kutip ganda (") → `&quot;`
   - Tanda kutip tunggal (') → `&apos;`
-- 🛡️ **MANDATORY SCRIPT EXTRACTION FOR COMPLEX STATE**: For complex Alpine components (>3 properties, nested objects, lifecycle hooks, or long methods), NEVER cram large state objects inside inline HTML attributes. ALWAYS extract the component into a separate `<script>` block (e.g. `function componentName() { return { ... }; }`) and bind cleanly using `<tag x-data="componentName()">`.
+- 🛡️ **MANDATORY SCRIPT EXTRACTION FOR COMPLEX STATE**: Untuk komponen Alpine yang kompleks (>3 properti, nested objects, lifecycle hooks, atau method panjang), JANGAN jejali state besar di dalam inline HTML attributes. SELALU ekstrak komponen ke dalam blok `<script>` terpisah (misal `function componentName() { return { ... }; }`) dan hubungkan secara bersih dengan `<tag x-data="componentName()">`.
 
 ---
 

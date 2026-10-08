@@ -4441,16 +4441,23 @@ PROMPT;
         $rules .= "- **Foreign Keys**: ALWAYS use `->foreignUlid('parent_id')` to match ULID primary keys.\n";
         $rules .= "- **Zero Auto-Increment**: NEVER use `\$table->id()` or auto-incrementing integers for business domain entities.\n\n";
 
-        $rules .= "### B. Keyset Cursor Pagination O(1)\n";
-        $rules .= "- **Zero Offset Pagination**: NEVER use standard `paginate()` (OFFSET-based). It degrades linearly O(N) to O(N^2) on large tables.\n";
-        $rules .= "- **Mandatory Keyset**: ALWAYS use `cursorPaginate()` with stable keyset fallbacks (e.g. `->orderBy('id', 'asc')`).\n\n";
+        $rules .= "### B. Keyset Cursor Pagination O(1) & Table Scalability\n";
+        $rules .= "- **Tabel Wajib Search & Pagination O(1)**: Setiap tabel wajib dilengkapi fitur search berindeks dan pagination bulletproof untuk jutaan data dan viewer: Keyset Cursor Pagination O(1) (`cursorPaginate()`). Dilarang keras menggunakan offset pagination (`paginate()`).\n";
+        $rules .= "- **Mandatory Keyset**: ALWAYS use `cursorPaginate()` with stable keyset fallbacks (e.g. `->orderBy('id', 'asc')`).\n";
+        $rules .= "- **Dual View (Grid & List View)**: Setiap membuat komponen list data, selalu sediakan search, pagination O(1), dan tombol toggle tampilan Grid View dan List View switcher untuk menjamin skalabilitas jutaan data dan kenyamanan visual.\n";
+        $rules .= "- **Instant Clear Button (\"X\") pada Search Field**: Field search selalu wajib ada icon \"X\" (tombol hapus instan) untuk menghapus teks yang sudah ada di dalam textfield search secara instan dengan satu klik.\n\n";
 
-        $rules .= "### C. Zero Tolerance for Magic Strings & Fuzzy Searches (\"Anti-Dosa Hardcode\")\n";
-        $rules .= "- NEVER identify entities or state via fuzzy string matching (`LIKE '%...'`, demo strings, or slugs).\n";
+        $rules .= "### C. Zero Tolerance for Magic Strings & Fuzzy Searches (\"Anti-Dosa Hardcode / Prefix WHERE LIKE\")\n";
+        $rules .= "- NEVER identify entities, transactions, or state via fuzzy string matching (`WHERE LIKE 'retail_%'`, `LIKE '%APEX%'`, demo aliases, or slugs). Fuzzy prefix searching is fundamentally broken for long-term scalability.\n";
         $rules .= "- ALWAYS identify models, orders, and documents strictly via **Concrete Relational Foreign Keys** or **Exact Primary Key Lookups** (`find(\$id)`).\n";
-        $rules .= "- Business states must derive strictly from concrete status columns/enums (`status === 'settlement'`), never string sniffing.\n\n";
+        $rules .= "- Business states (DP settlement, contract signing, scope freeze) must derive strictly from concrete status columns/enums (`status === 'settlement'`), never string sniffing.\n\n";
 
-        $rules .= "### D. Cache Serialization Safety\n";
+        $rules .= "### D. Multi-Language 2-Tier Architecture (Database Native JSON & Whitelisted Global Plugin)\n";
+        $rules .= "- **Tier 1 (Database Native JSON)**: Selalu sediakan multi-bahasa Tier 1 dari database di mana kolomnya adalah JSON (bukan string tunggal biasa) dan di-cast sebagai `'array'` (`{\"id\": \"...\", \"en\": \"...\"}`). Admin backend Filament bisa mengelola dua versi bahasa (ID & EN) secara resmi.\n";
+        $rules .= "- **Tier 2 (Global Plugin Google Translate)**: Ditenagai oleh plugin Google Translate di frontend, di mana daftar opsi bahasa disimpan di database backend admin (`CmsGlobalSetting`) dan dapat ditentukan whitelist bahasa mana saja yang dimunculkan ke publik.\n";
+        $rules .= "- **Single Unified Navbar Dropdown**: Di navigasi, dilarang membuat switch bahasa redundant (misal dobel tombol ID/EN dan tombol Global berdampingan). Cukup gunakan SATU dropdown terpadu yang memuat dua list group: Tier 1 (Native Precise) dan Tier 2 (Global Translate).\n\n";
+
+        $rules .= "### E. Cache Serialization Safety\n";
         $rules .= "- NEVER cache raw Eloquent model instances in `Cache::rememberForever()`. Serializing Eloquent models across lifecycles causes `__PHP_Incomplete_Class` errors.\n";
         $rules .= "- ALWAYS cache primitive attribute arrays (`\$record->getAttributes()`) or JSON strings, and reconstitute models via `(new Model)->newFromBuilder(\$cachedAttributes)`.\n\n";
         $rules .= "---\n\n";
@@ -4461,13 +4468,30 @@ PROMPT;
         $rules .= "- UI/UX border radius MUST be subtle (`rounded-none`, `rounded-xs`, `rounded-sm`, max `rounded-md`).\n";
         $rules .= "- STRICT BAN on `rounded-full` capsule buttons or pills. They look generic, reduce clickable area, and degrade enterprise aesthetics.\n\n";
 
-        $rules .= "### B. Zero Native Browser Dialogs\n";
-        $rules .= "- NEVER use native browser dialogs (`window.alert()`, `confirm()`, `prompt()`).\n";
+        $rules .= "### B. Clean Solid Brutalist Theme (Strict Ban on Gaudy Multi-Color Gradients)\n";
+        $rules .= "- **Hindari Gradient Style**: Hindari gradient style dalam membuat theme UI.\n";
+        $rules .= "- **Solid & Sharp Brutalism**: Gunakan warna solid, sleek monochrome, border presisi tajam (`border-zinc-200 dark:border-zinc-800`), dan background solid (`bg-white dark:bg-zinc-950`). Jangan gunakan background gradien warna-warni yang mencolok (\"AI slop / template murahan\").\n\n";
+
+        $rules .= "### C. Comprehensive Dark & Light Mode Fidelity\n";
+        $rules .= "- **100% Dark & Light Mode Compliance**: Selalu buat theme dark / light dan pastikan setiap komponen yang dibuat comply dengan theme ini.\n";
+        $rules .= "- **Consistent Contrast**: Gunakan pasangan class Tailwind secara disiplin (`bg-white dark:bg-zinc-950`, `text-zinc-900 dark:text-zinc-100`, `border-zinc-200 dark:border-zinc-800`, `hover:bg-zinc-100 dark:hover:bg-zinc-900`). Dilarang keras membuat komponen yang hanya terlihat bagus di salah satu mode.\n\n";
+
+        $rules .= "### D. Zero Native Browser Dialogs (No \"Modal Kampungan\")\n";
+        $rules .= "- NEVER use native browser dialogs (`window.alert()`, `confirm()`, `prompt()`). They look cheap/unprofessional (\"modal kampungan\") and freeze the UI thread.\n";
         $rules .= "- ALWAYS use modern floating toast notifications: `window.showToast({ type: 'success'|'error'|'warning'|'info', title: '...', message: '...' })` or curated Tailwind + Alpine dialogs with backdrop-blur.\n\n";
 
-        $rules .= "### C. Alpine.js HTML Entity Encoding\n";
-        $rules .= "- NEVER use raw double quotes (`\"`) or single quotes (`'`) inside inline Alpine attributes (`x-data=\"...\"`, `@click=\"...\"`).\n";
-        $rules .= "- ALWAYS encode quotes as HTML entities (`&quot;`, `&apos;`) or extract state into clean `<script>` components.\n\n";
+        $rules .= "### E. Thousand Separators on Numbers & Currencies\n";
+        $rules .= "- Setiap kali membuat input atau tampilan nominal angka atau currency yang mencapai ribuan (>= 1.000), WAJIB memformat pemisah ribuan (titik `.` untuk ID / koma `,` untuk EN) di seluruh komponen UI/UX.\n\n";
+
+        $rules .= "### F. Country Zone Dialing Code Standard\n";
+        $rules .= "- Setiap membuat input nomor telepon atau WhatsApp, WAJIB menggunakan country code dropdown yang bisa di-search (`config/country_zones.php`, e.g. +62, +65, +1, +44, +81) untuk menegakkan standar E.164 internasional dan mengeliminasi nomor telepon tidak valid.\n\n";
+
+        $rules .= "### G. Alpine.js HTML Entity Encoding & Script Extraction Standard\n";
+        $rules .= "- Ketika menulis inline JavaScript di dalam atribut Alpine.js (`x-data=\"...\"`, `x-init=\"...\"`, `@click=\"...\"`), NEVER use raw double quotes (`\"`) or single quotes (`'`) inside string literals or JSON outputs (`@json()`).\n";
+        $rules .= "- MANDATORY HTML ENTITY ENCODING:\n";
+        $rules .= "  - Tanda kutip ganda (\") → `&quot;`\n";
+        $rules .= "  - Tanda kutip tunggal (') → `&apos;`\n";
+        $rules .= "- Untuk komponen Alpine yang kompleks (>3 properti, nested objects, lifecycle hooks, atau method panjang), SELALU ekstrak komponen ke dalam blok `<script>` terpisah (`function componentName() { return { ... }; }`) dan hubungkan dengan `<tag x-data=\"componentName()\">`.\n\n";
         $rules .= "---\n\n";
 
         // 4. Actors

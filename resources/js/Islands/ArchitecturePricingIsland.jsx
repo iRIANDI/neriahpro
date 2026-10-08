@@ -569,7 +569,7 @@ export default function ArchitecturePricingIsland({
             </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 items-stretch">
-            {/* SPARK / FREE TIER */}
+            {/* TIER 01: SPARK / FREE AUDIT */}
             <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex flex-col justify-between rounded-none hover:border-cyan-500/60 transition group relative">
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -577,87 +577,51 @@ export default function ArchitecturePricingIsland({
                     TIER 01 // AUDIT
                   </span>
                   <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-[9px] font-bold">
-                    {isEn ? 'FREE GUEST TIER' : 'GRATIS MODE TAMU'}
+                    {isEn ? 'FREE GUEST MODE' : 'GRATIS / MODE TAMU'}
                   </span>
                 </div>
 
-                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1">
-                  Spark / Free Audit
+                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5 font-sans">
+                  {isEn ? 'Spark (Idea Audit)' : 'Spark (Audit Ide)'}
                 </h3>
 
-                <div className="mb-3 px-2 py-1 bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 font-mono text-[10px] font-bold rounded-xs">
-                  {isEn ? 'TARGET: Early founders validating market problem & MVP viability.' : 'TARGET: Founder pemula yang ingin memvalidasi ide & kelayakan MVP.'}
-                </div>
-
-                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
-                  {isEn ? 'Quick idea sanity check, core problem statement & lean MVP scoping.' : 'Audit cepat kelayakan ide bisnis, pemetaan masalah utama, dan cakupan lean MVP.'}
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
+                  {isEn 
+                    ? 'Validate business viability, market problem, and core MVP scope in 60 seconds.' 
+                    : 'Validasi kelayakan ide bisnis, target audiens, dan ruang lingkup dasar MVP dalam 60 detik.'}
                 </p>
 
-                <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
-                  <div>
-                    <span className="text-[10px] text-zinc-500 font-mono block">
-                      {isEn ? 'Digital Access Fee:' : 'Tarif Akses Digital:'}
+                {/* Compact Price Box */}
+                <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                      Rp {pricingSettings.retail_spark_price || '0'}
                     </span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
-                        Rp {pricingSettings.retail_spark_price || '0'}
-                      </span>
-                      <span className="text-[10px] font-mono text-emerald-500 font-bold">
-                        {isEn ? '/ FREE' : '/ GRATIS'}
-                      </span>
-                    </div>
+                    <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                      {isEn ? '100% FREE' : 'GRATIS'}
+                    </span>
                   </div>
-
-                  <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1">
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Execution:' : 'Pengerjaan:'}</span>
-                      <span className="font-bold text-cyan-600 dark:text-cyan-400">
-                        {isEn ? '100% Self-Service' : '100% Mandiri'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Quota Limit:' : 'Batas Kuota:'}</span>
-                      <span className="font-bold text-zinc-900 dark:text-white">
-                        {isEn ? '2 Idea Audits / Month' : (pricingSettings.retail_spark_limit || '2x Audit / Bulan')}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Reset Cycle:' : 'Siklus Reset:'}</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                        {isEn ? '1st of Every Month' : 'Tiap Tgl 1 Awal Bulan'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Validity Period:' : 'Masa Berlaku:'}</span>
-                      <span className="font-bold text-zinc-700 dark:text-zinc-300">
-                        {isEn ? '7-Day Guest Session' : '7 Hari Sesi Tamu'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Login Requirement:' : 'Syarat Login:'}</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                        {isEn ? 'No Login Required (Guest)' : 'Tanpa Login (Tamu)'}
-                      </span>
-                    </div>
+                  <div className="text-[10px] font-mono text-zinc-500 space-y-0.5 pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                    <div>&bull; {isEn ? '2 Audits / month (Resets 1st of month)' : (pricingSettings.retail_spark_limit || '2x Audit / bulan (Reset tgl 1)')}</div>
+                    <div>&bull; {isEn ? 'Guest mode (No login required)' : 'Mode tamu (Langsung coba tanpa login)'}</div>
                   </div>
                 </div>
 
+                {/* Features */}
                 <div className="space-y-2 mb-6">
                   <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider block">
-                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT SPESIFIKASI DIDAPATKAN:'}
+                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT YANG DIDAPATKAN:'}
                   </span>
                   {(isEn ? [
-                    'Business Viability Analysis & Problem Framing',
-                    'Executive Summary & Target Audience Definition',
+                    'Business Viability & Problem Framing',
                     'Top 5 Priority Essential MVP Features',
-                    'Complexity Rating & Initial TCO Estimation',
-                    'Export Markdown Summary to Local Device (.md)',
+                    'Complexity Rating & Development Timeline',
+                    'Export Markdown Summary to Device (.md)',
                   ] : [
-                    'Analisis Kelayakan Bisnis & Problem Framing',
-                    'Executive Summary & Target Audiens',
-                    '5 Fitur Esensial MVP Prioritas',
-                    'Estimasi Kompleksitas & TCO Awal',
-                    'Ekspor Ringkasan Dokumen Markdown (.md)',
+                    'Analisis kelayakan & validasi masalah bisnis',
+                    '5 Rekomendasi fitur prioritas utama MVP',
+                    'Estimasi waktu & kompleksitas sistem',
+                    'Ekspor ringkasan dokumen Markdown (.md)',
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-cyan-500 shrink-0 mt-0.5" />
@@ -665,32 +629,23 @@ export default function ArchitecturePricingIsland({
                     </div>
                   ))}
                 </div>
-
-                <div className="p-2.5 mb-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1">
-                  <span className="font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                    {isEn ? 'LIMITATIONS & UPSELL HOOK:' : 'BATASAN // RASA TANGGUNG:'}
-                  </span>
-                  <div className="text-zinc-500 space-y-0.5">
-                    <div>&bull; {isEn ? 'No SQL DDL Schema (must design DB manually)' : 'Tanpa Skema SQL DDL (wajib buat DB manual)'}</div>
-                    <div>&bull; {isEn ? 'No Docker, OpenAPI 3.1 & AI Coding Rules' : 'Tanpa Docker, OpenAPI 3.1 & AI Coding Rules'}</div>
-                    <div>&bull; {isEn ? 'Capped at 2 audits/month (guest session)' : 'Dibatasi 2x audit/bulan (mode sesi tamu)'}</div>
-                  </div>
-                  <div className="pt-1.5 mt-1 border-t border-zinc-200 dark:border-zinc-800 text-cyan-600 dark:text-cyan-400 font-bold">
-                    {isEn ? '👉 Want strict PostgreSQL DDL? Upgrade to Lite (Rp 99k)' : '👉 Butuh DDL SQL Siap Import? Upgrade ke Lite (Rp 99rb)'}
-                  </div>
-                </div>
               </div>
 
-              <a
-                href="/blueprint?tier=spark"
-                className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
-              >
-                <span>{isEn ? 'TRY LIVE FREE (GUEST)' : 'COBA GRATIS SEKARANG (GUEST)'}</span>
-                <ArrowRight className="w-3 h-3" />
-              </a>
+              <div>
+                <div className="text-[10px] font-mono text-zinc-400 text-center mb-3">
+                  {isEn ? '100% Self-Service (Coded by your team)' : '100% Mandiri (Koding oleh tim Anda sendiri)'}
+                </div>
+                <a
+                  href="/blueprint?tier=spark"
+                  className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
+                >
+                  <span>{isEn ? 'TRY LIVE FREE (GUEST)' : 'COBA GRATIS SEKARANG'}</span>
+                  <ArrowRight className="w-3 h-3" />
+                </a>
+              </div>
             </div>
 
-            {/* LITE PRD TIER */}
+            {/* TIER 02: LITE PRD */}
             <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex flex-col justify-between rounded-none hover:border-cyan-500/60 transition group relative">
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -702,85 +657,49 @@ export default function ArchitecturePricingIsland({
                   </span>
                 </div>
 
-                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1">
-                  Lite PRD Generator
+                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5 font-sans">
+                  {isEn ? 'Lite PRD & Database' : 'Lite PRD & Database'}
                 </h3>
 
-                <div className="mb-3 px-2 py-1 bg-zinc-500/10 border border-zinc-500/20 text-zinc-600 dark:text-zinc-400 font-mono text-[10px] font-bold rounded-xs">
-                  {isEn ? 'TARGET: Freelance developers & solo founders needing strict database DDL.' : 'TARGET: Freelance developer & solo founder yang butuh skema database SQL siap pakai.'}
-                </div>
-
-                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
-                  {isEn ? '26 Structured Parameters PRD + PostgreSQL Strict ULID DDL schema.' : 'Spesifikasi PRD 26 parameter lengkap + skema SQL DDL PostgreSQL Strict ULID siap eksekusi.'}
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
+                  {isEn 
+                    ? 'Official 26-parameter PRD document and ready-to-import SQL database schema.' 
+                    : 'Dokumen PRD resmi 26 parameter dan skema database SQL siap import untuk developer.'}
                 </p>
 
-                <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
-                  <div>
-                    <span className="text-[10px] text-zinc-500 font-mono block">
-                      {isEn ? 'Digital License Fee:' : 'Biaya Lisensi Digital:'}
+                {/* Compact Price Box */}
+                <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                      Rp {pricingSettings.retail_lite_price || '99.000'}
                     </span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
-                        Rp {pricingSettings.retail_lite_price || '99.000'}
-                      </span>
-                      <span className="text-[10px] font-mono text-zinc-500">/ project</span>
-                    </div>
+                    <span className="text-[10px] font-mono text-zinc-500">
+                      {isEn ? '/ project' : '/ proyek'}
+                    </span>
                   </div>
-
-                  <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1">
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Execution:' : 'Pengerjaan:'}</span>
-                      <span className="font-bold text-cyan-600 dark:text-cyan-400">
-                        {isEn ? '100% Self-Service' : '100% Mandiri'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Quota Limit:' : 'Batas Kuota:'}</span>
-                      <span className="font-bold text-zinc-900 dark:text-white">
-                        {isEn ? '1 Project (26-Param PRD)' : (pricingSettings.retail_lite_limit || '1 Proyek PRD 26 Param')}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Reset Cycle:' : 'Siklus Reset:'}</span>
-                      <span className="font-bold text-zinc-700 dark:text-zinc-300">
-                        {isEn ? 'One-Time License (1 Project)' : 'Sekali Bayar (1 Proyek)'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Validity Period:' : 'Masa Berlaku:'}</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                        {isEn ? 'Lifetime Download + 30-Day Rev' : 'Unduh Selamanya + 30hr Rev'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Login Requirement:' : 'Syarat Login:'}</span>
-                      <span className="font-bold text-amber-600 dark:text-amber-400">
-                        {isEn ? 'Account Login Required' : 'Wajib Login Akun'}
-                      </span>
-                    </div>
+                  <div className="text-[10px] font-mono text-zinc-500 space-y-0.5 pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                    <div>&bull; {isEn ? 'One-time license • Lifetime download' : 'Lisensi sekali bayar • Unduh selamanya'}</div>
+                    <div>&bull; {isEn ? '30-day form parameter revision' : (pricingSettings.retail_lite_limit || 'Akses revisi form 30 hari')}</div>
                   </div>
                 </div>
 
+                {/* Inclusive Header & Features */}
                 <div className="space-y-2 mb-6">
-                  <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider block">
-                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT SPESIFIKASI DIDAPATKAN:'}
-                  </span>
-                  <div className="p-1.5 mb-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-mono text-[10px] font-bold rounded-xs flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3 h-3 text-cyan-500" />
-                    <span>{isEn ? 'Includes all Spark Free deliverables, plus:' : 'Seperti di Paket Spark Free, ditambah:'}</span>
+                  <div className="p-2 mb-2 bg-zinc-100 dark:bg-zinc-800 border-l-2 border-cyan-500 text-zinc-800 dark:text-zinc-200 font-mono text-[10px] font-bold">
+                    ⭐ {isEn ? 'Includes all Spark Free features, plus:' : 'Mencakup seluruh fitur Spark, ditambah:'}
                   </div>
                   {(isEn ? [
                     'Full 26-Parameter 6-Chapter PRD Document',
-                    'PostgreSQL Strict ULID DDL SQL Schema (schema_complete.sql)',
+                    'PostgreSQL Strict ULID DDL SQL Schema (Ready-to-import)',
                     'O(1) Keyset & Cursor Pagination Technical Directives',
-                    'Work Breakdown Structure (WBS) 2 Sprints Linear/Jira Ready',
-                    'Official PDF & Markdown Export with Verified Hash',
+                    'Work Breakdown Structure (WBS) 2 Sprints Jira/Linear Ready',
+                    'Official PDF & Markdown Export with SHA-256 Hash',
                   ] : [
-                    'Dokumen PRD Lengkap 6 Bab (26 Parameter)',
-                    'Skema PostgreSQL Strict ULID DDL SQL (schema_complete.sql)',
-                    'Standar Teknis Keyset Cursor Pagination O(1)',
-                    'Work Breakdown Structure (WBS) 2 Sprint Linear/Jira Ready',
-                    'Ekspor Format Resmi PDF & Markdown Ber-hash SHA-256',
+                    'Dokumen PRD lengkap 26 parameter (Bab 1–6)',
+                    'Skema database SQL siap import (PostgreSQL ULID)',
+                    'Standar teknis query & pagination cepat O(1)',
+                    'Rencana kerja 2 sprint terstruktur (Linear / Jira ready)',
+                    'Unduh dokumen resmi format PDF & Markdown berlisensi',
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-cyan-500 shrink-0 mt-0.5" />
@@ -788,34 +707,24 @@ export default function ArchitecturePricingIsland({
                     </div>
                   ))}
                 </div>
-
-                <div className="p-2.5 mb-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1">
-                  <span className="font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                    {isEn ? 'LIMITATIONS & UPSELL HOOK:' : 'BATASAN // RASA TANGGUNG:'}
-                  </span>
-                  <div className="text-zinc-500 space-y-0.5">
-                    <div>&bull; {isEn ? 'No Docker Stack (manual PHP/PG/Redis setup)' : 'Tanpa Docker Stack (harus setup PHP/PG manual)'}</div>
-                    <div>&bull; {isEn ? 'No AI Agent Rules (.cursorrules, AGENTS.md)' : 'Tanpa AI Agent Rules (.cursorrules, AGENTS.md)'}</div>
-                    <div>&bull; {isEn ? 'No Synthetic Seeders & API Routes boilerplate' : 'Tanpa Seeder Sintetik & Rute API Boilerplate'}</div>
-                    <div>&bull; {isEn ? 'Capped at 2 Sprints (Sprints 3-5 unmapped)' : 'Hanya 2 Sprint (Sprint 3-5 belum terpetakan)'}</div>
-                  </div>
-                  <div className="pt-1.5 mt-1 border-t border-zinc-200 dark:border-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold">
-                    {isEn ? '👉 Tanggung without Docker & AI? Add Rp 300k to get Pro!' : '👉 Nanggung koding tanpa Docker & AI? Tambah Rp 300rb dapat Pro!'}
-                  </div>
-                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => openBookingModal('retail_lite')}
-                className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
-              >
-                <span>{isEn ? 'GET LITE PRD' : 'PILIH PAKET LITE'}</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
+              <div>
+                <div className="text-[10px] font-mono text-zinc-400 text-center mb-3">
+                  {isEn ? '100% Self-Service (Coded by your team)' : '100% Mandiri (Koding oleh tim Anda sendiri)'}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openBookingModal('retail_lite')}
+                  className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
+                >
+                  <span>{isEn ? 'GET LITE PRD' : 'PILIH PAKET LITE'}</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
             </div>
 
-            {/* PRO PRD TIER (BEST VALUE) */}
+            {/* TIER 03: PRO PRODUCTION (BEST VALUE) */}
             <div className="bg-white dark:bg-zinc-900 border-2 border-emerald-500 p-5 sm:p-6 flex flex-col justify-between rounded-none shadow-xl relative transform xl:-translate-y-1">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-black px-3 py-0.5 font-mono text-[9px] font-black uppercase tracking-widest shadow-xs">
                 {isEn ? 'BEST VALUE // DEVELOPER FAVORITE' : 'PILIHAN TERBAIK // FAVORIT DEVELOPER'}
@@ -831,91 +740,50 @@ export default function ArchitecturePricingIsland({
                   </span>
                 </div>
 
-                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1">
-                  Pro Production PRD
+                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5 font-sans">
+                  {isEn ? 'Pro Production Blueprint' : 'Pro Production Blueprint'}
                 </h3>
 
-                <div className="mb-3 px-2 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold rounded-xs">
-                  {isEn ? 'TARGET: Software agencies, CTOs & startups building live products with AI & Docker.' : 'TARGET: Agensi software, CTO, & startup yang ingin langsung koding hari ini dengan AI & Docker.'}
-                </div>
-
-                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
-                  {isEn ? 'Production blueprint, 6 Mermaid diagrams, Decoupled & Monolith matrix, WBS 5 Sprints.' : 'Cetak biru produksi, 6 diagram Mermaid, matriks arsitektur Decoupled & Monolith, serta WBS 5 sprint.'}
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
+                  {isEn 
+                    ? 'Production blueprint with Docker containers, system diagrams, and AI coding agent rules.' 
+                    : 'Cetak biru produksi lengkap dengan Docker, diagram arsitektur, dan panduan AI coding.'}
                 </p>
 
-                <div className="mb-4 p-3 bg-emerald-500/5 border border-emerald-500/30 space-y-2">
-                  <div>
-                    <span className="text-[10px] text-zinc-500 font-mono block">
-                      {isEn ? 'Digital License Fee:' : 'Biaya Lisensi Digital:'}
+                {/* Compact Price Box */}
+                <div className="mb-4 p-3 bg-emerald-500/5 border border-emerald-500/30 space-y-1.5">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                      Rp {pricingSettings.retail_pro_price || '399.000'}
                     </span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
-                        Rp {pricingSettings.retail_pro_price || '399.000'}
-                      </span>
-                      <span className="text-[10px] font-mono text-zinc-500">/ project</span>
-                    </div>
+                    <span className="text-[10px] font-mono text-zinc-500">
+                      {isEn ? '/ project' : '/ proyek'}
+                    </span>
                   </div>
-
-                  <div className="pt-2 border-t border-emerald-500/20 text-[10px] font-mono space-y-1">
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Execution:' : 'Pengerjaan:'}</span>
-                      <span className="font-bold text-emerald-500">
-                        {isEn ? '100% Self-Service' : '100% Mandiri'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Quota Limit:' : 'Batas Kuota:'}</span>
-                      <span className="font-bold text-zinc-900 dark:text-white">
-                        {isEn ? '1 Project (PRD + 5 Sprints WBS)' : (pricingSettings.retail_pro_limit || '1 Proyek PRD + WBS 5 Sprint')}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Reset Cycle:' : 'Siklus Reset:'}</span>
-                      <span className="font-bold text-zinc-700 dark:text-zinc-300">
-                        {isEn ? 'One-Time License (1 Project)' : 'Sekali Bayar (1 Proyek)'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Validity Period:' : 'Masa Berlaku:'}</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                        {isEn ? 'Lifetime Download + 6 Months AI' : 'Unduh Selamanya + 6bln AI'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Login Requirement:' : 'Syarat Login:'}</span>
-                      <span className="font-bold text-amber-600 dark:text-amber-400">
-                        {isEn ? 'Account Login Required' : 'Wajib Login Akun'}
-                      </span>
-                    </div>
+                  <div className="text-[10px] font-mono text-zinc-500 space-y-0.5 pt-1 border-t border-emerald-500/20">
+                    <div>&bull; {isEn ? 'One-time license • Lifetime download' : 'Lisensi sekali bayar • Unduh selamanya'}</div>
+                    <div>&bull; {isEn ? '6 Months AI regeneration access' : (pricingSettings.retail_pro_limit || 'Akses regenerasi AI 6 bulan')}</div>
                   </div>
                 </div>
 
+                {/* Inclusive Header & Features */}
                 <div className="space-y-2 mb-6">
-                  <span className="text-[10px] font-mono font-bold text-emerald-500 uppercase tracking-wider block">
-                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT SPESIFIKASI DIDAPATKAN:'}
-                  </span>
-                  <div className="p-1.5 mb-1.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold rounded-xs flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                    <span>{isEn ? 'Includes all Lite PRD deliverables, plus:' : 'Seperti di Paket Lite PRD, ditambah:'}</span>
+                  <div className="p-2 mb-2 bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold">
+                    ⭐ {isEn ? 'Includes all Lite PRD features, plus:' : 'Mencakup seluruh fitur Lite PRD, ditambah:'}
                   </div>
                   {(isEn ? [
-                    'Pillar 1 (Spec): OpenAPI 3.1 Contract Spec & Idempotency Rules',
-                    'Pillar 3 (Scaffold): Container Stack (docker-compose.yml, PHP 8.4, PG 16, Redis 7)',
-                    'Pillar 4 (Seeder): Synthetic Mock Data Seeder (25 Realistic Records)',
-                    'Pillar 5 (AI Agent): AI Coding Rules (.cursorrules, CLAUDE.md, AGENTS.md)',
-                    '6 Mermaid System Diagrams (ERD, Data Flow, Sequence, User Flow, Gantt)',
-                    'Work Breakdown Structure (WBS) 5 Sprints Linear / Jira Ready',
-                    'Pre-built RESTful API Routes (Laravel 13 & Next.js 15 App Router)',
-                    'White-Label Agency Export License (Re-brand directly to your clients)',
+                    '6 Mermaid Diagrams (ERD, Architecture, Data Flow, Sequence)',
+                    'Container Stack (docker-compose.yml, PHP 8.4, PG 16, Redis, Nginx)',
+                    'AI Agent Coding Rules (.cursorrules, CLAUDE.md, AGENTS.md)',
+                    'Work Breakdown Structure (WBS) 5 Full Sprints Jira-Ready',
+                    'Pre-built RESTful API Routes (Laravel 13 & Next.js 15)',
+                    'White-Label Agency License (Re-brand directly to clients)',
                   ] : [
-                    'Pilar 1 (Spec): OpenAPI 3.1 Contract Spec & Aturan Idempotensi',
-                    'Pilar 3 (Scaffold): Kontainer Docker Siap Jalan (PHP 8.4, PG 16, Redis 7, Nginx)',
-                    'Pilar 4 (Seeder): Database Seeder Sintetik (25 Data Simulasi Siap Pakai)',
-                    'Pilar 5 (AI Agent): AI Coding Rules (.cursorrules, CLAUDE.md, AGENTS.md)',
-                    '6 Diagram Mermaid Lengkap (ERD, Data Flow, Sequence, User Flow, Gantt)',
-                    'Work Breakdown Structure (WBS) 5 Sprint Linear / Jira Ready',
-                    'Rute RESTful API Siap Pakai (Laravel 13 & Next.js 15 App Router)',
-                    'Lisensi White-Label Agency Export (Bebas branding ke klien Anda)',
+                    '6 Diagram sistem lengkap (ERD, Arsitektur, Alur Data, Sequence)',
+                    'File kontainer Docker siap jalan (PHP 8.4, PostgreSQL 16, Redis, Nginx)',
+                    'Aturan AI coding agent (.cursorrules, CLAUDE.md, AGENTS.md)',
+                    'Rencana kerja penuh 5 sprint + Rute API RESTful siap pakai',
+                    'Lisensi White-Label Agensi (Bebas re-brand ke klien Anda)',
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
@@ -923,34 +791,24 @@ export default function ArchitecturePricingIsland({
                     </div>
                   ))}
                 </div>
-
-                <div className="p-2.5 mb-5 bg-emerald-500/5 border border-emerald-500/20 text-[10px] font-mono space-y-1">
-                  <span className="font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                    {isEn ? 'LIMITATIONS & UPSELL HOOK:' : 'BATASAN // RASA TANGGUNG:'}
-                  </span>
-                  <div className="text-zinc-500 dark:text-zinc-400 space-y-0.5">
-                    <div>&bull; {isEn ? 'No UI/UX Design Tokens & Screen Wireframes' : 'Tanpa Wireframe Layar UI/UX & Design Tokens'}</div>
-                    <div>&bull; {isEn ? 'No Automated Pest/PHPUnit Contract Testing' : 'Tanpa Automated Contract Testing Suite (Pest)'}</div>
-                    <div>&bull; {isEn ? 'No Cloud CI/CD Pipeline & VPS deploy.sh script' : 'Tanpa Pipeline CI/CD GitHub Actions & deploy.sh'}</div>
-                    <div>&bull; {isEn ? 'Self-service (no 1-on-1 Principal Architect call)' : 'Koding Mandiri (tanpa sesi konsultasi 1-on-1)'}</div>
-                  </div>
-                  <div className="pt-1.5 mt-1 border-t border-emerald-500/20 text-amber-600 dark:text-amber-400 font-bold">
-                    {isEn ? '👉 Need complete 7-pillar OS + 60m Architect Call? Upgrade to Ultimate!' : '👉 Butuh komplit 7 Pilar OS + 60m Sesi Arsitek? Upgrade ke Ultimate!'}
-                  </div>
-                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => openBookingModal('retail_pro')}
-                className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-2.5 px-3 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none shadow-md cursor-pointer"
-              >
-                <span>{isEn ? 'GET PRO BLUEPRINT' : 'PILIH PAKET PRO'}</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
+              <div>
+                <div className="text-[10px] font-mono text-zinc-400 text-center mb-3">
+                  {isEn ? '100% Self-Service (Coded by your team)' : '100% Mandiri (Koding oleh tim Anda sendiri)'}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openBookingModal('retail_pro')}
+                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-2.5 px-3 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none shadow-md cursor-pointer"
+                >
+                  <span>{isEn ? 'GET PRO BLUEPRINT' : 'PILIH PAKET PRO'}</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
             </div>
 
-            {/* ULTIMATE ENTERPRISE ADVISORY */}
+            {/* TIER 04: ULTIMATE SOFTWARE FACTORY OS */}
             <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex flex-col justify-between rounded-none hover:border-amber-500/60 transition group relative">
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -958,93 +816,53 @@ export default function ArchitecturePricingIsland({
                     TIER 04 // ENTERPRISE
                   </span>
                   <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[9px] font-bold">
-                    {isEn ? 'COMPLETE 7-PILLAR FACTORY OS' : 'LENGKAP 7 PILAR FACTORY OS'}
+                    {isEn ? 'COMPLETE 7-PILLAR OS' : 'LENGKAP 7 PILAR OS'}
                   </span>
                 </div>
 
-                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1">
-                  Ultimate Software Factory OS
+                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5 font-sans">
+                  {isEn ? 'Ultimate Factory OS' : 'Ultimate Factory OS'}
                 </h3>
 
-                <div className="mb-3 px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-[10px] font-bold rounded-xs">
-                  {isEn ? 'TARGET: Enterprise product leaders, funded startups & teams needing the complete 7-pillar factory.' : 'TARGET: Pemimpin produk korporat, startup berdana, & tim yang butuh 7 pilar factory lengkap.'}
-                </div>
-
-                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
-                  {isEn ? 'Complete 7-Pillar Software Factory: PRD, Wireframe Blueprints, Full Scaffold, Synthetic Seeders, AI Rules, Contract Tests, CI/CD + 1-on-1 Call.' : 'Paket komplit 7 Pilar Software Factory: PRD, Wireframe UI, Scaffold Lengkap, Seeder Sintetik, AI Rules, Test Contract, CI/CD + Sesi 1-on-1.'}
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
+                  {isEn 
+                    ? 'Complete 7-pillar architecture with UI wireframes, automated testing, and 1-on-1 architect call.' 
+                    : 'Arsitektur lengkap 7 pilar, wireframe UI/UX, testing otomatis, dan sesi konsultasi 1-on-1 bersama Arsitek.'}
                 </p>
 
-                <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
-                  <div>
-                    <span className="text-[10px] text-zinc-500 font-mono block">
-                      {isEn ? 'Advisory Investment:' : 'Investasi Advisory:'}
+                {/* Compact Price Box */}
+                <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                      Rp {pricingSettings.retail_ultimate_price || '1.490.000'}
                     </span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
-                        Rp {pricingSettings.retail_ultimate_price || '1.490.000'}
-                      </span>
-                      <span className="text-[10px] font-mono text-zinc-500">/ project</span>
-                    </div>
+                    <span className="text-[10px] font-mono text-zinc-500">
+                      {isEn ? '/ project' : '/ proyek'}
+                    </span>
                   </div>
-
-                  <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1">
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Execution:' : 'Pengerjaan:'}</span>
-                      <span className="font-bold text-amber-600 dark:text-amber-400">
-                        {isEn ? 'Self-Service + 1-on-1 Call' : 'Mandiri + Sesi 1-on-1'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Quota Limit:' : 'Batas Kuota:'}</span>
-                      <span className="font-bold text-zinc-900 dark:text-white">
-                        {isEn ? '1 Enterprise Project' : (pricingSettings.retail_ultimate_limit || '1 Proyek Enterprise')}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Reset Cycle:' : 'Siklus Reset:'}</span>
-                      <span className="font-bold text-zinc-700 dark:text-zinc-300">
-                        {isEn ? 'One-Time License (1 Project)' : 'Sekali Bayar (1 Proyek)'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Validity Period:' : 'Masa Berlaku:'}</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                        {isEn ? 'Lifetime Download + 1 Year Updates' : 'Unduh Selamanya + 1th Update'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>{isEn ? 'Login Requirement:' : 'Syarat Login:'}</span>
-                      <span className="font-bold text-amber-600 dark:text-amber-400">
-                        {isEn ? 'Verified Account Required' : 'Wajib Akun Terverifikasi'}
-                      </span>
-                    </div>
+                  <div className="text-[10px] font-mono text-zinc-500 space-y-0.5 pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                    <div>&bull; {isEn ? 'One-time license • Lifetime download' : 'Lisensi sekali bayar • Unduh selamanya'}</div>
+                    <div>&bull; {isEn ? '1 Year priority architecture updates' : (pricingSettings.retail_ultimate_limit || 'Pembaruan prioritas 1 tahun')}</div>
                   </div>
                 </div>
 
+                {/* Inclusive Header & Features */}
                 <div className="space-y-2 mb-6">
-                  <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider block">
-                    {isEn ? '7-PILLAR FACTORY OS DELIVERABLES:' : 'OUTPUT LENGKAP 7 PILAR FACTORY OS:'}
-                  </span>
-                  <div className="p-1.5 mb-1.5 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-mono text-[10px] font-bold rounded-xs flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3 h-3 text-amber-500" />
-                    <span>{isEn ? 'Includes all Pro Production deliverables, plus:' : 'Seperti di Paket Pro Production, ditambah:'}</span>
+                  <div className="p-2 mb-2 bg-amber-500/10 border-l-2 border-amber-500 text-amber-800 dark:text-amber-300 font-mono text-[10px] font-bold">
+                    ⭐ {isEn ? 'Includes all Pro Blueprint features, plus:' : 'Mencakup seluruh fitur Pro Blueprint, ditambah:'}
                   </div>
                   {(isEn ? [
-                    'Pillar 2 (UI/UX): Design Tokens JSON & 4 Core Screens Wireframe Blueprint',
-                    'Pillar 6 (QA Test): Automated Feature Testing Suite Contract-First (Pest/PHPUnit)',
-                    'Pillar 7 (DevOps): One-Click Cloud CI/CD (GitHub Actions) & Production deploy.sh',
-                    'Production Hardening: Multi-Model Token Failover & Threat Shield Strategy',
-                    'Executive Session: 1 Scheduled 60-Min 1-on-1 Call with Principal Architect',
-                    'Legal Security: Corporate Non-Disclosure Agreement (NDA) with Digital Signatures',
-                    'Priority Support: 1-Year Priority Architecture Updates & Advisory Retainer',
+                    'Pillar 2 (UI/UX): Design Tokens JSON & 4 Core Screens Wireframe',
+                    'Pillar 6 (QA): Automated Feature Testing Suite (Pest/PHPUnit)',
+                    'Pillar 7 (DevOps): CI/CD GitHub Actions & Production deploy.sh',
+                    'Executive Call: 1 Scheduled 60-Min 1-on-1 with Principal Architect',
+                    'Legal Security: Corporate Non-Disclosure Agreement (NDA)',
                   ] : [
-                    'Pilar 2 (UI/UX): Design Tokens JSON & Cetak Biru Wireframe 4 Layar Utama',
-                    'Pilar 6 (QA Test): Automated Feature Testing Suite Contract-First (Pest/PHPUnit)',
-                    'Pilar 7 (DevOps): Pipeline CI/CD GitHub Actions & Skrip Deploy VPS deploy.sh',
-                    'Production Hardening: Strategi Token Failover Multi-Model & Threat Shield',
-                    'Sesi Eksklusif: 1 Sesi Konsultasi 60 Menit 1-on-1 bersama Principal Architect',
-                    'Legal Security: Dokumen Non-Disclosure Agreement (NDA) Bertanda Tangan Digital',
-                    'Dukungan Prioritas: 1 Tahun Akses Pembaruan Arsitektur & Konsultasi Prioritas',
+                    'Pilar 2 (UI/UX): Wireframe cetak biru 4 layar utama & Design Tokens JSON',
+                    'Pilar 6 (QA Test): Pengujian fitur otomatis (Pest/PHPUnit Contract Tests)',
+                    'Pilar 7 (DevOps): Pipeline CI/CD GitHub Actions & Skrip deploy.sh VPS',
+                    'Sesi Konsultasi: 1 Sesi 60 Menit 1-on-1 bersama Principal Architect',
+                    'Legal Security: Surat Non-Disclosure Agreement (NDA) resmi bertanda tangan',
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
@@ -1052,29 +870,21 @@ export default function ArchitecturePricingIsland({
                     </div>
                   ))}
                 </div>
-
-                <div className="p-2.5 mb-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1">
-                  <span className="font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                    {isEn ? 'LIMITATIONS & STUDIO HOOK:' : 'BATASAN // STUDIO UPSELL:'}
-                  </span>
-                  <div className="text-zinc-500 space-y-0.5">
-                    <div>&bull; {isEn ? 'Execution: 100% Coded by your internal/freelance team' : 'Pengerjaan: 100% Koding oleh tim developer internal Anda'}</div>
-                    <div>&bull; {isEn ? 'Zero coding done by Neriah Pro engineers' : 'Tim Neriah Pro tidak menulis baris koding aplikasi'}</div>
-                  </div>
-                  <div className="pt-1.5 mt-1 border-t border-zinc-200 dark:border-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold">
-                    {isEn ? '👉 Want Neriah Pro to build 100% turnkey? Hire Studio MVP (fee deducted from DP)!' : '👉 Ingin Neriah Pro koding 100% turnkey sampai online? Pilih Studio MVP (biaya potong DP)!'}
-                  </div>
-                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => openBookingModal('retail_ultimate')}
-                className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
-              >
-                <span>{isEn ? 'BOOK ULTIMATE ADVISORY' : 'PESAN ULTIMATE ADVISORY'}</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
+              <div>
+                <div className="text-[10px] font-mono text-zinc-400 text-center mb-3">
+                  {isEn ? 'Self-Service + 1-on-1 Architect Session' : 'Mandiri + 1 Sesi Konsultasi Arsitek'}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openBookingModal('retail_ultimate')}
+                  className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
+                >
+                  <span>{isEn ? 'BOOK ULTIMATE ADVISORY' : 'PESAN ULTIMATE ADVISORY'}</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1098,134 +908,101 @@ export default function ArchitecturePricingIsland({
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
             {/* TIER 1: ADVISORY ONLY / ARCHITECTURE BLUEPRINT */}
-            <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 p-6 sm:p-8 flex flex-col justify-between rounded-none shadow-xs hover:border-emerald-500/60 transition group relative">
+            <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 p-6 sm:p-7 flex flex-col justify-between rounded-none shadow-xs hover:border-emerald-500/60 transition group relative">
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-3">
                   <span className="font-mono text-xs font-black tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
-                    {isEn ? 'SCENARIO 1 // ADVISORY STUDIO' : 'SKENARIO 1 // ADVISORY STUDIO'}
+                    {isEn ? 'SCENARIO 1 // ADVISORY' : 'SKENARIO 1 // ADVISORY'}
                   </span>
                   <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-[10px] font-bold">
-                    {isEn ? 'ONE-TIME INVESTMENT' : 'INVESTASI SATU KALI'}
+                    {isEn ? 'ARCHITECTURE ONLY' : 'CETAK BIRU TEKNIS'}
                   </span>
                 </div>
 
-                <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2">
-                  Blueprint &amp; PRD Architecture Advisory
+                <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2 font-sans">
+                  {isEn ? 'Blueprint & PRD Advisory' : 'Blueprint & PRD Advisory'}
                 </h3>
 
-                <div className="mb-4 px-2.5 py-1.5 bg-zinc-500/10 border border-zinc-500/20 text-zinc-700 dark:text-zinc-300 font-mono text-[10px] font-bold rounded-xs">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
                   {isEn 
-                    ? 'TARGET: Founders & CTOs with in-house/freelance coders needing independent architecture & sprint roadmaps.' 
-                    : 'TARGET: Founder & CTO dengan tim koding sendiri yang butuh cetak biru arsitektur independen & roadmap sprint.'}
-                </div>
-
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-6">
-                  {isEn 
-                    ? 'Designed for founders and CTOs with an in-house or freelance dev team who need a rock-solid technical blueprint to prevent scope creep and architectural failures.'
-                    : 'Solusi ideal bagi founder, CTO, atau manajer IT yang sudah memiliki tim programmer sendiri, namun membutuhkan pendampingan cetak biru arsitektur enterprise siap kerja tanpa menyewa kami untuk coding.'}
+                    ? 'Technical architectural roadmap for founders & CTOs with their own dev team to prevent re-work and scope creep.' 
+                    : 'Cetak biru arsitektur enterprise untuk founder & CTO yang sudah punya programmer sendiri tapi butuh roadmap teknis bebas revisi.'}
                 </p>
 
-                <div className="mb-6 p-4 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono block mb-1">
-                    {isEn ? 'Total Advisory Service Fee:' : 'Total Biaya Jasa Advisory:'}
-                  </span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl sm:text-4xl font-black font-mono text-zinc-900 dark:text-white">
+                {/* Price & DP Credit Guarantee Box */}
+                <div className="mb-5 p-3.5 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-2xl sm:text-3xl font-black font-mono text-zinc-900 dark:text-white">
                       Rp {pricingSettings.advisory_price || '2.500.000'}
                     </span>
                     <span className="text-xs font-mono text-zinc-500">{isEn ? '/ project' : '/ proyek'}</span>
                   </div>
-                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-bold mt-1 block">
-                    &bull; {isEn ? 'Includes full PRD synthesis + ERD schema + Scoping Discovery' : 'Termasuk PRD 26 parameter + Skema DDL + Sesi Scoping'}
-                  </span>
-                  <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono text-zinc-500">
-                    <span>
-                      {isEn ? (
-                        <>Coding Execution: <strong>Executed by Client Dev Team (Advisory fee deducted from 50% Down Payment if continuing to Full MVP)</strong></>
-                      ) : (
-                        <>Pengerjaan Koding: <strong>Dieksekusi Tim Klien Sendiri (Biaya Rp 2.5jt memotong DP 50% jika lanjut Full MVP)</strong></>
-                      )}
-                    </span>
+                  <div className="p-2 bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold">
+                    ⭐ {isEn ? 'Advisory fee 100% deducted from DP if continuing to Full MVP!' : 'Biaya Rp 2.5 jt otomatis memotong DP jika lanjut ke Full MVP!'}
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
+                {/* Features */}
+                <div className="space-y-2.5 mb-6">
                   <div className="font-mono text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT SPESIFIKASI DIDAPATKAN:'}
+                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT YANG DIDAPATKAN:'}
                   </div>
-
                   {(isEn ? [
-                    'Complete 7-Pillar Software Factory OS Specifications',
-                    'Comprehensive 26-Parameter PRD (Functional, Non-Functional, NFR)',
-                    'PostgreSQL Strict ULID Database Schema (Ready-to-Import DDL SQL)',
-                    'O(1) Keyset & Keyset Cursor Pagination Architectural Guide',
+                    'Comprehensive 26-Parameter PRD Document (Chapters 1-6)',
+                    'PostgreSQL Strict ULID Database Schema (Ready-to-import SQL)',
                     'Work Breakdown Structure (WBS) 5 Sprints Jira/Linear Ready',
-                    'One-on-One Technical Scoping & Architecture Discovery Session',
-                    'Security, Anti-Malware & DDoS Hardening Checklist',
-                    '100% Intellectual Property Ownership & Corporate NDA',
-                    'DP Credit Guarantee: Advisory fee 100% deducted from DP if continuing to Full MVP',
+                    '1-on-1 Technical Scoping Session with Principal Architect',
+                    'Corporate Non-Disclosure Agreement (NDA) & 100% IP Ownership',
                   ] : [
-                    'Output Lengkap Spesifikasi 7 Pilar Software Factory OS',
-                    'PRD 26 Parameter Lengkap (Fungsional, Non-Fungsional, NFR)',
-                    'Skema Database PostgreSQL Strict ULID (DDL SQL Siap Pakai)',
-                    'Standar O(1) Keyset & Cursor Pagination Guide',
-                    'Work Breakdown Structure (WBS) 5 Sprint Jira/Linear Ready',
-                    'Sesi Konsultasi & Scoping Discovery bersama Principal Architect',
-                    'Security & Anti-Malware / DDoS Hardening Checklist',
-                    '100% Hak Milik Dokumen & Non-Disclosure Agreement (NDA)',
-                    'Jaminan Potong DP: Biaya Rp 2.5jt otomatis memotong DP jika lanjut Full MVP',
+                    'Dokumen PRD lengkap 26 parameter (Fungsional, Skema & NFR)',
+                    'Skema database PostgreSQL ULID siap import (DDL SQL)',
+                    'Rencana kerja terinci 5 sprint terstruktur (Linear / Jira ready)',
+                    '1 Sesi konsultasi & scoping teknis bersama Principal Architect',
+                    'Dokumen NDA resmi & 100% hak milik dokumen diserahkan ke klien',
                   ]).map((feat, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-700 dark:text-zinc-300">
-                      <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <div key={idx} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
                       <span>{feat}</span>
                     </div>
                   ))}
                 </div>
-
-                <div className="p-2.5 mb-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1">
-                  <span className="font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                    {isEn ? 'LIMITATIONS & UPSELL HOOK:' : 'BATASAN // RASA TANGGUNG:'}
-                  </span>
-                  <div className="text-zinc-500 space-y-0.5">
-                    <div>&bull; {isEn ? 'Execution: 100% Coded by your client/freelance dev team' : 'Pengerjaan: 100% Koding oleh tim developer klien sendiri'}</div>
-                    <div>&bull; {isEn ? 'No server provisioning, live deployment, or code bug warranty' : 'Tanpa setup server live, deployment, & tanpa garansi koding'}</div>
-                  </div>
-                  <div className="pt-1.5 mt-1 border-t border-zinc-200 dark:border-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold">
-                    {isEn ? '👉 Want Neriah Pro engineers to write 100% of the code? Upgrade to Full MVP!' : '👉 Ingin tim Neriah Pro yang koding 100% siap live? Upgrade ke Full MVP!'}
-                  </div>
-                </div>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                <button
-                  type="button"
-                  onClick={() => openBookingModal('blueprint_advisory')}
-                  className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-3 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-xs text-center cursor-pointer"
-                >
-                  <span>{isEn ? 'ORDER ADVISORY NOW' : 'PESAN JASA ADVISORY (RP 2.5 JT)'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+              <div>
+                <div className="text-[10px] font-mono text-zinc-400 text-center mb-3">
+                  {isEn ? 'Coding executed by your in-house/freelance team' : 'Pengerjaan koding dieksekusi oleh tim developer klien'}
+                </div>
+                <div className="space-y-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                  <button
+                    type="button"
+                    onClick={() => openBookingModal('blueprint_advisory')}
+                    className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-3 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-xs text-center cursor-pointer"
+                  >
+                    <span>{isEn ? 'ORDER ADVISORY (RP 2.5M)' : 'PESAN JASA ADVISORY (RP 2.5 JT)'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
 
-                <a
-                  href="/blueprint"
-                  className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2.5 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
-                >
-                  <Terminal className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>{isEn ? 'TRY LIVE GENERATOR' : 'COBA GENERATOR BLUEPRINT'}</span>
-                </a>
+                  <a
+                    href="/blueprint"
+                    className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
+                  >
+                    <Terminal className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>{isEn ? 'TRY LIVE GENERATOR' : 'COBA GENERATOR BLUEPRINT'}</span>
+                  </a>
+                </div>
               </div>
             </div>
 
             {/* TIER 2: FULL MVP DEVELOPMENT (FLAGSHIP ENTERPRISE) */}
-            <div className="bg-white dark:bg-zinc-900 border-2 border-emerald-500 dark:border-emerald-500 p-6 sm:p-8 flex flex-col justify-between rounded-none shadow-2xl relative transform lg:-translate-y-2">
+            <div className="bg-white dark:bg-zinc-900 border-2 border-emerald-500 dark:border-emerald-500 p-6 sm:p-7 flex flex-col justify-between rounded-none shadow-2xl relative transform lg:-translate-y-2">
               {/* Best Value Badge */}
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-500 text-black px-4 py-1 font-mono text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-md">
                 <Crown className="w-3.5 h-3.5" />
-                <span>{isEn ? 'EXECUTED 100% BY NERIAH PRO // FULL MVP' : 'DIKERJAKAN 100% OLEH NERIAH PRO // FULL MVP'}</span>
+                <span>{isEn ? '100% CODED BY NERIAH PRO // FULL MVP' : 'DIKERJAKAN 100% OLEH NERIAH PRO // FULL MVP'}</span>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-4 mt-2">
+                <div className="flex items-center justify-between mb-3 mt-2">
                   <span className="font-mono text-xs font-black tracking-wider uppercase text-emerald-600 dark:text-emerald-400">
                     {isEn ? 'SCENARIO 2 // FULL MONOLITH' : 'SKENARIO 2 // FULL MONOLITH'}
                   </span>
@@ -1234,235 +1011,180 @@ export default function ArchitecturePricingIsland({
                   </span>
                 </div>
 
-                <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2">
-                  Enterprise Rapid Monolith MVP
+                <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2 font-sans">
+                  {isEn ? 'Enterprise Monolith MVP' : 'Full Turnkey Monolith MVP'}
                 </h3>
 
-                <div className="mb-4 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold rounded-xs">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
                   {isEn 
-                    ? 'TARGET: Funded startups, enterprise leaders, & companies wanting a turnkey web app built end-to-end.' 
-                    : 'TARGET: Founder startup berdana, pimpinan korporat, & instansi yang ingin aplikasi web siap pakai 100%.'}
-                </div>
-
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-6">
-                  {isEn 
-                    ? 'End-to-end production development. We build your entire scalable web app using Laravel 13, Filament v5, and React 19 Islands. Architecture Blueprint is completely included.'
-                    : 'Pengembangan penuh aplikasi web skala jutaan pengguna. Kami membangun seluruh sistem siap produksi dengan kontrak legal, DP 50% bergaransi, dan Blueprint PRD sudah otomatis termasuk di dalamnya.'}
+                    ? 'Turnkey production web app built end-to-end by Neriah Pro Senior Architects. Blueprint & legal contract included.' 
+                    : 'Aplikasi web skala enterprise dibangun dari nol sampai live di server VPS. Dikerjakan langsung oleh Senior Software Architect Neriah Pro.'}
                 </p>
 
-                <div className="mb-6 p-4 bg-emerald-500/5 border border-emerald-500/30">
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono block mb-1">
-                    {isEn ? 'Full Development Contract Value:' : 'Nilai Kontrak Pengembangan Penuh:'}
-                  </span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl sm:text-4xl font-black font-mono text-zinc-900 dark:text-white">
+                {/* Compact Price & Milestone Box */}
+                <div className="mb-5 p-3.5 bg-emerald-500/5 border border-emerald-500/30 space-y-2">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-2xl sm:text-3xl font-black font-mono text-zinc-900 dark:text-white">
                       Rp {pricingSettings.mvp_price || '50.000.000'}
                     </span>
+                    <span className="text-[10px] font-mono text-zinc-500">{isEn ? 'Total Contract' : 'Nilai Kontrak'}</span>
                   </div>
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-emerald-500/20">
-                    <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                  <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between text-xs font-mono">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                       {isEn ? 'Down Payment (50% DP):' : 'Uang Muka (DP 50%):'}
                     </span>
-                    <span className="text-sm font-mono font-black text-emerald-500">
+                    <span className="font-black text-emerald-500">
                       Rp 25.000.000
                     </span>
                   </div>
-                  <span className="text-[10px] text-zinc-500 font-mono mt-1 block">
-                    {isEn ? '• Remaining 50% settled upon UAT & Live Production Deploy' : '• Pelunasan sisa 50% setelah UAT & Live Production Deploy'}
-                  </span>
-                  <div className="mt-2 pt-2 border-t border-emerald-500/20 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                    <span>
-                      {isEn 
-                        ? 'Coding Execution: 100% Executed by Neriah Pro Senior Software Architects & Engineers' 
-                        : 'Pengerjaan Koding: 100% Dikerjakan oleh Software Architect & Engineer Neriah Pro'}
-                    </span>
+                  <div className="text-[10px] font-mono text-zinc-500">
+                    &bull; {isEn ? 'Remaining 50% settled after UAT & live deployment' : 'Pelunasan sisa 50% setelah UAT & aplikasi live di VPS'}
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  <div className="font-mono text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{isEn ? 'EVERYTHING IN BLUEPRINT ADVISORY & 7-PILLAR OS PLUS:' : 'SEMUA OUTPUT BLUEPRINT ADVISORY & 7 PILAR OS DITAMBAH:'}</span>
+                {/* Inclusive Header & Features */}
+                <div className="space-y-2.5 mb-6">
+                  <div className="p-2 mb-2 bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold">
+                    ⭐ {isEn ? 'Includes all Blueprint Advisory deliverables, plus:' : 'Mencakup seluruh hasil Blueprint Advisory, ditambah:'}
                   </div>
-
                   {(isEn ? [
                     'Full-Stack Modern Monolith (Laravel 13, Filament v5, React 19)',
-                    'Digital Scope-Locked Legal Contract & Security Architecture',
-                    'Secure 50% Milestone Down Payment via Midtrans / Bank Escrow',
-                    'Dedicated VPS Hardening, Nginx Tuning & Redis Setup',
-                    'Automated Test Suite (Pest PHP Unit & Feature Tests)',
-                    'Payment Gateway, WhatsApp API & Email Gateway Integration',
-                    '100% Source Code & Client Server Credentials Handover',
-                    'Full 3-Month Priority SLA Bug Warranty & Maintenance',
-                  ] : [
-                    'Full-Stack Modern Monolith (Laravel 13, Filament v5, React 19)',
-                    'Kontrak Hukum Digital Scope-Locked & Legal Security',
-                    'Pembayaran DP 50% Aman via Midtrans / Bank Escrow',
+                    'Direct 100% Execution by Neriah Pro Senior Software Architects',
+                    'Midtrans Payment Gateway (QRIS/VA), WhatsApp & Email Integration',
                     'Dedicated VPS Hardening, Nginx Tuning, & Redis Setup',
-                    'Automated Test Suite (Pest PHP Unit & Feature Tests)',
-                    'Integrasi Payment Gateway, WhatsApp API, & Email Gateway',
-                    '100% Penyerahan Source Code & Akun Server Klien',
-                    'Garansi Perbaikan Bug & SLA Prioritas 3 Bulan Penuh',
+                    '100% Source Code & Server Credentials Handover to Client',
+                    '3-Month Full Priority SLA Bug Warranty & Maintenance',
+                  ] : [
+                    'Koding penuh aplikasi web modern (Laravel 13, Filament v5, React 19)',
+                    'Dikerjakan langsung 100% oleh Senior Software Architect Neriah Pro',
+                    'Integrasi pembayaran otomatis (Midtrans QRIS/VA), WhatsApp, & Email',
+                    'Konfigurasi server VPS dedicated, Nginx tuning, & Redis siap pakai',
+                    '100% penyerahan source code & kredensial server ke tangan klien',
+                    'Garansi perbaikan bug & SLA prioritas 3 bulan penuh pasca-live',
                   ]).map((feat, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <div key={idx} className="flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
                       <span>{feat}</span>
                     </div>
                   ))}
                 </div>
-
-                <div className="p-2.5 mb-5 bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono space-y-1">
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-                    {isEn ? 'SCOPE GOVERNANCE & SLA COMMITMENT:' : 'TATA KELOLA SCOPE & JAMINAN SLA:'}
-                  </span>
-                  <div className="text-zinc-600 dark:text-zinc-300 space-y-0.5">
-                    <div>&bull; {isEn ? 'Scope locked strictly to 5 Sprints WBS (Zero scope creep)' : 'Scope terkunci ketat pada WBS 5 Sprint (Bebas molor/scope creep)'}</div>
-                    <div>&bull; {isEn ? 'Full 3-Month Priority SLA Bug Fix Warranty included' : 'Garansi perbaikan bug prioritas 3 bulan penuh pasca live'}</div>
-                  </div>
-                  <div className="pt-1.5 mt-1 border-t border-emerald-500/20 text-emerald-500 font-bold">
-                    {isEn ? '✨ Zero Freelancer Drama // 100% Senior Architect Direct Execution' : '✨ Tanpa Drama Freelancer // Dikerjakan Langsung Senior Architect'}
-                  </div>
-                </div>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                <button
-                  onClick={() => openBookingModal('full_mvp')}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-lg cursor-pointer"
-                >
-                  <span>{isEn ? 'START 5 SPRINT DEVELOPMENT (50% DP)' : 'RESERVASI SPRINT PROYEK (DP 50%)'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+              <div>
+                <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 text-center mb-3 font-bold">
+                  {isEn ? '100% Executed by Neriah Pro Team (Zero Freelancer Drama)' : '100% Dikerjakan Neriah Pro sampai Live (Tanpa Drama Freelancer)'}
+                </div>
+                <div className="space-y-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                  <button
+                    onClick={() => openBookingModal('full_mvp')}
+                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-lg cursor-pointer"
+                  >
+                    <span>{isEn ? 'RESERVE SPRINT (50% DP)' : 'RESERVASI PROYEK (DP 50%)'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
 
-                <button
-                  onClick={() => openBookingModal('full_mvp')}
-                  className="w-full bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 py-2.5 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
-                >
-                  <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>{isEn ? 'SCHEDULE TECH SCOPING CALL' : 'KONSULTASI SCOPE TEKNIS'}</span>
-                </button>
+                  <button
+                    onClick={() => openBookingModal('full_mvp')}
+                    className="w-full bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 py-2 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>{isEn ? 'TECH SCOPING CALL' : 'KONSULTASI SCOPE TEKNIS'}</span>
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* TIER 3: UMKM DIGITAL STARTER & SUBSIDI */}
-            <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 p-6 sm:p-8 flex flex-col justify-between rounded-none shadow-xs hover:border-emerald-500/60 transition group relative">
+            <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 p-6 sm:p-7 flex flex-col justify-between rounded-none shadow-xs hover:border-emerald-500/60 transition group relative">
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-3">
                   <span className="font-mono text-xs font-black tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
-                    {isEn ? 'STIMULUS PROGRAM // LOCAL BUSINESS' : 'PROGRAM STIMULUS // UMKM'}
+                    {isEn ? 'STIMULUS PROGRAM // UMKM' : 'PROGRAM STIMULUS // UMKM'}
                   </span>
                   <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 font-mono text-[10px] font-bold">
-                    {isEn ? '50% SUBSIDY // EXECUTED BY NERIAH PRO' : 'SUBSIDI 50% // DIKERJAKAN NERIAH PRO'}
+                    {isEn ? '50% SUBSIDY // BY NERIAH PRO' : 'SUBSIDI 50% // OLEH NERIAH PRO'}
                   </span>
                 </div>
 
-                <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2">
-                  UMKM Digital Starter
+                <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2 font-sans">
+                  {isEn ? 'UMKM Digital Starter' : 'UMKM Digital Starter'}
                 </h3>
 
-                <div className="mb-4 px-2.5 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-mono text-[10px] font-bold rounded-xs">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
                   {isEn 
-                    ? 'TARGET: Local businesses, retail shops, & organizations moving from manual paperwork to web apps.' 
-                    : 'TARGET: Pemilik usaha lokal, toko retail, & yayasan yang ingin beralih dari nota manual ke web app.'}
-                </div>
-
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-6">
-                  {isEn 
-                    ? 'Dedicated package for local businesses, shops, and social enterprises moving from manual paperwork to automated web systems with available government/community subsidies.'
-                    : 'Solusi terjangkau bagi pemilik usaha lokal, retail, dan yayasan yang ingin beralih dari nota manual ke sistem web app transaksional dengan kuota subsidi voucher.'}
+                    ? 'Turnkey transactional web app for local businesses, shops, and social enterprises moving from paper to digital.' 
+                    : 'Solusi aplikasi web siap pakai bagi toko retail, usaha lokal, & yayasan yang ingin beralih dari nota manual ke sistem digital otomatis.'}
                 </p>
 
-                <div className="mb-6 p-4 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800">
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono block mb-1">
-                    {isEn ? 'Standard Initial Investment:' : 'Investasi Awal Normal:'}
-                  </span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl sm:text-3xl font-black font-mono text-zinc-900 dark:text-white">
-                      Rp {pricingSettings.umkm_price || '7.500.000'}
+                {/* Price & Subsidy Box */}
+                <div className="mb-5 p-3.5 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                  <div className="flex items-baseline justify-between">
+                    <div>
+                      <span className="text-xs text-zinc-400 line-through mr-2">Rp {pricingSettings.umkm_price || '7.500.000'}</span>
+                      <span className="text-2xl font-black font-mono text-amber-500">
+                        Rp 3.750.000
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold">
+                      SUBSIDI 50%
                     </span>
                   </div>
-                  <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-                    <span className="text-[11px] font-mono text-zinc-500">
-                      {isEn ? 'With Business Subsidy (50%):' : 'Dengan Subsidi UMKM (50%):'}
-                    </span>
-                    <span className="text-xs font-mono font-black text-amber-500">
-                      Rp 3.750.000
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-amber-500 font-mono mt-1 block">
-                    &bull; {isEn ? 'Limited community subsidy quota (2 business slots / month)' : 'Program subsidi terbatas (Alokasi 2 kuota usaha / bulan)'}
-                  </span>
-                  <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
-                    <span>
-                      {isEn 
-                        ? 'Coding Execution: 100% Executed by Neriah Pro Team Turnkey Ready' 
-                        : 'Pengerjaan Koding: 100% Dikerjakan oleh Tim Neriah Pro sampai Siap Pakai'}
-                    </span>
+                  <div className="text-[10px] font-mono text-zinc-500 pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                    &bull; {isEn ? 'Voucher "UMKM-SUBSIDI-50" (Quota 2 slots / month)' : 'Gunakan voucher "UMKM-SUBSIDI-50" (Kuota 2 usaha / bln)'}
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
+                {/* Features */}
+                <div className="space-y-2.5 mb-6">
                   <div className="font-mono text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-                    {isEn ? 'PACKAGE HIGHLIGHTS:' : 'FITUR UTAMA DIDAPATKAN:'}
+                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT YANG DIDAPATKAN:'}
                   </div>
-
                   {(isEn ? [
                     'Centralized Transaction Engine & Customer Database',
                     'Automated QRIS & Bank Transfer Payment Integration',
-                    'Admin Dashboard Filament v5 (Bilingual Native ID/EN)',
+                    'Admin Dashboard Filament v5 (Easy-to-use Indonesian)',
                     'Automated Sales Reports Export (Excel / PDF)',
                     'Real-Time WhatsApp Order Confirmation Notifications',
-                    'Business Domain Setup (.id / .com) & Fast Cloud Hosting',
-                    'Dashboard Training Session via Zoom / Video Guide',
+                    'Domain (.id / .com) Setup + Fast Cloud VPS Hosting',
                   ] : [
-                    'Engine Transaksi & Database Pelanggan Terpusat',
-                    'Integrasi Pembayaran Otomatis QRIS & Transfer Bank',
-                    'Admin Dashboard Filament v5 Bahasa Indonesia',
-                    'Ekspor Laporan Penjualan Excel / PDF Otomatis',
-                    'Notifikasi WhatsApp Konfirmasi Pesanan Real-Time',
-                    'Setup Domain Bisnis (.id / .com) & Hosting Cepat',
-                    'Pelatihan Penggunaan Dashboard via Zoom / Panduan Video',
+                    'Sistem web transaksi, kasir, & database pelanggan terpusat',
+                    'Pembayaran otomatis QRIS & transfer bank (Midtrans)',
+                    'Dashboard admin Bahasa Indonesia yang mudah digunakan',
+                    'Laporan penjualan otomatis (bisa unduh Excel & PDF)',
+                    'Notifikasi pesanan otomatis via WhatsApp ke pelanggan',
+                    'Setup domain bisnis (.id / .com) & hosting cloud cepat',
                   ]).map((feat, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-700 dark:text-zinc-300">
-                      <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <div key={idx} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
                       <span>{feat}</span>
                     </div>
                   ))}
                 </div>
-
-                <div className="p-2.5 mb-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1">
-                  <span className="font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                    {isEn ? 'LIMITATIONS & UPSELL HOOK:' : 'BATASAN // RASA TANGGUNG:'}
-                  </span>
-                  <div className="text-zinc-500 space-y-0.5">
-                    <div>&bull; {isEn ? 'Capped to standard retail workflows (max 2 core flows)' : 'Dikhususkan untuk alur kerja ritel UMKM standar (maks 2 modul)'}</div>
-                    <div>&bull; {isEn ? 'No custom enterprise architecture or dedicated SLA retainer' : 'Tanpa arsitektur enterprise kustom atau retainer SLA khusus'}</div>
-                    <div>&bull; {isEn ? 'Subsidy allocation strictly limited to 2 businesses / month' : 'Kuota subsidi terbatas maksimal 2 slot usaha per bulan'}</div>
-                  </div>
-                  <div className="pt-1.5 mt-1 border-t border-zinc-200 dark:border-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold">
-                    {isEn ? '👉 Need complex custom architecture & 3-month SLA? Upgrade to Full MVP!' : '👉 Butuh arsitektur kustom enterprise & garansi SLA 3 bulan? Upgrade ke Full MVP!'}
-                  </div>
-                </div>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                <button
-                  onClick={() => openBookingModal('umkm_starter', 'UMKM-SUBSIDI-50')}
-                  className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-3 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-xs cursor-pointer"
-                >
-                  <span>{isEn ? 'CLAIM 50% SUBSIDY' : 'KLAIM SUBSIDI UMKM (50%)'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+              <div>
+                <div className="text-[10px] font-mono text-amber-600 dark:text-amber-400 text-center mb-3 font-bold">
+                  {isEn ? '100% Coded & Deployed by Neriah Pro Team' : '100% Dikerjakan oleh Neriah Pro sampai Siap Pakai'}
+                </div>
+                <div className="space-y-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                  <button
+                    onClick={() => openBookingModal('umkm_starter', 'UMKM-SUBSIDI-50')}
+                    className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-3 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-xs cursor-pointer"
+                  >
+                    <span>{isEn ? 'CLAIM 50% SUBSIDY' : 'KLAIM SUBSIDI UMKM (50%)'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
 
-                <a
-                  href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Halo Lead Architect Neriah Pro, saya ingin konsultasi mengenai Program Subsidi UMKM Digital Starter.')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2.5 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
-                >
-                  <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
-                  <span>{isEn ? 'CONSULT BUSINESS NEEDS' : 'KONSULTASI KEBUTUHAN UMKM'}</span>
-                </a>
+                  <a
+                    href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Halo Lead Architect Neriah Pro, saya ingin konsultasi mengenai Program Subsidi UMKM Digital Starter.')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
+                    <span>{isEn ? 'CONSULT ON WHATSAPP' : 'KONSULTASI WHATSAPP'}</span>
+                  </a>
+                </div>
               </div>
             </div>
           </div>

@@ -171,6 +171,64 @@
         .custom-prd-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #34d399;
         }
+
+        /* Custom Range Slider (Brutalist Strict Subtle Radii - Anti-AI Slop) */
+        :root {
+            --slider-track-empty: #e4e4e7;
+            --slider-track-border: #d4d4d8;
+        }
+        .dark {
+            --slider-track-empty: #18181b;
+            --slider-track-border: #27272a;
+        }
+        .custom-range-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            outline: none !important;
+            border: 1px solid var(--slider-track-border);
+            border-radius: 0px !important;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+        .custom-range-slider:focus,
+        .custom-range-slider:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+            border-color: #52525b !important;
+        }
+        .custom-range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 18px;
+            border-radius: 0px !important;
+            border: 1px solid #000000;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            transition: transform 0.1s ease;
+        }
+        .custom-range-slider::-webkit-slider-thumb:hover {
+            transform: scaleY(1.15);
+        }
+        .custom-range-slider::-moz-range-thumb {
+            width: 14px;
+            height: 18px;
+            border-radius: 0px !important;
+            border: 1px solid #000000;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .custom-range-slider::-moz-range-thumb:hover {
+            transform: scaleY(1.15);
+        }
+        .custom-range-slider.slider-emerald::-webkit-slider-thumb { background-color: #10b981; }
+        .custom-range-slider.slider-emerald::-moz-range-thumb { background-color: #10b981; }
+        .custom-range-slider.slider-sky::-webkit-slider-thumb { background-color: #0ea5e9; }
+        .custom-range-slider.slider-sky::-moz-range-thumb { background-color: #0ea5e9; }
+        .custom-range-slider.slider-amber::-webkit-slider-thumb { background-color: #f59e0b; }
+        .custom-range-slider.slider-amber::-moz-range-thumb { background-color: #f59e0b; }
     </style>
     <!-- Alpine.js & Mermaid UMD Bundle (Local Vendor JS) -->
     <script defer src="{{ asset('js/vendor/alpine.min.js') }}"></script>
@@ -5597,7 +5655,7 @@ class ProcessSecureDataset implements ShouldQueue
                                 <span class="text-zinc-600 dark:text-zinc-400 text-xs uppercase font-bold">7 PILAR KODE NYATA: DOCKER &bull; ULID &bull; SEEDER &bull; AGENTS &bull; CI/CD</span>
                             </div>
                             <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white">
-                                Ekspor Repository Lengkap 7 Pilar Software Factory OS
+                                13. Ekspor Repository Lengkap 7 Pilar Software Factory OS
                             </h3>
                             <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs max-w-2xl leading-relaxed">
                                 Blueprint arsitektur PRD Anda dapat langsung diekspor menjadi 7 pilar Software Factory OS: <code>docker-compose.yml</code> (PHP 8.4, PostgreSQL 16, Redis 7), skema <code>schema_complete.sql</code> (Strict ULID), routing (Laravel 13 &amp; Next.js App Router), <code>SyntheticDataSeeder.php</code> (Mock Seeder 100+ data), aturan AI <code>.cursorrules</code>, pengujian <code>ApiContractTest.php</code>, dan skrip <code>deploy.sh</code> 1-klik.
@@ -5745,26 +5803,50 @@ class ProcessSecureDataset implements ShouldQueue
                         dau: 25000,
                         rps: 35,
                         storageGb: 40,
+                        userCustomizedRps: false,
+                        onDauInput() {
+                            if (!this.userCustomizedRps) {
+                                // Realistic peak RPS benchmark: ~1 RPS per 1,000 - 1,500 DAU
+                                this.rps = Math.min(300, Math.max(5, Math.round(this.dau / 1200)));
+                            }
+                        },
+                        onRpsInput() {
+                            this.userCustomizedRps = true;
+                        },
+                        get dauPct() {
+                            return (((this.dau - 1000) / (500000 - 1000)) * 100).toFixed(1);
+                        },
+                        get rpsPct() {
+                            return (((this.rps - 5) / (300 - 5)) * 100).toFixed(1);
+                        },
+                        get storagePct() {
+                            return (((this.storageGb - 10) / (500 - 10)) * 100).toFixed(1);
+                        },
                         get vcpu() {
-                            if (this.dau < 10000) return 2;
-                            if (this.dau < 50000) return 4;
-                            if (this.dau < 250000) return 8;
-                            return 16;
+                            let dauCpu = 2;
+                            if (this.dau >= 250000) dauCpu = 16;
+                            else if (this.dau >= 50000) dauCpu = 8;
+                            else if (this.dau >= 10000) dauCpu = 4;
+
+                            let rpsCpu = 2;
+                            if (this.rps >= 180) rpsCpu = 16;
+                            else if (this.rps >= 90) rpsCpu = 8;
+                            else if (this.rps >= 35) rpsCpu = 4;
+
+                            return Math.max(dauCpu, rpsCpu);
                         },
                         get ram() {
-                            if (this.dau < 10000) return 4;
-                            if (this.dau < 50000) return 8;
-                            if (this.dau < 250000) return 16;
-                            return 32;
+                            return this.vcpu * 2;
                         },
                         get redisRam() {
-                            if (this.dau < 10000) return 1;
-                            if (this.dau < 50000) return 2;
-                            if (this.dau < 250000) return 4;
-                            return 8;
+                            if (this.vcpu >= 16 || this.rps >= 150) return 8;
+                            if (this.vcpu >= 8 || this.rps >= 70) return 4;
+                            if (this.vcpu >= 4 || this.rps >= 30) return 2;
+                            return 1;
                         },
                         get monthlyCostIdr() {
-                            const baseVps = this.vcpu === 2 ? 150000 : (this.vcpu === 4 ? 350000 : (this.vcpu === 8 ? 750000 : 1500000));
+                            const vpsPrices = { 2: 150000, 4: 350000, 8: 750000, 16: 1500000 };
+                            const baseVps = vpsPrices[this.vcpu] || 1500000;
                             const storageCost = this.storageGb * 2500;
                             return baseVps + storageCost;
                         },
@@ -5774,9 +5856,29 @@ class ProcessSecureDataset implements ShouldQueue
                         get estAiTokens() {
                             return (this.dau * 120).toLocaleString('id-ID');
                         },
+                        get peakAiRps() {
+                            return Math.max(1, Math.round(this.rps * 0.15));
+                        },
                         get monthlyAiCostIdr() {
                             const millionTokens = (this.dau * 120 * 30) / 1000000;
                             return Math.round(millionTokens * 2500);
+                        },
+                        get slaUptime() {
+                            if (this.vcpu >= 16) return '99.99%';
+                            if (this.vcpu >= 8) return '99.95%';
+                            return '99.90%';
+                        },
+                        get slaLatency() {
+                            if (this.rps <= 30) return '< 35ms';
+                            if (this.rps <= 75) return '< 65ms';
+                            if (this.rps <= 140) return '< 95ms';
+                            if (this.rps <= 220) return '< 120ms';
+                            return '< 150ms';
+                        },
+                        get slaClusterMode() {
+                            if (this.vcpu >= 16) return 'HA Failover & Multi-Worker';
+                            if (this.vcpu >= 8) return 'Multi-Worker & Redis Cluster';
+                            return 'Reverse Proxy & Keyset O(1)';
                         },
                         formatIdr(val) {
                             return new Intl.NumberFormat('id-ID').format(val);
@@ -5802,32 +5904,67 @@ class ProcessSecureDataset implements ShouldQueue
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <!-- Slider 1: DAU -->
                             <div>
-                                <div class="flex justify-between items-center mb-1 text-[11px]">
+                                <div class="flex justify-between items-center mb-1.5 text-[11px]">
                                     <span class="text-zinc-500">Pengguna Aktif Harian (DAU):</span>
                                     <strong class="text-emerald-500 font-bold" x-text="formatIdr(dau) + ' Users'">25.000 Users</strong>
                                 </div>
-                                <input type="range" min="1000" max="500000" step="1000" x-model.number="dau" class="w-full accent-emerald-500 cursor-pointer">
-                                <span class="text-[9px] text-zinc-400 block mt-1">Rentang: 1.000 s/d 500.000 DAU</span>
+                                <input 
+                                    type="range" 
+                                    min="1000" 
+                                    max="500000" 
+                                    step="1000" 
+                                    x-model.number="dau" 
+                                    @input="onDauInput()"
+                                    :style="'background: linear-gradient(to right, #10b981 ' + dauPct + '%, var(--slider-track-empty) ' + dauPct + '%)'"
+                                    class="custom-range-slider slider-emerald"
+                                >
+                                <div class="flex justify-between items-center mt-1 text-[9px] text-zinc-400">
+                                    <span>Rentang: 1.000 s/d 500.000 DAU</span>
+                                    <span class="text-emerald-500 font-bold" x-text="dauPct + '%'"></span>
+                                </div>
                             </div>
 
                             <!-- Slider 2: RPS -->
                             <div>
-                                <div class="flex justify-between items-center mb-1 text-[11px]">
+                                <div class="flex justify-between items-center mb-1.5 text-[11px]">
                                     <span class="text-zinc-500">Beban API Puncak (RPS):</span>
                                     <strong class="text-sky-500 font-bold" x-text="rps + ' Req/Detik'">35 Req/Detik</strong>
                                 </div>
-                                <input type="range" min="5" max="300" step="5" x-model.number="rps" class="w-full accent-sky-500 cursor-pointer">
-                                <span class="text-[9px] text-zinc-400 block mt-1">Rentang: 5 s/d 300 Requests/Detik</span>
+                                <input 
+                                    type="range" 
+                                    min="5" 
+                                    max="300" 
+                                    step="5" 
+                                    x-model.number="rps" 
+                                    @input="onRpsInput()"
+                                    :style="'background: linear-gradient(to right, #0ea5e9 ' + rpsPct + '%, var(--slider-track-empty) ' + rpsPct + '%)'"
+                                    class="custom-range-slider slider-sky"
+                                >
+                                <div class="flex justify-between items-center mt-1 text-[9px] text-zinc-400">
+                                    <span>Rentang: 5 s/d 300 Requests/Detik</span>
+                                    <span class="text-sky-500 font-bold" x-text="rpsPct + '%'"></span>
+                                </div>
                             </div>
 
                             <!-- Slider 3: Media Storage -->
                             <div>
-                                <div class="flex justify-between items-center mb-1 text-[11px]">
+                                <div class="flex justify-between items-center mb-1.5 text-[11px]">
                                     <span class="text-zinc-500">Alokasi Media &amp; Dokumen:</span>
                                     <strong class="text-amber-500 font-bold" x-text="storageGb + ' GB NVMe'">40 GB NVMe</strong>
                                 </div>
-                                <input type="range" min="10" max="500" step="10" x-model.number="storageGb" class="w-full accent-amber-500 cursor-pointer">
-                                <span class="text-[9px] text-zinc-400 block mt-1">Rentang: 10 s/d 500 GB NVMe</span>
+                                <input 
+                                    type="range" 
+                                    min="10" 
+                                    max="500" 
+                                    step="10" 
+                                    x-model.number="storageGb" 
+                                    :style="'background: linear-gradient(to right, #f59e0b ' + storagePct + '%, var(--slider-track-empty) ' + storagePct + '%)'"
+                                    class="custom-range-slider slider-amber"
+                                >
+                                <div class="flex justify-between items-center mt-1 text-[9px] text-zinc-400">
+                                    <span>Rentang: 10 s/d 500 GB NVMe</span>
+                                    <span class="text-amber-500 font-bold" x-text="storagePct + '%'"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -5840,18 +5977,19 @@ class ProcessSecureDataset implements ShouldQueue
                             <div class="text-base font-black text-emerald-400 mb-1" x-text="vcpu + ' vCPU / ' + ram + ' GB RAM'">
                                 4 vCPU / 8 GB RAM
                             </div>
-                            <span class="text-[10px] text-zinc-400 leading-tight block">
-                                + Dedicated Redis: <strong class="text-white" x-text="redisRam + ' GB RAM'">2 GB RAM</strong>
-                            </span>
+                            <div class="flex items-center justify-between text-[10px] text-zinc-400 leading-tight">
+                                <span>Redis: <strong class="text-white" x-text="redisRam + ' GB RAM'">2 GB</strong></span>
+                                <span>Storage: <strong class="text-white" x-text="storageGb + ' GB NVMe'">40 GB</strong></span>
+                            </div>
                         </div>
 
                         <!-- Est Monthly Hosting Cost -->
                         <div class="p-4 bg-zinc-900 border border-zinc-800 text-white">
-                            <span class="text-[9px] text-zinc-400 uppercase tracking-wider block mb-1">ESTIMASI BIAYA VPS HOSTING</span>
+                            <span class="text-[9px] text-zinc-400 uppercase tracking-wider block mb-1">ESTIMASI BIAYA VPS &amp; NVMe</span>
                             <div class="text-base font-black text-emerald-400 mb-1" x-text="'Rp ' + formatIdr(monthlyCostIdr) + ' / bln'">
                                 Rp 450.000 / bln
                             </div>
-                            <span class="text-[10px] text-zinc-400 leading-tight block" x-text="'Setara ~ $' + monthlyCostUsd + ' USD / Bulan'">
+                            <span class="text-[10px] text-zinc-400 leading-tight block" x-text="'Setara ~ $' + monthlyCostUsd + ' USD / Bulan (NVMe: Rp ' + formatIdr(storageGb * 2500) + ')'">
                                 Setara ~ $28 USD / Bulan
                             </span>
                         </div>
@@ -5862,18 +6000,19 @@ class ProcessSecureDataset implements ShouldQueue
                             <div class="text-base font-black text-sky-400 mb-1" x-text="estAiTokens + ' Tok/Hari'">
                                 3.000.000 Tok/Hari
                             </div>
-                            <span class="text-[10px] text-zinc-400 leading-tight block" x-text="'Est. AI Token: Rp ' + formatIdr(monthlyAiCostIdr) + '/bln'">
-                                Est. AI Token: Rp 225.000/bln
-                            </span>
+                            <div class="flex items-center justify-between text-[10px] text-zinc-400 leading-tight">
+                                <span x-text="'Est: Rp ' + formatIdr(monthlyAiCostIdr) + '/bln'">Est. AI Token: Rp 225.000/bln</span>
+                                <span class="text-sky-400 font-bold" x-text="'Peak: ~' + peakAiRps + ' Req/s'"></span>
+                            </div>
                         </div>
 
                         <!-- SLA Guarantee & Response Time -->
                         <div class="p-4 bg-zinc-900 border border-zinc-800 text-white">
                             <span class="text-[9px] text-zinc-400 uppercase tracking-wider block mb-1">SLA UPTIME &amp; LATENSI</span>
-                            <div class="text-base font-black text-amber-400 mb-1">
+                            <div class="text-base font-black text-amber-400 mb-1" x-text="slaUptime + ' // ' + slaLatency">
                                 99.95% // &lt; 150ms
                             </div>
-                            <span class="text-[10px] text-zinc-400 leading-tight block">
+                            <span class="text-[10px] text-zinc-400 leading-tight block" x-text="slaClusterMode">
                                 Reverse Proxy Nginx &amp; Keyset O(1)
                             </span>
                         </div>

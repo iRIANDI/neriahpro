@@ -1068,6 +1068,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         if (window.showToast) window.showToast({ type: 'success', title: 'KODE DISALIN', message: 'File ' + this.scaffoldActiveTab + ' berhasil disalin ke clipboard!' });
                     });
                 },
+                activeHostingSpectrum: 'umkm_lean',
                 flowTab: 'visual', 
                 erdTab: 'visual', 
                 erdLang: 'id',
@@ -4771,81 +4772,170 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
                 </div>
 
-                <!-- 1. Evaluasi Lingkungan Hosting: Tangga Solusi Bertahap (Hosting Ladder) -->
+                <!-- 1. Evaluasi Lingkungan Hosting: Tangga Solusi Bertahap (Hosting Ladder 3-Tier) -->
                 @php
-                    $isLeanVerdict = str_contains($archEval['hosting_evaluation']['verdict'] ?? '', 'CLOUD STARTER');
-                    $cloudStarter = $archEval['hosting_evaluation']['cloud_starter'] ?? [];
-                    $dedicatedVps = $archEval['hosting_evaluation']['dedicated_vps'] ?? [];
-                @endphp
-                <div class="mb-8">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                        <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
-                            <span class="w-2 h-2 bg-emerald-500"></span>
-                            1. Evaluasi Lingkungan Hosting: Tangga Solusi Bertahap (Hosting Ladder)
-                        </h3>
-                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase border {{ $isLeanVerdict ? 'bg-sky-500/10 text-sky-400 border-sky-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' }}">
-                            {{ $archEval['hosting_evaluation']['verdict'] ?? 'REKOMENDASI: ADAPTIF' }}
-                        </span>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Cloud Starter / Shared Efisien -->
-                        <div class="p-5 {{ $isLeanVerdict ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500' : 'bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800' }} font-mono text-xs">
-                            <div class="flex items-center justify-between gap-2 mb-3">
-                                <span class="font-black uppercase {{ $isLeanVerdict ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300' }} text-sm">
-                                    {{ $cloudStarter['title'] ?? 'Cloud Starter / Shared Efisien (< Rp 100.000 / bln)' }}
-                                </span>
-                                <span class="px-2 py-0.5 text-[9px] font-bold uppercase {{ $isLeanVerdict ? 'bg-emerald-500 text-black' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }}">
-                                    {{ $isLeanVerdict ? 'PILIHAN CERDAS FASE 1' : 'OPSI VALIDASI LEAN' }}
-                                </span>
-                            </div>
-                            <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs mb-3">
-                                Pilihan ekonomis untuk menjaga modal usaha tetap aman di tahap peluncuran awal:
-                            </p>
-                            <ul class="space-y-2 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                                @foreach($cloudStarter['reasons'] ?? [] as $reason)
-                                    <li class="flex items-start gap-2">
-                                        <span class="{{ $isLeanVerdict ? 'text-emerald-500' : 'text-zinc-400' }} font-bold">&check;</span>
-                                        <span>{{ $reason }}</span>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-
-                        <!-- Dedicated VPS -->
-                        <div class="p-5 {{ !$isLeanVerdict ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500' : 'bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800' }} font-mono text-xs">
-                            <div class="flex items-center justify-between gap-2 mb-3">
-                                <span class="font-black uppercase {{ !$isLeanVerdict ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300' }} text-sm">
-                                    {{ $dedicatedVps['title'] ?? 'Dedicated VPS Container (Nixpacks & Docker)' }}
-                                </span>
-                                <span class="px-2 py-0.5 text-[9px] font-bold uppercase {{ !$isLeanVerdict ? 'bg-emerald-500 text-black' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }}">
-                                    {{ !$isLeanVerdict ? 'REKOMENDASI SCALE-UP' : 'UPGRADE FASE 2' }}
-                                </span>
-                            </div>
-                            <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs mb-3">
-                                Menjamin kecepatan respons sub-detik, isolasi komputasi penuh, dan kesiapan AI:
-                            </p>
-                            <ul class="space-y-2 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                                @foreach($dedicatedVps['reasons'] ?? [] as $reason)
-                                    <li class="flex items-start gap-2">
-                                        <span class="{{ !$isLeanVerdict ? 'text-emerald-500' : 'text-zinc-400' }} font-bold">&check;</span>
-                                        <span>{{ $reason }}</span>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. Analisis & Matriks Spesifikasi Hardware Server Nyata (Hardware Capacity Sizing Engine) -->
-                @php
+                    $isLeanVerdict = str_contains($archEval['hosting_evaluation']['verdict'] ?? '', 'CLOUD STARTER') || str_contains($archEval['hosting_evaluation']['verdict'] ?? '', 'LEAN');
                     $serverSizing = $archEval['server_hardware_sizing'] ?? \App\Services\PrdGeneratorService::calculateServerHardwareSizing(
                         $blueprint->nama_bisnis ?? $blueprint->client_name,
                         $blueprint->masalah_utama ?? '',
                         $prd['features']['mvp_phase1'] ?? [],
                         $blueprint->user_metadata ?? []
                     );
+                    $spectrumTiers = $serverSizing['spectrum_tiers'] ?? [];
+                    $domainMatrix = $serverSizing['domain_comparison_matrix'] ?? [];
+                    $byohProtocol = $serverSizing['hosting_freedom_protocol'] ?? [];
                 @endphp
+                <div class="mb-8">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-emerald-500"></span>
+                            1. Evaluasi Lingkungan Hosting: Tangga Solusi Bertahap (Hosting Ladder 3-Tier)
+                        </h3>
+                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase border bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                            ADAPTIF DARI UMKM S/D ENTERPRISE
+                        </span>
+                    </div>
+
+                    <!-- 3-Tier Responsive Spectrum Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- TIER 1: UMKM ULTRA-LEAN (< 500RB/THN) -->
+                        <div class="p-5 bg-amber-500/5 dark:bg-amber-950/20 border-2 border-amber-500/60 font-mono text-xs flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    <span class="font-black uppercase text-amber-600 dark:text-amber-400 text-sm">
+                                        Tier 1: UMKM Ultra-Lean
+                                    </span>
+                                    <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase bg-amber-500 text-black">
+                                        &lt; RP 500RB / TAHUN
+                                    </span>
+                                </div>
+                                <div class="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+                                    Promo Online Shop &amp; Registrar Lokal
+                                </div>
+                                <div class="text-xs font-black text-amber-600 dark:text-amber-400 mb-3">
+                                    Rp 290.000 - Rp 490.000 / TAHUN
+                                </div>
+                                <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs mb-3 leading-relaxed">
+                                    Sangat bijak untuk validasi ide, etalase online, &amp; toko lokal tanpa risiko membakar modal awal:
+                                </p>
+                                <ul class="space-y-1.5 text-zinc-700 dark:text-zinc-300 text-[11px] mb-4">
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-amber-500 font-bold">&check;</span>
+                                        <span><strong>Domain Murah:</strong> .my.id (Rp 15rb/thn) atau .biz.id (Rp 25rb/thn).</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-amber-500 font-bold">&check;</span>
+                                        <span><strong>Hosting Murah:</strong> Shared cPanel / Micro VPS di Shopee/Tokopedia (~Rp 25rb-35rb/bln).</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-amber-500 font-bold">&check;</span>
+                                        <span><strong>Dukungan Project OS:</strong> Mode SQLite/MySQL ringan, zero background memory overhead.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <button 
+                                type="button" 
+                                @click="activeHostingSpectrum = 'umkm_lean'" 
+                                :class="activeHostingSpectrum === 'umkm_lean' ? 'bg-amber-500 text-black font-black' : 'bg-zinc-900 text-amber-400 border border-amber-500/40 hover:bg-zinc-800'"
+                                class="w-full py-1.5 text-center text-[10px] uppercase font-bold transition cursor-pointer"
+                            >
+                                <span x-text="activeHostingSpectrum === 'umkm_lean' ? '✓ SEDANG DITINJAU' : 'PILIH SPEK INI'"></span>
+                            </button>
+                        </div>
+
+                        <!-- TIER 2: PRODUCTION PERFORMANCE DEDICATED VPS -->
+                        <div class="p-5 bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500 font-mono text-xs flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    <span class="font-black uppercase text-emerald-600 dark:text-emerald-400 text-sm">
+                                        Tier 2: Production VPS
+                                    </span>
+                                    <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase bg-emerald-500 text-black">
+                                        REKOMENDASI SCALE-UP
+                                    </span>
+                                </div>
+                                <div class="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+                                    Dedicated KVM Cloud VPS
+                                </div>
+                                <div class="text-xs font-black text-emerald-600 dark:text-emerald-400 mb-3">
+                                    Rp 90.000 - Rp 250.000 / BULAN
+                                </div>
+                                <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs mb-3 leading-relaxed">
+                                    Menjamin isolasi compute 100%, webhook Midtrans sub-detik, dan kesiapan antrean transaksi:
+                                </p>
+                                <ul class="space-y-1.5 text-zinc-700 dark:text-zinc-300 text-[11px] mb-4">
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-500 font-bold">&check;</span>
+                                        <span><strong>Domain Populer:</strong> .com (Rp 120rb/thn) atau .id (Rp 200rb/thn).</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-500 font-bold">&check;</span>
+                                        <span><strong>Dedicated Compute:</strong> 2 vCPU &bull; 2-4 GB ECC RAM &bull; 40-80 GB NVMe SSD.</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-500 font-bold">&check;</span>
+                                        <span><strong>Integritas Penuh:</strong> PostgreSQL 16 Strict ULID &bull; Redis Queue 24/7.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <button 
+                                type="button" 
+                                @click="activeHostingSpectrum = 'vps_production'" 
+                                :class="activeHostingSpectrum === 'vps_production' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-emerald-400 border border-emerald-500/40 hover:bg-zinc-800'"
+                                class="w-full py-1.5 text-center text-[10px] uppercase font-bold transition cursor-pointer"
+                            >
+                                <span x-text="activeHostingSpectrum === 'vps_production' ? '✓ SEDANG DITINJAU' : 'PILIH SPEK INI'"></span>
+                            </button>
+                        </div>
+
+                        <!-- TIER 3: ENTERPRISE HIGH-THROUGHPUT CLUSTER -->
+                        <div class="p-5 bg-sky-500/5 dark:bg-sky-950/20 border-2 border-sky-500/60 font-mono text-xs flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    <span class="font-black uppercase text-sky-600 dark:text-sky-400 text-sm">
+                                        Tier 3: Enterprise Cluster
+                                    </span>
+                                    <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase bg-sky-500 text-black">
+                                        HIGH-CONCURRENCY
+                                    </span>
+                                </div>
+                                <div class="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+                                    Clustered Nodes &amp; Global Edge
+                                </div>
+                                <div class="text-xs font-black text-sky-600 dark:text-sky-400 mb-3">
+                                    Rp 450.000 - Rp 950.000+ / BULAN
+                                </div>
+                                <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs mb-3 leading-relaxed">
+                                    Untuk platform berskala nasional dengan beban ratusan ribu pengguna &amp; kampanye flash sale:
+                                </p>
+                                <ul class="space-y-1.5 text-zinc-700 dark:text-zinc-300 text-[11px] mb-4">
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-sky-500 font-bold">&check;</span>
+                                        <span><strong>Proteksi Merek:</strong> Multi-domain bundling (.id, .com, .co.id).</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-sky-500 font-bold">&check;</span>
+                                        <span><strong>Spek Tangguh:</strong> 4-8 vCPU &bull; 8-16 GB RAM &bull; 160+ GB NVMe &bull; SLA 99.95%.</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-sky-500 font-bold">&check;</span>
+                                        <span><strong>Failover Cerdas:</strong> Read replicas database &bull; Global Anycast CDN.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <button 
+                                type="button" 
+                                @click="activeHostingSpectrum = 'enterprise_cluster'" 
+                                :class="activeHostingSpectrum === 'enterprise_cluster' ? 'bg-sky-500 text-black font-black' : 'bg-zinc-900 text-sky-400 border border-sky-500/40 hover:bg-zinc-800'"
+                                class="w-full py-1.5 text-center text-[10px] uppercase font-bold transition cursor-pointer"
+                            >
+                                <span x-text="activeHostingSpectrum === 'enterprise_cluster' ? '✓ SEDANG DITINJAU' : 'PILIH SPEK INI'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Analisis & Matriks Spesifikasi Hardware Server Nyata (Hardware Capacity Sizing Engine) -->
                 <div class="mb-8 p-6 bg-white dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-zinc-900 dark:text-zinc-100 shadow-sm">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-5">
                         <div>
@@ -4864,6 +4954,33 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     </div>
 
+                    <!-- Interactive Spectrum Viewport Notice -->
+                    <div class="mb-4 p-3 border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                         :class="{
+                             'bg-amber-500/10 border-amber-500/40 text-amber-400': activeHostingSpectrum === 'umkm_lean',
+                             'bg-emerald-500/10 border-emerald-500/40 text-emerald-400': activeHostingSpectrum === 'vps_production',
+                             'bg-sky-500/10 border-sky-500/40 text-sky-400': activeHostingSpectrum === 'enterprise_cluster'
+                         }">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-none"
+                                  :class="{
+                                      'bg-amber-400': activeHostingSpectrum === 'umkm_lean',
+                                      'bg-emerald-500': activeHostingSpectrum === 'vps_production',
+                                      'bg-sky-400': activeHostingSpectrum === 'enterprise_cluster'
+                                  }"></span>
+                            <strong class="uppercase text-[11px]" x-text="{
+                                'umkm_lean': 'SIMULASI AKTIF: TIER 1 - UMKM ULTRA-LEAN (BIAYA &lt; RP 500.000 / TAHUN)',
+                                'vps_production': 'SIMULASI AKTIF: TIER 2 - PRODUCTION PERFORMANCE DEDICATED VPS',
+                                'enterprise_cluster': 'SIMULASI AKTIF: TIER 3 - ENTERPRISE HIGH-THROUGHPUT CLUSTER'
+                            }[activeHostingSpectrum]"></strong>
+                        </div>
+                        <span class="text-[10px] font-sans text-zinc-400" x-text="{
+                            'umkm_lean': 'Cocok untuk modal tipis, tes ombak pasar, dan etalase online mandiri.',
+                            'vps_production': 'Rekomendasi terbaik untuk bisnis berjalan & kecepatan sub-detik.',
+                            'enterprise_cluster': 'Kapasitas maksimal untuk platform skala nasional & lonjakan flash sale.'
+                        }[activeHostingSpectrum]"></span>
+                    </div>
+
                     <!-- 4 Hardware Pillar Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <!-- vCPU -->
@@ -4872,8 +4989,18 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">PROSESOR (vCPU)</span>
                                 <span class="text-emerald-600 dark:text-emerald-400 font-black text-xs">&part; CPU</span>
                             </div>
-                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1">{{ $serverSizing['specifications']['vcpu']['count'] }}</div>
-                            <p class="text-[10px] text-zinc-600 dark:text-zinc-400 mb-3">{{ $serverSizing['specifications']['vcpu']['architecture'] }}</p>
+                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1" x-text="{
+                                'umkm_lean': '1 vCPU Virtual',
+                                'vps_production': '{{ $serverSizing['specifications']['vcpu']['count'] }}',
+                                'enterprise_cluster': '4-8 vCPU Dedicated'
+                            }[activeHostingSpectrum]">
+                                {{ $serverSizing['specifications']['vcpu']['count'] }}
+                            </div>
+                            <p class="text-[10px] text-zinc-600 dark:text-zinc-400 mb-3" x-text="{
+                                'umkm_lean': 'Shared CPU Core (Cukup untuk 5-15 req/detik)',
+                                'vps_production': '{{ $serverSizing['specifications']['vcpu']['architecture'] }}',
+                                'enterprise_cluster': 'Dedicated AMD EPYC 9004 Series High-Clock'
+                            }[activeHostingSpectrum]">{{ $serverSizing['specifications']['vcpu']['architecture'] }}</p>
                             <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-600 dark:text-zinc-400">
                                 @foreach($serverSizing['specifications']['vcpu']['allocation'] as $allocKey => $allocVal)
                                     <div>&bull; <strong class="text-zinc-800 dark:text-zinc-300">{{ $allocKey }}:</strong> {{ $allocVal }}</div>
@@ -4884,10 +5011,16 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <!-- RAM -->
                         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">MEMORI (RAM ECC)</span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">MEMORI (RAM)</span>
                                 <span class="text-sky-600 dark:text-sky-400 font-black text-xs">&infin; MEM</span>
                             </div>
-                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1">{{ $serverSizing['specifications']['ram']['total'] }}</div>
+                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1" x-text="{
+                                'umkm_lean': '1 GB RAM',
+                                'vps_production': '{{ $serverSizing['specifications']['ram']['total'] }}',
+                                'enterprise_cluster': '8 - 16 GB ECC RAM'
+                            }[activeHostingSpectrum]">
+                                {{ $serverSizing['specifications']['ram']['total'] }}
+                            </div>
                             <p class="text-[10px] text-zinc-600 dark:text-zinc-400 mb-3">Distribusi Anggaran Memori Terisolasi</p>
                             <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-600 dark:text-zinc-400">
                                 @foreach($serverSizing['specifications']['ram']['budget_distribution'] as $b)
@@ -4905,7 +5038,13 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">STORAGE (NVMe SSD)</span>
                                 <span class="text-amber-600 dark:text-amber-400 font-black text-xs">&Delta; DISK</span>
                             </div>
-                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1">{{ $serverSizing['specifications']['storage']['capacity'] }}</div>
+                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1" x-text="{
+                                'umkm_lean': '15 - 25 GB NVMe',
+                                'vps_production': '{{ $serverSizing['specifications']['storage']['capacity'] }}',
+                                'enterprise_cluster': '160 - 320 GB NVMe'
+                            }[activeHostingSpectrum]">
+                                {{ $serverSizing['specifications']['storage']['capacity'] }}
+                            </div>
                             <p class="text-[10px] text-zinc-600 dark:text-zinc-400 mb-3">{{ $serverSizing['specifications']['storage']['speed'] }}</p>
                             <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-600 dark:text-zinc-400">
                                 @foreach($serverSizing['specifications']['storage']['distribution'] as $d)
@@ -4920,11 +5059,21 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <!-- Network -->
                         <div class="p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">JARINGAN & BANDWIDTH</span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">JARINGAN &amp; BANDWIDTH</span>
                                 <span class="text-emerald-600 dark:text-emerald-400 font-black text-xs">&theta; NET</span>
                             </div>
-                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1">{{ $serverSizing['specifications']['network']['port_speed'] }}</div>
-                            <p class="text-[10px] text-zinc-600 dark:text-zinc-400 mb-3">{{ $serverSizing['specifications']['network']['bandwidth'] }}</p>
+                            <div class="text-base font-black text-zinc-900 dark:text-white mb-1" x-text="{
+                                'umkm_lean': '100 Mbps Shared',
+                                'vps_production': '{{ $serverSizing['specifications']['network']['port_speed'] }}',
+                                'enterprise_cluster': '10 Gbps Uplink'
+                            }[activeHostingSpectrum]">
+                                {{ $serverSizing['specifications']['network']['port_speed'] }}
+                            </div>
+                            <p class="text-[10px] text-zinc-600 dark:text-zinc-400 mb-3" x-text="{
+                                'umkm_lean': 'Unmetered Shared Fair Usage',
+                                'vps_production': '{{ $serverSizing['specifications']['network']['bandwidth'] }}',
+                                'enterprise_cluster': '10 - 20 TB Bandwidth'
+                            }[activeHostingSpectrum]">{{ $serverSizing['specifications']['network']['bandwidth'] }}</p>
                             <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-600 dark:text-zinc-400">
                                 <div>&bull; <strong class="text-zinc-800 dark:text-zinc-300">Latensi Target:</strong> {{ $serverSizing['specifications']['network']['latency_target'] }}</div>
                                 <div>&bull; <strong class="text-zinc-800 dark:text-zinc-300">Proteksi:</strong> Anti-DDoS Anycast L3/L4/L7</div>
@@ -4934,8 +5083,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                     <!-- Provider Benchmark Comparison Table -->
                     <div class="mb-5">
-                        <div class="text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-2 flex items-center gap-1.5">
+                        <div class="text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-2 flex items-center justify-between">
                             <span>Perbandingan Benchmark Provider Server Riil:</span>
+                            <span class="text-[10px] text-zinc-500">Transparansi Pasar Terbuka</span>
                         </div>
                         <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800">
                             <table class="w-full text-[11px] text-left">
@@ -4952,7 +5102,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                         <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/60 transition">
                                             <td class="py-2 px-3">
                                                 <strong class="text-zinc-900 dark:text-white block">{{ $p['name'] }}</strong>
-                                                <span class="text-[9px] text-emerald-600 dark:text-emerald-400 uppercase">{{ $p['badge'] }}</span>
+                                                <span class="text-[9px] text-emerald-600 dark:text-emerald-400 uppercase font-bold">{{ $p['badge'] }}</span>
                                             </td>
                                             <td class="py-2 px-3 text-zinc-700 dark:text-zinc-300">{{ $p['plan'] }}</td>
                                             <td class="py-2 px-3 font-bold text-emerald-600 dark:text-emerald-400">{{ $p['est_cost'] }}</td>
@@ -4974,6 +5124,92 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     </div>
                 </div>
+
+                <!-- 2.5 Matriks Komparasi TLD Nama Domain Dinamis & Rekomendasi Terbuka -->
+                @if(!empty($domainMatrix))
+                    <div class="mb-8 p-6 bg-white dark:bg-zinc-950 border-2 border-zinc-300 dark:border-zinc-800 font-mono text-zinc-900 dark:text-zinc-100 shadow-sm">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
+                            <div>
+                                <span class="px-2 py-0.5 bg-zinc-900 text-white dark:bg-white dark:text-black font-black text-[10px] uppercase tracking-wider">
+                                    DOMAIN ASSET STRATEGY
+                                </span>
+                                <h3 class="text-sm sm:text-base font-black uppercase text-zinc-900 dark:text-white mt-1">
+                                    2.5 Matriks Komparasi Nama Domain: Solusi Cerdas Hemat Modal UMKM
+                                </h3>
+                            </div>
+                            <span class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                                RESMI PANDI &amp; ICANN
+                            </span>
+                        </div>
+                        <p class="text-zinc-600 dark:text-zinc-400 text-xs mb-4 font-sans leading-relaxed">
+                            Nama domain tidak harus mahal untuk memulai bisnis. Klien bebas memilih ekstensi domain yang paling sesuai dengan modal dan target pasar:
+                        </p>
+                        <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800 mb-4">
+                            <table class="w-full text-[11px] text-left">
+                                <thead class="bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 uppercase font-mono text-[10px] border-b border-zinc-200 dark:border-zinc-800">
+                                    <tr>
+                                        <th class="py-2.5 px-3">Ekstensi (TLD)</th>
+                                        <th class="py-2.5 px-3">Kategori</th>
+                                        <th class="py-2.5 px-3">Estimasi Biaya Resmi</th>
+                                        <th class="py-2.5 px-3">Otoritas &amp; Legalitas</th>
+                                        <th class="py-2.5 px-3">Paling Cocok Untuk</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800/60 font-mono">
+                                    @foreach($domainMatrix as $dm)
+                                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/60 transition">
+                                            <td class="py-2.5 px-3">
+                                                <strong class="text-base font-black text-emerald-600 dark:text-emerald-400">{{ $dm['tld'] }}</strong>
+                                            </td>
+                                            <td class="py-2.5 px-3 text-zinc-800 dark:text-zinc-200 font-bold">{{ $dm['category'] }}</td>
+                                            <td class="py-2.5 px-3 text-zinc-900 dark:text-white font-black">{{ $dm['est_price'] }}</td>
+                                            <td class="py-2.5 px-3 text-zinc-600 dark:text-zinc-400 text-[10px]">{{ $dm['authority'] }}</td>
+                                            <td class="py-2.5 px-3 text-zinc-700 dark:text-zinc-300 font-sans text-[11px]">{{ $dm['best_for'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- 2.8 Protokol Kebebasan Klien & Anti Vendor Lock-In (Bring Your Own Host / BYOH) -->
+                @if(!empty($byohProtocol))
+                    <div class="mb-8 p-5 bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500 text-zinc-800 dark:text-zinc-200 font-mono text-xs shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="w-3 h-3 bg-emerald-500"></span>
+                            <h4 class="font-black text-sm uppercase text-emerald-700 dark:text-emerald-400">
+                                2.8 Protokol Kebebasan Infrastruktur Klien (Bring Your Own Host / BYOH)
+                            </h4>
+                        </div>
+                        <p class="text-zinc-600 dark:text-zinc-400 text-xs mb-3 font-sans">
+                            Komitmen Neriah Pro dalam menjunjung tinggi kedaulatan kepemilikan aset klien dan demokratisasi teknologi:
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px]">
+                            <div class="p-3 bg-white dark:bg-zinc-900 border border-emerald-500/30">
+                                <span class="px-1.5 py-0.5 bg-emerald-500 text-black font-black text-[9px] block w-fit mb-1">PRINSIP 01</span>
+                                <strong class="text-zinc-900 dark:text-white block mb-1">Zero Vendor Lock-In</strong>
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[10px] leading-relaxed">
+                                    Neriah Pro tidak pernah memaksa klien sewa server lewat kami. Anda bebas membeli domain &amp; hosting murah sendiri di Shopee, Tokopedia, Niagahoster, Domainesia, atau provider mana pun.
+                                </p>
+                            </div>
+                            <div class="p-3 bg-white dark:bg-zinc-900 border border-emerald-500/30">
+                                <span class="px-1.5 py-0.5 bg-emerald-500 text-black font-black text-[9px] block w-fit mb-1">PRINSIP 02</span>
+                                <strong class="text-zinc-900 dark:text-white block mb-1">Demokratisasi Modal UMKM</strong>
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[10px] leading-relaxed">
+                                    Validasi bisnis Anda dulu dengan opsi paling hemat (&lt; Rp 500.000 / tahun). Jangan bakar uang untuk server dedicated sebelum ada traksi dan penjualan nyata!
+                                </p>
+                            </div>
+                            <div class="p-3 bg-white dark:bg-zinc-900 border border-emerald-500/30">
+                                <span class="px-1.5 py-0.5 bg-emerald-500 text-black font-black text-[9px] block w-fit mb-1">PRINSIP 03</span>
+                                <strong class="text-zinc-900 dark:text-white block mb-1">Tangga Pertumbuhan Mulus</strong>
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[10px] leading-relaxed">
+                                    Kode Project OS (Laravel 13, strict ULID, cursor pagination) bersifat portabel. Anda dapat memindahkan aplikasi dari hosting 300rb/tahun ke VPS Dedicated kapan saja dalam 5 menit tanpa merombak kode.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- 3. Monolith vs Decoupled Assessment -->
                 @php

@@ -48,21 +48,7 @@ class LandingPageSeeder extends Seeder
                         'id' => 'Konsultasi Proyek Dedicated Studio',
                         'en' => 'Dedicated Engineering Studio'
                     ],
-                    'cta_link' => '#dual-track-matrix'
-                ]
-            ],
-            [
-                'type' => 'architecture_pricing',
-                'is_active' => true,
-                'data' => [
-                    'headline' => [
-                        'id' => 'MATRIKS INVESTASI & LISENSI REKAYASA SISTEM // NERIAH PRO',
-                        'en' => 'SOFTWARE ARCHITECTURE & LICENSING MATRIX // NERIAH PRO'
-                    ],
-                    'subheadline' => [
-                        'id' => 'Bandingkan transparansi lisensi digital retail mandiri (Self-Service) hingga koding penuh turnkey Studio Monolith MVP.',
-                        'en' => 'Standardized engineering investment for founders: From instant self-service blueprints to full turnkey Monolith MVP contracts.'
-                    ],
+                    'cta_link' => '/pricing'
                 ]
             ]
         ];

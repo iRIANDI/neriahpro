@@ -90,11 +90,18 @@ class PageController extends Controller
             abort(404);
         }
 
-        // Hard filter: ensure feature_grid and product_grid are completely purged from plugins array
+        // Hard filter: ensure feature_grid, product_grid, and redundant pricing on homepage are purged
         if (! empty($page->plugins) && is_array($page->plugins)) {
-            $page->plugins = array_values(array_filter($page->plugins, function ($item) {
+            $page->plugins = array_values(array_filter($page->plugins, function ($item) use ($slug) {
                 $type = is_array($item) ? ($item['type'] ?? $item['plugin_type'] ?? '') : ($item->type ?? $item->plugin_type ?? '');
-                return !in_array($type, ['feature_grid', 'product_grid']);
+                if (in_array($type, ['feature_grid', 'product_grid'])) {
+                    return false;
+                }
+                // Strictly isolate full pricing to /pricing page; eliminate duplicate pricing island on homepage
+                if ($slug === 'home' && in_array($type, ['architecture_pricing', 'pricing_section'])) {
+                    return false;
+                }
+                return true;
             }));
         }
 

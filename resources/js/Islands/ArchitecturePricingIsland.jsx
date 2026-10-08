@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Check, 
@@ -29,7 +29,8 @@ import {
   Server, 
   Cpu,
   CreditCard,
-  ExternalLink
+  ExternalLink,
+  ShoppingBag
 } from 'lucide-react';
 
 /**
@@ -123,6 +124,37 @@ export default function ArchitecturePricingIsland({
   // Dynamic feature flag & admin toggle for CV Pro module switcher
   const isCvProEnabled = Boolean(featureFlags?.enable_cv_pro) && Boolean(featureFlags?.pricing_show_cv_tab);
   const [activeTab, setActiveTab] = useState('software'); // 'software' | 'cv'
+
+  // Pricing Section Tab: 'retail' | 'project' | 'matrix' | 'faq'
+  const [pricingSectionTab, setPricingSectionTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      if (['retail', 'instant'].includes(hash)) return 'retail';
+      if (['project', 'studio'].includes(hash)) return 'project';
+      if (['matrix', 'comparison'].includes(hash)) return 'matrix';
+      if (['faq', 'faqs'].includes(hash)) return 'faq';
+    }
+    return 'retail';
+  });
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      if (['retail', 'instant'].includes(hash)) setPricingSectionTab('retail');
+      else if (['project', 'studio'].includes(hash)) setPricingSectionTab('project');
+      else if (['matrix', 'comparison'].includes(hash)) setPricingSectionTab('matrix');
+      else if (['faq', 'faqs'].includes(hash)) setPricingSectionTab('faq');
+    };
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  const switchPricingTab = (tab) => {
+    setPricingSectionTab(tab);
+    if (typeof window !== 'undefined' && window.history?.replaceState) {
+      window.history.replaceState(null, '', `#${tab}`);
+    }
+  };
 
   // Modal State for Capacity Reservation & Direct Selection
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -593,9 +625,108 @@ export default function ArchitecturePricingIsland({
               </p>
             </div>
 
-            <div className="mb-16 sm:mb-20">
-              {/* 2. PUNCHY & STREAMLINED 100% SELF-SERVICE NOTICE */}
-            <div className="mb-6 sm:mb-8 p-3.5 sm:p-4 bg-amber-500/10 border border-amber-500/30 text-zinc-900 dark:text-zinc-100 rounded-none shadow-xs">
+            {/* 2. DYNAMIC 4-TAB NAVIGATION SWITCHER (RETAIL | STUDIO | MATRIX | FAQ) */}
+            <div className="flex justify-center mb-8 sm:mb-10">
+              <div className="grid grid-cols-2 lg:grid-cols-4 p-1.5 bg-zinc-200/80 dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs font-mono text-xs w-full max-w-4xl gap-1.5">
+                
+                {/* TAB 1: RETAIL */}
+                <button
+                  type="button"
+                  id="tab-btn-retail"
+                  onClick={() => switchPricingTab('retail')}
+                  className={`px-3 py-3 font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer ${
+                    pricingSectionTab === 'retail'
+                      ? 'bg-emerald-600 text-black shadow-xs font-mono'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60'
+                  }`}
+                >
+                  <ShoppingBag className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{isEn ? '01. Retail Licenses' : '01. Paket Retail'}</span>
+                  <span className={`hidden sm:inline-block px-1.5 py-0.2 text-[9px] font-bold ${
+                    pricingSectionTab === 'retail' ? 'bg-black/20 text-black' : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                  }`}>
+                    {isEn ? 'SELF-SERVICE' : 'MANDIRI'}
+                  </span>
+                </button>
+
+                {/* TAB 2: PROJECT STUDIO */}
+                <button
+                  type="button"
+                  id="tab-btn-project"
+                  onClick={() => switchPricingTab('project')}
+                  className={`px-3 py-3 font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer ${
+                    pricingSectionTab === 'project'
+                      ? 'bg-zinc-900 text-white dark:bg-white dark:text-black shadow-xs font-mono'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60'
+                  }`}
+                >
+                  <Rocket className="w-4 h-4 shrink-0 text-emerald-500 dark:text-emerald-600" />
+                  <span className="truncate">{isEn ? '02. Project Studio' : '02. Paket Studio'}</span>
+                  <span className={`hidden sm:inline-block px-1.5 py-0.2 text-[9px] font-bold ${
+                    pricingSectionTab === 'project' 
+                      ? 'bg-emerald-500 text-black' 
+                      : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                  }`}>
+                    {isEn ? 'TURNKEY' : 'KODING'}
+                  </span>
+                </button>
+
+                {/* TAB 3: MATRIX */}
+                <button
+                  type="button"
+                  id="tab-btn-matrix"
+                  onClick={() => switchPricingTab('matrix')}
+                  className={`px-3 py-3 font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer ${
+                    pricingSectionTab === 'matrix'
+                      ? 'bg-emerald-600 text-black shadow-xs font-mono'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60'
+                  }`}
+                >
+                  <Layers className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{isEn ? '03. Comparison' : '03. Matriks'}</span>
+                  <span className={`hidden sm:inline-block px-1.5 py-0.2 text-[9px] font-bold ${
+                    pricingSectionTab === 'matrix' ? 'bg-black/20 text-black' : 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400'
+                  }`}>
+                    7 PILAR
+                  </span>
+                </button>
+
+                {/* TAB 4: FAQ */}
+                <button
+                  type="button"
+                  id="tab-btn-faq"
+                  onClick={() => switchPricingTab('faq')}
+                  className={`px-3 py-3 font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer ${
+                    pricingSectionTab === 'faq'
+                      ? 'bg-emerald-600 text-black shadow-xs font-mono'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60'
+                  }`}
+                >
+                  <HelpCircle className="w-4 h-4 shrink-0" />
+                  <span className="truncate">04. FAQ Project OS</span>
+                  <span className={`hidden sm:inline-block px-1.5 py-0.2 text-[9px] font-bold ${
+                    pricingSectionTab === 'faq' ? 'bg-black/20 text-black' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                  }`}>
+                    19 FAQ
+                  </span>
+                </button>
+
+              </div>
+            </div>
+
+            {/* ========================================================================= */}
+            {/* TAB 1: RETAIL SOFTWARE FACTORY OS (SELF-SERVICE BLUEPRINTS)               */}
+            {/* ========================================================================= */}
+            {pricingSectionTab === 'retail' && (
+              <motion.div
+                key="retail-tab-content"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="mb-16 sm:mb-20"
+              >
+                {/* 2. PUNCHY & STREAMLINED 100% SELF-SERVICE NOTICE */}
+                <div className="mb-6 sm:mb-8 p-3.5 sm:p-4 bg-amber-500/10 border border-amber-500/30 text-zinc-900 dark:text-zinc-100 rounded-none shadow-xs">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-1.5">
                 <div className="flex items-center gap-2">
                   <span className="px-1.5 py-0.5 bg-amber-500 text-black font-black text-[10px] font-mono rounded-none">
@@ -936,10 +1067,42 @@ export default function ArchitecturePricingIsland({
               </div>
             </div>
           </div>
-        </div>
 
-        {/* 3. NERIAH PRO CUSTOM ENGINEERING STUDIO (FULL DEVELOPMENT CONTRACTS BY NERIAH PRO) */}
-        <div className="mb-20">
+          {/* Quick Switcher to Studio */}
+          <div className="mt-8 p-4 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Rocket className="w-5 h-5 text-emerald-500 shrink-0" />
+              <div className="text-xs">
+                <span className="font-bold text-zinc-900 dark:text-white block font-sans">
+                  {isEn ? 'Need our engineers to code and build the entire system turnkey?' : 'Butuh tim Neriah Pro yang mengoding dan mendeploy sistem 100% turnkey?'}
+                </span>
+                <span className="text-zinc-500 text-[11px]">
+                  {isEn ? 'Explore our dedicated Full MVP Monolith & UMKM Starter packages.' : 'Pelajari paket Full Monolith MVP & Program Subsidi UMKM Starter kami.'}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => switchPricingTab('project')}
+              className="px-4 py-2 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-mono text-xs font-bold uppercase tracking-wider rounded-none shrink-0 transition cursor-pointer"
+            >
+              {isEn ? 'View Studio Packages →' : 'Lihat Paket Studio →'}
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 2: NERIAH PRO CUSTOM ENGINEERING STUDIO (FULL DEVELOPMENT CONTRACTS) */}
+      {/* ========================================================================= */}
+      {pricingSectionTab === 'project' && (
+        <motion.div
+          key="project-tab-content"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="mb-20"
+        >
           <div className="text-center max-w-3xl mx-auto mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold mb-3 rounded-none">
               <Crown className="w-3.5 h-3.5" />
@@ -1255,10 +1418,42 @@ export default function ArchitecturePricingIsland({
               </div>
             </div>
           </div>
-        </div>
 
-        {/* 3. TECHNICAL SPECIFICATION COMPARISON MATRIX */}
-        <div className="mb-16 border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-none shadow-xs">
+          {/* Quick Switcher to Retail Licenses */}
+          <div className="mt-8 p-4 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <ShoppingBag className="w-5 h-5 text-emerald-500 shrink-0" />
+              <div className="text-xs">
+                <span className="font-bold text-zinc-900 dark:text-white block font-sans">
+                  {isEn ? 'Already have an in-house engineering team to write code?' : 'Sudah memiliki tim programmer in-house sendiri untuk mengoding?'}
+                </span>
+                <span className="text-zinc-500 text-[11px]">
+                  {isEn ? 'Save tens of millions with our self-service Instant Architectural Blueprints.' : 'Hemat puluhan juta rupiah dengan Lisensi Retail Instant Blueprint mandiri kami.'}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => switchPricingTab('retail')}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-black font-mono text-xs font-bold uppercase tracking-wider rounded-none shrink-0 transition cursor-pointer"
+            >
+              {isEn ? 'View Retail Licenses →' : 'Lihat Lisensi Retail →'}
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 3: TECHNICAL SPECIFICATION COMPARISON MATRIX                          */}
+      {/* ========================================================================= */}
+      {pricingSectionTab === 'matrix' && (
+        <motion.div
+          key="matrix-tab-content"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="mb-16 border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-none shadow-xs"
+        >
           <div className="mb-6">
             <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white flex items-center gap-2 font-sans">
               <Layers className="w-5 h-5 text-emerald-500" />
@@ -1747,10 +1942,20 @@ export default function ArchitecturePricingIsland({
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
+      )}
 
-        {/* 4. FREQUENTLY ASKED QUESTIONS (FAQ) ACCORDION */}
-        <div className="max-w-4xl mx-auto mb-16">
+      {/* ========================================================================= */}
+      {/* TAB 4: FREQUENTLY ASKED QUESTIONS (FAQ) ACCORDION                         */}
+      {/* ========================================================================= */}
+      {pricingSectionTab === 'faq' && (
+        <motion.div
+          key="faq-tab-content"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="max-w-4xl mx-auto mb-16"
+        >
           <div className="text-center mb-8">
             <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
               {isEn ? 'FREQUENTLY ASKED QUESTIONS' : 'PERTANYAAN YANG SERING DIAJUKAN (FAQ)'}
@@ -1794,7 +1999,8 @@ export default function ArchitecturePricingIsland({
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
+      )}
 
         {/* 5. BOTTOM FAST CONTACT CALLOUT */}
         <div className="p-8 sm:p-10 bg-zinc-900 dark:bg-zinc-900/90 border-2 border-zinc-800 text-white text-center rounded-none shadow-xl relative overflow-hidden">

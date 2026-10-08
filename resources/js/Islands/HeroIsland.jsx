@@ -194,14 +194,13 @@ export default function HeroIsland({
 
           {/* Dual Action Primary CTA Buttons */}
           <div className="flex flex-wrap items-center gap-4 mb-8 font-mono text-xs uppercase tracking-wider font-bold">
-            <button
-              type="button"
-              onClick={() => scrollTo('dual-track-matrix')}
+            <a
+              href="/pricing"
               className="bg-emerald-600 hover:bg-emerald-500 text-black font-black py-3.5 px-6 rounded-none transition flex items-center gap-2 cursor-pointer shadow-xs"
             >
               <ShoppingBag className="w-4 h-4 text-black" />
-              <span>{isEn ? `Explore Retail Licenses ($6 - $99) ↓` : `Jelajahi Lisensi Retail (Rp 99k - 1,49jt) ↓`}</span>
-            </button>
+              <span>{isEn ? `Explore Pricing & Packages →` : `Jelajahi Paket & Harga Investasi →`}</span>
+            </a>
 
             <button
               type="button"
@@ -326,12 +325,8 @@ export default function HeroIsland({
 
               <div>
                 <a
-                  href="#pricing-matrix"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    scrollTo('pricing-matrix');
-                  }}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-mono font-black text-xs uppercase py-3.5 px-5 rounded-none transition flex items-center justify-center gap-2 cursor-pointer"
+                  href="/pricing#retail"
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-mono font-black text-xs uppercase py-3.5 px-5 rounded-none transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                 >
                   <ShoppingBag className="w-4 h-4 text-black" />
                   <span>{isEn ? 'View Retail Packages (Spark, Lite, Pro, Ultimate) →' : 'Lihat Paket Lisensi Retail (Spark, Lite, Pro, Ultimate) →'}</span>
@@ -405,15 +400,21 @@ export default function HeroIsland({
                 </div>
               </div>
 
-              <div>
+              <div className="flex flex-col sm:flex-row gap-2.5">
                 <button
                   type="button"
                   onClick={() => scrollTo('interactive-discovery')}
-                  className="w-full bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-mono font-bold text-xs uppercase py-3.5 px-5 rounded-none transition flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-mono font-bold text-xs uppercase py-3.5 px-4 rounded-none transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                 >
                   <Rocket className="w-4 h-4 text-emerald-500" />
-                  <span>{isEn ? 'Scope Studio Project & Get Cost Estimate ↓' : 'Rancang Scope Proyek Studio & Estimasi Biaya ↓'}</span>
+                  <span>{isEn ? 'Scope Studio Project ↓' : 'Rancang Scope Studio ↓'}</span>
                 </button>
+                <a
+                  href="/pricing#studio"
+                  className="border-2 border-zinc-900 dark:border-zinc-300 hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-black text-zinc-900 dark:text-zinc-100 font-mono font-bold text-xs uppercase py-3.5 px-4 rounded-none transition flex items-center justify-center gap-1.5"
+                >
+                  <span>{isEn ? 'Studio Tiers →' : 'Paket Studio →'}</span>
+                </a>
               </div>
             </div>
 

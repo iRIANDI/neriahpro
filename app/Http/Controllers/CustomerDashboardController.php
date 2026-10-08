@@ -75,6 +75,27 @@ class CustomerDashboardController extends Controller
                 || in_array($bp->project_status, ['Retail License', 'Self-Service', 'Instant Blueprint'], true);
         });
 
+        // Filter active pending orders so customer can resume or verify payment
+        $pendingRetailOrders = $transactions->filter(function ($tx) {
+            if ($tx->status !== 'pending') return false;
+            $orderId = $tx->midtrans_order_id ?? '';
+            return str_starts_with($orderId, 'NPRO-LC-')
+                || str_starts_with($orderId, 'NPRO-LIC-')
+                || ($tx->customer_details['is_retail'] ?? false)
+                || in_array($tx->customer_details['package_tier'] ?? '', \App\Support\PricingRegistry::getSelfServiceIds(), true);
+        });
+
+        $pendingStudioOrders = $transactions->filter(function ($tx) {
+            if ($tx->status !== 'pending') return false;
+            $orderId = $tx->midtrans_order_id ?? '';
+            return str_starts_with($orderId, 'NPRO-DP-')
+                || str_starts_with($orderId, 'NP-BP-')
+                || str_starts_with($orderId, 'NP-CART-')
+                || str_starts_with($orderId, 'NPRO-PK-')
+                || str_starts_with($orderId, 'NPRO-PKG-')
+                || ($tx->customer_details['type'] ?? '') === 'blueprint_dp';
+        });
+
         // Compute active metrics
         $totalBlueprints = $blueprints->count();
         $totalRetail = $retailLicenses->count();
@@ -86,6 +107,8 @@ class CustomerDashboardController extends Controller
             'blueprints' => $blueprints,
             'retailLicenses' => $retailLicenses,
             'studioProjects' => $studioProjects,
+            'pendingRetailOrders' => $pendingRetailOrders,
+            'pendingStudioOrders' => $pendingStudioOrders,
             'transactions' => $transactions,
             'hostingAssets' => $hostingAssets,
             'globalSettings' => $globalSettings,
@@ -97,5 +120,78 @@ class CustomerDashboardController extends Controller
                 'total_spend_idr' => (float) $transactions->whereIn('status', ['settlement', 'capture', 'success'])->sum('total_idr'),
             ],
         ]);
+    }
+
+    /**
+     * Check transaction status with Midtrans API and self-heal / fulfill if settled.
+     */
+    public function syncTransaction(Request $request, string $id): \Illuminate\Http\RedirectResponse
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return redirect()->route('customer.login');
+        }
+
+        $email = strtolower(trim($user->email ?? ''));
+        $tx = Transaction::where('id', $id)
+            ->where(function ($q) use ($user, $email) {
+                $q->where('user_id', $user->id);
+                if ($email) {
+                    $q->orWhere(function ($sub) use ($email) {
+                        $sub->whereNotNull('customer_details')
+                            ->where('customer_details', 'LIKE', '%"' . $email . '"%');
+                    });
+                }
+            })->firstOrFail();
+
+        // 1. Sandbox simulation bypass for developer / sandbox testing
+        if (!config('midtrans.is_production', false) && ($request->boolean('simulate') || $request->input('action') === 'simulate')) {
+            $tx->update([
+                'status' => 'settlement',
+                'user_id' => $user->id,
+            ]);
+            $request->merge([
+                'gross_amount' => $tx->total_idr,
+                'transaction_id' => 'SIM-' . time(),
+            ]);
+            app(\App\Http\Controllers\MidtransWebhookController::class)->fulfillOrder($tx->midtrans_order_id, $request);
+
+            return redirect()->route('customer.dashboard')->with('success', 'Simulasi pembayaran Sandbox berhasil! Lisensi digital telah resmi diaktifkan.');
+        }
+
+        // 2. Query Midtrans API directly for live status
+        $statusCheck = \App\Services\MidtransSnapService::checkStatus($tx->midtrans_order_id);
+
+        if ($statusCheck['success']) {
+            $data = $statusCheck['data'] ?? [];
+            $trxStatus = $data['transaction_status'] ?? null;
+            $fraudStatus = $data['fraud_status'] ?? null;
+
+            if (in_array($trxStatus, ['settlement', 'capture']) && ($fraudStatus !== 'challenge')) {
+                $tx->update([
+                    'status' => 'settlement',
+                    'midtrans_transaction_id' => $data['transaction_id'] ?? $tx->midtrans_transaction_id,
+                    'user_id' => $user->id,
+                ]);
+
+                $request->merge([
+                    'gross_amount' => $data['gross_amount'] ?? $tx->total_idr,
+                    'transaction_id' => $data['transaction_id'] ?? $tx->midtrans_transaction_id,
+                ]);
+
+                // Fulfill order & provision blueprint / licenses
+                app(\App\Http\Controllers\MidtransWebhookController::class)->fulfillOrder($tx->midtrans_order_id, $request);
+
+                return redirect()->route('customer.dashboard')->with('success', 'Pembayaran berhasil diverifikasi oleh Midtrans Escrow! Lisensi digital Anda telah aktif.');
+            } elseif (in_array($trxStatus, ['expire', 'cancel', 'deny'])) {
+                $tx->update(['status' => $trxStatus]);
+
+                return redirect()->route('customer.dashboard')->with('warning', 'Status pembayaran di Midtrans adalah: ' . strtoupper($trxStatus) . '. Silakan buat pesanan baru jika ingin melanjutkan.');
+            } else {
+                return redirect()->route('customer.dashboard')->with('info', 'Status tagihan saat ini masih PENDING (Menunggu Pembayaran). Silakan selesaikan pembayaran sesuai panduan Midtrans.');
+            }
+        }
+
+        return redirect()->route('customer.dashboard')->with('warning', 'Tidak dapat memeriksa gateway Midtrans saat ini: ' . ($statusCheck['error'] ?? 'Koneksi gagal.'));
     }
 }

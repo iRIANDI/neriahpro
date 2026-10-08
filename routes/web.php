@@ -74,6 +74,7 @@ Route::get('/invite/{slug}', \App\Livewire\ClientInviteForm::class)->name('invit
 
 // Customer & Client Dashboard Portal
 Route::get('/customer/dashboard', [\App\Http\Controllers\CustomerDashboardController::class, 'index'])->name('customer.dashboard');
+Route::post('/customer/transaction/{id}/sync', [\App\Http\Controllers\CustomerDashboardController::class, 'syncTransaction'])->name('customer.transaction.sync')->middleware('auth');
 Route::get('/portal', fn () => redirect()->route('customer.dashboard'))->name('portal');
 
 // Customer Passwordless OTP Authentication Routes

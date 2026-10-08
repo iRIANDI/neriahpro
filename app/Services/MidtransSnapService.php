@@ -102,4 +102,51 @@ class MidtransSnapService
             ];
         }
     }
+
+    /**
+     * Check transaction status directly from Midtrans API.
+     */
+    public static function checkStatus(string $orderId): array
+    {
+        $serverKey = config('midtrans.server_key');
+        $isProduction = config('midtrans.is_production', false);
+        $baseUrl = $isProduction ? 'https://api.midtrans.com/v2/' : 'https://api.sandbox.midtrans.com/v2/';
+
+        if (empty($serverKey)) {
+            return [
+                'success' => false,
+                'error' => 'MIDTRANS_SERVER_KEY is not configured in .env',
+            ];
+        }
+
+        try {
+            $authHeader = 'Basic ' . base64_encode($serverKey . ':');
+            $response = Http::withHeaders([
+                'Authorization' => $authHeader,
+                'Accept' => 'application/json',
+            ])->timeout(10)->get($baseUrl . $orderId . '/status');
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'status_code' => $response->status(),
+                    'data' => $response->json(),
+                ];
+            }
+
+            return [
+                'success' => false,
+                'status_code' => $response->status(),
+                'error' => $response->json()['status_message'] ?? 'Midtrans status check failed (' . $response->status() . ')',
+                'data' => $response->json(),
+            ];
+        } catch (\Throwable $e) {
+            Log::error("Midtrans checkStatus Exception for {$orderId}: " . $e->getMessage());
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
 }

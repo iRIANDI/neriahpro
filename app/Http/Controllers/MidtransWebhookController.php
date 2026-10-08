@@ -114,7 +114,7 @@ class MidtransWebhookController extends Controller
      * Fulfill blueprint project or contract based on order ID.
      * Consumes voucher quota strictly when payment is confirmed settled.
      */
-    protected function fulfillOrder(string $orderId, Request $request): void
+    public function fulfillOrder(string $orderId, Request $request): void
     {
         $processedVouchers = [];
 
@@ -304,17 +304,20 @@ class MidtransWebhookController extends Controller
         // 5. Retail Digital Licenses & Package consultation orders: NPRO-LC-, NPRO-LIC-, NPRO-PK-, NPRO-PKG-
         if (str_starts_with($orderId, 'NPRO-LC-') || str_starts_with($orderId, 'NPRO-LIC-') || str_starts_with($orderId, 'NPRO-PK-') || str_starts_with($orderId, 'NPRO-PKG-')) {
             $cachedOrder = Cache::get('pricing_order_' . $orderId);
+            $existingTx = \App\Models\Transaction::where('midtrans_order_id', $orderId)->first();
+            $txDetails = $existingTx?->customer_details ?? [];
+
             $parts = explode('-', $orderId);
-            $leadId = $parts[2] ?? null;
+            $leadId = $parts[2] ?? ($txDetails['lead_id'] ?? null);
             $lead = $leadId ? \App\Models\LeadContact::find($leadId) : null;
 
-            $email = $cachedOrder['email'] ?? $lead?->email;
-            $name = $cachedOrder['name'] ?? $lead?->name ?? 'Licensed Client';
-            $phone = $cachedOrder['phone'] ?? $lead?->phone;
-            $company = $cachedOrder['company'] ?? $lead?->company_name ?? ($name . ' Project');
-            $packageTier = $cachedOrder['package_tier'] ?? $lead?->metadata['package_interest'] ?? 'retail_lite';
-            $isRetail = str_starts_with($orderId, 'NPRO-LC-') || str_starts_with($orderId, 'NPRO-LIC-') || ($cachedOrder['is_retail'] ?? false);
-            $grossAmount = $cachedOrder['gross_amount'] ?? $request->input('gross_amount', 0);
+            $email = $cachedOrder['email'] ?? $txDetails['email'] ?? $lead?->email ?? $existingTx?->user?->email;
+            $name = $cachedOrder['name'] ?? $txDetails['name'] ?? $lead?->name ?? $existingTx?->user?->name ?? 'Licensed Client';
+            $phone = $cachedOrder['phone'] ?? $txDetails['phone'] ?? $lead?->phone;
+            $company = $cachedOrder['company'] ?? $txDetails['company'] ?? $lead?->company_name ?? ($name . ' Project');
+            $packageTier = $cachedOrder['package_tier'] ?? $txDetails['package_tier'] ?? $lead?->metadata['package_interest'] ?? 'retail_lite';
+            $isRetail = str_starts_with($orderId, 'NPRO-LC-') || str_starts_with($orderId, 'NPRO-LIC-') || ($cachedOrder['is_retail'] ?? false) || ($txDetails['is_retail'] ?? false);
+            $grossAmount = $cachedOrder['gross_amount'] ?? $existingTx?->total_idr ?? $request->input('gross_amount', 0);
 
             if ($email) {
                 // Find or create customer User
@@ -330,26 +333,30 @@ class MidtransWebhookController extends Controller
                     $user->assignRole('client_retail');
                 }
 
-                // Provision VisionBlueprint representing their active license/project
-                $slug = \Illuminate\Support\Str::slug($company . '-' . $packageTier . '-' . \Illuminate\Support\Str::random(5));
-                $blueprint = VisionBlueprint::create([
-                    'slug' => $slug,
-                    'nama_bisnis' => $company,
-                    'client_name' => $name,
-                    'email' => $email,
-                    'phone' => $phone,
-                    'project_status' => $isRetail ? 'Retail License' : 'In Development (DP Paid)',
-                    'is_free_grant' => false,
-                    'user_metadata' => [
-                        'user_id' => $user->id,
-                        'retail_tier' => $packageTier,
-                        'package_tier' => $packageTier,
-                        'order_id' => $orderId,
-                        'gross_amount' => $grossAmount,
-                        'purchased_at' => now()->toIso8601String(),
-                        'lead_id' => $leadId,
-                    ],
-                ]);
+                // Check for existing blueprint to prevent duplicate creation
+                $blueprint = VisionBlueprint::where('user_metadata->order_id', $orderId)->first();
+
+                if (!$blueprint) {
+                    $slug = \Illuminate\Support\Str::slug($company . '-' . $packageTier . '-' . \Illuminate\Support\Str::random(5));
+                    $blueprint = VisionBlueprint::create([
+                        'slug' => $slug,
+                        'nama_bisnis' => $company,
+                        'client_name' => $name,
+                        'email' => $email,
+                        'phone' => $phone,
+                        'project_status' => $isRetail ? 'Retail License' : 'In Development (DP Paid)',
+                        'is_free_grant' => false,
+                        'user_metadata' => [
+                            'user_id' => $user->id,
+                            'retail_tier' => $packageTier,
+                            'package_tier' => $packageTier,
+                            'order_id' => $orderId,
+                            'gross_amount' => $grossAmount,
+                            'purchased_at' => now()->toIso8601String(),
+                            'lead_id' => $leadId,
+                        ],
+                    ]);
+                }
 
                 // Record / update Transaction for Retail License
                 \App\Models\Transaction::updateOrCreate(

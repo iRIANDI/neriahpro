@@ -178,6 +178,74 @@
             }
         };
 
+        window.payRetailSnap = function(token) {
+            if (!token) {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'TOKEN TIDAK DITEMUKAN',
+                        message: 'Token Midtrans Snap tidak tersedia. Silakan hubungi tim kami atau gunakan tombol Cek Status.'
+                    });
+                } else {
+                    alert('Token Midtrans Snap tidak ditemukan.');
+                }
+                return;
+            }
+
+            if (window.snap && typeof window.snap.pay === 'function') {
+                window.snap.pay(token, {
+                    onSuccess: function(result) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'success',
+                                title: 'PEMBAYARAN LUNAS!',
+                                message: 'Pembayaran lisensi berhasil diverifikasi. Memperbarui lisensi digital Anda...',
+                                duration: 3500
+                            });
+                        }
+                        setTimeout(function() { window.location.reload(); }, 1800);
+                    },
+                    onPending: function(result) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'warning',
+                                title: 'MENUNGGU PEMBAYARAN',
+                                message: 'Instruksi pembayaran telah dibuat. Silakan selesaikan pembayaran.',
+                                duration: 5000
+                            });
+                        }
+                        setTimeout(function() { window.location.reload(); }, 2200);
+                    },
+                    onError: function(result) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: 'PEMBAYARAN DIBATALKAN',
+                                message: 'Transaksi pembayaran lisensi belum diselesaikan.'
+                            });
+                        }
+                    },
+                    onClose: function() {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'info',
+                                title: 'MODAL DITUTUP',
+                                message: 'Anda dapat menekan tombol bayar kembali kapan saja.'
+                            });
+                        }
+                    }
+                });
+            } else {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'MIDTRANS SNAP ERROR',
+                        message: 'Midtrans Snap SDK gagal dimuat. Periksa koneksi internet Anda.'
+                    });
+                }
+            }
+        };
+
         if (localStorage.getItem('neriah_theme') === 'dark' || (!localStorage.getItem('neriah_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -309,6 +377,44 @@
     <!-- 2. MAIN MODULAR MULTI-PANE CONTAINER (ANTI-FATIGUE SCROLL ARCHITECTURE) -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
+        <!-- Solid Brutalist Session Alerts -->
+        @if(session('success'))
+            <div class="mb-5 p-4 border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 font-mono text-xs flex items-center justify-between rounded-none shadow-xs">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-sm">✓</span>
+                    <span>{{ session('success') }}</span>
+                </div>
+                <button type="button" @click="$el.parentElement.remove()" class="text-xs font-bold hover:opacity-75 cursor-pointer">✕</button>
+            </div>
+        @endif
+        @if(session('warning'))
+            <div class="mb-5 p-4 border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 font-mono text-xs flex items-center justify-between rounded-none shadow-xs">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-sm">⚠️</span>
+                    <span>{{ session('warning') }}</span>
+                </div>
+                <button type="button" @click="$el.parentElement.remove()" class="text-xs font-bold hover:opacity-75 cursor-pointer">✕</button>
+            </div>
+        @endif
+        @if(session('info'))
+            <div class="mb-5 p-4 border-2 border-cyan-500 bg-cyan-50 dark:bg-cyan-950/40 text-cyan-800 dark:text-cyan-200 font-mono text-xs flex items-center justify-between rounded-none shadow-xs">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-sm">ℹ️</span>
+                    <span>{{ session('info') }}</span>
+                </div>
+                <button type="button" @click="$el.parentElement.remove()" class="text-xs font-bold hover:opacity-75 cursor-pointer">✕</button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-5 p-4 border-2 border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 font-mono text-xs flex items-center justify-between rounded-none shadow-xs">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-sm">❌</span>
+                    <span>{{ session('error') }}</span>
+                </div>
+                <button type="button" @click="$el.parentElement.remove()" class="text-xs font-bold hover:opacity-75 cursor-pointer">✕</button>
+            </div>
+        @endif
+
         <!-- MODULAR HORIZONTAL / VERTICAL NAVIGATION PILLS -->
         <nav class="flex items-center gap-1.5 sm:gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-6 overflow-x-auto font-mono text-xs no-scrollbar">
             <!-- Tab 1: Overview -->
@@ -354,6 +460,11 @@
                 <span class="px-1.5 py-0.2 bg-zinc-200/50 dark:bg-zinc-800 text-[10px] font-bold">
                     {{ $metrics['total_retail'] }}
                 </span>
+                @if(isset($pendingRetailOrders) && $pendingRetailOrders->isNotEmpty())
+                    <span class="px-1.5 py-0.2 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold animate-pulse border border-amber-500/40">
+                        {{ $pendingRetailOrders->count() }} PENDING
+                    </span>
+                @endif
             </button>
 
             <!-- Tab 4: Invoices & Receipts -->
@@ -452,9 +563,15 @@
                     <span class="text-2xl sm:text-3xl font-black font-mono text-cyan-600 dark:text-cyan-400 mt-1 block">
                         {{ $metrics['total_retail'] }}
                     </span>
-                    <span class="text-[10px] text-zinc-500 font-sans mt-0.5 block">
-                        {{ $isEn ? 'Lifetime downloads ready →' : 'Akses unduh seumur hidup →' }}
-                    </span>
+                    @if(isset($pendingRetailOrders) && $pendingRetailOrders->isNotEmpty())
+                        <span class="text-[10px] text-amber-500 font-mono font-bold mt-0.5 block animate-pulse">
+                            ⏳ {{ $pendingRetailOrders->count() }} {{ $isEn ? 'order awaiting payment →' : 'pesanan menunggu bayar →' }}
+                        </span>
+                    @else
+                        <span class="text-[10px] text-zinc-500 font-sans mt-0.5 block">
+                            {{ $isEn ? 'Lifetime downloads ready →' : 'Akses unduh seumur hidup →' }}
+                        </span>
+                    @endif
                 </div>
 
                 <div class="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none shadow-xs cursor-pointer hover:border-emerald-500 transition" @click="setTab('projects')">
@@ -548,9 +665,30 @@
                     </div>
 
                     @if($retailLicenses->isEmpty())
-                        <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-dashed border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
-                            {{ $isEn ? 'No retail licenses registered to this account.' : 'Belum ada lisensi retail terdaftar di akun ini.' }}
-                        </div>
+                        @if(isset($pendingRetailOrders) && $pendingRetailOrders->isNotEmpty())
+                            @php $firstPending = $pendingRetailOrders->first(); @endphp
+                            <div class="p-3 bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-2">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1 text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold uppercase">
+                                        <span>⏳</span>
+                                        <span>{{ $isEn ? 'AWAITING PAYMENT' : 'MENUNGGU PEMBAYARAN' }}</span>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-zinc-900 dark:text-white truncate">
+                                        {{ $firstPending->customer_details['display_package'] ?? $firstPending->customer_details['package_tier'] ?? 'Lisensi Digital Retail' }}
+                                    </h4>
+                                    <span class="text-[10px] font-mono text-zinc-500 block">
+                                        Rp {{ number_format((float) $firstPending->total_idr, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                                <button type="button" @click="setTab('licenses')" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-mono text-[11px] font-bold uppercase shrink-0 transition cursor-pointer">
+                                    {{ $isEn ? 'PAY / SYNC →' : 'BAYAR / CEK →' }}
+                                </button>
+                            </div>
+                        @else
+                            <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-dashed border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+                                {{ $isEn ? 'No retail licenses registered to this account.' : 'Belum ada lisensi retail terdaftar di akun ini.' }}
+                            </div>
+                        @endif
                     @else
                         @php $firstRetail = $retailLicenses->first(); @endphp
                         <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2">
@@ -864,20 +1002,119 @@
                 </span>
             </div>
 
+            @if(isset($pendingRetailOrders) && $pendingRetailOrders->isNotEmpty())
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 bg-amber-500 rounded-none animate-pulse"></span>
+                        <h3 class="text-xs font-mono font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">
+                            {{ $isEn ? 'PENDING LICENSE ORDERS AWAITING SETTLEMENT' : 'PESANAN LISENSI DIGITAL MENUNGGU PEMBAYARAN' }} ({{ $pendingRetailOrders->count() }})
+                        </h3>
+                    </div>
+
+                    @foreach($pendingRetailOrders as $pendingTx)
+                        @php
+                            $pDetails = $pendingTx->customer_details ?? [];
+                            $snapToken = $pDetails['snap_token'] ?? null;
+                            $pkgName = $pDetails['display_package'] ?? $pDetails['package_tier'] ?? 'Lisensi Retail';
+                            $companyName = $pDetails['company'] ?? ($pDetails['name'] ?? 'Proyek Mandiri');
+                        @endphp
+                        <div class="p-5 bg-amber-500/5 border-2 border-amber-500/40 rounded-none shadow-xs space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/20 pb-3">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 bg-amber-500 text-black font-mono text-[10px] font-black uppercase tracking-wider">
+                                            ⏳ {{ $isEn ? 'PENDING SETTLEMENT' : 'MENUNGGU PEMBAYARAN' }}
+                                        </span>
+                                        <span class="font-mono text-[10px] text-zinc-500">
+                                            Order ID: {{ $pendingTx->midtrans_order_id }}
+                                        </span>
+                                    </div>
+                                    <h4 class="text-base font-black text-zinc-900 dark:text-white uppercase font-sans">
+                                        {{ $pkgName }}
+                                    </h4>
+                                    <p class="text-xs text-zinc-500 font-mono mt-0.5">
+                                        Entitas: {{ $companyName }} &bull; Tanggal Order: {{ $pendingTx->created_at ? $pendingTx->created_at->format('d M Y, H:i') : 'N/A' }}
+                                    </p>
+                                </div>
+                                <div class="text-left sm:text-right">
+                                    <span class="text-[10px] font-mono text-zinc-400 uppercase block">Tagihan Nominal</span>
+                                    <span class="text-xl font-black font-mono text-zinc-900 dark:text-white">
+                                        Rp {{ number_format((float) $pendingTx->total_idr, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-white/70 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+                                <span class="font-bold text-zinc-900 dark:text-white font-mono">ℹ️ INFORMASI AKTIVASI LISENSI:</span>
+                                Berkas spesifikasi PRD 26 parameter, skema SQL DDL PostgreSQL Strict ULID, dan unduhan ZIP codebase scaffold akan otomatis terbuka di bawah ini segera setelah pembayaran dikonfirmasi oleh Midtrans.
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-2 pt-1">
+                                @if($snapToken)
+                                    <button 
+                                        type="button" 
+                                        onclick="window.payRetailSnap('{{ $snapToken }}')"
+                                        class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-mono text-xs font-black uppercase tracking-wider transition rounded-none shadow-xs cursor-pointer flex items-center gap-1.5"
+                                    >
+                                        <span>💳</span>
+                                        <span>{{ $isEn ? 'PAY NOW VIA MIDTRANS SNAP →' : 'BAYAR SEKARANG VIA MIDTRANS SNAP →' }}</span>
+                                    </button>
+                                @endif
+
+                                <form method="POST" action="{{ route('customer.transaction.sync', $pendingTx->id) }}" class="inline-block">
+                                    @csrf
+                                    <button 
+                                        type="submit" 
+                                        class="px-3.5 py-2 bg-zinc-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-mono text-xs font-bold uppercase tracking-wider transition rounded-none border border-zinc-700 cursor-pointer flex items-center gap-1.5"
+                                        title="Periksa status transaksi ke gateway Midtrans jika Anda sudah mentransfer pembayaran"
+                                    >
+                                        <span>🔄</span>
+                                        <span>{{ $isEn ? 'CHECK / SYNC STATUS' : 'CEK & SINKRONKAN STATUS' }}</span>
+                                    </button>
+                                </form>
+
+                                @if(!config('midtrans.is_production', false))
+                                    <form method="POST" action="{{ route('customer.transaction.sync', $pendingTx->id) }}" class="inline-block">
+                                        @csrf
+                                        <input type="hidden" name="simulate" value="1">
+                                        <button 
+                                            type="submit" 
+                                            class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-black uppercase tracking-wider transition rounded-none shadow-xs cursor-pointer flex items-center gap-1.5"
+                                            title="Simulasi pelunasan instan untuk pengujian mode Sandbox Developer"
+                                        >
+                                            <span>⚡</span>
+                                            <span>{{ $isEn ? 'SIMULATE SETTLEMENT (DEV)' : 'SIMULASI LUNAS (SANDBOX DEV)' }}</span>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             @if($retailLicenses->isEmpty())
                 <div class="p-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-3 rounded-none">
                     <span class="text-3xl block">📦</span>
                     <h3 class="font-bold text-sm font-mono uppercase text-zinc-900 dark:text-white">
-                        {{ $isEn ? 'NO RETAIL DIGITAL LICENSES YET' : 'BELUM ADA LISENSI DIGITAL RETAIL' }}
+                        {{ $isEn ? 'NO ACTIVE RETAIL LICENSES REGISTERED YET' : 'BELUM ADA LISENSI DIGITAL RETAIL AKTIF' }}
                     </h3>
                     <p class="text-xs text-zinc-500 max-w-md mx-auto">
-                        {{ $isEn 
-                            ? 'Get instant 26-parameter PRDs, PostgreSQL Strict ULID schemas, and complete codebase scaffolds for your engineering team to build independently.' 
-                            : 'Dapatkan spesifikasi PRD 26 parameter instan, skema SQL PostgreSQL Strict ULID, dan scaffold codebase lengkap untuk dibangun mandiri oleh tim developer Anda.' }}
+                        @if(isset($pendingRetailOrders) && $pendingRetailOrders->isNotEmpty())
+                            {{ $isEn 
+                                ? 'You have ' . $pendingRetailOrders->count() . ' pending license order(s) above awaiting payment. Complete payment or sync status to unlock your lifetime downloads immediately.' 
+                                : 'Anda memiliki ' . $pendingRetailOrders->count() . ' pesanan lisensi di atas yang sedang menunggu pembayaran. Selesaikan pembayaran atau sinkronkan status untuk langsung mengakses pusat unduhan seumur hidup.' }}
+                        @else
+                            {{ $isEn 
+                                ? 'Get instant 26-parameter PRDs, PostgreSQL Strict ULID schemas, and complete codebase scaffolds for your engineering team to build independently.' 
+                                : 'Dapatkan spesifikasi PRD 26 parameter instan, skema SQL PostgreSQL Strict ULID, dan scaffold codebase lengkap untuk dibangun mandiri oleh tim developer Anda.' }}
+                        @endif
                     </p>
-                    <a href="/pricing" class="inline-block mt-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold uppercase tracking-wider rounded-none">
-                        {{ $isEn ? 'ORDER LITE OR PRO PRD (STARTING RP 99.000) →' : 'PESAN LISENSI LITE / PRO (MULAI RP 99RB) →' }}
-                    </a>
+                    @if(!isset($pendingRetailOrders) || $pendingRetailOrders->isEmpty())
+                        <a href="/pricing" class="inline-block mt-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold uppercase tracking-wider rounded-none">
+                            {{ $isEn ? 'ORDER LITE OR PRO PRD (STARTING RP 99.000) →' : 'PESAN LISENSI LITE / PRO (MULAI RP 99RB) →' }}
+                        </a>
+                    @endif
                 </div>
             @else
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1048,13 +1285,50 @@
                                         @endif
                                     </td>
                                     <td class="p-3 text-right">
-                                        <button 
-                                            type="button" 
-                                            onclick="window.print()" 
-                                            class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 text-[10px] font-bold transition rounded-none cursor-pointer"
-                                        >
-                                            🖨️ {{ $isEn ? 'PRINT RECEIPT' : 'CETAK KWITANSI' }}
-                                        </button>
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            @if($tx->status === 'pending')
+                                                @if(!empty($tx->customer_details['snap_token']))
+                                                    <button 
+                                                        type="button" 
+                                                        onclick="window.payRetailSnap('{{ $tx->customer_details['snap_token'] }}')" 
+                                                        class="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-bold font-mono transition rounded-none cursor-pointer"
+                                                        title="Buka kembali popup Midtrans Snap"
+                                                    >
+                                                        💳 {{ $isEn ? 'PAY' : 'BAYAR' }}
+                                                    </button>
+                                                @endif
+                                                <form method="POST" action="{{ route('customer.transaction.sync', $tx->id) }}" class="inline-block">
+                                                    @csrf
+                                                    <button 
+                                                        type="submit" 
+                                                        class="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 text-[10px] font-bold font-mono transition rounded-none cursor-pointer"
+                                                        title="Cek status pembayaran di Midtrans"
+                                                    >
+                                                        🔄 {{ $isEn ? 'CHECK' : 'CEK' }}
+                                                    </button>
+                                                </form>
+                                                @if(!config('midtrans.is_production', false))
+                                                    <form method="POST" action="{{ route('customer.transaction.sync', $tx->id) }}" class="inline-block">
+                                                        @csrf
+                                                        <input type="hidden" name="simulate" value="1">
+                                                        <button 
+                                                            type="submit" 
+                                                            class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold font-mono transition rounded-none cursor-pointer"
+                                                            title="Simulasi lunas Sandbox Developer"
+                                                        >
+                                                            ⚡ {{ $isEn ? 'DEV' : 'LUNASKAN' }}
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @endif
+                                            <button 
+                                                type="button" 
+                                                onclick="window.print()" 
+                                                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 text-[10px] font-bold transition rounded-none cursor-pointer"
+                                            >
+                                                🖨️ {{ $isEn ? 'PRINT' : 'CETAK' }}
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

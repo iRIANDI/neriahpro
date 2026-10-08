@@ -902,8 +902,8 @@ export default function ArchitecturePricingIsland({
             </h2>
             <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
               {isEn
-                ? 'End-to-end custom software engineering executed directly by Neriah Pro senior architects and engineers. We write every line of code, provision VPS servers, setup databases, integrate payments, and deliver turnkey production systems with digital legal contracts and bug warranty.'
-                : 'Proyek di bawah ini dikerjakan, dikoding, diuji, dan dideploy langsung oleh tim Senior Software Architect & Engineer Neriah Pro end-to-end. Kami menulis seluruh kode sumber, menyusun basis data skala jutaan baris, mengintegrasikan payment gateway, serta mengonfigurasi dedicated server VPS siap pakai dengan kontrak hukum digital dan garansi bug pasca-peluncuran.'}
+                ? 'End-to-end custom software engineering executed directly by Neriah Pro senior architects and engineers under the Project OS standard. We write every line of production code across all 7 Pillars of Software Factory OS, enforce Managed Sprint Capacity with Anti-Collision batch scheduling, harden dedicated cloud VPS servers, integrate automated payments, and deliver turnkey systems backed by certified digital contracts, real-time Gantt tracking, and a 3-month SLA bug warranty.'
+                : 'Layanan pengerjaan software turnkey end-to-end yang dikoding, diuji, dan dideploy langsung oleh tim Senior Software Architect & Engineer Neriah Pro dengan standar Project OS. Kami menulis 100% kode produksi mencakup seluruh 7 Pilar Software Factory OS, menerapkan Managed Sprint Capacity (Kapasitas Terkelola) dengan proteksi anti-tabrakan jadwal (Anti-Collision), mengonfigurasi dedicated server VPS, mengintegrasikan payment gateway otomatis, serta memantau progres sprint transparan via Master Gantt Timeline dengan garansi bug 3 bulan penuh.'}
             </p>
           </div>
 
@@ -949,17 +949,21 @@ export default function ArchitecturePricingIsland({
                     {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT YANG DIDAPATKAN:'}
                   </div>
                   {(isEn ? [
-                    'Comprehensive 26-Parameter PRD Document (Chapters 1-6)',
-                    'PostgreSQL Strict ULID Database Schema (Ready-to-import SQL)',
-                    'Work Breakdown Structure (WBS) 5 Sprints Jira/Linear Ready',
-                    '1-on-1 Technical Scoping Session with Principal Architect',
-                    'Corporate Non-Disclosure Agreement (NDA) & 100% IP Ownership',
+                    'Comprehensive 26-Parameter PRD Document (Chapters 1-6) + Interactive Mermaid Charts',
+                    'PostgreSQL 16 Strict ULID Database Schema & Keyset Cursor O(1) DDL SQL',
+                    'Work Breakdown Structure (WBS) 5 Sprints & Master Mermaid Gantt Chart',
+                    'Standard AI Coding Agent Directives (.cursorrules, AGENTS.md) for internal devs',
+                    '1-on-1 Technical Scoping Session with Principal Architect (Google Meet)',
+                    '100% DP Credit: Fee Rp 2.5M automatically deducts 50% DP if upgrading to Full MVP!',
+                    'Corporate Non-Disclosure Agreement (NDA) & 100% Client Intellectual Property',
                   ] : [
-                    'Dokumen PRD lengkap 26 parameter (Fungsional, Skema & NFR)',
-                    'Skema database PostgreSQL ULID siap import (DDL SQL)',
-                    'Rencana kerja terinci 5 sprint terstruktur (Linear / Jira ready)',
-                    '1 Sesi konsultasi & scoping teknis bersama Principal Architect',
-                    'Dokumen NDA resmi & 100% hak milik dokumen diserahkan ke klien',
+                    'Dokumen PRD Arsitektur Lengkap 26 Parameter (Bab 1–6) + Diagram Alur Mermaid',
+                    'Skema Basis Data PostgreSQL 16 Strict ULID & Keyset Cursor O(1) DDL SQL Siap Import',
+                    'Work Breakdown Structure (WBS) 5 Sprint & Visualisasi Master Mermaid Gantt Chart',
+                    'Standar Aturan Agen AI (.cursorrules, AGENTS.md) untuk tim developer internal Anda',
+                    '1 Sesi Konsultasi & Scoping Teknis 1-on-1 bersama Principal Architect (Google Meet)',
+                    'Garansi Kredit DP 100%: Biaya Rp 2.5 Jt otomatis memotong DP 50% jika lanjut ke Full MVP!',
+                    'Dokumen Legal NDA Resmi & 100% Hak Milik Dokumen / Kode diserahkan ke klien',
                   ]).map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
@@ -1046,22 +1050,34 @@ export default function ArchitecturePricingIsland({
                 {/* Inclusive Header & Features */}
                 <div className="space-y-2.5 mb-6">
                   <div className="p-2 mb-2 bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold">
-                    ⭐ {isEn ? 'Includes all Blueprint Advisory deliverables, plus:' : 'Mencakup seluruh hasil Blueprint Advisory, ditambah:'}
+                    ⭐ {isEn ? 'Includes all Blueprint Advisory deliverables + Complete 7 Pillars of Software Factory OS:' : 'Mencakup seluruh hasil Blueprint Advisory + Lengkap 7 Pilar Software Factory OS:'}
                   </div>
                   {(isEn ? [
-                    'Full-Stack Modern Monolith (Laravel 13, Filament v5, React 19)',
-                    'Direct 100% Execution by Neriah Pro Senior Software Architects',
-                    'Midtrans Payment Gateway (QRIS/VA), WhatsApp & Email Integration',
-                    'Dedicated VPS Hardening, Nginx Tuning, & Redis Setup',
-                    '100% Source Code & Server Credentials Handover to Client',
-                    '3-Month Full Priority SLA Bug Warranty & Maintenance',
+                    'Managed Sprint Capacity: Reserved slot in Batch 1, 2, or Q1 with Anti-Collision Engine',
+                    'Complete 7 Pillars of Software Factory OS Coded End-to-End (Laravel 13, Filament v5, React 19)',
+                    'PostgreSQL 16 Strict ULID Database Architecture & Keyset Cursor Pagination O(1)',
+                    'Synthetic Vital Data Seeder (100+ realistic records for instant staging testing)',
+                    'AI Coding Agent Directives (.cursorrules, CLAUDE.md, AGENTS.md) ready for Cursor & Windsurf',
+                    'Automated Feature Contract-First Tests (ApiContractTest Pest / PHPUnit Suite)',
+                    'Automated Payments (Midtrans Snap: QRIS, VA, Cards) with Idempotent Anti-Duplicate Webhook',
+                    'Real-Time Master Gantt Timeline & Milestone Transparency in Customer Portal',
+                    'Dedicated Production VPS Hardening (Docker/Nixpacks, Nginx HTTP/2, SSL, Redis Caching)',
+                    'One-Click Cloud CI/CD Pipeline (GitHub Actions & deploy.sh 6 scenarios)',
+                    '100% Source Code & Server Credentials Handover (Zero Vendor Lock-in)',
+                    '3-Month Full Priority SLA Bug Warranty & Dedicated Lead Architect Maintenance',
                   ] : [
-                    'Koding penuh aplikasi web modern (Laravel 13, Filament v5, React 19)',
-                    'Dikerjakan langsung 100% oleh Senior Software Architect Neriah Pro',
-                    'Integrasi pembayaran otomatis (Midtrans QRIS/VA), WhatsApp, & Email',
-                    'Konfigurasi server VPS dedicated, Nginx tuning, & Redis siap pakai',
-                    '100% penyerahan source code & kredensial server ke tangan klien',
-                    'Garansi perbaikan bug & SLA prioritas 3 bulan penuh pasca-live',
+                    'Managed Sprint Capacity: Slot terisolasi di Batch 1, 2, atau Q1 dengan Anti-Collision Engine',
+                    'Seluruh 7 Pilar Software Factory OS Dikodingkan Penuh (Laravel 13, Filament v5, React 19)',
+                    'Arsitektur Basis Data PostgreSQL 16 Strict ULID & Keyset Cursor Pagination O(1)',
+                    'Synthetic Vital Data Seeder Engine (100+ data uji realistis siap pakai)',
+                    'Standardisasi Aturan Koding Agen AI (.cursorrules, CLAUDE.md, AGENTS.md)',
+                    'Paket Uji Kontrak Fitur Otomatis (ApiContractTest Pest / PHPUnit Suite)',
+                    'Integrasi Pembayaran Otomatis (Midtrans Snap: QRIS/VA/Kartu) & Webhook Idempoten',
+                    'Pelacakan Real-Time Master Gantt Timeline & Faktur Pajak di Customer Portal',
+                    'Konfigurasi Dedicated Server VPS (Docker/Nixpacks, Nginx HTTP/2, SSL, Redis Caching)',
+                    'Pipeline Otomasi Cloud CI/CD (GitHub Actions & deploy.sh 6 skenario deploy aman)',
+                    '100% Penyerahan Source Code Repo GitHub Privat & Kredensial Server (No Lock-in)',
+                    'Garansi Perbaikan Bug SLA Prioritas 3 Bulan Penuh & Maintenance Terjadwal',
                   ]).map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
@@ -1141,19 +1157,21 @@ export default function ArchitecturePricingIsland({
                     {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT YANG DIDAPATKAN:'}
                   </div>
                   {(isEn ? [
-                    'Centralized Transaction Engine & Customer Database',
-                    'Automated QRIS & Bank Transfer Payment Integration',
-                    'Admin Dashboard Filament v5 (Easy-to-use Indonesian)',
-                    'Automated Sales Reports Export (Excel / PDF)',
-                    'Real-Time WhatsApp Order Confirmation Notifications',
-                    'Domain (.id / .com) Setup + Fast Cloud VPS Hosting',
+                    'Centralized Transaction Engine & Customer Database (Laravel 13 & PostgreSQL Strict ULID)',
+                    'Automated Instant QRIS & Bank Virtual Account Payments (Midtrans Snap Integration)',
+                    'Admin Dashboard Filament v5 in Indonesian (Easy Orders, Products & Sales Tracking)',
+                    'Automated Financial & Sales Reports Export (Excel Spreadsheet & PDF Format)',
+                    'Real-Time E.164 WhatsApp Order Confirmations & Tax Invoices to Customers',
+                    'Fast Cloud SSD VPS Hosting Setup + Custom Business Domain (.id / .com) with HTTPS SSL',
+                    '100% Coded & Deployed by Neriah Pro Team + 1-Month Priority Bug Warranty & Video Guide',
                   ] : [
-                    'Sistem web transaksi, kasir, & database pelanggan terpusat',
-                    'Pembayaran otomatis QRIS & transfer bank (Midtrans)',
-                    'Dashboard admin Bahasa Indonesia yang mudah digunakan',
-                    'Laporan penjualan otomatis (bisa unduh Excel & PDF)',
-                    'Notifikasi pesanan otomatis via WhatsApp ke pelanggan',
-                    'Setup domain bisnis (.id / .com) & hosting cloud cepat',
+                    'Sistem Transaksi, Kasir & Database Pelanggan Terpusat (Laravel 13 & PostgreSQL Strict ULID)',
+                    'Pembayaran Otomatis Instan QRIS & Virtual Account Bank (Integrasi Midtrans Snap)',
+                    'Dashboard Admin Filament v5 Bahasa Indonesia (Kelola Pesanan, Stok, & Laporan Penjualan)',
+                    'Ekspor Laporan Keuangan & Penjualan Otomatis (Format Excel & Dokumen PDF)',
+                    'Notifikasi Konfirmasi Pesanan & Faktur Otomatis via WhatsApp Standar E.164 ke Pelanggan',
+                    'Setup Cloud SSD VPS Cepat + Domain Bisnis (.id / .com) dengan Enkripsi HTTPS SSL',
+                    '100% Dikerjakan sampai Siap Pakai oleh Neriah Pro + Garansi Bug 1 Bulan & Panduan Video',
                   ]).map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
@@ -1295,10 +1313,76 @@ export default function ArchitecturePricingIsland({
                     {isEn ? '1 Focused Specification Project' : '1 Proyek Spesifikasi Terfokus'}
                   </td>
                   <td className="py-3 px-3 text-zinc-800 dark:text-zinc-200 font-semibold">
-                    {isEn ? '1 Full Project (Max 2 Projects/Cycle)' : '1 Proyek Penuh (Kapasitas Maks. 2 Proyek/Siklus)'}
+                    {isEn ? '1 Dedicated Enterprise Build (Batch Lock)' : '1 Proyek Enterprise Penuh (Kunci Slot Batch)'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
                     {isEn ? '1 Business System (Monthly Subsidy)' : '1 Sistem Usaha (Alokasi Subsidi Bulanan)'}
+                  </td>
+                </tr>
+
+                {/* 3B. KAPASITAS TERKELOLA & ANTI-TABRAKAN JADWAL */}
+                <tr className="bg-emerald-500/5 dark:bg-emerald-500/10">
+                  <td className="py-3 px-3 font-bold text-zinc-900 dark:text-white font-mono">
+                    {isEn ? 'Managed Capacity & Anti-Collision' : 'Kapasitas Terkelola & Anti-Tabrakan'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-500 font-mono bg-cyan-500/5">
+                    {isEn ? 'Instant Self-Service' : 'Mandiri Instan'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 font-mono">
+                    {isEn ? 'Flexible Scheduling' : 'Jadwal Fleksibel'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? 'Batch 1, 2, Q1 (Max 2-3/Batch, Anti-Collision Lock)' : 'Batch 1, 2, Q1 (Maks 2-3/Batch, Kunci Anti-Tabrakan)'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-amber-600 dark:text-amber-400 font-mono">
+                    {isEn ? 'Quota 2 Slots / Month' : 'Kuota 2 Slot / Bulan'}
+                  </td>
+                </tr>
+
+                {/* 3C. KELENGKAPAN 7 PILAR SOFTWARE FACTORY OS */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200 font-mono">
+                    {isEn ? '7 Pillars of Software Factory OS' : '7 Pilar Software Factory OS'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
+                    {isEn ? 'Spark: 1 | Lite: 2 | Pro: 5 | Ultimate: Complete 7' : 'Spark: 1 | Lite: 2 | Pro: 5 | Ultimate: Lengkap 7'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    {isEn ? 'Pillar 1 (PRD & DDL) + WBS 5 Sprints' : 'Pilar 1 (PRD & DDL) + WBS 5 Sprint'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? '100% Complete 7 Pillars Coded & Live' : '100% Seluruh 7 Pilar Dikodingkan sampai Live'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400 text-[11px]">
+                    {isEn ? 'Core Monolith + Filament v5' : 'Engine Transaksi + Filament v5'}
+                  </td>
+                </tr>
+
+                {/* 3D. MASTER GANTT TIMELINE & CUSTOMER PORTAL */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200 font-mono">
+                    {isEn ? 'Master Gantt & Customer Portal' : 'Master Gantt & Customer Portal'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
+                    {isEn ? 'Mermaid Gantt Diagram Code' : 'Kode Diagram Mermaid Gantt'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    {isEn ? 'WBS 5-Sprint Gantt Blueprint' : 'Cetak Biru WBS 5 Sprint Gantt'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? 'Interactive Gantt + Customer Portal Live' : 'Interactive Gantt + Akses Customer Portal'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400 text-[11px]">
+                    {isEn ? 'Standard Milestone Tracking' : 'Pelacakan Milestone Standar'}
                   </td>
                 </tr>
 

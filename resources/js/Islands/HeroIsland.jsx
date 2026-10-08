@@ -380,7 +380,11 @@ export default function HeroIsland({
                 <div className="space-y-3 mb-8 text-xs font-sans text-zinc-700 dark:text-zinc-300">
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Dedicated Fullstack &amp; DevOps Engineering Team</strong> berpengalaman membangun sistem berskala tinggi.</span>
+                    <span><strong>Dedicated Fullstack &amp; DevOps Engineering:</strong> Menulis 100% kode produksi mencakup seluruh 7 Pilar Software Factory OS.</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span><strong>Managed Capacity &amp; Anti-Collision:</strong> Slot terisolasi per batch (Batch 1, 2, Q1) dengan pelacakan Master Gantt di Customer Portal.</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -388,11 +392,11 @@ export default function HeroIsland({
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Kontrak Digital Legal Bersertifikat</strong> dengan jaminan SLA, NDA kerahasiaan, dan transfer hak cipta 100%.</span>
+                    <span><strong>Kontrak Digital Legal Bersertifikat</strong> dengan jaminan SLA, NDA kerahasiaan, dan transfer hak cipta 100% (No Lock-in).</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Full Deployment Siap Pakai</strong> ke Cloud Production VPS (Docker/Nixpacks, Nginx, SSL, Domain).</span>
+                    <span><strong>Full Deployment Siap Pakai</strong> ke Cloud Production VPS (Docker/Nixpacks, Nginx HTTP/2, SSL, Domain).</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />

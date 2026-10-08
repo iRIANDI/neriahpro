@@ -761,15 +761,18 @@
                         TARGET: Founder startup berdana & korporat yang butuh sistem siap produksi skala jutaan pengguna.
                     </div>
                     <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
-                        <li><strong style="color: #10b981;">Seperti di Blueprint Advisory + UMKM</strong>, ditambah:</li>
-                        <li>Pengerjaan Koding 100% Turnkey (Laravel 13, Filament v5, React 19)</li>
-                        <li>Kontrak Hukum Digital Scope-Locked & Legal Escrow (DP 50%)</li>
-                        <li>Dedicated VPS Hardening, Redis, PostgreSQL Tuning & CI/CD</li>
-                        <li>Automated Test Suite Lengkap & 100% Source Code Handover</li>
+                        <li><strong style="color: #10b981;">Managed Sprint Capacity</strong>: Slot terisolasi Batch 1, 2, atau Q1 dengan Anti-Collision Engine</li>
+                        <li><strong style="color: #10b981;">Seluruh 7 Pilar Software Factory OS Dikodingkan Penuh</strong> (Laravel 13, Filament v5, React 19)</li>
+                        <li>Arsitektur Database PostgreSQL 16 Strict ULID & Keyset Cursor Pagination O(1)</li>
+                        <li>Synthetic Vital Data Seeder (100+ data uji) & Panduan Agen AI (.cursorrules, AGENTS.md)</li>
+                        <li>Automated Test Suite ApiContractTest & Midtrans Snap Idempotent Webhook</li>
+                        <li>Monitoring Master Gantt Timeline & Faktur Pajak Resmi di Customer Portal</li>
+                        <li>Dedicated VPS Hardening, Redis Caching, Nginx HTTP/2, & Pipeline deploy.sh 6 Skenario</li>
+                        <li>100% Repositori GitHub Privat & Kredensial Server diserahkan ke Klien (No Lock-in)</li>
                         <li><strong style="color: #10b981;">Garansi Perbaikan Bug & SLA Prioritas 3 Bulan Penuh</strong></li>
                     </ul>
                     <div style="font-size: 10px; font-family: ui-monospace, monospace; color: #10b981;">
-                        TATA KELOLA: Scope terkunci pada WBS 5 Sprint (Zero scope creep & zero delay).
+                        TATA KELOLA: Managed Capacity (Maks 2-3 Proyek/Batch) & Scope WBS 5 Sprint (Zero Delay & Anti-AI-Slop).
                     </div>
                 </div>
             </div>

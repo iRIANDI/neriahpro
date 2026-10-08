@@ -18,21 +18,32 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
+GIT_REMOTE_URL="${GIT_REMOTE_URL:-https://github.com/iRIANDI/neriahpro.git}"
+
 if [ -z "$DEPLOY_SYNCED" ]; then
     if [ -d .git ]; then
         echo "[1/3] Sinkronisasi kode ke versi GitHub (main)..."
-        git fetch origin main
-        git reset --hard origin/main
-        DEPLOY_SYNCED=1 exec bash "$0" "$@"
-    elif [ -n "$GIT_REMOTE_URL" ]; then
-        echo "[1/3] Sinkronisasi kode via GIT_REMOTE_URL..."
-        git init -b main 2>/dev/null || true
-        git remote add origin "$GIT_REMOTE_URL" 2>/dev/null || git remote set-url origin "$GIT_REMOTE_URL"
-        git fetch origin main
-        git reset --hard origin/main
+        git fetch origin main 2>/dev/null || git fetch "$GIT_REMOTE_URL" main 2>/dev/null || true
+        git reset --hard origin/main 2>/dev/null || git reset --hard FETCH_HEAD 2>/dev/null || true
+        echo "Commit saat ini: $(git rev-parse --short HEAD 2>/dev/null || echo 'main')"
         DEPLOY_SYNCED=1 exec bash "$0" "$@"
     else
-        echo "[1/3] Container environment terdeteksi (tanpa .git), menjalankan skenario..."
+        echo "[1/3] Container environment terdeteksi (tanpa .git). Menghubungkan ke GitHub ($GIT_REMOTE_URL)..."
+        if command -v git >/dev/null 2>&1; then
+            git init -b main 2>/dev/null || git init 2>/dev/null || true
+            git remote add origin "$GIT_REMOTE_URL" 2>/dev/null || git remote set-url origin "$GIT_REMOTE_URL"
+            git fetch origin main
+            git reset --hard origin/main
+            echo "Commit saat ini di container: $(git rev-parse --short HEAD 2>/dev/null || echo 'main')"
+            DEPLOY_SYNCED=1 exec bash "$0" "$@"
+        elif command -v curl >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
+            echo "Mengunduh kode terbaru dari GitHub main branch via tarball..."
+            curl -sL "https://github.com/iRIANDI/neriahpro/archive/refs/heads/main.tar.gz" | tar -xz --strip-components=1
+            echo "Kode terbaru berhasil diunduh dan diekstrak ke container."
+            DEPLOY_SYNCED=1 exec bash "$0" "$@"
+        else
+            echo "[1/3] Container environment tanpa Git/Curl. Melanjutkan dengan file container..."
+        fi
     fi
 fi
 

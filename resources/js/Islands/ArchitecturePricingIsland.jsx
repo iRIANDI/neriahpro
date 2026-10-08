@@ -120,12 +120,6 @@ export default function ArchitecturePricingIsland({
 }) {
   const isEn = currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
   
-  // Feature flag check for CV Pro
-  const isCvProEnabled = Boolean(featureFlags?.enable_cv_pro);
-
-  // Tab switcher
-  const [activeTab, setActiveTab] = useState('software'); // 'software' | 'cv'
-  
   // Modal State for Capacity Reservation & Direct Selection
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState('full_mvp');
@@ -468,67 +462,7 @@ export default function ArchitecturePricingIsland({
     <div className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-10 sm:py-16 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
-        {/* DYNAMIC MODULE SWITCHER (PROJECT OS VS UPCOMING CV PRO) */}
-        {isCvProEnabled && (
-          <div className="flex items-center justify-center mb-8">
-            <div className="inline-flex p-1 bg-zinc-200 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs shadow-inner font-mono text-xs">
-              <button
-                type="button"
-                onClick={() => setActiveTab('software')}
-                className={`px-4 py-2 font-bold uppercase tracking-wider transition rounded-xs flex items-center gap-2 cursor-pointer ${
-                  activeTab === 'software'
-                    ? 'bg-zinc-900 text-white dark:bg-emerald-500 dark:text-black shadow-xs'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-              >
-                <Cpu className="w-3.5 h-3.5 text-emerald-500 dark:text-black" />
-                <span>Project OS // Digital Architecture</span>
-                <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-700 dark:text-black font-black text-[9px]">ACTIVE</span>
-              </button>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab('cv')}
-                className={`px-4 py-2 font-bold uppercase tracking-wider transition rounded-xs flex items-center gap-2 cursor-pointer ${
-                  activeTab === 'cv'
-                    ? 'bg-zinc-900 text-white dark:bg-purple-500 dark:text-white shadow-xs'
-                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5 text-purple-400" />
-                <span>CV Pro Studio</span>
-                <span className="px-1.5 py-0.2 bg-zinc-300 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold text-[9px]">UPCOMING</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* IF CV TAB IS CLICKED: SHOW CLEAN UPCOMING PREVIEW */}
-        {isCvProEnabled && activeTab === 'cv' ? (
-          <div className="max-w-2xl mx-auto my-12 p-8 bg-zinc-100 dark:bg-zinc-900 border-2 border-dashed border-purple-500/40 rounded-xs text-center space-y-4">
-            <div className="w-12 h-12 mx-auto rounded-xs bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-500">
-              <FileText className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-black uppercase text-zinc-900 dark:text-white">
-              CV Pro Studio &bull; {isEn ? 'Module Under Active Development (Q4)' : 'Modul Dalam Pengembangan (Q4)'}
-            </h3>
-            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              {isEn 
-                ? 'CV Pro Studio is currently under active sprint development for Q4 release. During our Midtrans merchant compliance review, only Project OS digital architecture services are actively processed for transactions.'
-                : 'Modul CV Pro Studio sedang dalam persiapan rilis Q4. Selama periode review kepatuhan merchant Midtrans, hanya layanan rekayasa arsitektur Project OS yang aktif diproses untuk transaksi.'}
-            </p>
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab('software')}
-                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs uppercase tracking-wider rounded-xs cursor-pointer transition"
-              >
-                &larr; {isEn ? 'View Active Project OS Services' : 'Lihat Layanan Aktif Project OS'}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
             {/* 1. CLEAN & CONCISE SINGLE HEADER SECTION */}
             <div className="text-center max-w-3xl mx-auto mb-8">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold mb-3 rounded-xs">
@@ -1864,8 +1798,6 @@ export default function ArchitecturePricingIsland({
             </a>
           </div>
         </div>
-          </>
-        )}
 
       </div>
 

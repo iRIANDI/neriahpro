@@ -17,7 +17,8 @@ import {
   Globe,
   ShoppingCart,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Check
 } from 'lucide-react';
 
 export default function GlobalNavigationIsland({ settings, featureFlags, cartData }) {
@@ -34,6 +35,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
   const [cartDropdownOpen, setCartDropdownOpen] = useState(false);
   const [globalLangOpen, setGlobalLangOpen] = useState(false);
+  const [mobileLangOpen, setMobileLangOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
   // Cart state & Real-time Anti-Ghost Hold countdown
@@ -91,11 +93,55 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
     return 'id';
   });
 
+  const [activeTier2, setActiveTier2] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const match = document.cookie.match(new RegExp('(^| )googtrans=([^;]+)'));
+      if (match) {
+        const parts = decodeURIComponent(match[2]).split('/');
+        const target = parts[parts.length - 1];
+        if (target && target !== 'id' && target !== '') {
+          return target;
+        }
+      }
+    }
+    return null;
+  });
+
+  const tier1Languages = [
+    { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
+    { code: 'en', name: 'English (US)', flag: '🇺🇸' },
+  ];
+
+  const tier2Languages = [
+    { code: 'ja', name: '日本語', label: 'Japanese', flag: '🇯🇵' },
+    { code: 'zh-CN', name: '中文', label: 'Mandarin', flag: '🇨🇳' },
+    { code: 'ar', name: 'العربية', label: 'Arabic', flag: '🇸🇦' },
+    { code: 'de', name: 'Deutsch', label: 'German', flag: '🇩🇪' },
+    { code: 'fr', name: 'Français', label: 'French', flag: '🇫🇷' },
+    { code: 'es', name: 'Español', label: 'Spanish', flag: '🇪🇸' },
+  ];
+
   const changeLanguage = (newLang) => {
-    if (newLang === lang) return;
-    setLang(newLang);
+    // Clear Google Translate cookie so Tier 1 native takes full precedence
+    document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
     document.cookie = `neriah_locale=${newLang};path=/;max-age=31536000`;
+    setLang(newLang);
+    setActiveTier2(null);
+    setGlobalLangOpen(false);
     window.location.href = `/lang/${newLang}`;
+  };
+
+  const selectTier2Language = (code) => {
+    setActiveTier2(code);
+    setGlobalLangOpen(false);
+    if (window.translateLanguage) {
+      window.translateLanguage(code);
+    } else {
+      document.cookie = `googtrans=/id/${code}; path=/; domain=${window.location.hostname}`;
+      document.cookie = `googtrans=/id/${code}; path=/;`;
+      window.location.reload();
+    }
   };
 
   useEffect(() => {
@@ -161,28 +207,11 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Language Switch */}
-            <div className="flex items-center gap-1 text-[11px] font-bold">
-              <button 
-                onClick={() => changeLanguage('id')} 
-                className={`px-1.5 py-0.5 rounded-none transition ${lang === 'id' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-400 hover:text-white'}`}
-              >
-                ID
-              </button>
-              <span className="text-zinc-600">/</span>
-              <button 
-                onClick={() => changeLanguage('en')} 
-                className={`px-1.5 py-0.5 rounded-none transition ${lang === 'en' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-400 hover:text-white'}`}
-              >
-                EN
-              </button>
-            </div>
-
             {/* Dark / Light Mode Switch */}
             <button 
               onClick={toggleTheme} 
-              className="text-zinc-400 hover:text-white transition p-0.5" 
-              title="Toggle Theme"
+              className="text-zinc-400 hover:text-white transition p-1 flex items-center gap-1 cursor-pointer" 
+              title={isDarkMode ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'}
             >
               {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
@@ -290,27 +319,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
           {/* Action CTAs */}
           <div className="hidden sm:flex items-center gap-3">
-            {/* Tier 1 Native Language Switcher (ID / EN) */}
-            <div className="flex items-center border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-[11px] font-mono font-bold rounded-xs overflow-hidden">
-              <button
-                type="button"
-                onClick={() => changeLanguage('id')}
-                className={`px-2.5 py-1.5 transition cursor-pointer ${lang === 'id' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
-                title="Bahasa Indonesia (Native Tier 1)"
-              >
-                ID
-              </button>
-              <button
-                type="button"
-                onClick={() => changeLanguage('en')}
-                className={`px-2.5 py-1.5 transition cursor-pointer ${lang === 'en' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
-                title="English (Native Tier 1)"
-              >
-                EN
-              </button>
-            </div>
-
-            {/* Tier 2 Global Whitelist Language Dropdown (Google Translate) */}
+            {/* Unified Language Selector Dropdown (Tier 1 Native & Tier 2 Global) */}
             <div 
               className="relative"
               onMouseEnter={() => setGlobalLangOpen(true)}
@@ -318,12 +327,22 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
             >
               <button
                 type="button"
-                className="flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 py-1.5 px-2.5 text-[11px] font-mono font-bold rounded-xs transition cursor-pointer"
-                title="Global Plugin Translation (Tier 2)"
+                onClick={() => setGlobalLangOpen(!globalLangOpen)}
+                className={`flex items-center gap-1.5 border py-1.5 px-2.5 text-[11px] font-mono font-bold rounded-xs transition cursor-pointer ${
+                  globalLangOpen 
+                    ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400' 
+                    : 'border-zinc-300 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                }`}
+                title="Pilih Bahasa (Tier 1 & Tier 2)"
               >
                 <Globe className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="hidden lg:inline uppercase">Global</span>
-                <ChevronDown className="w-3 h-3 text-zinc-400" />
+                <span className="uppercase tracking-wider font-bold">
+                  {activeTier2 ? activeTier2.toUpperCase() : lang.toUpperCase()}
+                </span>
+                <span className="text-[10px] text-zinc-400 hidden lg:inline font-sans">
+                  {activeTier2 ? '(Global)' : (lang === 'id' ? '(ID)' : '(EN)')}
+                </span>
+                <ChevronDown className={`w-3 h-3 text-zinc-400 transition-transform duration-150 ${globalLangOpen ? 'rotate-180 text-emerald-500' : ''}`} />
               </button>
 
               <AnimatePresence>
@@ -333,40 +352,77 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 5 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-full right-0 mt-1 w-44 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl p-2 z-50 font-sans text-xs space-y-1 rounded-xs"
+                    className="absolute top-full right-0 mt-1 w-64 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl p-2 z-50 font-sans text-xs space-y-2 rounded-xs"
                   >
-                    <div className="px-2 py-1 text-[10px] font-mono text-zinc-400 uppercase font-bold border-b border-zinc-200 dark:border-zinc-800 mb-1">
-                      Translate (Tier 2)
-                    </div>
-                    {[
-                      { code: 'en', name: 'English (US)', flag: '🇺🇸' },
-                      { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
-                      { code: 'ja', name: '日本語 (Japanese)', flag: '🇯🇵' },
-                      { code: 'zh-CN', name: '中文 (Chinese)', flag: '🇨🇳' },
-                      { code: 'ar', name: 'العربية (Arabic)', flag: '🇸🇦' },
-                      { code: 'de', name: 'Deutsch (German)', flag: '🇩🇪' },
-                      { code: 'fr', name: 'Français (French)', flag: '🇫🇷' },
-                      { code: 'es', name: 'Español (Spanish)', flag: '🇪🇸' },
-                    ].map((item) => (
-                      <button
-                        key={item.code}
-                        type="button"
-                        onClick={() => {
-                          if (window.translateLanguage) {
-                            window.translateLanguage(item.code);
-                          } else {
-                            changeLanguage(item.code === 'en' ? 'en' : 'id');
-                          }
-                          setGlobalLangOpen(false);
-                        }}
-                        className="w-full text-left px-2 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-200 transition text-xs rounded-none cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span>{item.flag}</span>
-                          <span>{item.name}</span>
+                    {/* LIST GROUP 1: TIER 1 NATIVE PRECISE */}
+                    <div>
+                      <div className="px-2 py-1 text-[10px] font-mono text-zinc-500 dark:text-zinc-400 uppercase font-bold flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 mb-1">
+                        <span>TIER 1 // NATIVE PRECISE</span>
+                        <span className="text-[9px] px-1 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                          {lang === 'id' ? 'RESMI' : 'OFFICIAL'}
                         </span>
-                      </button>
-                    ))}
+                      </div>
+                      <div className="space-y-0.5">
+                        {tier1Languages.map((item) => {
+                          const isActive = !activeTier2 && lang === item.code;
+                          return (
+                            <button
+                              key={item.code}
+                              type="button"
+                              onClick={() => changeLanguage(item.code)}
+                              className={`w-full text-left px-2 py-1.5 flex items-center justify-between transition text-xs rounded-none cursor-pointer ${
+                                isActive 
+                                  ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold' 
+                                  : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <span className="text-sm">{item.flag}</span>
+                                <span>{item.name}</span>
+                              </span>
+                              <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                                <span className="uppercase text-zinc-400 font-bold">{item.code}</span>
+                                {isActive && <Check className="w-3.5 h-3.5 text-emerald-500 stroke-[2.5]" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* LIST GROUP 2: TIER 2 GLOBAL TRANSLATE */}
+                    <div className="pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                      <div className="px-2 py-1 text-[10px] font-mono text-zinc-500 dark:text-zinc-400 uppercase font-bold flex items-center justify-between mb-1">
+                        <span>TIER 2 // GLOBAL TRANSLATE</span>
+                        <span className="text-[9px] text-zinc-400 font-mono">GOOGLE AI</span>
+                      </div>
+                      <div className="space-y-0.5 max-h-48 overflow-y-auto pr-0.5">
+                        {tier2Languages.map((item) => {
+                          const isActive = activeTier2 === item.code;
+                          return (
+                            <button
+                              key={item.code}
+                              type="button"
+                              onClick={() => selectTier2Language(item.code)}
+                              className={`w-full text-left px-2 py-1.5 flex items-center justify-between transition text-xs rounded-none cursor-pointer ${
+                                isActive 
+                                  ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold' 
+                                  : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <span className="text-sm">{item.flag}</span>
+                                <span>{item.name} <span className="text-zinc-400 text-[11px]">({item.label})</span></span>
+                              </span>
+                              <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                                <span className="uppercase text-zinc-400 font-bold">{item.code}</span>
+                                {isActive && <Check className="w-3.5 h-3.5 text-emerald-500 stroke-[2.5]" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -517,39 +573,82 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                   </span>
                 )}
               </a>
-              {/* Mobile Tier 1 & Tier 2 Language Selector */}
-              <div className="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-                <span className="text-[10px] text-zinc-500 font-bold uppercase">BAHASA // LANG:</span>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-[10px] font-bold">
-                    <button
-                      type="button"
-                      onClick={() => changeLanguage('id')}
-                      className={`px-2 py-1 ${lang === 'id' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-600 dark:text-zinc-400'}`}
-                    >
-                      ID
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => changeLanguage('en')}
-                      className={`px-2 py-1 ${lang === 'en' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-600 dark:text-zinc-400'}`}
-                    >
-                      EN
-                    </button>
+              {/* Mobile Unified Tier 1 & Tier 2 Language Selector */}
+              <div className="border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 overflow-hidden rounded-xs">
+                <button
+                  type="button"
+                  onClick={() => setMobileLangOpen(!mobileLangOpen)}
+                  className="w-full py-2.5 px-3 flex items-center justify-between text-left font-mono text-xs font-bold cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-zinc-500 text-[10px] uppercase">BAHASA / LANG:</span>
+                    <span className="text-zinc-900 dark:text-zinc-100">
+                      {activeTier2 ? `${activeTier2.toUpperCase()} (Tier 2)` : `${lang.toUpperCase()} (Tier 1)`}
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.translateLanguage) {
-                        window.translateLanguage(lang === 'en' ? 'id' : 'en');
-                      }
-                    }}
-                    className="flex items-center gap-1 px-2 py-1 border border-zinc-300 dark:border-zinc-700 text-[10px] text-zinc-600 dark:text-zinc-400"
-                  >
-                    <Globe className="w-3 h-3 text-emerald-500" />
-                    <span>Global</span>
-                  </button>
-                </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-150 ${mobileLangOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                </button>
+
+                {mobileLangOpen && (
+                  <div className="p-2 border-t border-zinc-200 dark:border-zinc-800 space-y-2 bg-white dark:bg-zinc-950 font-sans text-xs">
+                    {/* Tier 1 Group */}
+                    <div>
+                      <div className="px-1.5 py-0.5 text-[10px] font-mono text-zinc-500 dark:text-zinc-400 uppercase font-bold flex items-center justify-between">
+                        <span>TIER 1 // NATIVE PRECISE</span>
+                        <span className="text-[9px] px-1 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">RESMI</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5 mt-1">
+                        {tier1Languages.map((item) => {
+                          const isActive = !activeTier2 && lang === item.code;
+                          return (
+                            <button
+                              key={item.code}
+                              type="button"
+                              onClick={() => { changeLanguage(item.code); setMobileLangOpen(false); }}
+                              className={`px-2.5 py-1.5 text-xs text-left border flex items-center justify-between transition cursor-pointer rounded-none ${
+                                isActive
+                                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-bold'
+                                  : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                              }`}
+                            >
+                              <span>{item.flag} {item.code.toUpperCase()}</span>
+                              {isActive && <Check className="w-3 h-3 text-emerald-500" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Tier 2 Group */}
+                    <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                      <div className="px-1.5 py-0.5 text-[10px] font-mono text-zinc-500 dark:text-zinc-400 uppercase font-bold flex items-center justify-between">
+                        <span>TIER 2 // GLOBAL TRANSLATE</span>
+                        <span className="text-[9px] text-zinc-400 font-mono">GOOGLE AI</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5 mt-1">
+                        {tier2Languages.map((item) => {
+                          const isActive = activeTier2 === item.code;
+                          return (
+                            <button
+                              key={item.code}
+                              type="button"
+                              onClick={() => { selectTier2Language(item.code); setMobileLangOpen(false); }}
+                              className={`px-2 py-1.5 text-xs text-left border flex items-center justify-between transition cursor-pointer rounded-none ${
+                                isActive
+                                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-bold'
+                                  : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                              }`}
+                            >
+                              <span className="truncate">{item.flag} {item.name}</span>
+                              {isActive && <Check className="w-3 h-3 text-emerald-500 shrink-0 ml-1" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <a href="/" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">

@@ -1254,38 +1254,48 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     <span class="sm:hidden">SCAFFOLD</span>
                 </button>
 
-                <!-- Dual-Language Toggle Button (Tier 1: Native Dual-Locale) -->
-                <button @click="setLocale(locale === 'id' ? 'en' : 'id')" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer" title="Tier 1: Ganti Bahasa Native / Switch Native Locale">
-                    <span class="w-2 h-2 rounded-none" :class="locale === 'en' ? 'bg-sky-500' : 'bg-emerald-500'"></span>
-                    <span x-text="locale === 'id' ? 'ID ➔ EN' : 'EN ➔ ID'">ID ➔ EN</span>
-                </button>
-
-                @if($googleTranslateEnabled)
-                <!-- Dual-Language Dropdown (Tier 2: Global Google Translate Whitelist) -->
-                <div x-data="{ openLang: false, activeLang: 'ID' }" class="relative inline-block text-left shrink-0" @click.outside="openLang = false">
-                    <button type="button" @click="openLang = !openLang" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap" title="Tier 2: Pemilih Bahasa Global (Google Translate Whitelist)">
-                        <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
-                        <span class="hidden sm:inline font-bold uppercase text-[10px] tracking-wider text-emerald-600 dark:text-emerald-400">GLOBAL:</span>
-                        <span class="uppercase text-[11px]" x-text="activeLang">ID</span>
-                        <svg class="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                <!-- Unified Language Selector Dropdown (Tier 1 Native & Tier 2 Global) -->
+                <div x-data="{ openLang: false, activeTier2: '' }" class="relative inline-block text-left shrink-0" @click.outside="openLang = false">
+                    <button type="button" @click="openLang = !openLang" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap" title="Pilih Bahasa (Tier 1 & Tier 2)">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
+                        <span class="uppercase text-[11px]" x-text="activeTier2 ? activeTier2 : locale.toUpperCase()">ID</span>
+                        <span class="text-[10px] text-zinc-400 hidden sm:inline" x-text="activeTier2 ? '(Global)' : (locale === 'id' ? '(ID)' : '(EN)')"></span>
+                        <svg class="w-3 h-3 text-zinc-400 transition-transform duration-150" :class="openLang ? 'rotate-180 text-emerald-500' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
 
-                    <div x-show="openLang" x-cloak class="absolute right-0 mt-2 w-44 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none shadow-xl z-[100] py-1 font-mono text-xs max-h-60 overflow-y-auto custom-prd-scrollbar">
-                        <div class="px-2.5 py-1 text-[10px] uppercase font-bold text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
-                            Whitelist Global (Tier 2)
+                    <div x-show="openLang" x-cloak class="absolute right-0 mt-2 w-56 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-2xl z-[100] py-1.5 font-mono text-xs max-h-72 overflow-y-auto custom-prd-scrollbar space-y-1">
+                        <!-- TIER 1 // NATIVE PRECISE -->
+                        <div class="px-2.5 py-1 text-[10px] uppercase font-bold text-zinc-400 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                            <span>TIER 1 // NATIVE PRECISE</span>
+                            <span class="text-[9px] px-1 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">RESMI</span>
+                        </div>
+                        <button type="button" @click="setLocale('id'); activeTier2 = ''; if(window.translateLanguage){ document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname; } openLang = false;" class="w-full text-left px-3 py-1.5 flex items-center justify-between text-xs transition cursor-pointer" :class="(!activeTier2 && locale === 'id') ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'">
+                            <span class="flex items-center gap-2"><span>🇮🇩</span><span>Bahasa Indonesia</span></span>
+                            <span class="text-[10px] text-emerald-500 font-bold font-mono" x-show="!activeTier2 && locale === 'id'">✓ ID</span>
+                        </button>
+                        <button type="button" @click="setLocale('en'); activeTier2 = ''; if(window.translateLanguage){ document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname; } openLang = false;" class="w-full text-left px-3 py-1.5 flex items-center justify-between text-xs transition cursor-pointer" :class="(!activeTier2 && locale === 'en') ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'">
+                            <span class="flex items-center gap-2"><span>🇺🇸</span><span>English (US)</span></span>
+                            <span class="text-[10px] text-emerald-500 font-bold font-mono" x-show="!activeTier2 && locale === 'en'">✓ EN</span>
+                        </button>
+
+                        @if($googleTranslateEnabled)
+                        <!-- TIER 2 // GLOBAL TRANSLATE -->
+                        <div class="px-2.5 py-1 text-[10px] uppercase font-bold text-zinc-400 border-y border-zinc-200 dark:border-zinc-800 flex items-center justify-between mt-1">
+                            <span>TIER 2 // GLOBAL TRANSLATE</span>
+                            <span class="text-[9px] text-zinc-400 font-mono">GOOGLE AI</span>
                         </div>
                         @foreach($allowedLangList as $lCode)
                             @php
                                 $info = $langLabels[$lCode] ?? ['flag' => '🌐', 'name' => strtoupper($lCode)];
                             @endphp
-                            <button type="button" @click="activeLang = '{{ strtoupper($lCode) }}'; window.translateLanguage('{{ $lCode }}'); openLang = false" class="w-full text-left px-3 py-1.5 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between text-xs transition cursor-pointer">
-                                <span>{{ $info['flag'] }} {{ $info['name'] }}</span>
+                            <button type="button" @click="activeTier2 = '{{ strtoupper($lCode) }}'; window.translateLanguage('{{ $lCode }}'); openLang = false;" class="w-full text-left px-3 py-1.5 flex items-center justify-between text-xs transition cursor-pointer" :class="activeTier2 === '{{ strtoupper($lCode) }}' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'">
+                                <span class="flex items-center gap-2"><span>{{ $info['flag'] }}</span><span>{{ $info['name'] }}</span></span>
                                 <span class="text-[10px] text-zinc-400 uppercase font-mono">{{ $lCode }}</span>
                             </button>
                         @endforeach
+                        @endif
                     </div>
                 </div>
-                @endif
 
                 <!-- Unified Document Actions: Print, PDF, MD, .cursorrules -->
                 <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">

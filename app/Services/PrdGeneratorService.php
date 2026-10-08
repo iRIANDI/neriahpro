@@ -4555,6 +4555,12 @@ PROMPT;
         $rules .= "### E. Cache Serialization Safety\n";
         $rules .= "- NEVER cache raw Eloquent model instances in `Cache::rememberForever()`. Serializing Eloquent models across lifecycles causes `__PHP_Incomplete_Class` errors.\n";
         $rules .= "- ALWAYS cache primitive attribute arrays (`\$record->getAttributes()`) or JSON strings, and reconstitute models via `(new Model)->newFromBuilder(\$cachedAttributes)`.\n\n";
+
+        $rules .= "### F. Managed Sprint Capacity, Anti-Collision Batch Engineering & Local Gantt Dashboard\n";
+        $rules .= "- **Managed Capacity Discipline**: Tidak menerima proyek paralel tak terbatas demi menjaga kualitas rekayasa enterprise, nol bug, dan anti-AI-slop. Setiap proyek dikunci ke dalam batch waktu sprint terkelola (e.g. Batch 1, Batch 2, Batch Q1).\n";
+        $rules .= "- **Anti-Collision Architecture**: Mencegah tabrakan jadwal kickoff antar klien (schedule collision) dan mencegah transaksi ganda (payment collision) menggunakan generator ULID unik dan webhook idempotency.\n";
+        $rules .= "- **Zero CDN Latency Requirement**: Seluruh library JavaScript yang digunakan untuk merender visualisasi (seperti Mermaid.js, Alpine.js, Frappe Gantt) WAJIB diunduh dan disimpan secara lokal di dalam repository (`public/js/vendor/`). DILARANG KERAS memuat script via CDN eksternal.\n";
+        $rules .= "- **Interactive Gantt & Timeline Monitoring**: Setiap blueprint wajib men-generate diagram Mermaid Gantt (`sprint_gantt_mermaid`) yang dapat dimonitor melalui backend admin dashboard untuk melacak ketercapaian milestone DoD (Definition of Done) per sprint.\n\n";
         $rules .= "---\n\n";
 
         // 3. UI/UX Protocols

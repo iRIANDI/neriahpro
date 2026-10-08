@@ -118,6 +118,17 @@ After completing any task, you MUST always suggest which deployment script numbe
 # Mandatory Rule: Local FontAwesome Icons (Zero CDN Latency)
 - 🎨 **LOCAL FONTAWESOME LIBRARY**: Representative icons for navigation, footer, global alert, and plugins MUST use local SVGs (`config/fontawesome.php` and `\App\Support\FontAwesome::svg('name')`) to prevent third-party CDN latency, blocking, or offline broken layouts.
 
+# Mandatory Rule: Managed Sprint Capacity, Anti-Collision Batch Architecture & Local Gantt Timeline Dashboard
+- ⏱️ **MANAGED CAPACITY PHILOSOPHY**: Tidak menerima proyek paralel tak terbatas demi menjaga standar rekayasa enterprise (anti-burnout, anti-AI-slop). Kapasitas sprint dibatasi maksimal 2–3 proyek paralel per batch (Batch 1, Batch 2, Batch Q1).
+- 🛡️ **DUAL ANTI-COLLISION ENGINE**:
+  - *Schedule Collision Prevention*: Klien mengunci slot waktu sprint terencana via frontend modal (`ArchitecturePricingIsland.jsx`) sehingga alokasi engineer 100% fokus dan terisolasi.
+  - *Payment Collision Prevention*: Order generator berbasis ULID unik dan webhook Midtrans idempoten mendeteksi serta mencegah transaksi ganda (double-payment auto-refund / termin credit conversion).
+- 📦 **STRICT LOCAL JS BUNDLE PROTOCOL (ZERO CDN LATENCY)**:
+  - Seluruh pustaka JavaScript untuk visualisasi data, diagram Gantt, dan interaktivitas (Mermaid.js, Alpine.js, dsb.) WAJIB diunduh dan disimpan secara lokal di `public/js/vendor/` (`mermaid.min.js`, `alpine.min.js`).
+  - Dilarang keras memuat script atau stylesheet dari CDN pihak ketiga (cdnjs, unpkg, jsdelivr) untuk mencegah latensi jaringan, blocking ISP, atau layout rusak saat offline.
+- 📊 **FILAMENT SPRINT TIMELINE & GANTT DASHBOARD**:
+  - Seluruh alokasi batch, kapasitas slot terisi/sisa, dan diagram Gantt multi-proyek wajib dapat dikelola serta dimonitor melalui Filament Admin Page `SprintTimelinePage` (`/admin/sprint-timeline`) dan widget `SprintCapacityGanttWidget`.
+
 # Mandatory Rule: Curator Picker & Shallow Storage Hierarchy (Server Inodes & RAM Optimization)
 - 🖼️ **CURATOR PICKER MANDATORY**: Every image input in Filament v5 backend admin MUST use Curator Picker (`\Awcodes\Curator\Components\Forms\CuratorPicker` or `\App\Support\FilamentCuratorHelper::picker('name')`).
 - 📁 **SHALLOW DIRECTORY MAP (MAX 1-2 LEVELS)**: Every image upload MUST specify a shallow directory mapping (e.g. `->directory('products')`, `->directory('branding')`, `->directory('media')`). NEVER use deep recursive folder paths (such as `uploads/YYYY/MM/DD/user/id/...`) because deep directory nesting exhausts Linux filesystem inodes, degrades OS filesystem traversal, and spikes RAM consumption when scanning directories.

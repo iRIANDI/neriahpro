@@ -853,22 +853,22 @@ export default function ArchitecturePricingIsland({
                   </span>
                   {(isEn ? [
                     'All Lite Tier Deliverables',
-                    'AI Code-Gen Prompt Ready (.cursorrules)',
-                    'White-Label Agency Export',
+                    'AI Code-Gen Prompt Ready (.cursorrules & AGENTS.md)',
+                    'Containerized Stack (docker-compose.yml, PHP 8.4, PG 16, Redis 7)',
+                    'Synthetic Database Seeders (Realistic Mock Data)',
                     'Decoupled 2026+ Blueprint (Next.js 15, Cloudflare)',
                     '6 Mermaid Diagrams (ERD, Data Flow, Sequence, Gantt)',
                     'WBS 5 Sprints Linear / Jira Ready',
                     'OpenAPI 3.1 & Idempotency Specification',
-                    'Anti-AI-Slop & UI Design Tokens Guidelines',
                   ] : [
                     'Semua Output Lite Tier',
-                    'AI Code-Gen Prompt Ready (.cursorrules)',
-                    'White-Label Agency Export',
+                    'AI Code-Gen Prompt Ready (.cursorrules & AGENTS.md)',
+                    'Containerized Stack (docker-compose.yml, PHP 8.4, PG 16, Redis 7)',
+                    'Database Seeder Sintetik (Data Simulasi Siap Pakai)',
                     'Cetak Biru Decoupled 2026+ (Next.js 15, Cloudflare)',
                     '6 Diagram Mermaid (ERD, Data Flow, Sequence, Gantt)',
                     'WBS 5 Sprint Linear / Jira Ready',
                     'OpenAPI 3.1 & Idempotency Specification',
-                    'Panduan Anti-AI-Slop & UI Design Tokens',
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
@@ -896,16 +896,16 @@ export default function ArchitecturePricingIsland({
                     TIER 04 // ENTERPRISE
                   </span>
                   <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[9px] font-bold">
-                    {isEn ? '+ 1-ON-1 ARCHITECT CALL' : '+ SESI 1-ON-1 LEAD ARCHITECT'}
+                    {isEn ? 'COMPLETE 7-PILLAR FACTORY OS' : 'LENGKAP 7 PILAR FACTORY OS'}
                   </span>
                 </div>
 
                 <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1">
-                  Ultimate Advisory
+                  Ultimate Software Factory OS
                 </h3>
 
                 <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
-                  {isEn ? 'Full PRD, Multi-AI Failover Hub, Threat Shield, and 1-on-1 Scoping Consultation.' : 'PRD Ultimate, Multi-AI Failover Hub, Threat Shield, dan 1 sesi konsultasi langsung dengan Lead Architect.'}
+                  {isEn ? 'Complete 7-Pillar Software Factory: PRD, Wireframe Blueprints, Full Scaffold, Synthetic Seeders, AI Rules, Contract Tests, CI/CD + 1-on-1 Call.' : 'Paket komplit 7 Pilar Software Factory: PRD, Wireframe UI, Scaffold Lengkap, Seeder Sintetik, AI Rules, Test Contract, CI/CD + Sesi 1-on-1.'}
                 </p>
 
                 <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
@@ -957,22 +957,26 @@ export default function ArchitecturePricingIsland({
 
                 <div className="space-y-2 mb-6">
                   <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider block">
-                    {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT SPESIFIKASI DIDAPATKAN:'}
+                    {isEn ? '7-PILLAR FACTORY OS DELIVERABLES:' : 'OUTPUT LENGKAP 7 PILAR FACTORY OS:'}
                   </span>
                   {(isEn ? [
-                    'All Pro Production Tier Deliverables',
-                    'AI Multi-Model Failover Token Shield Strategy',
-                    'Zero-Trust CORS & Anti-Malware Hardening',
-                    '1 Scheduled 60-Min Architecture Call (Google Meet)',
-                    'Validation & Review by Internal Engineering Team',
-                    'Corporate Non-Disclosure Agreement (NDA)',
+                    'Pillar 1: 6-Chapter PRD Blueprint & OpenAPI 3.1 Spec',
+                    'Pillar 2: UI/UX Wireframe Blueprints & Design Tokens',
+                    'Pillar 3: Containerized Scaffold (Docker, Laravel, Next.js)',
+                    'Pillar 4: Synthetic Database Mock Data / Seeders',
+                    'Pillar 5: AI Coding Agent Rules (.cursorrules & AGENTS.md)',
+                    'Pillar 6: Contract-First Feature Testing Suite (Pest/PHPUnit)',
+                    'Pillar 7: One-Click Cloud CI/CD & Deploy Pipeline Script',
+                    'Plus: 1 Scheduled 60-Min Architecture Call & Corporate NDA',
                   ] : [
-                    'Semua Output Pro Production Tier',
-                    'AI Multi-Model Failover Token Shield Strategy',
-                    'Zero-Trust CORS & Anti-Malware Hardening',
-                    '1 Sesi 60 Menit Architecture Call (Google Meet)',
-                    'Validasi & Review Tim Engineering Internal',
-                    'Non-Disclosure Agreement (NDA) Korporat',
+                    'Pilar 1: PRD Blueprint 6 Bab & Spesifikasi OpenAPI 3.1',
+                    'Pilar 2: Cetak Biru Wireframe UI/UX & Design Tokens',
+                    'Pilar 3: Containerized Scaffold (Docker, Laravel, Next.js)',
+                    'Pilar 4: Data Mock Database Sintetik & Seeder Siap Pakai',
+                    'Pilar 5: AI Coding Agent Rules (.cursorrules & AGENTS.md)',
+                    'Pilar 6: Automated Testing Suite Contract-First (Pest/PHPUnit)',
+                    'Pilar 7: Pipeline CI/CD GitHub Actions & Skrip Deploy VPS',
+                    'Plus: 1 Sesi Konsultasi 60 Menit 1-on-1 & NDA Korporat',
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />

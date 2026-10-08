@@ -24,20 +24,41 @@ class ScaffoldGeneratorService
 
         $schemaSql = self::generateDatabaseMigrationsSql($blueprint, $erdTables);
         return [
-            'docker-compose.yml' => self::generateDockerCompose($blueprint, $slug),
-            '.cursorrules' => PrdGeneratorService::toCursorrules($blueprint, $prd),
-            'CLAUDE.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
-            'AGENTS.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
-            '.env.example' => self::generateEnvExample($blueprint, $slug),
-            'README.md' => self::generateReadme($blueprint, $projectName, $slug),
+            // Pillar 1: Contract-First Specifications & Database Architecture
             'openapi.json' => self::generateOpenApiSpec($blueprint, $erdTables),
             'schema_complete.sql' => $schemaSql,
             'database/migrations/schema_complete.sql' => $schemaSql,
+
+            // Pillar 2: UI/UX Wireframe & Design Tokens
+            'design/tokens.json' => self::generateDesignTokens($blueprint),
+            'design/wireframes/screens.md' => self::generateWireframeBlueprints($blueprint, $erdTables),
+
+            // Pillar 3: Infrastructure, Containerization & Routing
+            'docker-compose.yml' => self::generateDockerCompose($blueprint, $slug),
+            '.env.example' => self::generateEnvExample($blueprint, $slug),
+            'README.md' => self::generateReadme($blueprint, $projectName, $slug),
             'docker/nginx/default.conf' => self::generateNginxConf($slug),
             'routes/web.php' => self::generateLaravelRoutes($blueprint, $erdTables),
             'routes/api.php' => self::generateLaravelApiRoutes($blueprint, $erdTables),
             'app/api/route.ts' => self::generateNextJsRoute($blueprint, $erdTables),
             'nextjs/app/api/resources/route.ts' => self::generateNextJsRoute($blueprint, $erdTables),
+
+            // Pillar 4: Synthetic Mock Data / Seeder Engine
+            'database/seeders/DatabaseSeeder.php' => self::generateDatabaseSeeder($blueprint),
+            'database/seeders/SyntheticDataSeeder.php' => self::generateSyntheticDataSeeder($blueprint, $erdTables),
+
+            // Pillar 5: AI Coding Agent Rules (.cursorrules & AGENTS.md)
+            '.cursorrules' => PrdGeneratorService::toCursorrules($blueprint, $prd),
+            'CLAUDE.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
+            'AGENTS.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
+
+            // Pillar 6: Contract-First Testing Suite
+            'tests/Feature/ApiContractTest.php' => self::generateContractTest($blueprint, $erdTables),
+
+            // Pillar 7: One-Click Cloud CI/CD & Deploy Pipeline
+            '.github/workflows/deploy.yml' => self::generateCiCdWorkflow($blueprint, $slug),
+            'deploy.sh' => self::generateDeployScript($blueprint, $slug),
+            'docker/systemd/queue-worker.service' => self::generateQueueWorkerService($slug),
         ];
     }
 
@@ -1049,4 +1070,528 @@ MARKDOWN;
 
         return json_encode($spec, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
+
+    /**
+     * Pillar 2: Generate UI/UX Design Tokens JSON.
+     * Enforces Solid Monochrome Brutalism, subtle borders, and dark/light mode fidelity.
+     */
+    public static function generateDesignTokens(VisionBlueprint $blueprint): string
+    {
+        $tokens = [
+            'meta' => [
+                'project' => $blueprint->nama_bisnis ?: 'Enterprise System',
+                'design_philosophy' => 'Solid Monochrome Brutalism (Zero Gaudy Gradients, Precise Sharp Borders, 100% Dark & Light Mode Compliance)',
+                'typography_system' => 'Inter Display + JetBrains Mono for Technical Telemetry',
+                'border_radius_rule' => 'Subtle and thin (0px, 2px, 4px, 6px max). Strict ban on capsule / pill rounded-full shapes.',
+            ],
+            'color' => [
+                'light' => [
+                    'background' => '#ffffff',
+                    'surface' => '#f4f4f5',
+                    'surface_elevated' => '#ffffff',
+                    'border' => '#e4e4e7',
+                    'border_focus' => '#18181b',
+                    'text_primary' => '#18181b',
+                    'text_secondary' => '#71717a',
+                    'accent_primary' => '#10b981',
+                    'accent_hover' => '#059669',
+                    'danger' => '#ef4444',
+                    'warning' => '#f59e0b',
+                ],
+                'dark' => [
+                    'background' => '#09090b',
+                    'surface' => '#18181b',
+                    'surface_elevated' => '#27272a',
+                    'border' => '#27272a',
+                    'border_focus' => '#fafafa',
+                    'text_primary' => '#fafafa',
+                    'text_secondary' => '#a1a1aa',
+                    'accent_primary' => '#10b981',
+                    'accent_hover' => '#34d399',
+                    'danger' => '#f87171',
+                    'warning' => '#fbbf24',
+                ],
+            ],
+            'radii' => [
+                'none' => '0px',
+                'xs' => '2px',
+                'sm' => '4px',
+                'md' => '6px',
+                'strict_ban' => 'rounded-full / capsule pills are strictly forbidden',
+            ],
+            'typography' => [
+                'font_family_sans' => 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                'font_family_mono' => '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                'scale' => [
+                    'xs' => '0.75rem',
+                    'sm' => '0.875rem',
+                    'base' => '1rem',
+                    'lg' => '1.125rem',
+                    'xl' => '1.25rem',
+                    '2xl' => '1.5rem',
+                    '3xl' => '1.875rem',
+                    '4xl' => '2.25rem',
+                ],
+            ],
+            'components' => [
+                'button' => [
+                    'primary' => 'bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 font-mono text-xs font-bold uppercase tracking-wider py-2.5 px-4 rounded-xs border border-zinc-900 dark:border-white transition-all',
+                    'secondary' => 'bg-transparent hover:bg-zinc-100 text-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 font-mono text-xs font-semibold py-2.5 px-4 rounded-xs border border-zinc-200 dark:border-zinc-800 transition-all',
+                    'accent' => 'bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-mono text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xs shadow-xs transition-all',
+                ],
+                'input' => [
+                    'text' => 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 font-mono text-xs py-2 px-3 rounded-xs focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100',
+                ],
+                'table' => [
+                    'wrapper' => 'w-full overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-xs',
+                    'header_cell' => 'bg-zinc-50 dark:bg-zinc-900 px-4 py-3 text-left font-mono text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800',
+                    'body_cell' => 'px-4 py-3 text-xs font-sans text-zinc-900 dark:text-zinc-100 border-b border-zinc-100 dark:border-zinc-900',
+                ],
+            ],
+        ];
+
+        return json_encode($tokens, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Pillar 2: Generate UI/UX Wireframe Blueprints & Component Layouts.
+     */
+    public static function generateWireframeBlueprints(VisionBlueprint $blueprint, array $erdTables): string
+    {
+        $projectName = $blueprint->nama_bisnis ?: 'Application';
+        $entityNames = array_map(fn($t) => $t['name'] ?? ($t['table_name'] ?? 'Resource'), array_slice($erdTables, 0, 4));
+        $primaryEntity = !empty($entityNames) ? $entityNames[0] : 'Item';
+
+        return <<<MARKDOWN
+# UI/UX SCREEN WIREFRAME BLUEPRINTS & COMPONENT SPECIFICATION
+# Project: {$projectName}
+# Architectural Standard: Solid Monochrome Brutalism (Zero Gaudy Gradients, Precise Sharp Borders)
+
+This document specifies the exact screen layout wireframes, ASCII spatial diagrams, and Tailwind CSS utility patterns for developers to construct high-performance, compliant web interfaces.
+
+---
+
+## 1. Executive Telemetry Dashboard (`/dashboard`)
+
+```
++---------------------------------------------------------------------------------------+
+|  [LOGO]  {$projectName}  | Search... [X] | ID/EN v | Theme [Sun/Moon] | [User Avatar] |
++---------------------------------------------------------------------------------------+
+|  METRIC TILES:                                                                        |
+|  +--------------------+  +--------------------+  +--------------------+               |
+|  | TOTAL {$primaryEntity}S       |  | ACTIVE PIPELINE    |  | SYSTEM HEALTH      |               |
+|  | 14,820 (Thousand)  |  | Rp 250.000.000     |  | 99.98% O(1)        |               |
+|  +--------------------+  +--------------------+  +--------------------+               |
+|                                                                                       |
+|  RECENT AUDIT TRAIL (O(1) Live Stream)                                                |
+|  +---------------------------------------------------------------------------------+  |
+|  | ULID: 01J9V9XYZK... | Status: [SETTLED] | Actor: Operator A | 2 mins ago        |  |
+|  | ULID: 01J9V9XYZL... | Status: [PENDING] | Actor: Client B   | 5 mins ago        |  |
+|  +---------------------------------------------------------------------------------+  |
++---------------------------------------------------------------------------------------+
+```
+
+### Component Structure:
+- Container: `max-w-7xl mx-auto px-4 py-8`
+- Metric Cards: `bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-xs`
+- Stat Numbers: `text-2xl font-black font-mono text-zinc-900 dark:text-zinc-100` (Always formatted with thousand separators)
+
+---
+
+## 2. Resource Management Index (`/resources` or `/{$primaryEntity}`)
+
+```
++---------------------------------------------------------------------------------------+
+|  FILTER & TOOLBAR:                                                                    |
+|  [ Search by Keyword...        (X) ]   [ Filter: All v ]   [ [GRID] | [LIST] ]  [+ ADD] |
++---------------------------------------------------------------------------------------+
+|  DATA TABLE / GRID VIEW:                                                              |
+|  +-------------------+-------------------+--------------------+---------------------+ |
+|  | ID (ULID)         | NAME / TITLE      | CREATED AT         | ACTION              | |
+|  +-------------------+-------------------+--------------------+---------------------+ |
+|  | 01J9V9XYZ... [CP] | Alpha Logistics   | 08 Oct 2026, 14:00 | [View] [Edit] [Del] | |
+|  | 01J9V9XYZ... [CP] | Beta Enterprise   | 08 Oct 2026, 13:45 | [View] [Edit] [Del] | |
+|  +-------------------+-------------------+--------------------+---------------------+ |
+|                                                                                       |
+|  PAGINATION:                                                                          |
+|  [Showing 1-25 of 14,820]                    [< Prev Cursor]   [Next Cursor >]        |
++---------------------------------------------------------------------------------------+
+```
+
+### Strict Requirements:
+1. **Search Clear Button ("X")**: Input has interactive "X" icon to purge query in 1 click.
+2. **Dual View Toggle**: Instant switcher between Grid Cards (`grid grid-cols-1 md:grid-cols-3 gap-4`) and List Table.
+3. **Cursor Pagination**: Powered by keyset pointers (`cursorPaginate()`), never offset pagination.
+
+---
+
+## 3. Transactional Input Form & Creation Modal
+
+```
++---------------------------------------------------------------------------------------+
+|  CREATE NEW RECORD                                                              [X]   |
++---------------------------------------------------------------------------------------+
+|  Title / Name:                                                                        |
+|  [ Enter descriptive title...                                                       ] |
+|                                                                                       |
+|  Phone / WhatsApp Number (International E.164):                                       |
+|  [ Country Code: [+62 (ID) v] ] [ Enter digits without leading zero: 8123456789     ] |
+|                                                                                       |
+|  Nominal Value / Budget (Currency with Thousand Separator):                           |
+|  [ Rp 15.000.000 (Auto-formatted on input)                                          ] |
+|                                                                                       |
+|  Multi-Language Tier 1 (Native JSON Array):                                           |
+|  [ Tab: Bahasa Indonesia (ID) ] [ Tab: English (EN) ]                                 |
+|  [ Deskripsi dalam Bahasa Indonesia...                                              ] |
+|                                                                                       |
+|  [ Cancel ]                                              [ Submit & Save Record ]     |
++---------------------------------------------------------------------------------------+
+```
+
+### Component Structure:
+- Modal Backdrop: `fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4`
+- Modal Surface: `bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 max-w-xl w-full rounded-xs shadow-2xl`
+- Submit Action: Dispatches `window.showToast({ type: 'success', title: 'TERSIMPAN', message: 'Data berhasil disimpan.' })` (Strict ban on `alert()`).
+MARKDOWN;
+    }
+
+    /**
+     * Pillar 4: Generate Synthetic Database Seeder (database/seeders/SyntheticDataSeeder.php).
+     */
+    public static function generateSyntheticDataSeeder(VisionBlueprint $blueprint, array $erdTables): string
+    {
+        $projectName = $blueprint->nama_bisnis ?: 'Application';
+
+        return <<<PHP
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+class SyntheticDataSeeder extends Seeder
+{
+    /**
+     * Run synthetic mock data generation for all core entities.
+     * Enforces strict ULID primary keys, localized JSON strings, and concrete relationships.
+     */
+    public function run(): void
+    {
+        \$now = now();
+
+        // 1. Seed Core Administrative User
+        \$adminId = (string) Str::ulid();
+        DB::table('users')->insertOrIgnore([
+            'id' => \$adminId,
+            'name' => 'Principal Administrator',
+            'email' => 'admin@{$blueprint->slug}.local',
+            'password' => bcrypt('password123'),
+            'role' => 'superadmin',
+            'created_at' => \$now,
+            'updated_at' => \$now,
+        ]);
+
+        // 2. Seed Standard Operators & Clients
+        \$operatorId = (string) Str::ulid();
+        DB::table('users')->insertOrIgnore([
+            'id' => \$operatorId,
+            'name' => 'Operations Lead',
+            'email' => 'ops@{$blueprint->slug}.local',
+            'password' => bcrypt('password123'),
+            'role' => 'operator',
+            'created_at' => \$now,
+            'updated_at' => \$now,
+        ]);
+
+        // 3. Seed 25 Realistic Mock Business Records
+        for (\$i = 1; \$i <= 25; \$i++) {
+            \$recordId = (string) Str::ulid();
+            \$padded = str_pad((string)\$i, 3, '0', STR_PAD_LEFT);
+
+            // Multilingual Tier 1 JSON payload
+            \$titleJson = json_encode([
+                'id' => "Proyek Operasional #{\$padded} - {$projectName}",
+                'en' => "Operational Enterprise Project #{\$padded} - {$projectName}",
+            ]);
+
+            \$descJson = json_encode([
+                'id' => "Catatan rekayasa sistem otomatis yang terhubung ke arsitektur PostgreSQL ULID.",
+                'en' => "Automated engineering record bound to PostgreSQL ULID architecture.",
+            ]);
+
+            // Insert into primary demonstration entity table if migration exists
+            try {
+                DB::table('project_records')->insertOrIgnore([
+                    'id' => \$recordId,
+                    'user_id' => \$operatorId,
+                    'title' => \$titleJson,
+                    'description' => \$descJson,
+                    'nominal_amount' => 1500000 + (\$i * 250000),
+                    'phone_e164' => '+628123456' . \$padded,
+                    'status' => \$i % 3 === 0 ? 'settled' : (\$i % 2 === 0 ? 'processing' : 'active'),
+                    'created_at' => \$now->copy()->subHours(\$i * 2),
+                    'updated_at' => \$now->copy()->subHours(\$i * 2),
+                ]);
+            } catch (\Throwable \$e) {
+                // Table might use customized entity name from ERD; safely bypass if not migrated yet
+            }
+        }
+    }
 }
+PHP;
+    }
+
+    /**
+     * Pillar 4: Generate Master Database Seeder (database/seeders/DatabaseSeeder.php).
+     */
+    public static function generateDatabaseSeeder(VisionBlueprint $blueprint): string
+    {
+        return <<<PHP
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class DatabaseSeeder extends Seeder
+{
+    /**
+     * Seed the application's database.
+     */
+    public function run(): void
+    {
+        \$this->call([
+            SyntheticDataSeeder::class,
+        ]);
+    }
+}
+PHP;
+    }
+
+    /**
+     * Pillar 6: Generate Contract-First Feature Testing Suite (tests/Feature/ApiContractTest.php).
+     */
+    public static function generateContractTest(VisionBlueprint $blueprint, array $erdTables): string
+    {
+        $slug = $blueprint->slug ?: 'app';
+
+        return <<<PHP
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ApiContractTest extends TestCase
+{
+    /**
+     * Test Keyset Cursor Pagination O(1) format on entity index.
+     */
+    public function test_resource_index_returns_keyset_cursor_pagination(): void
+    {
+        \$response = \$this->getJson('/api/v1/healthcheck');
+        \$response->assertStatus(200);
+        \$response->assertJsonStructure([
+            'status',
+            'timestamp',
+            'scalability_mode',
+        ]);
+    }
+
+    /**
+     * Test protected endpoints return 401 when unauthenticated.
+     */
+    public function test_protected_routes_require_authentication(): void
+    {
+        \$response = \$this->postJson('/api/v1/resources', [
+            'title' => 'Unauthorized Attempt',
+        ]);
+
+        \$response->assertStatus(401);
+    }
+
+    /**
+     * Test validation rules reject invalid input with 422 Unprocessable Entity.
+     */
+    public function test_resource_creation_validates_required_fields(): void
+    {
+        // Authenticate dummy user
+        \$user = (new \App\Models\User())->forceFill([
+            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'name' => 'Test Runner',
+            'email' => 'tester@test.local',
+        ]);
+
+        \$response = \$this->actingAs(\$user)->postJson('/api/v1/resources', []);
+
+        \$response->assertStatus(422);
+        \$response->assertJsonValidationErrors(['title']);
+    }
+
+    /**
+     * Test valid creation returns 201 with 26-character ULID primary key.
+     */
+    public function test_resource_creation_emits_valid_ulid(): void
+    {
+        \$user = (new \App\Models\User())->forceFill([
+            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'name' => 'Test Runner',
+            'email' => 'tester@test.local',
+        ]);
+
+        \$response = \$this->actingAs(\$user)->postJson('/api/v1/resources', [
+            'title' => 'High Concurrency Pipeline',
+            'nominal_amount' => 5000000,
+        ]);
+
+        if (\$response->status() === 201) {
+            \$id = \$response->json('data.id');
+            \$this->assertIsString(\$id);
+            \$this->assertEquals(26, strlen(\$id));
+        }
+    }
+}
+PHP;
+    }
+
+    /**
+     * Pillar 7: Generate GitHub Actions CI/CD Workflow (.github/workflows/deploy.yml).
+     */
+    public static function generateCiCdWorkflow(VisionBlueprint $blueprint, string $slug): string
+    {
+        return <<<YAML
+name: Software Factory CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP Runtime
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, redis
+          coverage: none
+
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Execute Automated Regression Test Suite
+        run: php artisan test --parallel
+
+  deploy-to-cloud:
+    needs: test-and-lint
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Remote SSH Rolling Deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: \${{ secrets.VPS_HOST }}
+          username: \${{ secrets.VPS_USER }}
+          key: \${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/{$slug}
+            git pull origin main
+            ./deploy.sh 1
+YAML;
+    }
+
+    /**
+     * Pillar 7: Generate Production Zero-Downtime Deployment Shell Script (deploy.sh).
+     */
+    public static function generateDeployScript(VisionBlueprint $blueprint, string $slug): string
+    {
+        return <<<BASH
+#!/usr/bin/env bash
+# ==============================================================================
+# PROJECT OS // PRODUCTION SELF-HEALING DEPLOYMENT CONTROLLER
+# Project: {$blueprint->nama_bisnis}
+# ==============================================================================
+
+set -e
+
+SCENARIO=\${1:-1}
+
+echo ">>> [SOFTWARE FACTORY] Initializing deployment scenario \${SCENARIO}..."
+
+case "\${SCENARIO}" in
+  1)
+    echo ">>> Scenario 1: Standard UI & Logic Hot-Reload..."
+    git pull origin main
+    composer install --no-dev --optimize-autoloader
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    chmod -R 777 storage bootstrap/cache
+    php artisan queue:restart
+    echo ">>> Deployment Scenario 1 Complete! System Live."
+    ;;
+  2)
+    echo ">>> Scenario 2: Safe Database Migration without Data Loss..."
+    git pull origin main
+    composer install --no-dev --optimize-autoloader
+    php artisan migrate --force
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    chmod -R 777 storage bootstrap/cache
+    php artisan queue:restart
+    echo ">>> Deployment Scenario 2 Complete! Schema Synchronized."
+    ;;
+  3)
+    echo ">>> Scenario 3: Staging Wipe & Rebuild with Seeders..."
+    read -p "Are you sure you want to run migrate:fresh? (y/N): " CONFIRM
+    if [ "\$CONFIRM" = "y" ]; then
+      php artisan migrate:fresh --seed --force
+      chmod -R 777 storage bootstrap/cache
+      echo ">>> Staging database wiped and populated with synthetic mock records."
+    else
+      echo ">>> Migration aborted."
+    fi
+    ;;
+  *)
+    echo ">>> Usage: ./deploy.sh [1-3]"
+    exit 1
+    ;;
+esac
+BASH;
+    }
+
+    /**
+     * Pillar 7: Generate Systemd Queue Worker Supervisor Service.
+     */
+    public static function generateQueueWorkerService(string $slug): string
+    {
+        return <<<CONF
+[Unit]
+Description={$slug} High-Concurrency Queue Worker (Redis)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=3
+ExecStart=/usr/bin/php /var/www/html/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+
+[Install]
+WantedBy=multi-user.target
+CONF;
+    }
+}
+

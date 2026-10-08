@@ -138,8 +138,10 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/blueprint/{slug}`: Halaman preview dokumen PRD, ERD, dan Tech Stack (`BlueprintController::show`).
 - `/blueprint/{slug}/raw-md`: Endpoint raw Markdown PRD Ultimate untuk 1-click clipboard prompt AI Code Agent (`BlueprintController::rawMd`).
 - `/blueprint/{slug}/download/md`: Endpoint unduh dokumen spesifikasi PRD Ultimate format Markdown (`BlueprintController::downloadMd`).
-- `/blueprint/{slug}/export/scaffold`: Endpoint ekspor 1-click arsip zip berisikan docker-compose.yml, schema_complete.sql (strict ULID), dan struktur routing Laravel 13 / Next.js (`BlueprintController::exportScaffold`).
-- `/blueprint/{slug}/scaffold/preview`: Endpoint AJAX JSON preview source code berkas scaffold (`BlueprintController::previewScaffold`).
+- `/blueprint/{slug}/export/scaffold`: Endpoint ekspor 1-click arsip zip berisikan docker-compose.yml, schema_complete.sql (strict ULID), dan struktur routing Laravel 13 / Next.js (`BlueprintController::exportScaffold`), otomatis menggabungkan elaborasi kustom pengguna dari `user_metadata['scaffold_customizations']`.
+- `/blueprint/{slug}/scaffold/preview`: Endpoint AJAX JSON preview source code berkas scaffold (`BlueprintController::previewScaffold`), mengembalikan daftar `customized_files`.
+- `/blueprint/{slug}/scaffold/save-file`: Endpoint AJAX POST untuk menyimpan elaborasi/kustomisasi kode berkas scaffold secara auto-save (`BlueprintController::saveScaffoldFile`).
+- `/blueprint/{slug}/scaffold/reset-file`: Endpoint AJAX POST untuk mengembalikan berkas scaffold yang dielaborasi ke default sintesis AI (`BlueprintController::resetScaffoldFile`).
 - `/api/blueprint/{slug}/presence`: Endpoint POST & GET sinkronisasi kehadiran kolaborator real-time (Lead Architect & Klien) dan koordinat kursor langsung (`BlueprintController::updatePresence`, `BlueprintController::getPresence`).
 - `/api/blueprint/{slug}/checkpoint`: Endpoint POST sinkronisasi progress checkpoint sprint developer ke database (`BlueprintController::updateCheckpoint`) yang otomatis merefleksikan persentase dan fase terkini ke timeline portal klien secara real-time.
 - `/customer/dashboard`: Client Portal & Customer Dashboard (`CustomerDashboardController::index`) menampilkan 4 KPI ringkasan akun, Roadmap Sprint Proyek 6-fase live terhubung ke PRD checkpoints, Pusat Unduh Lisensi Retail Seumur Hidup (PDF, MD, ZIP Scaffold, SQL DDL), Pelacak Garansi Revisi 30 Hari, dan Tabel Faktur Pajak & Kwitansi Resmi reimbursement kantor.

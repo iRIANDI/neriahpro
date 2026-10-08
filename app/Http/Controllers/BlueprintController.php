@@ -1073,12 +1073,88 @@ class BlueprintController extends Controller
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
 
         $files = \App\Services\ScaffoldGeneratorService::generateFiles($blueprint);
+        $customizations = $blueprint->user_metadata['scaffold_customizations'] ?? [];
 
         return response()->json([
             'success' => true,
             'slug' => $blueprint->slug,
             'project_name' => $blueprint->nama_bisnis ?: 'Proyek',
             'files' => $files,
+            'customized_files' => array_keys($customizations),
+        ]);
+    }
+
+    /**
+     * Auto-save or update an elaborated scaffold file for this blueprint.
+     */
+    public function saveScaffoldFile(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+
+        $request->validate([
+            'filename' => 'required|string|max:255',
+            'content' => 'required|string',
+        ]);
+
+        $filename = $request->input('filename');
+        $content = $request->input('content');
+
+        // Prevent path traversal
+        if (str_contains($filename, '..') || str_starts_with($filename, '/')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nama file tidak valid.',
+            ], 422);
+        }
+
+        $userMeta = $blueprint->user_metadata ?? [];
+        $scaffoldCustom = $userMeta['scaffold_customizations'] ?? [];
+        $scaffoldCustom[$filename] = $content;
+        $userMeta['scaffold_customizations'] = $scaffoldCustom;
+
+        $blueprint->update([
+            'user_metadata' => $userMeta,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'filename' => $filename,
+            'saved_at' => now()->format('H:i:s') . ' WIB',
+            'message' => "Berkas {$filename} berhasil dielaborasi dan disimpan otomatis.",
+        ]);
+    }
+
+    /**
+     * Reset an elaborated scaffold file back to default AI synthesis.
+     */
+    public function resetScaffoldFile(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+
+        $request->validate([
+            'filename' => 'required|string|max:255',
+        ]);
+
+        $filename = $request->input('filename');
+
+        $userMeta = $blueprint->user_metadata ?? [];
+        if (isset($userMeta['scaffold_customizations'][$filename])) {
+            unset($userMeta['scaffold_customizations'][$filename]);
+            $blueprint->update([
+                'user_metadata' => $userMeta,
+            ]);
+        }
+
+        // Generate clean default
+        $allFiles = \App\Services\ScaffoldGeneratorService::generateFiles($blueprint);
+        $defaultContent = $allFiles[$filename] ?? '';
+
+        return response()->json([
+            'success' => true,
+            'filename' => $filename,
+            'content' => $defaultContent,
+            'saved_at' => now()->format('H:i:s') . ' WIB',
+            'message' => "Berkas {$filename} berhasil dikembalikan ke sintesis AI default.",
         ]);
     }
 

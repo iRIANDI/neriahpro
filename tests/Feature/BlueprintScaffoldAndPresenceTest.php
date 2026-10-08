@@ -224,4 +224,73 @@ class BlueprintScaffoldAndPresenceTest extends TestCase
         $this->assertContains('retail_lite', $selfServiceIds);
         $this->assertNotContains('full_mvp', $selfServiceIds);
     }
+
+    public function test_scaffold_file_save_and_reset_endpoints(): void
+    {
+        $blueprint = VisionBlueprint::create([
+            'client_name' => 'Elaborator Client',
+            'email' => 'elaborator@example.com',
+            'whatsapp' => '628123999999',
+            'nama_bisnis' => 'Custom Cloud OS',
+            'tipe_aplikasi' => 'SaaS Platform',
+            'target_pengguna' => 'DevOps Engineers',
+            'masalah_utama' => 'Konfigurasi rumit',
+            'solusi_diinginkan' => 'Scaffold generator',
+            'target_waktu' => '30 Hari Kerja',
+            'is_published' => true,
+        ]);
+
+        $customDockerContent = "version: '3.9'\nservices:\n  custom_cloud:\n    image: custom_cloud:v2";
+
+        // 1. Save customized file
+        $saveRes = $this->postJson(route('blueprint.scaffold.save-file', $blueprint->slug), [
+            'filename' => 'docker-compose.yml',
+            'content' => $customDockerContent,
+        ]);
+
+        $saveRes->assertOk();
+        $saveRes->assertJson([
+            'success' => true,
+            'filename' => 'docker-compose.yml',
+        ]);
+        $this->assertNotEmpty($saveRes->json('saved_at'));
+
+        // Verify blueprint database state has customization in user_metadata
+        $blueprint->refresh();
+        $this->assertEquals(
+            $customDockerContent,
+            $blueprint->user_metadata['scaffold_customizations']['docker-compose.yml'] ?? null
+        );
+
+        // 2. Preview endpoint returns customized content and lists it in customized_files
+        $previewRes = $this->getJson(route('blueprint.scaffold.preview', $blueprint->slug));
+        $previewRes->assertOk();
+        $previewData = $previewRes->json();
+        $this->assertEquals($customDockerContent, $previewData['files']['docker-compose.yml']);
+        $this->assertContains('docker-compose.yml', $previewData['customized_files']);
+
+        // 3. Reset customized file back to default
+        $resetRes = $this->postJson(route('blueprint.scaffold.reset-file', $blueprint->slug), [
+            'filename' => 'docker-compose.yml',
+        ]);
+
+        $resetRes->assertOk();
+        $resetRes->assertJson([
+            'success' => true,
+            'filename' => 'docker-compose.yml',
+        ]);
+        $this->assertStringContainsString('postgres:16-alpine', $resetRes->json('content'));
+
+        // Verify blueprint user_metadata customization removed
+        $blueprint->refresh();
+        $this->assertArrayNotHasKey(
+            'docker-compose.yml',
+            $blueprint->user_metadata['scaffold_customizations'] ?? []
+        );
+
+        // Preview now shows customized_files does not contain docker-compose.yml
+        $previewAfterReset = $this->getJson(route('blueprint.scaffold.preview', $blueprint->slug));
+        $this->assertNotContains('docker-compose.yml', $previewAfterReset->json('customized_files'));
+    }
 }
+

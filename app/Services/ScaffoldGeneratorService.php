@@ -23,7 +23,7 @@ class ScaffoldGeneratorService
         }
 
         $schemaSql = self::generateDatabaseMigrationsSql($blueprint, $erdTables);
-        return [
+        $files = [
             // Pillar 1: Contract-First Specifications & Database Architecture
             'openapi.json' => self::generateOpenApiSpec($blueprint, $erdTables),
             'schema_complete.sql' => $schemaSql,
@@ -60,6 +60,18 @@ class ScaffoldGeneratorService
             'deploy.sh' => self::generateDeployScript($blueprint, $slug),
             'docker/systemd/queue-worker.service' => self::generateQueueWorkerService($slug),
         ];
+
+        // Apply any user-elaborated / customized scaffold files (persisted in user_metadata)
+        $customizations = $blueprint->user_metadata['scaffold_customizations'] ?? [];
+        if (!empty($customizations) && is_array($customizations)) {
+            foreach ($customizations as $file => $customContent) {
+                if (is_string($customContent) && isset($files[$file])) {
+                    $files[$file] = $customContent;
+                }
+            }
+        }
+
+        return $files;
     }
 
     /**

@@ -503,18 +503,29 @@
             }
         };
 
+        let isProgrammaticScroll = false;
+        let programmaticScrollTimer = null;
+
         window.jumpToSection = function(id) {
             const el = document.getElementById(id);
             if (!el) return;
+
+            // Lock scroll spy while smooth scrolling to target
+            isProgrammaticScroll = true;
+            clearTimeout(programmaticScrollTimer);
+            programmaticScrollTimer = setTimeout(() => {
+                isProgrammaticScroll = false;
+            }, 850);
+
             const yOffset = -80;
-            const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            const y = Math.max(0, el.getBoundingClientRect().top + window.pageYOffset + yOffset);
             window.scrollTo({ top: y, behavior: 'smooth' });
 
             // Visual pulse highlight
             el.classList.add('outline-2', 'outline-emerald-500', 'transition-all');
             setTimeout(() => {
                 el.classList.remove('outline-2', 'outline-emerald-500');
-            }, 2000);
+            }, 1800);
         };
 
         window.setupBlueprintScrollSpy = function(onActiveChange) {
@@ -525,35 +536,47 @@
             ];
             let ticking = false;
             let lastActive = null;
+
             const update = () => {
+                if (isProgrammaticScroll) {
+                    ticking = false;
+                    return;
+                }
+
                 let current = sectionIds[0];
                 const isBottom = (window.innerHeight + window.pageYOffset) >= (document.body.offsetHeight - 120);
+                
                 if (isBottom) {
                     current = sectionIds[sectionIds.length - 1];
+                } else if (window.pageYOffset < 400) {
+                    current = sectionIds[0];
                 } else {
                     for (let i = sectionIds.length - 1; i >= 0; i--) {
                         const el = document.getElementById(sectionIds[i]);
                         if (el) {
                             const rect = el.getBoundingClientRect();
-                            if (rect.top <= 240) {
+                            if (rect.top <= 220) {
                                 current = sectionIds[i];
                                 break;
                             }
                         }
                     }
                 }
+
                 if (current !== lastActive) {
                     lastActive = current;
                     onActiveChange(current);
                 }
                 ticking = false;
             };
+
             window.addEventListener('scroll', () => {
                 if (!ticking) {
                     window.requestAnimationFrame(update);
                     ticking = true;
                 }
             }, { passive: true });
+
             update();
         };
 
@@ -911,8 +934,14 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 },
                 scaffoldModalOpen: false,
                 scaffoldLoading: false,
+                scaffoldMode: 'preview', // 'preview' or 'edit'
                 scaffoldActiveTab: 'docker-compose.yml',
                 scaffoldFiles: {},
+                scaffoldCustomizedFiles: [],
+                scaffoldSaveStatus: 'idle', // 'idle' | 'typing' | 'saving' | 'saved' | 'error'
+                scaffoldLastSaved: null,
+                scaffoldDebounceTimer: null,
+                scaffoldIsScopeLocked: {{ ($isScopeLocked ?? false) ? 'true' : 'false' }},
                 collaborators: [],
                 collaboratorCursor: { x: 0, y: 0, visible: false, name: '' },
                 async openScaffoldModal() {
@@ -924,8 +953,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             const data = await res.json();
                             if (data && data.files) {
                                 this.scaffoldFiles = data.files;
+                                this.scaffoldCustomizedFiles = data.customized_files || [];
                                 const keys = Object.keys(data.files);
-                                if (keys.length > 0) this.scaffoldActiveTab = keys[0];
+                                if (keys.length > 0 && !this.scaffoldFiles[this.scaffoldActiveTab]) {
+                                    this.scaffoldActiveTab = keys[0];
+                                }
                             }
                         } catch(e) {
                             if (window.showToast) window.showToast({ type: 'error', title: 'GAGAL MEMUAT', message: 'Gagal memuat pratinjau scaffold.' });
@@ -933,6 +965,101 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             this.scaffoldLoading = false;
                         }
                     }
+                },
+                onScaffoldCodeInput() {
+                    this.scaffoldSaveStatus = 'typing';
+                    clearTimeout(this.scaffoldDebounceTimer);
+                    this.scaffoldDebounceTimer = setTimeout(() => {
+                        this.autoSaveActiveScaffoldFile();
+                    }, 1000);
+                },
+                async autoSaveActiveScaffoldFile(showToastFeedback = false) {
+                    if (this.scaffoldIsScopeLocked) return;
+                    const filename = this.scaffoldActiveTab;
+                    const content = this.scaffoldFiles[filename] || '';
+                    this.scaffoldSaveStatus = 'saving';
+
+                    try {
+                        const res = await fetch('{{ route('blueprint.scaffold.save-file', $blueprint->slug) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({ filename, content })
+                        });
+                        const data = await res.json();
+                        if (data && data.success) {
+                            this.scaffoldSaveStatus = 'saved';
+                            this.scaffoldLastSaved = data.saved_at;
+                            if (!this.scaffoldCustomizedFiles.includes(filename)) {
+                                this.scaffoldCustomizedFiles.push(filename);
+                            }
+                            if (showToastFeedback && window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: 'TERSINKRON KE CLOUD',
+                                    message: 'Perubahan pada berkas ' + filename + ' berhasil disimpan otomatis.'
+                                });
+                            }
+                        } else {
+                            throw new Error(data.message || 'Gagal menyimpan.');
+                        }
+                    } catch(err) {
+                        this.scaffoldSaveStatus = 'error';
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: 'GAGAL AUTO-SAVE',
+                                message: 'Tidak dapat menyimpan otomatis berkas ' + filename + '. Cek koneksi Anda.'
+                            });
+                        }
+                    }
+                },
+                async resetActiveScaffoldFile() {
+                    if (this.scaffoldIsScopeLocked) return;
+                    const filename = this.scaffoldActiveTab;
+                    this.scaffoldLoading = true;
+                    try {
+                        const res = await fetch('{{ route('blueprint.scaffold.reset-file', $blueprint->slug) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({ filename })
+                        });
+                        const data = await res.json();
+                        if (data && data.success) {
+                            this.scaffoldFiles[filename] = data.content;
+                            this.scaffoldCustomizedFiles = this.scaffoldCustomizedFiles.filter(f => f !== filename);
+                            this.scaffoldSaveStatus = 'saved';
+                            this.scaffoldLastSaved = data.saved_at;
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'info',
+                                    title: 'RESET KE DEFAULT AI',
+                                    message: 'Berkas ' + filename + ' berhasil dikembalikan ke sintesis PRD awal.'
+                                });
+                            }
+                        }
+                    } catch(e) {
+                        if (window.showToast) window.showToast({ type: 'error', title: 'GAGAL RESET', message: 'Gagal mengembalikan berkas ke default.' });
+                    } finally {
+                        this.scaffoldLoading = false;
+                    }
+                },
+                insertTabInEditor(event) {
+                    const textarea = event.target;
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const val = textarea.value;
+                    textarea.value = val.substring(0, start) + '    ' + val.substring(end);
+                    textarea.selectionStart = textarea.selectionEnd = start + 4;
+                    this.scaffoldFiles[this.scaffoldActiveTab] = textarea.value;
+                    this.onScaffoldCodeInput();
                 },
                 copyActiveScaffold() {
                     const code = this.scaffoldFiles[this.scaffoldActiveTab] || '';
@@ -3274,7 +3401,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         @endforeach
                     </div>
                 @endif
-                <!-- SECTION 3.5: PUSAT ORKESTRASI & SPRINT COCKPIT AI CODING AGENT -->
+            </section>
+
+            <!-- SECTION 3.5: PUSAT ORKESTRASI & SPRINT COCKPIT AI CODING AGENT -->
             <section id="section-3-5" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-4">
                     <div class="flex items-center gap-2">
@@ -7794,42 +7923,34 @@ class ProcessSecureDataset implements ShouldQueue
 
             <!-- Tab Selector (All 7 Pillars of Software Factory OS) -->
             <div class="flex items-center gap-1.5 mb-3 font-mono text-xs border-b border-zinc-800 pb-2 shrink-0 overflow-x-auto custom-prd-scrollbar py-1 select-none">
-                <button type="button" @click="scaffoldActiveTab = 'docker-compose.yml'" :class="scaffoldActiveTab === 'docker-compose.yml' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    docker-compose.yml
-                </button>
-                <button type="button" @click="scaffoldActiveTab = 'openapi.json'" :class="scaffoldActiveTab === 'openapi.json' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    openapi.json (Swagger)
-                </button>
-                <button type="button" @click="scaffoldActiveTab = 'schema_complete.sql'" :class="scaffoldActiveTab === 'schema_complete.sql' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    schema_complete.sql (PostgreSQL)
-                </button>
-                <button type="button" @click="scaffoldActiveTab = 'routes/web.php'" :class="scaffoldActiveTab === 'routes/web.php' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    routes/web.php (Laravel 13)
-                </button>
-                <button type="button" @click="scaffoldActiveTab = 'routes/api.php'" :class="scaffoldActiveTab === 'routes/api.php' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    routes/api.php (Sanctum)
-                </button>
-                <button type="button" @click="scaffoldActiveTab = 'app/api/route.ts'" :class="scaffoldActiveTab === 'app/api/route.ts' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    Next.js App Router (TypeScript)
-                </button>
-                <button type="button" @click="scaffoldActiveTab = 'database/seeders/SyntheticDataSeeder.php'" :class="scaffoldActiveTab === 'database/seeders/SyntheticDataSeeder.php' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    SyntheticDataSeeder.php
-                </button>
-                <button type="button" @click="scaffoldActiveTab = '.cursorrules'" :class="scaffoldActiveTab === '.cursorrules' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    .cursorrules (AI Agent)
-                </button>
-                <button type="button" @click="scaffoldActiveTab = 'tests/Feature/ApiContractTest.php'" :class="scaffoldActiveTab === 'tests/Feature/ApiContractTest.php' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    ApiContractTest.php
-                </button>
-                <button type="button" @click="scaffoldActiveTab = 'deploy.sh'" :class="scaffoldActiveTab === 'deploy.sh' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    deploy.sh (CI/CD)
-                </button>
-                <button type="button" @click="scaffoldActiveTab = 'design/tokens.json'" :class="scaffoldActiveTab === 'design/tokens.json' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    design/tokens.json
-                </button>
-                <button type="button" @click="scaffoldActiveTab = 'README.md'" :class="scaffoldActiveTab === 'README.md' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
-                    README.md
-                </button>
+                <template x-for="tab in [
+                    { id: 'docker-compose.yml', label: 'docker-compose.yml' },
+                    { id: 'openapi.json', label: 'openapi.json (Swagger)' },
+                    { id: 'schema_complete.sql', label: 'schema_complete.sql (PostgreSQL)' },
+                    { id: 'routes/web.php', label: 'routes/web.php (Laravel 13)' },
+                    { id: 'routes/api.php', label: 'routes/api.php (Sanctum)' },
+                    { id: 'app/api/route.ts', label: 'Next.js App Router (TypeScript)' },
+                    { id: 'database/seeders/SyntheticDataSeeder.php', label: 'SyntheticDataSeeder.php' },
+                    { id: '.cursorrules', label: '.cursorrules (AI Agent)' },
+                    { id: 'tests/Feature/ApiContractTest.php', label: 'ApiContractTest.php' },
+                    { id: 'deploy.sh', label: 'deploy.sh (CI/CD)' },
+                    { id: 'design/tokens.json', label: 'design/tokens.json' },
+                    { id: 'README.md', label: 'README.md' }
+                ]" :key="tab.id">
+                    <button 
+                        type="button" 
+                        @click="scaffoldActiveTab = tab.id" 
+                        :class="scaffoldActiveTab === tab.id ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" 
+                        class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 rounded-none"
+                    >
+                        <span x-text="tab.label"></span>
+                        <span 
+                            x-show="scaffoldCustomizedFiles.includes(tab.id)" 
+                            class="w-1.5 h-1.5 bg-amber-400 inline-block rounded-none shadow-sm"
+                            title="File ini telah dielaborasi secara kustom"
+                        ></span>
+                    </button>
+                </template>
             </div>
 
             <!-- Code Content Area (Strictly Scrollable Container) -->
@@ -7837,23 +7958,106 @@ class ProcessSecureDataset implements ShouldQueue
                 <div x-show="scaffoldLoading" class="absolute inset-0 bg-black/80 flex items-center justify-center text-emerald-400 text-sm font-mono font-bold animate-pulse z-10">
                     Memuat sintesis file scaffold...
                 </div>
-                <div class="shrink-0 flex items-center justify-between pb-2 mb-2 border-b border-zinc-900 text-[10px] text-zinc-500">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 bg-emerald-500 rounded-none"></span>
+                <div class="shrink-0 flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-900 text-[10px]">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="w-2 h-2 rounded-none shrink-0" :class="scaffoldCustomizedFiles.includes(scaffoldActiveTab) ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-emerald-500'"></span>
                         <span class="text-zinc-200 font-bold" x-text="scaffoldActiveTab">docker-compose.yml</span>
                         <span class="text-zinc-500" x-text="'(' + ((scaffoldFiles[scaffoldActiveTab] || '').split('\n').length) + ' baris)'"></span>
+                        <template x-if="scaffoldCustomizedFiles.includes(scaffoldActiveTab)">
+                            <span class="px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] font-bold uppercase tracking-wider">
+                                DIELABORASI (CUSTOM)
+                            </span>
+                        </template>
+                        <template x-if="!scaffoldCustomizedFiles.includes(scaffoldActiveTab)">
+                            <span class="px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold uppercase tracking-wider">
+                                DEFAULT AI SINTESIS
+                            </span>
+                        </template>
                     </div>
-                    <button type="button" @click="copyActiveScaffold()" class="text-emerald-400 hover:text-emerald-300 font-bold uppercase transition flex items-center gap-1 cursor-pointer">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                        <span>Salin File Ini</span>
-                    </button>
+
+                    <!-- Auto-Save Status Indicator & Action Bar -->
+                    <div class="flex items-center gap-2">
+                        <!-- Auto-Save Status Indicator -->
+                        <div class="flex items-center gap-1.5 px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-[10px]">
+                            <template x-if="scaffoldSaveStatus === 'typing'">
+                                <span class="flex items-center gap-1 text-amber-400">
+                                    <span class="w-1.5 h-1.5 bg-amber-400 animate-ping"></span>
+                                    <span>Mengetik...</span>
+                                </span>
+                            </template>
+                            <template x-if="scaffoldSaveStatus === 'saving'">
+                                <span class="flex items-center gap-1 text-sky-400 animate-pulse">
+                                    <svg class="w-2.5 h-2.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                    <span>Menyimpan otomatis...</span>
+                                </span>
+                            </template>
+                            <template x-if="scaffoldSaveStatus === 'saved'">
+                                <span class="flex items-center gap-1 text-emerald-400">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    <span x-text="'Tersimpan ' + scaffoldLastSaved"></span>
+                                </span>
+                            </template>
+                            <template x-if="scaffoldSaveStatus === 'error'">
+                                <span class="flex items-center gap-1 text-rose-400">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    <span>Gagal simpan</span>
+                                </span>
+                            </template>
+                            <template x-if="scaffoldSaveStatus === 'idle'">
+                                <span class="text-zinc-500">Auto-Save Siap</span>
+                            </template>
+                        </div>
+
+                        <!-- Mode Switcher: Preview vs Edit & Elaborasi -->
+                        <div class="inline-flex border border-zinc-800 p-0.5 bg-zinc-950">
+                            <button type="button" @click="scaffoldMode = 'preview'" :class="scaffoldMode === 'preview' ? 'bg-zinc-800 text-zinc-100 font-bold' : 'text-zinc-500 hover:text-zinc-300'" class="px-2 py-0.5 transition cursor-pointer">
+                                PREVIEW
+                            </button>
+                            <button type="button" @click="scaffoldMode = 'edit'" :class="scaffoldMode === 'edit' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-500 hover:text-zinc-300'" class="px-2 py-0.5 transition cursor-pointer flex items-center gap-1">
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                <span>EDIT &amp; ELABORASI</span>
+                            </button>
+                        </div>
+
+                        <!-- Reset to AI default button (if customized) -->
+                        <template x-if="scaffoldCustomizedFiles.includes(scaffoldActiveTab)">
+                            <button type="button" @click="resetActiveScaffoldFile()" class="px-2 py-0.5 border border-zinc-800 hover:border-amber-500/50 hover:bg-zinc-900 text-zinc-400 hover:text-amber-400 transition cursor-pointer flex items-center gap-1" title="Kembalikan file ini ke sintesis default AI">
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                <span>RESET AI</span>
+                            </button>
+                        </template>
+
+                        <button type="button" @click="copyActiveScaffold()" class="text-emerald-400 hover:text-emerald-300 font-bold uppercase transition flex items-center gap-1 cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            <span>Salin</span>
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Code Container: Preview Mode vs Edit/Elaborasi Mode -->
                 <div class="flex-1 min-h-0 relative overflow-hidden flex flex-col">
+                    <!-- PREVIEW MODE -->
                     <pre 
+                        x-show="scaffoldMode === 'preview'"
                         class="flex-1 min-h-0 w-full overflow-y-scroll overflow-x-auto text-[11px] text-emerald-400 leading-relaxed select-all font-mono whitespace-pre p-3 bg-zinc-950/90 border border-zinc-900 custom-prd-scrollbar focus:outline-none" 
                         tabindex="0"
                         x-text="scaffoldFiles[scaffoldActiveTab] || 'Memuat berkas...'"
                     ></pre>
+
+                    <!-- EDIT & ELABORASI MODE (<textarea> with Tab Support & Auto-Save) -->
+                    <div x-show="scaffoldMode === 'edit'" class="flex-1 min-h-0 flex flex-col relative">
+                        <textarea 
+                            class="flex-1 min-h-0 w-full overflow-y-scroll overflow-x-auto text-[11px] text-emerald-300 leading-relaxed font-mono p-3 bg-zinc-950 border border-emerald-500/40 custom-prd-scrollbar focus:outline-none focus:border-emerald-400 resize-none selection:bg-emerald-500/30 selection:text-white"
+                            spellcheck="false"
+                            x-model="scaffoldFiles[scaffoldActiveTab]"
+                            @input="onScaffoldCodeInput()"
+                            @keydown.tab.prevent="insertTabInEditor($event)"
+                            placeholder="Tulis atau elaborasi spesifikasi scaffold kode di sini... Perubahan akan otomatis tersimpan dalam 1 detik."
+                        ></textarea>
+                        <div class="absolute bottom-2 right-4 pointer-events-none text-[9px] text-zinc-500 bg-zinc-950/90 px-2 py-0.5 border border-zinc-800">
+                            TAB = 4 SPASI &bull; AUTO-SAVE 1000ms
+                        </div>
+                    </div>
                 </div>
             </div>
 

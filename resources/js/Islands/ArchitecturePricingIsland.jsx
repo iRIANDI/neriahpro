@@ -463,7 +463,7 @@ export default function ArchitecturePricingIsland({
   ];
 
   return (
-    <div className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 pt-4 sm:pt-6 pb-12 sm:pb-16 transition-colors">
+    <div id="pricing-matrix" className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 pt-4 sm:pt-6 pb-12 sm:pb-16 transition-colors scroll-mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
         {/* DYNAMIC MODULE SWITCHER (PROJECT OS VS UPCOMING CV PRO - DITENTUKAN DARI BACKEND ADMIN) */}

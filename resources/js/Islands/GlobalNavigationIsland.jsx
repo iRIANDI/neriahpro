@@ -230,14 +230,14 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
           
           {/* Brand Logo */}
-          <a href="/" className="flex items-center gap-2 group shrink-0">
+          <a href="/" className="flex items-center gap-2 group shrink-0 mr-4 sm:mr-6 lg:mr-8">
             <span className="w-7 h-7 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black flex items-center justify-center font-mono font-black text-xs rounded-none transition-transform group-hover:scale-105">
               N
             </span>
             <span className="font-black text-lg sm:text-xl uppercase tracking-tighter text-zinc-900 dark:text-white font-sans">
               NERIAH<span className="text-emerald-500">PRO</span>
             </span>
-            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 border-l border-zinc-300 dark:border-zinc-700 pl-2 hidden lg:inline font-bold whitespace-nowrap">
+            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 ml-2 hidden xl:inline font-bold whitespace-nowrap rounded-none">
               {lang === 'id' ? 'APLIKASI SOLUSI HIDUP' : 'LIFE SOLUTION APPS'}
             </span>
           </a>

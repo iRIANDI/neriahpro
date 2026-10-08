@@ -12,16 +12,17 @@ class LandingPageSeeder extends Seeder
      */
     public function run(): void
     {
+        // 1. Dual-Track Homepage (/ or /home)
         $homePage = CmsPage::firstOrNew(['slug' => 'home']);
         
         $homePage->title = [
-            'en' => 'Neriah Pro // Enterprise Architecture & Digital Services Hub',
-            'id' => 'Neriah Pro // Pusat Arsitektur & Layanan Rekayasa Digital'
+            'en' => 'Enterprise Architecture & Digital Engineering Platform // Neriah Pro',
+            'id' => 'Pusat Arsitektur & Rekayasa Sistem Digital // Neriah Pro'
         ];
         
         $homePage->meta_description = [
-            'en' => 'High-retention digital architecture platform. Generate PRD blueprints, PostgreSQL Strict ULID schemas, contract lock, and enterprise systems.',
-            'id' => 'Platform arsitektur digital teruji. Hasilkan PRD blueprint instan, skema database PostgreSQL Strict ULID, penguncian kontrak, dan sistem enterprise.'
+            'en' => 'Enterprise software architecture & engineering platform. Choose between ready-to-code retail software licenses (PRD, DDL, Scaffold) or full dedicated turnkey engineering.',
+            'id' => 'Platform arsitektur & rekayasa perangkat lunak enterprise. Pilih lisensi digital retail siap koding (PRD, DDL, Scaffold) atau rekayasa proyek kustom bersama tim dedicated engineer.'
         ];
         
         $homePage->is_published = true;
@@ -32,20 +33,38 @@ class LandingPageSeeder extends Seeder
                 'is_active' => true,
                 'data' => [
                     'headline' => [
-                        'id' => 'Pusat Arsitektur & Rekayasa Digital untuk Proyek Berskala Tinggi.',
-                        'en' => 'Digital Architecture & Enterprise Software Hub for High-Scale Projects.'
+                        'id' => 'Pusat Arsitektur & Rekayasa Sistem Digital Kelas Enterprise.',
+                        'en' => 'Enterprise Software Architecture & Engineering Platform.'
                     ],
                     'subheadline' => [
-                        'id' => 'Ubah visi bisnis Anda menjadi Product Requirements Document (PRD) lengkap, skema basis data ERD PostgreSQL Strict ULID, alur kerja bertahap, dan penguncian kontrak kerja sama dalam hitungan menit.',
-                        'en' => 'Transform your business vision into comprehensive Product Requirements Documents (PRDs), distributed PostgreSQL Strict ULID schemas, sprint milestones, and locked contracts in minutes.'
+                        'id' => 'Dua jalur solusi rekayasa modern untuk bisnis dan founder: Beli lisensi arsitektur siap pakai (Retail) untuk di-deploy mandiri, atau bangun sistem skala besar bersama tim dedicated engineer kami (Project Studio).',
+                        'en' => 'Two modern engineering paths: Acquire instant self-service software factory licenses (Retail) or build mission-critical systems with our dedicated engineering studio.'
                     ],
-                    'cta_text' => [
-                        'id' => 'Mulai Blueprint Lengkap',
-                        'en' => 'Launch Architecture Blueprint'
+                    'cta_retail_text' => [
+                        'id' => 'Jelajahi Lisensi Retail (Rp 99k - 1,49jt)',
+                        'en' => 'Explore Retail Licenses'
                     ],
-                    'cta_link' => '/blueprint'
+                    'cta_project_text' => [
+                        'id' => 'Konsultasi Proyek Dedicated Studio',
+                        'en' => 'Dedicated Engineering Studio'
+                    ],
+                    'cta_link' => '#dual-track-matrix'
                 ]
             ],
+            [
+                'type' => 'architecture_pricing',
+                'is_active' => true,
+                'data' => [
+                    'headline' => [
+                        'id' => 'MATRIKS INVESTASI & LISENSI REKAYASA SISTEM // NERIAH PRO',
+                        'en' => 'SOFTWARE ARCHITECTURE & LICENSING MATRIX // NERIAH PRO'
+                    ],
+                    'subheadline' => [
+                        'id' => 'Bandingkan transparansi lisensi digital retail mandiri (Self-Service) hingga koding penuh turnkey Studio Monolith MVP.',
+                        'en' => 'Standardized engineering investment for founders: From instant self-service blueprints to full turnkey Monolith MVP contracts.'
+                    ],
+                ]
+            ]
         ];
 
         $homePage->plugins = $plugins;
@@ -58,8 +77,8 @@ class LandingPageSeeder extends Seeder
             'id' => 'Paket & Biaya Layanan Arsitektur Software // Neriah Pro'
         ];
         $pricingPage->meta_description = [
-            'en' => 'Transparent pricing for high-scale digital architecture: Standalone Advisory PRD Blueprint (Rp 2.5M), Full Rapid Monolith MVP (Rp 50M - 50% DP), and UMKM Stimulus Subsidies.',
-            'id' => 'Biaya investasi transparan arsitektur software berskala tinggi: Jasa Advisory Blueprint PRD (Rp 2.5 Juta), Full MVP Rapid Monolith (Rp 50 Juta - DP 50%), dan Program Subsidi UMKM.'
+            'en' => 'Transparent pricing for digital retail licenses (Rp 99k - Rp 1.49M) and high-scale digital architecture: Standalone Advisory (Rp 2.5M), UMKM Stimulus (Rp 7.5M), and Full Rapid Monolith MVP (Rp 50M).',
+            'id' => 'Biaya investasi transparan lisensi digital retail (Rp 99rb - Rp 1,49jt) dan arsitektur software berskala tinggi: Advisory (Rp 2.5 Juta), UMKM (Rp 7.5 Juta), dan Full MVP (Rp 50 Juta).'
         ];
         $pricingPage->is_published = true;
         $pricingPage->plugins = [
@@ -94,6 +113,6 @@ class LandingPageSeeder extends Seeder
         ];
         $pricingPage->save();
         
-        $this->command->info('Landing Page & Pricing Page seeded successfully with 4 Pillars & CV Pro Pricing Hub data!');
+        $this->command->info('Landing Page & Pricing Page seeded successfully with Dual-Track Retail & Project OS data!');
     }
 }

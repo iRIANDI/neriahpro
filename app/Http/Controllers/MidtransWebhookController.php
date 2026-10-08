@@ -57,7 +57,30 @@ class MidtransWebhookController extends Controller
                 }
             }
 
-            // 3. Process Blueprint or Document fulfillment
+            // 3. Synchronize status on Transaction record if exists in database
+            if ($orderId && $transactionStatus) {
+                $mappedStatus = match ($transactionStatus) {
+                    'settlement' => 'settlement',
+                    'capture' => ($fraudStatus === 'challenge') ? 'pending' : 'settlement',
+                    'pending' => 'pending',
+                    'deny' => 'deny',
+                    'expire' => 'expire',
+                    'cancel' => 'cancel',
+                    'refund' => 'refund',
+                    default => 'pending',
+                };
+
+                $midtransTxId = $payload['transaction_id'] ?? null;
+                $tx = \App\Models\Transaction::where('midtrans_order_id', $orderId)->first();
+                if ($tx) {
+                    $tx->update([
+                        'status' => $mappedStatus,
+                        'midtrans_transaction_id' => $midtransTxId ?: $tx->midtrans_transaction_id,
+                    ]);
+                }
+            }
+
+            // 4. Process Blueprint or Document fulfillment if payment confirmed
             $isPaid = in_array($transactionStatus, ['settlement', 'capture']) 
                 && ($fraudStatus === 'accept' || empty($fraudStatus) || $fraudStatus === 'success');
 
@@ -65,7 +88,7 @@ class MidtransWebhookController extends Controller
                 $this->fulfillOrder($orderId, $request);
             }
 
-            // 4. Mark DLQ log as successfully processed
+            // 5. Mark DLQ log as successfully processed
             $webhookLog->markAsProcessed();
 
             return response()->json([
@@ -166,6 +189,24 @@ class MidtransWebhookController extends Controller
                             'midtrans_order_id' => $orderId,
                         ]);
                     }
+
+                    // Record / update Transaction
+                    \App\Models\Transaction::updateOrCreate(
+                        ['midtrans_order_id' => $orderId],
+                        [
+                            'user_id' => $blueprint->user_id,
+                            'status' => 'settlement',
+                            'midtrans_transaction_id' => $request->input('transaction_id'),
+                            'total_idr' => $request->input('gross_amount', 0),
+                            'customer_details' => [
+                                'name' => $blueprint->client_name,
+                                'email' => $blueprint->email,
+                                'phone' => $blueprint->phone,
+                                'type' => 'blueprint_dp',
+                                'blueprint_slug' => $blueprint->slug,
+                            ],
+                        ]
+                    );
                 }
             }
         }
@@ -202,6 +243,16 @@ class MidtransWebhookController extends Controller
                         $processedVouchers[] = $cachedOrder['voucher_code'];
                     }
                 }
+
+                // Record / update Transaction for Cart checkout
+                \App\Models\Transaction::updateOrCreate(
+                    ['midtrans_order_id' => $orderId],
+                    [
+                        'status' => 'settlement',
+                        'midtrans_transaction_id' => $request->input('transaction_id'),
+                        'total_idr' => $request->input('gross_amount', 0),
+                    ]
+                );
             }
         }
 
@@ -229,20 +280,23 @@ class MidtransWebhookController extends Controller
                         ]);
                     }
 
-                    // Record Transaction
-                    \App\Models\Transaction::create([
-                        'user_id' => $blueprint->user_id,
-                        'midtrans_order_id' => $orderId,
-                        'status' => 'settlement',
-                        'total_idr' => $request->input('gross_amount', 0),
-                        'customer_details' => [
-                            'name' => $blueprint->client_name,
-                            'email' => $blueprint->email,
-                            'phone' => $blueprint->phone,
-                            'type' => 'pelunasan_50_percent',
-                            'blueprint_slug' => $blueprint->slug,
-                        ],
-                    ]);
+                    // Record / update Transaction for Pelunasan
+                    \App\Models\Transaction::updateOrCreate(
+                        ['midtrans_order_id' => $orderId],
+                        [
+                            'user_id' => $blueprint->user_id,
+                            'status' => 'settlement',
+                            'midtrans_transaction_id' => $request->input('transaction_id'),
+                            'total_idr' => $request->input('gross_amount', 0),
+                            'customer_details' => [
+                                'name' => $blueprint->client_name,
+                                'email' => $blueprint->email,
+                                'phone' => $blueprint->phone,
+                                'type' => 'pelunasan_50_percent',
+                                'blueprint_slug' => $blueprint->slug,
+                            ],
+                        ]
+                    );
                 }
             }
         }
@@ -297,20 +351,23 @@ class MidtransWebhookController extends Controller
                     ],
                 ]);
 
-                // Record Transaction
-                \App\Models\Transaction::create([
-                    'user_id' => $user->id,
-                    'midtrans_order_id' => $orderId,
-                    'status' => 'settlement',
-                    'total_idr' => $grossAmount,
-                    'customer_details' => [
-                        'name' => $name,
-                        'email' => $email,
-                        'phone' => $phone,
-                        'package_tier' => $packageTier,
-                        'blueprint_slug' => $blueprint->slug,
-                    ],
-                ]);
+                // Record / update Transaction for Retail License
+                \App\Models\Transaction::updateOrCreate(
+                    ['midtrans_order_id' => $orderId],
+                    [
+                        'user_id' => $user->id,
+                        'status' => 'settlement',
+                        'midtrans_transaction_id' => $request->input('transaction_id'),
+                        'total_idr' => $grossAmount,
+                        'customer_details' => [
+                            'name' => $name,
+                            'email' => $email,
+                            'phone' => $phone,
+                            'package_tier' => $packageTier,
+                            'blueprint_slug' => $blueprint->slug,
+                        ],
+                    ]
+                );
 
                 if ($lead) {
                     $lead->update(['status' => 'customer']);

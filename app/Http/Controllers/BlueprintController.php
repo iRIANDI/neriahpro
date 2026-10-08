@@ -587,8 +587,15 @@ class BlueprintController extends Controller
             $blueprint->update(['voucher_code' => $voucher->code]);
         }
 
-        // Attach/update Digital Contract Document with order_id for webhook fulfillment
+        // Cancel any previous pending transactions for this blueprint's order IDs
         $existingDoc = $blueprint->getContractDocument();
+        if ($existingDoc && $existingDoc->midtrans_order_id) {
+            \App\Models\Transaction::where('midtrans_order_id', $existingDoc->midtrans_order_id)
+                ->where('status', 'pending')
+                ->update(['status' => 'cancel']);
+        }
+
+        // Attach/update Digital Contract Document with order_id for webhook fulfillment
         $isSigned = $existingDoc && $existingDoc->status === 'signed' && (float)$existingDoc->contract_amount > 0;
 
         Document::updateOrCreate(
@@ -609,6 +616,25 @@ class BlueprintController extends Controller
                 'document_hash' => $isSigned ? $existingDoc->document_hash : ($blueprint->document_sha256 ?: $blueprint->calculatePrdHash()),
             ]
         );
+
+        // Instantly record pending transaction for Blueprint DP in database
+        \App\Models\Transaction::create([
+            'user_id' => $blueprint->user_id,
+            'midtrans_order_id' => $orderId,
+            'status' => 'pending',
+            'total_idr' => $finalDpAmount,
+            'original_currency' => 'IDR',
+            'original_amount' => $finalDpAmount,
+            'customer_details' => [
+                'name' => $blueprint->client_name ?: $blueprint->nama_bisnis,
+                'email' => $blueprint->email,
+                'phone' => $blueprint->phone,
+                'type' => 'blueprint_dp',
+                'blueprint_slug' => $blueprint->slug,
+                'tier' => $matchedTier['name'] ?? $tier,
+                'snap_token' => $snapResponse['token'],
+            ],
+        ]);
 
         return response()->json([
             'success' => true,
@@ -689,6 +715,13 @@ class BlueprintController extends Controller
             ],
         ];
 
+        // Cancel any previous pending pelunasan transaction for this blueprint
+        if ($existingContract && !empty($existingContract->content_clauses['pelunasan_order_id'])) {
+            \App\Models\Transaction::where('midtrans_order_id', $existingContract->content_clauses['pelunasan_order_id'])
+                ->where('status', 'pending')
+                ->update(['status' => 'cancel']);
+        }
+
         $snapResponse = MidtransSnapService::createSnapToken($params);
 
         if (!$snapResponse['success']) {
@@ -706,6 +739,24 @@ class BlueprintController extends Controller
                 'content_clauses' => $clauses,
             ]);
         }
+
+        // Instantly record pending transaction for Pelunasan in database
+        \App\Models\Transaction::create([
+            'user_id' => $blueprint->user_id,
+            'midtrans_order_id' => $orderId,
+            'status' => 'pending',
+            'total_idr' => (int) $pelunasanAmount,
+            'original_currency' => 'IDR',
+            'original_amount' => (int) $pelunasanAmount,
+            'customer_details' => [
+                'name' => $blueprint->client_name ?: $blueprint->nama_bisnis,
+                'email' => $blueprint->email,
+                'phone' => $blueprint->phone,
+                'type' => 'pelunasan_50_percent',
+                'blueprint_slug' => $blueprint->slug,
+                'snap_token' => $snapResponse['token'],
+            ],
+        ]);
 
         return response()->json([
             'success' => true,
@@ -1419,6 +1470,27 @@ class BlueprintController extends Controller
                 'voucher_code' => $voucher?->code,
                 'created_at' => now()->toIso8601String(),
             ], now()->addDays(3));
+
+            // Instantly record pending transaction in database for admin visibility
+            \App\Models\Transaction::create([
+                'user_id' => null,
+                'midtrans_order_id' => $orderId,
+                'status' => 'pending',
+                'total_idr' => $finalAmount,
+                'original_currency' => 'IDR',
+                'original_amount' => $finalAmount,
+                'customer_details' => [
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'phone' => $cleanPhone,
+                    'company' => $company,
+                    'package_tier' => $packageName,
+                    'display_package' => $displayPackage,
+                    'is_retail' => $isRetail,
+                    'lead_id' => $lead->id,
+                    'snap_token' => $snapResponse['token'],
+                ],
+            ]);
         }
 
         // Generate pre-filled WhatsApp direct message as optional secondary support

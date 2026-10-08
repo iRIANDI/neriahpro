@@ -149,6 +149,15 @@ class CartController extends Controller
             }
         }
 
+        $pendingOrder = session()->get('neriah_cart_pending_order');
+        if ($pendingOrder && !empty($pendingOrder['order_id'])) {
+            $tx = \App\Models\Transaction::where('midtrans_order_id', $pendingOrder['order_id'])->first();
+            if ($tx && in_array($tx->status, ['settlement', 'capture', 'cancel', 'expire'])) {
+                session()->forget('neriah_cart_pending_order');
+                $pendingOrder = null;
+            }
+        }
+
         $finalTotalContract = max(0, $totalContract - $discountAmount);
         $finalTotalDp = (int) round($finalTotalContract * 0.50);
 
@@ -161,6 +170,7 @@ class CartController extends Controller
             'finalTotalContract' => $finalTotalContract,
             'finalTotalDp' => $finalTotalDp,
             'minRemainingSeconds' => $minRemainingSeconds ?? (self::RESERVATION_HOURS * 3600),
+            'pendingOrder' => $pendingOrder,
         ]);
     }
 
@@ -227,6 +237,17 @@ class CartController extends Controller
         ];
 
         session()->put('neriah_cart', $cart);
+
+        // Invalidate previous pending checkout session if cart items change
+        if (session()->has('neriah_cart_pending_order')) {
+            $oldPending = session()->get('neriah_cart_pending_order');
+            if (!empty($oldPending['order_id'])) {
+                \App\Models\Transaction::where('midtrans_order_id', $oldPending['order_id'])
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancel']);
+            }
+            session()->forget('neriah_cart_pending_order');
+        }
 
         // If voucher provided from blueprint, apply to cart
         if ($request->filled('voucher')) {
@@ -304,6 +325,16 @@ class CartController extends Controller
             session()->put('neriah_cart', $cart);
         }
 
+        if (session()->has('neriah_cart_pending_order')) {
+            $oldPending = session()->get('neriah_cart_pending_order');
+            if (!empty($oldPending['order_id'])) {
+                \App\Models\Transaction::where('midtrans_order_id', $oldPending['order_id'])
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancel']);
+            }
+            session()->forget('neriah_cart_pending_order');
+        }
+
         return redirect()->route('cart.index')->with('success', 'Item berhasil dihapus dari Cart.');
     }
 
@@ -312,6 +343,16 @@ class CartController extends Controller
      */
     public function clear(): RedirectResponse
     {
+        if (session()->has('neriah_cart_pending_order')) {
+            $oldPending = session()->get('neriah_cart_pending_order');
+            if (!empty($oldPending['order_id'])) {
+                \App\Models\Transaction::where('midtrans_order_id', $oldPending['order_id'])
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancel']);
+            }
+            session()->forget('neriah_cart_pending_order');
+        }
+
         session()->forget('neriah_cart');
         session()->forget('neriah_cart_voucher');
         return redirect()->route('cart.index')->with('success', 'Cart berhasil dikosongkan.');
@@ -332,6 +373,16 @@ class CartController extends Controller
             return redirect()->route('cart.index')->with('warning', 'Kode voucher "' . $code . '" tidak valid, kuota telah habis, atau sudah kedaluwarsa.');
         }
 
+        if (session()->has('neriah_cart_pending_order')) {
+            $oldPending = session()->get('neriah_cart_pending_order');
+            if (!empty($oldPending['order_id'])) {
+                \App\Models\Transaction::where('midtrans_order_id', $oldPending['order_id'])
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancel']);
+            }
+            session()->forget('neriah_cart_pending_order');
+        }
+
         session()->put('neriah_cart_voucher', [
             'code' => $voucher->code,
             'discount_type' => $voucher->discount_type,
@@ -347,6 +398,16 @@ class CartController extends Controller
      */
     public function removeVoucher(): RedirectResponse
     {
+        if (session()->has('neriah_cart_pending_order')) {
+            $oldPending = session()->get('neriah_cart_pending_order');
+            if (!empty($oldPending['order_id'])) {
+                \App\Models\Transaction::where('midtrans_order_id', $oldPending['order_id'])
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancel']);
+            }
+            session()->forget('neriah_cart_pending_order');
+        }
+
         session()->forget('neriah_cart_voucher');
         return redirect()->route('cart.index')->with('success', 'Voucher berhasil dilepas dari Cart.');
     }
@@ -421,6 +482,13 @@ class CartController extends Controller
             ], 400);
         }
 
+        $existingPending = session()->get('neriah_cart_pending_order');
+        if ($existingPending && !empty($existingPending['order_id'])) {
+            \App\Models\Transaction::where('midtrans_order_id', $existingPending['order_id'])
+                ->where('status', 'pending')
+                ->update(['status' => 'cancel']);
+        }
+
         $orderId = 'NP-CART-' . strtoupper(Str::random(6)) . '-' . time();
 
         $itemDetails = [
@@ -491,6 +559,34 @@ class CartController extends Controller
             'voucher_code' => $appliedVoucher?->code,
         ], now()->addDays(7));
 
+        // Instantly record pending transaction in database for admin visibility & anti-ghost tracking
+        \App\Models\Transaction::create([
+            'user_id' => auth()->id(),
+            'midtrans_order_id' => $orderId,
+            'status' => 'pending',
+            'total_idr' => $finalDp,
+            'original_currency' => 'IDR',
+            'original_amount' => $finalDp,
+            'customer_details' => [
+                'name' => $firstClientName ?: 'Client Neriah Pro',
+                'email' => $firstEmail ?: 'client@neriahpro.com',
+                'phone' => $firstPhone ?: '08123456789',
+                'type' => 'cart_dp',
+                'cart_slugs' => array_keys($cart),
+                'snap_token' => $snapResponse['token'],
+                'discount_amount' => $discountAmount,
+                'voucher_code' => $appliedVoucher?->code,
+            ],
+        ]);
+
+        // Keep active pending session in Cart state for seamless resume
+        session()->put('neriah_cart_pending_order', [
+            'order_id' => $orderId,
+            'snap_token' => $snapResponse['token'],
+            'gross_amount' => $finalDp,
+            'created_at' => now()->toIso8601String(),
+        ]);
+
         return response()->json([
             'success' => true,
             'token' => $snapResponse['token'],
@@ -501,6 +597,22 @@ class CartController extends Controller
             'contract_amount' => $finalContract,
             'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
         ]);
+    }
+
+    /**
+     * Cancel / reset active pending checkout session so user can change payment method or cart items.
+     */
+    public function resetPendingOrder(Request $request): RedirectResponse
+    {
+        $pendingOrder = session()->get('neriah_cart_pending_order');
+        if ($pendingOrder && !empty($pendingOrder['order_id'])) {
+            \App\Models\Transaction::where('midtrans_order_id', $pendingOrder['order_id'])
+                ->where('status', 'pending')
+                ->update(['status' => 'cancel']);
+        }
+        session()->forget('neriah_cart_pending_order');
+
+        return redirect()->route('cart.index')->with('info', 'Sesi tagihan pembayaran sebelumnya telah dibatalkan. Anda dapat mengubah pilihan item atau memilih metode pembayaran baru.');
     }
 
     /**

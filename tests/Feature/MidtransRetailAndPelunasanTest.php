@@ -282,4 +282,83 @@ class MidtransRetailAndPelunasanTest extends TestCase
             'status' => 'settlement',
         ]);
     }
+
+    public function test_project_os_retail_products_exist_in_database()
+    {
+        $this->assertDatabaseHas('products', [
+            'slug' => 'project-os-retail-lite-prd',
+            'price_idr' => 99000.00,
+        ]);
+
+        $this->assertDatabaseHas('products', [
+            'slug' => 'project-os-retail-pro-blueprint',
+            'price_idr' => 399000.00,
+        ]);
+
+        $this->assertDatabaseHas('products', [
+            'slug' => 'project-os-retail-ultimate-factory-os',
+            'price_idr' => 1490000.00,
+        ]);
+    }
+
+    public function test_cart_snap_token_creates_pending_transaction_and_resets_cleanly()
+    {
+        $blueprint = VisionBlueprint::create([
+            'slug' => 'test-cart-flow-slug',
+            'nama_bisnis' => 'Retail Cart Co',
+            'client_name' => 'Bob Marley',
+            'email' => 'bob@cartflow.com',
+            'phone' => '081299887766',
+            'project_status' => 'Draft',
+        ]);
+
+        // Put in cart session
+        $this->withSession([
+            'neriah_cart' => [
+                $blueprint->slug => [
+                    'slug' => $blueprint->slug,
+                    'nama_bisnis' => $blueprint->nama_bisnis,
+                    'tier' => 'standard',
+                    'contract_amount' => 50000000,
+                    'dp_amount' => 25000000,
+                    'added_at' => now()->toIso8601String(),
+                ]
+            ]
+        ]);
+
+        // Request Snap Token
+        $response = $this->postJson('/cart/snap-token');
+        $response->assertStatus(200);
+        $orderId = $response->json('order_id');
+        $grossAmount = $response->json('gross_amount');
+        $this->assertNotEmpty($orderId);
+        $this->assertGreaterThan(0, $grossAmount);
+
+        // Assert pending transaction exists in database
+        $this->assertDatabaseHas('transactions', [
+            'midtrans_order_id' => $orderId,
+            'status' => 'pending',
+            'total_idr' => $grossAmount,
+        ]);
+
+        // Visit cart page and verify pending card is rendered
+        $cartPage = $this->get('/cart');
+        $cartPage->assertStatus(200);
+        $cartPage->assertSee($orderId);
+        $cartPage->assertSee('Menunggu Pembayaran');
+        $cartPage->assertSee('Lanjutkan Bayar');
+
+        // Reset / cancel pending session
+        $resetResponse = $this->post('/cart/reset-pending');
+        $resetResponse->assertRedirect('/cart');
+
+        // Assert transaction status transitioned to cancel
+        $this->assertDatabaseHas('transactions', [
+            'midtrans_order_id' => $orderId,
+            'status' => 'cancel',
+        ]);
+
+        // Assert session pending order is cleared
+        $this->assertNull(session('neriah_cart_pending_order'));
+    }
 }

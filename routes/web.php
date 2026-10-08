@@ -68,6 +68,7 @@ Route::post('/cart/snap-token', [\App\Http\Controllers\CartController::class, 'g
 Route::post('/cart/voucher/apply', [\App\Http\Controllers\CartController::class, 'applyVoucher'])->name('cart.voucher.apply');
 Route::post('/cart/voucher/remove', [\App\Http\Controllers\CartController::class, 'removeVoucher'])->name('cart.voucher.remove');
 Route::post('/cart/claim-free-grant', [\App\Http\Controllers\CartController::class, 'claimFreeGrant'])->name('cart.claim-free');
+Route::post('/cart/reset-pending', [\App\Http\Controllers\CartController::class, 'resetPendingOrder'])->name('cart.reset-pending');
 
 Route::get('/invite/{slug}', \App\Livewire\ClientInviteForm::class)->name('invite');
 

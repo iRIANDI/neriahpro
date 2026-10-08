@@ -83,10 +83,45 @@
             </div>
         @endif
 
-        @if(session('warning'))
-            <div class="mb-6 p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-mono flex items-center gap-2">
-                <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                <span>{{ session('warning') }}</span>
+        @if(session('info'))
+            <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-300 text-xs font-mono flex items-center gap-2">
+                <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>{{ session('info') }}</span>
+            </div>
+        @endif
+
+        @if(!empty($pendingOrder))
+            <!-- Active Pending Order Alert & Quick Resume Card -->
+            <div class="mb-6 p-5 bg-white dark:bg-zinc-900 border-2 border-emerald-500 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1.5">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-bold bg-amber-500 text-black uppercase tracking-wider">
+                            Status: Menunggu Pembayaran
+                        </span>
+                        <span class="text-xs font-mono text-zinc-500 dark:text-zinc-400">
+                            Order ID: <strong class="text-zinc-900 dark:text-zinc-100 font-mono">{{ $pendingOrder['order_id'] }}</strong>
+                        </span>
+                    </div>
+                    <p class="text-xs text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed">
+                        Tagihan sebesar <strong class="text-emerald-600 dark:text-emerald-400 font-mono text-sm">Rp {{ number_format($pendingOrder['gross_amount'] ?? ($pendingOrder['total_idr'] ?? 0), 0, ',', '.') }}</strong> telah dicatat di backend. Anda dapat langsung melanjutkan pembayaran tanpa membuat tagihan baru, atau membatalkan sesi untuk mengganti metode pembayaran.
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                    <button type="button" 
+                            id="btn-resume-snap"
+                            onclick="resumePendingSnap('{{ $pendingOrder['snap_token'] ?? '' }}')"
+                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        Lanjutkan Bayar
+                    </button>
+                    <form action="{{ route('cart.reset-pending') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" 
+                                class="px-3 py-2 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-xs uppercase tracking-wider transition cursor-pointer">
+                            Ganti Metode / Batal
+                        </button>
+                    </form>
+                </div>
             </div>
         @endif
 
@@ -680,12 +715,13 @@
                             if (window.showToast) {
                                 window.showToast({
                                     type: 'info',
-                                    title: 'PROMPT DITUTUP',
-                                    message: 'Modal pembayaran ditutup. Klik tombol kembali jika Anda ingin melanjutkan transaksi.'
+                                    title: 'TAGIHAN TERCATAT PENDING',
+                                    message: 'Modal ditutup. Tagihan pembayaran Anda tetap aman tersimpan di sistem dan dapat dilanjutkan sewaktu-waktu.'
                                 });
                             }
                             btn.disabled = false;
                             btn.innerHTML = originalText;
+                            setTimeout(function() { window.location.reload(); }, 1200);
                         }
                     });
                 } else {
@@ -713,6 +749,72 @@
                 }
                 btn.disabled = false;
                 btn.innerHTML = originalText;
+            }
+        }
+
+        function resumePendingSnap(token) {
+            if (!token) {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'SESI KEDALUWARSA',
+                        message: 'Token pembayaran tidak ditemukan. Silakan batalkan sesi tagihan dan buat sesi baru.'
+                    });
+                }
+                return;
+            }
+
+            if (window.snap && window.snap.pay) {
+                window.snap.pay(token, {
+                    onSuccess: function(result) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'success',
+                                title: 'PEMBAYARAN DP DIKONFIRMASI',
+                                message: 'Transaksi berhasil diverifikasi oleh Midtrans Escrow! Memperbarui status...',
+                                duration: 3500
+                            });
+                        }
+                        setTimeout(function() { window.location.reload(); }, 1800);
+                    },
+                    onPending: function(result) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'warning',
+                                title: 'MENUNGGU PEMBAYARAN',
+                                message: 'Tagihan menunggu pembayaran. Anda dapat menyelesaikannya sesuai panduan Midtrans.',
+                                duration: 5000
+                            });
+                        }
+                        setTimeout(function() { window.location.reload(); }, 2000);
+                    },
+                    onError: function(result) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: 'PEMBAYARAN DIBATALKAN',
+                                message: 'Transaksi tidak dapat diselesaikan atau dibatalkan.'
+                            });
+                        }
+                    },
+                    onClose: function() {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'info',
+                                title: 'TAGIHAN TETAP TERSIMPAN',
+                                message: 'Tagihan pembayaran tetap tersimpan. Anda dapat melanjutkannya melalui kartu status tagihan di atas.'
+                            });
+                        }
+                    }
+                });
+            } else {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'KONEKSI SNAP MIDTRANS',
+                        message: 'Script Snap gateway gagal dimuat. Silakan periksa koneksi internet Anda.'
+                    });
+                }
             }
         }
     </script>

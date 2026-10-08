@@ -119,6 +119,7 @@
 
         $featureFlags = [
             'enable_cv_pro' => (bool) $getSettingVal('feature_enable_cv_pro', true),
+            'pricing_show_cv_tab' => (bool) $getSettingVal('pricing_show_cv_tab', false),
             'enable_pricing' => (bool) $getSettingVal('feature_enable_cv_pricing', true),
             'enable_job_hub' => (bool) $getSettingVal('feature_enable_cv_job_hub', true),
             'enable_keuangan' => (bool) $getSettingVal('feature_enable_cv_keuangan', true),

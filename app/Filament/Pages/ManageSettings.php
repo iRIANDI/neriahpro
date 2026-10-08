@@ -575,8 +575,13 @@ class ManageSettings extends Page implements HasForms
                                     ->schema([
                                         Toggle::make('feature_enable_cv_pro')
                                             ->label('Aktifkan Modul CV Pro Studio')
-                                            ->helperText('Jika dinonaktifkan, akses publik ke /cv-pro disembunyikan.')
-                                            ->default(true),
+                                            ->helperText('Jika dinonaktifkan (default), akses publik ke /cv-pro dan tab CV Pro di pricing disembunyikan.')
+                                            ->default(false),
+
+                                        Toggle::make('pricing_show_cv_tab')
+                                            ->label('Tampilkan Tab Switcher CV Pro di Halaman Pricing')
+                                            ->helperText('Jika dinonaktifkan (default), tab CV Pro di halaman pricing disembunyikan. Jika diaktifkan, tab switcher CV Pro akan muncul.')
+                                            ->default(false),
 
                                         Toggle::make('feature_enable_cv_pricing')
                                             ->label('Tampilkan Paket Harga & Modal Top-Up Kuota')

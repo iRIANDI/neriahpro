@@ -626,8 +626,8 @@ export default function ArchitecturePricingIsland({
             </div>
 
             {/* 2. DYNAMIC 4-TAB NAVIGATION SWITCHER (RETAIL | STUDIO | MATRIX | FAQ) */}
-            <div className="flex justify-center mb-8 sm:mb-10">
-              <div className="grid grid-cols-2 lg:grid-cols-4 p-1.5 bg-zinc-200/80 dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs font-mono text-xs w-full max-w-4xl gap-1.5">
+            <div className="flex justify-center mb-8 sm:mb-10 w-full px-2 sm:px-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 p-1.5 bg-zinc-200/80 dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs font-mono text-xs w-full max-w-6xl gap-1.5 sm:gap-2">
                 
                 {/* TAB 1: RETAIL */}
                 <button
@@ -641,8 +641,8 @@ export default function ArchitecturePricingIsland({
                   }`}
                 >
                   <ShoppingBag className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{isEn ? '01. Retail Licenses' : '01. Paket Retail'}</span>
-                  <span className={`hidden sm:inline-block px-1.5 py-0.2 text-[9px] font-bold ${
+                  <span className="whitespace-nowrap font-bold">{isEn ? '01. Paket Retail' : '01. Paket Retail'}</span>
+                  <span className={`shrink-0 px-1.5 py-0.5 text-[9px] font-bold ${
                     pricingSectionTab === 'retail' ? 'bg-black/20 text-black' : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                   }`}>
                     {isEn ? 'SELF-SERVICE' : 'MANDIRI'}
@@ -661,8 +661,8 @@ export default function ArchitecturePricingIsland({
                   }`}
                 >
                   <Rocket className="w-4 h-4 shrink-0 text-emerald-500 dark:text-emerald-600" />
-                  <span className="truncate">{isEn ? '02. Project Studio' : '02. Paket Studio'}</span>
-                  <span className={`hidden sm:inline-block px-1.5 py-0.2 text-[9px] font-bold ${
+                  <span className="whitespace-nowrap font-bold">{isEn ? '02. Paket Studio' : '02. Paket Studio'}</span>
+                  <span className={`shrink-0 px-1.5 py-0.5 text-[9px] font-bold ${
                     pricingSectionTab === 'project' 
                       ? 'bg-emerald-500 text-black' 
                       : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
@@ -683,8 +683,8 @@ export default function ArchitecturePricingIsland({
                   }`}
                 >
                   <Layers className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{isEn ? '03. Comparison' : '03. Matriks'}</span>
-                  <span className={`hidden sm:inline-block px-1.5 py-0.2 text-[9px] font-bold ${
+                  <span className="whitespace-nowrap font-bold">{isEn ? '03. Matriks Perbandingan' : '03. Matriks Perbandingan'}</span>
+                  <span className={`shrink-0 px-1.5 py-0.5 text-[9px] font-bold ${
                     pricingSectionTab === 'matrix' ? 'bg-black/20 text-black' : 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400'
                   }`}>
                     7 PILAR
@@ -703,8 +703,8 @@ export default function ArchitecturePricingIsland({
                   }`}
                 >
                   <HelpCircle className="w-4 h-4 shrink-0" />
-                  <span className="truncate">04. FAQ Project OS</span>
-                  <span className={`hidden sm:inline-block px-1.5 py-0.2 text-[9px] font-bold ${
+                  <span className="whitespace-nowrap font-bold">04. FAQ Project OS</span>
+                  <span className={`shrink-0 px-1.5 py-0.5 text-[9px] font-bold ${
                     pricingSectionTab === 'faq' ? 'bg-black/20 text-black' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
                   }`}>
                     19 FAQ

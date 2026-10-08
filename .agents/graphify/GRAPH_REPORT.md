@@ -52,8 +52,7 @@ graph TD
 
 Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter untuk menjamin skalabilitas enterprise dan integritas PostgreSQL:
 
-| Model | Lokasi File | Primary Key | Traits / Fitur Utama | Relasi Utama |
-| :--- | :--- | :---: | :--- | :--- |
+| `EmailTemplate` | [EmailTemplate.php](file:///c:/xampp/htdocs/neriahpro/app/Models/EmailTemplate.php) | ULID | `HasUlids`, Dynamic transactional email template manager, Variable placeholder substitution, Event-driven cache forever | - |
 | `LeadContact` | [LeadContact.php](file:///c:/xampp/htdocs/neriahpro/app/Models/LeadContact.php) | ULID | `HasUlids`, CRM lead contacts database, company metadata JSON, direct mail dispatcher | - |
 | `EmailCampaign` | [EmailCampaign.php](file:///c:/xampp/htdocs/neriahpro/app/Models/EmailCampaign.php) | ULID | `HasUlids`, Custom dynamic sender name/email, Reply-to Gmail routing, Audience segmentation | `creator` (belongsTo), `logs` (hasMany) |
 | `CvProPlan` | [CvProPlan.php](file:///c:/xampp/htdocs/neriahpro/app/Models/CvProPlan.php) | ULID | `HasUlids`, Dynamic pricing tiers (A, B, C) & a la carte top-up packages | `userQuotas` (hasMany), `transactions` (hasMany) |
@@ -98,6 +97,7 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 | `ProductResource` | Commerce & Billing | Layanan digital, Dual-currency input, Fitur list, Infolist preview | `ProductForm`, `ProductsTable`, `ProductInfolist` |
 | `TransactionResource` | Commerce & Billing | Midtrans status settlement, Total IDR, Payment timestamp | `TransactionsTable`, `TransactionInfolist` |
 | `LegalPolicyResource` | Contracts & Legal | Syarat ketentuan, Kebijakan privasi multibahasa | `LegalPolicyForm`, `LegalPoliciesTable` |
+| `EmailTemplateResource` | Settings & System | Manajemen template email transaksional dinamis (OTP, Notifikasi), live preview modal, variabel dinamis | `EmailTemplateForm`, `EmailTemplatesTable` |
 
 > 🛡️ **Role & Scope Isolation (Midtrans Merchant Compliance & Web Developer Contracting OS)**:
 > - **Super Admin (`yoseph.iriandi.tambunan@gmail.com`)**: Akses $100\%$ tanpa batas ke seluruh Resource, Spatie Shield RBAC, dan Global Settings.

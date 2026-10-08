@@ -371,7 +371,10 @@ class VisionBlueprint extends Model
         }
 
         return \App\Models\Transaction::whereIn('status', ['settlement', 'capture', 'success'])
-            ->where('midtrans_order_id', 'LIKE', 'NPRO-FINAL-' . $this->id . '-%')
+            ->where(function ($q) {
+                $q->where('midtrans_order_id', 'LIKE', 'NPRO-FN-' . $this->id . '-%')
+                  ->orWhere('midtrans_order_id', 'LIKE', 'NPRO-FINAL-' . $this->id . '-%');
+            })
             ->exists();
     }
 

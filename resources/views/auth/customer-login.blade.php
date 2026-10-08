@@ -60,7 +60,7 @@
                 countdownTimer: null,
                 tier2Open: false,
 
-                // Visual Sequence PIN Captcha Data
+                // Visual Scattered Object PIN Captcha Data
                 isCaptchaModalOpen: false,
                 captchaCatalog: [
                     { id: 'shield', icon: '🛡️', label_id: 'Perisai', label_en: 'Shield' },
@@ -73,7 +73,7 @@
                     { id: 'compass', icon: '📐', label_id: 'Penggaris', label_en: 'Ruler' },
                 ],
                 targetCaptchaSequence: [],
-                candidateCaptchaGrid: [],
+                scatteredSceneObjects: [],
                 pinnedCaptchaSequence: [],
                 isCaptchaVerified: false,
                 captchaError: '',
@@ -98,12 +98,43 @@
                     this.pinnedCaptchaSequence = [];
                     this.captchaError = '';
                     
-                    // Shuffle catalog and pick 3 distinct target items
-                    const shuffled = [...this.captchaCatalog].sort(() => 0.5 - Math.random());
-                    this.targetCaptchaSequence = shuffled.slice(0, 3);
+                    // Shuffle catalog and pick 3 distinct target items for the clue
+                    const shuffledCatalog = [...this.captchaCatalog].sort(() => 0.5 - Math.random());
+                    this.targetCaptchaSequence = shuffledCatalog.slice(0, 3);
 
-                    // Candidates are all 8 shuffled
-                    this.candidateCaptchaGrid = [...this.captchaCatalog].sort(() => 0.5 - Math.random());
+                    // 8 spatial anchors distributed across the image canvas (percentages)
+                    const anchors = [
+                        { x: 15, y: 22 },
+                        { x: 42, y: 18 },
+                        { x: 68, y: 24 },
+                        { x: 88, y: 20 },
+                        { x: 22, y: 55 },
+                        { x: 78, y: 53 },
+                        { x: 38, y: 82 },
+                        { x: 82, y: 80 },
+                    ];
+
+                    const shuffledAnchors = [...anchors].sort(() => 0.5 - Math.random());
+
+                    // Scatter objects across canvas with subtle jitter and rotation
+                    this.scatteredSceneObjects = shuffledCatalog.map((item, index) => {
+                        const anchor = shuffledAnchors[index];
+                        const jitterX = Math.floor(Math.random() * 8) - 4; // -4% to +4%
+                        const jitterY = Math.floor(Math.random() * 8) - 4; // -4% to +4%
+                        const rotation = Math.floor(Math.random() * 20) - 10; // -10deg to +10deg
+                        return {
+                            ...item,
+                            x: Math.max(10, Math.min(88, anchor.x + jitterX)),
+                            y: Math.max(15, Math.min(84, anchor.y + jitterY)),
+                            rotation: rotation
+                        };
+                    });
+                },
+
+                resetPins() {
+                    if (this.isCaptchaVerified) return;
+                    this.pinnedCaptchaSequence = [];
+                    this.captchaError = '';
                 },
 
                 pinCaptchaItem(item) {
@@ -117,7 +148,7 @@
                         return;
                     }
 
-                    // If already 3 pinned, ignore extra
+                    // Max 3 pins
                     if (this.pinnedCaptchaSequence.length >= this.targetCaptchaSequence.length) {
                         return;
                     }
@@ -125,7 +156,7 @@
                     this.pinnedCaptchaSequence.push(item);
                     this.captchaError = '';
 
-                    // When exactly 3 pinned, verify sequence!
+                    // When 3 pins placed, verify against target sequence!
                     if (this.pinnedCaptchaSequence.length === this.targetCaptchaSequence.length) {
                         const isMatch = this.pinnedCaptchaSequence.every((pinned, idx) => pinned.id === this.targetCaptchaSequence[idx].id);
                         if (isMatch) {
@@ -135,19 +166,19 @@
                                 window.showToast({
                                     type: 'success',
                                     title: this.lang === 'en' ? 'Captcha Verified' : 'Captcha Berhasil',
-                                    message: this.lang === 'en' ? 'Visual sequence verified! Login button is now unlocked.' : 'Urutan gambar terverifikasi! Tombol login kini aktif.'
+                                    message: this.lang === 'en' ? 'Visual scene objects verified! Login unlocked.' : 'Objek gambar terverifikasi! Tombol login kini aktif.'
                                 });
                             }
-                            // Auto close modal smoothly after success
                             setTimeout(() => {
                                 this.closeCaptchaModal();
-                            }, 600);
+                            }, 650);
                         } else {
                             this.isCaptchaVerified = false;
-                            this.captchaError = this.lang === 'en' ? 'Incorrect sequence. Resetting...' : 'Urutan gambar tidak cocok dengan contoh. Mengulang...';
+                            this.captchaError = this.lang === 'en' ? 'Incorrect pin sequence. Resetting...' : 'Urutan pin objek salah. Mengulang...';
                             setTimeout(() => {
                                 this.pinnedCaptchaSequence = [];
-                            }, 750);
+                                this.captchaError = '';
+                            }, 850);
                         }
                     }
                 },
@@ -571,11 +602,11 @@
                                 <span x-show="isCaptchaVerified" x-cloak>✓</span>
                             </span>
                             <div class="font-mono">
-                                <div class="text-xs font-bold" x-text="isCaptchaVerified ? (lang === 'en' ? 'Visual Sequence Verified' : 'Urutan Gambar Terverifikasi') : (lang === 'en' ? 'Verify Visual Sequence PIN' : 'Verifikasi Urutan Gambar PIN')">
-                                    {{ $isEn ? 'Verify Visual Sequence PIN' : 'Verifikasi Urutan Gambar PIN' }}
+                                <div class="text-xs font-bold" x-text="isCaptchaVerified ? (lang === 'en' ? 'Image Objects Verified' : 'Objek Gambar Terverifikasi') : (lang === 'en' ? 'Pin Image Objects (Visual Captcha)' : 'Pin Objek Gambar (Visual Captcha)')">
+                                    {{ $isEn ? 'Pin Image Objects (Visual Captcha)' : 'Pin Objek Gambar (Visual Captcha)' }}
                                 </div>
-                                <div class="text-[10px] text-zinc-500 dark:text-zinc-400" x-text="isCaptchaVerified ? (lang === 'en' ? 'Challenge passed! Click to view or reset' : 'Tantangan lolos! Klik untuk melihat atau mereset') : (lang === 'en' ? 'Click to open snap challenge modal' : 'Klik untuk membuka snap modal tantangan')">
-                                    {{ $isEn ? 'Click to open snap challenge modal' : 'Klik untuk membuka snap modal tantangan' }}
+                                <div class="text-[10px] text-zinc-500 dark:text-zinc-400" x-text="isCaptchaVerified ? (lang === 'en' ? 'Challenge passed! Click to view or reset' : 'Tantangan lolos! Klik untuk melihat atau mereset') : (lang === 'en' ? 'Follow clue and pin 3 scattered objects on image' : 'Ikuti petunjuk urutan dan pin 3 objek pada gambar')">
+                                    {{ $isEn ? 'Follow clue and pin 3 scattered objects on image' : 'Ikuti petunjuk urutan dan pin 3 objek pada gambar' }}
                                 </div>
                             </div>
                         </div>
@@ -746,130 +777,233 @@
 
         <!-- Modal Dialog Box -->
         <div 
-            class="relative w-full max-w-md bg-white dark:bg-zinc-900 border-2 border-emerald-500/60 shadow-2xl p-5 sm:p-6 space-y-4 font-sans z-10 rounded-none animate-in fade-in zoom-in-95 duration-200"
+            class="relative w-full max-w-lg bg-zinc-900 border-2 border-emerald-500/70 shadow-2xl p-4 sm:p-5 space-y-3.5 font-sans z-10 rounded-none animate-in fade-in zoom-in-95 duration-200 text-zinc-100"
             @click.stop
         >
             <!-- Modal Header -->
-            <div class="flex items-start justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
+            <div class="flex items-start justify-between border-b border-zinc-800 pb-2.5">
                 <div>
-                    <div class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20 mb-1">
+                    <div class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20 mb-1">
                         <span class="w-1.5 h-1.5 rounded-none bg-emerald-500 animate-pulse"></span>
-                        <span x-text="lang === 'en' ? 'SECURITY CHALLENGE // SNAP CAPTCHA' : 'TANTANGAN KEAMANAN // SNAP CAPTCHA'">TANTANGAN KEAMANAN // SNAP CAPTCHA</span>
+                        <span x-text="lang === 'en' ? 'SECURITY CHALLENGE // OBJECT PINPOINT CANVAS' : 'TANTANGAN KEAMANAN // PINPOINT OBJEK GAMBAR'">TANTANGAN KEAMANAN // PINPOINT OBJEK GAMBAR</span>
                     </div>
-                    <h3 class="text-base font-black uppercase text-zinc-900 dark:text-white font-sans tracking-tight"
-                        x-text="lang === 'en' ? 'Pin 3 Images in Sequence' : 'Pin 3 Gambar Berurutan'">
-                        {{ $isEn ? 'Pin 3 Images in Sequence' : 'Pin 3 Gambar Berurutan' }}
+                    <h3 class="text-base font-black uppercase text-white font-sans tracking-tight"
+                        x-text="lang === 'en' ? 'Pin 3 Objects in Sequence' : 'Pin 3 Objek Gambar Berurutan'">
+                        {{ $isEn ? 'Pin 3 Objects in Sequence' : 'Pin 3 Objek Gambar Berurutan' }}
                     </h3>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mt-0.5"
-                       x-text="lang === 'en' ? 'Click 3 icons in candidate grid matching example below.' : 'Klik 3 gambar di bawah sesuai urutan contoh untuk verifikasi.'">
-                        {{ $isEn ? 'Click 3 icons in candidate grid matching example below.' : 'Klik 3 gambar di bawah sesuai urutan contoh untuk verifikasi.' }}
+                    <p class="text-xs text-zinc-400 font-sans mt-0.5"
+                       x-text="lang === 'en' ? 'Follow the sequence clue below and click to pin 3 objects directly on the image.' : 'Ikuti petunjuk urutan di bawah, lalu klik dan pasang pin pada 3 objek di dalam gambar.'">
+                        {{ $isEn ? 'Follow the sequence clue below and click to pin 3 objects directly on the image.' : 'Ikuti petunjuk urutan di bawah, lalu klik dan pasang pin pada 3 objek di dalam gambar.' }}
                     </p>
                 </div>
                 <button 
                     type="button" 
                     @click="closeCaptchaModal()" 
-                    class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-lg font-mono p-1 rounded-none cursor-pointer"
+                    class="text-zinc-400 hover:text-zinc-200 text-lg font-mono p-1 rounded-none cursor-pointer"
                     title="Tutup / Close"
                 >
                     ✕
                 </button>
             </div>
 
-            <!-- Target Reference Example Box -->
-            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-none space-y-2">
+            <!-- Target Clue Sequence Box -->
+            <div class="p-2.5 bg-zinc-950 border border-zinc-800 rounded-none space-y-1.5">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-mono text-zinc-500 uppercase font-bold"
-                          x-text="lang === 'en' ? 'Target sequence example:' : 'Contoh urutan target:'">
-                        {{ $isEn ? 'Target sequence example:' : 'Contoh urutan target:' }}
+                    <span class="text-[10px] font-mono text-zinc-400 uppercase font-bold flex items-center gap-1">
+                        <span>🎯</span>
+                        <span x-text="lang === 'en' ? 'Target Sequence Clue (Follow in Order):' : 'Petunjuk Urutan Pin (Ikuti Berurutan):'">
+                            {{ $isEn ? 'Target Sequence Clue (Follow in Order):' : 'Petunjuk Urutan Pin (Ikuti Berurutan):' }}
+                        </span>
                     </span>
                     <button 
                         type="button" 
                         @click="generateCaptcha()" 
-                        class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer font-bold"
-                        title="Acak Ulang Contoh"
+                        class="text-[10px] font-mono text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer font-bold"
+                        title="Acak Ulang Gambar & Petunjuk"
                     >
                         <span>🔄</span>
-                        <span x-text="lang === 'en' ? 'Refresh Target' : 'Acak Ulang'">{{ $isEn ? 'Refresh Target' : 'Acak Ulang' }}</span>
+                        <span x-text="lang === 'en' ? 'Reshuffle Scene' : 'Acak Ulang'">{{ $isEn ? 'Reshuffle Scene' : 'Acak Ulang' }}</span>
                     </button>
                 </div>
 
-                <!-- Reference Example Icons Sequence -->
-                <div class="flex items-center justify-center gap-1.5 sm:gap-2 py-1 min-h-[46px]">
+                <!-- Reference Example Icons Sequence Clue -->
+                <div class="flex items-center justify-center gap-1.5 sm:gap-2 py-0.5 min-h-[44px]">
                     <template x-for="(item, idx) in targetCaptchaSequence" :key="item.id">
                         <div class="flex items-center gap-1.5 sm:gap-2">
-                            <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 shadow-xs font-mono">
-                                <span class="text-xs font-black text-emerald-500" x-text="(idx + 1) + '.'"></span>
+                            <div 
+                                class="flex items-center gap-1.5 px-2.5 py-1 border font-mono transition-all duration-150"
+                                :class="pinnedCaptchaSequence.length > idx && pinnedCaptchaSequence[idx].id === item.id 
+                                    ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300 ring-1 ring-emerald-400/50' 
+                                    : 'bg-zinc-900 border-zinc-700 text-zinc-200'"
+                            >
+                                <span 
+                                    class="text-[11px] font-black px-1 rounded-none"
+                                    :class="pinnedCaptchaSequence.length > idx && pinnedCaptchaSequence[idx].id === item.id ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-emerald-400'"
+                                    x-text="(idx + 1)"
+                                ></span>
                                 <span class="text-lg" x-text="item.icon"></span>
-                                <span class="text-[10px] font-bold text-zinc-800 dark:text-zinc-200 hidden sm:inline" x-text="lang === 'en' ? item.label_en : item.label_id"></span>
+                                <span class="text-[10px] font-bold hidden sm:inline" x-text="lang === 'en' ? item.label_en : item.label_id"></span>
+                                <span x-show="pinnedCaptchaSequence.length > idx && pinnedCaptchaSequence[idx].id === item.id" x-cloak class="text-emerald-400 text-xs font-black">✓</span>
                             </div>
-                            <span x-show="idx < targetCaptchaSequence.length - 1" class="text-zinc-400 text-xs font-bold">➔</span>
+                            <span x-show="idx < targetCaptchaSequence.length - 1" class="text-zinc-600 text-xs font-bold">➔</span>
                         </div>
                     </template>
                 </div>
             </div>
 
-            <!-- Candidate Interactive Grid -->
-            <div class="space-y-1.5">
-                <div class="flex items-center justify-between text-[10px] font-mono text-zinc-500 uppercase font-bold">
-                    <span x-text="lang === 'en' ? 'Select candidates in order:' : 'Pilih gambar berurutan:'">{{ $isEn ? 'Select candidates in order:' : 'Pilih gambar berurutan:' }}</span>
-                    <span class="text-emerald-600 dark:text-emerald-400" x-text="pinnedCaptchaSequence.length + ' / ' + targetCaptchaSequence.length + ' ' + (lang === 'en' ? 'PINNED' : 'TERPIN')"></span>
+            <!-- Visual Scattered Objects Image Canvas -->
+            <div class="relative w-full h-72 sm:h-80 bg-zinc-950 border border-zinc-700 select-none overflow-hidden rounded-none shadow-inner">
+                <!-- Blueprint Grid Architectural Pattern -->
+                <div class="absolute inset-0 bg-[linear-gradient(to_right,#10b98115_1px,transparent_1px),linear-gradient(to_bottom,#10b98115_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#10b98112_0%,transparent_75%)] pointer-events-none"></div>
+
+                <!-- Subtle moving scanline -->
+                <div class="absolute inset-x-0 h-14 bg-gradient-to-b from-transparent via-emerald-500/10 to-transparent pointer-events-none animate-pulse"></div>
+
+                <!-- HUD Metadata Overlays -->
+                <div class="absolute top-2 left-2.5 flex items-center gap-1.5 text-[9px] font-mono text-zinc-500 tracking-wider pointer-events-none">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-none animate-ping"></span>
+                    <span>SCENE-GRID // OBJECT-MATRIX [LIVE]</span>
                 </div>
-                
-                <div class="grid grid-cols-4 gap-2 min-h-[120px]">
-                    <template x-for="item in candidateCaptchaGrid" :key="item.id">
-                        <button
-                            type="button"
-                            @click="pinCaptchaItem(item)"
-                            :disabled="isCaptchaVerified"
-                            :class="{
-                                'border-emerald-500 bg-emerald-500/15 dark:bg-emerald-500/20 ring-1 ring-emerald-500 shadow-sm': getPinIndex(item) !== null,
-                                'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 hover:border-zinc-400 dark:hover:border-zinc-500': getPinIndex(item) === null,
-                                'opacity-60 cursor-default': isCaptchaVerified
-                            }"
-                            class="relative p-2.5 flex flex-col items-center justify-center border rounded-none transition cursor-pointer group"
+                <div class="absolute top-2 right-2.5 text-[9px] font-mono text-zinc-500 tracking-wider pointer-events-none">
+                    <span>X: 104.22° // Y: 72.84°</span>
+                </div>
+                <div class="absolute bottom-2 left-2.5 text-[9px] font-mono text-zinc-600 pointer-events-none">
+                    <span>NERIAH-SEC // PINPOINT LAYER</span>
+                </div>
+
+                <!-- Corner Crosshair Brackets -->
+                <div class="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-emerald-500/40 pointer-events-none"></div>
+                <div class="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-emerald-500/40 pointer-events-none"></div>
+                <div class="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-emerald-500/40 pointer-events-none"></div>
+                <div class="absolute bottom-1 right-1 w-2.5 h-2.5 border-b-2 border-r-2 border-emerald-500/40 pointer-events-none"></div>
+
+                <!-- Scattered Interactive Objects on Image Canvas -->
+                <template x-for="item in scatteredSceneObjects" :key="item.id">
+                    <button
+                        type="button"
+                        @click="pinCaptchaItem(item)"
+                        :disabled="isCaptchaVerified"
+                        :style="`left: ${item.x}%; top: ${item.y}%; transform: translate(-50%, -50%) rotate(${item.rotation}deg);`"
+                        class="absolute p-1 flex flex-col items-center justify-center transition-all duration-150 cursor-pointer group focus:outline-none"
+                        :class="{
+                            'scale-110 z-20': getPinIndex(item) !== null,
+                            'hover:scale-115 hover:z-10 z-10': getPinIndex(item) === null,
+                            'opacity-50 cursor-default': isCaptchaVerified
+                        }"
+                    >
+                        <!-- Object Box / Pin Target Container -->
+                        <div 
+                            class="relative w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center border transition-all duration-150 shadow-md"
+                            :class="getPinIndex(item) !== null 
+                                ? 'border-emerald-400 bg-emerald-500/25 ring-2 ring-emerald-400/60 shadow-[0_0_15px_rgba(16,185,129,0.5)]' 
+                                : 'border-zinc-700 bg-zinc-900/90 hover:border-emerald-500/80 hover:bg-zinc-800/95'"
                         >
-                            <!-- Pinned Sequence Order Badge -->
+                            <!-- Pinned Sequence Flag Badge -->
                             <span 
                                 x-show="getPinIndex(item) !== null"
-                                class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-500 text-black font-mono font-black text-[9px] flex items-center justify-center rounded-none shadow-xs"
-                                x-text="getPinIndex(item)"
-                            ></span>
+                                x-cloak
+                                class="absolute -top-3 -right-3 px-1.5 py-0.5 bg-emerald-500 text-black font-mono font-black text-[9px] tracking-tight flex items-center gap-0.5 border border-black shadow-lg rounded-none animate-bounce"
+                            >
+                                <span class="text-[8px]">📌</span>
+                                <span x-text="'PIN #' + getPinIndex(item)"></span>
+                            </span>
 
-                            <span class="text-2xl group-hover:scale-110 transition-transform" x-text="item.icon"></span>
-                            <span class="text-[9px] font-mono text-zinc-600 dark:text-zinc-400 mt-1 truncate max-w-full font-bold" x-text="lang === 'en' ? item.label_en : item.label_id"></span>
-                        </button>
-                    </template>
+                            <!-- Target Crosshair Lines when Pinned -->
+                            <span x-show="getPinIndex(item) !== null" x-cloak class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+                                <span class="w-full h-px bg-emerald-400"></span>
+                                <span class="h-full w-px bg-emerald-400 absolute"></span>
+                            </span>
+
+                            <!-- Object Icon -->
+                            <span class="text-2xl filter drop-shadow-md select-none" x-text="item.icon"></span>
+                        </div>
+
+                        <!-- Object Name Tooltip -->
+                        <span 
+                            class="mt-1 px-1.5 py-0.5 text-[9px] font-mono font-bold tracking-tight rounded-none shadow-xs border transition-colors select-none"
+                            :class="getPinIndex(item) !== null 
+                                ? 'bg-emerald-500 text-black border-emerald-400' 
+                                : 'bg-zinc-900/90 text-zinc-300 border-zinc-700 group-hover:border-zinc-500'"
+                            x-text="lang === 'en' ? item.label_en : item.label_id"
+                        ></span>
+                    </button>
+                </template>
+
+                <!-- Success HUD Scan Overlay -->
+                <div 
+                    x-show="isCaptchaVerified" 
+                    x-cloak 
+                    class="absolute inset-0 bg-emerald-950/90 backdrop-blur-xs flex flex-col items-center justify-center text-center p-4 z-30 transition-all"
+                >
+                    <div class="w-10 h-10 bg-emerald-500 text-black flex items-center justify-center font-mono font-black text-xl mb-2 shadow-lg rounded-none">✓</div>
+                    <h4 class="text-sm font-mono font-black text-emerald-300 uppercase tracking-widest" x-text="lang === 'en' ? 'CHALLENGE PASSED // VERIFIED' : 'TANTANGAN BERHASIL // TERVERIFIKASI'"></h4>
+                    <p class="text-[11px] font-mono text-emerald-400/90 mt-1" x-text="lang === 'en' ? 'Object pins verified. Unlocking login...' : 'Pin objek sesuai petunjuk. Membuka login...'"></p>
+                </div>
+
+                <!-- Error HUD Flash Bar -->
+                <div 
+                    x-show="captchaError" 
+                    x-cloak 
+                    class="absolute inset-x-0 bottom-0 bg-rose-950/95 border-t border-rose-500 p-2.5 flex items-center justify-between text-[11px] font-mono text-rose-300 z-30"
+                >
+                    <span class="flex items-center gap-1.5">
+                        <span class="font-bold">⚠️</span>
+                        <span x-text="captchaError"></span>
+                    </span>
+                    <span class="text-[10px] text-rose-400 uppercase font-bold animate-pulse" x-text="lang === 'en' ? 'Auto-resetting pins...' : 'Mereset pin otomatis...'"></span>
                 </div>
             </div>
 
-            <!-- Feedback Messages in Modal -->
-            <div x-show="captchaError" x-cloak class="p-2.5 bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[11px] font-mono flex items-center justify-between">
-                <span x-text="captchaError"></span>
-                <button type="button" @click="generateCaptcha()" class="underline font-bold" x-text="lang === 'en' ? 'Reset' : 'Ulangi'">Ulangi</button>
-            </div>
-
-            <div x-show="isCaptchaVerified" x-cloak class="p-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-mono flex items-center gap-1.5 font-bold">
-                <span>✅</span>
-                <span x-text="lang === 'en' ? 'Sequence verified! Closing snap modal...' : 'Urutan cocok terverifikasi! Menutup modal...'"></span>
+            <!-- Pin Progress Bar Below Canvas -->
+            <div class="flex items-center justify-between p-2 bg-zinc-950 border border-zinc-800 text-[11px] font-mono">
+                <div class="flex items-center gap-2">
+                    <span class="text-zinc-500 uppercase font-bold" x-text="lang === 'en' ? 'Pinned:' : 'Terpin:'">Terpin:</span>
+                    <div class="flex items-center gap-1.5">
+                        <template x-for="idx in [0, 1, 2]" :key="idx">
+                            <span 
+                                class="px-2 py-0.5 border text-[10px] flex items-center gap-1"
+                                :class="pinnedCaptchaSequence.length > idx 
+                                    ? 'border-emerald-500 bg-emerald-500/15 text-emerald-400' 
+                                    : 'border-zinc-800 bg-zinc-900 text-zinc-600'"
+                            >
+                                <span class="font-bold" x-text="'#' + (idx + 1)"></span>
+                                <span x-text="pinnedCaptchaSequence.length > idx ? (pinnedCaptchaSequence[idx].icon + ' ' + (lang === 'en' ? pinnedCaptchaSequence[idx].label_en : pinnedCaptchaSequence[idx].label_id)) : '—'"></span>
+                            </span>
+                        </template>
+                    </div>
+                </div>
+                <span class="text-emerald-400 font-bold" x-text="pinnedCaptchaSequence.length + ' / 3'"></span>
             </div>
 
             <!-- Modal Footer Actions -->
-            <div class="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+            <div class="flex items-center justify-between pt-2 border-t border-zinc-800 font-mono text-xs">
                 <button 
                     type="button" 
                     @click="closeCaptchaModal()" 
-                    class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white rounded-none cursor-pointer"
+                    class="px-3.5 py-1.5 border border-zinc-700 text-zinc-400 hover:text-white rounded-none cursor-pointer"
                 >
                     <span x-text="lang === 'en' ? 'Cancel' : 'Batal'">{{ $isEn ? 'Cancel' : 'Batal' }}</span>
                 </button>
-                <button 
-                    type="button" 
-                    @click="generateCaptcha()" 
-                    class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-none cursor-pointer flex items-center gap-1"
-                >
-                    <span>🔄</span>
-                    <span x-text="lang === 'en' ? 'Reset Tiles' : 'Reset Urutan'">{{ $isEn ? 'Reset Tiles' : 'Reset Urutan' }}</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button 
+                        type="button" 
+                        @click="resetPins()" 
+                        :disabled="pinnedCaptchaSequence.length === 0 || isCaptchaVerified"
+                        class="px-3 py-1.5 border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-none cursor-pointer flex items-center gap-1"
+                    >
+                        <span>↺</span>
+                        <span x-text="lang === 'en' ? 'Reset Pins' : 'Reset Pin'">{{ $isEn ? 'Reset Pins' : 'Reset Pin' }}</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="generateCaptcha()" 
+                        class="px-3 py-1.5 border border-emerald-600 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-none cursor-pointer flex items-center gap-1 font-bold"
+                    >
+                        <span>🔄</span>
+                        <span x-text="lang === 'en' ? 'Reshuffle Scene' : 'Acak Gambar'">{{ $isEn ? 'Reshuffle Scene' : 'Acak Gambar' }}</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

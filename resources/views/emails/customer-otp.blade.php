@@ -132,6 +132,7 @@
                 <div>Alamat IP Peminta: {{ $ipAddress }}</div>
                 @endif
                 <div>Waktu Permintaan: {{ now()->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }} WIB</div>
+                <div>Pusat Bantuan & Kontak: <a href="mailto:support@neriahpro.com" style="color: #38bdf8; text-decoration: none;">support@neriahpro.com</a></div>
             </div>
         </div>
         <div class="footer">

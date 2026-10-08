@@ -538,8 +538,8 @@ class BlueprintController extends Controller
             ], 400);
         }
 
-        // Guaranteed Order ID generation with full 26-character ULID for strict relational integrity
-        $orderId = 'NPRO-DP-' . $blueprint->id . '-' . time() . '-' . rand(1000, 9999);
+        // Guaranteed Order ID generation with full 26-character ULID (45 chars <= 50 Midtrans limit)
+        $orderId = 'NPRO-DP-' . $blueprint->id . '-' . time();
 
         $itemName = 'DP (50%) - ' . ($blueprint->nama_bisnis ?: 'Proyek');
         if ($voucher) {
@@ -665,7 +665,8 @@ class BlueprintController extends Controller
             ], 400);
         }
 
-        $orderId = 'NPRO-FINAL-' . $blueprint->id . '-' . time() . '-' . rand(1000, 9999);
+        // 48 characters (11 + 26 + 1 + 10): strictly under Midtrans 50-character limit
+        $orderId = 'NPRO-FINAL-' . $blueprint->id . '-' . time();
         $itemName = 'Pelunasan (50%) - ' . ($blueprint->nama_bisnis ?: 'Proyek');
 
         $params = [
@@ -1289,8 +1290,9 @@ class BlueprintController extends Controller
         $orderId = null;
 
         if ($isPaidPackage) {
+            // 46 characters (9 + 26 + 1 + 10): strictly conforms to Midtrans 50-character limit
             $orderPrefix = $isRetail ? 'NPRO-LIC-' : 'NPRO-PKG-';
-            $orderId = $orderPrefix . $lead->id . '-' . time() . '-' . rand(1000, 9999);
+            $orderId = $orderPrefix . $lead->id . '-' . time();
 
             $params = [
                 'transaction_details' => [

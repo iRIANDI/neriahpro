@@ -393,4 +393,40 @@ class CustomerOtpLoginAndNotificationTest extends TestCase
             return $mail->hasTo($email) && strlen($mail->otp) === 6;
         });
     }
+
+    /**
+     * Test customer login page renders with visual scatter pinpoint captcha modal.
+     */
+    public function test_customer_login_page_renders_with_visual_scatter_captcha_modal(): void
+    {
+        $response = $this->get('/customer/login');
+
+        $response->assertStatus(200);
+        $response->assertSee('Pin Objek Gambar (Visual Captcha)');
+        $response->assertSee('scatteredSceneObjects');
+        $response->assertSee('PINPOINT OBJEK GAMBAR');
+        $response->assertSee('PIN #');
+    }
+
+    /**
+     * Test customer OTP mail renders using support@neriahpro.com and dynamic email template.
+     */
+    public function test_customer_otp_mail_uses_dynamic_template_and_support_email(): void
+    {
+        $mailable = new CustomerOtpMail(
+            otp: '308933',
+            email: 'client@company.com',
+            ipAddress: '162.159.98.106',
+            expiryMinutes: 10
+        );
+
+        $rendered = $mailable->render();
+
+        $this->assertStringContainsString('308933', $rendered);
+        $this->assertStringContainsString('client@company.com', $rendered);
+        $this->assertStringContainsString('support@neriahpro.com', $rendered);
+        $this->assertStringNotContainsString('yoseph.iriandi.tambunan@gmail.com', $rendered);
+        $this->assertStringContainsString('162.159.98.106', $rendered);
+        $this->assertStringContainsString('Autentikasi Klien // Zero-Password', $rendered);
+    }
 }

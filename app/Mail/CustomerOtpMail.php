@@ -2,8 +2,10 @@
 
 namespace App\Mail;
 
+use App\Models\EmailTemplate;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -12,24 +14,37 @@ class CustomerOtpMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public array $renderedTemplate;
+
     public function __construct(
         public string $otp,
         public string $email,
         public ?string $ipAddress = null,
         public int $expiryMinutes = 10
-    ) {}
+    ) {
+        $this->renderedTemplate = EmailTemplate::renderTemplate('customer_otp', [
+            'otp' => $otp,
+            'email' => $email,
+            'ip_address' => $ipAddress ?: '127.0.0.1',
+            'expiry_minutes' => (string) $expiryMinutes,
+            'requested_at' => now()->timezone('Asia/Jakarta')->format('d M Y, H:i:s') . ' WIB',
+            'support_email' => 'support@neriahpro.com',
+        ]);
+    }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "[Neriah Pro] {$this->otp} adalah Kode OTP Masuk Anda",
+            from: new Address($this->renderedTemplate['sender_email'], $this->renderedTemplate['sender_name']),
+            replyTo: [new Address($this->renderedTemplate['reply_to_email'], $this->renderedTemplate['sender_name'])],
+            subject: $this->renderedTemplate['subject'],
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.customer-otp',
+            htmlString: $this->renderedTemplate['body_html']
         );
     }
 

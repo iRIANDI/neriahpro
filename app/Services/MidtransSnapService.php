@@ -28,6 +28,13 @@ class MidtransSnapService
         }
 
         try {
+            // Strict Midtrans compliance: transaction_details.order_id must not exceed 50 characters
+            if (!empty($params['transaction_details']['order_id']) && strlen((string) $params['transaction_details']['order_id']) > 50) {
+                $originalOrderId = (string) $params['transaction_details']['order_id'];
+                $params['transaction_details']['order_id'] = substr($originalOrderId, 0, 50);
+                Log::warning("Midtrans order_id exceeded 50 characters, auto-truncated from '{$originalOrderId}' to '{$params['transaction_details']['order_id']}'");
+            }
+
             $authHeader = 'Basic ' . base64_encode($serverKey . ':');
 
             $response = Http::withHeaders([

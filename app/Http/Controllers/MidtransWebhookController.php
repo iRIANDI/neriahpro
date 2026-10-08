@@ -205,8 +205,8 @@ class MidtransWebhookController extends Controller
             }
         }
 
-        // 4. Final Settlement / Pelunasan 50% fulfillment: NPRO-FINAL-{id}-{time}
-        if (str_starts_with($orderId, 'NPRO-FINAL-')) {
+        // 4. Final Settlement / Pelunasan 50% fulfillment: NPRO-FN-{id}-{time} or legacy NPRO-FINAL-{id}-{time}
+        if (str_starts_with($orderId, 'NPRO-FN-') || str_starts_with($orderId, 'NPRO-FINAL-')) {
             $parts = explode('-', $orderId);
             if (isset($parts[2])) {
                 $targetId = $parts[2];
@@ -247,8 +247,8 @@ class MidtransWebhookController extends Controller
             }
         }
 
-        // 5. Retail Digital Licenses & Package consultation orders: NPRO-LIC- or NPRO-PKG-
-        if (str_starts_with($orderId, 'NPRO-LIC-') || str_starts_with($orderId, 'NPRO-PKG-')) {
+        // 5. Retail Digital Licenses & Package consultation orders: NPRO-LC-, NPRO-LIC-, NPRO-PK-, NPRO-PKG-
+        if (str_starts_with($orderId, 'NPRO-LC-') || str_starts_with($orderId, 'NPRO-LIC-') || str_starts_with($orderId, 'NPRO-PK-') || str_starts_with($orderId, 'NPRO-PKG-')) {
             $cachedOrder = Cache::get('pricing_order_' . $orderId);
             $parts = explode('-', $orderId);
             $leadId = $parts[2] ?? null;
@@ -259,7 +259,7 @@ class MidtransWebhookController extends Controller
             $phone = $cachedOrder['phone'] ?? $lead?->phone;
             $company = $cachedOrder['company'] ?? $lead?->company_name ?? ($name . ' Project');
             $packageTier = $cachedOrder['package_tier'] ?? $lead?->metadata['package_interest'] ?? 'retail_lite';
-            $isRetail = str_starts_with($orderId, 'NPRO-LIC-') || ($cachedOrder['is_retail'] ?? false);
+            $isRetail = str_starts_with($orderId, 'NPRO-LC-') || str_starts_with($orderId, 'NPRO-LIC-') || ($cachedOrder['is_retail'] ?? false);
             $grossAmount = $cachedOrder['gross_amount'] ?? $request->input('gross_amount', 0);
 
             if ($email) {

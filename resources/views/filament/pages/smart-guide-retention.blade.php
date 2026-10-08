@@ -549,17 +549,237 @@
         </div>
     </div>
 
-    <!-- 05. Section Technical Limits & Enforcement Matrix -->
-    <div id="sec-matrix" class="sg-card" x-show="matchesSearch(t[lang].sec5_title + ' batasan kuota reset spark lite pro ultimate window otp')">
+    <!-- 05. Section Technical Limits & Enforcement Matrix + 7-Pillar Factory OS -->
+    <div id="sec-matrix" class="sg-card" x-show="matchesSearch(t[lang].sec5_title + ' batasan kuota reset spark lite pro ultimate window otp pilar factory studio mvp umkm')">
         <div style="border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px;">
             <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #d97706; text-transform: uppercase; font-weight: 700;">
-                05 // BACKEND ENFORCEMENT MATRIX
+                05 // 7-PILLAR SOFTWARE FACTORY OS & VALUE LADDER MATRIX
             </span>
             <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec5_title"></h3>
             <p style="font-size: 12px; color: var(--sg-text-muted); margin: 4px 0 0 0;" x-text="t[lang].sec5_desc"></p>
         </div>
 
+        <!-- 7 Pillars of Software Factory OS Infographic Banner -->
+        <div style="margin-bottom: 24px; padding: 16px; background: var(--sg-subcard-bg); border: 1px solid var(--sg-border); border-radius: 3px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                THE 7 PILLARS OF SOFTWARE FACTORY OS (ONE-STOP DEVELOPMENT)
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; font-size: 11px;">
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="color: #6366f1;">Pilar 1 // Otak & Kontrak</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;">PRD 26 Parameter & OpenAPI 3.1 Contract Spec</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="color: #0284c7;">Pilar 2 // Wajah & Tampilan</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;">Design Tokens JSON & Wireframe 4 Layar Utama</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="color: #10b981;">Pilar 3 // Rangka Koding</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;">Docker Compose (PHP 8.4, PG 16, Redis 7) & API Routes</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="color: #f59e0b;">Pilar 4 // Darah Sistem</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;">Synthetic Mock Data Seeder (25 Data Realistis)</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="color: #8b5cf6;">Pilar 5 // Asisten Cerdas</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;">AI Coding Rules (.cursorrules, CLAUDE.md, AGENTS.md)</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="color: #ec4899;">Pilar 6 // Jaminan Kualitas</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;">Automated Pest Feature Contract-First Tests</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="color: #14b8a6;">Pilar 7 // Jalan Tol Server</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;">One-Click GitHub Actions CI/CD & deploy.sh</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Retail Packages Progressive Value Ladder & Upsell Psychology -->
+        <div style="margin-bottom: 24px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #0284c7; text-transform: uppercase; margin-bottom: 12px;">
+                A. VALUE LADDER RETAIL (HAK UNDUH SELAMANYA PER PROYEK // SELF-SERVICE)
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+                <!-- Spark Free Card -->
+                <div class="sg-subcard" style="border-top: 3px solid #64748b;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong style="font-size: 13px; color: var(--sg-text-title);">01. Spark / Free Audit</strong>
+                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #10b981; font-size: 11px;">Rp 0</span>
+                    </div>
+                    <div style="font-size: 10px; font-family: ui-monospace, monospace; padding: 2px 6px; background: rgba(100, 116, 139, 0.1); color: var(--sg-text-muted); margin-bottom: 8px;">
+                        TARGET: Founder pemula yang ingin memvalidasi ide & kelayakan MVP.
+                    </div>
+                    <div style="font-size: 11px; color: var(--sg-text-title); font-weight: 700; margin-bottom: 4px;">Deliverables:</div>
+                    <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
+                        <li>Analisis Kelayakan Bisnis & Problem Framing</li>
+                        <li>Executive Summary & Target Audiens</li>
+                        <li>5 Fitur Esensial MVP Prioritas</li>
+                        <li>Estimasi Kompleksitas & TCO Awal</li>
+                        <li>Ekspor Ringkasan Dokumen Markdown (.md)</li>
+                    </ul>
+                    <div style="padding: 8px; background: var(--sg-card-bg); border: 1px solid var(--sg-border); font-size: 10px; font-family: ui-monospace, monospace;">
+                        <span style="color: #d97706; font-weight: 700;">BATASAN / HOOK RASA TANGGUNG:</span>
+                        <div style="color: var(--sg-text-muted); margin-top: 2px;">Tanpa skema SQL DDL, tanpa Docker, & tanpa AI rules. Dibatasi 2x audit tamu.</div>
+                        <div style="color: #0284c7; margin-top: 4px; font-weight: 700;">👉 Upsell: Upgrade ke Lite PRD (Rp 99rb) untuk skema database siap import!</div>
+                    </div>
+                </div>
+
+                <!-- Lite PRD Card -->
+                <div class="sg-subcard" style="border-top: 3px solid #0284c7;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong style="font-size: 13px; color: #0284c7;">02. Lite PRD Generator</strong>
+                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #0284c7; font-size: 11px;">Rp 99.000</span>
+                    </div>
+                    <div style="font-size: 10px; font-family: ui-monospace, monospace; padding: 2px 6px; background: rgba(2, 132, 199, 0.1); color: #0284c7; margin-bottom: 8px;">
+                        TARGET: Freelance developer & solo founder yang butuh skema database SQL siap pakai.
+                    </div>
+                    <div style="font-size: 11px; color: var(--sg-text-title); font-weight: 700; margin-bottom: 4px;">Deliverables:</div>
+                    <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
+                        <li><strong style="color: #0284c7;">Seperti di Paket Spark Free</strong>, ditambah:</li>
+                        <li>Dokumen PRD Lengkap 6 Bab (26 Parameter)</li>
+                        <li>Skema PostgreSQL Strict ULID DDL SQL (schema_complete.sql)</li>
+                        <li>Standar Teknis Keyset Cursor Pagination O(1)</li>
+                        <li>Work Breakdown Structure (WBS) 2 Sprint Linear/Jira Ready</li>
+                        <li>Ekspor Resmi PDF & Markdown Ber-hash SHA-256</li>
+                    </ul>
+                    <div style="padding: 8px; background: var(--sg-card-bg); border: 1px solid var(--sg-border); font-size: 10px; font-family: ui-monospace, monospace;">
+                        <span style="color: #d97706; font-weight: 700;">BATASAN / HOOK RASA TANGGUNG:</span>
+                        <div style="color: var(--sg-text-muted); margin-top: 2px;">Tanpa Docker compose, tanpa AI agent rules, & WBS terpotong hanya 2 sprint.</div>
+                        <div style="color: #10b981; margin-top: 4px; font-weight: 700;">👉 Upsell: Tambah Rp 300rb dapat Pro (Rp 399rb) lengkap dengan Docker & AI!</div>
+                    </div>
+                </div>
+
+                <!-- Pro Production Card -->
+                <div class="sg-subcard" style="border-top: 3px solid #10b981; background: rgba(16, 185, 129, 0.03);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong style="font-size: 13px; color: #10b981;">03. Pro Production PRD ★</strong>
+                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #10b981; font-size: 11px;">Rp 399.000</span>
+                    </div>
+                    <div style="font-size: 10px; font-family: ui-monospace, monospace; padding: 2px 6px; background: rgba(16, 185, 129, 0.1); color: #10b981; margin-bottom: 8px;">
+                        TARGET: Software agensi, CTO, & startup yang ingin langsung koding hari ini dengan AI.
+                    </div>
+                    <div style="font-size: 11px; color: var(--sg-text-title); font-weight: 700; margin-bottom: 4px;">Deliverables:</div>
+                    <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
+                        <li><strong style="color: #10b981;">Seperti di Paket Lite PRD</strong>, ditambah:</li>
+                        <li>Pilar 1 (Spec): OpenAPI 3.1 Spec & Idempotensi</li>
+                        <li>Pilar 3 (Scaffold): Container Docker Siap Pakai</li>
+                        <li>Pilar 4 (Seeder): Database Seeder Sintetik 25 Data</li>
+                        <li>Pilar 5 (AI Agent): AI Coding Rules (.cursorrules, AGENTS.md)</li>
+                        <li>6 Diagram Mermaid Lengkap & WBS 5 Sprint</li>
+                        <li>White-Label Agency Export License</li>
+                    </ul>
+                    <div style="padding: 8px; background: var(--sg-card-bg); border: 1px solid var(--sg-border); font-size: 10px; font-family: ui-monospace, monospace;">
+                        <span style="color: #d97706; font-weight: 700;">BATASAN / HOOK RASA TANGGUNG:</span>
+                        <div style="color: var(--sg-text-muted); margin-top: 2px;">Tanpa wireframe UI, tanpa test suite otomatis, & tanpa pipeline CI/CD.</div>
+                        <div style="color: #8b5cf6; margin-top: 4px; font-weight: 700;">👉 Upsell: Butuh 7 Pilar Factory OS komplit + Sesi 1-on-1? Upgrade ke Ultimate!</div>
+                    </div>
+                </div>
+
+                <!-- Ultimate Factory OS Card -->
+                <div class="sg-subcard" style="border-top: 3px solid #8b5cf6;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong style="font-size: 13px; color: #8b5cf6;">04. Ultimate Factory OS</strong>
+                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #8b5cf6; font-size: 11px;">Rp 1.490.000</span>
+                    </div>
+                    <div style="font-size: 10px; font-family: ui-monospace, monospace; padding: 2px 6px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; margin-bottom: 8px;">
+                        TARGET: Enterprise product leaders, funded startups, & tim yang butuh 7 pilar lengkap.
+                    </div>
+                    <div style="font-size: 11px; color: var(--sg-text-title); font-weight: 700; margin-bottom: 4px;">Deliverables:</div>
+                    <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
+                        <li><strong style="color: #8b5cf6;">Seperti di Paket Pro Production</strong>, ditambah:</li>
+                        <li>Pilar 2 (UI/UX): Tokens JSON & Wireframe 4 Layar</li>
+                        <li>Pilar 6 (QA Test): Automated Pest Contract-First Tests</li>
+                        <li>Pilar 7 (DevOps): CI/CD GitHub Actions & deploy.sh</li>
+                        <li>Sesi Konsultasi 60 Menit bersama Principal Architect</li>
+                        <li>Legal NDA Digital & 1 Tahun Prioritas Advisory</li>
+                    </ul>
+                    <div style="padding: 8px; background: var(--sg-card-bg); border: 1px solid var(--sg-border); font-size: 10px; font-family: ui-monospace, monospace;">
+                        <span style="color: #d97706; font-weight: 700;">BATASAN / STUDIO HOOK:</span>
+                        <div style="color: var(--sg-text-muted); margin-top: 2px;">Koding tetap dieksekusi oleh tim developer internal klien sendiri.</div>
+                        <div style="color: #10b981; margin-top: 4px; font-weight: 700;">👉 Trojan Horse: Ingin tim kami yang koding 100% turnkey? Biaya potong DP 50%!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Studio Development Contracts -->
+        <div style="margin-bottom: 24px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #10b981; text-transform: uppercase; margin-bottom: 12px;">
+                B. KONTRAK STUDIO & JASA PENGERJAAN PENUH (EXECUTED BY NERIAH PRO)
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px;">
+                <!-- Studio 1: Blueprint Advisory -->
+                <div class="sg-subcard" style="border-left: 3px solid #64748b;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <strong style="font-size: 13px; color: var(--sg-text-title);">Studio // Blueprint Advisory</strong>
+                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: var(--sg-text-title); font-size: 11px;">Rp 2.500.000</span>
+                    </div>
+                    <div style="font-size: 10px; font-family: ui-monospace, monospace; color: var(--sg-text-muted); margin-bottom: 8px;">
+                        TARGET: Founder/CTO dengan tim koding sendiri yang butuh pendampingan arsitektur enterprise.
+                    </div>
+                    <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
+                        <li>Seluruh Output Spesifikasi 7 Pilar Software Factory OS</li>
+                        <li>Sesi Discovery & Technical Scoping bersama Principal Architect</li>
+                        <li>Non-Disclosure Agreement (NDA) Sah & 100% Hak Milik Dokumen</li>
+                        <li><strong style="color: #10b981;">Jaminan Potong DP</strong>: Biaya Rp 2.5jt memotong DP jika lanjut koding</li>
+                    </ul>
+                    <div style="font-size: 10px; font-family: ui-monospace, monospace; color: #d97706;">
+                        BATASAN: Neriah Pro tidak menulis baris koding. Koding dilakukan tim klien.
+                    </div>
+                </div>
+
+                <!-- Studio 2: UMKM Digital Starter -->
+                <div class="sg-subcard" style="border-left: 3px solid #f59e0b;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <strong style="font-size: 13px; color: #f59e0b;">Studio // UMKM Digital Starter</strong>
+                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #f59e0b; font-size: 11px;">Rp 3.750.000 (Subsidi)</span>
+                    </div>
+                    <div style="font-size: 10px; font-family: ui-monospace, monospace; color: var(--sg-text-muted); margin-bottom: 8px;">
+                        TARGET: Pemilik bisnis lokal, ritel, & yayasan yang butuh web app transaksional siap pakai.
+                    </div>
+                    <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
+                        <li><strong style="color: #10b981;">100% Dikerjakan sampai Live oleh Tim Neriah Pro</strong></li>
+                        <li>Engine Transaksi & Database Pelanggan Terpusat</li>
+                        <li>Integrasi Pembayaran Otomatis QRIS & Transfer Bank (Midtrans)</li>
+                        <li>Admin Dashboard Filament v5 Bahasa Indonesia & Notifikasi WhatsApp</li>
+                        <li>Setup Domain Bisnis (.id/.com), Hosting Cepat & Sesi Pelatihan</li>
+                    </ul>
+                    <div style="font-size: 10px; font-family: ui-monospace, monospace; color: #d97706;">
+                        BATASAN: Alur kerja ritel UMKM standar (maks 2 core flows). Kuota 2 slot/bulan.
+                    </div>
+                </div>
+
+                <!-- Studio 3: Enterprise Monolith MVP -->
+                <div class="sg-subcard" style="border-left: 3px solid #10b981; background: rgba(16, 185, 129, 0.04);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <strong style="font-size: 13px; color: #10b981;">Studio // Enterprise Monolith MVP</strong>
+                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #10b981; font-size: 11px;">Rp 50.000.000 (DP 50%)</span>
+                    </div>
+                    <div style="font-size: 10px; font-family: ui-monospace, monospace; color: #10b981; margin-bottom: 8px;">
+                        TARGET: Founder startup berdana & korporat yang butuh sistem siap produksi skala jutaan pengguna.
+                    </div>
+                    <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
+                        <li><strong style="color: #10b981;">Seperti di Blueprint Advisory + UMKM</strong>, ditambah:</li>
+                        <li>Pengerjaan Koding 100% Turnkey (Laravel 13, Filament v5, React 19)</li>
+                        <li>Kontrak Hukum Digital Scope-Locked & Legal Escrow (DP 50%)</li>
+                        <li>Dedicated VPS Hardening, Redis, PostgreSQL Tuning & CI/CD</li>
+                        <li>Automated Test Suite Lengkap & 100% Source Code Handover</li>
+                        <li><strong style="color: #10b981;">Garansi Perbaikan Bug & SLA Prioritas 3 Bulan Penuh</strong></li>
+                    </ul>
+                    <div style="font-size: 10px; font-family: ui-monospace, monospace; color: #10b981;">
+                        TATA KELOLA: Scope terkunci pada WBS 5 Sprint (Zero scope creep & zero delay).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Backend Limit & Reset Cycle Matrix Table -->
         <div style="overflow-x: auto;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #d97706; text-transform: uppercase; margin-bottom: 8px;">
+                C. TABEL PENEGAKAN BATASAN TEKNIS & SIKLUS RESET LISENSI
+            </div>
             <table class="sg-table">
                 <thead>
                     <tr>
@@ -604,12 +824,28 @@
                         <td>1 Tahun Prioritas & 60 Hari Call</td>
                         <td style="color: #d97706;">Wajib Akun Terverifikasi</td>
                     </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: var(--sg-text-title);">Studio Advisory (Rp 2.5M)</td>
+                        <td style="color: #ef4444;" x-text="t[lang].m_self"></td>
+                        <td>1 Proyek Enterprise</td>
+                        <td>Per Kontrak Advisory</td>
+                        <td>Sesi Scoping & Garansi Potong DP</td>
+                        <td style="color: #10b981;">NDA & Kontrak Sah</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #f59e0b;">Studio UMKM (Rp 3.75M)</td>
+                        <td style="font-weight: 800; color: #10b981;" x-text="t[lang].m_neriah"></td>
+                        <td>Turnkey Sistem Ritel</td>
+                        <td>Per Kontrak UMKM</td>
+                        <td>Garansi & Sesi Pelatihan Zoom</td>
+                        <td style="color: #10b981;">Kontrak Usaha Sah</td>
+                    </tr>
                     <tr style="background: rgba(16, 185, 129, 0.08); border-top: 2px solid #10b981;">
-                        <td style="font-weight: 800; color: #10b981;">Studio MVP (Rp 50M)</td>
+                        <td style="font-weight: 800; color: #10b981;">Studio Full MVP (Rp 50M)</td>
                         <td style="font-weight: 800; color: #10b981;" x-text="t[lang].m_neriah"></td>
                         <td>Turnkey Monolith System</td>
                         <td>Milestone 50/50 DP</td>
-                        <td>SLA 30 Hari Garansi Bug</td>
+                        <td>SLA 3 Bulan Garansi Bug</td>
                         <td style="color: #10b981;">Kontrak Digital Sah</td>
                     </tr>
                 </tbody>
@@ -618,7 +854,7 @@
     </div>
 
     <!-- 06. Section CS & Sales Playbook -->
-    <div id="sec-playbook" class="sg-card" x-show="matchesSearch(t[lang].sec6_title + ' playbook script cs sales jawaban komplain')">
+    <div id="sec-playbook" class="sg-card" x-show="matchesSearch(t[lang].sec6_title + ' playbook script cs sales jawaban komplain docker ai')">
         <div style="border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px;">
             <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #db2777; text-transform: uppercase; font-weight: 700;">
                 06 // SALES & CS OBJECTION SCRIPTS
@@ -634,6 +870,14 @@
             <div class="sg-subcard">
                 <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 6px;" x-text="t[lang].sec6_q2"></div>
                 <div style="font-size: 12px; color: var(--sg-quote-text); font-style: italic; background: var(--sg-quote-bg); padding: 12px; border: 1px solid var(--sg-quote-border); border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a2"></div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-size: 12px; font-weight: 700; color: #0284c7; margin-bottom: 6px;" x-text="t[lang].sec6_q3"></div>
+                <div style="font-size: 12px; color: var(--sg-quote-text); font-style: italic; background: var(--sg-quote-bg); padding: 12px; border: 1px solid var(--sg-quote-border); border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a3"></div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-size: 12px; font-weight: 700; color: #8b5cf6; margin-bottom: 6px;" x-text="t[lang].sec6_q4"></div>
+                <div style="font-size: 12px; color: var(--sg-quote-text); font-style: italic; background: var(--sg-quote-bg); padding: 12px; border: 1px solid var(--sg-quote-border); border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a4"></div>
             </div>
         </div>
     </div>
@@ -713,7 +957,11 @@ function smartGuideApp() {
                 sec6_q1: 'Q: "Kenapa proyek kedua saya disuruh bayar lagi? Katanya lifetime?"',
                 sec6_a1: '"Halo Kak, betul sekali! Lisensi yang Kakak beli memberikan hak unduh dan akses arsip SELAMANYA untuk proyek [Nama Proyek Pertama] tanpa biaya bulanan. Untuk membangun arsitektur sistem baru dengan spesifikasi, DDL, dan scope yang berbeda, sistem kami membutuhkan komputasi AI baru sehingga memerlukan 1 lisensi terpisah per entitas proyek."',
                 sec6_q2: 'Q: "Saya sudah punya blueprint Pro, tapi tim saya bingung cara kodingnya. Bisa tolong kodingin?"',
-                sec6_a2: '"Tentu bisa sekali Kak! Paket Blueprint adalah paket Self-Service untuk tim internal Kakak. Namun jika Kakak ingin sistem ini dibangun 100% turnkey dan siap pakai oleh Software Architect & Senior Engineer Neriah Pro, Kakak dapat meng-upgrade ke Kontrak Monolith MVP Studio (mulai Rp 50 Juta). Dokumen Blueprint Kakak akan langsung kami gunakan sebagai acuan sprint produksi!"'
+                sec6_a2: '"Tentu bisa sekali Kak! Paket Blueprint adalah paket Self-Service untuk tim internal Kakak. Namun jika Kakak ingin sistem ini dibangun 100% turnkey dan siap pakai oleh Software Architect & Senior Engineer Neriah Pro, Kakak dapat meng-upgrade ke Kontrak Monolith MVP Studio (mulai Rp 50 Juta). Dokumen Blueprint Kakak akan langsung kami gunakan sebagai acuan sprint produksi!"',
+                sec6_q3: 'Q: "Kenapa di Paket Lite belum ada Docker dan AI coding rules? Kan saya juga developer?"',
+                sec6_a3: '"Pertanyaan bagus sekali Kak! Paket Lite (Rp 99rb) memang dirancang sangat hemat dan lean khusus bagi developer yang hanya butuh spesifikasi PRD formal dan skema SQL DDL mentah untuk diimpor ke database lokal. Namun jika Kakak ingin menghemat 40+ jam kerja tanpa harus pusing setup Docker compose, synthetic mock data seeder, dan AI coding agent rules (.cursorrules) yang siap di-prompting di Cursor / Windsurf, selisih Rp 300rb ke Paket Pro (Rp 399rb) adalah investasi paling efisien yang langsung melipatgandakan kecepatan koding Kakak hari ini juga!"',
+                sec6_q4: 'Q: "Apa bedanya beli Blueprint Ultimate (Rp 1.49 Jt) dibanding kontrak Studio MVP (Rp 50 Jt)?"',
+                sec6_a4: '"Perbedaannya terletak pada SIAPA YANG MENULIS KODE Kak! Paket Ultimate Software Factory OS (Rp 1.49 Jt) memberikan seluruh 7 pilar cetak biru, wireframe, unit test suite, dan pipeline CI/CD lengkap untuk dieksekusi oleh tim programmer internal Kakak sendiri, ditambah 1 jam konsultasi arsitek. Sedangkan Kontrak Monolith MVP Studio (Rp 50 Jt) adalah layanan turnkey penuh di mana Senior Architect dan Engineer Neriah Pro yang menulis 100% kode aplikasi, memasang VPS, mengintegrasikan payment, dan memberikan garansi bug 3 bulan. Menariknya, biaya Rp 1.49 Jt ini otomatis memotong DP 50% jika Kakak memutuskan lanjut koding bersama kami!"'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -779,7 +1027,11 @@ function smartGuideApp() {
                 sec6_q1: 'Q: "Why am I asked to pay again for my second project? Isn\'t it lifetime?"',
                 sec6_a1: '"Hi! Exactly right! Your purchased license grants LIFETIME download and archive access to [Project Name] without monthly fees. To architect a brand new system with different DDL, specifications, and scope, our system initiates a new AI synthesis cycle requiring a separate license per project entity."',
                 sec6_q2: 'Q: "I have the Pro blueprint, but my team doesn\'t know how to code it. Can you build it?"',
-                sec6_a2: '"Absolutely! The Blueprint is a Self-Service package for internal execution. If you prefer our Senior Architects and Engineers to build this 100% turnkey, you can upgrade directly to our Monolith MVP Studio Contract (from Rp 50 Million). Your existing blueprint will serve as the exact production sprint specification!"'
+                sec6_a2: '"Absolutely! The Blueprint is a Self-Service package for internal execution. If you prefer our Senior Architects and Engineers to build this 100% turnkey, you can upgrade directly to our Monolith MVP Studio Contract (from Rp 50 Million). Your existing blueprint will serve as the exact production sprint specification!"',
+                sec6_q3: 'Q: "Why doesn\'t the Lite package include Docker and AI coding rules? I\'m a developer too."',
+                sec6_a3: '"Great question! The Lite tier (Rp 99k) is designed to be ultra-lean for solo developers who only need the formal PRD specification and raw SQL DDL to import directly into local databases. However, if you want to save 40+ engineering hours and eliminate manual setup of Docker containers, synthetic mock data seeders, and AI coding agent rules (.cursorrules) ready for Cursor / Windsurf, the Rp 300k jump to Pro (Rp 399k) is the most cost-effective lever to immediately supercharge your development velocity today!"',
+                sec6_q4: 'Q: "What is the difference between buying the Ultimate Blueprint (Rp 1.49M) vs hiring Studio MVP (Rp 50M)?"',
+                sec6_a4: '"The core difference is WHO WRITES THE CODE! The Ultimate Software Factory OS (Rp 1.49M) provides all 7 pillars of blueprint specifications, wireframes, contract test suites, and CI/CD pipelines for your internal developers to execute, plus a 1-hour Principal Architect consultation. Meanwhile, the Studio Monolith MVP Contract (Rp 50M) is a 100% turnkey service where Neriah Pro senior architects and engineers write every line of production code, harden your VPS, integrate payment gateways, and back it with a 3-month SLA warranty. Best of all, your advisory investment is 100% credited toward the 50% Down Payment if you proceed with our engineering studio!"'
             }
         },
 

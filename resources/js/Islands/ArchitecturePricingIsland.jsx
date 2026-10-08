@@ -1545,6 +1545,116 @@ export default function ArchitecturePricingIsland({
                   </td>
                 </tr>
 
+                {/* 9B. SYNTHETIC DATA SEEDER (PILAR 4) */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Synthetic Data Seeder (Pillar 4)' : 'Synthetic Data Seeder (Pilar 4)'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
+                    {isEn ? 'Pro/Ultimate: Blueprint Seeder Script' : 'Pro/Ultimate: Cetak Biru Seeder Sintetis'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    {isEn ? 'Data Dictionary & Mock Specs' : 'Kamus Data & Spesifikasi Mock'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? '100+ Realistic Records Seeded Live' : '100+ Baris Data Sintetis Di-seed Live'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-zinc-500 text-[11px]">
+                    {isEn ? 'Sample Catalog & Initial Records' : 'Katalog Awal & Data Contoh Toko'}
+                  </td>
+                </tr>
+
+                {/* 9C. ATURAN KODING AGEN AI (PILAR 5) */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'AI Coding Directives (Pillar 5)' : 'Aturan Koding Agen AI (Pilar 5)'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
+                    {isEn ? 'Pro/Ultimate: .cursorrules & AGENTS.md' : 'Pro/Ultimate: .cursorrules & AGENTS.md'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    {isEn ? 'Architecture Rules for Client Team' : 'Template Aturan AI Khusus Tim Klien'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? 'Repository-Tailored AI Directives' : 'Ruleset Khusus (.cursorrules, AGENTS.md)'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-zinc-500 text-[11px]">
+                    {isEn ? 'Standard Operations Manual' : 'Buku Panduan Operasional Standar'}
+                  </td>
+                </tr>
+
+                {/* 9D. AUTOMATED CONTRACT TESTS (PILAR 6) */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Contract-First Tests (Pillar 6)' : 'Uji Kontrak Otomatis (Pilar 6)'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
+                    {isEn ? 'Ultimate: ApiContractTest Specs' : 'Ultimate: Spesifikasi ApiContractTest'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    {isEn ? 'Acceptance Criteria & Test Matrix' : 'Kriteria UAT & Matriks Skenario Uji'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? 'Automated Pest/PHPUnit Suite (100% Green)' : 'Suite Uji Otomatis Pest (100% Lolos)'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-zinc-500 text-[11px]">
+                    {isEn ? 'End-to-End Payment & Order UAT' : 'Verifikasi UAT Alur Transaksi & QRIS'}
+                  </td>
+                </tr>
+
+                {/* 9E. CLOUD CI/CD & DEPLOY.SH (PILAR 7) */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Cloud CI/CD & deploy.sh (Pillar 7)' : 'Cloud CI/CD & deploy.sh (Pilar 7)'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
+                    {isEn ? 'Ultimate: GitHub Actions & deploy.sh Code' : 'Ultimate: GitHub Actions & deploy.sh'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    {isEn ? 'VPS Topology & Hardening Guide' : 'Panduan Topologi VPS & Hardening'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? 'Live CI/CD Pipeline + deploy.sh 6 Scenarios' : 'Pipeline CI/CD Aktif + deploy.sh 6 Skenario'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-zinc-500 text-[11px]">
+                    {isEn ? 'Cloud VPS Hosting + Auto SSL HTTPS' : 'Hosting Cloud VPS + SSL HTTPS Otomatis'}
+                  </td>
+                </tr>
+
+                {/* 9F. PROTEKSI TRANSAKSI IDEMPOTEN */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn ? 'Idempotent Payment Engine' : 'Proteksi Transaksi Idempoten'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
+                    {isEn ? 'Instant License Delivery' : 'Pengiriman Lisensi Digital Instan'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    {isEn ? 'Idempotent Webhook Architecture' : 'Arsitektur Webhook Anti-Tabrakan'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? 'Midtrans Snap + Anti-Double Payment Guard' : 'Midtrans Snap + Proteksi Dobel Bayar'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-zinc-500 text-[11px]">
+                    {isEn ? 'Automated Midtrans QRIS & VA' : 'QRIS & Virtual Account Otomatis'}
+                  </td>
+                </tr>
+
                 {/* 10. MEKANISME PEMBAYARAN */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">

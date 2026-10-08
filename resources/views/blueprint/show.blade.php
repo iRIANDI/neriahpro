@@ -1132,13 +1132,31 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     this.syncAccordionToSection(id);
                     this.floatingIndexOpen = false;
                 },
+                getActiveSectionNumber() {
+                    const numbers = {
+                        'section-1': '01',
+                        'section-1-5': '01.5',
+                        'section-2': '02',
+                        'section-3': '03',
+                        'section-3-5': '04',
+                        'section-3-8': '05',
+                        'section-4': '06',
+                        'section-5': '07',
+                        'section-6': '08',
+                        'section-7': '09',
+                        'section-8': '10',
+                        'section-9': '11',
+                        'section-10': '12'
+                    };
+                    return numbers[this.activeSectionId] || '01';
+                },
                 getActiveSectionTitle() {
                     const titles = {
                         'section-1': { id: '01. Executive Discovery', en: '01. Executive Discovery' },
                         'section-1-5': { id: '01.5 Analisis ROI & Garansi', en: '01.5 Business ROI & Guarantees' },
                         'section-2': { id: '02. RBAC & Aktor Sistem', en: '02. RBAC & System Actors' },
                         'section-3': { id: '03. Rekayasa Fitur MVP', en: '03. Feature Engineering' },
-                        'section-3-5': { id: '04. Edukasi Handoff AI', en: '04. AI Handoff Playbook' },
+                        'section-3-5': { id: '04. Edukasi Developer AI', en: '04. AI Developer Hub' },
                         'section-3-8': { id: '05. Virtual Studio Charts', en: '05. Virtual Charts Studio' },
                         'section-4': { id: '06. Alur Kerja User Flow', en: '06. Core User Flow' },
                         'section-5': { id: '07. Database ERD', en: '07. Database ERD Blueprint' },
@@ -1669,8 +1687,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             </p>
                         </div>
                     </div>
-                    <div class="text-[10px] font-bold text-emerald-400 bg-zinc-800 px-2 py-0.5 border border-zinc-700">
-                        12 SECTIONS
+                    <div class="text-[10px] font-bold text-emerald-400 bg-zinc-800 px-2 py-0.5 border border-zinc-700 whitespace-nowrap">
+                        12 BAB // 13 BLOK
                     </div>
                 </div>
 
@@ -1861,6 +1879,89 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
                             <span class="text-zinc-400 block mb-0.5">KESIAPAN ASET</span>
                             <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $blueprint->kesiapan_aset ?? 'Sedang Disiapkan' }}</span>
+                        </div>
+                    </div>
+
+                    @php
+                        $retailTierMeta = $blueprint->user_metadata['retail_tier'] ?? $blueprint->user_metadata['package_tier'] ?? null;
+                        $selectedVelocityMeta = $blueprint->user_metadata['selected_velocity_tier'] ?? null;
+                        
+                        $pkgTitle = 'Studio MVP Turnkey Project (Standard Velocity)';
+                        $pkgBadge = 'STUDIO CONTRACT';
+                        
+                        if ($retailTierMeta) {
+                            $cleanRt = strtolower(str_replace('retail_', '', $retailTierMeta));
+                            if ($cleanRt === 'spark') {
+                                $pkgTitle = 'Paket 1: Spark Free Idea Audit (Rp 0 - Validasi Ide Awal)';
+                                $pkgBadge = 'SPARK FREE AUDIT';
+                            } elseif ($cleanRt === 'lite') {
+                                $pkgTitle = 'Paket 2: Lite PRD Blueprint (Rp 2.500.000 - Cetak Biru Sistem)';
+                                $pkgBadge = 'LITE PRD BLUEPRINT';
+                            } elseif ($cleanRt === 'pro') {
+                                $pkgTitle = 'Paket 3: Pro Production System Architecture (Rp 7.500.000 - Siap Koding)';
+                                $pkgBadge = 'PRO PRODUCTION STACK';
+                            } elseif ($cleanRt === 'ultimate' || $cleanRt === 'enterprise') {
+                                $pkgTitle = 'Paket 4: Ultimate Software Factory OS (Rp 15.000.000 - Pabrik Software Otonom)';
+                                $pkgBadge = 'ULTIMATE SOFTWARE FACTORY OS';
+                            }
+                        } elseif ($selectedVelocityMeta) {
+                            if ($selectedVelocityMeta === 'fast_track' || str_contains($selectedVelocityMeta, 'fast') || str_contains($selectedVelocityMeta, 'swarm')) {
+                                $pkgTitle = 'Studio MVP: Fast-Track Swarm AI Accelerated (14 Hari Kerja)';
+                                $pkgBadge = 'SWARM AI ACCELERATED';
+                            } elseif ($selectedVelocityMeta === 'emergency') {
+                                $pkgTitle = 'Studio MVP: Emergency Concurrency Squad (7 Hari Kerja)';
+                                $pkgBadge = 'EMERGENCY TOP SPEED';
+                            }
+                        }
+                    @endphp
+                    <!-- Software Factory OS Package Deliverables Status -->
+                    <div class="mt-4 p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-3">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-none animate-pulse"></span>
+                                <span class="text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px]">PAKET &amp; LISENSI SOFTWARE FACTORY OS:</span>
+                                <span class="font-black text-sm text-zinc-900 dark:text-zinc-100">{{ $pkgTitle }}</span>
+                            </div>
+                            <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase w-fit">
+                                {{ $pkgBadge }}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-[10px]">
+                            <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-emerald-500 font-bold block">&check; PILAR 1</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">PRD &amp; ERD</span>
+                                <span class="text-[9px] text-zinc-400 block">Strict ULID</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-emerald-500 font-bold block">&check; PILAR 2</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">UI Tokens</span>
+                                <span class="text-[9px] text-zinc-400 block">Design System</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-emerald-500 font-bold block">&check; PILAR 3</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">Scaffold Code</span>
+                                <span class="text-[9px] text-zinc-400 block">Docker &amp; Routes</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-emerald-500 font-bold block">&check; PILAR 4</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">Mock Seeder</span>
+                                <span class="text-[9px] text-zinc-400 block">100+ Records</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-emerald-500 font-bold block">&check; PILAR 5</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">AI Rules</span>
+                                <span class="text-[9px] text-zinc-400 block">.cursorrules</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-emerald-500 font-bold block">&check; PILAR 6</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">Contract Tests</span>
+                                <span class="text-[9px] text-zinc-400 block">ApiContractTest</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-emerald-500 font-bold block">&check; PILAR 7</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">Cloud CI/CD</span>
+                                <span class="text-[9px] text-zinc-400 block">deploy.sh Pipeline</span>
+                            </div>
                         </div>
                     </div>
 
@@ -3119,9 +3220,12 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             <section id="section-3-5" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-4">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">&para;</span>
+                        <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">04</span>
                         <div>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Pusat Orkestrasi AI Agent: Strategi Vertical Slice &amp; Interactive Sprint Cockpit</h2>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
+                                <span x-show="locale === 'en'">AI Developer Education Hub &amp; Interactive Sprint Cockpit</span>
+                                <span x-show="locale !== 'en'">Pusat Edukasi Developer AI &amp; Interactive Sprint Cockpit</span>
+                            </h2>
                             <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Panduan taktis membimbing AI Agent (Cursor Composer, Claude Code CLI, Windsurf Cascade, Devin, Antigravity IDE) membaca PRD per fitur vertikal secara terpandu sampai tuntas.</p>
                         </div>
                     </div>
@@ -3740,7 +3844,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             <section id="section-3-8" class="bg-white dark:bg-zinc-900 border-2 border-sky-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-sky-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">&loz;</span>
+                        <span class="w-6 h-6 bg-sky-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">05</span>
                         <div>
                             <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Virtual Architecture Studio (Visual Chart Center)</h2>
                             <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Visualisasi komprehensif diagram alur, topologi basis data, peta dependensi, dan timeline sprint standar AI Agent.</p>
@@ -3987,7 +4091,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             <section id="section-4" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-6">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">04</span>
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
                         <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Alur Kerja Utama (User Flow)</h2>
                     </div>
 
@@ -4166,8 +4270,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             <section id="section-5" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">05</span>
-                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Database ERD & Schema (PostgreSQL Strict)</h2>
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">07</span>
+                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Database ERD &amp; Skema Relasi (PostgreSQL Strict ULID)</h2>
                     </div>
 
                     <!-- ERD Tabs & Multi-Language Selector -->
@@ -4449,8 +4553,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             <section id="section-6" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
-                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Evaluasi Arsitektur & Infrastruktur (AI Database Ready)</h2>
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">08</span>
+                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Evaluasi Arsitektur &amp; Infrastruktur (AI Database Ready)</h2>
                     </div>
                     <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
                         HIGH INTEGRITY ARCHITECTURE
@@ -5484,29 +5588,29 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
                 </div>
 
-                <!-- 13. Scaffold & Boilerplate Exporter Starter Card -->
+                <!-- Software Factory OS: 7-Pillar Scaffold & Repository Exporter -->
                 <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
                     <div class="p-6 bg-zinc-50 dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
                         <div class="space-y-2">
-                            <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase">1-CLICK EXPORTER</span>
-                                <span class="text-zinc-600 dark:text-zinc-400 text-xs uppercase font-bold">DOCKER &bull; SQL MIGRATION &bull; ROUTING</span>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase">SOFTWARE FACTORY OS</span>
+                                <span class="text-zinc-600 dark:text-zinc-400 text-xs uppercase font-bold">7 PILAR KODE NYATA: DOCKER &bull; ULID &bull; SEEDER &bull; AGENTS &bull; CI/CD</span>
                             </div>
                             <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white">
-                                Ekspor Boilerplate &amp; Scaffold Kode Lengkap
+                                Ekspor Repository Lengkap 7 Pilar Software Factory OS
                             </h3>
                             <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs max-w-2xl leading-relaxed">
-                                Blueprint ERD dan arsitektur PRD Anda dapat langsung diubah menjadi file kode nyata: <code>docker-compose.yml</code> (PHP 8.4, PostgreSQL 16, Redis 7), skrip <code>schema_complete.sql</code> (Strict ULID), dan struktur routing (Laravel 13 &amp; Next.js App Router).
+                                Blueprint arsitektur PRD Anda dapat langsung diekspor menjadi 7 pilar Software Factory OS: <code>docker-compose.yml</code> (PHP 8.4, PostgreSQL 16, Redis 7), skema <code>schema_complete.sql</code> (Strict ULID), routing (Laravel 13 &amp; Next.js App Router), <code>SyntheticDataSeeder.php</code> (Mock Seeder 100+ data), aturan AI <code>.cursorrules</code>, pengujian <code>ApiContractTest.php</code>, dan skrip <code>deploy.sh</code> 1-klik.
                             </p>
                         </div>
                         <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
                             <button type="button" @click="openScaffoldModal()" class="w-full sm:w-auto px-5 py-3 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/60 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                <span>PREVIEW KODE</span>
+                                <span>PREVIEW KODE (7 PILAR)</span>
                             </button>
                             <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-5 py-3 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-850 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm" title="Unduh .cursorrules / CLAUDE.md untuk AI IDE">
                                 <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                                <span>UNDUH .CURSORRULES / CLAUDE.MD</span>
+                                <span>UNDUH .CURSORRULES</span>
                             </a>
                             <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-xl">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -5777,13 +5881,16 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
             </section>
 
-            <!-- SECTION 07: OPSI VELOCITY PENGERJAAN & AKSESORIS AI GEMINI ULTRA (PRICING & SPRINT SELECTION) -->
+            <!-- SECTION 09: OPSI VELOCITY PENGERJAAN & AKSESORIS AI GEMINI ULTRA (PRICING & SPRINT SELECTION) -->
             <section id="section-7" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
-                            <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">07</span>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Opsi Velocity & Akselerasi AI Gemini Ultra</h2>
+                            <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">09</span>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
+                                <span x-show="locale === 'en'">Delivery Velocity, Cloud AI &amp; Pricing Tiers</span>
+                                <span x-show="locale !== 'en'">Opsi Velocity Pengerjaan &amp; Akselerasi AI Gemini Ultra</span>
+                            </h2>
                         </div>
                         <p class="text-zinc-500 dark:text-zinc-400 text-xs font-mono">
                             Pilih kecepatan penyelesaian sistem. Kecepatan akselerasi melibatkan alokasi komputasi cloud Swarm AI Gemini Ultra dan paralel engineering squad.
@@ -5923,12 +6030,12 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
             </section>
 
-            <!-- SECTION 08: TIMELINE & GANTT MILESTONE (ALIGNED TO VELOCITY) -->
+            <!-- SECTION 10: TIMELINE & GANTT MILESTONE (ALIGNED TO VELOCITY) -->
             <section id="section-8" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex items-center justify-between gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">08</span>
-                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Timeline & Milestone Proyek (Velocity Aligned)</h2>
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">10</span>
+                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Timeline &amp; Milestone Proyek (Velocity Aligned)</h2>
                     </div>
                     <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
                         Target: <span x-text="tierAmounts[selectedTier]?.days || '-'"></span>
@@ -5967,12 +6074,12 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
             </section>
 
-            <!-- SECTION 09: STANDAR TATA KELOLA, KUALITAS & SLA SERAH TERIMA (GOVERNANCE & SLA) -->
+            <!-- SECTION 11: STANDAR TATA KELOLA, KUALITAS & SLA SERAH TERIMA (GOVERNANCE & SLA) -->
             <section id="section-9" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
                 <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">09</span>
-                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Tata Kelola, Kualitas & SLA Serah Terima</h2>
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">11</span>
+                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Tata Kelola, Kualitas &amp; SLA Serah Terima</h2>
                     </div>
                     <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
                         ENTERPRISE SERVICE LEVEL AGREEMENT
@@ -6113,7 +6220,7 @@ class ProcessSecureDataset implements ShouldQueue
                             LEGAL &amp; PAYMENT PROTOCOL
                         </span>
                         <h3 class="text-xl sm:text-2xl font-black uppercase tracking-tight flex items-center gap-2">
-                            <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs inline-flex items-center justify-center rounded-none">10</span>
+                            <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs inline-flex items-center justify-center rounded-none">12</span>
                             <span x-show="locale === 'en'">Scope Lock, Digital Sign-Off &amp; Escrow</span>
                             <span x-show="locale !== 'en'">Kunci Scope Proyek, Persetujuan Digital &amp; DP</span>
                         </h3>
@@ -6597,7 +6704,7 @@ class ProcessSecureDataset implements ShouldQueue
                         </span>
                         <div class="flex flex-col">
                             <div class="flex items-center gap-1.5 text-[9px] text-zinc-400 leading-none">
-                                <span class="text-emerald-400 font-bold" x-text="'[' + (getActiveSectionIndex() < 10 ? '0' : '') + getActiveSectionIndex() + ' / 12]'"></span>
+                                <span class="text-emerald-400 font-bold" x-text="'[' + getActiveSectionNumber() + ' / 12]'"></span>
                                 <span class="hidden sm:inline uppercase">SPY ACTIVE</span>
                             </div>
                             <span class="text-xs font-bold text-zinc-100 group-hover:text-emerald-400 transition-colors max-w-[150px] sm:max-w-[210px] truncate leading-tight mt-0.5" x-text="getActiveSectionTitle()"></span>
@@ -7520,14 +7627,14 @@ class ProcessSecureDataset implements ShouldQueue
     >
         <div 
             @click.outside="scaffoldModalOpen = false" 
-            class="bg-zinc-950 border-2 border-emerald-500 w-full max-w-5xl rounded-none shadow-2xl p-6 relative flex flex-col max-h-[92vh]"
+            class="bg-zinc-950 border-2 border-emerald-500 w-full max-w-5xl rounded-none shadow-2xl p-4 sm:p-6 relative flex flex-col h-[90vh] max-h-[90vh] overflow-hidden"
         >
             <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-4 mb-4 shrink-0">
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-3 mb-3 shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 bg-emerald-500 rounded-none inline-block"></span>
                     <h3 class="text-sm sm:text-base font-mono font-black uppercase text-white tracking-wider">
-                        SCAFFOLD &amp; BOILERPLATE CODE EXPORTER // ARCHITECTURE TO REAL CODE
+                        SCAFFOLD &amp; BOILERPLATE CODE EXPORTER // 7 PILAR SOFTWARE FACTORY OS
                     </h3>
                 </div>
                 <button @click="scaffoldModalOpen = false" class="text-zinc-400 hover:text-white text-xl font-bold p-1 cursor-pointer">
@@ -7536,58 +7643,83 @@ class ProcessSecureDataset implements ShouldQueue
             </div>
 
             <!-- Modal Info Banner -->
-            <div class="mb-4 p-3 bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+            <div class="mb-3 p-2.5 bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                 <div>
                     <span class="text-emerald-400 font-bold">Target Framework:</span> Laravel 13 (PHP 8.4) &bull; PostgreSQL 16 Strict ULID &bull; Redis 7 &bull; Next.js App Router
                 </div>
-                <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[11px] flex items-center gap-1.5 transition cursor-pointer w-fit">
+                <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[11px] flex items-center gap-1.5 transition cursor-pointer w-fit">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     <span>DOWNLOAD ZIP LENGKAP (.ZIP)</span>
                 </a>
             </div>
 
-            <!-- Tab Selector -->
-            <div class="flex flex-wrap items-center gap-1.5 mb-3 font-mono text-xs border-b border-zinc-800 pb-2 shrink-0">
-                <button type="button" @click="scaffoldActiveTab = 'docker-compose.yml'" :class="scaffoldActiveTab === 'docker-compose.yml' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-3 py-1.5 transition cursor-pointer">
+            <!-- Tab Selector (All 7 Pillars of Software Factory OS) -->
+            <div class="flex items-center gap-1.5 mb-3 font-mono text-xs border-b border-zinc-800 pb-2 shrink-0 overflow-x-auto custom-prd-scrollbar py-1 select-none">
+                <button type="button" @click="scaffoldActiveTab = 'docker-compose.yml'" :class="scaffoldActiveTab === 'docker-compose.yml' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
                     docker-compose.yml
                 </button>
-                <button type="button" @click="scaffoldActiveTab = 'openapi.json'" :class="scaffoldActiveTab === 'openapi.json' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-3 py-1.5 transition cursor-pointer">
-                    openapi.json (Swagger/Postman)
+                <button type="button" @click="scaffoldActiveTab = 'openapi.json'" :class="scaffoldActiveTab === 'openapi.json' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
+                    openapi.json (Swagger)
                 </button>
-                <button type="button" @click="scaffoldActiveTab = 'schema_complete.sql'" :class="scaffoldActiveTab === 'schema_complete.sql' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-3 py-1.5 transition cursor-pointer">
+                <button type="button" @click="scaffoldActiveTab = 'schema_complete.sql'" :class="scaffoldActiveTab === 'schema_complete.sql' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
                     schema_complete.sql (PostgreSQL)
                 </button>
-                <button type="button" @click="scaffoldActiveTab = 'routes/web.php'" :class="scaffoldActiveTab === 'routes/web.php' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-3 py-1.5 transition cursor-pointer">
+                <button type="button" @click="scaffoldActiveTab = 'routes/web.php'" :class="scaffoldActiveTab === 'routes/web.php' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
                     routes/web.php (Laravel 13)
                 </button>
-                <button type="button" @click="scaffoldActiveTab = 'routes/api.php'" :class="scaffoldActiveTab === 'routes/api.php' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-3 py-1.5 transition cursor-pointer">
-                    routes/api.php (Sanctum/Tokens)
+                <button type="button" @click="scaffoldActiveTab = 'routes/api.php'" :class="scaffoldActiveTab === 'routes/api.php' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
+                    routes/api.php (Sanctum)
                 </button>
-                <button type="button" @click="scaffoldActiveTab = 'app/api/route.ts'" :class="scaffoldActiveTab === 'app/api/route.ts' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-3 py-1.5 transition cursor-pointer">
+                <button type="button" @click="scaffoldActiveTab = 'app/api/route.ts'" :class="scaffoldActiveTab === 'app/api/route.ts' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
                     Next.js App Router (TypeScript)
                 </button>
-                <button type="button" @click="scaffoldActiveTab = 'README.md'" :class="scaffoldActiveTab === 'README.md' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-3 py-1.5 transition cursor-pointer">
+                <button type="button" @click="scaffoldActiveTab = 'database/seeders/SyntheticDataSeeder.php'" :class="scaffoldActiveTab === 'database/seeders/SyntheticDataSeeder.php' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
+                    SyntheticDataSeeder.php
+                </button>
+                <button type="button" @click="scaffoldActiveTab = '.cursorrules'" :class="scaffoldActiveTab === '.cursorrules' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
+                    .cursorrules (AI Agent)
+                </button>
+                <button type="button" @click="scaffoldActiveTab = 'tests/Feature/ApiContractTest.php'" :class="scaffoldActiveTab === 'tests/Feature/ApiContractTest.php' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
+                    ApiContractTest.php
+                </button>
+                <button type="button" @click="scaffoldActiveTab = 'deploy.sh'" :class="scaffoldActiveTab === 'deploy.sh' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
+                    deploy.sh (CI/CD)
+                </button>
+                <button type="button" @click="scaffoldActiveTab = 'design/tokens.json'" :class="scaffoldActiveTab === 'design/tokens.json' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
+                    design/tokens.json
+                </button>
+                <button type="button" @click="scaffoldActiveTab = 'README.md'" :class="scaffoldActiveTab === 'README.md' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" class="px-2.5 py-1.5 transition cursor-pointer whitespace-nowrap">
                     README.md
                 </button>
             </div>
 
-            <!-- Code Content Area -->
-            <div class="relative flex-1 min-h-[300px] overflow-hidden bg-black border border-zinc-800 p-4 font-mono text-xs">
-                <div x-show="scaffoldLoading" class="absolute inset-0 bg-black/80 flex items-center justify-center text-emerald-400 text-sm font-mono font-bold animate-pulse">
+            <!-- Code Content Area (Strictly Scrollable Container) -->
+            <div class="relative flex-1 min-h-0 flex flex-col bg-black border border-zinc-800 p-4 font-mono text-xs overflow-hidden">
+                <div x-show="scaffoldLoading" class="absolute inset-0 bg-black/80 flex items-center justify-center text-emerald-400 text-sm font-mono font-bold animate-pulse z-10">
                     Memuat sintesis file scaffold...
                 </div>
-                <div class="flex items-center justify-between pb-2 mb-2 border-b border-zinc-900 text-[10px] text-zinc-500">
-                    <span x-text="scaffoldActiveTab">docker-compose.yml</span>
+                <div class="shrink-0 flex items-center justify-between pb-2 mb-2 border-b border-zinc-900 text-[10px] text-zinc-500">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-none"></span>
+                        <span class="text-zinc-200 font-bold" x-text="scaffoldActiveTab">docker-compose.yml</span>
+                        <span class="text-zinc-500" x-text="'(' + ((scaffoldFiles[scaffoldActiveTab] || '').split('\n').length) + ' baris)'"></span>
+                    </div>
                     <button type="button" @click="copyActiveScaffold()" class="text-emerald-400 hover:text-emerald-300 font-bold uppercase transition flex items-center gap-1 cursor-pointer">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                         <span>Salin File Ini</span>
                     </button>
                 </div>
-                <pre class="h-full overflow-y-auto overflow-x-auto text-[11px] text-emerald-400 leading-relaxed select-all" x-text="scaffoldFiles[scaffoldActiveTab] || 'Memuat berkas...'"></pre>
+                <div class="flex-1 min-h-0 relative overflow-hidden flex flex-col">
+                    <pre 
+                        class="flex-1 min-h-0 w-full overflow-y-scroll overflow-x-auto text-[11px] text-emerald-400 leading-relaxed select-all font-mono whitespace-pre p-3 bg-zinc-950/90 border border-zinc-900 custom-prd-scrollbar focus:outline-none" 
+                        tabindex="0"
+                        x-text="scaffoldFiles[scaffoldActiveTab] || 'Memuat berkas...'"
+                    ></pre>
+                </div>
             </div>
 
             <!-- Modal Footer -->
-            <div class="flex items-center justify-between pt-4 mt-4 border-t border-zinc-800 shrink-0 font-mono text-xs">
+            <div class="flex items-center justify-between pt-3 mt-3 border-t border-zinc-800 shrink-0 font-mono text-xs">
                 <button type="button" @click="scaffoldModalOpen = false" class="px-4 py-2 border border-zinc-700 hover:bg-zinc-800 text-zinc-300 uppercase font-bold transition cursor-pointer">
                     TUTUP
                 </button>

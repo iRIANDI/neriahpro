@@ -561,37 +561,37 @@
 
         <!-- 7 Pillars of Software Factory OS Infographic Banner -->
         <div style="margin-bottom: 24px; padding: 16px; background: var(--sg-subcard-bg); border: 1px solid var(--sg-border); border-radius: 3px;">
-            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;" x-text="t[lang].sec5_banner_title || 'THE 7 PILLARS OF SOFTWARE FACTORY OS'">
                 THE 7 PILLARS OF SOFTWARE FACTORY OS (ONE-STOP DEVELOPMENT)
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; font-size: 11px;">
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
-                    <strong style="color: #6366f1;">Pilar 1 // Otak & Kontrak</strong>
-                    <div style="color: var(--sg-text-muted); margin-top: 2px;">PRD 26 Parameter & OpenAPI 3.1 Contract Spec</div>
+                    <strong style="color: #6366f1;" x-text="t[lang].pil1_title">Pilar 1 // Otak & Kontrak</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil1_desc">PRD 26 Parameter & OpenAPI 3.1 Contract Spec</div>
                 </div>
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
-                    <strong style="color: #0284c7;">Pilar 2 // Wajah & Tampilan</strong>
-                    <div style="color: var(--sg-text-muted); margin-top: 2px;">Design Tokens JSON & Wireframe 4 Layar Utama</div>
+                    <strong style="color: #0284c7;" x-text="t[lang].pil2_title">Pilar 2 // Desain UI/UX</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil2_desc">Design Tokens JSON & Wireframe 4 Layar Utama</div>
                 </div>
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
-                    <strong style="color: #10b981;">Pilar 3 // Rangka Koding</strong>
-                    <div style="color: var(--sg-text-muted); margin-top: 2px;">Docker Compose (PHP 8.4, PG 16, Redis 7) & API Routes</div>
+                    <strong style="color: #10b981;" x-text="t[lang].pil3_title">Pilar 3 // Rangka Koding</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil3_desc">Docker Compose (PHP 8.4, PG 16, Redis 7) & API Routes</div>
                 </div>
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
-                    <strong style="color: #f59e0b;">Pilar 4 // Darah Sistem</strong>
-                    <div style="color: var(--sg-text-muted); margin-top: 2px;">Synthetic Mock Data Seeder (25 Data Realistis)</div>
+                    <strong style="color: #f59e0b;" x-text="t[lang].pil4_title">Pilar 4 // Data Awal Sistem</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil4_desc">Synthetic Mock Data Seeder (25 Data Realistis)</div>
                 </div>
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
-                    <strong style="color: #8b5cf6;">Pilar 5 // Asisten Cerdas</strong>
-                    <div style="color: var(--sg-text-muted); margin-top: 2px;">AI Coding Rules (.cursorrules, CLAUDE.md, AGENTS.md)</div>
+                    <strong style="color: #8b5cf6;" x-text="t[lang].pil5_title">Pilar 5 // Panduan Agen AI</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil5_desc">AI Coding Rules (.cursorrules, CLAUDE.md, AGENTS.md)</div>
                 </div>
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
-                    <strong style="color: #ec4899;">Pilar 6 // Jaminan Kualitas</strong>
-                    <div style="color: var(--sg-text-muted); margin-top: 2px;">Automated Pest Feature Contract-First Tests</div>
+                    <strong style="color: #ec4899;" x-text="t[lang].pil6_title">Pilar 6 // Jaminan Kualitas</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil6_desc">Automated Pest Feature Contract-First Tests</div>
                 </div>
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
-                    <strong style="color: #14b8a6;">Pilar 7 // Jalan Tol Server</strong>
-                    <div style="color: var(--sg-text-muted); margin-top: 2px;">One-Click GitHub Actions CI/CD & deploy.sh</div>
+                    <strong style="color: #14b8a6;" x-text="t[lang].pil7_title">Pilar 7 // Jalur Otomasi Server</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil7_desc">One-Click GitHub Actions CI/CD & deploy.sh</div>
                 </div>
             </div>
         </div>
@@ -943,6 +943,21 @@ function smartGuideApp() {
                 sim_upsell_desc: 'Jika 5% pembeli blueprint (1 dari 20 orang) menyewa tim Neriah Pro untuk koding sistem:',
                 sim_upsell_clients: 'Estimasi Klien Studio MVP:',
                 sim_upsell_pipeline: 'Pipeline Kontrak Studio:',
+                sec5_banner_title: '7 PILAR SOFTWARE FACTORY OS (PENGEMBANGAN SISTEM SATU PINTU)',
+                pil1_title: 'Pilar 1 // Otak & Kontrak',
+                pil1_desc: 'Dokumen PRD 26 Parameter & Spesifikasi Kontrak OpenAPI 3.1',
+                pil2_title: 'Pilar 2 // Desain UI/UX',
+                pil2_desc: 'Token Desain (JSON) & Wireframe 4 Layar Utama',
+                pil3_title: 'Pilar 3 // Rangka Koding',
+                pil3_desc: 'Docker Compose (PHP 8.4, PG 16, Redis 7) & Rute API Siap Pakai',
+                pil4_title: 'Pilar 4 // Data Awal Sistem',
+                pil4_desc: 'Generator Data Awal Sintetis (Mock Seeder 100+ Data Realistis)',
+                pil5_title: 'Pilar 5 // Panduan Agen AI',
+                pil5_desc: 'Aturan Koding Agen AI (.cursorrules, CLAUDE.md, AGENTS.md)',
+                pil6_title: 'Pilar 6 // Jaminan Kualitas',
+                pil6_desc: 'Paket Uji Fitur Kontrak Otomatis (ApiContractTest Pest/PHPUnit)',
+                pil7_title: 'Pilar 7 // Jalur Otomasi Server',
+                pil7_desc: 'Pipeline CI/CD GitHub Actions & Skrip deploy.sh VPS Cloud',
                 sec5_title: 'Matriks Penegakan Batasan Teknis & Siklus Reset',
                 sec5_desc: 'Semua batasan telah dikunci di level backend PHP & controller middleware.',
                 m_tier: 'Tingkat Paket',
@@ -1013,6 +1028,21 @@ function smartGuideApp() {
                 sim_upsell_desc: 'If 5% of blueprint buyers (1 in 20) hire Neriah Pro engineers to code their system turnkey:',
                 sim_upsell_clients: 'Estimated Studio MVP Clients:',
                 sim_upsell_pipeline: 'Studio MVP Pipeline Value:',
+                sec5_banner_title: 'THE 7 PILLARS OF SOFTWARE FACTORY OS (ONE-STOP DEVELOPMENT)',
+                pil1_title: 'Pillar 1 // Brain & Contract Spec',
+                pil1_desc: '26-Parameter PRD Document & OpenAPI 3.1 Contract Spec',
+                pil2_title: 'Pillar 2 // Interface & UI/UX',
+                pil2_desc: 'Design Tokens JSON & 4 Core Screens Wireframe Blueprint',
+                pil3_title: 'Pillar 3 // Scaffold Container Stack',
+                pil3_desc: 'Docker Compose (PHP 8.4, PG 16, Redis 7) & API Routes',
+                pil4_title: 'Pillar 4 // Synthetic Vital Data',
+                pil4_desc: 'Synthetic Mock Data Seeder Engine (100+ Realistic Records)',
+                pil5_title: 'Pillar 5 // AI Agent Intelligence',
+                pil5_desc: 'AI Coding Agent Directives (.cursorrules, CLAUDE.md, AGENTS.md)',
+                pil6_title: 'Pillar 6 // Quality Assurance (QA)',
+                pil6_desc: 'Automated Feature Contract-First Tests (Pest / PHPUnit)',
+                pil7_title: 'Pillar 7 // Server CI/CD Expressway',
+                pil7_desc: 'One-Click Cloud GitHub Actions CI/CD & deploy.sh Pipeline',
                 sec5_title: 'Technical Limit & Reset Cycle Matrix',
                 sec5_desc: 'All constraints are enforced at the PHP backend and middleware layer.',
                 m_tier: 'Package Tier',

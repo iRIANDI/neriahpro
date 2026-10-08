@@ -22,6 +22,8 @@
         'vi' => ['flag' => '🇻🇳', 'name' => 'Tiếng Việt'],
         'th' => ['flag' => '🇹🇭', 'name' => 'ไทย'],
     ];
+    $currentLang = request()->cookie('neriah_locale', app()->getLocale());
+    $isEn = $currentLang === 'en' || app()->getLocale() === 'en';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
@@ -2072,30 +2074,35 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         $retailTierMeta = $blueprint->user_metadata['retail_tier'] ?? $blueprint->user_metadata['package_tier'] ?? null;
                         $selectedVelocityMeta = $blueprint->user_metadata['selected_velocity_tier'] ?? null;
                         
-                        $pkgTitle = 'Studio MVP Turnkey Project (Standard Velocity)';
+                        $pkgTitle = $isEn ? 'Studio MVP Turnkey Project (Standard Velocity)' : 'Proyek Studio MVP Turnkey (Standard Velocity)';
                         $pkgBadge = 'STUDIO CONTRACT';
                         
+                        $sparkPrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_spark_price', '0');
+                        $litePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_lite_price', '99.000');
+                        $proPrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_pro_price', '399.000');
+                        $ultimatePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_ultimate_price', '1.490.000');
+
                         if ($retailTierMeta) {
                             $cleanRt = strtolower(str_replace('retail_', '', $retailTierMeta));
                             if ($cleanRt === 'spark') {
-                                $pkgTitle = 'Paket 1: Spark Free Idea Audit (Rp 0 - Validasi Ide Awal)';
+                                $pkgTitle = $isEn ? "Tier 01: Spark Free Idea Audit (Rp {$sparkPrice} - Initial Validation)" : "Paket 1: Spark Free Idea Audit (Rp {$sparkPrice} - Validasi Ide Awal)";
                                 $pkgBadge = 'SPARK FREE AUDIT';
                             } elseif ($cleanRt === 'lite') {
-                                $pkgTitle = 'Paket 2: Lite PRD Blueprint (Rp 2.500.000 - Cetak Biru Sistem)';
-                                $pkgBadge = 'LITE PRD BLUEPRINT';
+                                $pkgTitle = $isEn ? "Tier 02: Lite PRD & Database (Rp {$litePrice} - System Blueprint)" : "Paket 2: Lite PRD & Database (Rp {$litePrice} - Cetak Biru Sistem)";
+                                $pkgBadge = 'LITE PRD & DB';
                             } elseif ($cleanRt === 'pro') {
-                                $pkgTitle = 'Paket 3: Pro Production System Architecture (Rp 7.500.000 - Siap Koding)';
+                                $pkgTitle = $isEn ? "Tier 03: Pro Production Blueprint (Rp {$proPrice} - Ready to Code)" : "Paket 3: Pro Production Blueprint (Rp {$proPrice} - Siap Koding)";
                                 $pkgBadge = 'PRO PRODUCTION STACK';
                             } elseif ($cleanRt === 'ultimate' || $cleanRt === 'enterprise') {
-                                $pkgTitle = 'Paket 4: Ultimate Software Factory OS (Rp 15.000.000 - Pabrik Software Otonom)';
-                                $pkgBadge = 'ULTIMATE SOFTWARE FACTORY OS';
+                                $pkgTitle = $isEn ? "Tier 04: Ultimate Software Factory OS (Rp {$ultimatePrice} - Complete 7 Pillars)" : "Paket 4: Ultimate Software Factory OS (Rp {$ultimatePrice} - Lengkap 7 Pilar)";
+                                $pkgBadge = 'ULTIMATE 7-PILLAR OS';
                             }
                         } elseif ($selectedVelocityMeta) {
                             if ($selectedVelocityMeta === 'fast_track' || str_contains($selectedVelocityMeta, 'fast') || str_contains($selectedVelocityMeta, 'swarm')) {
-                                $pkgTitle = 'Studio MVP: Fast-Track Swarm AI Accelerated (14 Hari Kerja)';
+                                $pkgTitle = $isEn ? 'Studio MVP: Fast-Track Swarm AI Accelerated (14 Business Days)' : 'Studio MVP: Fast-Track Swarm AI Accelerated (14 Hari Kerja)';
                                 $pkgBadge = 'SWARM AI ACCELERATED';
                             } elseif ($selectedVelocityMeta === 'emergency') {
-                                $pkgTitle = 'Studio MVP: Emergency Concurrency Squad (7 Hari Kerja)';
+                                $pkgTitle = $isEn ? 'Studio MVP: Emergency Concurrency Squad (7 Business Days)' : 'Studio MVP: Emergency Concurrency Squad (7 Hari Kerja)';
                                 $pkgBadge = 'EMERGENCY TOP SPEED';
                             }
                         }
@@ -2105,7 +2112,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-3">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="w-2.5 h-2.5 bg-emerald-500 rounded-none animate-pulse"></span>
-                                <span class="text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px]">PAKET &amp; LISENSI SOFTWARE FACTORY OS:</span>
+                                <span class="text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px]">{{ $isEn ? 'SOFTWARE FACTORY OS PACKAGE & LICENSE:' : 'PAKET & LISENSI SOFTWARE FACTORY OS:' }}</span>
                                 <span class="font-black text-sm text-zinc-900 dark:text-zinc-100">{{ $pkgTitle }}</span>
                             </div>
                             <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase w-fit">
@@ -2114,39 +2121,39 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-[10px]">
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; PILAR 1</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">PRD &amp; ERD</span>
-                                <span class="text-[9px] text-zinc-400 block">Strict ULID</span>
+                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 1' : 'PILAR 1' }}</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'PRD & ERD' : 'PRD & ERD' }}</span>
+                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? 'Strict ULID' : 'Skema ULID' }}</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; PILAR 2</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">UI Tokens</span>
-                                <span class="text-[9px] text-zinc-400 block">Design System</span>
+                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 2' : 'PILAR 2' }}</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'UI Tokens' : 'Token UI' }}</span>
+                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? 'Design System' : 'Sistem Desain' }}</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; PILAR 3</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">Scaffold Code</span>
-                                <span class="text-[9px] text-zinc-400 block">Docker &amp; Routes</span>
+                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 3' : 'PILAR 3' }}</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Scaffold Code' : 'Rangka Kode' }}</span>
+                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? 'Docker & Routes' : 'Docker & Rute' }}</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; PILAR 4</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">Mock Seeder</span>
-                                <span class="text-[9px] text-zinc-400 block">100+ Records</span>
+                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 4' : 'PILAR 4' }}</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Mock Seeder' : 'Data Awal' }}</span>
+                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? '100+ Records' : '100+ Data' }}</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; PILAR 5</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">AI Rules</span>
+                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 5' : 'PILAR 5' }}</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'AI Rules' : 'Panduan AI' }}</span>
                                 <span class="text-[9px] text-zinc-400 block">.cursorrules</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; PILAR 6</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">Contract Tests</span>
+                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 6' : 'PILAR 6' }}</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Contract Tests' : 'Uji Kontrak' }}</span>
                                 <span class="text-[9px] text-zinc-400 block">ApiContractTest</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; PILAR 7</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">Cloud CI/CD</span>
-                                <span class="text-[9px] text-zinc-400 block">deploy.sh Pipeline</span>
+                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 7' : 'PILAR 7' }}</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Cloud CI/CD' : 'CI/CD Cloud' }}</span>
+                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? 'deploy.sh Pipeline' : 'Jalur deploy.sh' }}</span>
                             </div>
                         </div>
                     </div>
@@ -3959,20 +3966,20 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <div class="space-y-3">
                             <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold uppercase">
                                 <span class="w-2.5 h-2.5 bg-emerald-500"></span>
-                                <h3>1. FRONTEND: ANTI AI-SLOP UI/UX</h3>
+                                <h3>{{ $isEn ? '1. FRONTEND: ANTI AI-SLOP UI/UX' : '1. FRONTEND: UI/UX ANTI AI-SLOP' }}</h3>
                             </div>
                             <ul class="space-y-2 text-[11px] text-zinc-700 dark:text-zinc-300">
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>Palet Kurasi:</strong> Base Zinc monokrom dengan aksen tajam Emerald &amp; Amber. Zero generic pastel.</span>
+                                    <span><strong>{{ $isEn ? 'Curated Palette:' : 'Palet Kurasi:' }}</strong> {{ $isEn ? 'Zinc monochrome base with sharp Emerald & Amber accents. Zero generic pastel.' : 'Base Zinc monokrom dengan aksen tajam Emerald & Amber. Zero generic pastel.' }}</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>Zero Native Popups:</strong> Dilarang keras <code>alert()</code> atau <code>confirm()</code>. Gunakan Floating Toast &amp; Modal.</span>
+                                    <span><strong>{{ $isEn ? 'Zero Native Popups:' : 'Zero Native Popups:' }}</strong> {{ $isEn ? 'Strictly ban alert() or confirm(). Use Floating Toast & Modals.' : 'Dilarang keras alert() atau confirm(). Gunakan Floating Toast & Modal.' }}</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-emerald-500 font-bold">&check;</span>
-                                    <span><strong>Sudut Tipis:</strong> Border radius halus (<code>rounded-none/sm</code>), dilarang tombol kapsul <code>rounded-full</code>.</span>
+                                    <span><strong>{{ $isEn ? 'Subtle Corners:' : 'Sudut Tipis:' }}</strong> {{ $isEn ? 'Subtle border radius (rounded-none/sm), ban capsule rounded-full buttons.' : 'Border radius halus (rounded-none/sm), dilarang tombol kapsul rounded-full.' }}</span>
                                 </li>
                             </ul>
                         </div>
@@ -3983,20 +3990,20 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <div class="space-y-3">
                             <div class="flex items-center gap-2 text-sky-600 dark:text-sky-400 font-bold uppercase">
                                 <span class="w-2.5 h-2.5 bg-sky-500"></span>
-                                <h3>2. BACKEND: ENTERPRISE SCALABILITY</h3>
+                                <h3>{{ $isEn ? '2. BACKEND: ENTERPRISE SCALABILITY' : '2. BACKEND: SKALABILITAS ENTERPRISE' }}</h3>
                             </div>
                             <ul class="space-y-2 text-[11px] text-zinc-700 dark:text-zinc-300">
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-sky-500 font-bold">&check;</span>
-                                    <span><strong>Strict ULID Primary Keys:</strong> Gunakan <code>ulid(&apos;id&apos;)</code> (VARCHAR(26)). Hindari AUTO_INCREMENT.</span>
+                                    <span><strong>Strict ULID Primary Keys:</strong> {{ $isEn ? 'Use ulid(\'id\') (VARCHAR(26)). Avoid AUTO_INCREMENT.' : 'Gunakan ulid(\'id\') (VARCHAR(26)). Hindari AUTO_INCREMENT.' }}</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-sky-500 font-bold">&check;</span>
-                                    <span><strong>Keyset Cursor Pagination O(1):</strong> Hindari <code>paginate()</code> OFFSET. Wajib gunakan <code>cursorPaginate()</code>.</span>
+                                    <span><strong>{{ $isEn ? 'Keyset Cursor Pagination O(1):' : 'Keyset Cursor Pagination O(1):' }}</strong> {{ $isEn ? 'Avoid OFFSET paginate(). Always use cursorPaginate().' : 'Hindari paginate() OFFSET. Wajib gunakan cursorPaginate().' }}</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-sky-500 font-bold">&check;</span>
-                                    <span><strong>Atomic Transactions:</strong> Enkapsulasi logika mutasi dalam Single Action Class di dalam <code>DB::transaction()</code>.</span>
+                                    <span><strong>{{ $isEn ? 'Atomic Transactions:' : 'Transaksi Atomik:' }}</strong> {{ $isEn ? 'Encapsulate mutations in Single Action Classes wrapped in DB::transaction().' : 'Enkapsulasi logika mutasi dalam Single Action Class di dalam DB::transaction().' }}</span>
                                 </li>
                             </ul>
                         </div>
@@ -4007,20 +4014,20 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <div class="space-y-3">
                             <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold uppercase">
                                 <span class="w-2.5 h-2.5 bg-amber-500"></span>
-                                <h3>3. INTEGRASI: ZERO CONTEXT-ROT</h3>
+                                <h3>{{ $isEn ? '3. INTEGRATION: ZERO CONTEXT-ROT' : '3. INTEGRASI: ZERO CONTEXT-ROT' }}</h3>
                             </div>
                             <ul class="space-y-2 text-[11px] text-zinc-700 dark:text-zinc-300">
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-amber-500 font-bold">&check;</span>
-                                    <span><strong>One-Feature-At-A-Time:</strong> Salin prompt per fitur vertikal, bukan seluruh PRD.</span>
+                                    <span><strong>One-Feature-At-A-Time:</strong> {{ $isEn ? 'Copy prompts per vertical feature slice, not the entire PRD.' : 'Salin prompt per fitur vertikal, bukan seluruh PRD.' }}</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-amber-500 font-bold">&check;</span>
-                                    <span><strong>Bounded File Scoping:</strong> Batasi target file pada prompt agar AI tidak merusak file lain.</span>
+                                    <span><strong>Bounded File Scoping:</strong> {{ $isEn ? 'Explicitly bound target files in prompts so AI doesn\'t alter unrelated code.' : 'Batasi target file pada prompt agar AI tidak merusak file lain.' }}</span>
                                 </li>
                                 <li class="flex items-start gap-1.5">
                                     <span class="text-amber-500 font-bold">&check;</span>
-                                    <span><strong>Terminal Verification:</strong> Wajibkan AI menjalankan tes (<code>php artisan test</code>) sebelum menandai task selesai.</span>
+                                    <span><strong>Terminal Verification:</strong> {{ $isEn ? 'Mandate AI to run test suites (php artisan test) before completing tasks.' : 'Wajibkan AI menjalankan tes (php artisan test) sebelum menandai task selesai.' }}</span>
                                 </li>
                             </ul>
                         </div>
@@ -5789,12 +5796,14 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
                             <div>
                                 <div class="flex items-center justify-between gap-1 mb-2">
-                                    <span class="px-1.5 py-0.2 bg-rose-500 text-black font-black text-[9px]">PILLAR 1</span>
+                                    <span class="px-1.5 py-0.2 bg-rose-500 text-black font-black text-[9px]">{{ $isEn ? 'PILLAR 1' : 'PILAR 1' }}</span>
                                     <span class="text-[9px] text-zinc-500">HTTP GATEWAY</span>
                                 </div>
                                 <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">AiThreatShield Middleware</h4>
                                 <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
-                                    Mencegat payload request berkecepatan tinggi sebelum menyentuh controller. Memblokir pola injeksi shell OS (system, exec, passthru, eval, __construct) dan memblokir IP secara otomatis selama 2 jam.
+                                    {{ $isEn 
+                                        ? 'Intercepts high-velocity payload requests before touching controllers. Blocks OS shell injection patterns (system, exec, passthru, eval, __construct) and automatically quarantines offending IPs for 2 hours.' 
+                                        : 'Mencegat payload request berkecepatan tinggi sebelum menyentuh controller. Memblokir pola injeksi shell OS (system, exec, passthru, eval, __construct) dan memblokir IP secara otomatis selama 2 jam.' }}
                                 </p>
                             </div>
                             <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
@@ -5806,12 +5815,14 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
                             <div>
                                 <div class="flex items-center justify-between gap-1 mb-2">
-                                    <span class="px-1.5 py-0.2 bg-emerald-500 text-black font-black text-[9px]">PILLAR 2</span>
+                                    <span class="px-1.5 py-0.2 bg-emerald-500 text-black font-black text-[9px]">{{ $isEn ? 'PILLAR 2' : 'PILAR 2' }}</span>
                                     <span class="text-[9px] text-zinc-500">ASYNC WORKER</span>
                                 </div>
                                 <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">ProcessSecureDataset Job</h4>
                                 <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
-                                    Pemrosesan unggahan file (CSV, JSON, XML) dipindahkan ke worker antrean terisolasi. Validasi MIME absolut via <code>finfo</code>, 0% native <code>unserialize()</code>, dan mematikan eksekusi entity external XML (Anti-XXE).
+                                    {{ $isEn 
+                                        ? 'File upload processing (CSV, JSON, XML) is offloaded to isolated queue workers. Absolute MIME validation via finfo, 0% native unserialize(), and disabled external XML entity execution (Anti-XXE).' 
+                                        : 'Pemrosesan unggahan file (CSV, JSON, XML) dipindahkan ke worker antrean terisolasi. Validasi MIME absolut via finfo, 0% native unserialize(), dan mematikan eksekusi entity external XML (Anti-XXE).' }}
                                 </p>
                             </div>
                             <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
@@ -5823,12 +5834,14 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
                             <div>
                                 <div class="flex items-center justify-between gap-1 mb-2">
-                                    <span class="px-1.5 py-0.2 bg-sky-500 text-black font-black text-[9px]">PILLAR 3</span>
+                                    <span class="px-1.5 py-0.2 bg-sky-500 text-black font-black text-[9px]">{{ $isEn ? 'PILLAR 3' : 'PILAR 3' }}</span>
                                     <span class="text-[9px] text-zinc-500">AUDIT COCKPIT</span>
                                 </div>
                                 <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">Filament Security Audit Hub</h4>
                                 <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
-                                    Dasbor backend admin untuk mengawasi intrusi payload secara real-time, mendeteksi endpoint yang paling sering di-probing oleh bot AI liar, serta mengelola IP whitelist/blacklist terdesentralisasi.
+                                    {{ $isEn 
+                                        ? 'Backend admin cockpit to monitor payload intrusions in real-time, detect endpoints frequently probed by unverified AI crawlers, and manage decentralized IP whitelist/blacklists.' 
+                                        : 'Dasbor backend admin untuk mengawasi intrusi payload secara real-time, mendeteksi endpoint yang paling sering di-probing oleh bot AI liar, serta mengelola IP whitelist/blacklist terdesentralisasi.' }}
                                 </p>
                             </div>
                             <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
@@ -6017,27 +6030,29 @@ class ProcessSecureDataset implements ShouldQueue
                         <div class="space-y-2">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase">SOFTWARE FACTORY OS</span>
-                                <span class="text-zinc-600 dark:text-zinc-400 text-xs uppercase font-bold">7 PILAR KODE NYATA: DOCKER &bull; ULID &bull; SEEDER &bull; AGENTS &bull; CI/CD</span>
+                                <span class="text-zinc-600 dark:text-zinc-400 text-xs uppercase font-bold">{{ $isEn ? '7 PILLARS OF PRODUCTION CODE: DOCKER • ULID • SEEDER • AGENTS • CI/CD' : '7 PILAR KODE PRODUKSI: DOCKER • ULID • SEEDER • AGENTS • CI/CD' }}</span>
                             </div>
                             <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white">
-                                13. Ekspor Repository Lengkap 7 Pilar Software Factory OS
+                                {{ $isEn ? '13. Export Complete 7 Pillars Software Factory OS Repository' : '13. Ekspor Repository Lengkap 7 Pilar Software Factory OS' }}
                             </h3>
                             <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs max-w-2xl leading-relaxed">
-                                Blueprint arsitektur PRD Anda dapat langsung diekspor menjadi 7 pilar Software Factory OS: <code>docker-compose.yml</code> (PHP 8.4, PostgreSQL 16, Redis 7), skema <code>schema_complete.sql</code> (Strict ULID), routing (Laravel 13 &amp; Next.js App Router), <code>SyntheticDataSeeder.php</code> (Mock Seeder 100+ data), aturan AI <code>.cursorrules</code>, pengujian <code>ApiContractTest.php</code>, dan skrip <code>deploy.sh</code> 1-klik.
+                                {{ $isEn 
+                                    ? 'Your PRD architectural blueprint can be directly exported into all 7 pillars of Software Factory OS: docker-compose.yml (PHP 8.4, PostgreSQL 16, Redis 7), complete SQL schema (Strict ULID), routing (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ realistic records), AI rules (.cursorrules, CLAUDE.md, AGENTS.md), contract testing ApiContractTest.php, and 1-click cloud deploy.sh pipeline.'
+                                    : 'Blueprint arsitektur PRD Anda dapat langsung diekspor menjadi 7 pilar Software Factory OS: docker-compose.yml (PHP 8.4, PostgreSQL 16, Redis 7), skema SQL lengkap (Strict ULID), perutean (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ data realistis), aturan agen AI (.cursorrules, CLAUDE.md, AGENTS.md), pengujian kontrak ApiContractTest.php, dan skrip deploy.sh cloud 1-klik.' }}
                             </p>
                         </div>
                         <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
                             <button type="button" @click="openScaffoldModal()" class="w-full sm:w-auto px-5 py-3 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/60 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                <span>PREVIEW KODE (7 PILAR)</span>
+                                <span>{{ $isEn ? 'PREVIEW CODE (7 PILLARS)' : 'PREVIEW KODE (7 PILAR)' }}</span>
                             </button>
-                            <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-5 py-3 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-850 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm" title="Unduh .cursorrules / CLAUDE.md untuk AI IDE">
+                            <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-5 py-3 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-850 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm" title="{{ $isEn ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE' }}">
                                 <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                                <span>UNDUH .CURSORRULES</span>
+                                <span>{{ $isEn ? 'DOWNLOAD .CURSORRULES' : 'UNDUH .CURSORRULES' }}</span>
                             </a>
                             <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-xl">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                <span>DOWNLOAD ZIP (.ZIP)</span>
+                                <span>{{ $isEn ? 'DOWNLOAD ZIP (.ZIP)' : 'UNDUH BERKAS (.ZIP)' }}</span>
                             </a>
                         </div>
                     </div>
@@ -8138,7 +8153,7 @@ class ProcessSecureDataset implements ShouldQueue
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 bg-emerald-500 rounded-none inline-block"></span>
                     <h3 class="text-sm sm:text-base font-mono font-black uppercase text-white tracking-wider">
-                        SCAFFOLD &amp; BOILERPLATE CODE EXPORTER // 7 PILAR SOFTWARE FACTORY OS
+                        {{ $isEn ? 'SCAFFOLD & BOILERPLATE CODE EXPORTER // 7 PILLARS SOFTWARE FACTORY OS' : 'EKSPOR KODE SCAFFOLD & BOILERPLATE // 7 PILAR SOFTWARE FACTORY OS' }}
                     </h3>
                 </div>
                 <button @click="scaffoldModalOpen = false" class="text-zinc-400 hover:text-white text-xl font-bold p-1 cursor-pointer">
@@ -8149,11 +8164,11 @@ class ProcessSecureDataset implements ShouldQueue
             <!-- Modal Info Banner -->
             <div class="mb-3 p-2.5 bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                 <div>
-                    <span class="text-emerald-400 font-bold">Target Framework:</span> Laravel 13 (PHP 8.4) &bull; PostgreSQL 16 Strict ULID &bull; Redis 7 &bull; Next.js App Router
+                    <span class="text-emerald-400 font-bold">{{ $isEn ? 'Target Stack:' : 'Target Framework:' }}</span> Laravel 13 (PHP 8.4) &bull; PostgreSQL 16 Strict ULID &bull; Redis 7 &bull; Next.js App Router
                 </div>
                 <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[11px] flex items-center gap-1.5 transition cursor-pointer w-fit">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    <span>DOWNLOAD ZIP LENGKAP (.ZIP)</span>
+                    <span>{{ $isEn ? 'DOWNLOAD FULL ZIP (.ZIP)' : 'UNDUH ZIP LENGKAP (.ZIP)' }}</span>
                 </a>
             </div>
 
@@ -8300,16 +8315,16 @@ class ProcessSecureDataset implements ShouldQueue
             <!-- Modal Footer -->
             <div class="flex items-center justify-between pt-3 mt-3 border-t border-zinc-800 shrink-0 font-mono text-xs">
                 <button type="button" @click="scaffoldModalOpen = false" class="px-4 py-2 border border-zinc-700 hover:bg-zinc-800 text-zinc-300 uppercase font-bold transition cursor-pointer">
-                    TUTUP
+                    {{ $isEn ? 'CLOSE' : 'TUTUP' }}
                 </button>
                 <div class="flex items-center gap-2">
                     <button type="button" @click="copyActiveScaffold()" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/50 uppercase font-bold transition flex items-center gap-1.5 cursor-pointer">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                        <span>SALIN KODE TAB</span>
+                        <span>{{ $isEn ? 'COPY TAB CODE' : 'SALIN KODE TAB' }}</span>
                     </button>
                     <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-black uppercase font-black transition flex items-center gap-1.5 cursor-pointer shadow-lg">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        <span>DOWNLOAD .ZIP</span>
+                        <span>{{ $isEn ? 'DOWNLOAD .ZIP' : 'UNDUH .ZIP' }}</span>
                     </a>
                 </div>
             </div>

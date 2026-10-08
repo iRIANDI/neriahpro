@@ -689,17 +689,17 @@ export default function ArchitecturePricingIsland({
                     ⭐ {isEn ? 'Includes all Spark Free features, plus:' : 'Mencakup seluruh fitur Spark, ditambah:'}
                   </div>
                   {(isEn ? [
-                    'Full 26-Parameter 6-Chapter PRD Document',
-                    'PostgreSQL Strict ULID DDL SQL Schema (Ready-to-import)',
-                    'O(1) Keyset & Cursor Pagination Technical Directives',
-                    'Work Breakdown Structure (WBS) 2 Sprints Jira/Linear Ready',
-                    'Official PDF & Markdown Export with SHA-256 Hash',
+                    'Pillar 1 (Core Spec): Full 26-Parameter PRD Document (Chapters 1-6)',
+                    'Database Schema: PostgreSQL Strict ULID DDL SQL (Ready-to-import)',
+                    'Performance Standard: O(1) Keyset & Cursor Pagination Directives',
+                    'Execution Roadmap: 2 Sprints Work Breakdown Structure (Linear / Jira ready)',
+                    'Official Deliverable: Licensed PDF & Markdown Export with SHA-256 Hash',
                   ] : [
-                    'Dokumen PRD lengkap 26 parameter (Bab 1–6)',
-                    'Skema database SQL siap import (PostgreSQL ULID)',
-                    'Standar teknis query & pagination cepat O(1)',
-                    'Rencana kerja 2 sprint terstruktur (Linear / Jira ready)',
-                    'Unduh dokumen resmi format PDF & Markdown berlisensi',
+                    'Pilar 1 (Spesifikasi Inti): Dokumen PRD lengkap 26 parameter (Bab 1–6)',
+                    'Skema Database: SQL PostgreSQL ULID presisi (Siap diimpor)',
+                    'Standar Kinerja: Panduan kueri cepat Keyset & Cursor Pagination O(1)',
+                    'Peta Kerja Eksekusi: Rencana kerja 2 sprint terstruktur (Linear / Jira ready)',
+                    'Ekspor Dokumen Resmi: Berkas PDF & Markdown berlisensi hash SHA-256',
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-cyan-500 shrink-0 mt-0.5" />
@@ -772,18 +772,19 @@ export default function ArchitecturePricingIsland({
                     ⭐ {isEn ? 'Includes all Lite PRD features, plus:' : 'Mencakup seluruh fitur Lite PRD, ditambah:'}
                   </div>
                   {(isEn ? [
-                    '6 Mermaid Diagrams (ERD, Architecture, Data Flow, Sequence)',
-                    'Container Stack (docker-compose.yml, PHP 8.4, PG 16, Redis, Nginx)',
-                    'AI Agent Coding Rules (.cursorrules, CLAUDE.md, AGENTS.md)',
-                    'Work Breakdown Structure (WBS) 5 Full Sprints Jira-Ready',
-                    'Pre-built RESTful API Routes (Laravel 13 & Next.js 15)',
-                    'White-Label Agency License (Re-brand directly to clients)',
+                    'Pillar 3 (Scaffold): Container Stack (docker-compose.yml, PHP 8.4, PG 16, Redis, Nginx)',
+                    'Pillar 4 (Seeder): Synthetic Mock Data Seeder Engine (100+ Realistic Records)',
+                    'Pillar 5 (AI Agent): AI Coding Agent Directives (.cursorrules, CLAUDE.md, AGENTS.md)',
+                    'Visual System Blueprint: 6 Complete Diagrams (Architecture, ERD, Data Flow, Sequence)',
+                    'API Foundation: Pre-built RESTful API Routes (Laravel 13 & Next.js App Router)',
+                    'White-Label License: Full rights to re-brand and deliver directly to your clients',
                   ] : [
-                    '6 Diagram sistem lengkap (ERD, Arsitektur, Alur Data, Sequence)',
-                    'File kontainer Docker siap jalan (PHP 8.4, PostgreSQL 16, Redis, Nginx)',
-                    'Aturan AI coding agent (.cursorrules, CLAUDE.md, AGENTS.md)',
-                    'Rencana kerja penuh 5 sprint + Rute API RESTful siap pakai',
-                    'Lisensi White-Label Agensi (Bebas re-brand ke klien Anda)',
+                    'Pilar 3 (Rangka Koding): File kontainer Docker siap jalan (PHP 8.4, PostgreSQL 16, Redis, Nginx)',
+                    'Pilar 4 (Data Awal): Generator data awal sintetis (Synthetic Data Seeder 100+ baris)',
+                    'Pilar 5 (Panduan AI): Aturan koding untuk agen AI (.cursorrules, CLAUDE.md, AGENTS.md)',
+                    'Cetak Biru Visual: 6 Diagram sistem lengkap (Arsitektur, ERD, Alur Data, Sequence)',
+                    'Fondasi API: Rute API RESTful siap pakai (Laravel 13 & Next.js App Router)',
+                    'Lisensi Bebas Merek: Hak penuh re-brand dan serahkan langsung ke klien Anda',
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
@@ -852,17 +853,17 @@ export default function ArchitecturePricingIsland({
                     ⭐ {isEn ? 'Includes all Pro Blueprint features, plus:' : 'Mencakup seluruh fitur Pro Blueprint, ditambah:'}
                   </div>
                   {(isEn ? [
-                    'Pillar 2 (UI/UX): Design Tokens JSON & 4 Core Screens Wireframe',
-                    'Pillar 6 (QA): Automated Feature Testing Suite (Pest/PHPUnit)',
-                    'Pillar 7 (DevOps): CI/CD GitHub Actions & Production deploy.sh',
-                    'Executive Call: 1 Scheduled 60-Min 1-on-1 with Principal Architect',
-                    'Legal Security: Corporate Non-Disclosure Agreement (NDA)',
+                    'Pillar 2 (UI/UX Design): Design Tokens JSON & 4 Core Screens Wireframe',
+                    'Pillar 6 (QA Testing): Automated Contract Feature Testing Suite (Pest/PHPUnit)',
+                    'Pillar 7 (DevOps CI/CD): 1-Click Cloud Deployment Pipeline (GitHub Actions & deploy.sh)',
+                    'Executive Call: 1 Scheduled 60-Minute 1-on-1 Session with Principal Architect',
+                    'Legal Security: Official Corporate Non-Disclosure Agreement (NDA)',
                   ] : [
-                    'Pilar 2 (UI/UX): Wireframe cetak biru 4 layar utama & Design Tokens JSON',
-                    'Pilar 6 (QA Test): Pengujian fitur otomatis (Pest/PHPUnit Contract Tests)',
-                    'Pilar 7 (DevOps): Pipeline CI/CD GitHub Actions & Skrip deploy.sh VPS',
+                    'Pilar 2 (Desain UI/UX): Cetak biru wireframe 4 layar utama & Token Desain (JSON)',
+                    'Pilar 6 (Uji Kualitas): Paket pengujian fitur otomatis (ApiContractTest Pest/PHPUnit)',
+                    'Pilar 7 (Otomasi Server): Jalur deployment otomatis cloud (GitHub Actions & deploy.sh)',
                     'Sesi Konsultasi: 1 Sesi 60 Menit 1-on-1 bersama Principal Architect',
-                    'Legal Security: Surat Non-Disclosure Agreement (NDA) resmi bertanda tangan',
+                    'Perlindungan Hukum: Surat Perjanjian Kerahasiaan (NDA) resmi bertanda tangan digital',
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />

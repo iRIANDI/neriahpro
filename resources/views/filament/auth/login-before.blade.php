@@ -1,11 +1,14 @@
+@php
+    $isEn = app()->getLocale() === 'en';
+@endphp
 <div style="margin-bottom: 1.25rem; padding: 0.875rem 1rem; border-radius: 0.75rem; background: rgba(244, 244, 245, 0.8); border: 1px solid rgba(228, 228, 231, 1); text-align: left;" class="dark:bg-zinc-900/80 dark:border-zinc-800">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.625rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(228, 228, 231, 0.8);" class="dark:border-zinc-800">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
             <span style="display: inline-block; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-family: monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;" class="bg-zinc-900 text-zinc-100 dark:bg-white dark:text-zinc-900">
-                CORE PILLARS
+                {{ $isEn ? 'CORE PILLARS' : 'PILAR UTAMA' }}
             </span>
             <span style="font-size: 11px; font-weight: 600; color: #3f3f46;" class="dark:text-zinc-300">
-                Enterprise Mission Architecture
+                {{ $isEn ? 'Enterprise Mission Architecture' : 'Arsitektur Misi Enterprise' }}
             </span>
         </div>
         <span style="font-family: monospace; font-size: 9px; color: #71717a;" class="dark:text-zinc-400">
@@ -24,7 +27,9 @@
                 <span>Vision Blueprint</span>
             </div>
             <p style="font-size: 10px; color: #52525b; line-height: 1.35; margin: 0;" class="dark:text-zinc-400">
-                Sintesis PRD otomatis, arsitektur ERD, dan skema PostgreSQL ULID.
+                {{ $isEn 
+                    ? 'Automated PRD synthesis, ERD architecture, and PostgreSQL ULID schemas.' 
+                    : 'Sintesis PRD otomatis, arsitektur ERD, dan skema PostgreSQL ULID.' }}
             </p>
         </div>
 
@@ -37,7 +42,9 @@
                 <span>Scope Lock OS</span>
             </div>
             <p style="font-size: 10px; color: #52525b; line-height: 1.35; margin: 0;" class="dark:text-zinc-400">
-                Kontrak anti-scope-creep, milestone escrow, dan kepastian deliverable.
+                {{ $isEn 
+                    ? 'Anti-scope-creep contracts, milestone escrow, and deliverable certainty.' 
+                    : 'Kontrak anti-scope-creep, milestone escrow, dan kepastian deliverable.' }}
             </p>
         </div>
 
@@ -50,7 +57,9 @@
                 <span>CV Pro Studio</span>
             </div>
             <p style="font-size: 10px; color: #52525b; line-height: 1.35; margin: 0;" class="dark:text-zinc-400">
-                MarkItDown scan dokumen, audit ATS CV, dan mock interview suara.
+                {{ $isEn 
+                    ? 'MarkItDown document scanning, ATS CV audit, and AI mock voice interview.' 
+                    : 'MarkItDown scan dokumen, audit ATS CV, dan mock interview suara.' }}
             </p>
         </div>
     </div>

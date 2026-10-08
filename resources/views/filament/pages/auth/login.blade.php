@@ -60,13 +60,22 @@
                         </span>
                     </div>
 
+@php
+    $isEn = app()->getLocale() === 'en';
+@endphp
                     <!-- Vision & Mission Headline -->
                     <div style="margin-bottom: 1.5rem;">
                         <h2 style="font-size: 1.5rem; font-weight: 900; line-height: 1.25; color: #ffffff; letter-spacing: -0.025em; margin: 0 0 0.5rem 0; text-transform: uppercase;">
-                            Architecting High-Performance <span style="color: #f59e0b;">Digital Platforms</span> & Scope Lock OS
+                            @if($isEn)
+                                Architecting High-Performance <span style="color: #f59e0b;">Digital Platforms</span> & Scope Lock OS
+                            @else
+                                Rancang Platform Digital <span style="color: #f59e0b;">Performa Tinggi</span> & Scope Lock OS
+                            @endif
                         </h2>
                         <p style="font-size: 0.8125rem; line-height: 1.55; color: #a1a1aa; margin: 0;">
-                            Pusat komando terpusat untuk perumusan otomatis arsitektur perangkat lunak berstandar enterprise, eliminasi mutlak scope creep lewat kontrak digital mengikat, dan akselerasi karir cerdas CV Pro Studio.
+                            {{ $isEn 
+                                ? 'Centralized command hub for enterprise-grade automated software architecture synthesis, absolute scope creep elimination via binding digital contracts, and intelligent career acceleration with CV Pro Studio.' 
+                                : 'Pusat komando terpusat untuk perumusan otomatis arsitektur perangkat lunak berstandar enterprise, eliminasi mutlak penambahan lingkup kerja tak terkendali via kontrak digital, dan akselerasi karir cerdas CV Pro Studio.' }}
                         </p>
                     </div>
 
@@ -81,10 +90,12 @@
                             </div>
                             <div>
                                 <div style="font-size: 0.8125rem; font-weight: 700; color: #f4f4f5; font-family: monospace;">
-                                    1. Vision Blueprint & Ultimate PRD
+                                    {{ $isEn ? '1. Vision Blueprint & Ultimate PRD' : '1. Vision Blueprint & PRD Mutakhir' }}
                                 </div>
                                 <div style="font-size: 0.75rem; color: #a1a1aa; line-height: 1.4; margin-top: 0.125rem;">
-                                    Sintesis PRD otomatis, diagram arsitektur sistem, skema basis data terdistribusi, dan performa tinggi skala enterprise.
+                                    {{ $isEn 
+                                        ? 'Automated PRD synthesis, system architecture diagrams, distributed database schemas, and enterprise-grade high-throughput performance.' 
+                                        : 'Sintesis PRD otomatis, diagram arsitektur sistem, skema basis data terdistribusi, dan performa tinggi skala enterprise.' }}
                                 </div>
                             </div>
                         </div>
@@ -98,10 +109,12 @@
                             </div>
                             <div>
                                 <div style="font-size: 0.8125rem; font-weight: 700; color: #f4f4f5; font-family: monospace;">
-                                    2. Scope Lock OS & Digital Escrow
+                                    {{ $isEn ? '2. Scope Lock OS & Digital Escrow' : '2. Scope Lock OS & Escrow Digital' }}
                                 </div>
                                 <div style="font-size: 0.75rem; color: #a1a1aa; line-height: 1.4; margin-top: 0.125rem;">
-                                    Pemberantasan scope creep lewat kontrak berpayung hukum, milestone escrow DP Midtrans, dan SHA-256 audit.
+                                    {{ $isEn 
+                                        ? 'Zero scope creep via legally binding digital contracts, Midtrans DP escrow milestones, and SHA-256 integrity audits.' 
+                                        : 'Pencegahan penambahan lingkup tak terkendali lewat kontrak berpayung hukum, milestone escrow DP Midtrans, dan audit hash SHA-256.' }}
                                 </div>
                             </div>
                         </div>
@@ -115,10 +128,12 @@
                             </div>
                             <div>
                                 <div style="font-size: 0.8125rem; font-weight: 700; color: #f4f4f5; font-family: monospace;">
-                                    3. Enterprise Architecture & Sprint Delivery
+                                    {{ $isEn ? '3. Enterprise Architecture & Sprint Delivery' : '3. Arsitektur Enterprise & Eksekusi Sprint' }}
                                 </div>
                                 <div style="font-size: 0.75rem; color: #a1a1aa; line-height: 1.4; margin-top: 0.125rem;">
-                                    Sistem orkestrasi sprint deliverables, audit standar clean code, dan automated acceptance testing.
+                                    {{ $isEn 
+                                        ? 'Sprint deliverables orchestration system, clean code standard compliance audits, and automated acceptance testing suites.' 
+                                        : 'Sistem orkestrasi deliverable sprint, audit kepatuhan standar clean code, dan rangkaian pengujian penerimaan otomatis.' }}
                                 </div>
                             </div>
                         </div>

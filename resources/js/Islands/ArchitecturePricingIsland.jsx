@@ -421,6 +421,46 @@ export default function ArchitecturePricingIsland({
         : 'Sebagian besar proyek gagal bukan karena programmer tidak bisa coding, melainkan karena ketiadaan cetak biru arsitektur yang solid: skema database tidak terindeks dengan baik, spesifikasi fitur kabur, dan sprint berantakan. Paket Advisory Blueprint memberikan roadmap teknis siap eksekusi (PRD 26 parameter, skema PostgreSQL Strict ULID, arsitektur pagination O(1), dan WBS 5 sprint) sehingga tim Anda hemat ratusan jam revisi.'
     },
     {
+      q: isEn 
+        ? 'What are the "7 Pillars of Software Factory OS" included in Neriah Pro Project OS?' 
+        : 'Apa itu "7 Pilar Software Factory OS" yang menjadi standar rekayasa Project OS Neriah Pro?',
+      a: isEn
+        ? 'The 7 Pillars constitute our turnkey engineering operating system to eliminate software failure: (1) Brain & Contract Spec: 26-parameter PRD, Mermaid dataflows, and OpenAPI 3.1 contracts. (2) Interface & UI/UX: Anti-AI-slop Clean Solid Brutalism with 100% dark/light mode fidelity and 4 core screen wireframes. (3) Scaffold Container Stack: Production-ready Docker Compose (PHP 8.4, PostgreSQL 16, Redis 7, Nginx HTTP/2). (4) Synthetic Vital Data: Seeder engine with 100+ realistic records for immediate testing. (5) AI Agent Intelligence: Strict directives (.cursorrules, AGENTS.md, CLAUDE.md) for zero-hallucination AI pair-programming. (6) QA Assurance: Automated Pest/PHPUnit ApiContractTest suite running 100% green. (7) Server CI/CD Expressway: GitHub Actions pipeline and zero-downtime deploy.sh across 6 production scenarios.'
+        : '7 Pilar Software Factory OS adalah sistem operasi rekayasa perangkat lunak enterprise Neriah Pro untuk mengeliminasi risiko kegagalan proyek: (1) Brain & Contract Spec: Dokumen PRD 26 parameter, diagram alur Mermaid, dan spesifikasi OpenAPI 3.1. (2) Interface & UI/UX: Desain Clean Solid Brutalism anti-AI-slop, 100% Dark & Light Mode, serta wireframe 4 layar utama. (3) Scaffold Container Stack: Docker Compose siap produksi (PHP 8.4, PostgreSQL 16, Redis 7, Nginx HTTP/2). (4) Synthetic Vital Data: Engine seeder 100+ baris data realistis siap uji. (5) AI Agent Intelligence: Aturan baku (.cursorrules, AGENTS.md, CLAUDE.md) untuk memandu AI coding agent tanpa halusinasi. (6) QA Assurance: Suite uji otomatis Pest / PHPUnit ApiContractTest yang lolos 100% hijau. (7) Server CI/CD Expressway: Pipeline GitHub Actions dan skrip deploy.sh 6 skenario tanpa downtime.'
+    },
+    {
+      q: isEn 
+        ? 'Why does Project OS enforce PostgreSQL Strict ULID and Keyset Cursor Pagination O(1)?' 
+        : 'Mengapa Project OS mewajibkan arsitektur PostgreSQL Strict ULID dan Keyset Cursor Pagination O(1)?',
+      a: isEn
+        ? 'To guarantee enterprise scalability for millions of records and concurrent users without performance degradation. Conventional AUTO_INCREMENT integers leak business volume, fail in distributed databases, and are vulnerable to enumeration attacks. ULIDs (Universally Unique Lexicographically Sortable Identifiers) provide 128-bit distributed uniqueness with sub-millisecond chronological sorting and zero lock contention. Furthermore, conventional OFFSET-based pagination degrades exponentially as page numbers grow (O(N) full-table scanning); Keyset Cursor Pagination guarantees constant O(1) sub-10ms response times even on tables with tens of millions of rows.'
+        : 'Untuk menjamin skalabilitas kelas enterprise yang mampu menangani jutaan data dan ribuan pengunjung bersamaan tanpa penurunan performa (anti-lemot). Primary key AUTO_INCREMENT tradisional membocorkan volume transaksi bisnis, rawan serangan enumerasi ID, dan rusak saat migrasi distributed database. Project OS menggunakan ULID (Universally Unique Lexicographically Sortable Identifier) yang aman, acak terdistribusi, namun tetap berurutan kronologis secara presisi. Selain itu, pagination konvensional berbasis OFFSET melambat drastis saat halaman membesar (O(N) scanning); Keyset Cursor Pagination O(1) menjamin kecepatan query stabil di bawah 10 milidetik bahkan pada tabel berisi puluhan juta data.'
+    },
+    {
+      q: isEn 
+        ? 'How do clients monitor development progress in real-time via Master Gantt Timeline & Customer Portal?' 
+        : 'Bagaimana cara klien memantau progres pengerjaan secara real-time via Master Gantt Timeline & Customer Portal?',
+      a: isEn
+        ? 'Every client receives access to their dedicated Customer Portal (/customer/dashboard). Inside, an interactive Master Gantt Timeline powered by local Mermaid.js visualization tracks all 5 sprints in real-time. Clients can inspect sprint phases (Sprint 1: DB & Auth, Sprint 2: Core Business Engine, Sprint 3: Integrations & Payments, Sprint 4: QA & Contract Tests, Sprint 5: Hardening & Cloud Deploy), view active milestones, download intermediate deliverables, verify test statuses, and communicate directly with the Lead Architect without opaque "black box" development.'
+        : 'Setiap klien mendapatkan akun resmi di Customer Portal Neriah Pro (/customer/dashboard). Di dalamnya, terdapat Master Gantt Timeline interaktif ditenagai pustaka lokal Mermaid.js (zero CDN latency) yang memvisualisasikan seluruh 5 sprint secara real-time. Klien dapat memantau fase sprint (Sprint 1: Fondasi DB & Auth, Sprint 2: Core Engine & Transaksi, Sprint 3: Integrasi Pembayaran Midtrans, Sprint 4: QA & ApiContractTest, Sprint 5: VPS Hardening & Live Deploy), mengecek milestone aktif, mengunduh deliverable parsial, dan berkoordinasi transparan dengan Principal Architect tanpa ada proses "black box".'
+    },
+    {
+      q: isEn 
+        ? 'Why does Neriah Pro restrict sprint capacity (Managed Capacity) to max 2-3 parallel projects per batch?' 
+        : 'Mengapa Neriah Pro membatasi kapasitas sprint (Managed Capacity) maksimal 2–3 proyek per batch?',
+      a: isEn
+        ? 'To preserve elite engineering craftsmanship and guarantee zero burnout or "AI-slop" code generation. Software development agencies that take on dozens of concurrent projects inevitably assign junior freelancers or deliver rushed, unstable code. Neriah Pro strictly limits intake to 2-3 projects per batch (Batch 1, Batch 2, Batch Q1). Once batch capacity is full, the schedule locks via our Anti-Collision Engine, ensuring our Senior Architects and Engineers give 100% dedicated, uninterrupted focus to your codebase until production deployment.'
+        : 'Demi menjaga standar rekayasa kelas atas (craftsmanship) dan menjamin kode yang dihasilkan bebas dari "AI-slop" atau bug tersembunyi. Agensi software tradisional sering menerima belasan proyek sekaligus hingga developer kelelahan (burnout) dan akhirnya melempar pekerjaan ke freelancer junior yang asal jadi. Neriah Pro secara ketat membatasi kapasitas maksimal 2–3 proyek per batch (Batch 1, Batch 2, Batch Q1). Ketika slot batch terisi, jadwal terkunci via Anti-Collision Engine sehingga tim Senior Architect dan Engineer kami fokus penuh 100% pada sistem Anda hingga live bergaransi di server produksi.'
+    },
+    {
+      q: isEn 
+        ? 'How do the AI Coding Directives (.cursorrules, AGENTS.md, CLAUDE.md) empower our team after handover?' 
+        : 'Bagaimana aturan agen AI (.cursorrules, AGENTS.md, CLAUDE.md) memberdayakan tim developer kami setelah serah terima?',
+      a: isEn
+        ? 'Modern development heavily leverages AI assistants like Cursor, Windsurf, GitHub Copilot, and Claude Code. However, without strict architectural context, AI hallucinates legacy syntax, uses vulnerable packages, and introduces O(N) performance regressions. Our Project OS packages embed battle-tested directive files (.cursorrules, AGENTS.md, CLAUDE.md) tailored to your exact stack (Laravel 13, Filament v5, PostgreSQL ULID, Keyset Cursor). When your developers open your project in AI IDEs, the AI assistant immediately respects your architecture, coding conventions, and security rules without continuous re-prompting.'
+        : 'Pengembangan software modern kini mengandalkan AI coding tools seperti Cursor, Windsurf, GitHub Copilot, dan Claude Code. Namun tanpa panduan arsitektur yang ketat, AI sering berhalusinasi, menulis kode usang, atau merusak skema database dengan query yang lambat. Deliverable Project OS menyertakan berkas direktif siap pakai (.cursorrules, AGENTS.md, CLAUDE.md) yang disesuaikan persis dengan stack teknologi proyek Anda (Laravel 13, Filament v5, PostgreSQL ULID, Keyset Cursor O(1)). Ketika developer Anda membuka repositori, AI coding assistant akan otomatis mematuhi aturan arsitektur, konvensi penamaan, dan standar keamanan tanpa perlu berulang kali di-prompting manual.'
+    },
+    {
       q: isEn ? 'How does the 50% Down Payment (DP) work for Full MVP Development?' : 'Bagaimana skema pembayaran Uang Muka (DP) 50% untuk Full MVP?',
       a: isEn 
         ? 'We enforce Scope Locking and Digital Legal Contracts. To kickstart the 5 sprints development, clients settle a 50% DP (Rp 25,000,000) securely via Midtrans or Bank Escrow. The remaining 50% is paid upon User Acceptance Testing (UAT) and successful deployment to production VPS.'

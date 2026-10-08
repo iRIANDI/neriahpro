@@ -223,21 +223,21 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
       <nav 
         className={`w-full transition-all duration-200 border-b ${
           scrolled 
-            ? 'bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-zinc-200 dark:border-zinc-800 py-3 shadow-xs' 
-            : 'bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 py-4'
+            ? 'bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-zinc-200 dark:border-zinc-800 py-2.5 shadow-xs' 
+            : 'bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 py-3 sm:py-3.5'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
           
           {/* Brand Logo */}
-          <a href="/" className="flex items-center gap-2 group">
+          <a href="/" className="flex items-center gap-2 group shrink-0">
             <span className="w-7 h-7 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black flex items-center justify-center font-mono font-black text-xs rounded-none transition-transform group-hover:scale-105">
               N
             </span>
             <span className="font-black text-lg sm:text-xl uppercase tracking-tighter text-zinc-900 dark:text-white font-sans">
               NERIAH<span className="text-emerald-500">PRO</span>
             </span>
-            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 border-l border-zinc-300 dark:border-zinc-700 pl-2 hidden md:inline font-bold">
+            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 border-l border-zinc-300 dark:border-zinc-700 pl-2 hidden lg:inline font-bold whitespace-nowrap">
               {lang === 'id' ? 'APLIKASI SOLUSI HIDUP' : 'LIFE SOLUTION APPS'}
             </span>
           </a>

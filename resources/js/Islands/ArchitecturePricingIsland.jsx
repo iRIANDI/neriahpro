@@ -463,12 +463,12 @@ export default function ArchitecturePricingIsland({
   ];
 
   return (
-    <div className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-10 sm:py-16 transition-colors">
+    <div className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 pt-4 sm:pt-6 pb-12 sm:pb-16 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
         {/* DYNAMIC MODULE SWITCHER (PROJECT OS VS UPCOMING CV PRO - DITENTUKAN DARI BACKEND ADMIN) */}
         {isCvProEnabled && (
-          <div className="flex items-center justify-center pt-2 sm:pt-4 mb-8 sm:mb-10">
+          <div className="flex items-center justify-center pt-1 mb-6 sm:mb-8">
             <div className="inline-flex p-1 bg-zinc-200 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none shadow-inner font-mono text-xs">
               <button
                 type="button"
@@ -528,36 +528,36 @@ export default function ArchitecturePricingIsland({
         ) : (
           <>
             {/* 1. CLEAN & CONCISE SINGLE HEADER SECTION */}
-            <div className="text-center max-w-3xl mx-auto mb-8">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold mb-3 rounded-xs">
+            <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-8">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold mb-2.5 rounded-none">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>{isEn ? 'TRANSPARENT VALUE-BASED PRICING' : 'SKEMA INVESTASI TRANSPARAN & TERSTANDAR'}</span>
               </div>
               
-              <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight font-sans text-zinc-900 dark:text-white mb-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight font-sans text-zinc-900 dark:text-white mb-2 leading-tight">
                 {isEn ? 'Digital Architecture & Engineering Pricing' : 'Investasi Layanan Rekayasa Sistem'}
               </h1>
               
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed max-w-2xl mx-auto">
                 {isEn 
                   ? 'Standardized software engineering investment: From instant self-service architectural blueprints to full turnkey Monolith MVP contracts.' 
                   : 'Pilihan investasi rekayasa perangkat lunak terstandarisasi untuk founder & pengembang: Dari cetak biru mandiri (Self-Service) hingga koding penuh turnkey Studio Monolith MVP.'}
               </p>
             </div>
 
-            <div className="mb-20">
+            <div className="mb-16 sm:mb-20">
               {/* 2. PUNCHY & STREAMLINED 100% SELF-SERVICE NOTICE */}
-            <div className="mb-8 p-3.5 sm:p-4 bg-amber-500/10 border border-amber-500/30 text-zinc-900 dark:text-zinc-100 rounded-xs shadow-xs">
+            <div className="mb-6 sm:mb-8 p-3.5 sm:p-4 bg-amber-500/10 border border-amber-500/30 text-zinc-900 dark:text-zinc-100 rounded-none shadow-xs">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-black font-black text-[10px] font-mono rounded-xs">
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-black font-black text-[10px] font-mono rounded-none">
                     {isEn ? '⚠️ IMPORTANT' : '⚠️ PENTING'}
                   </span>
                   <span className="font-mono text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
                     {isEn ? 'TIERS 01-04: 100% SELF-SERVICE // ZERO NERIAH PRO CODING' : 'PAKET 01-04: 100% SELF-SERVICE // TANPA KODING DARI NERIAH PRO'}
                   </span>
                 </div>
-                <span className="font-mono text-[10px] px-2 py-0.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold uppercase rounded-xs">
+                <span className="font-mono text-[10px] px-2 py-0.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold uppercase rounded-none">
                   {isEn ? 'CLIENT-EXECUTED' : 'DIKERJAKAN OLEH DEVELOPER ANDA'}
                 </span>
               </div>

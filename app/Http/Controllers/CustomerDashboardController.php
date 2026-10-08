@@ -30,6 +30,7 @@ class CustomerDashboardController extends Controller
         $email = strtolower(trim($user->email ?? ''));
         $userId = $user->id;
         $globalSettings = CmsGlobalSetting::getAllCached();
+        $isPgsql = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql';
 
         // Retrieve blueprints owned by or registered to this customer
         $blueprints = VisionBlueprint::where(function ($q) use ($email, $userId) {
@@ -42,22 +43,94 @@ class CustomerDashboardController extends Controller
         })->orderBy('created_at', 'desc')->get();
 
         // Retrieve payment transactions (resilient across PostgreSQL & MySQL)
-        $transactions = Transaction::where(function ($q) use ($email, $userId) {
+        $transactions = Transaction::where(function ($q) use ($email, $userId, $isPgsql) {
             if ($userId) {
                 $q->where('user_id', $userId);
             }
             if ($email) {
-                $q->orWhere(function ($sub) use ($email) {
-                    $sub->whereNotNull('customer_details')
-                        ->where('customer_details', 'LIKE', '%"' . $email . '"%');
+                $q->orWhere(function ($sub) use ($email, $isPgsql) {
+                    $sub->whereNotNull('customer_details');
+                    if ($isPgsql) {
+                        $sub->whereRaw('LOWER("customer_details"::text) LIKE ?', ['%' . $email . '%']);
+                    } else {
+                        $sub->whereRaw('LOWER(customer_details) LIKE ?', ['%' . $email . '%']);
+                    }
                 });
             }
         })->orderBy('created_at', 'desc')->get();
 
-        // Retrieve linked domain & hosting assets if any
+        // Auto-reconcile / self-heal pending transactions with Midtrans on page load
+        $pendingToSync = $transactions->where('status', 'pending')->take(2);
+        $reSyncNeeded = false;
+
+        foreach ($pendingToSync as $pTx) {
+            $orderId = $pTx->midtrans_order_id;
+            if (empty($orderId)) continue;
+
+            try {
+                $statusCheck = \App\Services\MidtransSnapService::checkStatus($orderId);
+                if ($statusCheck['success']) {
+                    $data = $statusCheck['data'] ?? [];
+                    $trxStatus = $data['transaction_status'] ?? null;
+                    $fraudStatus = $data['fraud_status'] ?? null;
+
+                    if (in_array($trxStatus, ['settlement', 'capture']) && ($fraudStatus !== 'challenge')) {
+                        $pTx->update([
+                            'status' => 'settlement',
+                            'midtrans_transaction_id' => $data['transaction_id'] ?? $pTx->midtrans_transaction_id,
+                            'user_id' => $user->id,
+                        ]);
+                        $dummyReq = Request::create('/customer/transaction/' . $pTx->id . '/sync', 'POST', [
+                            'gross_amount' => $data['gross_amount'] ?? $pTx->total_idr,
+                            'transaction_id' => $data['transaction_id'] ?? $pTx->midtrans_transaction_id,
+                        ]);
+                        app(\App\Http\Controllers\MidtransWebhookController::class)->fulfillOrder($orderId, $dummyReq);
+                        $reSyncNeeded = true;
+                    } elseif (in_array($trxStatus, ['expire', 'cancel', 'deny'])) {
+                        $pTx->update([
+                            'status' => $trxStatus,
+                            'midtrans_transaction_id' => $data['transaction_id'] ?? $pTx->midtrans_transaction_id,
+                        ]);
+                        $reSyncNeeded = true;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Silently continue if gateway check fails
+            }
+        }
+
+        // If any transaction status was reconciled during auto-check, refresh collections
+        if ($reSyncNeeded) {
+            $blueprints = VisionBlueprint::where(function ($q) use ($email, $userId) {
+                if ($email) {
+                    $q->whereRaw('LOWER(email) = ?', [$email]);
+                }
+                if ($userId) {
+                    $q->orWhere('user_metadata->user_id', $userId);
+                }
+            })->orderBy('created_at', 'desc')->get();
+
+            $transactions = Transaction::where(function ($q) use ($email, $userId, $isPgsql) {
+                if ($userId) {
+                    $q->where('user_id', $userId);
+                }
+                if ($email) {
+                    $q->orWhere(function ($sub) use ($email, $isPgsql) {
+                        $sub->whereNotNull('customer_details');
+                        if ($isPgsql) {
+                            $sub->whereRaw('LOWER("customer_details"::text) LIKE ?', ['%' . $email . '%']);
+                        } else {
+                            $sub->whereRaw('LOWER(customer_details) LIKE ?', ['%' . $email . '%']);
+                        }
+                    });
+                }
+            })->orderBy('created_at', 'desc')->get();
+        }
+
+        // Retrieve linked domain & hosting assets if any (PostgreSQL strictly uses 'expires_at')
         $blueprintIds = $blueprints->pluck('id')->filter()->toArray();
         $hostingAssets = !empty($blueprintIds) 
-            ? \App\Models\DomainHostingAsset::whereIn('vision_blueprint_id', $blueprintIds)->orderBy('expiration_date', 'asc')->get()
+            ? \App\Models\DomainHostingAsset::whereIn('vision_blueprint_id', $blueprintIds)->orderBy('expires_at', 'asc')->get()
             : collect();
 
         // Categorize into Retail Self-Service Licenses vs Studio Custom Projects via Concrete Registry
@@ -85,6 +158,16 @@ class CustomerDashboardController extends Controller
                 || in_array($tx->customer_details['package_tier'] ?? '', \App\Support\PricingRegistry::getSelfServiceIds(), true);
         });
 
+        // Filter expired / cancelled / denied retail orders for transparent status explanation
+        $expiredRetailOrders = $transactions->filter(function ($tx) {
+            if (!in_array($tx->status, ['expire', 'cancel', 'deny'], true)) return false;
+            $orderId = $tx->midtrans_order_id ?? '';
+            return str_starts_with($orderId, 'NPRO-LC-')
+                || str_starts_with($orderId, 'NPRO-LIC-')
+                || ($tx->customer_details['is_retail'] ?? false)
+                || in_array($tx->customer_details['package_tier'] ?? '', \App\Support\PricingRegistry::getSelfServiceIds(), true);
+        });
+
         $pendingStudioOrders = $transactions->filter(function ($tx) {
             if ($tx->status !== 'pending') return false;
             $orderId = $tx->midtrans_order_id ?? '';
@@ -101,6 +184,7 @@ class CustomerDashboardController extends Controller
         $totalRetail = $retailLicenses->count();
         $totalStudio = $studioProjects->count();
         $activeStudio = $studioProjects->filter(fn ($p) => $p->isDpConfirmed() || $p->signed_agreement)->count();
+        $latestTransaction = $transactions->first();
 
         return view('customer.dashboard', [
             'user' => $user,
@@ -108,8 +192,10 @@ class CustomerDashboardController extends Controller
             'retailLicenses' => $retailLicenses,
             'studioProjects' => $studioProjects,
             'pendingRetailOrders' => $pendingRetailOrders,
+            'expiredRetailOrders' => $expiredRetailOrders,
             'pendingStudioOrders' => $pendingStudioOrders,
             'transactions' => $transactions,
+            'latestTransaction' => $latestTransaction,
             'hostingAssets' => $hostingAssets,
             'globalSettings' => $globalSettings,
             'metrics' => [

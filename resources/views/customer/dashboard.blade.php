@@ -611,6 +611,112 @@
                 </div>
             </div>
 
+            <!-- Executive Order & Payment Status Tracker -->
+            @if(isset($latestTransaction) && $latestTransaction)
+                @php
+                    $ltDetails = $latestTransaction->customer_details ?? [];
+                    $ltPkg = $ltDetails['display_package'] ?? $ltDetails['package_tier'] ?? 'Pesanan Sistem & Lisensi Neriah Pro';
+                    $ltStatus = $latestTransaction->status;
+                    $isLtSettled = in_array($ltStatus, ['settlement', 'capture', 'success'], true);
+                    $isLtPending = $ltStatus === 'pending';
+                    $isLtExpired = $ltStatus === 'expire';
+                    $isLtFailed = in_array($ltStatus, ['cancel', 'deny'], true);
+                @endphp
+
+                <div class="p-5 border-2 rounded-none shadow-xs space-y-3 transition {{ $isLtSettled ? 'bg-emerald-500/5 border-emerald-500/40 dark:bg-emerald-950/20' : '' }} {{ $isLtPending ? 'bg-amber-500/5 border-amber-500/40 dark:bg-amber-950/20' : '' }} {{ $isLtExpired ? 'bg-rose-500/5 border-rose-500/40 dark:bg-rose-950/20' : '' }} {{ $isLtFailed ? 'bg-zinc-500/5 border-zinc-500/40 dark:bg-zinc-950/20' : '' }}">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3 {{ $isLtSettled ? 'border-emerald-500/20' : '' }} {{ $isLtPending ? 'border-amber-500/20' : '' }} {{ $isLtExpired ? 'border-rose-500/20' : '' }} {{ $isLtFailed ? 'border-zinc-500/20' : '' }}">
+                        <div>
+                            <span class="text-[10px] font-mono font-bold uppercase tracking-wider block {{ $isLtSettled ? 'text-emerald-600 dark:text-emerald-400' : '' }} {{ $isLtPending ? 'text-amber-600 dark:text-amber-400' : '' }} {{ $isLtExpired ? 'text-rose-600 dark:text-rose-400' : '' }} {{ $isLtFailed ? 'text-zinc-500' : '' }}">
+                                {{ $isEn ? 'LATEST TRANSACTION & ORDER STATUS' : 'STATUS PESANAN & PEMBAYARAN TERAKHIR' }}
+                            </span>
+                            <h3 class="text-base font-black text-zinc-900 dark:text-white uppercase font-sans mt-0.5">
+                                {{ $ltPkg }}
+                            </h3>
+                            <span class="text-xs font-mono text-zinc-500 block">
+                                Order ID: {{ $latestTransaction->midtrans_order_id ?: ('NPRO-' . substr($latestTransaction->id, 0, 8)) }} &bull; 
+                                {{ $latestTransaction->created_at ? $latestTransaction->created_at->format('d M Y, H:i') : 'N/A' }} &bull; 
+                                Rp {{ number_format((float) $latestTransaction->total_idr, 0, ',', '.') }}
+                            </span>
+                        </div>
+
+                        <div class="shrink-0 flex items-center gap-2">
+                            @if($isLtSettled)
+                                <span class="px-3 py-1 bg-emerald-500 text-black font-mono text-xs font-black uppercase tracking-wider">
+                                    ✓ {{ $isEn ? 'SETTLED / ACTIVE' : 'LUNAS & AKTIF' }}
+                                </span>
+                            @elseif($isLtPending)
+                                <span class="px-3 py-1 bg-amber-500 text-black font-mono text-xs font-black uppercase tracking-wider animate-pulse">
+                                    ⏳ {{ $isEn ? 'AWAITING PAYMENT (PENDING)' : 'MENUNGGU PEMBAYARAN' }}
+                                </span>
+                            @elseif($isLtExpired)
+                                <span class="px-3 py-1 bg-rose-600 text-white font-mono text-xs font-black uppercase tracking-wider">
+                                    ⚠️ {{ $isEn ? 'ORDER EXPIRED' : 'KADALUARSA (EXPIRED)' }}
+                                </span>
+                            @elseif($isLtFailed)
+                                <span class="px-3 py-1 bg-zinc-700 text-white font-mono text-xs font-black uppercase tracking-wider">
+                                    ❌ {{ $isEn ? 'CANCELLED / FAILED' : 'DIBATALKAN / DITOLAK' }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                        <p class="text-xs font-sans text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
+                            @if($isLtSettled)
+                                {{ $isEn 
+                                    ? 'Payment was verified settled by Midtrans Escrow. All digital specifications, PostgreSQL Strict ULID DDL, and codebase scaffolds are permanently active in your account.' 
+                                    : 'Pembayaran telah sukses diverifikasi oleh Midtrans Escrow. Seluruh berkas spesifikasi PRD 26 parameter, skema database SQL PostgreSQL Strict ULID, dan scaffold codebase sudah aktif dan dapat diunduh seumur hidup.' }}
+                            @elseif($isLtPending)
+                                {{ $isEn 
+                                    ? 'This order is awaiting payment via Midtrans Gateway. Complete payment via QRIS / Virtual Account, or click sync if you already transferred.' 
+                                    : 'Pesanan ini sedang menunggu pembayaran di gateway Midtrans. Selesaikan pembayaran sesuai petunjuk Snap, atau klik "Cek Status" jika Anda sudah melakukan transfer.' }}
+                            @elseif($isLtExpired)
+                                {{ $isEn 
+                                    ? 'Payment window for this order has expired in Midtrans (over 24h). No charges were incurred. Please create a new order to receive a fresh payment code or QRIS.' 
+                                    : 'Batas waktu pembayaran untuk pesanan ini telah habis (kadaluarsa di Midtrans). Anda tidak dikenakan biaya apapun. Silakan lakukan pemesanan ulang untuk mendapatkan kode bayar atau QRIS baru.' }}
+                            @elseif($isLtFailed)
+                                {{ $isEn 
+                                    ? 'This transaction was cancelled or denied by the payment gateway. Please create a new order to proceed.' 
+                                    : 'Transaksi ini dibatalkan atau ditolak oleh payment gateway. Silakan buat pesanan baru jika ingin melanjutkan.' }}
+                            @endif
+                        </p>
+
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            @if($isLtSettled)
+                                <button type="button" @click="setTab('licenses')" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider rounded-none cursor-pointer">
+                                    {{ $isEn ? 'OPEN DOWNLOAD CENTER →' : 'BUKA PUSAT UNDUHAN →' }}
+                                </button>
+                            @elseif($isLtPending)
+                                @if(!empty($ltDetails['snap_token']))
+                                    <button type="button" onclick="window.payRetailSnap('{{ $ltDetails['snap_token'] }}')" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-black font-mono text-xs font-black uppercase tracking-wider rounded-none cursor-pointer">
+                                        💳 {{ $isEn ? 'PAY NOW' : 'BAYAR SEKARANG' }}
+                                    </button>
+                                @endif
+                                <form method="POST" action="{{ route('customer.transaction.sync', $latestTransaction->id) }}" class="inline-block">
+                                    @csrf
+                                    <button type="submit" class="px-3 py-2 bg-zinc-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-mono text-xs font-bold uppercase tracking-wider rounded-none border border-zinc-700 cursor-pointer">
+                                        🔄 {{ $isEn ? 'SYNC STATUS' : 'CEK STATUS' }}
+                                    </button>
+                                </form>
+                                @if(!config('midtrans.is_production', false))
+                                    <form method="POST" action="{{ route('customer.transaction.sync', $latestTransaction->id) }}" class="inline-block">
+                                        @csrf
+                                        <input type="hidden" name="simulate" value="1">
+                                        <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-black uppercase tracking-wider rounded-none cursor-pointer">
+                                            ⚡ {{ $isEn ? 'DEV SETTLE' : 'LUNASKAN (DEV)' }}
+                                        </button>
+                                    </form>
+                                @endif
+                            @elseif($isLtExpired || $isLtFailed)
+                                <a href="/pricing" class="px-4 py-2 bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black font-mono text-xs font-black uppercase tracking-wider rounded-none">
+                                    🛒 {{ $isEn ? 'ORDER AGAIN →' : 'PESAN ULANG SEKARANG →' }}
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Quick Launch Cards Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
@@ -1094,6 +1200,47 @@
             @endif
 
             @if($retailLicenses->isEmpty())
+                @if(isset($expiredRetailOrders) && $expiredRetailOrders->isNotEmpty() && (!isset($pendingRetailOrders) || $pendingRetailOrders->isEmpty()))
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 bg-rose-500 rounded-none"></span>
+                            <h3 class="text-xs font-mono font-black uppercase text-rose-600 dark:text-rose-400 tracking-wider">
+                                {{ $isEn ? 'EXPIRED LICENSE ORDERS' : 'RIWAYAT PESANAN KADALUARSA (EXPIRED)' }}
+                            </h3>
+                        </div>
+
+                        @foreach($expiredRetailOrders as $expTx)
+                            @php
+                                $expDetails = $expTx->customer_details ?? [];
+                                $expPkg = $expDetails['display_package'] ?? $expDetails['package_tier'] ?? 'Lisensi Retail';
+                            @endphp
+                            <div class="p-4 bg-rose-500/5 border border-rose-500/30 rounded-none flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 bg-rose-600 text-white font-mono text-[10px] font-black uppercase">
+                                            ⚠️ {{ $isEn ? 'EXPIRED' : 'KADALUARSA' }}
+                                        </span>
+                                        <span class="font-mono text-[10px] text-zinc-500">
+                                            Order ID: {{ $expTx->midtrans_order_id }} &bull; {{ $expTx->created_at ? $expTx->created_at->format('d M Y, H:i') : 'N/A' }}
+                                        </span>
+                                    </div>
+                                    <h4 class="text-sm font-bold text-zinc-900 dark:text-white font-sans">
+                                        {{ $expPkg }} (Rp {{ number_format((float) $expTx->total_idr, 0, ',', '.') }})
+                                    </h4>
+                                    <p class="text-xs text-zinc-500 mt-0.5">
+                                        {{ $isEn 
+                                            ? 'Payment window for this order passed without completion. Create a new order to access downloads.' 
+                                            : 'Batas waktu pembayaran 24 jam telah lewat. Anda tidak dikenakan biaya apapun. Silakan lakukan pemesanan ulang.' }}
+                                    </p>
+                                </div>
+                                <a href="/pricing" class="px-3.5 py-2 bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black font-mono text-xs font-black uppercase tracking-wider rounded-none shrink-0">
+                                    🛒 {{ $isEn ? 'ORDER AGAIN →' : 'PESAN ULANG →' }}
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
                 <div class="p-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-3 rounded-none">
                     <span class="text-3xl block">📦</span>
                     <h3 class="font-bold text-sm font-mono uppercase text-zinc-900 dark:text-white">
@@ -1104,6 +1251,10 @@
                             {{ $isEn 
                                 ? 'You have ' . $pendingRetailOrders->count() . ' pending license order(s) above awaiting payment. Complete payment or sync status to unlock your lifetime downloads immediately.' 
                                 : 'Anda memiliki ' . $pendingRetailOrders->count() . ' pesanan lisensi di atas yang sedang menunggu pembayaran. Selesaikan pembayaran atau sinkronkan status untuk langsung mengakses pusat unduhan seumur hidup.' }}
+                        @elseif(isset($expiredRetailOrders) && $expiredRetailOrders->isNotEmpty())
+                            {{ $isEn 
+                                ? 'Your previous license order has expired. Order again from our catalog to get instant PRD specifications and codebase scaffolds.' 
+                                : 'Pesanan lisensi Anda sebelumnya telah kadaluarsa di Midtrans. Silakan lakukan pemesanan ulang untuk langsung mengaktifkan spesifikasi PRD dan scaffold codebase.' }}
                         @else
                             {{ $isEn 
                                 ? 'Get instant 26-parameter PRDs, PostgreSQL Strict ULID schemas, and complete codebase scaffolds for your engineering team to build independently.' 
@@ -1271,15 +1422,27 @@
                                     </td>
                                     <td class="p-3">
                                         @if(in_array($tx->status, ['settlement', 'capture', 'success']))
-                                            <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20 text-[10px]">
+                                            <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20 text-[10px] block w-fit">
                                                 ✓ LUNAS (SETTLED)
                                             </span>
+                                            <span class="text-[9px] text-zinc-400 font-mono block mt-0.5">Terverifikasi Midtrans</span>
                                         @elseif($tx->status === 'pending')
-                                            <span class="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20 text-[10px]">
+                                            <span class="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20 text-[10px] block w-fit">
                                                 ⏳ MENUNGGU BAYAR
                                             </span>
+                                            <span class="text-[9px] text-amber-500 font-mono block mt-0.5">Selesaikan transfer</span>
+                                        @elseif($tx->status === 'expire')
+                                            <span class="px-2 py-0.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/20 text-[10px] block w-fit">
+                                                ⚠️ KADALUARSA (EXPIRED)
+                                            </span>
+                                            <span class="text-[9px] text-zinc-400 font-mono block mt-0.5">Batas waktu habis</span>
+                                        @elseif(in_array($tx->status, ['cancel', 'deny']))
+                                            <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] block w-fit">
+                                                ❌ {{ strtoupper($tx->status) }}
+                                            </span>
+                                            <span class="text-[9px] text-zinc-400 font-mono block mt-0.5">Transaksi dibatalkan</span>
                                         @else
-                                            <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px]">
+                                            <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] block w-fit">
                                                 {{ strtoupper($tx->status) }}
                                             </span>
                                         @endif
@@ -1320,6 +1483,14 @@
                                                         </button>
                                                     </form>
                                                 @endif
+                                            @elseif(in_array($tx->status, ['expire', 'cancel', 'deny']))
+                                                <a 
+                                                    href="/pricing" 
+                                                    class="px-2 py-1 bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black text-[10px] font-bold font-mono transition rounded-none inline-block"
+                                                    title="Pesan ulang paket ini"
+                                                >
+                                                    🛒 {{ $isEn ? 'RE-ORDER' : 'PESAN ULANG' }}
+                                                </a>
                                             @endif
                                             <button 
                                                 type="button" 
@@ -1378,14 +1549,14 @@
                                     {{ $asset->asset_type ?: 'Domain / Hosting' }}
                                 </span>
                                 <span class="font-mono text-[10px] text-zinc-500">
-                                    Exp: {{ $asset->expiration_date ? \Carbon\Carbon::parse($asset->expiration_date)->format('d M Y') : 'N/A' }}
+                                    Exp: {{ $asset->expires_at ? $asset->expires_at->format('d M Y') : 'N/A' }}
                                 </span>
                             </div>
                             <h4 class="text-base font-bold text-zinc-900 dark:text-white font-mono">
                                 {{ $asset->name }}
                             </h4>
                             <p class="text-xs text-zinc-500">
-                                {{ $asset->provider ?: 'Managed VPS Cloud' }} // {{ $asset->ip_address ?: 'Dedicated IP' }}
+                                {{ $asset->provider ?: 'Managed VPS Cloud' }} // {{ $asset->server_ip ?: 'Dedicated IP' }}
                             </p>
                         </div>
                     @endforeach

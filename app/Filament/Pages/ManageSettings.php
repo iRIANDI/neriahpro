@@ -76,6 +76,10 @@ class ManageSettings extends Page implements HasForms
             'midtrans_cancellation_policy_id' => "1. Sebelum Kickoff / DP: Pembatalan pesanan dapat dilakukan kapan saja tanpa penalti biaya.\n2. Pasca Pembayaran DP 50%: Jika klien membatalkan proyek secara sepihak saat sprint pengembangan telah berlangsung, DP yang telah dibayarkan dialokasikan untuk kompensasi jam kerja arsitek (non-refundable), namun seluruh berkas blueprint dan kode yang telah dikerjakan tetap diserahkan kepada klien.",
             'midtrans_cancellation_policy_en' => "1. Prior to Kickoff / DP: Orders can be cancelled anytime with zero penalty.\n2. Post-DP 50% Kickoff: If the client cancels unilaterally while development sprints are active, the DP is allocated toward incurred engineering hours (non-refundable), while all produced blueprints and source code remain delivered to the client.",
             'ai_default_provider' => 'relayrouter',
+            'ai_relayrouter_api_key' => config('ai.providers.relayrouter.api_key', 'sk-Uz4TzEyHYy5PSFvXvgi0guhlrauD6iWofllyoYwFDg1JxlzE'),
+            'ai_relayrouter_base_url' => config('ai.providers.relayrouter.base_url', 'https://api.relayrouter.ai/v1'),
+            'ai_relayrouter_discovery_model' => config('ai.providers.relayrouter.models.discovery', 'gpt-4o-mini'),
+            'ai_relayrouter_prd_model' => config('ai.providers.relayrouter.models.prd', 'claude-3-7-sonnet-20250219'),
             'default_frontend_locale' => 'id',
             'google_translate_enabled' => true,
             'google_translate_allowed_languages' => ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es'],
@@ -396,11 +400,6 @@ class ManageSettings extends Page implements HasForms
                                             ->password()
                                             ->revealable()
                                             ->helperText('Dapatkan di platform.openai.com untuk ChatGPT GPT-4o / o3-mini.'),
-                                        TextInput::make('ai_relayrouter_api_key')
-                                            ->label('RelayRouter API Key (Shopee Multi-Model Key)')
-                                            ->password()
-                                            ->revealable()
-                                            ->helperText('Kunci API RelayRouter (relayrouter.ai / akun Shopee). Mendukung Claude 3.7, GPT-4o, dan DeepSeek dalam 1 ID.'),
                                         TextInput::make('ai_grok_api_key')
                                             ->label('xAI Grok API Key')
                                             ->password()
@@ -497,19 +496,29 @@ class ManageSettings extends Page implements HasForms
                                             }),
                                     ])
                                     ->schema([
+                                        TextInput::make('ai_relayrouter_api_key')
+                                            ->label('RelayRouter API Token / Key')
+                                            ->placeholder('sk-Uz4TzEyHYy5PSFvXvgi0guhlrauD6iWofllyoYwFDg1JxlzE')
+                                            ->password()
+                                            ->revealable()
+                                            ->helperText('Token API RelayRouter Anda (sk-...). 1 Token ini dapat mengakses Claude 3.7, GPT-4o, DeepSeek R1, dan 400+ model AI sekaligus.')
+                                            ->columnSpan(1),
                                         TextInput::make('ai_relayrouter_base_url')
                                             ->label('RelayRouter Base URL')
                                             ->default('https://api.relayrouter.ai/v1')
-                                            ->helperText('Endpoint proxy OpenAI-compatible (standar: https://api.relayrouter.ai/v1).'),
+                                            ->helperText('Endpoint proxy OpenAI-compatible (standar: https://api.relayrouter.ai/v1).')
+                                            ->columnSpan(1),
                                         TextInput::make('ai_relayrouter_discovery_model')
                                             ->label('Model Discovery / Audit Cepat')
                                             ->default('gpt-4o-mini')
-                                            ->helperText('Model respons cepat & hemat untuk audit ide dan triage arsitektur awal (contoh: gpt-4o-mini, deepseek-chat, claude-3-5-haiku).'),
+                                            ->helperText('Model respons cepat & hemat untuk audit ide dan triage arsitektur awal (contoh: gpt-4o-mini, deepseek-chat, claude-3-5-haiku).')
+                                            ->columnSpan(1),
                                         TextInput::make('ai_relayrouter_prd_model')
                                             ->label('Model PRD & Arsitektur Kompleks')
                                             ->default('claude-3-7-sonnet-20250219')
-                                            ->helperText('Model penalaran kelas atas untuk PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan diagram Mermaid (contoh: claude-3-7-sonnet-20250219, gpt-4o, deepseek-reasoner).'),
-                                    ])->columns(3),
+                                            ->helperText('Model penalaran kelas atas untuk PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan diagram Mermaid (contoh: claude-3-7-sonnet-20250219, gpt-4o, deepseek-reasoner).')
+                                            ->columnSpan(1),
+                                    ])->columns(2),
                             ]),
 
                         Tabs\Tab::make('Multi-Language (2-Tier Locale)')

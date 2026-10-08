@@ -20,8 +20,12 @@ class CustomerOtpMail extends Mailable
         public string $otp,
         public string $email,
         public ?string $ipAddress = null,
-        public int $expiryMinutes = 10
+        public int $expiryMinutes = 10,
+        $locale = 'id',
+        $theme = 'dark'
     ) {
+        $this->locale = $locale ?: 'id';
+        $this->theme = $theme ?: 'dark';
         $this->renderedTemplate = EmailTemplate::renderTemplate('customer_otp', [
             'otp' => $otp,
             'email' => $email,
@@ -29,7 +33,7 @@ class CustomerOtpMail extends Mailable
             'expiry_minutes' => (string) $expiryMinutes,
             'requested_at' => now()->timezone('Asia/Jakarta')->format('d M Y, H:i:s') . ' WIB',
             'support_email' => 'support@neriahpro.com',
-        ]);
+        ], locale: (string) $this->locale, theme: (string) $this->theme);
     }
 
     public function envelope(): Envelope

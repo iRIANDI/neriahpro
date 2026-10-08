@@ -148,27 +148,48 @@ class CustomerAuthController extends Controller
         // Increment throttle counter
         Cache::put($throttleKey, $requestCount + 1, now()->addMinutes(self::RATE_LIMIT_MINUTES));
 
+        // Resolve Locale & Theme
+        $rawLang = strtolower(trim((string) $request->input('lang', session('neriah_locale', app()->getLocale()))));
+        // Strict Rule: If not 'id', it MUST strictly be 'en'
+        $locale = ($rawLang === 'id') ? 'id' : 'en';
+
+        $rawTheme = strtolower(trim((string) $request->input('theme', 'dark')));
+        $theme = ($rawTheme === 'light') ? 'light' : 'dark';
+
         // 5. Send Email Notification
         try {
             Mail::to($email)->send(new CustomerOtpMail(
                 otp: $otpCode,
                 email: $email,
                 ipAddress: $clientIp,
-                expiryMinutes: self::OTP_EXPIRY_MINUTES
+                expiryMinutes: self::OTP_EXPIRY_MINUTES,
+                locale: $locale,
+                theme: $theme
             ));
         } catch (\Throwable $e) {
             \Log::error('Gagal mengirimkan email OTP: ' . $e->getMessage());
+            $errorMsg = ($locale === 'en')
+                ? 'Failed to dispatch OTP code to email. Please verify mail server configuration.'
+                : 'Gagal mengirimkan kode OTP ke email. Pastikan koneksi mail server terkonfigurasi dengan benar.';
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengirimkan kode OTP ke email. Pastikan koneksi mail server terkonfigurasi dengan benar.',
+                'message' => $errorMsg,
             ], 500);
         }
 
-        $successMsg = match($mode) {
-            'register' => 'Kata sandi disimpan! Kode OTP 6-digit pendaftaran telah dikirim ke ' . $email . '. Verifikasi OTP untuk mengaktifkan akun.',
-            'forgot_password' => 'Kode OTP 6-digit pemulihan akun telah dikirim ke ' . $email . '. Masukkan kode untuk memperbarui kata sandi.',
-            default => 'Kata sandi terverifikasi! Kode OTP 6-digit telah dikirim ke e-mail ' . $email . '. Masukkan kode untuk menyelesaikan login.',
-        };
+        if ($locale === 'en') {
+            $successMsg = match($mode) {
+                'register' => 'Password saved! A 6-digit OTP registration code has been dispatched to ' . $email . '. Verify the OTP to activate your account.',
+                'forgot_password' => 'A 6-digit account recovery OTP has been sent to ' . $email . '. Enter the code to reset your password.',
+                default => 'Password verified! A 6-digit OTP code has been dispatched to ' . $email . '. Enter the code to complete your login.',
+            };
+        } else {
+            $successMsg = match($mode) {
+                'register' => 'Kata sandi disimpan! Kode OTP 6-digit pendaftaran telah dikirim ke ' . $email . '. Verifikasi OTP untuk mengaktifkan akun.',
+                'forgot_password' => 'Kode OTP 6-digit pemulihan akun telah dikirim ke ' . $email . '. Masukkan kode untuk memperbarui kata sandi.',
+                default => 'Kata sandi terverifikasi! Kode OTP 6-digit telah dikirim ke e-mail ' . $email . '. Masukkan kode untuk menyelesaikan login.',
+            };
+        }
 
         return response()->json([
             'success' => true,

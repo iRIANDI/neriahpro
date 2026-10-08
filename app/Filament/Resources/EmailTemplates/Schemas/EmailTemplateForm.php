@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\EmailTemplates\Schemas;
 
-use App\Support\FilamentRichEditor;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -64,39 +64,84 @@ class EmailTemplateForm
                             ->helperText('Ketika penerima menekan "Balas", email akan dikirim ke alamat ini.'),
                     ])->columns(3),
 
-                Section::make('Konten & Layout Email')
-                    ->description('Subjek dan struktur HTML template. Gunakan tag variabel yang tersedia.')
+                Section::make('Panduan Variabel & Desain Adaptif Tema')
+                    ->description('Daftar placeholder data dinamis dan token warna tema adaptif (Light / Dark Mode).')
                     ->schema([
-                        TextInput::make('subject')
-                            ->label('Subjek Email')
-                            ->placeholder('e.g. [Neriah Pro] {{otp}} adalah Kode OTP Masuk Anda')
-                            ->required()
-                            ->maxLength(255)
-                            ->helperText('Dapat menyertakan variabel, misalnya: {{otp}}, {{email}}, {{name}}.'),
-
                         Placeholder::make('variable_guide')
-                            ->label('Daftar Variabel / Placeholders yang Didukung')
-                            ->content(fn ($record) => new HtmlString('
-                                <div class="p-3 bg-zinc-900 border border-zinc-700 text-xs font-mono text-zinc-300 space-y-1.5 rounded-none">
-                                    <div class="font-bold text-emerald-400">Variabel Khusus OTP Klien:</div>
-                                    <div><code class="text-amber-300">{{otp}}</code> : 6-digit kode OTP keamanan</div>
-                                    <div><code class="text-amber-300">{{email}}</code> : Alamat email penerima</div>
-                                    <div><code class="text-amber-300">{{ip_address}}</code> : IP Address peminta kode OTP</div>
-                                    <div><code class="text-amber-300">{{expiry_minutes}}</code> : Masa aktif kode OTP (default: 10 menit)</div>
-                                    <div><code class="text-amber-300">{{requested_at}}</code> : Waktu pengiriman OTP (WIB)</div>
-                                    <div class="pt-1.5 border-t border-zinc-800 font-bold text-emerald-400">Variabel Global Sistem:</div>
-                                    <div><code class="text-amber-300">{{support_email}}</code> : support@neriahpro.com</div>
-                                    <div><code class="text-amber-300">{{app_name}}</code> : Neriah Pro</div>
-                                    <div><code class="text-amber-300">{{app_url}}</code> : https://neriahpro.com</div>
+                            ->label('Token Placeholders yang Didukung')
+                            ->content(fn () => new HtmlString('
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
+                                    <div class="p-3 bg-zinc-900 border border-zinc-700 text-zinc-300 space-y-1 rounded-none">
+                                        <div class="font-bold text-emerald-400 uppercase tracking-wider mb-1">&bull; Variabel Data Transaksional:</div>
+                                        <div><code class="text-amber-300">{{otp}}</code> : 6-digit kode OTP keamanan</div>
+                                        <div><code class="text-amber-300">{{email}}</code> : Alamat email penerima</div>
+                                        <div><code class="text-amber-300">{{name}}</code> : Nama pengguna / klien</div>
+                                        <div><code class="text-amber-300">{{ip_address}}</code> : IP Address peminta</div>
+                                        <div><code class="text-amber-300">{{expiry_minutes}}</code> : Masa aktif OTP (menit)</div>
+                                        <div><code class="text-amber-300">{{requested_at}}</code> : Waktu pengiriman (WIB)</div>
+                                        <div><code class="text-amber-300">{{support_email}}</code> : support@neriahpro.com</div>
+                                        <div><code class="text-amber-300">{{app_url}}</code> : https://neriahpro.com</div>
+                                    </div>
+                                    <div class="p-3 bg-zinc-900 border border-zinc-700 text-zinc-300 space-y-1 rounded-none">
+                                        <div class="font-bold text-sky-400 uppercase tracking-wider mb-1">&bull; Token Tema Adaptif (Light/Dark):</div>
+                                        <div><code class="text-sky-300">{{theme_body_bg}}</code> : Background luar email</div>
+                                        <div><code class="text-sky-300">{{theme_card_bg}}</code> : Background kartu konten</div>
+                                        <div><code class="text-sky-300">{{theme_card_border}}</code> : Border kartu</div>
+                                        <div><code class="text-sky-300">{{theme_header_bg}}</code> : Background header</div>
+                                        <div><code class="text-sky-300">{{theme_title_color}}</code> : Warna teks judul</div>
+                                        <div><code class="text-sky-300">{{theme_body_text}}</code> : Warna teks paragraf</div>
+                                        <div><code class="text-sky-300">{{theme_otp_color}}</code> : Warna angka kode OTP</div>
+                                        <div><code class="text-sky-300">{{theme_box_bg}}</code> : Kotak kode OTP</div>
+                                        <div><code class="text-sky-300">{{theme_alert_bg}}</code> : Kotak peringatan keamanan</div>
+                                    </div>
                                 </div>
                             ')),
+                    ]),
 
-                        Textarea::make('body_html')
-                            ->label('Template HTML Body (Desain Email)')
-                            ->required()
-                            ->rows(18)
-                            ->extraAttributes(['class' => 'font-mono text-xs leading-relaxed'])
-                            ->helperText('Mendukung markup HTML email standar dengan inline style untuk kompatibilitas Gmail, Apple Mail, dan Outlook.'),
+                Section::make('Konten Multibahasa Email (Bilingual Tabs: ID & EN)')
+                    ->description('Kelola subjek dan struktur HTML template untuk Bahasa Indonesia dan Bahasa Inggris secara terpisah.')
+                    ->schema([
+                        Tabs::make('Language Selector')
+                            ->tabs([
+                                Tabs\Tab::make('Bahasa Indonesia')
+                                    ->icon('heroicon-m-language')
+                                    ->badge('ID')
+                                    ->schema([
+                                        TextInput::make('subject.id')
+                                            ->label('Subjek Email (Bahasa Indonesia)')
+                                            ->placeholder('e.g. [Neriah Pro] {{otp}} adalah Kode OTP Masuk Anda')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->helperText('Subjek email dalam Bahasa Indonesia.'),
+
+                                        Textarea::make('body_html.id')
+                                            ->label('Template HTML Body (Bahasa Indonesia)')
+                                            ->required()
+                                            ->rows(18)
+                                            ->extraAttributes(['class' => 'font-mono text-xs leading-relaxed'])
+                                            ->helperText('Markup HTML email standar dengan inline styles dan token tema untuk Bahasa Indonesia.'),
+                                    ]),
+
+                                Tabs\Tab::make('English')
+                                    ->icon('heroicon-m-globe-alt')
+                                    ->badge('EN')
+                                    ->schema([
+                                        TextInput::make('subject.en')
+                                            ->label('Email Subject (English)')
+                                            ->placeholder('e.g. [Neriah Pro] {{otp}} is Your Login OTP Code')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->helperText('Email subject in English (used whenever the client selects English or non-Indonesian locale).'),
+
+                                        Textarea::make('body_html.en')
+                                            ->label('HTML Body Template (English)')
+                                            ->required()
+                                            ->rows(18)
+                                            ->extraAttributes(['class' => 'font-mono text-xs leading-relaxed'])
+                                            ->helperText('Standard email HTML markup with inline styles and theme tokens for English.'),
+                                    ]),
+                            ])
+                            ->columnSpanFull(),
                     ]),
             ]);
     }

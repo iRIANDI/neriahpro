@@ -3,8 +3,5 @@ Disallow: /admin/
 Disallow: /cart
 Disallow: /invite/
 Disallow: /api/
-Disallow: /cv-pro
-Disallow: /cv/
-Disallow: /pricing
 
 Sitemap: https://neriahpro.com/sitemap.xml

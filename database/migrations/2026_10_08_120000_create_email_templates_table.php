@@ -15,11 +15,11 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->string('code')->unique(); // e.g. customer_otp, project_blueprint, invoice_receipt
             $table->string('name'); // e.g. Template OTP Autentikasi Klien
-            $table->string('subject'); // e.g. [Neriah Pro] {{otp}} adalah Kode OTP Masuk Anda
+            $table->json('subject'); // e.g. {"id": "...", "en": "..."}
             $table->string('sender_name')->nullable()->default('Neriah Pro Support');
             $table->string('sender_email')->nullable()->default('support@neriahpro.com');
             $table->string('reply_to_email')->nullable()->default('support@neriahpro.com');
-            $table->longText('body_html');
+            $table->json('body_html'); // e.g. {"id": "...", "en": "..."}
             $table->json('available_placeholders')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

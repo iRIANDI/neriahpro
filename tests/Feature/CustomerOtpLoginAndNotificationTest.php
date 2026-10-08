@@ -429,4 +429,105 @@ class CustomerOtpLoginAndNotificationTest extends TestCase
         $this->assertStringContainsString('162.159.98.106', $rendered);
         $this->assertStringContainsString('Autentikasi Klien // Zero-Password', $rendered);
     }
+
+    /**
+     * Test OTP mail renders in Indonesian and English with appropriate themes.
+     */
+    public function test_customer_otp_mail_supports_multilingual_and_theme_adaptive_templates(): void
+    {
+        // 1. Indonesian (ID) + Dark Theme
+        $mailIdDark = new CustomerOtpMail(
+            otp: '111222',
+            email: 'indonesia@user.com',
+            ipAddress: '127.0.0.1',
+            expiryMinutes: 10,
+            locale: 'id',
+            theme: 'dark'
+        );
+        $renderedIdDark = $mailIdDark->render();
+        $this->assertEquals('[Neriah Pro] 111222 adalah Kode OTP Masuk Anda', $mailIdDark->envelope()->subject);
+        $this->assertStringContainsString('Autentikasi Klien // Zero-Password', $renderedIdDark);
+        $this->assertStringContainsString('Peringatan Keamanan', $renderedIdDark);
+        $this->assertStringContainsString('#09090b', $renderedIdDark); // Obsidian dark body bg
+        $this->assertStringContainsString('#10b981', $renderedIdDark); // Emerald OTP accent
+
+        // 2. English (EN) + Light Theme
+        $mailEnLight = new CustomerOtpMail(
+            otp: '333444',
+            email: 'english@user.com',
+            ipAddress: '127.0.0.1',
+            expiryMinutes: 10,
+            locale: 'en',
+            theme: 'light'
+        );
+        $renderedEnLight = $mailEnLight->render();
+        $this->assertEquals('[Neriah Pro] 333444 is Your Login OTP Code', $mailEnLight->envelope()->subject);
+        $this->assertStringContainsString('Client Authentication // Zero-Password', $renderedEnLight);
+        $this->assertStringContainsString('Security Warning', $renderedEnLight);
+        $this->assertStringContainsString('Never share this OTP code with anyone', $renderedEnLight);
+        $this->assertStringContainsString('#f4f4f5', $renderedEnLight); // Clean light body bg
+        $this->assertStringContainsString('#ffffff', $renderedEnLight); // White card bg
+    }
+
+    /**
+     * Test strict rule: Any non-'id' locale MUST strictly default to English ('en').
+     */
+    public function test_non_indonesian_locale_strictly_defaults_to_english(): void
+    {
+        // French, German, Japanese, etc. must all resolve to English ('en')
+        $renderedFr = \App\Models\EmailTemplate::renderTemplate('customer_otp', [
+            'otp' => '777888',
+            'email' => 'paris@client.fr',
+        ], locale: 'fr', theme: 'dark');
+
+        $this->assertEquals('en', $renderedFr['locale']);
+        $this->assertEquals('[Neriah Pro] 777888 is Your Login OTP Code', $renderedFr['subject']);
+        $this->assertStringContainsString('Client Authentication // Zero-Password', $renderedFr['body_html']);
+
+        $renderedDe = \App\Models\EmailTemplate::renderTemplate('customer_otp', [
+            'otp' => '999000',
+            'email' => 'berlin@client.de',
+        ], locale: 'de', theme: 'light');
+
+        $this->assertEquals('en', $renderedDe['locale']);
+        $this->assertEquals('[Neriah Pro] 999000 is Your Login OTP Code', $renderedDe['subject']);
+        $this->assertEquals('light', $renderedDe['theme']);
+    }
+
+    /**
+     * Test OTP request with lang and theme parameters dispatches mail with matching settings.
+     */
+    public function test_customer_otp_request_respects_lang_and_theme(): void
+    {
+        Mail::fake();
+
+        $email = 'global.user@company.com';
+        User::create([
+            'name' => 'Global User',
+            'email' => $email,
+            'password' => bcrypt('securePassword123'),
+        ]);
+
+        $response = $this->postJson('/api/customer/otp/request', [
+            'email' => $email,
+            'password' => 'securePassword123',
+            'mode' => 'login',
+            'captcha_verified' => true,
+            'lang' => 'en',
+            'theme' => 'light',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'mode' => 'login',
+        ]);
+        $this->assertStringContainsString('Password verified', $response->json('message'));
+
+        Mail::assertSent(CustomerOtpMail::class, function ($mail) use ($email) {
+            return $mail->hasTo($email) 
+                && $mail->locale === 'en' 
+                && $mail->theme === 'light';
+        });
+    }
 }

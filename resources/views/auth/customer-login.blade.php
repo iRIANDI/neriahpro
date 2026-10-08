@@ -272,6 +272,9 @@
                     this.isLoading = true;
                     this.alertMessage = '';
 
+                    const activeTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                    const activeLang = this.lang === 'id' ? 'id' : 'en';
+
                     try {
                         const response = await fetch('/api/customer/otp/request', {
                             method: 'POST',
@@ -285,7 +288,9 @@
                                 password: this.password,
                                 name: this.name,
                                 mode: this.mode,
-                                captcha_verified: this.isCaptchaVerified
+                                captcha_verified: this.isCaptchaVerified,
+                                lang: activeLang,
+                                theme: activeTheme
                             })
                         });
 

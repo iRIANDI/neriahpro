@@ -431,6 +431,31 @@ class CvProFeatureTest extends TestCase
                 ],
             ]);
     }
+
+    public function test_pricing_page_cv_pro_tab_visibility_respects_feature_flag(): void
+    {
+        // 1. When CV Pro is enabled
+        \App\Models\CmsGlobalSetting::updateOrCreate(
+            ['key' => 'feature_enable_cv_pro'],
+            ['value' => true, 'type' => 'boolean', 'group' => 'features']
+        );
+        \Illuminate\Support\Facades\Cache::flush();
+
+        $responseEnabled = $this->get('/pricing');
+        $responseEnabled->assertStatus(200);
+        $responseEnabled->assertSee('"enable_cv_pro":true', false);
+
+        // 2. When CV Pro is disabled
+        \App\Models\CmsGlobalSetting::updateOrCreate(
+            ['key' => 'feature_enable_cv_pro'],
+            ['value' => false, 'type' => 'boolean', 'group' => 'features']
+        );
+        \Illuminate\Support\Facades\Cache::flush();
+
+        $responseDisabled = $this->get('/pricing');
+        $responseDisabled->assertStatus(200);
+        $responseDisabled->assertSee('"enable_cv_pro":false', false);
+    }
 }
 
 

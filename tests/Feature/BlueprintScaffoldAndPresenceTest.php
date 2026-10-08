@@ -166,4 +166,62 @@ class BlueprintScaffoldAndPresenceTest extends TestCase
         $this->assertGreaterThan(0, $matrix['recommended_for_project']);
         $this->assertCount(20, $matrix['concepts']);
     }
+
+    public function test_blueprint_cursorrules_export_endpoint_and_formats(): void
+    {
+        $blueprint = VisionBlueprint::create([
+            'client_name' => 'Budi Santoso',
+            'email' => 'budi@example.com',
+            'whatsapp' => '628123456789',
+            'nama_bisnis' => 'FinTrack ERP',
+            'tipe_aplikasi' => 'Web App / SaaS Platform',
+            'target_pengguna' => 'Akuntan & UMKM',
+            'masalah_utama' => 'Pencatatan keuangan manual dan lambat',
+            'tujuan_utama' => 'Otomatisasi rekonsiliasi bank dan pelaporan pajak instan',
+            'target_audiens' => 'Pemilik bisnis dan akuntan',
+            'fitur_wajib' => "Autentikasi & RBAC\nRekonsiliasi Bank Otomatis\nLaporan Laba Rugi Realtime",
+            'target_waktu' => '30 Hari Kerja',
+            'is_published' => true,
+        ]);
+
+        // 1. Default .cursorrules download
+        $resDefault = $this->get(route('blueprint.download-cursorrules', $blueprint->slug));
+        $resDefault->assertOk();
+        $resDefault->assertHeader('Content-Disposition', 'attachment; filename=".cursorrules"');
+        $content = $resDefault->getContent();
+        $this->assertStringContainsString('FinTrack ERP', $content);
+        $this->assertStringContainsString('PostgreSQL ULID Standard', $content);
+        $this->assertStringContainsString('cursorPaginate()', $content);
+        $this->assertStringContainsString('Anti-Dosa Hardcode', $content);
+
+        // 2. Format CLAUDE.md
+        $resClaude = $this->get(route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'claude']));
+        $resClaude->assertOk();
+        $resClaude->assertHeader('Content-Disposition', 'attachment; filename="CLAUDE.md"');
+
+        // 3. Format AGENTS.md
+        $resAgents = $this->get(route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'agents']));
+        $resAgents->assertOk();
+        $resAgents->assertHeader('Content-Disposition', 'attachment; filename="AGENTS.md"');
+    }
+
+    public function test_pricing_registry_concrete_identification(): void
+    {
+        // Must identify packages strictly by concrete IDs, not fuzzy strings
+        $this->assertTrue(\App\Support\PricingRegistry::isSelfService('retail_spark'));
+        $this->assertTrue(\App\Support\PricingRegistry::isSelfService('retail_lite'));
+        $this->assertTrue(\App\Support\PricingRegistry::isSelfService('retail_pro'));
+        $this->assertTrue(\App\Support\PricingRegistry::isSelfService('retail_ultimate'));
+
+        $this->assertTrue(\App\Support\PricingRegistry::isStudioContract('full_mvp'));
+        $this->assertTrue(\App\Support\PricingRegistry::isStudioContract('umkm_starter'));
+        $this->assertTrue(\App\Support\PricingRegistry::isStudioContract('blueprint_advisory'));
+
+        $this->assertFalse(\App\Support\PricingRegistry::isSelfService('full_mvp'));
+        $this->assertFalse(\App\Support\PricingRegistry::isStudioContract('retail_lite'));
+
+        $selfServiceIds = \App\Support\PricingRegistry::getSelfServiceIds();
+        $this->assertContains('retail_lite', $selfServiceIds);
+        $this->assertNotContains('full_mvp', $selfServiceIds);
+    }
 }

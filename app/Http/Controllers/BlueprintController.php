@@ -901,6 +901,32 @@ class BlueprintController extends Controller
     }
 
     /**
+     * Download AI IDE Rules (.cursorrules / CLAUDE.md / AGENTS.md)
+     */
+    public function downloadCursorrules(Request $request, string $slug)
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $prd = $blueprint->prd_content ?? [];
+        if (empty($prd)) {
+            $prd = \App\Services\PrdGeneratorService::generate($blueprint);
+        }
+
+        $content = \App\Services\PrdGeneratorService::toCursorrules($blueprint, $prd);
+
+        $format = strtolower((string)$request->query('format', 'cursorrules'));
+        $filename = match ($format) {
+            'claude' => 'CLAUDE.md',
+            'agents' => 'AGENTS.md',
+            default => '.cursorrules',
+        };
+
+        return response($content, 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
      * Update and elaborate technical tasks and features for a blueprint proposal.
      * Guarded against scope lock (only allowed before contract is signed).
      */
@@ -1162,7 +1188,8 @@ class BlueprintController extends Controller
         ]);
 
         $packageName = $request->input('package_tier') ?: $request->input('package');
-        $isRetail = in_array($packageName, ['retail_spark', 'retail_lite', 'retail_pro', 'retail_ultimate']);
+        $packageMeta = \App\Support\PricingRegistry::get((string)$packageName);
+        $isRetail = \App\Support\PricingRegistry::isSelfService((string)$packageName);
         $company = $request->input('company') ?: $request->input('company_name') ?: ($isRetail ? ($validated['name'] . ' (Personal License)') : ($validated['name'] . ' Project'));
         $phoneInput = $validated['phone'];
         $countryCode = $request->input('country_code', '+62');
@@ -1198,16 +1225,7 @@ class BlueprintController extends Controller
             ],
         ]);
 
-        $packageLabels = [
-            'retail_spark' => 'Spark Free Idea Audit (Rp 0 - Guest Mode)',
-            'retail_lite' => 'Lite PRD Generator (Rp 99.000 - Self-Service License)',
-            'retail_pro' => 'Pro Production PRD (Rp 399.000 - Self-Service License)',
-            'retail_ultimate' => 'Ultimate Advisory PRD + 1-on-1 Call (Rp 1.490.000)',
-            'full_mvp' => 'Enterprise Rapid Monolith MVP (5 Sprints - DP 50%)',
-            'umkm_starter' => 'UMKM Digital Starter (Program Subsidi 50%)',
-            'blueprint_advisory' => 'Blueprint & PRD Architecture Advisory (Rp 2.500.000)',
-        ];
-        $displayPackage = $packageLabels[$packageName] ?? $packageName;
+        $displayPackage = $packageMeta['name'] ?? $packageName;
 
         // Send Filament notification to Admins
         try {
@@ -1237,25 +1255,8 @@ class BlueprintController extends Controller
             \Illuminate\Support\Facades\Log::warning("Notification to admin failed: " . $e->getMessage());
         }
 
-        $defaultPrices = [
-            'retail_spark' => 0,
-            'retail_lite' => 99000,
-            'retail_pro' => 399000,
-            'retail_ultimate' => 1490000,
-            'blueprint_advisory' => 2500000,
-            'full_mvp' => 25000000,
-            'umkm_starter' => 3750000,
-        ];
-
-        $settingKey = match($packageName) {
-            'retail_lite' => 'pricing_retail_lite_price',
-            'retail_pro' => 'pricing_retail_pro_price',
-            'retail_ultimate' => 'pricing_retail_ultimate_price',
-            'retail_spark' => 'pricing_retail_spark_price',
-            default => null,
-        };
-
-        $basePrice = $defaultPrices[$packageName] ?? 99000;
+        $basePrice = $packageMeta['default_price'] ?? 99000;
+        $settingKey = $packageMeta['setting_key'] ?? null;
         if ($settingKey) {
             $rawVal = CmsGlobalSetting::getVal($settingKey, null);
             if (!empty($rawVal)) {

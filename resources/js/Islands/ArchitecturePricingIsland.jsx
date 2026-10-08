@@ -32,6 +32,83 @@ import {
   ExternalLink
 } from 'lucide-react';
 
+/**
+ * Concrete Package Registry for fundamental architectural consistency.
+ * Zero string prefix/suffix matching (anti-dosa hardcode).
+ */
+export const PACKAGE_REGISTRY = {
+  retail_spark: {
+    id: 'retail_spark',
+    name: 'Spark Free Idea Audit',
+    category: 'blueprint_self_service',
+    execution_model: 'self_service',
+    is_paid: false,
+    requires_login: false,
+    requires_sprint_batch: false,
+    requires_kickoff_slot: false,
+  },
+  retail_lite: {
+    id: 'retail_lite',
+    name: 'Lite PRD Generator',
+    category: 'blueprint_self_service',
+    execution_model: 'self_service',
+    is_paid: true,
+    requires_login: true,
+    requires_sprint_batch: false,
+    requires_kickoff_slot: false,
+  },
+  retail_pro: {
+    id: 'retail_pro',
+    name: 'Pro Production PRD',
+    category: 'blueprint_self_service',
+    execution_model: 'self_service',
+    is_paid: true,
+    requires_login: true,
+    requires_sprint_batch: false,
+    requires_kickoff_slot: false,
+  },
+  retail_ultimate: {
+    id: 'retail_ultimate',
+    name: 'Ultimate Advisory',
+    category: 'blueprint_self_service',
+    execution_model: 'self_service',
+    is_paid: true,
+    requires_login: true,
+    requires_sprint_batch: false,
+    requires_kickoff_slot: false,
+  },
+  full_mvp: {
+    id: 'full_mvp',
+    name: 'Enterprise Rapid Monolith MVP',
+    category: 'studio_engineering',
+    execution_model: 'studio_contract',
+    is_paid: true,
+    requires_login: false,
+    requires_sprint_batch: true,
+    requires_kickoff_slot: true,
+  },
+  umkm_starter: {
+    id: 'umkm_starter',
+    name: 'UMKM Digital Starter',
+    category: 'studio_engineering',
+    execution_model: 'studio_contract',
+    is_paid: true,
+    requires_login: false,
+    requires_sprint_batch: false,
+    requires_kickoff_slot: false,
+  },
+  blueprint_advisory: {
+    id: 'blueprint_advisory',
+    name: 'Blueprint & PRD Architecture Advisory',
+    category: 'studio_engineering',
+    execution_model: 'studio_contract',
+    is_paid: true,
+    requires_login: false,
+    requires_sprint_batch: false,
+    requires_kickoff_slot: false,
+  }
+};
+
 export default function ArchitecturePricingIsland({ 
   headline = 'INVESTASI TRANSPARAN & TEPAT SASARAN',
   subheadline = 'Dua skenario solusi rekayasa perangkat lunak berskala tinggi: Mulai dari blueprint teknis siap eksekusi hingga pengembangan penuh sistem monolit modern tanpa drama pembengkakan biaya.',
@@ -141,7 +218,9 @@ export default function ArchitecturePricingIsland({
               });
             }
             setTimeout(() => {
-              window.location.href = ['retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage)
+              const targetPkg = PACKAGE_REGISTRY[selectedPackage] || PACKAGE_REGISTRY.full_mvp;
+              const isPaidTarget = targetPkg.execution_model === 'self_service' && targetPkg.is_paid;
+              window.location.href = isPaidTarget
                 ? '/customer/dashboard#licenses'
                 : '/customer/dashboard#projects';
             }, 1800);
@@ -229,7 +308,10 @@ export default function ArchitecturePricingIsland({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const isRetailTier = ['retail_lite', 'retail_pro', 'retail_ultimate', 'retail_spark'].includes(selectedPackage);
+  const activePkg = PACKAGE_REGISTRY[selectedPackage] || PACKAGE_REGISTRY.full_mvp;
+  const isSelfService = activePkg.execution_model === 'self_service';
+  const isPaidSelfService = isSelfService && activePkg.is_paid;
+  const isRetailTier = isSelfService;
 
   const handleSubmitInquiry = async (e) => {
     e.preventDefault();
@@ -254,8 +336,8 @@ export default function ArchitecturePricingIsland({
           phone: formData.phone,
           package_tier: selectedPackage,
           voucher_code: formData.voucher_code,
-          sprint_batch: selectedPackage === 'full_mvp' ? sprintBatch : null,
-          kickoff_slot: selectedPackage === 'full_mvp' ? kickoffSlot : null,
+          sprint_batch: activePkg.requires_sprint_batch ? sprintBatch : null,
+          kickoff_slot: activePkg.requires_kickoff_slot ? kickoffSlot : null,
           has_blueprint: selectedPackage === 'full_mvp' ? hasBlueprint : null,
           blueprint_slug: selectedPackage === 'full_mvp' && hasBlueprint === 'ready' ? blueprintSlug : null,
           umkm_category: selectedPackage === 'umkm_starter' ? umkmCategory : null,
@@ -787,6 +869,8 @@ export default function ArchitecturePricingIsland({
                   </span>
                   {(isEn ? [
                     'All Lite Tier Deliverables',
+                    'AI Code-Gen Prompt Ready (.cursorrules)',
+                    'White-Label Agency Export',
                     'Decoupled 2026+ Blueprint (Next.js 15, Cloudflare)',
                     '6 Mermaid Diagrams (ERD, Data Flow, Sequence, Gantt)',
                     'WBS 5 Sprints Linear / Jira Ready',
@@ -794,6 +878,8 @@ export default function ArchitecturePricingIsland({
                     'Anti-AI-Slop & UI Design Tokens Guidelines',
                   ] : [
                     'Semua Output Lite Tier',
+                    'AI Code-Gen Prompt Ready (.cursorrules)',
+                    'White-Label Agency Export',
                     'Cetak Biru Decoupled 2026+ (Next.js 15, Cloudflare)',
                     '6 Diagram Mermaid (ERD, Data Flow, Sequence, Gantt)',
                     'WBS 5 Sprint Linear / Jira Ready',
@@ -1827,7 +1913,7 @@ export default function ArchitecturePricingIsland({
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
                     {paymentStatus === 'success' ? (
                       <a
-                        href={['retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage) ? '/customer/dashboard#licenses' : '/customer/dashboard#projects'}
+                        href={isPaidSelfService ? '/customer/dashboard#licenses' : '/customer/dashboard#projects'}
                         className="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
                       >
                         <Sparkles className="w-4 h-4" />
@@ -1927,6 +2013,18 @@ export default function ArchitecturePricingIsland({
                       </optgroup>
                     </select>
                   </div>
+
+                  {/* BADGE PENEGASAN AKSI DIGITAL INSTAN (KHUSUS PAKET SELF-SERVICE // SPRINT BATCH & KICKOFF DISEMBUNYIKAN) */}
+                  {isSelfService && (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono flex items-center gap-2.5 text-emerald-700 dark:text-emerald-400">
+                      <Zap className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <div className="font-bold tracking-tight">
+                        {isEn 
+                          ? '⚡ Instant Digital Access — Auto-Generated & Ready for Download Post-Payment' 
+                          : '⚡ Akses Digital Instan — Dihasilkan Otomatis & Siap Unduh Pasca Pembayaran'}
+                      </div>
+                    </div>
+                  )}
 
                   {/* 1. KHUSUS FULL MVP: PILIHAN BATCH WAKTU & ANTI-TABRAKAN */}
                   {selectedPackage === 'full_mvp' && (
@@ -2100,7 +2198,7 @@ export default function ArchitecturePricingIsland({
                   )}
 
                   {/* 4. KHUSUS PAKET SELF-SERVICE BERBAYAR: RINGKASAN LISENSI CEPAT */}
-                  {['retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage) && (
+                  {isPaidSelfService && (
                     <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400 uppercase text-xs">
@@ -2213,7 +2311,7 @@ export default function ArchitecturePricingIsland({
                         required
                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden"
                       />
-                      {['retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage) && (
+                      {isPaidSelfService && (
                         <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-1">
                           {isEn ? '↳ License key & lifetime PRD download sent here' : '↳ Kunci lisensi & link download PRD dikirim ke sini'}
                         </span>
@@ -2249,7 +2347,7 @@ export default function ArchitecturePricingIsland({
                           className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-mono"
                         />
                       </div>
-                      {['retail_lite', 'retail_pro', 'retail_ultimate'].includes(selectedPackage) && (
+                      {isPaidSelfService && (
                         <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-1">
                           {isEn ? '↳ Official Midtrans transaction receipts & status delivered here' : '↳ Status transaksi & invoice resmi Midtrans dikirimkan ke nomor ini'}
                         </span>

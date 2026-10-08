@@ -4399,6 +4399,159 @@ PROMPT;
     }
 
     /**
+     * Synthesize complete AI Coding Rules (.cursorrules / CLAUDE.md / AGENTS.md)
+     * Tailored for Cursor, Claude Code, Antigravity, and Windsurf AI agents.
+     */
+    public static function toCursorrules(VisionBlueprint $blueprint, array $prd = []): string
+    {
+        if (empty($prd)) {
+            $prd = $blueprint->prd_content ?? self::generate($blueprint);
+        }
+
+        $projectName = $blueprint->nama_bisnis ?: ($blueprint->client_name . "'s Project");
+        $specId = strtoupper(substr((string)$blueprint->id, 0, 10));
+        $exec = $prd['executive_summary'] ?? [];
+        $actors = $prd['system_actors'] ?? [];
+        $erd = $prd['erd_schema']['tables'] ?? [];
+        $mvpFeatures = $prd['features']['mvp_phase1'] ?? [];
+
+        $rules = "# .cursorrules / CLAUDE.md — AI AGENT SYSTEM INSTRUCTIONS\n";
+        $rules .= "# Project: {$projectName}\n";
+        $rules .= "# Blueprint Spec ID: {$specId}\n";
+        $rules .= "# Engine: Neriah Pro AI Project OS (Generated: " . ($blueprint->created_at?->format('Y-m-d') ?: date('Y-m-d')) . ")\n\n";
+        $rules .= "You are pair programming on \"{$projectName}\", a mission-critical enterprise digital system.\n";
+        $rules .= "Always adhere strictly to the architectural constraints, database schemas, and engineering directives defined below.\n\n";
+        $rules .= "---\n\n";
+
+        // 1. Context
+        $rules .= "## 1. PROJECT SPECIFICATION & CONTEXT\n";
+        $rules .= "- **Project Name**: {$projectName}\n";
+        $rules .= "- **Primary Problem**: " . ($blueprint->masalah_utama ?: 'Enterprise operational digitization and centralized workflows.') . "\n";
+        $rules .= "- **Core Objective / Success Metrics**: " . ($blueprint->tujuan_utama ?: 'High efficiency, automated audit trails, and zero downtime.') . "\n";
+        $rules .= "- **Target Audience**: " . ($blueprint->target_audiens ?: 'Internal operators and external customers.') . "\n";
+        $rules .= "- **Target Platform**: " . ($blueprint->user_metadata['target_platform'] ?? 'Modern Web Application Responsive & PWA') . "\n";
+        $rules .= "- **Tech Stack**: Laravel 13, Filament v5, Livewire 4, Alpine.js, Tailwind CSS, PostgreSQL 16, Redis 7.\n\n";
+        $rules .= "---\n\n";
+
+        // 2. Protocols
+        $rules .= "## 2. STRICT ARCHITECTURAL PROTOCOLS (ZERO COMPROMISE)\n\n";
+        $rules .= "### A. Database Primary Keys & PostgreSQL ULID Standard\n";
+        $rules .= "- **Primary Keys**: ALWAYS use ULID (`->ulid('id')->primary()` and `HasUlids` trait) for all business domain tables.\n";
+        $rules .= "- **Strict PostgreSQL Compatibility**: NEVER use `\$table->uuid('id')` for models using ULID (`HasUlids`), as PostgreSQL strictly rejects 26-char ULID strings with `SQLSTATE[22P02]`. ALWAYS use `->ulid('id')`.\n";
+        $rules .= "- **Foreign Keys**: ALWAYS use `->foreignUlid('parent_id')` to match ULID primary keys.\n";
+        $rules .= "- **Zero Auto-Increment**: NEVER use `\$table->id()` or auto-incrementing integers for business domain entities.\n\n";
+
+        $rules .= "### B. Keyset Cursor Pagination O(1)\n";
+        $rules .= "- **Zero Offset Pagination**: NEVER use standard `paginate()` (OFFSET-based). It degrades linearly O(N) to O(N^2) on large tables.\n";
+        $rules .= "- **Mandatory Keyset**: ALWAYS use `cursorPaginate()` with stable keyset fallbacks (e.g. `->orderBy('id', 'asc')`).\n\n";
+
+        $rules .= "### C. Zero Tolerance for Magic Strings & Fuzzy Searches (\"Anti-Dosa Hardcode\")\n";
+        $rules .= "- NEVER identify entities or state via fuzzy string matching (`LIKE '%...'`, demo strings, or slugs).\n";
+        $rules .= "- ALWAYS identify models, orders, and documents strictly via **Concrete Relational Foreign Keys** or **Exact Primary Key Lookups** (`find(\$id)`).\n";
+        $rules .= "- Business states must derive strictly from concrete status columns/enums (`status === 'settlement'`), never string sniffing.\n\n";
+
+        $rules .= "### D. Cache Serialization Safety\n";
+        $rules .= "- NEVER cache raw Eloquent model instances in `Cache::rememberForever()`. Serializing Eloquent models across lifecycles causes `__PHP_Incomplete_Class` errors.\n";
+        $rules .= "- ALWAYS cache primitive attribute arrays (`\$record->getAttributes()`) or JSON strings, and reconstitute models via `(new Model)->newFromBuilder(\$cachedAttributes)`.\n\n";
+        $rules .= "---\n\n";
+
+        // 3. UI/UX Protocols
+        $rules .= "## 3. UI/UX & FRONTEND DIRECTIVES\n\n";
+        $rules .= "### A. Subtle Round Corners (Strict Ban on Capsule/Pill Shapes)\n";
+        $rules .= "- UI/UX border radius MUST be subtle (`rounded-none`, `rounded-xs`, `rounded-sm`, max `rounded-md`).\n";
+        $rules .= "- STRICT BAN on `rounded-full` capsule buttons or pills. They look generic, reduce clickable area, and degrade enterprise aesthetics.\n\n";
+
+        $rules .= "### B. Zero Native Browser Dialogs\n";
+        $rules .= "- NEVER use native browser dialogs (`window.alert()`, `confirm()`, `prompt()`).\n";
+        $rules .= "- ALWAYS use modern floating toast notifications: `window.showToast({ type: 'success'|'error'|'warning'|'info', title: '...', message: '...' })` or curated Tailwind + Alpine dialogs with backdrop-blur.\n\n";
+
+        $rules .= "### C. Alpine.js HTML Entity Encoding\n";
+        $rules .= "- NEVER use raw double quotes (`\"`) or single quotes (`'`) inside inline Alpine attributes (`x-data=\"...\"`, `@click=\"...\"`).\n";
+        $rules .= "- ALWAYS encode quotes as HTML entities (`&quot;`, `&apos;`) or extract state into clean `<script>` components.\n\n";
+        $rules .= "---\n\n";
+
+        // 4. Actors
+        $rules .= "## 4. SYSTEM ACTORS & RBAC ROLES\n\n";
+        if (!empty($actors)) {
+            foreach ($actors as $actor) {
+                $name = $actor['role_name'] ?? ($actor['name'] ?? 'User');
+                $desc = $actor['responsibilities'] ?? ($actor['desc'] ?? '-');
+                $rules .= "- **{$name}**: {$desc}\n";
+            }
+        } else {
+            $rules .= "- **Superadmin**: Full administrative control, configurations, and system monitoring.\n";
+            $rules .= "- **Operator / Staff**: Operational data input, processing, and review.\n";
+            $rules .= "- **Client / Customer**: Portal access, transaction submission, and report inspection.\n";
+        }
+        $rules .= "\n---\n\n";
+
+        // 5. ERD Schema
+        $rules .= "## 5. DATABASE ERD SCHEMA & ENTITIES\n\n";
+        if (!empty($erd)) {
+            foreach ($erd as $table) {
+                $tname = $table['table_name'] ?? 'entity';
+                $tdesc = $table['description'] ?? '';
+                $rules .= "### Table: `{$tname}`" . ($tdesc ? " ({$tdesc})" : "") . "\n";
+                $rules .= "```sql\n";
+                $rules .= "-- Primary key: id (ULID VARCHAR 26)\n";
+                if (!empty($table['columns'])) {
+                    foreach ($table['columns'] as $col) {
+                        $cname = $col['name'] ?? 'col';
+                        $ctype = $col['type'] ?? 'VARCHAR(255)';
+                        $cnote = !empty($col['note']) ? " -- {$col['note']}" : '';
+                        $rules .= "{$cname} {$ctype}{$cnote}\n";
+                    }
+                }
+                $rules .= "```\n\n";
+            }
+        } else {
+            $rules .= "- All domain tables must follow standard ULID naming and migrations.\n\n";
+        }
+        $rules .= "---\n\n";
+
+        // 6. Features
+        $rules .= "## 6. MVP FEATURES & SPRINT DELIVERABLES\n\n";
+        if (!empty($mvpFeatures)) {
+            foreach ($mvpFeatures as $idx => $f) {
+                $num = $idx + 1;
+                $ftitle = $f['title'] ?? 'Feature';
+                $fdesc = $f['desc'] ?? '';
+                $rules .= "### Feature {$num}: {$ftitle}\n";
+                if ($fdesc) {
+                    $rules .= "- **Description**: {$fdesc}\n";
+                }
+                if (!empty($f['user_story'])) {
+                    $rules .= "- **User Story**: {$f['user_story']}\n";
+                }
+                if (!empty($f['backend']['model_and_migration'])) {
+                    $rules .= "- **Backend**: {$f['backend']['model_and_migration']}\n";
+                }
+                if (!empty($f['frontend']['design_tokens'])) {
+                    $rules .= "- **Frontend**: {$f['frontend']['design_tokens']}\n";
+                }
+                $rules .= "\n";
+            }
+        } else {
+            $fiturLines = array_filter(explode("\n", (string) $blueprint->fitur_wajib));
+            foreach ($fiturLines as $idx => $line) {
+                $num = $idx + 1;
+                $rules .= "- **MVP {$num}**: " . trim($line) . "\n";
+            }
+            $rules .= "\n";
+        }
+        $rules .= "---\n\n";
+
+        // 7. Workflow
+        $rules .= "## 7. AI CODE-GEN EXECUTION WORKFLOW\n";
+        $rules .= "1. **Vertical Slice Implementation**: Always implement one module end-to-end (Migration -> Model -> Policy/Form -> UI/View -> Test) before proceeding to the next.\n";
+        $rules .= "2. **Minimalist & Surgical Diffs**: Never rewrite whole files unnecessarily. Keep diffs precise and token-efficient.\n";
+        $rules .= "3. **Automated Verification**: Ensure all code syntax is strictly valid for PHP 8.4+ and runs PHPUnit / Pest tests cleanly.\n";
+        $rules .= "4. **Git Discipline**: Every completed slice should be verified against regressions before concluding.\n\n";
+
+        return $rules;
+    }
+
+    /**
      * Synthesize high-impact AI strategic architecture guidance using Flagship PRD models
      * (DeepSeek-R1 / Claude 3.7 Sonnet / Gemini 2.5 Pro / GPT-4o / Grok) with automatic failover.
      */

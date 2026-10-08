@@ -60,18 +60,18 @@ class CustomerDashboardController extends Controller
             ? \App\Models\DomainHostingAsset::whereIn('vision_blueprint_id', $blueprintIds)->orderBy('expiration_date', 'asc')->get()
             : collect();
 
-        // Categorize into Retail Self-Service Licenses vs Studio Custom Projects
-        $retailTiers = ['retail_spark', 'retail_lite', 'retail_pro', 'retail_ultimate'];
+        // Categorize into Retail Self-Service Licenses vs Studio Custom Projects via Concrete Registry
+        $selfServiceIds = \App\Support\PricingRegistry::getSelfServiceIds();
 
-        $retailLicenses = $blueprints->filter(function ($bp) use ($retailTiers) {
+        $retailLicenses = $blueprints->filter(function ($bp) use ($selfServiceIds) {
             $tier = $bp->user_metadata['retail_tier'] ?? $bp->user_metadata['package_tier'] ?? null;
-            return in_array($tier, $retailTiers, true)
+            return in_array($tier, $selfServiceIds, true)
                 || in_array($bp->project_status, ['Retail License', 'Self-Service', 'Instant Blueprint'], true);
         });
 
-        $studioProjects = $blueprints->reject(function ($bp) use ($retailTiers) {
+        $studioProjects = $blueprints->reject(function ($bp) use ($selfServiceIds) {
             $tier = $bp->user_metadata['retail_tier'] ?? $bp->user_metadata['package_tier'] ?? null;
-            return in_array($tier, $retailTiers, true)
+            return in_array($tier, $selfServiceIds, true)
                 || in_array($bp->project_status, ['Retail License', 'Self-Service', 'Instant Blueprint'], true);
         });
 

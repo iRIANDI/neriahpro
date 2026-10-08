@@ -1287,7 +1287,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 </div>
                 @endif
 
-                <!-- Unified Document Actions: Print, PDF, MD -->
+                <!-- Unified Document Actions: Print, PDF, MD, .cursorrules -->
                 <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
                     <button type="button" onclick="window.printPrdDocument()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Cetak PRD (Print)">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
@@ -1298,6 +1298,10 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </a>
                     <a href="{{ route('blueprint.download-md', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Markdown Asli (.MD)">
                         <span class="hidden sm:inline">MD</span>
+                    </a>
+                    <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition flex items-center gap-1" title="Unduh .cursorrules / CLAUDE.md untuk AI IDE">
+                        <span class="hidden xl:inline">.CURSORRULES</span>
+                        <span class="xl:hidden">RULES</span>
                     </a>
                 </div>
 
@@ -5490,6 +5494,10 @@ class ProcessSecureDataset implements ShouldQueue
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 <span>PREVIEW KODE</span>
                             </button>
+                            <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-5 py-3 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-850 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm" title="Unduh .cursorrules / CLAUDE.md untuk AI IDE">
+                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                <span>UNDUH .CURSORRULES / CLAUDE.MD</span>
+                            </a>
                             <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-xl">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 <span>DOWNLOAD ZIP (.ZIP)</span>
@@ -6275,6 +6283,15 @@ class ProcessSecureDataset implements ShouldQueue
                             >
                                 <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 <span>Unduh PRD (.MD)</span>
+                            </a>
+
+                            <a 
+                                href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}"
+                                class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/50 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                title="Unduh .cursorrules / CLAUDE.md untuk AI Coding Agent"
+                            >
+                                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                <span>Unduh .cursorrules</span>
                             </a>
 
                             <button 
@@ -7318,14 +7335,24 @@ class ProcessSecureDataset implements ShouldQueue
                 >
                     Tutup
                 </button>
-                <button 
-                    type="button" 
-                    onclick="window.copyCockpitPrompt(this)"
-                    class="w-full sm:w-auto px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-bold transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                    <span>SALIN PROMPT UNTUK <span x-text="selectedPromptAgent.toUpperCase()">AGENT</span></span>
-                </button>
+                <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                    <a 
+                        href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}"
+                        class="w-full sm:w-auto px-4 py-2.5 bg-zinc-850 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/30 text-xs font-mono uppercase font-bold transition flex items-center justify-center gap-1.5"
+                        title="Unduh file .cursorrules langsung ke project"
+                    >
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>UNDUH .CURSORRULES</span>
+                    </a>
+                    <button 
+                        type="button" 
+                        onclick="window.copyCockpitPrompt(this)"
+                        class="w-full sm:w-auto px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-bold transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                        <span>SALIN PROMPT UNTUK <span x-text="selectedPromptAgent.toUpperCase()">AGENT</span></span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

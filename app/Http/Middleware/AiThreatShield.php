@@ -57,7 +57,7 @@ class AiThreatShield
         }
 
         // Exempt payment gateway and external webhooks from threat shielding
-        if ($request->is('api/webhook/*') || $request->is('webhook/*')) {
+        if ($request->is('api/webhook/*') || $request->is('webhook/*') || $request->is('api/midtrans/*') || $request->is('midtrans/*')) {
             return $next($request);
         }
 

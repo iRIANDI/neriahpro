@@ -55,8 +55,34 @@ Route::post('/blueprint/{slug}/tasks/update', [BlueprintController::class, 'upda
 Route::post('/api/blueprint/{slug}/checkpoint', [BlueprintController::class, 'updateCheckpoint'])->name('api.blueprint.checkpoint');
 Route::post('/api/pricing/inquiry', [BlueprintController::class, 'pricingInquiry'])->name('api.pricing.inquiry')->middleware('throttle:30,1');
 
-// Payment Gateway Webhooks (Midtrans DLQ Handler)
-Route::post('/api/webhook/midtrans', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('webhook.midtrans');
+// Payment Gateway Webhooks (Midtrans DLQ Handler & Notification Aliases)
+Route::match(['get', 'post'], '/api/webhook/midtrans', function (\Illuminate\Http\Request $request) {
+    if ($request->isMethod('get')) {
+        return app(\App\Http\Controllers\MidtransWebhookController::class)->status();
+    }
+    return app(\App\Http\Controllers\MidtransWebhookController::class)->handle($request);
+})->name('webhook.midtrans');
+
+Route::match(['get', 'post'], '/webhook/midtrans', function (\Illuminate\Http\Request $request) {
+    if ($request->isMethod('get')) {
+        return app(\App\Http\Controllers\MidtransWebhookController::class)->status();
+    }
+    return app(\App\Http\Controllers\MidtransWebhookController::class)->handle($request);
+});
+
+Route::match(['get', 'post'], '/api/midtrans/notification', function (\Illuminate\Http\Request $request) {
+    if ($request->isMethod('get')) {
+        return app(\App\Http\Controllers\MidtransWebhookController::class)->status();
+    }
+    return app(\App\Http\Controllers\MidtransWebhookController::class)->handle($request);
+});
+
+Route::match(['get', 'post'], '/api/midtrans/webhook', function (\Illuminate\Http\Request $request) {
+    if ($request->isMethod('get')) {
+        return app(\App\Http\Controllers\MidtransWebhookController::class)->status();
+    }
+    return app(\App\Http\Controllers\MidtransWebhookController::class)->handle($request);
+});
 
 // Cart & Project Escrow Checkout Routes
 Route::get('/cart', [\App\Http\Controllers\CartController::class, 'index'])->name('cart.index');

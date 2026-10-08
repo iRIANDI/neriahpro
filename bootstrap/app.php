@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/webhook/*',
             'webhook/*',
+            'api/midtrans/*',
+            'midtrans/*',
         ]);
         $middleware->append(\App\Http\Middleware\SetGlobalTimezone::class);
         $middleware->append(\App\Http\Middleware\AiThreatShield::class);

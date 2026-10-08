@@ -14,6 +14,23 @@ use Illuminate\Support\Facades\Cache;
 class MidtransWebhookController extends Controller
 {
     /**
+     * Webhook health status and configuration helper for GET requests.
+     */
+    public function status(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'active',
+            'service' => 'Midtrans Payment Notification Webhook Listener',
+            'gateway' => 'Midtrans',
+            'webhook_url' => url('/api/webhook/midtrans'),
+            'accepted_methods' => ['POST'],
+            'environment' => config('midtrans.is_production') ? 'production' : 'sandbox',
+            'configuration_guide' => 'Paste this webhook URL into Midtrans Dashboard (MAP) -> Settings -> Configuration -> Payment Notification URL',
+            'timestamp' => now()->toIso8601String(),
+        ], 200);
+    }
+
+    /**
      * Handle incoming Midtrans payment gateway webhooks.
      * Records all payloads to the Dead-Letter Queue (DLQ) audit log table.
      */

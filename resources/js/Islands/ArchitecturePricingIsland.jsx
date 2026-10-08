@@ -383,6 +383,14 @@ export default function ArchitecturePricingIsland({
 
   const faqs = [
     {
+      q: isEn 
+        ? 'Why is Blueprint Advisory (Rp 2.5M) priced similarly to UMKM Starter (Rp 3.75M), even though Advisory includes NO coding?' 
+        : 'Mengapa harga Blueprint Advisory (Rp 2.5 Jt) mirip dengan UMKM Digital Starter (Rp 3.75 Jt), padahal Advisory tidak termasuk koding?',
+      a: isEn
+        ? 'The fundamental difference lies in PROJECT COMPLEXITY and WHO EXECUTES CODING! (1) Blueprint Advisory (Rp 2.5M) is tailored for MASSIVE CUSTOM ENTERPRISE SYSTEMS (SaaS platforms, multi-sided marketplaces, fintech, logistics) whose full turnkey development value ranges from Rp 50M to Rp 200M+. On this scale, senior architectural planning (26-parameter PRD, PostgreSQL Strict ULID O(1) DDL, WBS 5 sprints, and 1-on-1 Principal Architect scoping) is critical to prevent hundreds of millions in costly architecture failures. Coding is handled by your internal team (or your advisory fee is 100% credited toward our Full MVP 50% DP). (2) Conversely, UMKM Digital Starter (Rp 3.75M) is a subsidized CSR program (50% off normal Rp 7.5M, capped at 2 businesses/month) for LOCAL RETAIL SHOPS and simple stores. Its workflows are standardized (POS cashier, QRIS, customer DB, WhatsApp receipts), allowing Neriah Pro engineers to code and deploy it quickly without lengthy custom enterprise architecture sessions.'
+        : 'Perbedaan mendasarnya terletak pada SKALA SISTEM dan SIAPA YANG MENGODING! (1) Blueprint Advisory (Rp 2.5 Jt) dirancang untuk SISTEM KUSTOM ENTERPRISE BERSKALA BESAR (SaaS, platform marketplace, logistik, fintech) yang biaya pengembangannya mencapai Rp 50 Jt hingga ratusan juta rupiah. Pada skala ini, rancangan teknis (PRD 26 parameter, skema PostgreSQL Strict ULID O(1), WBS 5 sprint, dan sesi 1-on-1 Principal Architect) mutlak dibutuhkan agar developer klien tidak salah bangun dan rugi puluhan juta. Koding dilakukan oleh tim dev klien sendiri (atau biaya Rp 2.5 Jt ini otomatis memotong DP 50% jika lanjut dikodingkan Neriah Pro). (2) Sebaliknya, UMKM Digital Starter (Rp 3.75 Jt) adalah PROGRAM STIMULUS SUBSIDI 50% (dari normal Rp 7.5 Jt, kuota 2 usaha/bulan) KHUSUS TOKO RETAIL/LOKAL. Alur kerjanya terstandar (kasir POS, QRIS otomatis, database pelanggan, notifikasi WhatsApp) sehingga bisa dikodingkan dan dideploy cepat oleh Neriah Pro tanpa memerlukan perancangan arsitektur custom yang rumit.'
+    },
+    {
       q: isEn ? 'Are Instant Architectural Blueprint packages 100% self-service without Neriah Pro coding?' : 'Apakah paket Instant Architectural Blueprint 100% self-service tanpa keterlibatan koding Neriah Pro?',
       a: isEn 
         ? 'Yes, absolutely. Instant Architectural Blueprint packages (Spark, Lite, Pro, Ultimate) are pure digital architectural specifications and engineering deliverables (26-parameter PRD, PostgreSQL Strict ULID DDL SQL, Mermaid diagrams, Jira/Linear WBS, Decoupled 2026+ matrix, OpenAPI 3.1 contracts). They are designed for you, your in-house engineering team, freelancers, or AI coding agents to build the software independently. Neriah Pro does NOT write application code for these self-service packages. If you need Neriah Pro engineers to build, code, and deploy your software turnkey, select our Custom Engineering Studio contracts below (Full MVP Monolith or UMKM Starter).'
@@ -916,7 +924,7 @@ export default function ArchitecturePricingIsland({
                     {isEn ? 'SCENARIO 1 // ADVISORY' : 'SKENARIO 1 // ADVISORY'}
                   </span>
                   <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-[10px] font-bold">
-                    {isEn ? 'ARCHITECTURE ONLY' : 'CETAK BIRU TEKNIS'}
+                    {isEn ? 'ARCHITECTURE ONLY (ZERO CODING)' : 'CETAK BIRU TEKNIS (TANPA KODING)'}
                   </span>
                 </div>
 
@@ -926,8 +934,8 @@ export default function ArchitecturePricingIsland({
 
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
                   {isEn 
-                    ? 'Technical architectural roadmap for founders & CTOs with their own dev team to prevent re-work and scope creep.' 
-                    : 'Cetak biru arsitektur enterprise untuk founder & CTO yang sudah punya programmer sendiri tapi butuh roadmap teknis bebas revisi.'}
+                    ? 'Technical architectural blueprint for founders & CTOs planning complex custom enterprise systems (SaaS, platforms, fintech) with their own dev team. Neriah Pro does not write code for this advisory tier.' 
+                    : 'Cetak biru arsitektur enterprise untuk founder & CTO yang merancang sistem custom kompleks (SaaS, marketplace, fintech) bersama tim dev sendiri. Tanpa jasa koding dari Neriah Pro.'}
                 </p>
 
                 {/* Price & DP Credit Guarantee Box */}
@@ -974,8 +982,8 @@ export default function ArchitecturePricingIsland({
               </div>
 
               <div>
-                <div className="text-[10px] font-mono text-zinc-400 text-center mb-3">
-                  {isEn ? 'Coding executed by your in-house/freelance team' : 'Pengerjaan koding dieksekusi oleh tim developer klien'}
+                <div className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 text-center mb-3 font-semibold">
+                  {isEn ? '⚠️ Architecture & Blueprint Only (Zero Coding by Neriah Pro)' : '⚠️ Cetak Biru & Roadmap Saja (Koding oleh Tim Anda)'}
                 </div>
                 <div className="space-y-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
                   <button
@@ -1119,7 +1127,7 @@ export default function ArchitecturePricingIsland({
                     {isEn ? 'STIMULUS PROGRAM // UMKM' : 'PROGRAM STIMULUS // UMKM'}
                   </span>
                   <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 font-mono text-[10px] font-bold">
-                    {isEn ? '50% SUBSIDY // BY NERIAH PRO' : 'SUBSIDI 50% // OLEH NERIAH PRO'}
+                    {isEn ? 'TURNKEY RETAIL APP (100% CODED)' : 'APLIKASI RITEL JADI (100% DIKODINGKAN)'}
                   </span>
                 </div>
 
@@ -1129,8 +1137,8 @@ export default function ArchitecturePricingIsland({
 
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
                   {isEn 
-                    ? 'Turnkey transactional web app for local businesses, shops, and social enterprises moving from paper to digital.' 
-                    : 'Solusi aplikasi web siap pakai bagi toko retail, usaha lokal, & yayasan yang ingin beralih dari nota manual ke sistem digital otomatis.'}
+                    ? 'Turnkey transactional web app for local retail shops, salons, clinics, & simple commerce. Not for complex custom platforms. 100% built and deployed to production by Neriah Pro.' 
+                    : 'Aplikasi web kasir & transaksi siap pakai khusus toko retail, kuliner, & usaha jasa lokal. Bukan untuk sistem custom rumit. 100% dikodingkan dan dideploy sampai live oleh Neriah Pro.'}
                 </p>
 
                 {/* Price & Subsidy Box */}
@@ -1182,8 +1190,8 @@ export default function ArchitecturePricingIsland({
               </div>
 
               <div>
-                <div className="text-[10px] font-mono text-amber-600 dark:text-amber-400 text-center mb-3 font-bold">
-                  {isEn ? '100% Coded & Deployed by Neriah Pro Team' : '100% Dikerjakan oleh Neriah Pro sampai Siap Pakai'}
+                <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 text-center mb-3 font-semibold">
+                  {isEn ? '✅ 100% Coded & Deployed by Neriah Pro (No Programmer Needed)' : '✅ 100% Dikodingkan & Dideploy Neriah Pro (Tinggal Pakai, Bebas Rekrut IT)'}
                 </div>
                 <div className="space-y-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
                   <button

@@ -56,6 +56,10 @@ export default function HeroIsland({
   const [loadingStep, setLoadingStep] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
 
+  // State for Dual-Track Recommendation Bridge Modal
+  const [synthesizedResult, setSynthesizedResult] = useState(null);
+  const [isRecommendationModalOpen, setIsRecommendationModalOpen] = useState(false);
+
   const fileInputRef = useRef(null);
 
   const scrollTo = (id) => {
@@ -150,8 +154,17 @@ export default function HeroIsland({
         throw new Error(result.message || (isEn ? 'Failed to process idea.' : 'Gagal memproses ide.'));
       }
 
-      setLoadingStep(isEn ? 'Redirecting to Blueprint Workspace...' : 'Mengarahkan ke Ruang Penyesuaian Blueprint...');
-      window.location.href = result.redirect_url || '/blueprint';
+      setIsSubmitting(false);
+      setLoadingStep('');
+
+      // Open the Dual-Track Architectural Recommendation Bridge Modal if recommendation payload exists
+      if (result.track_recommendation) {
+        setSynthesizedResult(result);
+        setIsRecommendationModalOpen(true);
+      } else {
+        setLoadingStep(isEn ? 'Redirecting to Blueprint Workspace...' : 'Mengarahkan ke Ruang Penyesuaian Blueprint...');
+        window.location.href = result.redirect_url || '/blueprint';
+      }
 
     } catch (err) {
       setIsSubmitting(false);
@@ -708,6 +721,235 @@ export default function HeroIsland({
         </div>
 
       </div>
+
+      {/* ========================================================================= */}
+      {/* 6. MODAL: DUAL-TRACK ARCHITECTURAL RECOMMENDATION BRIDGE                  */}
+      {/* ========================================================================= */}
+      {isRecommendationModalOpen && synthesizedResult && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 w-full max-w-4xl max-h-[92vh] flex flex-col rounded-none shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
+            
+            {/* Modal Topbar Header */}
+            <div className="p-4 sm:p-6 bg-zinc-900 text-white flex items-start justify-between gap-4 border-b border-zinc-800 shrink-0">
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                    <Sparkles className="w-3 h-3" />
+                    {isEn ? 'AI SYNTHESIS COMPLETE' : 'AI SINTESIS SELESAI'}
+                  </span>
+                  <span className="text-[11px] font-mono text-zinc-400">
+                    {synthesizedResult.project_name || 'Project Blueprint'}
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-2xl font-black uppercase tracking-tight text-white">
+                  {isEn ? 'System Execution Track Recommendation' : 'Rekomendasi Jalur Eksekusi Sistem'}
+                </h3>
+                <p className="text-xs sm:text-sm text-zinc-300 font-sans mt-1 max-w-2xl leading-relaxed">
+                  {isEn 
+                    ? 'Based on your architectural complexity, select the execution path that matches your internal technical resources:'
+                    : 'Setelah AI menganalisis kompleksitas ide Anda, sistem memetakan dua opsi jalur yang paling efisien:'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsRecommendationModalOpen(false)}
+                className="p-1.5 text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-none transition cursor-pointer"
+                title={isEn ? 'Close' : 'Tutup'}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
+              
+              {/* Architectural Assessment Banner */}
+              {synthesizedResult.track_recommendation && (
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2 font-mono text-xs">
+                    <div className="flex items-center gap-2">
+                      <Cpu className="w-4 h-4 text-emerald-500" />
+                      <span className="font-bold text-zinc-900 dark:text-white uppercase tracking-wider">
+                        {isEn ? 'SYSTEM COMPLEXITY METRICS:' : 'METRIK KOMPLEKSITAS SISTEM:'}
+                      </span>
+                    </div>
+                    <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/30 text-[11px]">
+                      {synthesizedResult.track_recommendation.complexity?.label}
+                    </span>
+                  </div>
+
+                  <div className="text-xs font-mono text-zinc-600 dark:text-zinc-400 mb-2">
+                    {synthesizedResult.track_recommendation.complexity?.summary}
+                  </div>
+
+                  {synthesizedResult.track_recommendation.rationale && (
+                    <p className="text-xs font-sans text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 p-2.5 border border-zinc-200 dark:border-zinc-800 leading-relaxed">
+                      <strong className="text-zinc-900 dark:text-zinc-100">{isEn ? 'AI Analysis Note: ' : 'Catatan Analisis AI: '}</strong>
+                      {synthesizedResult.track_recommendation.rationale}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* The 2 Side-by-Side Dual-Track Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                
+                {/* CARD 1: JALUR MANDIRI (RETAIL) */}
+                <div className={`p-5 sm:p-6 border-2 flex flex-col justify-between rounded-none relative transition ${
+                  synthesizedResult.track_recommendation?.recommended_track === 'retail'
+                    ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/[0.03]'
+                    : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900'
+                }`}>
+                  {synthesizedResult.track_recommendation?.recommended_track === 'retail' && (
+                    <div className="absolute -top-3 left-4 bg-emerald-500 text-black font-mono text-[9px] font-black uppercase px-2.5 py-0.5 tracking-wider shadow-xs">
+                      {isEn ? 'AI RECOMMENDED FOR YOU' : 'REKOMENDASI AI UNTUK ANDA'}
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">
+                      {isEn ? 'PATH 01 // DIGITAL RETAIL LICENSE' : 'JALUR 01 // LISENSI DIGITAL RETAIL'}
+                    </div>
+                    <h4 className="text-lg sm:text-xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5">
+                      {isEn ? 'Self-Service Track' : 'Jalur Mandiri'}
+                    </h4>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
+                      {isEn
+                        ? 'If you have an in-house programming/coding team and only need the architecture blueprint to build independently.'
+                        : 'Jika Anda memiliki tim programmer/coding sendiri dan hanya butuh cetak biru arsitektur untuk dieksekusi mandiri.'}
+                    </p>
+
+                    {/* Pricing Tag */}
+                    <div className="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 mb-4">
+                      <div className="text-[10px] font-mono text-zinc-500 uppercase">
+                        {isEn ? 'INVESTMENT' : 'BIAYA INVESTASI'}
+                      </div>
+                      <div className="text-lg font-black font-mono text-zinc-900 dark:text-white">
+                        Rp {retailLitePrice} <span className="text-xs font-normal text-zinc-500">s/d Rp {retailUltimatePrice}</span>
+                      </div>
+                      <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        {isEn ? 'One-time payment • Lifetime access' : 'Sekali bayar • Akses permanen & unduh instan'}
+                      </div>
+                    </div>
+
+                    {/* Deliverables */}
+                    <div className="space-y-2 text-xs font-sans text-zinc-700 dark:text-zinc-300 mb-6">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>Dokumen PRD 26 parameter lengkap berstandar Fortune 500</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>Skema DDL PostgreSQL Strict ULID (O(1) keyset cursor)</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>Docker container &amp; Modern Monolith config</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>Aturan AI coding agent (.cursorrules &amp; AGENTS.md)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <a
+                    href={`${synthesizedResult.redirect_url || '/blueprint'}?track=retail`}
+                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-mono font-black text-xs uppercase py-3 px-4 rounded-none transition flex items-center justify-center gap-2 cursor-pointer shadow-xs text-center"
+                  >
+                    <ShoppingBag className="w-4 h-4 text-black" />
+                    <span>{isEn ? 'Choose Retail Track & View PRD →' : 'Pilih Jalur Mandiri (Retail) →'}</span>
+                  </a>
+                </div>
+
+                {/* CARD 2: JALUR TURNKEY (STUDIO) */}
+                <div className={`p-5 sm:p-6 border-2 flex flex-col justify-between rounded-none relative transition ${
+                  synthesizedResult.track_recommendation?.recommended_track === 'studio'
+                    ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/[0.03]'
+                    : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900'
+                }`}>
+                  {synthesizedResult.track_recommendation?.recommended_track === 'studio' && (
+                    <div className="absolute -top-3 left-4 bg-emerald-500 text-black font-mono text-[9px] font-black uppercase px-2.5 py-0.5 tracking-wider shadow-xs">
+                      {isEn ? 'AI RECOMMENDED FOR YOU' : 'REKOMENDASI AI UNTUK ANDA'}
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
+                      {isEn ? 'PATH 02 // DEDICATED STUDIO TURNKEY' : 'JALUR 02 // DEDICATED STUDIO TURNKEY'}
+                    </div>
+                    <h4 className="text-lg sm:text-xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5">
+                      {isEn ? 'Turnkey Studio Track' : 'Jalur Turnkey (Studio)'}
+                    </h4>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
+                      {isEn
+                        ? 'If you need Neriah Pro engineers to code, test (Pest ApiContractTest), and deploy live to production VPS cloud.'
+                        : 'Jika Anda butuh tim Neriah Pro yang mengoding, membangun, menguji (Pest ApiContractTest), hingga live deploy di server VPS.'}
+                    </p>
+
+                    {/* Pricing Tag */}
+                    <div className="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 mb-4">
+                      <div className="text-[10px] font-mono text-zinc-500 uppercase">
+                        {isEn ? 'INVESTMENT' : 'BIAYA INVESTASI'}
+                      </div>
+                      <div className="text-lg font-black font-mono text-zinc-900 dark:text-white">
+                        Rp {pricingSettings?.studio_umkm_price || '3.750.000'} <span className="text-xs font-normal text-zinc-500">(UMKM) s/d Rp {pricingSettings?.studio_mvp_price || '50.000.000'}</span>
+                      </div>
+                      <div className="text-[10px] font-mono text-blue-600 dark:text-blue-400 mt-0.5">
+                        {isEn ? 'Staged 50% DP Escrow • SLA Contract' : 'Skema Escrow DP 50% • Kontrak Legal Bersertifikat'}
+                      </div>
+                    </div>
+
+                    {/* Deliverables */}
+                    <div className="space-y-2 text-xs font-sans text-zinc-700 dark:text-zinc-300 mb-6">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>100% turnkey coding oleh tim Senior Architect &amp; DevOps</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>Managed Sprint Capacity terisolasi (Anti-Collision Batch)</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>Kontrak legal SLA bersertifikat &amp; serah terima hak cipta 100%</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>Full deployment ke Cloud VPS Production &amp; Garansi Bug</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <a
+                    href={`${synthesizedResult.redirect_url || '/blueprint'}?track=studio`}
+                    className="w-full bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-mono font-bold text-xs uppercase py-3 px-4 rounded-none transition flex items-center justify-center gap-2 cursor-pointer shadow-xs text-center"
+                  >
+                    <Rocket className="w-4 h-4 text-emerald-500" />
+                    <span>{isEn ? 'Choose Studio Track & Review SLA →' : 'Pilih Jalur Turnkey (Studio) →'}</span>
+                  </a>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono shrink-0">
+              <span className="text-zinc-500 text-[11px]">
+                {isEn ? 'You can switch tracks anytime in the blueprint workspace.' : 'Anda tetap dapat beralih jalur kapan saja di ruang blueprint.'}
+              </span>
+              <a
+                href={synthesizedResult.redirect_url || '/blueprint'}
+                className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 underline underline-offset-4 transition inline-flex items-center gap-1 cursor-pointer"
+              >
+                <span>{isEn ? 'Directly inspect full 26-parameter blueprint form →' : 'Lewati & langsung buka form kuesioner 26 parameter →'}</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -1615,5 +1615,63 @@
     <footer class="mt-20 border-t border-zinc-200 dark:border-zinc-800 py-8 bg-white dark:bg-zinc-900 text-center font-mono text-xs text-zinc-500">
         <p>&copy; {{ date('Y') }} Neriah Pro. {{ $isEn ? 'All rights reserved. Modular Software Architecture OS.' : 'Hak cipta dilindungi. Sistem Operasi Arsitektur Perangkat Lunak Skala Enterprise.' }}</p>
     </footer>
+
+    <script>
+        window.payRetailSnap = function(snapToken) {
+            if (!snapToken) return;
+            if (window.snap && typeof window.snap.pay === 'function') {
+                window.snap.pay(snapToken, {
+                    onSuccess: function (result) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'success',
+                                title: 'PEMBAYARAN BERHASIL',
+                                message: 'Pembayaran lisensi berhasil diverifikasi! Memuat ulang portal...',
+                                duration: 3000
+                            });
+                        }
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1800);
+                    },
+                    onPending: function (result) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'info',
+                                title: 'MENUNGGU PEMBAYARAN',
+                                message: 'Silakan selesaikan pembayaran QRIS / Virtual Account Anda.'
+                            });
+                        }
+                    },
+                    onError: function (result) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: 'PEMBAYARAN DIBATALKAN',
+                                message: 'Sesi pembayaran dibatalkan atau ditolak.'
+                            });
+                        }
+                    },
+                    onClose: function () {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'info',
+                                title: 'PROMPT DITUTUP',
+                                message: 'Anda dapat menekan tombol bayar kembali kapan saja.'
+                            });
+                        }
+                    }
+                });
+            } else {
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'error',
+                        title: 'KONEKSI MIDTRANS',
+                        message: 'Sistem Snap sedang dimuat, silakan coba beberapa saat lagi.'
+                    });
+                }
+            }
+        };
+    </script>
 </body>
 </html>

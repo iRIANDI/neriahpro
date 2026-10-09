@@ -520,11 +520,13 @@ class BlueprintDiscoveryService
 
         $proactiveSuggestions = $this->generateProactiveSuggestions($corpus, $domain, $isEn);
         $completeness = $this->calculateCompleteness($baseData, $isEn);
+        $trackRecommendation = $this->evaluateTrackRecommendation($baseData, $corpus, $domain, $isEn);
 
         return array_merge($baseData, [
             'domain' => $domain,
             'proactive_suggestions' => $proactiveSuggestions,
             'completeness' => $completeness,
+            'track_recommendation' => $trackRecommendation,
             '_meta' => [
                 'synthesized_by' => 'neriah_agentic_markitdown_engine',
                 'files_processed' => count($fileSummaries),
@@ -534,9 +536,130 @@ class BlueprintDiscoveryService
                 'combined_markdown_corpus' => $corpus,
                 'raw_idea_text' => $rawText,
                 'domain' => $domain,
+                'track_recommendation' => $trackRecommendation,
                 'created_at' => now()->toIso8601String(),
             ]
         ]);
+    }
+
+    /**
+     * Evaluate system architecture complexity and recommend optimal execution track (Retail vs Studio).
+     */
+    public function evaluateTrackRecommendation(array $baseData, string $corpus, string $domain, bool $isEn): array
+    {
+        $featuresRaw = $baseData['fiturWajib'] ?? '';
+        $featuresCount = count(array_filter(preg_split('/\r\n|\r|\n/', (string) $featuresRaw)));
+        $actorsRaw = $baseData['aktorSistem'] ?? '';
+        $actorsCount = count(array_filter(preg_split('/\r\n|\r|\n/', (string) $actorsRaw)));
+        $integrationsRaw = $baseData['kebutuhanIntegrasi'] ?? '';
+        $integrationsCount = count(array_filter(preg_split('/\r\n|\r|\n/', (string) $integrationsRaw)));
+
+        // Complexity evaluation
+        $score = 2; // base
+        if ($featuresCount > 5) $score += 2;
+        if ($actorsCount > 2) $score += 2;
+        if ($integrationsCount > 2) $score += 2;
+        if (preg_match('/(iot|gps|pembayaran bertahap|multi vendor|multi tenant|escrow|real-time|ai|llm|rekam medis|rekonsiliasi)/i', $corpus)) {
+            $score += 2;
+        }
+
+        $complexityLevel = 'standard';
+        $complexityLabel = $isEn ? 'Standard / MVP Scale' : 'Standar / MVP Inti';
+        if ($score >= 7) {
+            $complexityLevel = 'enterprise';
+            $complexityLabel = $isEn ? 'Enterprise / Distributed Scale' : 'Skala Enterprise Terdistribusi';
+        } elseif ($score >= 4) {
+            $complexityLevel = 'medium';
+            $complexityLabel = $isEn ? 'Medium Commercial' : 'Menengah Komersial';
+        }
+
+        // Track intent detection
+        $corpusLower = strtolower($corpus);
+        $wantsSelfService = (bool) preg_match('/(tim sendiri|programmer|developer|koding sendiri|coding sendiri|punya engineer|hanya butuh blueprint|hanya butuh prd|arsitektur saja|api saja)/i', $corpusLower);
+        $wantsTurnkey = (bool) preg_match('/(terima beres|tidak bisa koding|tidak ada tim it|butuh tim|full stack|bantu buatkan|kerjakan sampai|siap pakai)/i', $corpusLower);
+
+        $recommendedTrack = 'retail';
+        $rationale = '';
+
+        if ($wantsTurnkey && !$wantsSelfService) {
+            $recommendedTrack = 'studio';
+            $rationale = $isEn
+                ? 'Your brief indicates a requirement for turnkey delivery. Neriah Pro Dedicated Studio provides senior engineers to code, test (Pest ApiContractTest), and deploy live with SLA guarantees.'
+                : 'Kebutuhan Anda menunjukkan preferensi pengerjaan siap pakai (terima beres). Dedicated Studio Neriah Pro menyediakan Senior Architect & Fullstack untuk mengoding, menguji dengan Pest, hingga deploy live ke VPS bergaransi SLA.';
+        } elseif ($wantsSelfService && !$wantsTurnkey) {
+            $recommendedTrack = 'retail';
+            $rationale = $isEn
+                ? 'Your team possesses internal engineering capability. The Software Factory OS Retail License delivers instant Fortune 500 architecture (PRD 26 parameters, Strict ULID DDL, Docker, AI directives) with zero development agency markup.'
+                : 'Tim Anda terdeteksi memiliki kapabilitas koding sendiri. Lisensi Digital Retail Software Factory OS memberikan cetak biru arsitektur kelas enterprise instan (PRD 26 parameter, DDL ULID, Docker, aturan AI) tanpa biaya agensi.';
+        } else {
+            // Neutral / Balanced recommendation
+            if ($complexityLevel === 'enterprise') {
+                $recommendedTrack = 'studio';
+                $rationale = $isEn
+                    ? 'Due to distributed architecture and multi-role integration requirements, we recommend Dedicated Studio for guaranteed SLA delivery, with Retail Ultimate as a viable self-service alternative if you have a senior team.'
+                    : 'Mengingat tingginya kompleksitas integrasi dan multi-role, Jalur Turnkey Studio disarankan untuk jaminan SLA pengerjaan. Namun jika Anda memiliki tim internal, Jalur Mandiri Lisensi Ultimate siap diunduh seketika.';
+            } else {
+                $recommendedTrack = 'retail';
+                $rationale = $isEn
+                    ? 'Both paths are available: Acquire a self-service Retail License for immediate independent coding, or engage our Dedicated Studio for end-to-end turnkey delivery.'
+                    : 'Kedua jalur terbuka: Ambil Lisensi Retail untuk koding mandiri instan berbiaya hemat, atau serahkan pengerjaan ke Dedicated Studio Neriah Pro jika ingin terima beres.';
+            }
+        }
+
+        $retailLitePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_lite_price', '190.000');
+        $retailProPrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_pro_price', '490.000');
+        $retailUltimatePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_ultimate_price', '1.490.000');
+        $studioUmkmPrice = \App\Models\CmsGlobalSetting::getVal('pricing_studio_umkm_price', '3.750.000');
+        $studioMvpPrice = \App\Models\CmsGlobalSetting::getVal('pricing_studio_mvp_price', '50.000.000');
+
+        return [
+            'recommended_track' => $recommendedTrack, // 'retail' | 'studio'
+            'complexity' => [
+                'score' => $score,
+                'level' => $complexityLevel,
+                'label' => $complexityLabel,
+                'summary' => $isEn
+                    ? "{$featuresCount} Must-Have Features • {$actorsCount} Roles • {$integrationsCount} Integration Rails"
+                    : "{$featuresCount} Fitur Wajib • {$actorsCount} Aktor Sistem • {$integrationsCount} Rel Integrasi",
+            ],
+            'rationale' => $rationale,
+            'tracks' => [
+                'retail' => [
+                    'id' => 'retail',
+                    'title' => $isEn ? 'Self-Service Track (Digital Retail License)' : 'Jalur Mandiri (Lisensi Digital Retail)',
+                    'badge' => $isEn ? 'FOR TEAMS WITH INTERNAL CODERS' : 'UNTUK TIM DENGAN PROGRAMMER SENDIRI',
+                    'tagline' => $isEn
+                        ? 'Acquire enterprise blueprint and build with your own engineers'
+                        : 'Miliki cetak biru arsitektur enterprise untuk dikerjakan tim Anda sendiri',
+                    'highlights' => [
+                        $isEn ? 'PRD with 26 architectural parameters' : 'Dokumen PRD 26 parameter lengkap',
+                        $isEn ? 'PostgreSQL 16 Strict ULID DDL schema (O(1) keyset)' : 'Skema DDL PostgreSQL Strict ULID (O(1) keyset)',
+                        $isEn ? 'Docker compose & modern monolith config' : 'Docker container & arsitektur modern monolith',
+                        $isEn ? 'AI Coding Directives (.cursorrules & AGENTS.md)' : 'Aturan AI coding agent (.cursorrules & AGENTS.md)',
+                    ],
+                    'starting_price' => "Rp {$retailLitePrice}",
+                    'max_price' => "Rp {$retailUltimatePrice}",
+                    'cta_label' => $isEn ? 'Choose Retail License →' : 'Pilih Jalur Mandiri (Lisensi Retail) →',
+                ],
+                'studio' => [
+                    'id' => 'studio',
+                    'title' => $isEn ? 'Turnkey Track (Project Studio Dedicated)' : 'Jalur Turnkey (Project Studio Dedicated)',
+                    'badge' => $isEn ? '100% CODED BY NERIAH PRO ENGINEERS' : 'DIKERJAKAN PENUH TIM NERIAH PRO',
+                    'tagline' => $isEn
+                        ? 'End-to-end coding, testing, and cloud deployment with SLA contract'
+                        : 'Koding penuh, pengujian Pest, hingga live deployment di server VPS',
+                    'highlights' => [
+                        $isEn ? '100% turnkey coding across 7 Software Factory OS pillars' : '100% turnkey koding mencakup 7 Pilar Software Factory OS',
+                        $isEn ? 'Managed Capacity & Anti-Collision sprint batch' : 'Alokasi slot sprint terisolasi dengan Master Gantt real-time',
+                        $isEn ? 'Legally binding SLA contract & 100% copyright transfer' : 'Kontrak legal SLA bersertifikat & serah terima hak cipta 100%',
+                        $isEn ? 'Staged 50% DP escrow payment via Midtrans Snap' : 'Skema pembayaran bertahap DP 50% via Midtrans Snap',
+                    ],
+                    'starting_price' => "Rp {$studioUmkmPrice}",
+                    'max_price' => "Rp {$studioMvpPrice}",
+                    'cta_label' => $isEn ? 'Choose Dedicated Studio →' : 'Pilih Jalur Turnkey (Project Studio) →',
+                ]
+            ]
+        ];
     }
 
     protected function detectDomain(string $text, array $brief = []): string

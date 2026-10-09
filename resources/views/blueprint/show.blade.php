@@ -1180,6 +1180,83 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     return Math.round(finalContract * 0.50);
                 },
                 isPayingSnap: false,
+                executionTrack: '{{ request('track') === 'retail' ? 'retail' : 'studio' }}',
+                retailCheckingOut: false,
+                async checkoutRetail(packageTier) {
+                    this.retailCheckingOut = true;
+                    try {
+                        const response = await fetch('/api/pricing/inquiry', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                name: '{{ addslashes($blueprint->client_name) }}',
+                                email: '{{ addslashes($blueprint->email) }}',
+                                phone: '{{ addslashes($blueprint->phone ?? '') }}',
+                                company: '{{ addslashes($blueprint->nama_bisnis ?? '') }}',
+                                country_code: '{{ addslashes($blueprint->country_code ?? '+62') }}',
+                                package_tier: packageTier,
+                                blueprint_slug: '{{ $blueprint->slug }}',
+                                notes: 'Checkout Lisensi Retail dari PRD Blueprint: {{ addslashes($blueprint->nama_bisnis) }}'
+                            })
+                        });
+
+                        const result = await response.json();
+                        if (!response.ok || !result.success) {
+                            throw new Error(result.message || 'Gagal memproses checkout lisensi.');
+                        }
+
+                        if (result.snap_token && window.snap && typeof window.snap.pay === 'function') {
+                            window.snap.pay(result.snap_token, {
+                                onSuccess: function (snapRes) {
+                                    if (window.showToast) {
+                                        window.showToast({
+                                            type: 'success',
+                                            title: 'PEMBAYARAN LISENSI BERHASIL',
+                                            message: 'Lisensi arsitektur Anda telah aktif! Mengarahkan ke Dashboard...'
+                                        });
+                                    }
+                                    setTimeout(function() {
+                                        window.location.href = '/customer/dashboard#licenses';
+                                    }, 1800);
+                                },
+                                onPending: function (snapRes) {
+                                    if (window.showToast) {
+                                        window.showToast({
+                                            type: 'info',
+                                            title: 'MENUNGGU PEMBAYARAN',
+                                            message: 'Silakan selesaikan pembayaran QRIS / Virtual Account Anda.'
+                                        });
+                                    }
+                                },
+                                onError: function (snapRes) {
+                                    if (window.showToast) {
+                                        window.showToast({
+                                            type: 'error',
+                                            title: 'PEMBAYARAN DIBATALKAN',
+                                            message: 'Transaksi dibatalkan atau ditolak.'
+                                        });
+                                    }
+                                }
+                            });
+                        } else if (result.redirect_url) {
+                            window.location.href = result.redirect_url;
+                        }
+                    } catch (err) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: 'CHECKOUT GAGAL',
+                                message: err.message || 'Terjadi kesalahan sistem saat menghubungi gateway pembayaran.'
+                            });
+                        }
+                    } finally {
+                        this.retailCheckingOut = false;
+                    }
+                },
                 devPlaybookOpen: true,
                 activeDevPhase: 1,
                 copyMasterPromptSuccess: false,
@@ -6733,7 +6810,199 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
                 @endif
 
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-6">
+@php
+    $litePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_lite_price', '190.000');
+    $proPrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_pro_price', '490.000');
+    $ultimatePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_ultimate_price', '1.490.000');
+@endphp
+
+                <!-- DUAL-TRACK EXECUTION SWITCHER (RETAIL VS STUDIO) -->
+                <div class="mb-8 border-2 border-zinc-900 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 p-4 sm:p-6 rounded-none">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <span class="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                            DUAL-TRACK EXECUTION BRIDGE // PILIH METODE PENGERJAAN
+                        </span>
+                        <span class="text-[11px] font-mono text-zinc-500">
+                            Transparan &bull; Bebas Lock-in &bull; Garansi Resmi
+                        </span>
+                    </div>
+
+                    <h3 class="text-lg sm:text-xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2">
+                        Bagaimana Anda Ingin Mengeksekusi Cetak Biru Ini?
+                    </h3>
+                    <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-6 max-w-3xl">
+                        Pilih jalur yang paling sesuai dengan kapasitas tim Anda: Beli lisensi arsitektur untuk koding mandiri dengan tim internal (Jalur Mandiri Retail), atau serahkan pengerjaan penuh dari nol sampai live di server VPS kepada tim engineer Neriah Pro (Jalur Turnkey Studio).
+                    </p>
+
+                    <!-- Track Switch Buttons (Brutalist Tab Switcher) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                        <button
+                            type="button"
+                            @click="executionTrack = 'retail'"
+                            :class="executionTrack === 'retail' ? 'border-emerald-500 bg-emerald-500/10 text-zinc-900 dark:text-white ring-1 ring-emerald-500' : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:border-zinc-500'"
+                            class="p-4 text-left border-2 rounded-none transition cursor-pointer flex flex-col justify-between"
+                        >
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="font-mono text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">
+                                        JALUR 01 // LISENSI DIGITAL RETAIL
+                                    </span>
+                                    <span x-show="executionTrack === 'retail'" class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-mono font-bold uppercase">
+                                        TERPILIH
+                                    </span>
+                                </div>
+                                <div class="text-base font-black uppercase text-zinc-900 dark:text-white mb-1">
+                                    Koding Mandiri (Tim Internal)
+                                </div>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                                    Untuk Anda yang punya tim programmer sendiri &amp; hanya butuh PRD 26 parameter, DDL SQL Strict ULID, Docker container, dan aturan AI coding agent.
+                                </p>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-between">
+                                <span>Mulai Rp {{ $litePrice }} (Sekali Bayar)</span>
+                                <span>Pilih Jalur Mandiri &darr;</span>
+                            </div>
+                        </button>
+
+                        <button
+                            type="button"
+                            @click="executionTrack = 'studio'"
+                            :class="executionTrack === 'studio' ? 'border-emerald-500 bg-emerald-500/10 text-zinc-900 dark:text-white ring-1 ring-emerald-500' : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:border-zinc-500'"
+                            class="p-4 text-left border-2 rounded-none transition cursor-pointer flex flex-col justify-between"
+                        >
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="font-mono text-[10px] font-bold uppercase text-zinc-500 dark:text-zinc-400">
+                                        JALUR 02 // DEDICATED STUDIO TURNKEY
+                                    </span>
+                                    <span x-show="executionTrack === 'studio'" class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-mono font-bold uppercase">
+                                        TERPILIH
+                                    </span>
+                                </div>
+                                <div class="text-base font-black uppercase text-zinc-900 dark:text-white mb-1">
+                                    Turnkey Penuh (Tim Neriah Pro)
+                                </div>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                                    Untuk Anda yang butuh tim Neriah Pro mengoding 100%, membangun, menguji (Pest ApiContractTest), hingga live deploy di VPS bergaransi SLA.
+                                </p>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs text-blue-600 dark:text-blue-400 font-bold flex items-center justify-between">
+                                <span>DP 50% Kickoff Escrow</span>
+                                <span>Pilih Jalur Studio &darr;</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- TRACK CONTENT A: JALUR MANDIRI RETAIL CARDS & INSTANT SNAP CHECKOUT -->
+                    <div x-show="executionTrack === 'retail'" x-cloak class="space-y-6 pt-2">
+                        <div class="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase block mb-1">
+                                ✓ LISENSI SOFTWARE FACTORY OS LANGSUNG AKTIF DI CUSTOMER PORTAL
+                            </span>
+                            <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                Pilih paket lisensi di bawah. Begitu pembayaran Midtrans Snap (QRIS/VA) diverifikasi, file cetak biru, skema SQL DDL, dan starter-kit ZIP langsung dapat diunduh permanen di <a href="/customer/dashboard" target="_blank" class="underline text-emerald-500 font-bold">Portal Klien Anda</a>.
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- TIER 02: LITE -->
+                            <div class="p-4 sm:p-5 bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-700 flex flex-col justify-between rounded-none">
+                                <div>
+                                    <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold uppercase">
+                                        TIER 02 // ARCHITECTURE ONLY
+                                    </span>
+                                    <h4 class="text-lg font-black uppercase text-zinc-900 dark:text-white mt-2 mb-1">
+                                        Lite Specification
+                                    </h4>
+                                    <div class="text-xl font-black font-mono text-zinc-900 dark:text-white mb-3">
+                                        Rp {{ $litePrice }}
+                                    </div>
+                                    <ul class="text-xs space-y-2 text-zinc-600 dark:text-zinc-300 mb-6">
+                                        <li class="flex items-start gap-1.5">&bull; Dokumen PRD 26 Parameter Lengkap</li>
+                                        <li class="flex items-start gap-1.5">&bull; Skema DDL PostgreSQL Strict ULID</li>
+                                        <li class="flex items-start gap-1.5">&bull; Lisensi Akses Seumur Hidup</li>
+                                    </ul>
+                                </div>
+                                <button
+                                    type="button"
+                                    @click="checkoutRetail('retail_lite')"
+                                    :disabled="retailCheckingOut"
+                                    class="w-full bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-mono font-bold text-xs uppercase py-3 px-3 transition cursor-pointer text-center"
+                                >
+                                    <span x-show="!retailCheckingOut">Beli Lisensi Lite &rarr;</span>
+                                    <span x-show="retailCheckingOut">Memproses...</span>
+                                </button>
+                            </div>
+
+                            <!-- TIER 03: PRO (RECOMMENDED) -->
+                            <div class="p-4 sm:p-5 bg-white dark:bg-zinc-900 border-2 border-emerald-500 flex flex-col justify-between rounded-none relative">
+                                <div class="absolute -top-3 right-4 bg-emerald-500 text-black font-mono text-[9px] font-black uppercase px-2.5 py-0.5 tracking-wider">
+                                    POPULER // DEVELOPER CHOICE
+                                </div>
+                                <div>
+                                    <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold uppercase">
+                                        TIER 03 // FULL AI DIRECTIVES
+                                    </span>
+                                    <h4 class="text-lg font-black uppercase text-zinc-900 dark:text-white mt-2 mb-1">
+                                        Pro Engineering Directives
+                                    </h4>
+                                    <div class="text-xl font-black font-mono text-zinc-900 dark:text-white mb-3">
+                                        Rp {{ $proPrice }}
+                                    </div>
+                                    <ul class="text-xs space-y-2 text-zinc-600 dark:text-zinc-300 mb-6">
+                                        <li class="flex items-start gap-1.5">&bull; Seluruh Fitur Paket Lite</li>
+                                        <li class="flex items-start gap-1.5">&bull; Aturan AI Coding Agent (.cursorrules &amp; AGENTS.md)</li>
+                                        <li class="flex items-start gap-1.5">&bull; Seeder Sintetis Realistis 100+ Baris</li>
+                                        <li class="flex items-start gap-1.5">&bull; Docker Container Config Siap Pakai</li>
+                                    </ul>
+                                </div>
+                                <button
+                                    type="button"
+                                    @click="checkoutRetail('retail_pro')"
+                                    :disabled="retailCheckingOut"
+                                    class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase py-3 px-3 transition cursor-pointer text-center shadow-xs"
+                                >
+                                    <span x-show="!retailCheckingOut">Beli Lisensi Pro &rarr;</span>
+                                    <span x-show="retailCheckingOut">Memproses...</span>
+                                </button>
+                            </div>
+
+                            <!-- TIER 04: ULTIMATE -->
+                            <div class="p-4 sm:p-5 bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 flex flex-col justify-between rounded-none">
+                                <div>
+                                    <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold uppercase">
+                                        TIER 04 // MASTER STARTER KIT
+                                    </span>
+                                    <h4 class="text-lg font-black uppercase text-zinc-900 dark:text-white mt-2 mb-1">
+                                        Ultimate Software Factory OS
+                                    </h4>
+                                    <div class="text-xl font-black font-mono text-zinc-900 dark:text-white mb-3">
+                                        Rp {{ $ultimatePrice }}
+                                    </div>
+                                    <ul class="text-xs space-y-2 text-zinc-600 dark:text-zinc-300 mb-6">
+                                        <li class="flex items-start gap-1.5">&bull; Seluruh Fitur Paket Lite &amp; Pro</li>
+                                        <li class="flex items-start gap-1.5">&bull; Master Starter Repository ZIP (Laravel 13, Filament v5, Livewire 4)</li>
+                                        <li class="flex items-start gap-1.5">&bull; 1-on-1 Architecture Call 60 Menit dengan Lead Architect</li>
+                                        <li class="flex items-start gap-1.5">&bull; 100% Biaya Lisensi Memotong DP jika Upgrade ke Studio</li>
+                                    </ul>
+                                </div>
+                                <button
+                                    type="button"
+                                    @click="checkoutRetail('retail_ultimate')"
+                                    :disabled="retailCheckingOut"
+                                    class="w-full bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-mono font-bold text-xs uppercase py-3 px-3 transition cursor-pointer text-center"
+                                >
+                                    <span x-show="!retailCheckingOut">Beli Lisensi Ultimate &rarr;</span>
+                                    <span x-show="retailCheckingOut">Memproses...</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRACK CONTENT B: JALUR TURNKEY STUDIO (CONTRACT SIGNING & DP 50%) -->
+                <div x-show="executionTrack === 'studio'">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-6">
                     <div>
                         <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-widest bg-emerald-500 text-black inline-block mb-2 rounded-none">
                             LEGAL &amp; PAYMENT PROTOCOL
@@ -7015,6 +7284,7 @@ class ProcessSecureDataset implements ShouldQueue
                         </form>
                     </div>
                 @endif
+                </div> <!-- END TRACK CONTENT B (STUDIO) -->
             </section>
 
             <!-- FLOATING QUICK-ACCESS DOCK & SCROLL-SPY NAVIGATOR -->

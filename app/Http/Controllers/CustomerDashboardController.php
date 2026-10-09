@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use App\Models\VisionBlueprint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class CustomerDashboardController extends Controller
@@ -186,6 +187,21 @@ class CustomerDashboardController extends Controller
         $activeStudio = $studioProjects->filter(fn ($p) => $p->isDpConfirmed() || $p->signed_agreement)->count();
         $latestTransaction = $transactions->first();
 
+        // Resolve Google Translate settings
+        $googleTranslateEnabled = (bool) CmsGlobalSetting::getVal('google_translate_enabled', true);
+        $rawAllowed = CmsGlobalSetting::getVal('google_translate_allowed_languages', ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es']);
+        $allowedLangList = is_array($rawAllowed) ? $rawAllowed : (is_string($rawAllowed) ? json_decode($rawAllowed, true) : ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es']);
+        if (empty($allowedLangList)) {
+            $allowedLangList = ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es'];
+        }
+
+        // Resolve prefilled profile from blueprints or transactions if user profile columns are empty
+        $prefilledCompany = $user->company_name 
+            ?? ($blueprints->first()->nama_bisnis ?? ($transactions->first()?->customer_details['company_name'] ?? ''));
+        $prefilledPhone = $user->phone 
+            ?? ($blueprints->first()->phone ?? '');
+        $prefilledCountryCode = $user->phone_country_code ?? '+62';
+
         return view('customer.dashboard', [
             'user' => $user,
             'blueprints' => $blueprints,
@@ -198,6 +214,26 @@ class CustomerDashboardController extends Controller
             'latestTransaction' => $latestTransaction,
             'hostingAssets' => $hostingAssets,
             'globalSettings' => $globalSettings,
+            'countryZones' => config('country_zones.zones', []),
+            'defaultCountryCode' => config('country_zones.default', 'ID'),
+            'googleTranslateEnabled' => $googleTranslateEnabled,
+            'allowedLangList' => $allowedLangList,
+            'profileDefaults' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'company_name' => $prefilledCompany,
+                'phone_country_code' => $prefilledCountryCode,
+                'phone' => $prefilledPhone,
+                'npwp' => $user->npwp ?? '',
+                'billing_address' => $user->billing_address ?? '',
+                'billing_city' => $user->billing_city ?? '',
+                'billing_province' => $user->billing_province ?? '',
+                'billing_postal_code' => $user->billing_postal_code ?? '',
+                'notification_preferences' => $user->notification_preferences ?? [
+                    'email_sprints' => true,
+                    'wa_billing' => true,
+                ],
+            ],
             'metrics' => [
                 'total_blueprints' => $totalBlueprints,
                 'total_retail' => $totalRetail,
@@ -279,5 +315,82 @@ class CustomerDashboardController extends Controller
         }
 
         return redirect()->route('customer.dashboard')->with('warning', 'Tidak dapat memeriksa gateway Midtrans saat ini: ' . ($statusCheck['error'] ?? 'Koneksi gagal.'));
+    }
+
+    /**
+     * Update customer profile and billing preferences.
+     */
+    public function updateProfile(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return response()->json(['success' => false, 'message' => 'Sesi login tidak valid.'], 401);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'company_name' => 'nullable|string|max:255',
+            'phone_country_code' => 'nullable|string|max:10',
+            'phone' => 'nullable|string|max:30',
+            'npwp' => 'nullable|string|max:50',
+            'billing_address' => 'nullable|string|max:500',
+            'billing_city' => 'nullable|string|max:100',
+            'billing_province' => 'nullable|string|max:100',
+            'billing_postal_code' => 'nullable|string|max:20',
+            'notify_email_sprints' => 'nullable|boolean',
+            'notify_wa_billing' => 'nullable|boolean',
+        ]);
+
+        // Clean phone number (strip spaces/dashes and leading zeros if country code provided)
+        $rawPhone = preg_replace('/[^0-9]/', '', $validated['phone'] ?? '');
+        $countryCode = trim($validated['phone_country_code'] ?? '+62');
+        if (!str_starts_with($countryCode, '+')) {
+            $countryCode = '+' . $countryCode;
+        }
+
+        $notifPrefs = [
+            'email_sprints' => (bool) ($request->input('notify_email_sprints', true)),
+            'wa_billing' => (bool) ($request->input('notify_wa_billing', true)),
+        ];
+
+        $user->name = $validated['name'];
+
+        $fields = [
+            'company_name' => $validated['company_name'] ?? null,
+            'phone_country_code' => $countryCode,
+            'phone' => $rawPhone,
+            'npwp' => $validated['npwp'] ?? null,
+            'billing_address' => $validated['billing_address'] ?? null,
+            'billing_city' => $validated['billing_city'] ?? null,
+            'billing_province' => $validated['billing_province'] ?? null,
+            'billing_postal_code' => $validated['billing_postal_code'] ?? null,
+            'notification_preferences' => $notifPrefs,
+        ];
+
+        foreach ($fields as $col => $val) {
+            if (Schema::hasColumn('users', $col)) {
+                $user->{$col} = $val;
+            }
+        }
+
+        if (Schema::hasColumn('users', 'profile_metadata')) {
+            $existing = is_array($user->profile_metadata) ? $user->profile_metadata : [];
+            $user->profile_metadata = array_merge($existing, $fields);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil dan data penagihan akun Anda berhasil diperbarui!',
+            'data' => [
+                'name' => $user->name,
+                'company_name' => $user->company_name ?? ($fields['company_name'] ?? ''),
+                'phone' => $user->phone ?? ($fields['phone'] ?? ''),
+                'phone_country_code' => $user->phone_country_code ?? $countryCode,
+                'npwp' => $user->npwp ?? ($fields['npwp'] ?? ''),
+                'billing_address' => $user->billing_address ?? ($fields['billing_address'] ?? ''),
+            ],
+        ]);
     }
 }

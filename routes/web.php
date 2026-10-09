@@ -116,6 +116,7 @@ Route::prefix('api/customer')->group(function () {
     Route::post('/otp/verify', [\App\Http\Controllers\CustomerAuthController::class, 'verifyOtp'])->middleware('throttle:15,1');
     Route::get('/status', [\App\Http\Controllers\CustomerAuthController::class, 'status']);
     Route::post('/logout', [\App\Http\Controllers\CustomerAuthController::class, 'logout'])->name('customer.logout');
+    Route::post('/profile', [\App\Http\Controllers\CustomerDashboardController::class, 'updateProfile'])->middleware('auth')->name('customer.profile.update');
 });
 
 // Authentication Aliases for Standard Web Routes

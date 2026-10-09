@@ -262,9 +262,143 @@
             }
         }
 
+        function changeTier1Language(locale) {
+            document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname;
+            document.cookie = 'neriah_locale=' + locale + ';path=/;max-age=31536000';
+            window.location.href = '/lang/' + locale;
+        }
+
+        function translateLanguage(langCode) {
+            const select = document.querySelector('.goog-te-combo');
+            if (select) {
+                select.value = langCode;
+                select.dispatchEvent(new Event('change'));
+            } else {
+                document.cookie = 'googtrans=/id/' + langCode + '; path=/; domain=' + window.location.hostname;
+                document.cookie = 'googtrans=/id/' + langCode + '; path=/;';
+                window.location.reload();
+            }
+        }
+
         function customerDashboardApp() {
             return {
                 currentTab: (window.location.hash ? window.location.hash.replace('#', '') : 'overview'),
+                servicesDropdownOpen: false,
+                langDropdownOpen: false,
+                mobileMenuOpen: false,
+                
+                // Profile & Billing state
+                profileName: @json($profileDefaults['name'] ?? ''),
+                profileCompany: @json($profileDefaults['company_name'] ?? ''),
+                selectedCountryCode: @json($profileDefaults['phone_country_code'] ?? '+62'),
+                profilePhone: @json($profileDefaults['phone'] ?? ''),
+                profileNpwp: @json($profileDefaults['npwp'] ?? ''),
+                profileAddress: @json($profileDefaults['billing_address'] ?? ''),
+                profileCity: @json($profileDefaults['billing_city'] ?? ''),
+                profileProvince: @json($profileDefaults['billing_province'] ?? ''),
+                profilePostalCode: @json($profileDefaults['billing_postal_code'] ?? ''),
+                notifyEmailSprints: {{ ($profileDefaults['notification_preferences']['email_sprints'] ?? true) ? 'true' : 'false' }},
+                notifyWaBilling: {{ ($profileDefaults['notification_preferences']['wa_billing'] ?? true) ? 'true' : 'false' }},
+                isSavingProfile: false,
+                profileSuccessMsg: '',
+                profileErrorMsg: '',
+                
+                // Country Zone Selector state
+                countryDropdownOpen: false,
+                countrySearch: '',
+                countryZones: @json($countryZones ?? []),
+
+                filteredCountryZones() {
+                    if (!this.countrySearch || !this.countrySearch.trim()) {
+                        return this.countryZones;
+                    }
+                    const q = this.countrySearch.toLowerCase().trim();
+                    return this.countryZones.filter(z => 
+                        (z.name && z.name.toLowerCase().includes(q)) || 
+                        (z.dial_code && z.dial_code.includes(q)) || 
+                        (z.code && z.code.toLowerCase().includes(q))
+                    );
+                },
+
+                selectCountry(zone) {
+                    this.selectedCountryCode = zone.dial_code;
+                    this.countryDropdownOpen = false;
+                    this.countrySearch = '';
+                },
+
+                getSelectedZone() {
+                    return this.countryZones.find(z => z.dial_code === this.selectedCountryCode) || {
+                        code: 'ID',
+                        dial_code: '+62',
+                        name: 'Indonesia',
+                        flag: '🇮🇩'
+                    };
+                },
+
+                async saveProfile() {
+                    if (!this.profileName || !this.profileName.trim()) {
+                        this.profileErrorMsg = 'Nama lengkap wajib diisi.';
+                        if (window.showToast) {
+                            window.showToast({ type: 'error', title: 'VALIDASI GAGAL', message: 'Nama lengkap wajib diisi.' });
+                        }
+                        return;
+                    }
+
+                    this.isSavingProfile = true;
+                    this.profileSuccessMsg = '';
+                    this.profileErrorMsg = '';
+
+                    try {
+                        const res = await fetch('/api/customer/profile', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                            },
+                            body: JSON.stringify({
+                                name: this.profileName,
+                                company_name: this.profileCompany,
+                                phone_country_code: this.selectedCountryCode,
+                                phone: this.profilePhone,
+                                npwp: this.profileNpwp,
+                                billing_address: this.profileAddress,
+                                billing_city: this.profileCity,
+                                billing_province: this.profileProvince,
+                                billing_postal_code: this.profilePostalCode,
+                                notify_email_sprints: this.notifyEmailSprints,
+                                notify_wa_billing: this.notifyWaBilling,
+                            })
+                        });
+
+                        const data = await res.json();
+                        if (!res.ok || !data.success) {
+                            throw new Error(data.message || 'Gagal menyimpan profil.');
+                        }
+
+                        this.profileSuccessMsg = data.message || 'Profil berhasil disimpan!';
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'success',
+                                title: 'PROFIL DIPERBARUI',
+                                message: this.profileSuccessMsg
+                            });
+                        }
+                        setTimeout(() => { this.profileSuccessMsg = ''; }, 5000);
+                    } catch (err) {
+                        this.profileErrorMsg = err.message || 'Terjadi kesalahan sistem.';
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: 'GAGAL MENYIMPAN',
+                                message: this.profileErrorMsg
+                            });
+                        }
+                    } finally {
+                        this.isSavingProfile = false;
+                    }
+                },
                 
                 init() {
                     const allowed = ['overview', 'projects', 'licenses', 'billing', 'assets', 'account'];
@@ -315,12 +449,12 @@
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen transition-colors duration-200" x-data="customerDashboardApp()">
 
-    <!-- 1. TOP UTILITY HEADER -->
-    <header class="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 sticky top-0 z-40 shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <!-- 1. TOP UTILITY HEADER (FULL SITE NAVIGATION + DUAL TIER LANGUAGE + THEME TOGGLE) -->
+    <header class="border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md sticky top-0 z-40 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
             
             <!-- Left: Brand & Portal Badge -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 shrink-0">
                 <a href="/" class="flex items-center gap-2 group">
                     <span class="w-8 h-8 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-black text-sm flex items-center justify-center rounded-none shadow-xs group-hover:scale-105 transition-transform">
                         N
@@ -329,47 +463,295 @@
                         Neriah<span class="text-emerald-500">Pro</span>
                     </span>
                 </a>
-                <span class="text-zinc-300 dark:text-zinc-700">/</span>
-                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider rounded-none border border-emerald-500/20">
+                <span class="text-zinc-300 dark:text-zinc-700 hidden sm:inline">/</span>
+                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider rounded-none border border-emerald-500/20 hidden sm:inline-block">
                     {{ $isEn ? 'CLIENT WORKSPACE' : 'WORKSPACE PELANGGAN' }}
                 </span>
             </div>
 
-            <!-- Right: Actions & User Details -->
-            <div class="flex items-center gap-2 sm:gap-3">
-                <!-- User Email Badge -->
-                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-mono">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="text-zinc-700 dark:text-zinc-300 font-bold truncate max-w-[200px]">{{ $user->email }}</span>
+            <!-- Center: Desktop Standard Navigation Menus -->
+            <nav class="hidden lg:flex items-center gap-6 font-mono text-xs uppercase tracking-wider font-bold">
+                <a href="/" class="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
+                    {{ $isEn ? 'Home' : 'Beranda' }}
+                </a>
+
+                <!-- Dropdown: Layanan HUB -->
+                <div 
+                    class="relative"
+                    @mouseenter="servicesDropdownOpen = true"
+                    @mouseleave="servicesDropdownOpen = false"
+                >
+                    <button 
+                        type="button"
+                        @click="servicesDropdownOpen = !servicesDropdownOpen"
+                        class="flex items-center gap-1 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition py-2 cursor-pointer"
+                    >
+                        <span>{{ $isEn ? 'Services Hub' : 'Layanan HUB' }}</span>
+                        <svg class="w-3 h-3 text-zinc-400 transition-transform duration-150" :class="servicesDropdownOpen ? 'rotate-180 text-emerald-500' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div 
+                        x-show="servicesDropdownOpen" 
+                        x-cloak 
+                        class="absolute top-full left-0 w-72 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-2xl p-2.5 space-y-1 text-left z-50 font-sans"
+                    >
+                        <a href="/blueprint" class="block p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="font-bold text-zinc-900 dark:text-white text-xs font-mono">Project OS (PRD)</span>
+                                <span class="px-1 py-0.2 bg-emerald-500 text-black text-[9px] font-mono font-bold">ACTIVE</span>
+                            </div>
+                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
+                                {{ $isEn ? 'Automated PRD & ERD Database Architecture' : 'Generator PRD & Skema ERD Otomatis' }}
+                            </p>
+                        </a>
+
+                        <a href="/cv-pro" class="block p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="font-bold text-zinc-900 dark:text-white text-xs font-mono">Studio CV Pro</span>
+                                <span class="px-1 py-0.2 bg-purple-500 text-white text-[9px] font-mono font-bold">PRO STUDIO</span>
+                            </div>
+                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
+                                {{ $isEn ? 'Visual Resume & Portfolio Studio' : 'Studio CV Visual & Portofolio Klien' }}
+                            </p>
+                        </a>
+
+                        <a href="/pricing" class="block p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none border-t border-zinc-100 dark:border-zinc-800">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="font-bold text-zinc-900 dark:text-white text-xs font-mono">{{ $isEn ? 'Pricing & Packages' : 'Paket & Harga' }}</span>
+                                <span class="px-1 py-0.2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-mono font-bold">PROMO</span>
+                            </div>
+                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
+                                {{ $isEn ? 'Monolith MVP, Retail Licenses & Starter Tiers' : 'Paket Monolith MVP, Retail Licenses & UMKM' }}
+                            </p>
+                        </a>
+                    </div>
                 </div>
 
-                <!-- Dark / Light Mode -->
+                <a href="/pricing" class="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition flex items-center gap-1.5">
+                    <span>{{ $isEn ? 'Pricing' : 'Paket & Harga' }}</span>
+                    <span class="px-1 py-0.2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-bold">PROMO</span>
+                </a>
+
+                <a href="/#architecture" class="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
+                    {{ $isEn ? 'Engineering' : 'Standar Rekayasa' }}
+                </a>
+
+                <!-- Active Workspace Indicator -->
+                <a href="/customer/dashboard" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition flex items-center gap-1.5 font-bold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>{{ $isEn ? 'Workspace' : 'Workspace' }}</span>
+                </a>
+
+                <a href="https://wa.me/{{ $whatsappNumber }}" target="_blank" rel="noopener noreferrer" class="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition flex items-center gap-1">
+                    <span>{{ $isEn ? 'Help / WA' : 'Bantuan WA' }}</span>
+                    <svg class="w-3 h-3 text-emerald-500 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                </a>
+            </nav>
+
+            <!-- Right: Utilities (Language Selector + Theme Toggle + Actions) -->
+            <div class="flex items-center gap-2 sm:gap-2.5">
+                
+                <!-- UNIFIED 2-TIER LANGUAGE SELECTOR DROPDOWN -->
+                <div class="relative" @click.away="langDropdownOpen = false">
+                    <button
+                        type="button"
+                        @click="langDropdownOpen = !langDropdownOpen"
+                        class="flex items-center gap-1.5 border border-zinc-300 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 py-1.5 px-2.5 text-[11px] font-mono font-bold rounded-none transition cursor-pointer"
+                        title="{{ $isEn ? 'Select Language (Tier 1 & Tier 2)' : 'Pilih Bahasa (Tier 1 & Tier 2)' }}"
+                    >
+                        <!-- Globe SVG -->
+                        <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                        <span class="uppercase tracking-wider font-bold">{{ strtoupper(app()->getLocale()) }}</span>
+                        <span class="text-[10px] text-zinc-400 hidden xl:inline font-sans">({{ $isEn ? 'US' : 'ID' }})</span>
+                        <svg class="w-3 h-3 text-zinc-400 transition-transform duration-150 shrink-0" :class="langDropdownOpen ? 'rotate-180 text-emerald-500' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <!-- Dropdown Pane -->
+                    <div
+                        x-show="langDropdownOpen"
+                        x-cloak
+                        class="absolute top-full right-0 mt-1 w-60 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl p-2 z-50 font-sans text-xs space-y-2 rounded-none"
+                    >
+                        <!-- Group 1: Tier 1 Native Precise -->
+                        <div>
+                            <div class="px-2 py-1 text-[10px] font-mono text-zinc-500 dark:text-zinc-400 uppercase font-bold flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 mb-1">
+                                <span>TIER 1 // NATIVE PRECISE</span>
+                                <span class="text-[9px] px-1 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                                    {{ $isEn ? 'OFFICIAL' : 'RESMI' }}
+                                </span>
+                            </div>
+                            <div class="space-y-0.5">
+                                <button
+                                    type="button"
+                                    onclick="changeTier1Language('id')"
+                                    class="w-full text-left px-2 py-1.5 flex items-center justify-between transition text-xs rounded-none cursor-pointer {{ app()->getLocale() === 'id' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800' }}"
+                                >
+                                    <span class="flex items-center gap-2">
+                                        <span class="text-sm">🇮🇩</span>
+                                        <span>Bahasa Indonesia</span>
+                                    </span>
+                                    @if(app()->getLocale() === 'id')
+                                        <span class="text-xs text-emerald-500">✓</span>
+                                    @endif
+                                </button>
+                                <button
+                                    type="button"
+                                    onclick="changeTier1Language('en')"
+                                    class="w-full text-left px-2 py-1.5 flex items-center justify-between transition text-xs rounded-none cursor-pointer {{ app()->getLocale() === 'en' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800' }}"
+                                >
+                                    <span class="flex items-center gap-2">
+                                        <span class="text-sm">🇺🇸</span>
+                                        <span>English (US)</span>
+                                    </span>
+                                    @if(app()->getLocale() === 'en')
+                                        <span class="text-xs text-emerald-500">✓</span>
+                                    @endif
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Group 2: Tier 2 Global Translate -->
+                        @if($googleTranslateEnabled ?? true)
+                        <div class="pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                            <div class="px-2 py-1 text-[10px] font-mono text-zinc-500 dark:text-zinc-400 uppercase font-bold flex items-center justify-between mb-1">
+                                <span>TIER 2 // GLOBAL TRANSLATE</span>
+                                <span class="text-[9px] px-1 py-0.2 bg-indigo-500/10 text-indigo-500 border border-indigo-500/30">
+                                    AI GOOGLE
+                                </span>
+                            </div>
+                            <div class="space-y-0.5">
+                                <button type="button" onclick="translateLanguage('ja')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                    <span class="flex items-center gap-2"><span>🇯🇵</span><span>日本語 (Japanese)</span></span>
+                                </button>
+                                <button type="button" onclick="translateLanguage('zh-CN')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                    <span class="flex items-center gap-2"><span>🇨🇳</span><span>中文 (Mandarin)</span></span>
+                                </button>
+                                <button type="button" onclick="translateLanguage('ar')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                    <span class="flex items-center gap-2"><span>🇸🇦</span><span>العربية (Arabic)</span></span>
+                                </button>
+                                <button type="button" onclick="translateLanguage('de')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                    <span class="flex items-center gap-2"><span>🇩🇪</span><span>Deutsch (German)</span></span>
+                                </button>
+                                <button type="button" onclick="translateLanguage('fr')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                    <span class="flex items-center gap-2"><span>🇫🇷</span><span>Français (French)</span></span>
+                                </button>
+                                <button type="button" onclick="translateLanguage('es')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                    <span class="flex items-center gap-2"><span>🇪🇸</span><span>Español (Spanish)</span></span>
+                                </button>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- DARK / LIGHT MODE TOGGLE BUTTON -->
                 <button 
                     type="button" 
                     onclick="toggleTheme()" 
-                    class="p-2 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition rounded-none bg-zinc-50 dark:bg-zinc-800 cursor-pointer"
-                    title="Toggle Theme"
+                    class="p-2 border border-zinc-300 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition rounded-none cursor-pointer flex items-center justify-center shrink-0"
+                    title="{{ $isEn ? 'Toggle Dark / Light Theme' : 'Beralih Mode Gelap / Terang' }}"
                 >
-                    <span class="dark:hidden">🌙</span>
-                    <span class="hidden dark:inline">☀️</span>
+                    <!-- Sun SVG (Dark Mode active, click for light) -->
+                    <svg class="hidden dark:block w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <!-- Moon SVG (Light Mode active, click for dark) -->
+                    <svg class="block dark:hidden w-3.5 h-3.5 text-zinc-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
                 </button>
 
                 <!-- New Project / Blueprint CTA -->
                 <a 
                     href="/blueprint" 
-                    class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-bold uppercase tracking-wider transition rounded-none shadow-xs"
+                    class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-bold uppercase tracking-wider transition rounded-none shadow-xs shrink-0"
                 >
                     <span>+ {{ $isEn ? 'NEW PROJECT' : 'PROYEK BARU' }}</span>
                 </a>
+
+                <!-- User Quick Profile Pill (Click to open Account Settings) -->
+                <button 
+                    type="button" 
+                    @click="setTab('account')" 
+                    class="hidden md:flex items-center gap-2 px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 transition text-xs font-mono rounded-none cursor-pointer"
+                    title="{{ $isEn ? 'Account Profile & Settings' : 'Pengaturan Akun & Profil' }}"
+                >
+                    <span class="w-4 h-4 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold text-[9px] flex items-center justify-center">
+                        {{ strtoupper(substr($user->name ?: $user->email, 0, 1)) }}
+                    </span>
+                    <span class="text-zinc-700 dark:text-zinc-300 font-bold truncate max-w-[130px]">{{ $user->name ?: $user->email }}</span>
+                </button>
 
                 <!-- Logout -->
                 <button 
                     type="button" 
                     @click="logoutCustomer()" 
-                    class="px-3 py-1.5 border border-zinc-200 dark:border-zinc-700 hover:border-rose-500 text-zinc-600 dark:text-zinc-400 hover:text-rose-500 text-xs font-mono font-bold transition rounded-none bg-zinc-50 dark:bg-zinc-800 cursor-pointer"
+                    class="px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 hover:border-rose-500 text-zinc-600 dark:text-zinc-400 hover:text-rose-500 text-xs font-mono font-bold transition rounded-none bg-zinc-50 dark:bg-zinc-800 cursor-pointer shrink-0"
+                    title="{{ $isEn ? 'Logout session' : 'Keluar dari akun' }}"
                 >
                     {{ $isEn ? 'LOGOUT' : 'KELUAR' }}
                 </button>
+
+                <!-- Mobile Hamburger Button -->
+                <button
+                    type="button"
+                    @click="mobileMenuOpen = !mobileMenuOpen"
+                    class="lg:hidden p-2 border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition rounded-none cursor-pointer"
+                    aria-label="Toggle Navigation Menu"
+                >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <path x-show="mobileMenuOpen" x-cloak stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu Drawer -->
+        <div 
+            x-show="mobileMenuOpen" 
+            x-cloak 
+            class="lg:hidden border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-4 space-y-3 font-mono text-xs uppercase"
+        >
+            <div class="space-y-1">
+                <a href="/" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold">
+                    {{ $isEn ? 'Home' : 'Beranda' }}
+                </a>
+                <a href="/blueprint" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold">
+                    Project OS (PRD)
+                </a>
+                <a href="/cv-pro" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold">
+                    Studio CV Pro
+                </a>
+                <a href="/pricing" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold">
+                    {{ $isEn ? 'Pricing' : 'Paket & Harga' }}
+                </a>
+                <a href="/#architecture" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold">
+                    {{ $isEn ? 'Engineering' : 'Standar Rekayasa' }}
+                </a>
+                <a href="https://wa.me/{{ $whatsappNumber }}" target="_blank" rel="noopener noreferrer" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold">
+                    {{ $isEn ? 'Help / WA Support' : 'Bantuan WhatsApp' }}
+                </a>
+                <button type="button" @click="setTab('account'); mobileMenuOpen = false;" class="w-full text-left py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold cursor-pointer">
+                    {{ $isEn ? 'Account Profile & Settings' : 'Profil & Pengaturan Akun' }}
+                </button>
+            </div>
+
+            <!-- Mobile Tier 1 Language Switch -->
+            <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
+                <span class="text-zinc-500 font-mono text-[10px] uppercase font-bold">Bahasa / Language:</span>
+                <div class="flex items-center gap-1 font-mono text-xs">
+                    <button type="button" onclick="changeTier1Language('id')" class="px-2 py-1 {{ app()->getLocale() === 'id' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300' }}">ID</button>
+                    <button type="button" onclick="changeTier1Language('en')" class="px-2 py-1 {{ app()->getLocale() === 'en' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300' }}">EN</button>
+                </div>
             </div>
         </div>
     </header>
@@ -1565,48 +1947,375 @@
         </div>
 
         <!-- =================================================================== -->
-        <!-- PANE 6: ACCOUNT & PREFERENCES                                       -->
+        <!-- PANE 6: ACCOUNT PROFILE, BILLING & PREFERENCES                      -->
         <!-- =================================================================== -->
         <div x-show="currentTab === 'account'" x-cloak class="space-y-6">
-            <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+            
+            <!-- Section Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3 gap-2">
                 <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider rounded-none border border-emerald-500/20">
+                            {{ $isEn ? 'ACCOUNT SETTINGS' : 'PENGATURAN AKUN' }}
+                        </span>
+                        <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-mono text-[10px] font-bold uppercase tracking-wider rounded-none border border-zinc-200 dark:border-zinc-700">
+                            {{ $isEn ? 'TAX & BILLING' : 'FAKTUR & PENAGIHAN' }}
+                        </span>
+                    </div>
                     <h2 class="text-lg font-black uppercase text-zinc-900 dark:text-white font-mono flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 bg-zinc-500 rounded-none"></span>
-                        <span>{{ $isEn ? 'Account Profile & Security Preferences' : 'Profil Akun & Preferensi Keamanan' }}</span>
+                        <span class="w-2.5 h-2.5 bg-emerald-500 rounded-none"></span>
+                        <span>{{ $isEn ? 'Customer Profile & Tax Invoicing Preferences' : 'Profil Akun, Identitas Bisnis & Data Penagihan' }}</span>
                     </h2>
                     <p class="text-xs text-zinc-500 font-sans mt-0.5">
-                        {{ $isEn ? 'Manage authentication credentials and verified customer information.' : 'Kelola informasi kredensial login dan status akun terverifikasi Anda.' }}
+                        {{ $isEn ? 'Manage contact details, registered company name for contracts & tax invoices, E.164 WhatsApp alerts, and sprint notification preferences.' : 'Sesuaikan data identitas kontak, nama resmi perusahaan untuk kontrak kerja sama & faktur pajak, WhatsApp E.164, dan preferensi notifikasi sprint.' }}
                     </p>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none space-y-4 max-w-2xl">
-                <div class="space-y-1">
-                    <span class="text-xs font-mono font-bold text-zinc-400 uppercase">E-mail Pelanggan Terdaftar</span>
-                    <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-sm text-zinc-900 dark:text-white font-bold">
-                        {{ $user->email }}
-                    </div>
+            <!-- Inline Success / Error Banner -->
+            <div x-show="profileSuccessMsg" x-cloak class="p-3 border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 font-mono text-xs flex items-center justify-between rounded-none shadow-xs">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold">✓</span>
+                    <span x-text="profileSuccessMsg"></span>
                 </div>
-
-                <div class="space-y-1">
-                    <span class="text-xs font-mono font-bold text-zinc-400 uppercase">Metode Autentikasi</span>
-                    <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
-                        <span>🔐 Passwordless 6-Digit Email OTP (Zero Password Vulnerability)</span>
-                        <span class="text-emerald-500 font-bold font-mono">AKTIF</span>
-                    </div>
-                </div>
-
-                <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-                    <span class="text-xs text-zinc-500">Keluar dari sesi portal di perangkat ini:</span>
-                    <button 
-                        type="button" 
-                        @click="logoutCustomer()" 
-                        class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-bold uppercase transition rounded-none cursor-pointer"
-                    >
-                        {{ $isEn ? 'LOGOUT SESSION' : 'KELUAR DARI AKUN' }}
-                    </button>
-                </div>
+                <button type="button" @click="profileSuccessMsg = ''" class="font-bold hover:opacity-75 cursor-pointer">✕</button>
             </div>
+            <div x-show="profileErrorMsg" x-cloak class="p-3 border-2 border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 font-mono text-xs flex items-center justify-between rounded-none shadow-xs">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold">❌</span>
+                    <span x-text="profileErrorMsg"></span>
+                </div>
+                <button type="button" @click="profileErrorMsg = ''" class="font-bold hover:opacity-75 cursor-pointer">✕</button>
+            </div>
+
+            <!-- Main Profile Form Grid -->
+            <form @submit.prevent="saveProfile()" class="space-y-6">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- COLUMN 1: KONTAK & IDENTITAS PERUSAHAAN -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none space-y-4 shadow-xs">
+                        <div class="border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="w-2 h-2 bg-emerald-500"></span>
+                                <span>{{ $isEn ? '1. Contact & Organization Identity' : '1. Identitas Kontak & Institusi' }}</span>
+                            </h3>
+                            <p class="text-[11px] text-zinc-500 font-sans mt-0.5">
+                                {{ $isEn ? 'Primary point of contact for sprint engineering and contracts.' : 'Penanggung jawab utama proyek sprint dan dokumen legal.' }}
+                            </p>
+                        </div>
+
+                        <!-- Nama Lengkap / PIC -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                                {{ $isEn ? 'Full Name / Contact PIC' : 'Nama Lengkap / PIC Proyek' }}
+                                <span class="text-rose-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                x-model="profileName" 
+                                placeholder="{{ $isEn ? 'e.g. John Doe' : 'Contoh: Yoseph Iriandi Tambunan' }}" 
+                                class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono text-xs focus:border-emerald-500 focus:outline-hidden rounded-none transition"
+                                required
+                            >
+                        </div>
+
+                        <!-- Email Terdaftar (Read-Only) -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                                {{ $isEn ? 'Registered Customer Email (OTP Authentication)' : 'E-mail Terdaftar (Autentikasi OTP)' }}
+                            </label>
+                            <div class="flex items-center justify-between p-2.5 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-mono text-zinc-600 dark:text-zinc-400">
+                                <span class="font-bold">{{ $user->email }}</span>
+                                <span class="text-[10px] px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold uppercase border border-zinc-300 dark:border-zinc-700">
+                                    🔐 {{ $isEn ? 'LOCKED (OTP ID)' : 'TERKUNCI (SESI OTP)' }}
+                                </span>
+                            </div>
+                            <p class="text-[10px] text-zinc-500 font-sans">
+                                {{ $isEn ? 'Email address is linked to your passwordless 2-FA OTP sessions.' : 'Alamat email terikat pada sesi passwordless OTP 6-digit demi keamanan tingkat tinggi.' }}
+                            </p>
+                        </div>
+
+                        <!-- Nama Perusahaan / Instansi -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                                {{ $isEn ? 'Company / Organization / Startup Name' : 'Nama Perusahaan / Startup / Instansi' }}
+                            </label>
+                            <input 
+                                type="text" 
+                                x-model="profileCompany" 
+                                placeholder="{{ $isEn ? 'e.g. PT Acme Technologies Indonesia' : 'Contoh: PT Neriah Solusi Digital' }}" 
+                                class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono text-xs focus:border-emerald-500 focus:outline-hidden rounded-none transition"
+                            >
+                            <p class="text-[10px] text-zinc-500 font-sans">
+                                {{ $isEn ? 'Attached to WBS specifications, staging environments, and official legal contracts.' : 'Dicantumkan secara resmi pada PRD, environment staging, dan surat perjanjian kerja.' }}
+                            </p>
+                        </div>
+
+                        <!-- WhatsApp / Nomor Telepon (Standar E.164 + Country Zone Selector) -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                                {{ $isEn ? 'WhatsApp / Mobile Number (E.164 Standard)' : 'Nomor WhatsApp / Seluler (Standar E.164)' }}
+                            </label>
+                            
+                            <div class="flex items-center gap-1.5">
+                                <!-- Country Zone Selector Dropdown -->
+                                <div class="relative shrink-0" @click.away="countryDropdownOpen = false">
+                                    <button 
+                                        type="button" 
+                                        @click="countryDropdownOpen = !countryDropdownOpen"
+                                        class="flex items-center gap-1 px-2.5 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-xs font-mono font-bold text-zinc-800 dark:text-zinc-200 rounded-none transition cursor-pointer"
+                                        title="Pilih Kode Negara"
+                                    >
+                                        <span x-text="getSelectedZone().flag" class="text-sm"></span>
+                                        <span x-text="selectedCountryCode"></span>
+                                        <svg class="w-3 h-3 text-zinc-400 transition-transform" :class="countryDropdownOpen ? 'rotate-180 text-emerald-500' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <!-- Country Dropdown Search & List -->
+                                    <div 
+                                        x-show="countryDropdownOpen" 
+                                        x-cloak 
+                                        class="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl p-2 z-50 rounded-none text-xs"
+                                    >
+                                        <div class="mb-2">
+                                            <input 
+                                                type="text" 
+                                                x-model="countrySearch" 
+                                                placeholder="{{ $isEn ? 'Search country or code...' : 'Cari negara / kode...' }}" 
+                                                class="w-full px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono text-xs focus:border-emerald-500 focus:outline-hidden rounded-none"
+                                            >
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto space-y-0.5 no-scrollbar">
+                                            <template x-for="item in filteredCountryZones()" :key="item.code">
+                                                <button 
+                                                    type="button" 
+                                                    @click="selectCountry(item)"
+                                                    class="w-full px-2 py-1.5 text-left flex items-center justify-between hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none text-zinc-800 dark:text-zinc-200 cursor-pointer"
+                                                    :class="selectedCountryCode === item.dial_code ? 'bg-emerald-500/10 font-bold text-emerald-600 dark:text-emerald-400' : ''"
+                                                >
+                                                    <span class="flex items-center gap-2 truncate">
+                                                        <span x-text="item.flag"></span>
+                                                        <span x-text="item.name" class="truncate max-w-[120px]"></span>
+                                                    </span>
+                                                    <span x-text="item.dial_code" class="font-mono text-zinc-400 font-bold shrink-0"></span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Phone Number Input -->
+                                <input 
+                                    type="tel" 
+                                    x-model="profilePhone" 
+                                    placeholder="81234567890" 
+                                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono text-xs focus:border-emerald-500 focus:outline-hidden rounded-none transition"
+                                >
+                            </div>
+                            <p class="text-[10px] text-zinc-500 font-sans">
+                                {{ $isEn ? 'Enter without leading zero (e.g. 812...). Used for sprint alerts and Midtrans payment receipts.' : 'Ketik tanpa angka 0 di depan (contoh: 812...). Digunakan untuk update sprint dan bukti transaksi.' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- COLUMN 2: DATA FAKTUR PAJAK & ALAMAT PENAGIHAN -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none space-y-4 shadow-xs">
+                        <div class="border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="w-2 h-2 bg-indigo-500"></span>
+                                <span>{{ $isEn ? '2. Tax Invoicing & Billing Address' : '2. Data Faktur Pajak & Penagihan' }}</span>
+                            </h3>
+                            <p class="text-[11px] text-zinc-500 font-sans mt-0.5">
+                                {{ $isEn ? 'Used for official corporate invoices, tax declarations, and receipts.' : 'Diperlukan untuk penerbitan faktur pajak resmi, kwitansi, dan penagihan corporate.' }}
+                            </p>
+                        </div>
+
+                        <!-- NPWP -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                                {{ $isEn ? 'NPWP / Corporate Tax Number' : 'NPWP (Nomor Pokok Wajib Pajak)' }}
+                            </label>
+                            <input 
+                                type="text" 
+                                x-model="profileNpwp" 
+                                placeholder="00.000.000.0-000.000" 
+                                class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono text-xs focus:border-emerald-500 focus:outline-hidden rounded-none transition"
+                            >
+                            <p class="text-[10px] text-zinc-500 font-sans">
+                                {{ $isEn ? 'Optional. Required if your company requires standard e-Faktur tax documents.' : 'Opsional. Lengkapi jika perusahaan Anda membutuhkan Faktur Pajak resmi (e-Faktur).' }}
+                            </p>
+                        </div>
+
+                        <!-- Alamat Penagihan -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                                {{ $isEn ? 'Billing / Office Address' : 'Alamat Kantor / Penagihan (Billing Address)' }}
+                            </label>
+                            <textarea 
+                                x-model="profileAddress" 
+                                rows="3" 
+                                placeholder="{{ $isEn ? 'Street address, office tower, floor, unit number...' : 'Nama jalan, gedung perkantoran, lantai, nomor unit...' }}" 
+                                class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-sans text-xs focus:border-emerald-500 focus:outline-hidden rounded-none transition"
+                            ></textarea>
+                        </div>
+
+                        <!-- Kota, Provinsi, Kode Pos (3-Col Grid) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            <div class="space-y-1">
+                                <label class="block text-[11px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                                    {{ $isEn ? 'City' : 'Kota / Kab.' }}
+                                </label>
+                                <input 
+                                    type="text" 
+                                    x-model="profileCity" 
+                                    placeholder="Jakarta Selatan" 
+                                    class="w-full px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono text-xs focus:border-emerald-500 focus:outline-hidden rounded-none"
+                                >
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block text-[11px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                                    {{ $isEn ? 'Province' : 'Provinsi' }}
+                                </label>
+                                <input 
+                                    type="text" 
+                                    x-model="profileProvince" 
+                                    placeholder="DKI Jakarta" 
+                                    class="w-full px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono text-xs focus:border-emerald-500 focus:outline-hidden rounded-none"
+                                >
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block text-[11px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                                    {{ $isEn ? 'Postal Code' : 'Kode Pos' }}
+                                </label>
+                                <input 
+                                    type="text" 
+                                    x-model="profilePostalCode" 
+                                    placeholder="12190" 
+                                    class="w-full px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono text-xs focus:border-emerald-500 focus:outline-hidden rounded-none"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PREFERENSI NOTIFIKASI SPRINT & KEAMANAN -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- Notifikasi Sprint -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none space-y-3 shadow-xs">
+                        <div class="border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="w-2 h-2 bg-amber-500"></span>
+                                <span>{{ $isEn ? '3. Sprint & Payment Notifications' : '3. Preferensi Notifikasi & Komunikasi' }}</span>
+                            </h3>
+                            <p class="text-[11px] text-zinc-500 font-sans mt-0.5">
+                                {{ $isEn ? 'Configure how you wish to receive milestone updates.' : 'Tentukan saluran penerimaan alert progres pengerjaan software factory.' }}
+                            </p>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 cursor-pointer">
+                                <input type="checkbox" x-model="notifyEmailSprints" class="mt-0.5 text-emerald-500 focus:ring-0 rounded-none">
+                                <div>
+                                    <span class="block text-xs font-mono font-bold text-zinc-900 dark:text-white">
+                                        {{ $isEn ? 'Email Sprint Milestone & QA Reports' : 'Notifikasi Milestone Sprint & Pengujian QA (Email)' }}
+                                    </span>
+                                    <span class="block text-[11px] text-zinc-500 font-sans mt-0.5">
+                                        {{ $isEn ? 'Receive automated progress reports upon completion of WBS deliverables and staging deploy.' : 'Menerima laporan kemajuan mingguan saat fitur selesai diuji dan staging siap ditinjau.' }}
+                                    </span>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 cursor-pointer">
+                                <input type="checkbox" x-model="notifyWaBilling" class="mt-0.5 text-emerald-500 focus:ring-0 rounded-none">
+                                <div>
+                                    <span class="block text-xs font-mono font-bold text-zinc-900 dark:text-white">
+                                        {{ $isEn ? 'WhatsApp Billing & Payment Receipts' : 'Bukti Pembayaran & Alert Pelunasan (WhatsApp)' }}
+                                    </span>
+                                    <span class="block text-[11px] text-zinc-500 font-sans mt-0.5">
+                                        {{ $isEn ? 'Direct alerts for Midtrans escrow verification and settlement confirmations.' : 'Menerima alert instan via WhatsApp saat pembayaran Midtrans terverifikasi dan faktur resmi terbit.' }}
+                                    </span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Keamanan & Status Sesi -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none space-y-3 shadow-xs">
+                        <div class="border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="w-2 h-2 bg-emerald-500"></span>
+                                <span>{{ $isEn ? '4. Security Credentials & Active Session' : '4. Status Keamanan & Sesi Terhubung' }}</span>
+                            </h3>
+                            <p class="text-[11px] text-zinc-500 font-sans mt-0.5">
+                                {{ $isEn ? 'State-of-the-art enterprise authentication standards.' : 'Standar autentikasi modern anti-credential stuffing.' }}
+                            </p>
+                        </div>
+
+                        <div class="space-y-2.5">
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs flex items-center justify-between">
+                                <div class="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
+                                    <span>🔐</span>
+                                    <span>Passwordless 6-Digit Email OTP</span>
+                                </div>
+                                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 font-mono text-[10px] font-bold border border-emerald-500/20">
+                                    AKTIF & TERVERIFIKASI
+                                </span>
+                            </div>
+
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs flex items-center justify-between">
+                                <div class="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
+                                    <span>🌐</span>
+                                    <span class="font-mono">IP Sesi: {{ request()->ip() }}</span>
+                                </div>
+                                <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-mono text-[10px] font-bold">
+                                    SESI AMAN
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 flex items-center justify-between">
+                            <span class="text-xs text-zinc-500 font-sans">
+                                {{ $isEn ? 'End session on this device:' : 'Akhiri sesi login di perangkat ini:' }}
+                            </span>
+                            <button 
+                                type="button" 
+                                @click="logoutCustomer()" 
+                                class="px-3 py-1.5 border border-rose-300 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-mono text-xs font-bold uppercase transition rounded-none cursor-pointer"
+                            >
+                                {{ $isEn ? 'LOGOUT SESSION' : 'KELUAR DARI AKUN' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTTOM ACTION BAR: SIMPAN PERUBAHAN -->
+                <div class="p-4 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg rounded-none">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-emerald-500 rounded-none"></span>
+                        <span class="text-xs font-mono font-bold uppercase text-zinc-800 dark:text-zinc-200">
+                            {{ $isEn ? 'All profile updates are immediately synchronized with your active contracts.' : 'Perubahan profil langsung disinkronkan ke seluruh dokumen kontrak dan faktur pajak aktif Anda.' }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                        <button 
+                            type="submit" 
+                            :disabled="isSavingProfile"
+                            class="w-full sm:w-auto px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-black font-mono text-xs font-black uppercase tracking-wider transition rounded-none shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <svg x-show="isSavingProfile" x-cloak class="w-4 h-4 animate-spin text-black" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-text="isSavingProfile ? '{{ $isEn ? "SAVING..." : "MENYIMPAN..." }}' : '{{ $isEn ? "SAVE PROFILE CHANGES" : "SIMPAN PERUBAHAN PROFIL" }}'"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
 
     </div>
@@ -1673,5 +2382,22 @@
             }
         };
     </script>
+
+    @if($googleTranslateEnabled ?? true)
+        <!-- Google Translate Container & Bridge (Tier 2) -->
+        <div id="google_translate_element" class="hidden"></div>
+        <script>
+            function googleTranslateElementInit() {
+                try {
+                    new google.translate.TranslateElement({
+                        pageLanguage: '{{ app()->getLocale() ?: "id" }}',
+                        includedLanguages: '{{ implode(",", $allowedLangList ?? ["en","id","ja","zh-CN","ar","de","fr","es"]) }}',
+                        autoDisplay: false
+                    }, 'google_translate_element');
+                } catch(e) {}
+            }
+        </script>
+        <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
+    @endif
 </body>
 </html>

@@ -13,7 +13,21 @@ use Spatie\Permission\Traits\HasRoles;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable([
+    'name',
+    'email',
+    'password',
+    'phone_country_code',
+    'phone',
+    'company_name',
+    'npwp',
+    'billing_address',
+    'billing_city',
+    'billing_province',
+    'billing_postal_code',
+    'notification_preferences',
+    'profile_metadata',
+])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -30,6 +44,8 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'notification_preferences' => 'array',
+            'profile_metadata' => 'array',
         ];
     }
 

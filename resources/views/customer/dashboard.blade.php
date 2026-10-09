@@ -1,6 +1,23 @@
 @php
     $isEn = app()->getLocale() === 'en';
     $whatsappNumber = \App\Models\CmsGlobalSetting::getVal('company_whatsapp', '628123456789');
+    $isMidtransStrict = (bool) \App\Models\CmsGlobalSetting::getVal('midtrans_compliance_strict_mode', true);
+    $cvProFlag = (bool) \App\Models\CmsGlobalSetting::getVal('feature_enable_cv_pro', false);
+    $isCvProEnabled = !$isMidtransStrict && $cvProFlag;
+
+    // Customer Initials Algorithm: first letter of each word (e.g. "Yoseph Iriandi Tambunan" => "YIT")
+    $customerDisplayName = trim($user->name ?: ($user->email ?: 'Client'));
+    $nameWords = preg_split('/\s+/', $customerDisplayName);
+    $customerInitials = '';
+    foreach ($nameWords as $w) {
+        if (!empty($w)) {
+            $customerInitials .= mb_substr($w, 0, 1);
+        }
+    }
+    $customerInitials = strtoupper(mb_substr($customerInitials, 0, 4));
+    if (empty($customerInitials)) {
+        $customerInitials = 'U';
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
@@ -89,7 +106,46 @@
     <!-- Alpine.js & Tab Navigation Support (Local Vendor JS) -->
     <style>
         [x-cloak] { display: none !important; }
+
+        /* Eradicate Google Translate Banner Bar & Body Push */
+        .goog-te-banner-frame,
+        .goog-te-banner-frame.skiptranslate,
+        iframe.goog-te-banner-frame,
+        #goog-gt-tt,
+        .goog-te-balloon-frame {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            width: 0 !important;
+            position: absolute !important;
+            top: -9999px !important;
+        }
+
+        body {
+            top: 0px !important;
+            position: static !important;
+        }
+
+        body > .skiptranslate {
+            display: none !important;
+        }
+
+        .goog-text-highlight {
+            background-color: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
     </style>
+    <script>
+        setInterval(function() {
+            if (document.body && document.body.style && document.body.style.top && document.body.style.top !== '0px') {
+                document.body.style.top = '0px';
+            }
+            var banner = document.querySelector('.goog-te-banner-frame');
+            if (banner) banner.style.display = 'none';
+        }, 100);
+    </script>
     <script defer src="{{ asset('js/vendor/alpine.min.js') }}"></script>
 
     <script>
@@ -269,15 +325,43 @@
             window.location.href = '/lang/' + locale;
         }
 
-        function translateLanguage(langCode) {
+        const langNamesMap = {
+            'ja': '日本語 (Japanese)',
+            'zh-CN': '中文 (Mandarin)',
+            'ar': 'العربية (Arabic)',
+            'de': 'Deutsch (German)',
+            'fr': 'Français (French)',
+            'es': 'Español (Spanish)',
+            'en': 'English (US)',
+            'id': 'Bahasa Indonesia'
+        };
+
+        function translateLanguage(langCode, langName) {
+            const resolvedName = langName || langNamesMap[langCode] || langCode.toUpperCase();
+            
+            // Show translation loader modal
+            if (window.customerDashboardAppInstance) {
+                window.customerDashboardAppInstance.translatingLanguageName = resolvedName;
+                window.customerDashboardAppInstance.isTranslating = true;
+                window.customerDashboardAppInstance.langDropdownOpen = false;
+            }
+
+            document.cookie = 'googtrans=/id/' + langCode + '; path=/; domain=' + window.location.hostname;
+            document.cookie = 'googtrans=/id/' + langCode + '; path=/;';
+
             const select = document.querySelector('.goog-te-combo');
             if (select) {
                 select.value = langCode;
                 select.dispatchEvent(new Event('change'));
+                setTimeout(() => {
+                    if (window.customerDashboardAppInstance) {
+                        window.customerDashboardAppInstance.isTranslating = false;
+                    }
+                }, 1200);
             } else {
-                document.cookie = 'googtrans=/id/' + langCode + '; path=/; domain=' + window.location.hostname;
-                document.cookie = 'googtrans=/id/' + langCode + '; path=/;';
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 400);
             }
         }
 
@@ -287,6 +371,13 @@
                 servicesDropdownOpen: false,
                 langDropdownOpen: false,
                 mobileMenuOpen: false,
+                userMenuModalOpen: false,
+                isTranslating: false,
+                translatingLanguageName: '',
+
+                init() {
+                    window.customerDashboardAppInstance = this;
+                },
                 
                 // Profile & Billing state
                 profileName: @json($profileDefaults['name'] ?? ''),
@@ -507,6 +598,7 @@
                             </p>
                         </a>
 
+                        @if($isCvProEnabled)
                         <a href="/cv-pro" class="block p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
                             <div class="flex items-center justify-between mb-0.5">
                                 <span class="font-bold text-zinc-900 dark:text-white text-xs font-mono">Studio CV Pro</span>
@@ -516,6 +608,7 @@
                                 {{ $isEn ? 'Visual Resume & Portfolio Studio' : 'Studio CV Visual & Portofolio Klien' }}
                             </p>
                         </a>
+                        @endif
 
                         <a href="/pricing" class="block p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none border-t border-zinc-100 dark:border-zinc-800">
                             <div class="flex items-center justify-between mb-0.5">
@@ -628,22 +721,22 @@
                                 </span>
                             </div>
                             <div class="space-y-0.5">
-                                <button type="button" onclick="translateLanguage('ja')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                <button type="button" onclick="translateLanguage('ja', '日本語 (Japanese)')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
                                     <span class="flex items-center gap-2"><span>🇯🇵</span><span>日本語 (Japanese)</span></span>
                                 </button>
-                                <button type="button" onclick="translateLanguage('zh-CN')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                <button type="button" onclick="translateLanguage('zh-CN', '中文 (Mandarin)')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
                                     <span class="flex items-center gap-2"><span>🇨🇳</span><span>中文 (Mandarin)</span></span>
                                 </button>
-                                <button type="button" onclick="translateLanguage('ar')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                <button type="button" onclick="translateLanguage('ar', 'العربية (Arabic)')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
                                     <span class="flex items-center gap-2"><span>🇸🇦</span><span>العربية (Arabic)</span></span>
                                 </button>
-                                <button type="button" onclick="translateLanguage('de')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                <button type="button" onclick="translateLanguage('de', 'Deutsch (German)')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
                                     <span class="flex items-center gap-2"><span>🇩🇪</span><span>Deutsch (German)</span></span>
                                 </button>
-                                <button type="button" onclick="translateLanguage('fr')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                <button type="button" onclick="translateLanguage('fr', 'Français (French)')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
                                     <span class="flex items-center gap-2"><span>🇫🇷</span><span>Français (French)</span></span>
                                 </button>
-                                <button type="button" onclick="translateLanguage('es')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
+                                <button type="button" onclick="translateLanguage('es', 'Español (Spanish)')" class="w-full text-left px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 transition text-xs rounded-none cursor-pointer">
                                     <span class="flex items-center gap-2"><span>🇪🇸</span><span>Español (Spanish)</span></span>
                                 </button>
                             </div>
@@ -677,27 +770,18 @@
                     <span>+ {{ $isEn ? 'NEW PROJECT' : 'PROYEK BARU' }}</span>
                 </a>
 
-                <!-- User Quick Profile Pill (Click to open Account Settings) -->
+                <!-- Customer Avatar Initials (Click to open Account & Logout Modal) -->
                 <button 
                     type="button" 
-                    @click="setTab('account')" 
-                    class="hidden md:flex items-center gap-2 px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 transition text-xs font-mono rounded-none cursor-pointer"
-                    title="{{ $isEn ? 'Account Profile & Settings' : 'Pengaturan Akun & Profil' }}"
+                    @click="userMenuModalOpen = true" 
+                    class="h-8 px-2.5 flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 border border-zinc-900 dark:border-zinc-200 font-mono font-black text-xs tracking-wider transition rounded-none cursor-pointer shrink-0 shadow-xs group"
+                    title="{{ $customerDisplayName }} ({{ $isEn ? 'Account & Session Menu' : 'Menu Akun & Sesi' }})"
                 >
-                    <span class="w-4 h-4 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold text-[9px] flex items-center justify-center">
-                        {{ strtoupper(substr($user->name ?: $user->email, 0, 1)) }}
-                    </span>
-                    <span class="text-zinc-700 dark:text-zinc-300 font-bold truncate max-w-[130px]">{{ $user->name ?: $user->email }}</span>
-                </button>
-
-                <!-- Logout -->
-                <button 
-                    type="button" 
-                    @click="logoutCustomer()" 
-                    class="px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 hover:border-rose-500 text-zinc-600 dark:text-zinc-400 hover:text-rose-500 text-xs font-mono font-bold transition rounded-none bg-zinc-50 dark:bg-zinc-800 cursor-pointer shrink-0"
-                    title="{{ $isEn ? 'Logout session' : 'Keluar dari akun' }}"
-                >
-                    {{ $isEn ? 'LOGOUT' : 'KELUAR' }}
+                    <span class="w-1.5 h-1.5 bg-emerald-400 dark:bg-emerald-600 rounded-none shrink-0 group-hover:scale-125 transition-transform"></span>
+                    <span class="font-bold tracking-tight">{{ $customerInitials }}</span>
+                    <svg class="w-2.5 h-2.5 text-zinc-400 dark:text-zinc-600 shrink-0 group-hover:translate-y-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                    </svg>
                 </button>
 
                 <!-- Mobile Hamburger Button -->
@@ -728,9 +812,11 @@
                 <a href="/blueprint" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold">
                     Project OS (PRD)
                 </a>
+                @if($isCvProEnabled)
                 <a href="/cv-pro" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold">
                     Studio CV Pro
                 </a>
+                @endif
                 <a href="/pricing" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold">
                     {{ $isEn ? 'Pricing' : 'Paket & Harga' }}
                 </a>
@@ -740,8 +826,12 @@
                 <a href="https://wa.me/{{ $whatsappNumber }}" target="_blank" rel="noopener noreferrer" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold">
                     {{ $isEn ? 'Help / WA Support' : 'Bantuan WhatsApp' }}
                 </a>
-                <button type="button" @click="setTab('account'); mobileMenuOpen = false;" class="w-full text-left py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold cursor-pointer">
-                    {{ $isEn ? 'Account Profile & Settings' : 'Profil & Pengaturan Akun' }}
+                <button type="button" @click="userMenuModalOpen = true; mobileMenuOpen = false;" class="w-full text-left py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold cursor-pointer flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                        <span class="w-5 h-5 bg-zinc-900 dark:bg-white text-white dark:text-black font-black text-[10px] flex items-center justify-center">{{ $customerInitials }}</span>
+                        <span>{{ $isEn ? 'Account Profile & Logout' : 'Profil Akun & Keluar' }}</span>
+                    </span>
+                    <span class="text-zinc-400 text-[10px] font-mono">MENU ➔</span>
                 </button>
             </div>
 
@@ -2382,6 +2472,172 @@
             }
         };
     </script>
+
+    <!-- 4. CUSTOMER ACCOUNT & LOGOUT MODAL (TRIGGERED BY AVATAR INITIALS) -->
+    <div 
+        x-show="userMenuModalOpen" 
+        x-cloak 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+        x-transition:enter="transition ease-out duration-150"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-100"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        @keydown.escape.window="userMenuModalOpen = false"
+    >
+        <div 
+            class="relative w-full max-w-md bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl rounded-none p-5 sm:p-6"
+            @click.outside="userMenuModalOpen = false"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="scale-95 opacity-0"
+            x-transition:enter-end="scale-100 opacity-100"
+        >
+            <!-- Header with Close Button -->
+            <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800 mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-emerald-500 rounded-none"></span>
+                    <h3 class="font-mono font-bold text-xs uppercase tracking-wider text-zinc-900 dark:text-white">
+                        {{ $isEn ? 'Customer Identity & Session' : 'Identitas Pelanggan & Sesi' }}
+                    </h3>
+                </div>
+                <button 
+                    type="button" 
+                    @click="userMenuModalOpen = false"
+                    class="p-1 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white font-mono font-bold text-sm cursor-pointer transition"
+                    title="{{ $isEn ? 'Close Modal' : 'Tutup Dialog' }}"
+                >
+                    ✕
+                </button>
+            </div>
+
+            <!-- Customer Avatar & Profile Details -->
+            <div class="flex items-start gap-4 p-3.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 mb-5">
+                <div class="w-12 h-12 bg-zinc-900 text-white dark:bg-emerald-500 dark:text-black font-mono font-black text-lg flex items-center justify-center shrink-0 rounded-none shadow-xs">
+                    {{ $customerInitials }}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h4 class="font-bold text-sm text-zinc-900 dark:text-white truncate">
+                            {{ $customerDisplayName }}
+                        </h4>
+                        <span class="px-1.5 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[9px] font-mono font-bold">
+                            {{ $isEn ? 'VERIFIED CLIENT' : 'KLIEN TERDAFTAR' }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono truncate mt-0.5">
+                        {{ $user->email }}
+                    </p>
+                    @if(!empty($user->phone))
+                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                        {{ $user->phone_country_code ?? '+62' }} {{ $user->phone }}
+                    </p>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Quick Navigation Shortcuts -->
+            <div class="space-y-1.5 mb-5 font-mono text-xs">
+                <button 
+                    type="button" 
+                    @click="setTab('account'); userMenuModalOpen = false;"
+                    class="w-full text-left px-3 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 flex items-center justify-between transition cursor-pointer rounded-none"
+                >
+                    <span class="flex items-center gap-2">
+                        <span>⚙️</span>
+                        <span>{{ $isEn ? 'Account Profile & Tax Data' : 'Profil Akun & Data Faktur' }}</span>
+                    </span>
+                    <span class="text-zinc-400 text-[10px]">➔</span>
+                </button>
+                <button 
+                    type="button" 
+                    @click="setTab('projects'); userMenuModalOpen = false;"
+                    class="w-full text-left px-3 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 flex items-center justify-between transition cursor-pointer rounded-none"
+                >
+                    <span class="flex items-center gap-2">
+                        <span>🚀</span>
+                        <span>{{ $isEn ? 'Studio Projects & Sprints' : 'Proyek Studio & Timeline' }}</span>
+                    </span>
+                    <span class="text-zinc-400 text-[10px]">➔</span>
+                </button>
+                <button 
+                    type="button" 
+                    @click="setTab('billing'); userMenuModalOpen = false;"
+                    class="w-full text-left px-3 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 flex items-center justify-between transition cursor-pointer rounded-none"
+                >
+                    <span class="flex items-center gap-2">
+                        <span>🧾</span>
+                        <span>{{ $isEn ? 'Invoices & Receipts' : 'Faktur Pajak & Kwitansi' }}</span>
+                    </span>
+                    <span class="text-zinc-400 text-[10px]">➔</span>
+                </button>
+            </div>
+
+            <!-- Logout Section -->
+            <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+                <button 
+                    type="button" 
+                    @click="logoutCustomer()" 
+                    class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-rose-700 transition cursor-pointer shadow-xs rounded-none"
+                >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>{{ $isEn ? 'LOGOUT OF DASHBOARD' : 'KELUAR DARI AKUN' }}</span>
+                </button>
+                <p class="text-[10px] text-center text-zinc-400 dark:text-zinc-500 font-mono">
+                    {{ $isEn ? 'Terminates your active encrypted session on this device.' : 'Mengakhiri sesi terenkripsi aktif portal pelanggan pada perangkat ini.' }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. GOOGLE TRANSLATE TIER 2 MODERN LOADER MODAL -->
+    <div 
+        x-show="isTranslating" 
+        x-cloak 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs"
+        x-transition:enter="transition ease-out duration-150"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+    >
+        <div 
+            class="relative w-full max-w-sm bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl rounded-none p-6 text-center"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="scale-95 opacity-0"
+            x-transition:enter-end="scale-100 opacity-100"
+        >
+            <!-- Animated Geometric Spinner Icon (Solid Brutalist, Sharp Non-Pill) -->
+            <div class="w-10 h-10 mx-auto mb-4 border-2 border-zinc-200 dark:border-zinc-700 border-t-emerald-500 rounded-none animate-spin"></div>
+
+            <div class="space-y-1 mb-3">
+                <span class="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
+                    {{ $isEn ? 'NEURAL ENGINE ACTIVE' : 'ENGINE TERJEMAHAN AKTIF' }}
+                </span>
+                <h4 class="font-mono font-bold text-sm uppercase text-zinc-900 dark:text-white">
+                    {{ $isEn ? 'Translating Interface...' : 'Menerjemahkan Halaman...' }}
+                </h4>
+            </div>
+
+            <!-- Target Language Badge -->
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 mb-4 font-mono text-xs text-zinc-800 dark:text-zinc-200 font-bold rounded-none">
+                <span class="w-2 h-2 bg-emerald-500 rounded-none animate-pulse"></span>
+                <span x-text="translatingLanguageName"></span>
+            </div>
+
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-relaxed">
+                {{ $isEn ? 'Converting interface elements. This banner-free view will adjust smoothly.' : 'Mengonversi komponen antarmuka. Tampilan bebas banner Google akan tertata otomatis.' }}
+            </p>
+
+            <!-- Subtle Progress Bar -->
+            <div class="mt-4 w-full h-1 bg-zinc-100 dark:bg-zinc-800 overflow-hidden rounded-none">
+                <div class="h-full bg-emerald-500 animate-pulse w-full"></div>
+            </div>
+        </div>
+    </div>
 
     @if($googleTranslateEnabled ?? true)
         <!-- Google Translate Container & Bridge (Tier 2) -->

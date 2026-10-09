@@ -90,8 +90,12 @@ class BlueprintController extends Controller
             $initialData = session('blueprint_draft', []);
         }
 
+        if (!is_array($initialData)) {
+            $initialData = [];
+        }
+
         // Forward selected track if present in query string
-        if ($track && !empty($initialData)) {
+        if ($track) {
             $initialData['selected_track'] = $track;
             $initialData['track'] = $track;
         }

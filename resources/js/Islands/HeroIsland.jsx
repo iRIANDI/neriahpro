@@ -123,9 +123,16 @@ export default function HeroIsland({
       return;
     }
 
+    const hasOnlyMdOrTxt = attachedFiles.length > 0 && attachedFiles.every(f => {
+      const ext = f.name.split('.').pop().toLowerCase();
+      return ['md', 'markdown', 'txt'].includes(ext);
+    });
+
     setIsSubmitting(true);
     setLoadingStep(attachedFiles.length > 0 
-      ? (isEn ? 'Converting documents via MarkItDown...' : 'Mengonversi dokumen via MarkItDown...')
+      ? (hasOnlyMdOrTxt
+          ? (isEn ? 'Reading specification files & mapping architecture...' : 'Membaca berkas spesifikasi & memetakan arsitektur...')
+          : (isEn ? 'Converting documents via MarkItDown...' : 'Mengonversi dokumen via MarkItDown...'))
       : (isEn ? 'Analyzing project architecture...' : 'Menganalisis arsitektur proyek...'));
 
     try {
@@ -832,6 +839,32 @@ export default function HeroIsland({
                       </div>
                     </div>
 
+                    {/* Tiers Included in Retail Track */}
+                    <div className="mb-4 p-2.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono">
+                      <div className="text-zinc-500 uppercase font-bold text-[9px] mb-1.5 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-1">
+                        <span>{isEn ? 'AVAILABLE RETAIL TIERS:' : 'PILIHAN PAKET LISENSI RETAIL:'}</span>
+                        <span className="text-emerald-500 font-bold">4 Pilihan</span>
+                      </div>
+                      <div className="space-y-1 text-zinc-700 dark:text-zinc-300">
+                        <div className="flex justify-between items-center">
+                          <span>• <strong>Spark:</strong> DDL PostgreSQL &amp; AI Rules</span>
+                          <span className="text-zinc-500">Rp 99.000</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span>• <strong>Starter:</strong> PRD Core &amp; DDL Keyset</span>
+                          <span className="text-zinc-500">Rp 299.000</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span>• <strong>Pro:</strong> Full PRD 26 Param + Docker</span>
+                          <span className="text-zinc-500">Rp 699.000</span>
+                        </div>
+                        <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold">
+                          <span>• <strong>Ultimate:</strong> Full 7 Software Factory OS</span>
+                          <span>Rp 1.490.000</span>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Deliverables */}
                     <div className="space-y-2 text-xs font-sans text-zinc-700 dark:text-zinc-300 mb-6">
                       <div className="flex items-start gap-2">
@@ -900,6 +933,28 @@ export default function HeroIsland({
                       </div>
                     </div>
 
+                    {/* Tiers Included in Studio Track */}
+                    <div className="mb-4 p-2.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono">
+                      <div className="text-zinc-500 uppercase font-bold text-[9px] mb-1.5 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-1">
+                        <span>{isEn ? 'AVAILABLE STUDIO TIERS:' : 'PILIHAN PAKET DEDICATED STUDIO:'}</span>
+                        <span className="text-blue-500 font-bold">3 Pilihan</span>
+                      </div>
+                      <div className="space-y-1 text-zinc-700 dark:text-zinc-300">
+                        <div className="flex justify-between items-center">
+                          <span>• <strong>Advisory Tier:</strong> Bedah PRD (Potong DP 100%)</span>
+                          <span className="text-zinc-500">Rp 2.500.000</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span>• <strong>UMKM Digital:</strong> Web Kasir / Bisnis Siap Pakai</span>
+                          <span className="text-zinc-500">Rp 3.750.000</span>
+                        </div>
+                        <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold">
+                          <span>• <strong>Full Monolith MVP:</strong> 100% Turnkey + SLA</span>
+                          <span>Rp 50.000.000</span>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Deliverables */}
                     <div className="space-y-2 text-xs font-sans text-zinc-700 dark:text-zinc-300 mb-6">
                       <div className="flex items-start gap-2">
@@ -935,16 +990,17 @@ export default function HeroIsland({
             </div>
 
             {/* Modal Footer */}
-            <div className="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono shrink-0">
+            <div className="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs font-mono shrink-0">
               <span className="text-zinc-500 text-[11px]">
-                {isEn ? 'You can switch tracks anytime in the blueprint workspace.' : 'Anda tetap dapat beralih jalur kapan saja di ruang blueprint.'}
+                {isEn ? 'You can switch between Retail and Studio tracks anytime in the blueprint workspace.' : 'Anda tetap dapat beralih jalur kapan saja di ruang blueprint.'}
               </span>
-              <a
-                href={synthesizedResult.redirect_url || '/blueprint'}
-                className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 underline underline-offset-4 transition inline-flex items-center gap-1 cursor-pointer"
+              <button
+                type="button"
+                onClick={() => setSynthesizedResult(null)}
+                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-xs font-mono uppercase cursor-pointer"
               >
-                <span>{isEn ? 'Directly inspect full 26-parameter blueprint form →' : 'Lewati & langsung buka form kuesioner 26 parameter →'}</span>
-              </a>
+                {isEn ? 'Close' : 'Tutup'}
+              </button>
             </div>
 
           </div>

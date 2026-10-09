@@ -368,9 +368,38 @@ class BlueprintDiscoveryService
 
         // 1. Detect Domain & Industry
         $domain = $this->detectDomain($textLower, $brief);
+        if ($domain === 'custom_portal' && !empty($fileSummaries)) {
+            $fileNamesCombined = implode(' ', array_column($fileSummaries, 'name'));
+            $fileDomain = $this->detectDomain($fileNamesCombined, []);
+            if ($fileDomain !== 'custom_portal') {
+                $domain = $fileDomain;
+            }
+        }
 
         // 2. Synthesize Business / Project Name
         $namaBisnis = !empty($brief['namaBisnis']) ? $brief['namaBisnis'] : $this->extractProjectName($corpus, $domain, $isEn);
+        $genericNames = [
+            'Platform Operasional & Portal Bisnis Terintegrasi',
+            'Centralized Enterprise Business Management Platform',
+            'Portal Pembelajaran & Administrasi Akademik Digital',
+            'Digital Academic Administration & Learning Portal',
+            'Platform Katering & Pemesanan Kuliner Harian Terpadu',
+            'Integrated Catering & Culinary Ordering Platform',
+            'Sistem Manajemen Logistik & Pelacakan Armada Terintegrasi',
+            'Integrated Fleet Tracking & Logistics Management Engine',
+            'Sistem Informasi Manajemen Klinik & Rekam Medis Elektronik',
+            'Clinical Information System & Electronic Medical Records',
+        ];
+        if ((empty($namaBisnis) || in_array($namaBisnis, $genericNames)) && !empty($fileSummaries)) {
+            foreach ($fileSummaries as $fs) {
+                $base = pathinfo($fs['name'], PATHINFO_FILENAME);
+                $clean = trim(preg_replace('/^(?:Master\s+Blueprint(?:\s+Sistem\s+Informasi)?|Dokumen\s+Spesifikasi|PRD)\s*[-—:\s]*/iu', '', $base));
+                if (!empty($clean) && mb_strlen($clean) >= 3) {
+                    $namaBisnis = $clean;
+                    break;
+                }
+            }
+        }
 
         // 3. Synthesize Core Problem
         $masalahUtama = !empty($brief['masalahUtama']) ? $brief['masalahUtama'] : $this->synthesizeProblem($corpus, $domain, $isEn);
@@ -518,6 +547,12 @@ class BlueprintDiscoveryService
         $clientName = '';
         if (preg_match('/(?:nama\s*saya|saya|atas\s*nama|pic|kontak)\s*[:=]?\s*([a-zA-Z\s]{3,30})/i', $corpus, $nameMatch)) {
             $clientName = trim($nameMatch[1]);
+        }
+        if (empty($clientName)) {
+            $firstLine = trim(explode("\n", $corpus)[0] ?? '');
+            if (preg_match('/^[A-Z][A-Za-z\s\'.]{2,40}$/u', $firstLine) && !preg_match('/^(?:Master|Blueprint|Dokumen|Project|Sistem|Spesifikasi|Bab|Daftar|Pendahuluan)/i', $firstLine)) {
+                $clientName = ucwords(strtolower($firstLine));
+            }
         }
 
         $baseData = [
@@ -707,7 +742,7 @@ class BlueprintDiscoveryService
             'clinic' => ['klinik', 'pasien', 'dokter', 'rekam medis', 'obat', 'apotek', 'rumah sakit', 'antrean poli', 'kesehatan', 'diagnosis', 'medical', 'dental', 'gigi', 'fisioterapi'],
             'finance' => ['keuangan', 'invoice', 'faktur', 'tagihan', 'pembayaran', 'akuntansi', 'kasir', 'pos', 'pembukuan', 'laporan keuangan', 'escrow', 'pajak'],
             'hr' => ['hrd', 'karyawan', 'rekrutmen', 'pelamar', 'lowongan', 'gaji', 'payroll', 'absensi', 'cuti', 'kinerja', 'talent'],
-            'education' => ['sekolah', 'kursus', 'siswa', 'guru', 'kelas', 'ujian', 'materi ajar', 'bimbel', 'lms', 'akademik', 'pembelajaran', 'les privat', 'kampus'],
+            'education' => ['sekolah', 'kursus', 'siswa', 'murid', 'guru', 'kelas', 'ujian', 'materi ajar', 'bimbel', 'lms', 'akademik', 'pembelajaran', 'les privat', 'kampus', 'pendidikan', 'paud', 'raport', 'kurikulum', 'advent', 'day school', 'boarding school'],
             'logistics' => ['logistik', 'ekspedisi', 'armada truk', 'truk kontainer', 'kontainer', 'pengiriman kargo', 'gudang kargo', 'cargo', 'surat jalan', 'resi ekspedisi', 'freight'],
             'marketplace' => ['marketplace', 'jual beli online', 'toko online', 'ecommerce', 'e-commerce', 'multi vendor', 'keranjang belanja', 'checkout online'],
         ];
@@ -716,8 +751,10 @@ class BlueprintDiscoveryService
         foreach ($patterns as $domain => $keywords) {
             $score = 0;
             foreach ($keywords as $kw) {
-                if (str_contains($combinedText, $kw)) {
-                    $score += str_contains($kw, ' ') ? 3 : 1;
+                $count = substr_count($combinedText, $kw);
+                if ($count > 0) {
+                    $multiplier = str_contains($kw, ' ') ? 3 : 1;
+                    $score += min($count, 30) * $multiplier;
                 }
             }
             if ($score > 0) {

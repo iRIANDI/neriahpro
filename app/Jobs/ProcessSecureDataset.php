@@ -183,13 +183,24 @@ class ProcessSecureDataset implements ShouldQueue
             throw new SecurityException("Ingestion rejected: executable or script MIME type detected ({$detectedMime}).", 403);
         }
 
-        // Scan for PHP open tags and native command execution
-        if (preg_match('/<\?(?:php|=)/i', $content) || preg_match('/(?:system|exec|shell_exec|eval|passthru|proc_open)\s*\(/i', $content)) {
-            Log::channel('security')->alert('Secure Ingestion: Embedded PHP / OS execution payload detected in dataset!', [
+        // Scan for PHP open tags
+        if (preg_match('/<\?(?:php|=)/i', $content)) {
+            Log::channel('security')->alert('Secure Ingestion: Embedded PHP tag detected in dataset!', [
                 'filename' => $filename,
                 'uploader' => $uploader,
             ]);
-            throw new SecurityException('Ingestion rejected: Embedded executable script found within dataset content.', 403);
+            throw new SecurityException('Ingestion rejected: Embedded PHP code found within dataset content.', 403);
+        }
+
+        // Scan for native command execution (avoid false positives on documentation words like "Management System (LMS)")
+        if (!in_array($ext, ['md', 'markdown', 'txt', 'csv', 'tsv', 'json'], true)) {
+            if (preg_match('/(?:\bexec|\bshell_exec|\beval|\bpassthru|\bproc_open|\bpopen)\s*\(/i', $content)) {
+                Log::channel('security')->alert('Secure Ingestion: Embedded OS execution payload detected in dataset!', [
+                    'filename' => $filename,
+                    'uploader' => $uploader,
+                ]);
+                throw new SecurityException('Ingestion rejected: Embedded executable script found within dataset content.', 403);
+            }
         }
 
         // Scan for Python Dataset Loader Exploit signatures (Exploit Gym / Hugging Face RCE vector)

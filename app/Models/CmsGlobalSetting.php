@@ -72,8 +72,12 @@ class CmsGlobalSetting extends Model
      */
     public static function getVal(string $key, mixed $default = null): mixed
     {
-        $all = static::getAllCached();
-        return $all->get($key)?->value ?? $default;
+        try {
+            $all = static::getAllCached();
+            return $all->get($key)?->value ?? $default;
+        } catch (\Throwable) {
+            return $default;
+        }
     }
 
     protected static function booted()

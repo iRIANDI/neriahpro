@@ -29,6 +29,15 @@ class BlueprintController extends Controller
         }
 
         $draftId = $request->query('draft_id');
+        // Defensive cleanup if draft_id contains query separators (e.g. "?track=...")
+        if ($draftId && str_contains($draftId, '?')) {
+            $draftId = explode('?', $draftId)[0];
+        }
+        if ($draftId && str_contains($draftId, '&')) {
+            $draftId = explode('&', $draftId)[0];
+        }
+
+        $track = $request->query('track');
         $slug = $request->query('slug');
         $initialData = [];
 
@@ -76,6 +85,15 @@ class BlueprintController extends Controller
             $initialData = [];
         } elseif ($draftId && Cache::has('blueprint_draft_' . $draftId)) {
             $initialData = Cache::get('blueprint_draft_' . $draftId, []);
+        } elseif (session()->has('blueprint_draft')) {
+            // Robust session fallback
+            $initialData = session('blueprint_draft', []);
+        }
+
+        // Forward selected track if present in query string
+        if ($track && !empty($initialData)) {
+            $initialData['selected_track'] = $track;
+            $initialData['track'] = $track;
         }
 
         return view('blueprint.create', [

@@ -98,6 +98,12 @@ export default function HeroIsland({
     setAttachedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const getTrackUrl = (track) => {
+    const base = synthesizedResult?.redirect_url || '/blueprint';
+    const separator = base.includes('?') ? '&' : '?';
+    return `${base}${separator}track=${track}`;
+  };
+
   const handleSubmitIdea = async (e) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -854,7 +860,7 @@ export default function HeroIsland({
                   </div>
 
                   <a
-                    href={`${synthesizedResult.redirect_url || '/blueprint'}?track=retail`}
+                    href={getTrackUrl('retail')}
                     className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-mono font-black text-xs uppercase py-3 px-4 rounded-none transition flex items-center justify-center gap-2 cursor-pointer shadow-xs text-center"
                   >
                     <ShoppingBag className="w-4 h-4 text-black" />
@@ -922,7 +928,7 @@ export default function HeroIsland({
                   </div>
 
                   <a
-                    href={`${synthesizedResult.redirect_url || '/blueprint'}?track=studio`}
+                    href={getTrackUrl('studio')}
                     className="w-full bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-mono font-bold text-xs uppercase py-3 px-4 rounded-none transition flex items-center justify-center gap-2 cursor-pointer shadow-xs text-center"
                   >
                     <Rocket className="w-4 h-4 text-emerald-500" />

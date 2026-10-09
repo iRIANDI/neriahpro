@@ -27,6 +27,21 @@ class MarkItDownService
         $originalName = $file instanceof UploadedFile ? $file->getClientOriginalName() : basename($file);
         $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
+        // 0. Fast-path pure Markdown and Plain Text files directly (zero CLI latency)
+        if (in_array($extension, ['md', 'markdown', 'txt'], true)) {
+            $rawContent = $this->readRawContent($file, $filePath);
+            return [
+                'markdown' => trim($rawContent),
+                'format' => $extension,
+                'engine' => 'markitdown-native-php',
+                'metadata' => [
+                    'filename' => $originalName,
+                    'size' => file_exists($filePath) ? filesize($filePath) : strlen($rawContent),
+                    'converted_at' => now()->toIso8601String(),
+                ],
+            ];
+        }
+
         // 1. If python markitdown CLI is available, attempt native execution
         $cliOutput = $this->tryPythonMarkItDown($filePath);
         if ($cliOutput !== null) {

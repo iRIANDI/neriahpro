@@ -683,7 +683,7 @@ class PrdGeneratorService
             $domainSlug = 'domain_records';
         }
 
-        return [
+        $baseTables = [
             [
                 'name' => 'users',
                 'description' => 'Menyimpan kredensial otentikasi semua aktor sistem (Admin, Staff, Klien).',
@@ -743,6 +743,64 @@ class PrdGeneratorService
                 ],
             ],
         ];
+
+        // Synthesize specialized domain entities from business name and MVP feature items
+        $combinedText = strtolower($businessName . ' ' . implode(' ', array_map(function($item) {
+            return ($item['title'] ?? '') . ' ' . ($item['desc'] ?? '');
+        }, $mvpItems)));
+
+        // Domain 1: Education / School / Akademik (e.g. Sekolah Advent, Bimbel, Kursus)
+        if (str_contains($combinedText, 'sekolah') || str_contains($combinedText, 'siswa') || str_contains($combinedText, 'guru') || str_contains($combinedText, 'ppdb') || str_contains($combinedText, 'spp') || str_contains($combinedText, 'akademik') || str_contains($combinedText, 'rapor')) {
+            $baseTables[] = [
+                'name' => 'students',
+                'description' => 'Master data induk siswa, NISN, kelas, dan kontak wali murid.',
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => [
+                    ['name' => 'id', 'type' => 'ulid', 'index' => 'PRIMARY', 'nullable' => false, 'notes' => 'ULID primary key', 'label' => ['id' => 'ID Siswa (ULID)', 'en' => 'Student ID (ULID)']],
+                    ['name' => 'user_id', 'type' => 'foreignUlid', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Relasi ke users.id', 'label' => ['id' => 'ID Akun Terkait', 'en' => 'Related User ID']],
+                    ['name' => 'nisn', 'type' => 'string(20)', 'index' => 'UNIQUE', 'nullable' => false, 'notes' => 'Nomor Induk Siswa Nasional', 'label' => ['id' => 'NISN Siswa', 'en' => 'Student NISN']],
+                    ['name' => 'full_name', 'type' => 'string(255)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Nama lengkap siswa', 'label' => ['id' => 'Nama Siswa', 'en' => 'Student Full Name']],
+                    ['name' => 'class_grade', 'type' => 'string(50)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Tingkat kelas aktif', 'label' => ['id' => 'Kelas Siswa', 'en' => 'Class Grade']],
+                    ['name' => 'parent_phone', 'type' => 'string(20)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Nomor WhatsApp wali untuk notifikasi', 'label' => ['id' => 'WhatsApp Orang Tua', 'en' => 'Parent WhatsApp']],
+                    ['name' => 'status', 'type' => 'string(30)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'active | graduated | transferred', 'label' => ['id' => 'Status Akademik', 'en' => 'Academic Status']],
+                    ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Waktu pendaftaran', 'label' => ['id' => 'Waktu Dibuat', 'en' => 'Created At']],
+                ],
+            ];
+
+            $baseTables[] = [
+                'name' => 'tuition_invoices',
+                'description' => 'Tagihan SPP dan administrasi sekolah dengan integrasi VA & QRIS.',
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => [
+                    ['name' => 'id', 'type' => 'ulid', 'index' => 'PRIMARY', 'nullable' => false, 'notes' => 'ULID primary key', 'label' => ['id' => 'ID Tagihan (ULID)', 'en' => 'Invoice ID (ULID)']],
+                    ['name' => 'student_id', 'type' => 'foreignUlid', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Relasi ke students.id', 'label' => ['id' => 'ID Siswa', 'en' => 'Student ID']],
+                    ['name' => 'invoice_number', 'type' => 'string(50)', 'index' => 'UNIQUE', 'nullable' => false, 'notes' => 'Nomor faktur unik', 'label' => ['id' => 'Nomor Tagihan', 'en' => 'Invoice Number']],
+                    ['name' => 'billing_period', 'type' => 'string(50)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Bulan tagihan (e.g. 2026-10)', 'label' => ['id' => 'Periode SPP', 'en' => 'Billing Period']],
+                    ['name' => 'amount', 'type' => 'decimal(15,2)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Nominal tagihan dalam IDR', 'label' => ['id' => 'Nominal Tagihan', 'en' => 'Invoice Amount']],
+                    ['name' => 'payment_channel', 'type' => 'string(50)', 'index' => 'NONE', 'nullable' => true, 'notes' => 'qris | bca_va | mandiri_va | cash', 'label' => ['id' => 'Metode Bayar', 'en' => 'Payment Channel']],
+                    ['name' => 'status', 'type' => 'string(30)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'unpaid | settlement | expired', 'label' => ['id' => 'Status Pembayaran', 'en' => 'Payment Status']],
+                    ['name' => 'paid_at', 'type' => 'timestamp', 'index' => 'NONE', 'nullable' => true, 'notes' => 'Waktu pelunasan terkonfirmasi', 'label' => ['id' => 'Waktu Pelunasan', 'en' => 'Paid At']],
+                    ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Waktu penerbitan faktur', 'label' => ['id' => 'Waktu Terbit', 'en' => 'Issued At']],
+                ],
+            ];
+
+            $baseTables[] = [
+                'name' => 'academic_evaluations',
+                'description' => 'Rekam nilai dan e-rapor Kurikulum Merdeka (ulangan harian, UTS, UAS).',
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => [
+                    ['name' => 'id', 'type' => 'ulid', 'index' => 'PRIMARY', 'nullable' => false, 'notes' => 'ULID primary key', 'label' => ['id' => 'ID Evaluasi (ULID)', 'en' => 'Evaluation ID (ULID)']],
+                    ['name' => 'student_id', 'type' => 'foreignUlid', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Relasi ke students.id', 'label' => ['id' => 'ID Siswa', 'en' => 'Student ID']],
+                    ['name' => 'subject_name', 'type' => 'string(100)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Nama mata pelajaran', 'label' => ['id' => 'Mata Pelajaran', 'en' => 'Subject Name']],
+                    ['name' => 'assessment_type', 'type' => 'string(50)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'formative | summative | uts | uas', 'label' => ['id' => 'Jenis Asesmen', 'en' => 'Assessment Type']],
+                    ['name' => 'score', 'type' => 'decimal(5,2)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Skor angka 0.00 - 100.00', 'label' => ['id' => 'Nilai Skor', 'en' => 'Score']],
+                    ['name' => 'competency_note', 'type' => 'text', 'index' => 'NONE', 'nullable' => true, 'notes' => 'Catatan capaian kompetensi', 'label' => ['id' => 'Capaian Kompetensi', 'en' => 'Competency Note']],
+                    ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Waktu input nilai', 'label' => ['id' => 'Waktu Input', 'en' => 'Created At']],
+                ],
+            ];
+        }
+
+        return $baseTables;
     }
 
     /**

@@ -2592,11 +2592,12 @@
         </div>
     </div>
 
-    <!-- 5. GOOGLE TRANSLATE TIER 2 MODERN LOADER MODAL -->
+    <!-- 5. GOOGLE TRANSLATE TIER 2 MODERN LOADER MODAL (STRICTLY VIEWPORT CENTERED) -->
     <div 
         x-show="isTranslating" 
         x-cloak 
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs"
+        class="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; display: flex !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important; margin: 0 !important; padding: 1rem !important;"
         x-transition:enter="transition ease-out duration-150"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -2605,7 +2606,8 @@
         x-transition:leave-end="opacity-0"
     >
         <div 
-            class="relative w-full max-w-sm bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl rounded-none p-6 text-center"
+            class="relative w-full max-w-sm bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl rounded-none p-6 text-center m-auto"
+            style="margin: auto !important; max-width: 24rem !important; width: 100% !important;"
             x-transition:enter="transition ease-out duration-150"
             x-transition:enter-start="scale-95 opacity-0"
             x-transition:enter-end="scale-100 opacity-100"

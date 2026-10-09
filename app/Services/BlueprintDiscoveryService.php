@@ -210,19 +210,19 @@ class BlueprintDiscoveryService
     public function parseStructuredBrief(string $corpus): array
     {
         $sectionMap = [
-            'namaBisnis' => ['nama bisnis', 'nama usaha', 'nama proyek', 'nama brand', 'nama aplikasi', 'nama platform', 'project name', 'business name', 'company name'],
-            'masalahUtama' => ['masalah utama', 'masalah', 'permasalahan', 'kendala', 'problem statement', 'pain points', 'core problem'],
-            'tujuanUtama' => ['tujuan utama', 'tujuan proyek', 'tujuan bisnis', 'tujuan', 'goals', 'goal', 'primary goal', 'kpi'],
-            'fiturWajib' => ['fitur wajib', 'fitur inti', 'fitur utama', 'fitur mvp', 'fitur fase 1', 'core features', 'mvp features', 'must-have'],
-            'fiturTambahan' => ['fitur tambahan', 'fitur fase 2', 'fitur lanjutan', 'roadmap', 'future features', 'nice-to-have'],
-            'aktorSistem' => ['aktor sistem', 'aktor & role', 'aktor', 'role pengguna', 'hak akses', 'user roles', 'system actors', 'rbac'],
-            'alurKerja' => ['alur kerja', 'alur bisnis', 'alur operasional', 'workflow', 'user journey', 'proses transaksi', 'user flow'],
-            'kebutuhanIntegrasi' => ['kebutuhan integrasi', 'integrasi api', 'integrasi', 'third party', 'third-party integrations', 'integrations'],
-            'outOfScope' => ['out of scope', 'batasan', 'ruang lingkup negatif', 'di luar lingkup', 'exclusions'],
-            'kisaranBudget' => ['alokasi budget', 'kisaran budget', 'budget range', 'budget', 'anggaran', 'estimasi investasi'],
+            'namaBisnis' => ['nama bisnis', 'nama usaha', 'nama proyek', 'nama brand', 'nama aplikasi', 'nama platform', 'project name', 'business name', 'company name', 'master blueprint', 'blueprint'],
+            'masalahUtama' => ['masalah utama', 'masalah', 'permasalahan', 'kendala', 'problem statement', 'pain points', 'core problem', 'profil sekolah', 'profil usaha', 'profil bisnis', 'profil lembaga', 'profil perusahaan', 'latar belakang', 'background', 'deskripsi proyek', 'deskripsi bisnis', 'tentang sekolah', 'tentang usaha'],
+            'tujuanUtama' => ['tujuan utama', 'tujuan proyek', 'tujuan bisnis', 'tujuan', 'goals', 'goal', 'primary goal', 'kpi', 'target capaian', 'visi & misi', 'visi misi'],
+            'fiturWajib' => ['fitur wajib', 'fitur inti', 'fitur utama', 'fitur mvp', 'fitur fase 1', 'core features', 'mvp features', 'must-have', 'modul wajib', 'modul inti', 'modul utama', 'modul sistem', 'daftar modul', 'modul aplikasi', 'fitur sistem', 'fitur'],
+            'fiturTambahan' => ['fitur tambahan', 'fitur fase 2', 'fitur lanjutan', 'roadmap', 'future features', 'nice-to-have', 'modul tambahan', 'fase 2'],
+            'aktorSistem' => ['pengguna dan role', 'pengguna & role', 'aktor sistem', 'aktor & role', 'aktor', 'role pengguna', 'hak akses', 'user roles', 'system actors', 'rbac', 'pengguna', 'user role', 'roles', 'role', 'pengguna sistem'],
+            'alurKerja' => ['alur kerja', 'alur bisnis', 'alur operasional', 'workflow', 'user journey', 'proses transaksi', 'user flow', 'alur pendaftaran', 'alur proses', 'alur sistem'],
+            'kebutuhanIntegrasi' => ['kebutuhan integrasi', 'integrasi api', 'integrasi', 'third party', 'third-party integrations', 'integrations', 'koneksi api', 'gerbang pembayaran'],
+            'outOfScope' => ['out of scope', 'batasan', 'ruang lingkup negatif', 'di luar lingkup', 'exclusions', 'non-scope'],
+            'kisaranBudget' => ['alokasi budget', 'kisaran budget', 'budget range', 'budget', 'anggaran', 'estimasi investasi', 'biaya'],
             'targetWaktu' => ['target waktu', 'target rilis', 'timeline', 'durasi kerja', 'durasi', 'target hari'],
-            'targetPlatform' => ['target platform', 'platform'],
-            'referensiDesain' => ['referensi desain', 'design reference'],
+            'targetPlatform' => ['target platform', 'platform', 'perangkat'],
+            'referensiDesain' => ['referensi desain', 'design reference', 'gaya desain', 'desain'],
         ];
 
         $lines = preg_split('/\r\n|\r|\n/', $corpus);
@@ -235,10 +235,25 @@ class BlueprintDiscoveryService
                 continue;
             }
 
+            // 1. Detect H1 title e.g. "# Master Blueprint Sistem Informasi SEKOLAH ADVENT"
+            if (preg_match('/^#\s+([^\n\r]+)/u', $trimmed, $h1Match)) {
+                $rawTitle = trim($h1Match[1]);
+                $cleanTitle = trim(preg_replace('/^(?:Master\s+Blueprint(?:\s+Sistem\s+Informasi)?|Dokumen\s+Spesifikasi|PRD)\s*[-—:\s]*/iu', '', $rawTitle));
+                if (!empty($cleanTitle) && mb_strlen($cleanTitle) >= 3 && empty($parsed['namaBisnis'])) {
+                    $parsed['namaBisnis'] = $cleanTitle;
+                }
+                continue;
+            }
+
             $matchedSection = null;
             $matchedValue = null;
 
-            if (preg_match('/^([A-Za-z0-9\s\/\(\)]+?)(?:\t|:\s*|\s*=\s*|\s+[-—]\s+)([\s\S]*)$/u', $trimmed, $m)) {
+            // Strip markdown headings (##, ###) and bullets (- , * )
+            $cleanLine = trim(preg_replace('/^(?:#+\s*|[-*]\s*)+/u', '', $trimmed));
+            $cleanLineWithoutColons = trim(rtrim($cleanLine, " :\t-—"));
+
+            // 2. Check structured key-value line: "Header : Value" or "Header - Value" or "Header\tValue"
+            if (preg_match('/^([A-Za-z0-9\s\/\(\)&]+?)(?:\t|:\s*|\s*=\s*|\s+[-—]\s+)([\s\S]*)$/u', $cleanLine, $m)) {
                 $headerCandidate = strtolower(trim(preg_replace('/\s*\([^)]*\)/', '', $m[1])));
                 foreach ($sectionMap as $secKey => $synonyms) {
                     foreach ($synonyms as $syn) {
@@ -251,12 +266,28 @@ class BlueprintDiscoveryService
                 }
             }
 
+            // 3. Check pure section heading: "### Fitur Wajib:" or "## Profil Sekolah"
+            if (!$matchedSection) {
+                $candidateLower = strtolower(trim(preg_replace('/\s*\([^)]*\)/', '', $cleanLineWithoutColons)));
+                foreach ($sectionMap as $secKey => $synonyms) {
+                    foreach ($synonyms as $syn) {
+                        if ($candidateLower === $syn || str_starts_with($candidateLower, $syn)) {
+                            $matchedSection = $secKey;
+                            $matchedValue = '';
+                            break 2;
+                        }
+                    }
+                }
+            }
+
             if ($matchedSection) {
                 $currentSection = $matchedSection;
                 if ($currentSection === 'namaBisnis') {
                     $matchedValue = trim(preg_replace('/\s*\([^)]*(?:teman|contoh|opsional|field)[^)]*\)/i', '', $matchedValue));
                 }
-                $parsed[$currentSection] = $matchedValue;
+                if (!empty($matchedValue)) {
+                    $parsed[$currentSection] = $matchedValue;
+                }
             } elseif ($currentSection) {
                 if (!empty($parsed[$currentSection])) {
                     $parsed[$currentSection] .= "\n" . $trimmed;
@@ -534,7 +565,7 @@ class BlueprintDiscoveryService
                 'has_documents' => !empty($fileSummaries),
                 'converted_markdown' => $docsMarkdown,
                 'combined_markdown_corpus' => $corpus,
-                'raw_idea_text' => $rawText,
+                'raw_idea_text' => !empty($rawText) ? $rawText : ($masalahUtama ?: $corpus),
                 'domain' => $domain,
                 'track_recommendation' => $trackRecommendation,
                 'created_at' => now()->toIso8601String(),

@@ -594,18 +594,12 @@ export default function HeroIsland({
                 )}
               </form>
 
-              <div className="flex flex-wrap items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/60 font-mono">
+              <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/60 font-mono">
                 <span>
                   &bull; {isEn 
                     ? 'MarkItDown converts all documents to clean Markdown. AI synthesizes architecture without prompt drift.'
                     : 'MarkItDown mengonversi berkas dokumen ke Markdown. AI murni fokus pada sintesis arsitektur teruji.'}
                 </span>
-                <a 
-                  href="/blueprint" 
-                  className="hover:text-emerald-500 underline transition inline-flex items-center gap-1 mt-1 sm:mt-0"
-                >
-                  <span>{isEn ? 'Or fill blueprint questionnaire directly →' : 'Atau isi kuesioner blueprint manual →'}</span>
-                </a>
               </div>
             </div>
 

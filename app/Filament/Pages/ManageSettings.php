@@ -342,6 +342,39 @@ class ManageSettings extends Page implements HasForms
                             ->schema([
                                 Section::make('Orkestrasi AI & Kebijakan Failover Otomatis')
                                     ->description('Konfigurasikan model AI default untuk Project OS & PRD Generator. Jika model utama kehabisan token atau mengalami 429 rate-limit, sistem otomatis berpindah ke model alternatif yang masih sehat tanpa downtime.')
+                                    ->headerActions([
+                                        Action::make('syncActiveModels')
+                                            ->label('🔄 Muat Model API Semua Provider Aktif')
+                                            ->color('primary')
+                                            ->icon('heroicon-m-arrow-path')
+                                            ->action(function ($livewire) {
+                                                $providers = ['relayrouter', 'gemini', 'openai', 'groq', 'openrouter', 'deepseek', 'anthropic'];
+                                                $synced = [];
+                                                foreach ($providers as $p) {
+                                                    $apiKey = \App\Services\Ai\MultiAiModelManager::getApiKey($p);
+                                                    if (!empty($apiKey)) {
+                                                        $res = \App\Services\Ai\MultiAiModelManager::fetchAvailableModels($p, forceRefresh: true);
+                                                        if ($res['success']) {
+                                                            $synced[] = strtoupper($p) . " ({$res['count']} model)";
+                                                        }
+                                                    }
+                                                }
+
+                                                if (!empty($synced)) {
+                                                    Notification::make()
+                                                        ->title('✅ Berhasil Memuat Model API!')
+                                                        ->body('Katalog model terbaru berhasil disinkronkan: ' . implode(', ', $synced))
+                                                        ->success()
+                                                        ->send();
+                                                } else {
+                                                    Notification::make()
+                                                        ->title('Belum Ada API Key Provider Aktif')
+                                                        ->body('Silakan isi dan simpan API Key provider di bawah untuk menarik katalog model langsung dari API.')
+                                                        ->info()
+                                                        ->send();
+                                                }
+                                            }),
+                                    ])
                                     ->schema([
                                         Select::make('ai_default_provider')
                                             ->label('AI Provider Utama (Default)')
@@ -494,6 +527,45 @@ class ManageSettings extends Page implements HasForms
                                                         ->send();
                                                 }
                                             }),
+                                        Action::make('fetchRelayRouterModels')
+                                            ->label('🔄 Tarik 380+ Model dari API')
+                                            ->color('info')
+                                            ->icon('heroicon-m-arrow-down-tray')
+                                            ->action(function ($livewire) {
+                                                $formData = $livewire->data ?? [];
+                                                $apiKey = !empty($formData['ai_relayrouter_api_key'])
+                                                    ? trim($formData['ai_relayrouter_api_key'])
+                                                    : \App\Services\Ai\MultiAiModelManager::getApiKey('relayrouter');
+                                                $baseUrl = !empty($formData['ai_relayrouter_base_url'])
+                                                    ? rtrim(trim($formData['ai_relayrouter_base_url']), '/')
+                                                    : \App\Services\Ai\MultiAiModelManager::getBaseUrl('relayrouter');
+
+                                                if (empty($apiKey)) {
+                                                    Notification::make()
+                                                        ->title('RelayRouter API Key Masih Kosong')
+                                                        ->body('Silakan tempel (paste) API Key RelayRouter terlebih dahulu sebelum menarik daftar model.')
+                                                        ->warning()
+                                                        ->send();
+                                                    return;
+                                                }
+
+                                                $res = \App\Services\Ai\MultiAiModelManager::fetchAvailableModels('relayrouter', $apiKey, $baseUrl, forceRefresh: true);
+
+                                                if ($res['success']) {
+                                                    $count = $res['count'];
+                                                    Notification::make()
+                                                        ->title("✅ Berhasil Memuat {$count} Model dari API!")
+                                                        ->body("Katalog seluruh {$count} model dari RelayRouter/OpenAI telah disinkronkan ke cache. Ketik atau pilih model apa saja pada saran input di bawah.")
+                                                        ->success()
+                                                        ->send();
+                                                } else {
+                                                    Notification::make()
+                                                        ->title('❌ Gagal Menarik Model dari API')
+                                                        ->body($res['error'] ?? 'Gagal menghubungi endpoint /models.')
+                                                        ->danger()
+                                                        ->send();
+                                                }
+                                            }),
                                     ])
                                     ->schema([
                                         TextInput::make('ai_relayrouter_api_key')
@@ -511,24 +583,18 @@ class ManageSettings extends Page implements HasForms
                                         TextInput::make('ai_relayrouter_discovery_model')
                                             ->label('Model Discovery / Audit Cepat')
                                             ->default('gpt-4o-mini')
-                                            ->datalist([
-                                                'gpt-4o-mini',
-                                                'deepseek-chat',
-                                                'claude-3-5-haiku',
-                                            ])
-                                            ->helperText('Model respons cepat & hemat untuk audit ide dan triage arsitektur awal (rekomendasi: gpt-4o-mini atau deepseek-chat).')
+                                            ->datalist(function () {
+                                                return \App\Services\Ai\MultiAiModelManager::getDatalistOptions('relayrouter');
+                                            })
+                                            ->helperText('Model respons cepat & hemat untuk audit ide awal. Ketik atau pilih dari 380+ model yang ditarik otomatis dari API (rekomendasi: gpt-4o-mini, deepseek-chat, gemini-2.0-flash-lite).')
                                             ->columnSpan(1),
                                         TextInput::make('ai_relayrouter_prd_model')
                                             ->label('Model PRD & Arsitektur Kompleks')
                                             ->default('claude-3-7-sonnet-20250219')
-                                            ->datalist([
-                                                'deepseek-chat',
-                                                'gpt-4o-mini',
-                                                'claude-3-5-haiku',
-                                                'gpt-4o',
-                                                'claude-3-7-sonnet-20250219',
-                                            ])
-                                            ->helperText('⚠️ INFO KUOTA & BIAYA: Model "claude-3-7-sonnet" menelan ~$0.50–$0.60 per sintesis PRD lengkap (sangat boros untuk saldo Shopee $1–$5). Jika ingin hemat 98%, ubah ke "deepseek-chat" (~$0.002) atau "gpt-4o-mini" (~$0.005).')
+                                            ->datalist(function () {
+                                                return \App\Services\Ai\MultiAiModelManager::getDatalistOptions('relayrouter');
+                                            })
+                                            ->helperText('Model penalaran arsitektur komprehensif. Ketik atau pilih dari 380+ model dari API. Rekomendasi hemat: deepseek-chat / gpt-4o-mini; Rekomendasi flagship: claude-3-7-sonnet-20250219 / claude-sonnet-4-5 / gpt-4o.')
                                             ->columnSpan(1),
                                     ])->columns(2),
                             ]),

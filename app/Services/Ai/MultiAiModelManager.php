@@ -424,4 +424,209 @@ class MultiAiModelManager
         self::recordFailure($provider, $response->body(), $response->status());
         return null;
     }
+
+    /**
+     * Fetch available models dynamically from provider API endpoint.
+     * Caches models for 24 hours to eliminate redundant network overhead.
+     *
+     * @param string $provider
+     * @param string|null $apiKey
+     * @param string|null $baseUrl
+     * @param bool $forceRefresh
+     * @return array ['success' => bool, 'models' => string[], 'count' => int, 'from_cache' => bool, 'error' => ?string]
+     */
+    public static function fetchAvailableModels(
+        string $provider,
+        ?string $apiKey = null,
+        ?string $baseUrl = null,
+        bool $forceRefresh = false
+    ): array {
+        $apiKey = $apiKey ?: self::getApiKey($provider);
+        $baseUrl = $baseUrl ?: self::getBaseUrl($provider);
+
+        $cacheKey = "ai_models_cache_{$provider}_" . substr(md5(($apiKey ?? '') . '|' . ($baseUrl ?? '')), 0, 16);
+
+        if (!$forceRefresh && Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey, []);
+            if (!empty($cached) && is_array($cached)) {
+                return [
+                    'success' => true,
+                    'models' => array_values($cached),
+                    'count' => count($cached),
+                    'from_cache' => true,
+                    'error' => null,
+                ];
+            }
+        }
+
+        if (empty($apiKey)) {
+            return [
+                'success' => false,
+                'models' => self::getFallbackModels($provider),
+                'count' => count(self::getFallbackModels($provider)),
+                'from_cache' => false,
+                'error' => 'API Key belum dikonfigurasi.',
+            ];
+        }
+
+        try {
+            $models = [];
+
+            if ($provider === 'gemini') {
+                $url = "https://generativelanguage.googleapis.com/v1beta/models?key={$apiKey}";
+                $response = Http::timeout(8)->get($url);
+
+                if ($response->successful()) {
+                    $rawModels = $response->json('models', []);
+                    foreach ($rawModels as $item) {
+                        $methods = $item['supportedGenerationMethods'] ?? [];
+                        if (in_array('generateContent', $methods)) {
+                            $name = $item['name'] ?? '';
+                            $cleanName = preg_replace('/^models\//', '', $name);
+                            if (!empty($cleanName)) {
+                                $models[] = $cleanName;
+                            }
+                        }
+                    }
+                } else {
+                    throw new \RuntimeException($response->json('error.message', 'Gagal memuat model dari Google Gemini API'));
+                }
+            } elseif ($provider === 'anthropic') {
+                $url = "https://api.anthropic.com/v1/models";
+                $response = Http::timeout(8)
+                    ->withHeaders([
+                        'x-api-key' => $apiKey,
+                        'anthropic-version' => '2023-06-01',
+                    ])
+                    ->get($url);
+
+                if ($response->successful()) {
+                    $rawModels = $response->json('data', []);
+                    foreach ($rawModels as $item) {
+                        if (!empty($item['id'])) {
+                            $models[] = $item['id'];
+                        }
+                    }
+                } else {
+                    throw new \RuntimeException($response->json('error.message', 'Gagal memuat model dari Anthropic API'));
+                }
+            } else {
+                // OpenAI-compatible format (RelayRouter, OpenAI, Groq, OpenRouter, DeepSeek, xAI, OneAPI, etc.)
+                $endpoint = rtrim($baseUrl, '/') . '/models';
+                $headers = [
+                    'Authorization' => "Bearer {$apiKey}",
+                    'Content-Type' => 'application/json',
+                ];
+
+                if ($provider === 'openrouter') {
+                    $headers['HTTP-Referer'] = 'https://neriahpro.com';
+                    $headers['X-Title'] = 'Neriah Pro Studio OS';
+                }
+
+                $response = Http::timeout(10)
+                    ->withHeaders($headers)
+                    ->get($endpoint);
+
+                if ($response->successful()) {
+                    $json = $response->json();
+                    $rawData = $json['data'] ?? (is_array($json) && isset($json[0]) ? $json : []);
+                    foreach ($rawData as $item) {
+                        if (is_array($item) && !empty($item['id'])) {
+                            $models[] = trim($item['id']);
+                        } elseif (is_string($item) && !empty($item)) {
+                            $models[] = trim($item);
+                        }
+                    }
+                } else {
+                    $msg = $response->json('error.message') ?? $response->body();
+                    throw new \RuntimeException("HTTP {$response->status()}: " . substr($msg, 0, 200));
+                }
+            }
+
+            $models = array_values(array_unique(array_filter($models)));
+            natcasesort($models);
+            $models = array_values($models);
+
+            if (!empty($models)) {
+                Cache::put($cacheKey, $models, now()->addHours(24));
+                Cache::put("ai_models_fallback_{$provider}", $models, now()->addDays(7));
+
+                return [
+                    'success' => true,
+                    'models' => $models,
+                    'count' => count($models),
+                    'from_cache' => false,
+                    'error' => null,
+                ];
+            }
+
+            return [
+                'success' => false,
+                'models' => self::getFallbackModels($provider),
+                'count' => count(self::getFallbackModels($provider)),
+                'from_cache' => false,
+                'error' => 'Tidak ada model yang ditemukan dalam respons API.',
+            ];
+        } catch (\Throwable $e) {
+            Log::warning("Gagal fetch models dari provider [{$provider}]: " . $e->getMessage());
+
+            $fallback = Cache::get("ai_models_fallback_{$provider}");
+            if (!empty($fallback) && is_array($fallback)) {
+                return [
+                    'success' => false,
+                    'models' => array_values($fallback),
+                    'count' => count($fallback),
+                    'from_cache' => true,
+                    'error' => $e->getMessage(),
+                ];
+            }
+
+            $defaults = self::getFallbackModels($provider);
+            return [
+                'success' => false,
+                'models' => $defaults,
+                'count' => count($defaults),
+                'from_cache' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get array of model IDs for HTML datalist or auto-complete.
+     */
+    public static function getDatalistOptions(string $provider, ?string $apiKey = null, ?string $baseUrl = null): array
+    {
+        $result = self::fetchAvailableModels($provider, $apiKey, $baseUrl, forceRefresh: false);
+        return $result['models'] ?? self::getFallbackModels($provider);
+    }
+
+    /**
+     * Curated fallback models when API key is missing or offline.
+     */
+    public static function getFallbackModels(string $provider): array
+    {
+        return match ($provider) {
+            'relayrouter' => [
+                'deepseek-chat',
+                'deepseek-v3',
+                'gpt-4o-mini',
+                'gpt-4o',
+                'claude-3-5-haiku',
+                'claude-3-7-sonnet-20250219',
+                'claude-sonnet-4-5-20250929',
+                'gemini-2.0-flash-lite',
+                'gemini-2.5-flash',
+                'qwen-2.5-72b',
+            ],
+            'deepseek' => ['deepseek-chat', 'deepseek-reasoner'],
+            'gemini' => ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.5-flash'],
+            'anthropic' => ['claude-3-7-sonnet-20250219', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022'],
+            'openai' => ['gpt-4o-mini', 'gpt-4o', 'o3-mini', 'o1'],
+            'groq' => ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'],
+            'openrouter' => ['meta-llama/llama-3.3-70b-instruct:free', 'deepseek/deepseek-r1:free', 'anthropic/claude-3.7-sonnet'],
+            'xai' => ['grok-2-1212', 'grok-beta'],
+            default => ['default'],
+        };
+    }
 }

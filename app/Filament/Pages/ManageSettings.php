@@ -511,12 +511,24 @@ class ManageSettings extends Page implements HasForms
                                         TextInput::make('ai_relayrouter_discovery_model')
                                             ->label('Model Discovery / Audit Cepat')
                                             ->default('gpt-4o-mini')
-                                            ->helperText('Model respons cepat & hemat untuk audit ide dan triage arsitektur awal (contoh: gpt-4o-mini, deepseek-chat, claude-3-5-haiku).')
+                                            ->datalist([
+                                                'gpt-4o-mini',
+                                                'deepseek-chat',
+                                                'claude-3-5-haiku',
+                                            ])
+                                            ->helperText('Model respons cepat & hemat untuk audit ide dan triage arsitektur awal (rekomendasi: gpt-4o-mini atau deepseek-chat).')
                                             ->columnSpan(1),
                                         TextInput::make('ai_relayrouter_prd_model')
                                             ->label('Model PRD & Arsitektur Kompleks')
                                             ->default('claude-3-7-sonnet-20250219')
-                                            ->helperText('Model penalaran kelas atas untuk PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan diagram Mermaid (contoh: claude-3-7-sonnet-20250219, gpt-4o, deepseek-reasoner).')
+                                            ->datalist([
+                                                'deepseek-chat',
+                                                'gpt-4o-mini',
+                                                'claude-3-5-haiku',
+                                                'gpt-4o',
+                                                'claude-3-7-sonnet-20250219',
+                                            ])
+                                            ->helperText('⚠️ INFO KUOTA & BIAYA: Model "claude-3-7-sonnet" menelan ~$0.50–$0.60 per sintesis PRD lengkap (sangat boros untuk saldo Shopee $1–$5). Jika ingin hemat 98%, ubah ke "deepseek-chat" (~$0.002) atau "gpt-4o-mini" (~$0.005).')
                                             ->columnSpan(1),
                                     ])->columns(2),
                             ]),

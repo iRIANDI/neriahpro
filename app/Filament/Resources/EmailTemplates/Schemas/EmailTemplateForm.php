@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\EmailTemplates\Schemas;
 
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Tabs;
+use Filament\Schemas\Components\Tabs;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;

@@ -109,6 +109,182 @@
 
         {{-- TAB 1: SPRINT CAPACITY & ANTI-COLLISION MATRIX --}}
         <div x-show="activeTab === 'matrix'" class="space-y-6">
+
+            {{-- 1. VISUAL MULTI-BATCH GANTT TIMELINE & CAPACITY ROADMAP --}}
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none p-5 shadow-xs">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 bg-emerald-500 rounded-none shrink-0" style="width: 12px; height: 12px; display: inline-block;"></span>
+                            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+                                Bagan Gantt Timeline & Utilisasi Kapasitas Multi-Batch
+                            </h3>
+                        </div>
+                        <p class="text-xs font-mono text-zinc-500 dark:text-zinc-400 mt-1">
+                            Peta jalan deterministik pengerjaan sprint paralel (maksimal 2–3 proyek per batch). Buffer protektif 5–15 hari menjamin 0 schedule overlap.
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase">
+                            🟢 100% Zero Overlap
+                        </span>
+                        <button
+                            type="button"
+                            @click="activeTab = 'gantt'; $nextTick(() => renderGantt())"
+                            class="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-mono text-xs font-bold rounded-none border border-zinc-300 dark:border-zinc-700 transition cursor-pointer"
+                        >
+                            Buka Mermaid WBS &rarr;
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Continuous Gantt Timeline Ruler & Tracks --}}
+                <div class="mt-5 space-y-4">
+                    {{-- Timeline Calendar Axis Header --}}
+                    <div class="grid grid-cols-6 gap-1 font-mono text-[10px] text-zinc-400 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                        <div class="text-left font-bold text-zinc-700 dark:text-zinc-300">
+                            <span class="block text-emerald-600 dark:text-emerald-400">● OKT 2026</span>
+                            <span class="text-[9px] text-zinc-500">Kickoff B1 (15 Okt)</span>
+                        </div>
+                        <div class="text-left font-bold text-zinc-700 dark:text-zinc-300">
+                            <span class="block">NOV 2026</span>
+                            <span class="text-[9px] text-zinc-500">Wrap B1 (25 Nov)</span>
+                        </div>
+                        <div class="text-left font-bold text-zinc-700 dark:text-zinc-300">
+                            <span class="block text-sky-600 dark:text-sky-400">● DES 2026</span>
+                            <span class="text-[9px] text-zinc-500">Kickoff B2 (01 Des)</span>
+                        </div>
+                        <div class="text-left font-bold text-zinc-700 dark:text-zinc-300">
+                            <span class="block">JAN 2027</span>
+                            <span class="text-[9px] text-zinc-500">Wrap B2 (15 Jan)</span>
+                        </div>
+                        <div class="text-left font-bold text-zinc-700 dark:text-zinc-300">
+                            <span class="block text-indigo-600 dark:text-indigo-400">● FEB 2027</span>
+                            <span class="text-[9px] text-zinc-500">Kickoff Q1 2027</span>
+                        </div>
+                        <div class="text-left font-bold text-zinc-700 dark:text-zinc-300">
+                            <span class="block">MAR 2027</span>
+                            <span class="text-[9px] text-zinc-500">Wrap Q1 2027</span>
+                        </div>
+                    </div>
+
+                    {{-- GANTT BARS --}}
+                    <div class="space-y-3 pt-2">
+                        {{-- Track 1: Batch 1 --}}
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                            <div class="flex items-center justify-between text-xs font-mono mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-zinc-900 dark:text-zinc-100">BATCH 1: Q4 SPRINT UTAMA</span>
+                                    <span class="text-[10px] text-zinc-500 font-mono">(15 Okt &ndash; 25 Nov 2026)</span>
+                                </div>
+                                <span class="text-[10px] font-mono px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold">
+                                    1 / 3 SLOT TERISI (33% UTILISASI)
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-6 gap-1 h-9 items-center">
+                                <div class="col-span-2 bg-emerald-500/15 border-2 border-emerald-500 p-2 h-full flex items-center justify-between gap-2 overflow-hidden">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="w-2 h-2 bg-emerald-500 rounded-none shrink-0" style="width: 8px; height: 8px; display: inline-block;"></span>
+                                        <span class="text-[11px] font-mono font-bold text-emerald-800 dark:text-emerald-300 truncate">
+                                            🔒 Apex Logistics Global (Active Sprint)
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-1 shrink-0 font-mono text-[9px]">
+                                        <span class="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Slot 2 Bebas</span>
+                                        <span class="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">Slot 3 Bebas</span>
+                                    </div>
+                                </div>
+                                <div class="col-span-4 bg-zinc-100/50 dark:bg-zinc-900/30 border border-dashed border-zinc-200 dark:border-zinc-800 h-full flex items-center px-3 text-[10px] font-mono text-zinc-400">
+                                    <span>🛡️ Jeda Buffer Anti-Collision (26–30 Nov) // Jeda Transisi Bebas Sebelum Batch 2</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Track 2: Batch 2 --}}
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                            <div class="flex items-center justify-between text-xs font-mono mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-zinc-900 dark:text-zinc-100">BATCH 2: TRANSISI AKHIR TAHUN</span>
+                                    <span class="text-[10px] text-zinc-500 font-mono">(01 Des 2026 &ndash; 15 Jan 2027)</span>
+                                </div>
+                                <span class="text-[10px] font-mono px-2 py-0.5 bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/30 font-bold">
+                                    0 / 3 SLOT TERISI (100% TERSEDIA)
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-6 gap-1 h-9 items-center">
+                                <div class="col-span-2 bg-zinc-100/40 dark:bg-zinc-900/20 border border-dotted border-zinc-200 dark:border-zinc-800 h-full flex items-center px-2 text-[9px] font-mono text-zinc-400">
+                                    <span>(Menunggu Penyelesaian Batch 1)</span>
+                                </div>
+                                <div class="col-span-2 bg-sky-500/10 border-2 border-dashed border-sky-500/50 p-2 h-full flex items-center justify-between gap-1 overflow-hidden">
+                                    <span class="text-[10px] font-mono font-bold text-sky-700 dark:text-sky-300">
+                                        3 Slot Siap Booking (Early Reservation)
+                                    </span>
+                                    <div class="flex items-center gap-1 shrink-0 font-mono text-[9px]">
+                                        <span class="px-1.5 py-0.5 bg-sky-500/20 text-sky-800 dark:text-sky-200 font-bold">+ Slot 1</span>
+                                        <span class="px-1.5 py-0.5 bg-sky-500/20 text-sky-800 dark:text-sky-200 font-bold">+ Slot 2</span>
+                                        <span class="px-1.5 py-0.5 bg-sky-500/20 text-sky-800 dark:text-sky-200 font-bold">+ Slot 3</span>
+                                    </div>
+                                </div>
+                                <div class="col-span-2 bg-zinc-100/50 dark:bg-zinc-900/30 border border-dashed border-zinc-200 dark:border-zinc-800 h-full flex items-center px-3 text-[10px] font-mono text-zinc-400">
+                                    <span>🛡️ Buffer Q1 (16–31 Jan)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Track 3: Batch Q1 2027 --}}
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                            <div class="flex items-center justify-between text-xs font-mono mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-zinc-900 dark:text-zinc-100">BATCH Q1 2027: EARLY BIRD PRIORITY</span>
+                                    <span class="text-[10px] text-zinc-500 font-mono">(Februari &ndash; Maret 2027)</span>
+                                </div>
+                                <span class="text-[10px] font-mono px-2 py-0.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 font-bold">
+                                    0 / 4 SLOT TERISI (100% TERSEDIA)
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-6 gap-1 h-9 items-center">
+                                <div class="col-span-4 bg-zinc-100/40 dark:bg-zinc-900/20 border border-dotted border-zinc-200 dark:border-zinc-800 h-full flex items-center px-2 text-[9px] font-mono text-zinc-400">
+                                    <span>(Sprint Kuartal 4 2026 & Pergantian Tahun Berjalan)</span>
+                                </div>
+                                <div class="col-span-2 bg-indigo-500/10 border-2 border-dashed border-indigo-500/50 p-2 h-full flex items-center justify-between gap-1 overflow-hidden">
+                                    <span class="text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-300">
+                                        4 Slot Early Bird
+                                    </span>
+                                    <div class="flex items-center gap-1 shrink-0 font-mono text-[9px]">
+                                        <span class="px-1 py-0.5 bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 font-bold">S1</span>
+                                        <span class="px-1 py-0.5 bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 font-bold">S2</span>
+                                        <span class="px-1 py-0.5 bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 font-bold">S3</span>
+                                        <span class="px-1 py-0.5 bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 font-bold">S4</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 10-SEGMENT MANAGED CAPACITY SUMMARY PROGRESS BAR --}}
+                    <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                        <div class="flex items-center justify-between text-xs font-mono mb-2">
+                            <span class="font-bold uppercase tracking-wider text-[11px] text-zinc-700 dark:text-zinc-300">
+                                AKUMULASI TOTAL KAPASITAS TERKELOLA ({{ $totalAssignedSlots }} / {{ $totalMaxSlots }} SLOT TERPAKAI)
+                            </span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400 text-[11px]">
+                                {{ $totalMaxSlots > 0 ? round(($totalAssignedSlots / $totalMaxSlots) * 100) : 0 }}% Terpakai &bull; Sisa {{ max(0, $totalMaxSlots - $totalAssignedSlots) }} Slot Terbuka
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-10 gap-1.5 h-3">
+                            @for($s = 0; $s < $totalMaxSlots; $s++)
+                                @if($s < $totalAssignedSlots)
+                                    <div class="bg-emerald-500 h-full rounded-none" style="background-color: #10b981;" title="Slot {{ $s + 1 }}: Terisi Aktif"></div>
+                                @else
+                                    <div class="bg-zinc-100 dark:bg-zinc-800 border border-dashed border-zinc-300 dark:border-zinc-700 h-full rounded-none" title="Slot {{ $s + 1 }}: Slot Bebas Siap Booking"></div>
+                                @endif
+                            @endfor
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 @foreach($batches as $bKey => $batch)
                     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none p-5 flex flex-col justify-between shadow-xs">
@@ -500,6 +676,7 @@
                 initDashboard() {
                     this.$nextTick(() => {
                         this.initMermaid();
+                        this.renderGantt();
                     });
                 },
 

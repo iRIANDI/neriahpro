@@ -449,9 +449,16 @@ class MultiAiModelManager
         if (!$forceRefresh && Cache::has($cacheKey)) {
             $cached = Cache::get($cacheKey, []);
             if (!empty($cached) && is_array($cached)) {
+                $categorized = Cache::get("ai_models_categorized_{$provider}");
+                if (empty($categorized) || !is_array($categorized)) {
+                    $categorized = self::categorizeAndSortModels($cached);
+                    Cache::put("ai_models_categorized_{$provider}", $categorized, now()->addHours(24));
+                }
+
                 return [
                     'success' => true,
                     'models' => array_values($cached),
+                    'categorized' => $categorized,
                     'count' => count($cached),
                     'from_cache' => true,
                     'error' => null,
@@ -460,10 +467,13 @@ class MultiAiModelManager
         }
 
         if (empty($apiKey)) {
+            $fallback = self::getFallbackModels($provider);
+            $categorizedFallback = self::categorizeAndSortModels($fallback);
             return [
                 'success' => false,
-                'models' => self::getFallbackModels($provider),
-                'count' => count(self::getFallbackModels($provider)),
+                'models' => $fallback,
+                'categorized' => $categorizedFallback,
+                'count' => count($fallback),
                 'from_cache' => false,
                 'error' => 'API Key belum dikonfigurasi.',
             ];
@@ -543,38 +553,45 @@ class MultiAiModelManager
                 }
             }
 
-            $models = array_values(array_unique(array_filter($models)));
-            natcasesort($models);
-            $models = array_values($models);
+            $rawModels = array_values(array_unique(array_filter($models)));
+            $categorized = self::categorizeAndSortModels($rawModels);
+            $cleanModels = $categorized['all_valid'];
 
-            if (!empty($models)) {
-                Cache::put($cacheKey, $models, now()->addHours(24));
-                Cache::put("ai_models_fallback_{$provider}", $models, now()->addDays(7));
+            if (!empty($cleanModels)) {
+                Cache::put($cacheKey, $cleanModels, now()->addHours(24));
+                Cache::put("ai_models_categorized_{$provider}", $categorized, now()->addHours(24));
+                Cache::put("ai_models_fallback_{$provider}", $cleanModels, now()->addDays(7));
 
                 return [
                     'success' => true,
-                    'models' => $models,
-                    'count' => count($models),
+                    'models' => $cleanModels,
+                    'categorized' => $categorized,
+                    'count' => count($cleanModels),
                     'from_cache' => false,
                     'error' => null,
                 ];
             }
 
+            $fallback = self::getFallbackModels($provider);
+            $categorizedFallback = self::categorizeAndSortModels($fallback);
             return [
                 'success' => false,
-                'models' => self::getFallbackModels($provider),
-                'count' => count(self::getFallbackModels($provider)),
+                'models' => $fallback,
+                'categorized' => $categorizedFallback,
+                'count' => count($fallback),
                 'from_cache' => false,
-                'error' => 'Tidak ada model yang ditemukan dalam respons API.',
+                'error' => 'Tidak ada model obrolan yang ditemukan dalam respons API.',
             ];
         } catch (\Throwable $e) {
             Log::warning("Gagal fetch models dari provider [{$provider}]: " . $e->getMessage());
 
             $fallback = Cache::get("ai_models_fallback_{$provider}");
             if (!empty($fallback) && is_array($fallback)) {
+                $categorized = self::categorizeAndSortModels($fallback);
                 return [
                     'success' => false,
                     'models' => array_values($fallback),
+                    'categorized' => $categorized,
                     'count' => count($fallback),
                     'from_cache' => true,
                     'error' => $e->getMessage(),
@@ -582,9 +599,11 @@ class MultiAiModelManager
             }
 
             $defaults = self::getFallbackModels($provider);
+            $categorized = self::categorizeAndSortModels($defaults);
             return [
                 'success' => false,
                 'models' => $defaults,
+                'categorized' => $categorized,
                 'count' => count($defaults),
                 'from_cache' => false,
                 'error' => $e->getMessage(),
@@ -593,11 +612,262 @@ class MultiAiModelManager
     }
 
     /**
+     * Check if a model ID represents non-chat / non-generative tasks
+     * (embeddings, audio/TTS, whisper, image generation, moderation, rerankers, etc.)
+     */
+    public static function isNonChatModel(string $id): bool
+    {
+        $lower = strtolower($id);
+        $excludePrefixes = [
+            'text-embedding', 'bge-', 'gte-', 'e5-', 'uae-',
+            'whisper', 'tts-', 'audio-', 'voice-', 'elevenlabs',
+            'dall-e', 'flux', 'midjourney', 'stable-diffusion', 'sdxl',
+            'text-moderation', 'omni-moderation', 'rerank',
+        ];
+
+        foreach ($excludePrefixes as $prefix) {
+            if (str_contains($lower, $prefix)) {
+                return true;
+            }
+        }
+
+        if (preg_match('/(^|[-_\/.])(embedding|embed|whisper|tts|moderation|rerank|realtime)($|[-_\/.])/i', $lower)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Classify model ID into target tier: 'discovery', 'prd', or 'general'.
+     * - 'discovery': Low latency, high throughput, cost-efficient (mini, flash, lite, haiku, 8b, 7b, small, etc.)
+     * - 'prd': Deep reasoning, flagship architecture, high intelligence (claude-3-7-sonnet, deepseek-r1, gpt-4o, o1, o3, 70b, 72b, etc.)
+     */
+    public static function classifyModelTier(string $id): string
+    {
+        $lower = strtolower($id);
+
+        // Guard against 'gemini' falsely matching 'mini'
+        $withoutGemini = str_replace('gemini', '', $lower);
+
+        // 1. Check Deep Reasoning & Flagship Architecture First (PRD)
+        $isDeepReasoning = preg_match('/(^|[-_\/.])(reasoner|reasoning|r1|o1|o3|qwq|thinking)($|[-_\/.])/i', $lower)
+            || str_contains($lower, 'deepseek-reasoner')
+            || str_contains($lower, 'deepseek-r1')
+            || str_contains($lower, 'o1-')
+            || str_contains($lower, 'o3-');
+
+        if ($isDeepReasoning) {
+            return 'prd';
+        }
+
+        // 2. Fast, Low-Latency & Economical (Discovery / Audit Cepat)
+        if (
+            preg_match('/(^|[-_\/.])(mini|flash|lite|haiku|instant|small|nano|pico|turbo|speed)($|[-_\/.])/i', $withoutGemini)
+            || str_ends_with($lower, '-mini')
+            || str_ends_with($lower, '-flash')
+            || str_ends_with($lower, '-lite')
+            || str_ends_with($lower, '-haiku')
+        ) {
+            return 'discovery';
+        }
+
+        // 3. Flagship / Heavy Architecture (PRD)
+        $prdKeywords = [
+            'claude-3-7', 'claude-sonnet-4', 'claude-3-5-sonnet', 'claude-3-opus', 'opus',
+            'gpt-4o', 'gpt-4.5', 'gpt-4-turbo', 'gpt-4',
+            'gemini-2.5-pro', 'gemini-2.0-pro', 'gemini-1.5-pro', 'gemini-pro',
+            'grok-2', 'grok-3',
+            'qwen-2.5-72b', 'qwen-max', 'qwen-plus',
+            'llama-3.1-405b', 'llama-3.3-70b', 'llama-3.1-70b', 'llama-3-70b', '70b', '72b', '405b',
+            'mistral-large', 'codestral', 'command-r-plus'
+        ];
+
+        foreach ($prdKeywords as $prdKw) {
+            if (str_contains($lower, $prdKw)) {
+                return 'prd';
+            }
+        }
+
+        // 4. Small parameter indicators for Discovery (1b to 14b)
+        if (preg_match('/(^|[-_\/.])([1-9]|1[0-4])b($|[-_\/.])/i', $lower)) {
+            return 'discovery';
+        }
+
+        // 5. Common fast chat models
+        $discoveryKeywords = [
+            'deepseek-chat', 'deepseek-v3', 'chatgpt-4o-latest', 'gpt-3.5'
+        ];
+
+        foreach ($discoveryKeywords as $discKw) {
+            if (str_contains($lower, $discKw)) {
+                return 'discovery';
+            }
+        }
+
+        return 'general';
+    }
+
+    /**
+     * Filter out non-chat models and categorize raw model IDs into Discovery and PRD tiers.
+     */
+    public static function categorizeAndSortModels(array $rawModels): array
+    {
+        $discovery = [];
+        $prd = [];
+        $general = [];
+        $allValid = [];
+
+        foreach ($rawModels as $modelId) {
+            $id = trim($modelId);
+            if (empty($id) || self::isNonChatModel($id)) {
+                continue;
+            }
+
+            $allValid[] = $id;
+            $tier = self::classifyModelTier($id);
+
+            if ($tier === 'discovery') {
+                $discovery[] = $id;
+            } elseif ($tier === 'prd') {
+                $prd[] = $id;
+            } else {
+                $general[] = $id;
+            }
+        }
+
+        $allValid = array_values(array_unique($allValid));
+        $discovery = array_values(array_unique($discovery));
+        $prd = array_values(array_unique($prd));
+        $general = array_values(array_unique($general));
+
+        natcasesort($discovery);
+        natcasesort($prd);
+        natcasesort($general);
+        natcasesort($allValid);
+
+        return [
+            'discovery' => array_values($discovery),
+            'prd' => array_values($prd),
+            'general' => array_values($general),
+            'all_valid' => array_values($allValid),
+        ];
+    }
+
+    /**
+     * Get benchmark gold-standard curated models with informative descriptions.
+     */
+    public static function getCuratedTopModels(string $tier): array
+    {
+        if ($tier === 'discovery') {
+            return [
+                'gpt-4o-mini' => 'gpt-4o-mini — OpenAI (Super Cepat, Standar Emas Audit Ide)',
+                'deepseek-chat' => 'deepseek-chat / V3 — DeepSeek (Ekstra Cepat & Super Hemat Biaya)',
+                'gemini-2.0-flash' => 'gemini-2.0-flash — Google (Inference Kilat & Multimodal)',
+                'gemini-2.0-flash-lite' => 'gemini-2.0-flash-lite — Google (Ultra Ringan & Hemat Latensi)',
+                'claude-3-5-haiku' => 'claude-3-5-haiku — Anthropic (Kecepatan Tinggi & Logika Tajam)',
+                'llama-3.3-70b-versatile' => 'llama-3.3-70b-versatile — Meta / Groq (High-Throughput Open Intelligence)',
+                'qwen-2.5-coder-7b' => 'qwen-2.5-coder-7b — Alibaba (Ringan & Cepat)',
+                'mistral-small' => 'mistral-small — Mistral AI (Efisien & Responsif)',
+            ];
+        }
+
+        return [
+            'claude-3-7-sonnet-20250219' => 'claude-3-7-sonnet-20250219 — Anthropic (Standar Tertinggi Hybrid Reasoning & PRD Enterprise)',
+            'claude-sonnet-4-5-20250929' => 'claude-sonnet-4-5-20250929 — Anthropic (Generasi Flagship Teranyar)',
+            'claude-3-5-sonnet-20241022' => 'claude-3-5-sonnet-20241022 — Anthropic (SOTA Coding & System Architecture)',
+            'deepseek-reasoner' => 'deepseek-reasoner / R1 — DeepSeek (SOTA Chain-of-Thought Reasoning & Ekstra Hemat)',
+            'gpt-4o' => 'gpt-4o — OpenAI (Frontier Multimodal & Rekayasa Arsitektur)',
+            'o3-mini' => 'o3-mini — OpenAI (Penalaran Matematika, Logika & Kode Tingkat Lanjut)',
+            'o1' => 'o1 — OpenAI (Penalaran Mendalam Masalah Kompleks)',
+            'gemini-2.5-pro' => 'gemini-2.5-pro — Google (Konteks Raksasa & Sintesis Arsitektur Skala Besar)',
+            'qwen-2.5-72b-instruct' => 'qwen-2.5-72b-instruct — Alibaba (72B SOTA Open-Weights)',
+            'grok-2-1212' => 'grok-2-1212 — xAI (Penalaran Cepat & Berwawasan Luas)',
+        ];
+    }
+
+    /**
+     * Build grouped select options for Filament dropdowns based on tier.
+     */
+    public static function getGroupedModelOptions(string $provider, string $tier = 'discovery', ?string $currentValue = null): array
+    {
+        $res = self::fetchAvailableModels($provider, forceRefresh: false);
+        $models = $res['models'] ?? self::getFallbackModels($provider);
+        $categorized = $res['categorized'] ?? self::categorizeAndSortModels($models);
+
+        $curated = self::getCuratedTopModels($tier);
+        $curatedKeys = array_keys($curated);
+
+        $tierGroupTitle = $tier === 'discovery'
+            ? '⚡ Rekomendasi Utama (Discovery & Audit Cepat)'
+            : '🏆 Rekomendasi Utama (PRD & Arsitektur Kompleks)';
+
+        $classifiedGroupTitle = $tier === 'discovery'
+            ? '🚀 Seluruh Model Cepat & Ringan (Tersortir dari 380+ API)'
+            : '🧠 Seluruh Model Penalaran & Arsitektur (Tersortir dari 380+ API)';
+
+        $options = [];
+
+        // 1. If currently saved value exists and not in list, preserve it cleanly
+        if (!empty($currentValue) && !isset($curated[$currentValue]) && !in_array($currentValue, $categorized['all_valid'] ?? [])) {
+            $options['📌 Model Aktif Saat Ini'] = [
+                $currentValue => "{$currentValue} (Tersimpan Saat Ini)"
+            ];
+        }
+
+        // 2. Primary Curated Recommendations
+        $options[$tierGroupTitle] = $curated;
+
+        // 3. Classified Models from API for this Tier
+        $tierModels = $categorized[$tier] ?? [];
+        $filteredTierModels = [];
+        foreach ($tierModels as $m) {
+            if (!in_array($m, $curatedKeys)) {
+                $filteredTierModels[$m] = $m;
+            }
+        }
+        if (!empty($filteredTierModels)) {
+            $options[$classifiedGroupTitle] = $filteredTierModels;
+        }
+
+        // 4. All Other Valid Chat Models (General + Opposite Tier) for 100% flexibility
+        $otherModels = [];
+        $oppositeTier = $tier === 'discovery' ? 'prd' : 'discovery';
+        $combinedOthers = array_merge(
+            $categorized['general'] ?? [],
+            $categorized[$oppositeTier] ?? []
+        );
+        $combinedOthers = array_values(array_unique($combinedOthers));
+        natcasesort($combinedOthers);
+
+        foreach ($combinedOthers as $m) {
+            if (!in_array($m, $curatedKeys) && !isset($filteredTierModels[$m])) {
+                $otherModels[$m] = $m;
+            }
+        }
+        if (!empty($otherModels)) {
+            $options['🌐 Pilihan Model Tersedia Lainnya (380+)'] = $otherModels;
+        }
+
+        return $options;
+    }
+
+    /**
      * Get array of model IDs for HTML datalist or auto-complete.
      */
-    public static function getDatalistOptions(string $provider, ?string $apiKey = null, ?string $baseUrl = null): array
+    public static function getDatalistOptions(string $provider, ?string $apiKey = null, ?string $baseUrl = null, string $tier = 'all'): array
     {
         $result = self::fetchAvailableModels($provider, $apiKey, $baseUrl, forceRefresh: false);
+        $categorized = $result['categorized'] ?? self::categorizeAndSortModels($result['models'] ?? self::getFallbackModels($provider));
+
+        if ($tier === 'discovery') {
+            return $categorized['discovery'] ?? [];
+        }
+
+        if ($tier === 'prd') {
+            return $categorized['prd'] ?? [];
+        }
+
         return $result['models'] ?? self::getFallbackModels($provider);
     }
 
@@ -610,6 +880,7 @@ class MultiAiModelManager
             'relayrouter' => [
                 'deepseek-chat',
                 'deepseek-v3',
+                'deepseek-reasoner',
                 'gpt-4o-mini',
                 'gpt-4o',
                 'claude-3-5-haiku',
@@ -617,11 +888,12 @@ class MultiAiModelManager
                 'claude-sonnet-4-5-20250929',
                 'gemini-2.0-flash-lite',
                 'gemini-2.5-flash',
+                'gemini-2.5-pro',
                 'qwen-2.5-72b',
             ],
             'deepseek' => ['deepseek-chat', 'deepseek-reasoner'],
-            'gemini' => ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.5-flash'],
-            'anthropic' => ['claude-3-7-sonnet-20250219', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022'],
+            'gemini' => ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'],
+            'anthropic' => ['claude-3-7-sonnet-20250219', 'claude-sonnet-4-5-20250929', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022'],
             'openai' => ['gpt-4o-mini', 'gpt-4o', 'o3-mini', 'o1'],
             'groq' => ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'],
             'openrouter' => ['meta-llama/llama-3.3-70b-instruct:free', 'deepseek/deepseek-r1:free', 'anthropic/claude-3.7-sonnet'],

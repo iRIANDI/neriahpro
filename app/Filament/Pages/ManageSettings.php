@@ -551,11 +551,13 @@ class ManageSettings extends Page implements HasForms
 
                                                 $res = \App\Services\Ai\MultiAiModelManager::fetchAvailableModels('relayrouter', $apiKey, $baseUrl, forceRefresh: true);
 
-                                                if ($res['success']) {
+                                                 if ($res['success']) {
                                                     $count = $res['count'];
+                                                    $discCount = count($res['categorized']['discovery'] ?? []);
+                                                    $prdCount = count($res['categorized']['prd'] ?? []);
                                                     Notification::make()
                                                         ->title("✅ Berhasil Memuat {$count} Model dari API!")
-                                                        ->body("Katalog seluruh {$count} model dari RelayRouter/OpenAI telah disinkronkan ke cache. Ketik atau pilih model apa saja pada saran input di bawah.")
+                                                        ->body("Katalog {$count} model dari RelayRouter/OpenAI telah disinkronkan & disortir ke dua dropdown: {$discCount} model Discovery / Audit Cepat dan {$prdCount} model PRD & Arsitektur Kompleks.")
                                                         ->success()
                                                         ->send();
                                                 } else {
@@ -580,21 +582,53 @@ class ManageSettings extends Page implements HasForms
                                             ->default('https://api.relayrouter.ai/v1')
                                             ->helperText('Endpoint proxy OpenAI-compatible (standar: https://api.relayrouter.ai/v1).')
                                             ->columnSpan(1),
-                                        TextInput::make('ai_relayrouter_discovery_model')
+                                        Select::make('ai_relayrouter_discovery_model')
                                             ->label('Model Discovery / Audit Cepat')
                                             ->default('gpt-4o-mini')
-                                            ->datalist(function () {
-                                                return \App\Services\Ai\MultiAiModelManager::getDatalistOptions('relayrouter');
+                                            ->searchable()
+                                            ->preload()
+                                            ->options(function ($get) {
+                                                return \App\Services\Ai\MultiAiModelManager::getGroupedModelOptions(
+                                                    'relayrouter',
+                                                    'discovery',
+                                                    $get('ai_relayrouter_discovery_model')
+                                                );
                                             })
-                                            ->helperText('Model respons cepat & hemat untuk audit ide awal. Ketik atau pilih dari 380+ model yang ditarik otomatis dari API (rekomendasi: gpt-4o-mini, deepseek-chat, gemini-2.0-flash-lite).')
+                                            ->getOptionLabelUsing(fn ($value) => $value)
+                                            ->createOptionForm([
+                                                TextInput::make('custom_model_id')
+                                                    ->label('Nama / ID Model AI Kustom')
+                                                    ->placeholder('contoh: gpt-4o-mini atau nama model baru')
+                                                    ->required(),
+                                            ])
+                                            ->createOptionUsing(function (array $data): string {
+                                                return trim($data['custom_model_id']);
+                                            })
+                                            ->helperText('Model respons cepat & hemat untuk audit ide awal. Tersortir khusus dari 380+ API (Rekomendasi: gpt-4o-mini, deepseek-chat, gemini-2.0-flash-lite).')
                                             ->columnSpan(1),
-                                        TextInput::make('ai_relayrouter_prd_model')
+                                        Select::make('ai_relayrouter_prd_model')
                                             ->label('Model PRD & Arsitektur Kompleks')
                                             ->default('claude-3-7-sonnet-20250219')
-                                            ->datalist(function () {
-                                                return \App\Services\Ai\MultiAiModelManager::getDatalistOptions('relayrouter');
+                                            ->searchable()
+                                            ->preload()
+                                            ->options(function ($get) {
+                                                return \App\Services\Ai\MultiAiModelManager::getGroupedModelOptions(
+                                                    'relayrouter',
+                                                    'prd',
+                                                    $get('ai_relayrouter_prd_model')
+                                                );
                                             })
-                                            ->helperText('Model penalaran arsitektur komprehensif. Ketik atau pilih dari 380+ model dari API. Rekomendasi hemat: deepseek-chat / gpt-4o-mini; Rekomendasi flagship: claude-3-7-sonnet-20250219 / claude-sonnet-4-5 / gpt-4o.')
+                                            ->getOptionLabelUsing(fn ($value) => $value)
+                                            ->createOptionForm([
+                                                TextInput::make('custom_model_id')
+                                                    ->label('Nama / ID Model AI Kustom')
+                                                    ->placeholder('contoh: claude-3-7-sonnet-20250219 atau nama model baru')
+                                                    ->required(),
+                                            ])
+                                            ->createOptionUsing(function (array $data): string {
+                                                return trim($data['custom_model_id']);
+                                            })
+                                            ->helperText('Model penalaran arsitektur komprehensif. Tersortir khusus dari 380+ API (Rekomendasi: claude-3-7-sonnet-20250219, deepseek-reasoner, gpt-4o).')
                                             ->columnSpan(1),
                                     ])->columns(2),
                             ]),

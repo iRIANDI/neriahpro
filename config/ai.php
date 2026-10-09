@@ -13,8 +13,8 @@ return [
             'name' => 'Google Gemini',
             'api_key' => env('GEMINI_API_KEY'),
             'models' => [
-                'discovery' => env('GEMINI_DISCOVERY_MODEL', 'gemini-2.5-flash'),
-                'prd' => env('GEMINI_PRD_MODEL', 'gemini-2.5-pro'),
+                'discovery' => env('GEMINI_DISCOVERY_MODEL', 'gemini-2.0-flash'),
+                'prd' => env('GEMINI_PRD_MODEL', 'gemini-1.5-pro'),
                 'fallback' => 'gemini-1.5-flash',
             ],
             'is_free_tier' => true,

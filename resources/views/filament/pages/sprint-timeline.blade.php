@@ -1,5 +1,33 @@
 <x-filament-panels::page>
-    <div x-data="sprintTimelineDashboard()" x-init="initDashboard()" class="space-y-6">
+    @vite(['resources/css/app.css'])
+
+    <style>
+        .st-container { font-family: ui-sans-serif, system-ui, sans-serif; }
+        .st-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        .st-grid-stats { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+        @media (min-width: 640px) { .st-grid-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (min-width: 1024px) { .st-grid-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        
+        .st-card { background: #ffffff; border: 1px solid #e4e4e7; padding: 18px; border-radius: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+        .dark .st-card { background: #18181b; border-color: #27272a; }
+
+        .st-tabs-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 2px solid #27272a; padding-bottom: 8px; margin: 24px 0 20px 0; }
+        .st-tab-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+        .st-tab-btn { padding: 10px 18px; font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.15s ease; border-radius: 0; border: 1px solid transparent; }
+        .st-tab-btn-active { background: #10b981 !important; color: #000000 !important; border-color: #059669 !important; font-weight: 900 !important; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); }
+        .st-tab-btn-inactive { background: #f4f4f5; color: #52525b; border-color: #d4d4d8; }
+        .dark .st-tab-btn-inactive { background: #27272a; color: #a1a1aa; border-color: #3f3f46; }
+        .st-tab-btn-inactive:hover { background: #e4e4e7; color: #18181b; }
+        .dark .st-tab-btn-inactive:hover { background: #3f3f46; color: #ffffff; }
+
+        .st-ruler-header { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; border-bottom: 1px solid #3f3f46; padding-bottom: 10px; font-family: ui-monospace, monospace; font-size: 11px; }
+        .st-track-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; min-height: 48px; align-items: stretch; margin-top: 8px; }
+        .st-meter-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; height: 16px; margin: 10px 0; }
+        .st-batch-grid { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px; }
+        @media (min-width: 1024px) { .st-batch-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    </style>
+
+    <div x-data="sprintTimelineDashboard()" x-init="initDashboard()" class="st-container space-y-6">
 
         {{-- TOP STATS: EXECUTIVE SPRINT VELOCITY & ANTI-COLLISION SHIELD --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -62,13 +90,13 @@
         </div>
 
         {{-- DASHBOARD TABS NAVIGATION --}}
-        <div class="border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2 overflow-x-auto">
-            <div class="flex items-center gap-2">
+        <div class="st-tabs-nav border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 overflow-x-auto pb-2">
+            <div class="st-tab-group flex flex-wrap items-center gap-2">
                 <button 
                     type="button" 
                     @click="activeTab = 'matrix'"
-                    :class="activeTab === 'matrix' ? 'border-b-2 border-emerald-500 text-zinc-900 dark:text-zinc-100 font-black' : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 font-medium'"
-                    class="px-4 py-3 text-xs font-mono uppercase tracking-wider flex items-center gap-2 transition cursor-pointer"
+                    :class="activeTab === 'matrix' ? 'st-tab-btn-active bg-emerald-500 text-black font-black border-emerald-600' : 'st-tab-btn-inactive bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold border-zinc-300 dark:border-zinc-700'"
+                    class="st-tab-btn px-4 py-2.5 text-xs font-mono uppercase tracking-wider flex items-center gap-2 transition cursor-pointer"
                 >
                     <svg width="16" height="16" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; max-width: 16px; max-height: 16px; display: inline-block; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                     <span>1. Matriks Kapasitas Slot</span>
@@ -76,9 +104,9 @@
 
                 <button 
                     type="button" 
-                    @click="activeTab = 'gantt'; $nextTick(() => renderGantt())"
-                    :class="activeTab === 'gantt' ? 'border-b-2 border-emerald-500 text-zinc-900 dark:text-zinc-100 font-black' : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 font-medium'"
-                    class="px-4 py-3 text-xs font-mono uppercase tracking-wider flex items-center gap-2 transition cursor-pointer"
+                    @click="activeTab = 'gantt'; setTimeout(() => renderGantt(true), 80)"
+                    :class="activeTab === 'gantt' ? 'st-tab-btn-active bg-emerald-500 text-black font-black border-emerald-600' : 'st-tab-btn-inactive bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold border-zinc-300 dark:border-zinc-700'"
+                    class="st-tab-btn px-4 py-2.5 text-xs font-mono uppercase tracking-wider flex items-center gap-2 transition cursor-pointer"
                 >
                     <svg width="16" height="16" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; max-width: 16px; max-height: 16px; display: inline-block; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                     <span>2. Master Gantt Multi-Proyek (Mermaid)</span>
@@ -87,22 +115,22 @@
                 <button 
                     type="button" 
                     @click="activeTab = 'calendar'"
-                    :class="activeTab === 'calendar' ? 'border-b-2 border-emerald-500 text-zinc-900 dark:text-zinc-100 font-black' : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 font-medium'"
-                    class="px-4 py-3 text-xs font-mono uppercase tracking-wider flex items-center gap-2 transition cursor-pointer"
+                    :class="activeTab === 'calendar' ? 'st-tab-btn-active bg-emerald-500 text-black font-black border-emerald-600' : 'st-tab-btn-inactive bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold border-zinc-300 dark:border-zinc-700'"
+                    class="st-tab-btn px-4 py-2.5 text-xs font-mono uppercase tracking-wider flex items-center gap-2 transition cursor-pointer"
                 >
                     <svg width="16" height="16" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; max-width: 16px; max-height: 16px; display: inline-block; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     <span>3. Timeline Kalender Bulanan</span>
                 </button>
             </div>
 
-            <div class="flex items-center gap-2 py-2">
+            <div class="flex items-center gap-2 py-1">
                 <button
                     type="button"
                     @click="openAssignModal = true"
-                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-black font-mono text-xs font-bold rounded-none flex items-center gap-1.5 transition cursor-pointer"
+                    class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-mono text-xs font-black rounded-none flex items-center gap-1.5 transition cursor-pointer border border-emerald-500 shadow-xs"
                 >
                     <svg width="14" height="14" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; max-width: 14px; max-height: 14px; display: inline-block; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <span>Kunci Slot Proyek</span>
+                    <span>+ Kunci Slot Proyek</span>
                 </button>
             </div>
         </div>
@@ -676,7 +704,6 @@
                 initDashboard() {
                     this.$nextTick(() => {
                         this.initMermaid();
-                        this.renderGantt();
                     });
                 },
 
@@ -709,11 +736,11 @@
                             securityLevel: 'loose',
                             gantt: {
                                 titleTopMargin: 25,
-                                barHeight: 20,
-                                barGap: 6,
+                                barHeight: 22,
+                                barGap: 8,
                                 topPadding: 50,
                                 sidePadding: 75,
-                                fontSize: 11,
+                                fontSize: 12,
                                 numberSectionStyles: 4,
                                 axisFormat: '%d %b',
                             }
@@ -724,7 +751,10 @@
                 },
 
                 async renderGantt(force = false) {
-                    if (!window.mermaid) return;
+                    if (!window.mermaid) {
+                        setTimeout(() => this.renderGantt(force), 250);
+                        return;
+                    }
                     const sourceEl = document.getElementById('unified-gantt-mermaid-source');
                     const targetEl = document.getElementById('unified-gantt-mermaid-target');
                     if (!sourceEl || !targetEl) return;
@@ -737,6 +767,13 @@
                         const renderId = 'mermaid-gantt-' + Date.now();
                         const { svg } = await window.mermaid.render(renderId, code);
                         targetEl.innerHTML = svg;
+                        const svgEl = targetEl.querySelector('svg');
+                        if (svgEl) {
+                            svgEl.style.maxWidth = '100%';
+                            svgEl.style.height = 'auto';
+                            svgEl.style.display = 'block';
+                            svgEl.style.margin = '0 auto';
+                        }
                     } catch (err) {
                         console.error('Gantt render error:', err);
                         targetEl.innerHTML = `

@@ -185,32 +185,33 @@ class SprintTimelinePage extends Page
         $hasTasks = false;
 
         foreach ($batchesWithProjects as $bKey => $batch) {
-            $batchLabel = preg_replace('/["\r\n]+/', '', $batch['label']);
-            $code .= "    section {$batchLabel} ({$batch['dates']})\n";
+            $cleanLabel = preg_replace('/[#:"\r\n]+/', '', $batch['label']);
+            $cleanDates = preg_replace('/[#:"\r\n]+/', '', $batch['dates']);
+            $code .= "    section {$cleanLabel} ({$cleanDates})\n";
 
             $assignedProjects = $batch['projects'] ?? [];
             if (empty($assignedProjects)) {
-                // Dummy reservation placeholder
                 $code .= "    Slot Kapasitas Terbuka (Siap Booking) :milestone, open_{$bKey}, {$batch['start_date']}, 0d\n";
                 $hasTasks = true;
                 continue;
             }
 
             foreach ($assignedProjects as $idx => $proj) {
-                $pName = preg_replace('/["\r\n]+/', '', substr($proj['name'], 0, 25));
+                $rawName = preg_replace('/[^a-zA-Z0-9\s\-_]/', '', substr($proj['name'], 0, 20));
+                $pName = trim($rawName) ?: 'Project ' . ($idx + 1);
                 $sDate = $proj['start_date'] ?: $batch['start_date'];
                 $prefix = "p_{$bKey}_{$idx}";
 
                 $statusTag = match ($proj['status']) {
-                    'Active Sprint', 'In Development (DP Paid)', 'In Progress' => ':active',
-                    'Completed' => ':done',
+                    'Active Sprint', 'In Development (DP Paid)', 'In Progress' => 'active, ',
+                    'Completed' => 'done, ',
                     default => '',
                 };
 
-                $code .= "    {$pName} // Discovery & DB ULID {$statusTag}, {$prefix}_1, {$sDate}, 7d\n";
-                $code .= "    {$pName} // Core Business & Filament Panel :after {$prefix}_1, 14d\n";
-                $code .= "    {$pName} // Island UI & End-to-End QA :after {$prefix}_1, 28d\n";
-                $code .= "    {$pName} // Production Go-Live :milestone, {$prefix}_live, after {$prefix}_1, 35d\n";
+                $code .= "    {$pName} - Discovery & DB ULID :{$statusTag}{$prefix}_1, {$sDate}, 7d\n";
+                $code .= "    {$pName} - Core Business & Filament :{$prefix}_2, after {$prefix}_1, 14d\n";
+                $code .= "    {$pName} - Island UI & QA :{$prefix}_3, after {$prefix}_2, 14d\n";
+                $code .= "    {$pName} - Production Go-Live :milestone, {$prefix}_live, after {$prefix}_3, 0d\n";
                 $hasTasks = true;
             }
             $code .= "\n";

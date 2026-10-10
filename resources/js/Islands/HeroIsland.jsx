@@ -832,7 +832,7 @@ export default function HeroIsland({
                         {isEn ? 'INVESTMENT' : 'BIAYA INVESTASI'}
                       </div>
                       <div className="text-lg font-black font-mono text-zinc-900 dark:text-white">
-                        Rp {retailLitePrice} <span className="text-xs font-normal text-zinc-500">s/d Rp {retailUltimatePrice}</span>
+                        Rp 0 <span className="text-xs font-normal text-zinc-500">(Gratis) s/d Rp {retailUltimatePrice}</span>
                       </div>
                       <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
                         {isEn ? 'One-time payment • Lifetime access' : 'Sekali bayar • Akses permanen & unduh instan'}
@@ -847,20 +847,20 @@ export default function HeroIsland({
                       </div>
                       <div className="space-y-1 text-zinc-700 dark:text-zinc-300">
                         <div className="flex justify-between items-center">
-                          <span>• <strong>Spark:</strong> DDL PostgreSQL &amp; AI Rules</span>
-                          <span className="text-zinc-500">Rp 99.000</span>
+                          <span>• <strong>Spark:</strong> Audit Ide &amp; Validasi MVP</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">Rp 0 (Gratis)</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span>• <strong>Starter:</strong> PRD Core &amp; DDL Keyset</span>
-                          <span className="text-zinc-500">Rp 299.000</span>
+                          <span>• <strong>Lite PRD:</strong> 26 Param &amp; PostgreSQL DDL</span>
+                          <span className="text-zinc-500">Rp {retailLitePrice}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span>• <strong>Pro:</strong> Full PRD 26 Param + Docker</span>
-                          <span className="text-zinc-500">Rp 699.000</span>
+                          <span>• <strong>Pro Blueprint:</strong> Docker + 6 Diagram (Favorit)</span>
+                          <span className="text-zinc-500">Rp {retailProPrice}</span>
                         </div>
-                        <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold">
-                          <span>• <strong>Ultimate:</strong> Full 7 Software Factory OS</span>
-                          <span>Rp 1.490.000</span>
+                        <div className="flex justify-between items-center text-amber-600 dark:text-amber-400 font-bold">
+                          <span>• <strong>Ultimate Factory OS:</strong> Lengkap 7 Pilar</span>
+                          <span>Rp {retailUltimatePrice}</span>
                         </div>
                       </div>
                     </div>

@@ -2820,7 +2820,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 : 'Punya programmer sendiri. Unduh instan cetak biru PRD 26 param, DDL Strict ULID, Docker & Aturan AI.'}
             </p>
             <div className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold border-t border-zinc-200 dark:border-zinc-800/80 pt-2 flex items-center justify-between">
-              <span>Rp 99.000 s/d Rp 1.490.000</span>
+              <span>Rp 0 (Gratis) s/d Rp 1.490.000</span>
               <span className="text-zinc-500 font-normal">Akses Permanen</span>
             </div>
           </button>

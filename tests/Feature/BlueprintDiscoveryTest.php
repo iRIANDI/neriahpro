@@ -209,10 +209,14 @@ class BlueprintDiscoveryTest extends TestCase
         $synthResponse->assertStatus(200);
         $draftId = $synthResponse->json('draft_id');
 
-        // 2. Direct visit to /blueprint without parameters MUST be completely clean/empty
+        // 2. Direct visit to /blueprint without parameters MUST redirect to /pricing#retail
         $cleanResponse = $this->get('/blueprint');
-        $cleanResponse->assertStatus(200);
-        $cleanResponse->assertViewHas('initialData', []);
+        $cleanResponse->assertRedirect('/pricing#retail');
+
+        // 2b. Visit with package tier (e.g. Spark) renders clean form
+        $sparkResponse = $this->get('/blueprint?tier=spark');
+        $sparkResponse->assertStatus(200);
+        $sparkResponse->assertViewHas('initialData');
 
         // 3. Explicit visit with draft_id loads the draft
         $draftResponse = $this->get('/blueprint?draft_id=' . $draftId);

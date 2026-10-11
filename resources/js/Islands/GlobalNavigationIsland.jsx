@@ -177,7 +177,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
   const navLinks = [
     { label: lang === 'id' ? 'Beranda' : 'Home', href: '/' },
-    ...(isBlueprintEnabled ? [{ label: 'Project OS (PRD)', href: '/blueprint', highlight: true }] : []),
+    ...(isBlueprintEnabled ? [{ label: 'Project OS (PRD)', href: '/pricing#retail', highlight: true }] : []),
     ...(isCvProEnabled ? [{ label: lang === 'id' ? 'Studio CV Pro' : 'CV Pro Studio', href: '/cv-pro' }] : []),
     ...(isPricingEnabled ? [{ label: lang === 'id' ? 'Paket & Harga' : 'Pricing', href: '/pricing' }] : []),
     ...(hasAnyService ? [{ label: lang === 'id' ? 'Layanan HUB' : 'Service Hub', href: '/#services' }] : []),
@@ -199,7 +199,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                 : 'Synthesize Project Specs, Database ERD & PRD in under 60 seconds.'}
             </span>
             {isBlueprintEnabled && (
-              <a href="/blueprint" className="text-emerald-400 hover:text-emerald-300 font-bold underline ml-1 flex items-center gap-0.5">
+              <a href="/pricing#retail" className="text-emerald-400 hover:text-emerald-300 font-bold underline ml-1 flex items-center gap-0.5">
                 <span>{lang === 'id' ? 'Coba Project OS' : 'Launch Project OS'}</span>
                 <ArrowRight className="w-3 h-3 inline" />
               </a>
@@ -270,7 +270,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                       className="absolute top-full left-0 w-72 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-xl p-3 space-y-1 text-left"
                     >
                       {isBlueprintEnabled && (
-                        <a href="/blueprint" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                        <a href="/pricing#retail" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
                           <div className="flex items-center justify-between mb-0.5">
                             <span className="font-bold text-zinc-900 dark:text-white text-xs">Project OS (PRD)</span>
                             <span className="px-1 py-0.2 bg-emerald-500 text-black text-[9px] font-bold">ACTIVE</span>
@@ -480,7 +480,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                     {cartState.count === 0 ? (
                       <div className="py-4 text-center text-xs text-zinc-500 font-sans">
                         <p>Cart saat ini masih kosong.</p>
-                        <a href="/blueprint" className="text-emerald-500 font-bold font-mono underline mt-1.5 inline-block">
+                        <a href="/pricing#retail" className="text-emerald-500 font-bold font-mono underline mt-1.5 inline-block">
                           Rancang Blueprint Proyek &rarr;
                         </a>
                       </div>
@@ -521,7 +521,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
             {isBlueprintEnabled ? (
               <a
-                href="/blueprint"
+                href="/pricing#retail"
                 className="bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black font-mono text-xs uppercase tracking-widest font-black py-2.5 px-5 rounded-none transition flex items-center gap-1.5 shadow-none"
               >
                 <span>{lang === 'id' ? 'Mulai Blueprint' : 'Launch Blueprint'}</span>
@@ -659,7 +659,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                 <span className="px-1.5 py-0.5 bg-emerald-500 text-black text-[9px] font-black">PROMO</span>
               </a>
               {isBlueprintEnabled && (
-                <a href="/blueprint" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
+                <a href="/pricing#retail" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
                   Project OS (PRD Generator) &rarr;
                 </a>
               )}
@@ -685,7 +685,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
               </a>
               {isBlueprintEnabled ? (
                 <a 
-                  href="/blueprint" 
+                  href="/pricing#retail" 
                   className="w-full bg-emerald-500 text-black font-black py-3 text-center block rounded-none uppercase"
                 >
                   Buat Blueprint Proyek Sekarang &rarr;

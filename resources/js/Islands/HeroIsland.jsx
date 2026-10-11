@@ -238,10 +238,10 @@ export default function HeroIsland({
             </button>
 
             <a
-              href="/blueprint"
+              href="/pricing#retail"
               className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 py-3.5 px-3 transition flex items-center gap-1.5 underline decoration-zinc-400 dark:decoration-zinc-600 underline-offset-4"
             >
-              <span>{isEn ? 'Blueprint Workspace ↗' : 'Ruang Blueprint ↗'}</span>
+              <span>{isEn ? 'Blueprint Packages ↗' : 'Paket Blueprint ↗'}</span>
             </a>
           </div>
 

@@ -30,9 +30,9 @@ class BlueprintController extends Controller
             return;
         }
 
-        // Guest access allowed for Free Grant / Spark Tier
-        $tier = $blueprint->user_metadata['retail_tier'] ?? $blueprint->user_metadata['package_tier'] ?? 'lite';
-        if ($tier === 'retail_spark' || $blueprint->is_free_grant) {
+        // Guest access allowed for Free Grant / Spark Tier or public blueprints without paid retail tier
+        $tier = $blueprint->user_metadata['retail_tier'] ?? $blueprint->user_metadata['package_tier'] ?? null;
+        if ($tier === 'retail_spark' || $blueprint->is_free_grant || empty($blueprint->user_metadata) || ! $tier) {
             return;
         }
 
@@ -52,7 +52,7 @@ class BlueprintController extends Controller
     /**
      * Show the public Project OS & Vision Blueprint Questionnaire form.
      */
-    public function create(Request $request): View
+    public function create(Request $request): \Illuminate\View\View|\Illuminate\Http\RedirectResponse
     {
         $globalSettings = CmsGlobalSetting::getAllCached();
         $isBlueprintEnabled = (bool) ($globalSettings['feature_enable_vision_blueprint']->value ?? true);
@@ -61,7 +61,19 @@ class BlueprintController extends Controller
             abort(404);
         }
 
+        $tier = $request->query('tier') ?: $request->query('package_tier') ?: $request->query('package');
+        $slug = $request->query('slug');
         $draftId = $request->query('draft_id');
+        $track = $request->query('track');
+
+        // Direct Access Guard:
+        // Wajib memilih paket terlebih dahulu dari halaman pricing (/pricing#retail).
+        // Jika pengguna langsung mengakses https://neriahpro.com/blueprint tanpa memilih paket
+        // (tanpa query ?tier=..., ?package=..., ?slug=..., atau ?draft_id=...), arahkan ke halaman pricing.
+        if (! $tier && ! $slug && ! $draftId && ! $track) {
+            return redirect('/pricing#retail');
+        }
+
         // Defensive cleanup if draft_id contains query separators (e.g. "?track=...")
         if ($draftId && str_contains($draftId, '?')) {
             $draftId = explode('?', $draftId)[0];
@@ -70,8 +82,6 @@ class BlueprintController extends Controller
             $draftId = explode('&', $draftId)[0];
         }
 
-        $track = $request->query('track');
-        $slug = $request->query('slug');
         $initialData = [];
 
         if ($slug) {
@@ -131,6 +141,12 @@ class BlueprintController extends Controller
         if ($track) {
             $initialData['selected_track'] = $track;
             $initialData['track'] = $track;
+        }
+
+        if ($tier) {
+            $initialData['selected_tier'] = $tier;
+            $initialData['tier'] = $tier;
+            $initialData['package_tier'] = $tier;
         }
 
         return view('blueprint.create', [

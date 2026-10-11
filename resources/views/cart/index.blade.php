@@ -45,7 +45,7 @@
                 <button onclick="toggleTheme()" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono rounded-none border border-zinc-300 dark:border-zinc-700 transition">
                     THEME
                 </button>
-                <a href="/blueprint" class="px-3 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none transition">
+                <a href="/pricing#retail" class="px-3 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none transition">
                     + NEW PROPOSAL
                 </a>
             </div>
@@ -148,8 +148,8 @@
                 <svg class="w-12 h-12 mx-auto text-zinc-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 <h3 class="text-base font-bold uppercase font-mono text-zinc-900 dark:text-zinc-100 mb-1">Cart Masih Kosong</h3>
                 <p class="text-zinc-500 text-xs font-sans mb-6">Belum ada spesifikasi Blueprint proyek yang ditambahkan ke cart belanja atau masa reservasi 24 jam telah kedaluwarsa.</p>
-                <a href="/blueprint" class="inline-block px-5 py-2.5 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs uppercase tracking-wider transition">
-                    Mulai Buat PRD Baru
+                <a href="/pricing#retail" class="inline-block px-5 py-2.5 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs uppercase tracking-wider transition">
+                    Pilih Paket Blueprint Baru
                 </a>
             </div>
         @else

@@ -588,7 +588,7 @@
                         x-cloak 
                         class="absolute top-full left-0 w-72 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-2xl p-2.5 space-y-1 text-left z-50 font-sans"
                     >
-                        <a href="/blueprint" class="block p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                        <a href="/pricing#retail" class="block p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
                             <div class="flex items-center justify-between mb-0.5">
                                 <span class="font-bold text-zinc-900 dark:text-white text-xs font-mono">Project OS (PRD)</span>
                                 <span class="px-1 py-0.2 bg-emerald-500 text-black text-[9px] font-mono font-bold">ACTIVE</span>
@@ -764,7 +764,7 @@
 
                 <!-- New Project / Blueprint CTA -->
                 <a 
-                    href="/blueprint" 
+                    href="/pricing#retail" 
                     class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-bold uppercase tracking-wider transition rounded-none shadow-xs shrink-0"
                 >
                     <span>+ {{ $isEn ? 'NEW PROJECT' : 'PROYEK BARU' }}</span>
@@ -809,7 +809,7 @@
                 <a href="/" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold">
                     {{ $isEn ? 'Home' : 'Beranda' }}
                 </a>
-                <a href="/blueprint" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold">
+                <a href="/pricing#retail" class="block py-2 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold">
                     Project OS (PRD)
                 </a>
                 @if($isCvProEnabled)
@@ -1010,7 +1010,7 @@
 
                 <div class="flex items-center gap-2">
                     <a 
-                        href="/blueprint" 
+                        href="/pricing#retail" 
                         class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider transition rounded-none shadow-xs"
                     >
                         + {{ $isEn ? 'NEW BLUEPRINT' : 'BUAT PROYEK BARU' }}

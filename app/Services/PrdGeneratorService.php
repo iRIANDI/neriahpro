@@ -4189,7 +4189,7 @@ PROMPT;
             }
 
             if (!empty($f['code_agent_directive'])) {
-                $md .= "<details><summary>🤖 <strong>Prompt Handoff AI Code Agent ({$fid})</strong></summary>\n\n";
+                $md .= "<details><summary>🤖 <strong>Prompt Handoff AI Code Agent (COPY-PASTE prompt ini ke Cursor/Claude/Aider untuk mengerjakan {$fid})</strong></summary>\n\n";
                 $md .= "```markdown\n" . $f['code_agent_directive'] . "\n```\n";
                 $md .= "</details>\n\n";
             }

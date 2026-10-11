@@ -642,8 +642,10 @@ export default function ArchitecturePricingIsland({
                 >
                   <ShoppingBag className="w-4 h-4 shrink-0" />
                   <span className="whitespace-nowrap font-bold">{isEn ? '01. Paket Retail' : '01. Paket Retail'}</span>
-                  <span className={`shrink-0 px-1.5 py-0.5 text-[9px] font-bold ${
-                    pricingSectionTab === 'retail' ? 'bg-black/20 text-black' : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                  <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
+                    pricingSectionTab === 'retail' 
+                      ? 'bg-black text-white shadow-xs' 
+                      : 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
                   }`}>
                     {isEn ? 'SELF-SERVICE' : 'MANDIRI'}
                   </span>
@@ -662,10 +664,10 @@ export default function ArchitecturePricingIsland({
                 >
                   <Rocket className="w-4 h-4 shrink-0 text-emerald-500 dark:text-emerald-600" />
                   <span className="whitespace-nowrap font-bold">{isEn ? '02. Paket Studio' : '02. Paket Studio'}</span>
-                  <span className={`shrink-0 px-1.5 py-0.5 text-[9px] font-bold ${
+                  <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
                     pricingSectionTab === 'project' 
-                      ? 'bg-emerald-500 text-black' 
-                      : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                      ? 'bg-emerald-500 text-black shadow-xs' 
+                      : 'bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700'
                   }`}>
                     {isEn ? 'TURNKEY' : 'KODING'}
                   </span>
@@ -684,8 +686,10 @@ export default function ArchitecturePricingIsland({
                 >
                   <Layers className="w-4 h-4 shrink-0" />
                   <span className="whitespace-nowrap font-bold">{isEn ? '03. Matriks Perbandingan' : '03. Matriks Perbandingan'}</span>
-                  <span className={`shrink-0 px-1.5 py-0.5 text-[9px] font-bold ${
-                    pricingSectionTab === 'matrix' ? 'bg-black/20 text-black' : 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400'
+                  <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
+                    pricingSectionTab === 'matrix' 
+                      ? 'bg-black text-white shadow-xs' 
+                      : 'bg-cyan-100 text-cyan-950 border border-cyan-400 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-700'
                   }`}>
                     7 PILAR
                   </span>
@@ -704,8 +708,10 @@ export default function ArchitecturePricingIsland({
                 >
                   <HelpCircle className="w-4 h-4 shrink-0" />
                   <span className="whitespace-nowrap font-bold">04. FAQ Project OS</span>
-                  <span className={`shrink-0 px-1.5 py-0.5 text-[9px] font-bold ${
-                    pricingSectionTab === 'faq' ? 'bg-black/20 text-black' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                  <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
+                    pricingSectionTab === 'faq' 
+                      ? 'bg-black text-white shadow-xs' 
+                      : 'bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700'
                   }`}>
                     19 FAQ
                   </span>
@@ -752,10 +758,10 @@ export default function ArchitecturePricingIsland({
             <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex flex-col justify-between rounded-none hover:border-cyan-500/60 transition group relative">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-zinc-500">
+                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-zinc-700 dark:text-zinc-300">
                     TIER 01 // AUDIT
                   </span>
-                  <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-[9px] font-bold">
+                  <span className="px-2 py-0.5 bg-cyan-100 text-cyan-950 border border-cyan-400 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-700 font-mono text-[9px] font-black">
                     {isEn ? 'FREE GUEST MODE' : 'GRATIS / MODE TAMU'}
                   </span>
                 </div>
@@ -828,10 +834,10 @@ export default function ArchitecturePricingIsland({
             <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex flex-col justify-between rounded-none hover:border-cyan-500/60 transition group relative">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-zinc-500">
+                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-zinc-700 dark:text-zinc-300">
                     TIER 02 // ESSENTIAL
                   </span>
-                  <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-[9px] font-bold">
+                  <span className="px-2 py-0.5 bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[9px] font-black">
                     SOLO / DEV
                   </span>
                 </div>
@@ -911,10 +917,10 @@ export default function ArchitecturePricingIsland({
 
               <div>
                 <div className="flex items-center justify-between mb-3 mt-1">
-                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-emerald-600 dark:text-emerald-400">
+                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-emerald-800 dark:text-emerald-400">
                     TIER 03 // PRODUCTION
                   </span>
-                  <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-mono text-[9px] font-bold">
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black">
                     {isEn ? 'STARTUP & AGENCY' : 'STARTUP & AGENSI'}
                   </span>
                 </div>
@@ -947,7 +953,7 @@ export default function ArchitecturePricingIsland({
 
                 {/* Inclusive Header & Features */}
                 <div className="space-y-2 mb-6">
-                  <div className="p-2 mb-2 bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold">
+                  <div className="p-2 mb-2 bg-emerald-100 dark:bg-emerald-950/80 border-l-2 border-emerald-600 dark:border-emerald-400 text-emerald-950 dark:text-emerald-200 font-mono text-[10px] font-black">
                     ⭐ {isEn ? 'Includes all Starter AI Architect features, plus:' : 'Mencakup seluruh fitur Starter AI Architect, ditambah:'}
                   </div>
                   {(isEn ? [
@@ -992,10 +998,10 @@ export default function ArchitecturePricingIsland({
             <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex flex-col justify-between rounded-none hover:border-amber-500/60 transition group relative">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-zinc-500">
+                  <span className="font-mono text-[10px] font-black tracking-wider uppercase text-zinc-700 dark:text-zinc-300">
                     TIER 04 // ENTERPRISE
                   </span>
-                  <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[9px] font-bold">
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[9px] font-black">
                     {isEn ? 'COMPLETE 7-PILLAR OS' : 'LENGKAP 7 PILAR OS'}
                   </span>
                 </div>
@@ -1028,7 +1034,7 @@ export default function ArchitecturePricingIsland({
 
                 {/* Inclusive Header & Features */}
                 <div className="space-y-2 mb-6">
-                  <div className="p-2 mb-2 bg-amber-500/10 border-l-2 border-amber-500 text-amber-800 dark:text-amber-300 font-mono text-[10px] font-bold">
+                  <div className="p-2 mb-2 bg-amber-100 dark:bg-amber-950/80 border-l-2 border-amber-500 dark:border-amber-400 text-amber-950 dark:text-amber-200 font-mono text-[10px] font-black">
                     ⭐ {isEn ? 'Includes all Pro Blueprint features, plus:' : 'Mencakup seluruh fitur Pro Blueprint, ditambah:'}
                   </div>
                   {(isEn ? [
@@ -1123,10 +1129,10 @@ export default function ArchitecturePricingIsland({
             <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 p-6 sm:p-7 flex flex-col justify-between rounded-none shadow-xs hover:border-emerald-500/60 transition group relative">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-xs font-black tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
+                  <span className="font-mono text-xs font-black tracking-wider uppercase text-zinc-700 dark:text-zinc-300">
                     {isEn ? 'SCENARIO 1 // ADVISORY' : 'SKENARIO 1 // ADVISORY'}
                   </span>
-                  <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-[10px] font-bold">
+                  <span className="px-2 py-0.5 bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-black">
                     {isEn ? 'ARCHITECTURE ONLY (ZERO CODING)' : 'CETAK BIRU TEKNIS (TANPA KODING)'}
                   </span>
                 </div>
@@ -1149,7 +1155,7 @@ export default function ArchitecturePricingIsland({
                     </span>
                     <span className="text-xs font-mono text-zinc-500">{isEn ? '/ project' : '/ proyek'}</span>
                   </div>
-                  <div className="p-2 bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold">
+                  <div className="p-2 bg-emerald-100 dark:bg-emerald-950/80 border-l-2 border-emerald-600 dark:border-emerald-400 text-emerald-950 dark:text-emerald-200 font-mono text-[10px] font-black">
                     ⭐ {isEn ? 'Advisory fee 100% deducted from DP if continuing to Full MVP!' : 'Biaya Rp 2.5 jt otomatis memotong DP jika lanjut ke Full MVP!'}
                   </div>
                 </div>
@@ -1219,10 +1225,10 @@ export default function ArchitecturePricingIsland({
 
               <div>
                 <div className="flex items-center justify-between mb-3 mt-2">
-                  <span className="font-mono text-xs font-black tracking-wider uppercase text-emerald-600 dark:text-emerald-400">
+                  <span className="font-mono text-xs font-black tracking-wider uppercase text-emerald-800 dark:text-emerald-400">
                     {isEn ? 'SCENARIO 2 // FULL MONOLITH' : 'SKENARIO 2 // FULL MONOLITH'}
                   </span>
-                  <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-mono text-[10px] font-bold">
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black">
                     {isEn ? '50% MILESTONE DP' : 'DP 50% MILESTONE'}
                   </span>
                 </div>
@@ -1246,10 +1252,10 @@ export default function ArchitecturePricingIsland({
                     <span className="text-[10px] font-mono text-zinc-500">{isEn ? 'Total Contract' : 'Nilai Kontrak'}</span>
                   </div>
                   <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between text-xs font-mono">
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="text-emerald-700 dark:text-emerald-300 font-bold">
                       {isEn ? 'Down Payment (50% DP):' : 'Uang Muka (DP 50%):'}
                     </span>
-                    <span className="font-black text-emerald-500">
+                    <span className="font-black text-emerald-800 dark:text-emerald-400">
                       Rp 25.000.000
                     </span>
                   </div>
@@ -1260,7 +1266,7 @@ export default function ArchitecturePricingIsland({
 
                 {/* Inclusive Header & Features */}
                 <div className="space-y-2.5 mb-6">
-                  <div className="p-2 mb-2 bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold">
+                  <div className="p-2 mb-2 bg-emerald-100 dark:bg-emerald-950/80 border-l-2 border-emerald-600 dark:border-emerald-400 text-emerald-950 dark:text-emerald-200 font-mono text-[10px] font-black">
                     ⭐ {isEn ? 'Includes all Blueprint Advisory deliverables + Complete 7 Pillars of Software Factory OS:' : 'Mencakup seluruh hasil Blueprint Advisory + Lengkap 7 Pilar Software Factory OS:'}
                   </div>
                   {(isEn ? [
@@ -1326,10 +1332,10 @@ export default function ArchitecturePricingIsland({
             <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 p-6 sm:p-7 flex flex-col justify-between rounded-none shadow-xs hover:border-emerald-500/60 transition group relative">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-xs font-black tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
+                  <span className="font-mono text-xs font-black tracking-wider uppercase text-zinc-700 dark:text-zinc-300">
                     {isEn ? 'STIMULUS PROGRAM // UMKM' : 'PROGRAM STIMULUS // UMKM'}
                   </span>
-                  <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 font-mono text-[10px] font-bold">
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black">
                     {isEn ? 'TURNKEY RETAIL APP (100% CODED)' : 'APLIKASI RITEL JADI (100% DIKODINGKAN)'}
                   </span>
                 </div>
@@ -1349,11 +1355,11 @@ export default function ArchitecturePricingIsland({
                   <div className="flex items-baseline justify-between">
                     <div>
                       <span className="text-xs text-zinc-400 line-through mr-2">Rp {pricingSettings.umkm_price || '7.500.000'}</span>
-                      <span className="text-2xl font-black font-mono text-amber-500">
+                      <span className="text-2xl font-black font-mono text-amber-800 dark:text-amber-400">
                         Rp 3.750.000
                       </span>
                     </div>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold">
+                    <span className="text-[10px] font-mono px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-black">
                       SUBSIDI 50%
                     </span>
                   </div>
@@ -1471,7 +1477,7 @@ export default function ArchitecturePricingIsland({
                   <th className="py-3 px-3 font-bold text-zinc-600 dark:text-zinc-400">
                     {isEn ? 'Evaluation Parameter' : 'Parameter Evaluasi'}
                   </th>
-                  <th className="py-3 px-3 font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/5">
+                  <th className="py-3 px-3 font-bold text-cyan-800 dark:text-cyan-400 bg-cyan-500/5">
                     <div>Instant Blueprint</div>
                     <div className="text-[9px] font-normal text-zinc-500">Spark / Lite / Pro / Ultimate</div>
                   </th>
@@ -1479,11 +1485,11 @@ export default function ArchitecturePricingIsland({
                     <div>Advisory Studio</div>
                     <div className="text-[9px] font-normal text-zinc-500">Rp 2.500.000</div>
                   </th>
-                  <th className="py-3 px-3 font-bold text-emerald-500">
+                  <th className="py-3 px-3 font-bold text-emerald-800 dark:text-emerald-400">
                     <div>Full MVP Monolith</div>
                     <div className="text-[9px] font-normal text-zinc-500">Rp 50.000.000 ({isEn ? '50% DP' : 'DP 50%'})</div>
                   </th>
-                  <th className="py-3 px-3 font-bold text-amber-500">
+                  <th className="py-3 px-3 font-bold text-amber-800 dark:text-amber-400">
                     <div>UMKM Starter</div>
                     <div className="text-[9px] font-normal text-zinc-500">{isEn ? 'Rp 3.75 - 7.5 M' : 'Rp 3.75 - 7.5 Jt'}</div>
                   </th>
@@ -2069,7 +2075,7 @@ export default function ArchitecturePricingIsland({
               <div className="mb-6 pt-2 pr-8">
                 {selectedPackage === 'full_mvp' ? (
                   <>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
                       <Clock className="w-3 h-3" />
                       <span>{isEn ? 'NERIAH PRO STUDIO // MAX 2 PROJECTS / CYCLE' : 'NERIAH PRO STUDIO // MAKSIMAL 2 PROYEK / SIKLUS'}</span>
                     </div>
@@ -2084,7 +2090,7 @@ export default function ArchitecturePricingIsland({
                   </>
                 ) : selectedPackage === 'umkm_starter' ? (
                   <>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
                       <Sparkles className="w-3 h-3" />
                       <span>{isEn ? 'NERIAH PRO STUDIO // LOCAL BUSINESS SUBSIDY' : 'NERIAH PRO STUDIO // PROGRAM SUBSIDI UMKM 50%'}</span>
                     </div>
@@ -2099,7 +2105,7 @@ export default function ArchitecturePricingIsland({
                   </>
                 ) : selectedPackage === 'blueprint_advisory' ? (
                   <>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
                       <FileText className="w-3 h-3" />
                       <span>{isEn ? 'NERIAH PRO STUDIO // ARCHITECTURE ADVISORY' : 'NERIAH PRO STUDIO // JASA ADVISORY BLUEPRINT'}</span>
                     </div>
@@ -2114,7 +2120,7 @@ export default function ArchitecturePricingIsland({
                   </>
                 ) : selectedPackage === 'retail_ultimate' ? (
                   <>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
                       <CreditCard className="w-3 h-3" />
                       <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
@@ -2129,7 +2135,7 @@ export default function ArchitecturePricingIsland({
                   </>
                 ) : selectedPackage === 'retail_pro' ? (
                   <>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
                       <CreditCard className="w-3 h-3" />
                       <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
@@ -2144,7 +2150,7 @@ export default function ArchitecturePricingIsland({
                   </>
                 ) : selectedPackage === 'retail_lite' ? (
                   <>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-cyan-100 text-cyan-950 border border-cyan-400 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
                       <CreditCard className="w-3 h-3" />
                       <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
@@ -2159,7 +2165,7 @@ export default function ArchitecturePricingIsland({
                   </>
                 ) : (
                   <>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-cyan-100 text-cyan-950 border border-cyan-400 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
                       <Terminal className="w-3 h-3" />
                       <span>{isEn ? '100% SELF-SERVICE // GUEST ACCESS (NO LOGIN)' : '100% SELF-SERVICE // AKSES TAMU (TANPA LOGIN)'}</span>
                     </div>

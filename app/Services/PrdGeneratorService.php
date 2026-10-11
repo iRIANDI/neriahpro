@@ -3905,7 +3905,7 @@ PROMPT;
                         [
                             'step' => 1,
                             'title' => 'Inisialisasi Guardrails & Arsitektur',
-                            'instruction' => 'Kunci aturan main (.agents/AGENTS.md atau .cursorrules): Standar Primary Key ULID PostgreSQL, Keyset Cursor Pagination O(1), Anti-AI-Slop UI, Zero Native Dialogs (wajib toast/modal), dan signature Schema Filament v5.',
+                            'instruction' => 'Kunci aturan main (.agents/AGENTS.md atau .cursorrules): Standar Primary Key ULID PostgreSQL, Keyset Cursor Pagination O(1), Anti-AI-Slop UI (Warna Font Teks Wajib Kontras Tinggi Anti-Tenggelam WCAG AAA/AA), Zero Native Dialogs (wajib toast/modal), dan signature Schema Filament v5.',
                             'target_tool' => 'Cursor (@Rules) / Claude Code CLI (/init) / Windsurf (.windsurfrules)',
                         ],
                         [
@@ -4648,17 +4648,23 @@ PROMPT;
         $rules .= "- **100% Dark & Light Mode Compliance**: Selalu buat theme dark / light dan pastikan setiap komponen yang dibuat comply dengan theme ini.\n";
         $rules .= "- **Consistent Contrast**: Gunakan pasangan class Tailwind secara disiplin (`bg-white dark:bg-zinc-950`, `text-zinc-900 dark:text-zinc-100`, `border-zinc-200 dark:border-zinc-800`, `hover:bg-zinc-100 dark:hover:bg-zinc-900`). Dilarang keras membuat komponen yang hanya terlihat bagus di salah satu mode.\n\n";
 
-        $rules .= "### D. Zero Native Browser Dialogs (No \"Modal Kampungan\")\n";
+        $rules .= "### D. High-Contrast Text Legibility & Strict Ban on Low-Contrast \"AI Slop\" (Anti-Tenggelam)\n";
+        $rules .= "- **Wajib Kontras Tinggi & Anti-Tenggelam**: Seluruh font teks, tipografi, badge, tag, dan label WAJIB memiliki rasio kontras tinggi (WCAG AAA/AA) yang tajam terhadap latar belakangnya. Dilarang keras membuat teks atau tombol yang warnanya pudar atau tenggelam (\"AI slop\") sehingga sulit dibaca pengguna.\n";
+        $rules .= "- **Latar Terang (Light Backgrounds)**: Pada background putih atau abu-abu terang, DILARANG KERAS menggunakan warna pastel pudar seperti `text-emerald-500` atau `text-amber-500` karena tidak terbaca (<3:1). WAJIB gunakan warna pekat: `text-zinc-950`, `text-emerald-950`, `text-amber-950`, `text-cyan-950` dengan border tegas.\n";
+        $rules .= "- **Tombol Berwarna Solid**: Di dalam tombol berwarna solid (seperti `bg-emerald-600 text-black`), badge di dalamnya WAJIB menggunakan kontras solid ekstrem seperti `bg-black text-white font-black px-2 py-0.5`. DILARANG KERAS menggunakan `bg-black/20 text-black` yang membuat teks hitam bertabrakan dengan hijau tua transparan.\n";
+        $rules .= "- **Dark Mode Legibility**: Pada dark mode, gunakan teks terang kontras tinggi (`dark:text-emerald-200`, `dark:text-amber-200`, `dark:text-cyan-200`) di atas background gelap (`dark:bg-emerald-950 dark:border-emerald-700`).\n\n";
+
+        $rules .= "### E. Zero Native Browser Dialogs (No \"Modal Kampungan\")\n";
         $rules .= "- NEVER use native browser dialogs (`window.alert()`, `confirm()`, `prompt()`). They look cheap/unprofessional (\"modal kampungan\") and freeze the UI thread.\n";
         $rules .= "- ALWAYS use modern floating toast notifications: `window.showToast({ type: 'success'|'error'|'warning'|'info', title: '...', message: '...' })` or curated Tailwind + Alpine dialogs with backdrop-blur.\n\n";
 
-        $rules .= "### E. Thousand Separators on Numbers & Currencies\n";
+        $rules .= "### F. Thousand Separators on Numbers & Currencies\n";
         $rules .= "- Setiap kali membuat input atau tampilan nominal angka atau currency yang mencapai ribuan (>= 1.000), WAJIB memformat pemisah ribuan (titik `.` untuk ID / koma `,` untuk EN) di seluruh komponen UI/UX.\n\n";
 
-        $rules .= "### F. Country Zone Dialing Code Standard\n";
+        $rules .= "### G. Country Zone Dialing Code Standard\n";
         $rules .= "- Setiap membuat input nomor telepon atau WhatsApp, WAJIB menggunakan country code dropdown yang bisa di-search (`config/country_zones.php`, e.g. +62, +65, +1, +44, +81) untuk menegakkan standar E.164 internasional dan mengeliminasi nomor telepon tidak valid.\n\n";
 
-        $rules .= "### G. Alpine.js HTML Entity Encoding & Script Extraction Standard\n";
+        $rules .= "### H. Alpine.js HTML Entity Encoding & Script Extraction Standard\n";
         $rules .= "- Ketika menulis inline JavaScript di dalam atribut Alpine.js (`x-data=\"...\"`, `x-init=\"...\"`, `@click=\"...\"`), NEVER use raw double quotes (`\"`) or single quotes (`'`) inside string literals or JSON outputs (`@json()`).\n";
         $rules .= "- MANDATORY HTML ENTITY ENCODING:\n";
         $rules .= "  - Tanda kutip ganda (\") → `&quot;`\n";

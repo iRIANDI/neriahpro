@@ -68,6 +68,20 @@ After completing any task, you MUST always suggest which deployment script numbe
 - 🌓 **100% DARK & LIGHT MODE COMPLIANCE**: Selalu buat theme dark / light dan pastikan setiap komponen yang dibuat comply dengan theme ini.
 - 🎨 **SEAMLESS CONTRAST & LEGIBILITY**: Gunakan pasangan class Tailwind secara disiplin (`bg-white dark:bg-zinc-950`, `text-zinc-900 dark:text-zinc-100`, `border-zinc-200 dark:border-zinc-800`, `hover:bg-zinc-100 dark:hover:bg-zinc-900`). Dilarang keras membuat komponen yang hanya terlihat bagus di salah satu mode (misal teks hitam di background gelap).
 
+# Mandatory Rule: High-Contrast Text Legibility & Strict Ban on Low-Contrast "AI Slop" (Anti-Tenggelam)
+- 👁️ **MANDATORY WCAG AAA/AA CONTRAST RATIO**: Seluruh teks, tipografi, badge, tag, dan label WAJIB memiliki rasio kontras tinggi yang tajam terhadap latar belakangnya. Dilarang keras membuat font teks yang warnanya pudar atau tenggelam ("AI slop") sehingga sulit dibaca oleh pengguna.
+- 🚫 **STRICT BAN ON LOW-CONTRAST PASTEL ON LIGHT BACKGROUNDS**:
+  - Pada latar terang (kartu putih, background abu-abu terang `bg-zinc-100`, atau container pastel), DILARANG KERAS menggunakan warna font pastel pudar (seperti `text-emerald-500`, `text-amber-500`, `text-cyan-500`, atau `text-zinc-400`). Warna-warna tersebut memiliki contrast ratio sangat rendah (<3:1) dan tidak terbaca di layar monitor normal.
+  - WAJIB gunakan teks bernada pekat dan tegas di latar terang: `text-zinc-950`, `text-emerald-950` / `text-emerald-900` / `text-emerald-800`, `text-amber-950` / `text-amber-900`, `text-cyan-950` / `text-cyan-900`.
+- 🚫 **STRICT BAN ON TRANSLUCENT DARK-ON-DARK BADGES INSIDE BUTTONS**:
+  - Pada tombol atau area berwarna solid (misalnya tombol hijau aktif `bg-emerald-600 text-black`), badge/chip di dalamnya DILARANG KERAS menggunakan `bg-black/20 text-black` yang menghasilkan teks hitam di atas hijau tua transparan (sangat buram dan tidak terbaca).
+  - Badge di dalam tombol aktif WAJIB menggunakan kontras solid ekstrem seperti `bg-black text-white font-black px-2 py-0.5` atau latar putih dengan teks hitam.
+- 🌓 **CRISP LIGHT & DARK BADGE PROTOCOL**:
+  - Light mode badge: Gunakan background tint 100 dengan teks 950 dan border 400 (e.g. `bg-emerald-100 text-emerald-950 border border-emerald-400 font-black`).
+  - Dark mode badge: Gunakan background pekat dengan teks 200/300 dan border 700 (e.g. `dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black`).
+  - Pastikan seluruh badge dan teks terbaca jelas dalam sekali lirik tanpa menyipitkan mata.
+
+
 # Mandatory Rule: Schema.org Structured Data & Dynamic Admin Control
 - 🌐 **MANDATORY SCHEMA.ORG**: All public-facing views must emit valid Schema.org JSON-LD (Organization, WebSite, SoftwareApplication, Product, Breadcrumbs).
 - ⚙️ **ADMIN BACKEND ADJUSTMENTS**: Schema.org data must be editable via admin settings (`ManageSettings`).

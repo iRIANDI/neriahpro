@@ -191,7 +191,28 @@ export default function ArchitecturePricingIsland({
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const ensureSnapReady = (snapUrl, clientKey) => {
+  
+  const formatPillar = (text) => {
+    if (typeof text !== 'string') return text;
+    return text.split(/(Pilar \d|Pillar \d)/i).map((part, i) => {
+      const match = part.match(/Pil[l]?ar (\d)/i);
+      if (match) {
+        const colors = {
+          '1': 'text-blue-600 dark:text-blue-400 font-black px-1 bg-blue-500/10 rounded-sm',
+          '2': 'text-purple-600 dark:text-purple-400 font-black px-1 bg-purple-500/10 rounded-sm',
+          '3': 'text-yellow-600 dark:text-yellow-400 font-black px-1 bg-yellow-500/10 rounded-sm',
+          '4': 'text-emerald-600 dark:text-emerald-400 font-black px-1 bg-emerald-500/10 rounded-sm',
+          '5': 'text-pink-600 dark:text-pink-400 font-black px-1 bg-pink-500/10 rounded-sm',
+          '6': 'text-orange-600 dark:text-orange-400 font-black px-1 bg-orange-500/10 rounded-sm',
+          '7': 'text-rose-600 dark:text-rose-400 font-black px-1 bg-rose-500/10 rounded-sm'
+        };
+        return <span key={i} className={colors[match[1]]}>{part}</span>;
+      }
+      return part;
+    });
+  };
+
+const ensureSnapReady = (snapUrl, clientKey) => {
     return new Promise((resolve) => {
       if (typeof window !== 'undefined' && window.snap && typeof window.snap.pay === 'function') {
         return resolve(true);
@@ -636,12 +657,12 @@ export default function ArchitecturePricingIsland({
                   onClick={() => switchPricingTab('retail')}
                   className={`px-3 py-3 font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer ${
                     pricingSectionTab === 'retail'
-                      ? 'bg-emerald-600 text-black shadow-xs font-mono'
+                      ? 'bg-emerald-600 text-white shadow-xs font-mono'
                       : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60'
                   }`}
                 >
                   <ShoppingBag className="w-4 h-4 shrink-0" />
-                  <span className="whitespace-nowrap font-bold">{isEn ? '01. Paket Retail' : '01. Paket Retail'}</span>
+                  <span className="whitespace-nowrap font-bold">{isEn ? '01. Retail Packages' : '01. Paket Retail'}</span>
                   <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
                     pricingSectionTab === 'retail' 
                       ? 'bg-black text-white shadow-xs' 
@@ -663,7 +684,7 @@ export default function ArchitecturePricingIsland({
                   }`}
                 >
                   <Rocket className="w-4 h-4 shrink-0 text-emerald-500 dark:text-emerald-600" />
-                  <span className="whitespace-nowrap font-bold">{isEn ? '02. Paket Studio' : '02. Paket Studio'}</span>
+                  <span className="whitespace-nowrap font-bold">{isEn ? '02. Studio Packages' : '02. Paket Studio'}</span>
                   <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
                     pricingSectionTab === 'project' 
                       ? 'bg-emerald-500 text-black shadow-xs' 
@@ -680,12 +701,12 @@ export default function ArchitecturePricingIsland({
                   onClick={() => switchPricingTab('matrix')}
                   className={`px-3 py-3 font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer ${
                     pricingSectionTab === 'matrix'
-                      ? 'bg-emerald-600 text-black shadow-xs font-mono'
+                      ? 'bg-emerald-600 text-white shadow-xs font-mono'
                       : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60'
                   }`}
                 >
                   <Layers className="w-4 h-4 shrink-0" />
-                  <span className="whitespace-nowrap font-bold">{isEn ? '03. Matriks Perbandingan' : '03. Matriks Perbandingan'}</span>
+                  <span className="whitespace-nowrap font-bold">{isEn ? '03. Comparison Matrix' : '03. Matriks Perbandingan'}</span>
                   <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
                     pricingSectionTab === 'matrix' 
                       ? 'bg-black text-white shadow-xs' 
@@ -702,12 +723,12 @@ export default function ArchitecturePricingIsland({
                   onClick={() => switchPricingTab('faq')}
                   className={`px-3 py-3 font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer ${
                     pricingSectionTab === 'faq'
-                      ? 'bg-emerald-600 text-black shadow-xs font-mono'
+                      ? 'bg-emerald-600 text-white shadow-xs font-mono'
                       : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60'
                   }`}
                 >
                   <HelpCircle className="w-4 h-4 shrink-0" />
-                  <span className="whitespace-nowrap font-bold">04. FAQ Project OS</span>
+                  <span className="whitespace-nowrap font-bold">{isEn ? '04. FAQ Project OS' : '04. FAQ Project OS'}</span>
                   <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
                     pricingSectionTab === 'faq' 
                       ? 'bg-black text-white shadow-xs' 
@@ -810,7 +831,7 @@ export default function ArchitecturePricingIsland({
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-cyan-500 shrink-0 mt-0.5" />
-                      <span className="text-[11px] leading-tight">{f}</span>
+                      <span className="text-[11px] leading-tight">{formatPillar(f)}</span>
                     </div>
                   ))}
                 </div>
@@ -888,7 +909,7 @@ export default function ArchitecturePricingIsland({
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-cyan-500 shrink-0 mt-0.5" />
-                      <span className="text-[11px] leading-tight">{f}</span>
+                      <span className="text-[11px] leading-tight">{formatPillar(f)}</span>
                     </div>
                   ))}
                 </div>
@@ -973,7 +994,7 @@ export default function ArchitecturePricingIsland({
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                      <span className="text-[11px] leading-tight">{f}</span>
+                      <span className="text-[11px] leading-tight">{formatPillar(f)}</span>
                     </div>
                   ))}
                 </div>
@@ -1002,7 +1023,7 @@ export default function ArchitecturePricingIsland({
                     TIER 04 // ENTERPRISE
                   </span>
                   <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[9px] font-black">
-                    {isEn ? 'COMPLETE 7-PILLAR OS' : 'LENGKAP 7 PILAR OS'}
+                    {formatPillar(isEn ? 'COMPLETE 7-PILLAR OS' : 'LENGKAP 7 PILAR OS')}
                   </span>
                 </div>
 
@@ -1052,7 +1073,7 @@ export default function ArchitecturePricingIsland({
                   ]).map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                      <span className="text-[11px] leading-tight">{f}</span>
+                      <span className="text-[11px] leading-tight">{formatPillar(f)}</span>
                     </div>
                   ))}
                 </div>
@@ -1267,7 +1288,7 @@ export default function ArchitecturePricingIsland({
                 {/* Inclusive Header & Features */}
                 <div className="space-y-2.5 mb-6">
                   <div className="p-2 mb-2 bg-emerald-100 dark:bg-emerald-950/80 border-l-2 border-emerald-600 dark:border-emerald-400 text-emerald-950 dark:text-emerald-200 font-mono text-[10px] font-black">
-                    ⭐ {isEn ? 'Includes all Blueprint Advisory deliverables + Complete 7 Pillars of Software Factory OS:' : 'Mencakup seluruh hasil Blueprint Advisory + Lengkap 7 Pilar Software Factory OS:'}
+                    ⭐ {formatPillar(isEn ? 'Includes all Blueprint Advisory deliverables + Complete 7 Pillars of Software Factory OS:' : 'Mencakup seluruh hasil Blueprint Advisory + Lengkap 7 Pilar Software Factory OS:')}
                   </div>
                   {(isEn ? [
                     'Managed Sprint Capacity: Reserved slot in Batch 1, 2, or Q1 with Anti-Collision Engine',
@@ -1594,18 +1615,18 @@ export default function ArchitecturePricingIsland({
                 {/* 3C. KELENGKAPAN 7 PILAR SOFTWARE FACTORY OS */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200 font-mono">
-                    {isEn ? '7 Pillars of Software Factory OS' : '7 Pilar Software Factory OS'}
+                    {formatPillar(isEn ? '7 Pillars of Software Factory OS' : '7 Pilar Software Factory OS')}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
                     {isEn ? 'Spark: 1 | Starter: 2 | Pro Agentic: 5 | Enterprise: Complete 7' : 'Spark: 1 | Starter: 2 | Pro Agentic: 5 | Enterprise: Lengkap 7'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                    {isEn ? 'Pillar 1 (PRD & DDL) + WBS 5 Sprints' : 'Pilar 1 (PRD & DDL) + WBS 5 Sprint'}
+                    {formatPillar(isEn ? 'Pillar 1 (PRD & DDL) + WBS 5 Sprints' : 'Pilar 1 (PRD & DDL) + WBS 5 Sprint')}
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>{isEn ? '100% Complete 7 Pillars Coded & Live' : '100% Seluruh 7 Pilar Dikodingkan sampai Live'}</span>
+                      <span>{formatPillar(isEn ? '100% Complete 7 Pillars Coded & Live' : '100% Seluruh 7 Pilar Dikodingkan sampai Live')}</span>
                     </span>
                   </td>
                   <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400 text-[11px]">
@@ -1789,7 +1810,7 @@ export default function ArchitecturePricingIsland({
                 {/* 9B. SYNTHETIC DATA SEEDER (PILAR 4) */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                    {isEn ? 'Synthetic Data Seeder (Pillar 4)' : 'Synthetic Data Seeder (Pilar 4)'}
+                    {formatPillar(isEn ? 'Synthetic Data Seeder (Pillar 4)' : 'Synthetic Data Seeder (Pilar 4)')}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
                     {isEn ? 'Pro/Enterprise: Blueprint Seeder Script' : 'Pro/Enterprise: Cetak Biru Seeder Sintetis'}
@@ -1811,7 +1832,7 @@ export default function ArchitecturePricingIsland({
                 {/* 9C. ATURAN KODING AGEN AI (PILAR 5) */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                    {isEn ? 'AI Coding Directives (Pillar 5)' : 'Aturan Koding Agen AI (Pilar 5)'}
+                    {formatPillar(isEn ? 'AI Coding Directives (Pillar 5)' : 'Aturan Koding Agen AI (Pilar 5)')}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
                     {isEn ? 'Pro/Enterprise: .cursorrules & AGENTS.md' : 'Pro/Enterprise: .cursorrules & AGENTS.md'}
@@ -1833,7 +1854,7 @@ export default function ArchitecturePricingIsland({
                 {/* 9D. AUTOMATED CONTRACT TESTS (PILAR 6) */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                    {isEn ? 'Contract-First Tests (Pillar 6)' : 'Uji Kontrak Otomatis (Pilar 6)'}
+                    {formatPillar(isEn ? 'Contract-First Tests (Pillar 6)' : 'Uji Kontrak Otomatis (Pilar 6)')}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
                     {isEn ? 'Enterprise: ApiContractTest Specs' : 'Enterprise: Spesifikasi ApiContractTest'}
@@ -1855,7 +1876,7 @@ export default function ArchitecturePricingIsland({
                 {/* 9E. CLOUD CI/CD & DEPLOY.SH (PILAR 7) */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                    {isEn ? 'Cloud CI/CD & deploy.sh (Pillar 7)' : 'Cloud CI/CD & deploy.sh (Pilar 7)'}
+                    {formatPillar(isEn ? 'Cloud CI/CD & deploy.sh (Pillar 7)' : 'Cloud CI/CD & deploy.sh (Pilar 7)')}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
                     {isEn ? 'Enterprise: GitHub Actions & deploy.sh Code' : 'Enterprise: GitHub Actions & deploy.sh'}

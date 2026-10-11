@@ -687,7 +687,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   <span className="whitespace-nowrap font-bold">{isEn ? '02. Studio Packages' : '02. Paket Studio'}</span>
                   <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
                     pricingSectionTab === 'project' 
-                      ? 'bg-emerald-500 text-black shadow-xs' 
+                      ? 'bg-emerald-500 text-white shadow-xs' 
                       : 'bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700'
                   }`}>
                     {isEn ? 'TURNKEY' : 'KODING'}
@@ -1239,7 +1239,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
             {/* TIER 2: FULL MVP DEVELOPMENT (FLAGSHIP ENTERPRISE) */}
             <div className="bg-white dark:bg-zinc-900 border-2 border-emerald-500 dark:border-emerald-500 p-6 sm:p-7 flex flex-col justify-between rounded-none shadow-2xl relative transform lg:-translate-y-2">
               {/* Best Value Badge */}
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-500 text-black px-4 py-1 font-mono text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-md">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 font-mono text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-md">
                 <Crown className="w-3.5 h-3.5" />
                 <span>{isEn ? '100% CODED BY NERIAH PRO // FULL MVP' : 'DIKERJAKAN 100% OLEH NERIAH PRO // FULL MVP'}</span>
               </div>
@@ -1332,7 +1332,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                 <div className="space-y-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
                   <button
                     onClick={() => openBookingModal('full_mvp')}
-                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-lg cursor-pointer"
+                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-white py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-lg cursor-pointer"
                   >
                     <span>{isEn ? 'RESERVE SPRINT (50% DP)' : 'RESERVASI PROYEK (DP 50%)'}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -1462,7 +1462,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
             <button
               type="button"
               onClick={() => switchPricingTab('retail')}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-black font-mono text-xs font-bold uppercase tracking-wider rounded-none shrink-0 transition cursor-pointer"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold uppercase tracking-wider rounded-none shrink-0 transition cursor-pointer"
             >
               {isEn ? 'View Retail Licenses →' : 'Lihat Lisensi Retail →'}
             </button>
@@ -2043,7 +2043,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => openBookingModal('full_mvp')}
-              className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-black py-3 px-6 font-mono text-xs font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-white py-3 px-6 font-mono text-xs font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer"
             >
               <Clock className="w-3.5 h-3.5" />
               <span>{isEn ? 'RESERVE SCOPING SESSION' : 'RESERVASI JADWAL SCOPING'}</span>

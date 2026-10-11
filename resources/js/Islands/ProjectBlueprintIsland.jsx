@@ -55,7 +55,8 @@ import {
   Smartphone,
   Award,
   ShoppingBag,
-  Rocket
+  Rocket,
+  ArrowUpRight
 } from 'lucide-react';
 
 const TRANSLATIONS = {
@@ -459,6 +460,118 @@ const PAYMENT_RAIL_OPTIONS = [
   },
 ];
 
+// Mapping between backend snake_case validation keys and DOM field IDs
+const FIELD_MAP = {
+  nama_bisnis: 'namaBisnis',
+  namaBisnis: 'namaBisnis',
+  masalah_utama: 'masalahUtama',
+  masalahUtama: 'masalahUtama',
+  tujuan_utama: 'tujuanUtama',
+  tujuanUtama: 'tujuanUtama',
+  target_audiens: 'targetAudiens',
+  targetAudiens: 'targetAudiens',
+  aktor_sistem: 'aktorSistem',
+  aktorSistem: 'aktorSistem',
+  target_platform: 'targetPlatform',
+  targetPlatform: 'targetPlatform',
+  fitur_wajib: 'fiturWajib',
+  fiturWajib: 'fiturWajib',
+  fitur_tambahan: 'fiturTambahan',
+  fiturTambahan: 'fiturTambahan',
+  alur_kerja: 'alurKerja',
+  alurKerja: 'alurKerja',
+  client_name: 'clientName',
+  clientName: 'clientName',
+  email: 'email',
+  phone: 'phone',
+  migrasi_data: 'migrasiData',
+  migrasiData: 'migrasiData',
+  kebutuhan_integrasi: 'kebutuhanIntegrasi',
+  kebutuhanIntegrasi: 'kebutuhanIntegrasi',
+  referensi_desain: 'referensiDesain',
+  referensiDesain: 'referensiDesain',
+  kesiapan_aset: 'kesiapanAset',
+  kesiapanAset: 'kesiapanAset',
+  preferensi_hosting: 'preferensiHosting',
+  preferensiHosting: 'preferensiHosting',
+  target_waktu: 'targetWaktu',
+  targetWaktu: 'targetWaktu',
+  durasi_hari: 'durasiHari',
+  durasiHari: 'durasiHari',
+  skala_pengguna: 'skalaPengguna',
+  skalaPengguna: 'skalaPengguna',
+  jangkauan_pasar: 'jangkauanPasar',
+  jangkauanPasar: 'jangkauanPasar',
+  out_of_scope: 'outOfScope',
+  outOfScope: 'outOfScope',
+  kepatuhan_keamanan: 'kepatuhanKeamanan',
+  kepatuhanKeamanan: 'kepatuhanKeamanan',
+  kisaran_budget: 'kisaranBudget',
+  kisaranBudget: 'kisaranBudget',
+  garansi_sla: 'garansiSla',
+  garansiSla: 'garansiSla',
+  termin_pembayaran: 'terminPembayaran',
+  terminPembayaran: 'terminPembayaran',
+};
+
+const FIELD_SECTION_MAP = {
+  namaBisnis: 'section-block-a',
+  masalahUtama: 'section-block-a',
+  tujuanUtama: 'section-block-a',
+  targetAudiens: 'section-block-b',
+  aktorSistem: 'section-block-b',
+  targetPlatform: 'section-block-b',
+  fiturWajib: 'section-block-c',
+  fiturTambahan: 'section-block-c',
+  alurKerja: 'section-block-c',
+  migrasiData: 'section-block-c',
+  kebutuhanIntegrasi: 'section-block-d',
+  referensiDesain: 'section-block-d',
+  kesiapanAset: 'section-block-d',
+  preferensiHosting: 'section-block-d',
+  targetWaktu: 'section-block-e',
+  durasiHari: 'section-block-e',
+  skalaPengguna: 'section-block-e',
+  jangkauanPasar: 'section-block-e',
+  outOfScope: 'section-block-e',
+  kepatuhanKeamanan: 'section-block-e',
+  kisaranBudget: 'section-block-f',
+  garansiSla: 'section-block-f',
+  terminPembayaran: 'section-block-f',
+  clientName: 'section-block-f',
+  email: 'section-block-f',
+  phone: 'section-block-f',
+};
+
+const FIELD_LABELS = {
+  namaBisnis: { num: '1', id: '1. Nama Aplikasi / Bisnis', en: '1. Application / Business Name' },
+  masalahUtama: { num: '2', id: '2. Masalah Utama Bisnis', en: '2. Core Business Problem' },
+  tujuanUtama: { num: '3', id: '3. Tolak Ukur Sukses (KPI)', en: '3. Success Metrics (KPIs)' },
+  targetAudiens: { num: '4', id: '4. Target Audiens / Pengguna', en: '4. Target Audience Profile' },
+  aktorSistem: { num: '5', id: '5. Aktor Sistem & RBAC Matrix', en: '5. System Actors & RBAC' },
+  targetPlatform: { num: '6', id: '6. Platform Target & Perangkat', en: '6. Target Platform' },
+  fiturWajib: { num: '7', id: '7. Fitur Wajib MVP (Fase 1)', en: '7. Core MVP Features' },
+  fiturTambahan: { num: '8', id: '8. Roadmap Fitur (Fase 2)', en: '8. Phase 2 Features' },
+  alurKerja: { num: '9', id: '9. Alur Kerja Utama (Workflow)', en: '9. User Workflow' },
+  migrasiData: { num: '10', id: '10. Migrasi Data Warisan', en: '10. Data Migration' },
+  kebutuhanIntegrasi: { num: '11', id: '11. Kebutuhan Integrasi', en: '11. Integrations' },
+  referensiDesain: { num: '12', id: '12. Referensi Desain UI/UX', en: '12. Design References' },
+  kesiapanAset: { num: '13', id: '13. Kesiapan Aset Konten', en: '13. Asset Readiness' },
+  preferensiHosting: { num: '14', id: '14. Infrastruktur Hosting', en: '14. Hosting Preference' },
+  targetWaktu: { num: '15', id: '15. Target Waktu Rilis', en: '15. Target Timeline' },
+  durasiHari: { num: '15', id: '15. Target Durasi Hari', en: '15. Duration Days' },
+  skalaPengguna: { num: '16', id: '16. Skala Trafik Pengguna', en: '16. User Scale' },
+  jangkauanPasar: { num: '17', id: '17. Jangkauan Pasar & Regulasi', en: '17. Market Reach' },
+  outOfScope: { num: '18', id: '18. Batasan Negatif (Out of Scope)', en: '18. Negative Scope' },
+  kepatuhanKeamanan: { num: '19', id: '19. Standar Keamanan Siber', en: '19. Security Standards' },
+  kisaranBudget: { num: '20', id: '20. Alokasi Budget Investasi', en: '20. Budget Range' },
+  garansiSla: { num: '21', id: '21. Garansi SLA & Akses Git', en: '21. Warranty SLA' },
+  terminPembayaran: { num: '22', id: '22. Termin Pembayaran', en: '22. Payment Terms' },
+  clientName: { num: '24', id: '24. Nama Lengkap PIC', en: '24. PIC Full Name' },
+  email: { num: '25', id: '25. Email Resmi PIC', en: '25. PIC Official Email' },
+  phone: { num: '26', id: '26. WhatsApp / Telepon PIC', en: '26. PIC WhatsApp / Phone' },
+};
+
 export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialData = {}, countries = [] }) {
   const [lang, setLang] = useState('id');
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -706,6 +819,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [invalidFields, setInvalidFields] = useState([]);
+  const [strokeActive, setStrokeActive] = useState(false);
+  const strokeTimerRef = useRef(null);
   const [successData, setSuccessData] = useState(null);
   const isLocked = !!successData;
 
@@ -856,28 +972,33 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     }, 2000);
   }, [syncAccordionToSection]);
 
-  const jumpToField = useCallback((fieldId, sectionId) => {
+  const jumpToField = useCallback((fieldIdOrKey, explicitSectionId) => {
+    const rawKey = String(fieldIdOrKey || '').replace(/^field-/, '');
+    const canonicalKey = FIELD_MAP[rawKey] || rawKey;
+    const finalDomId = String(fieldIdOrKey || '').startsWith('field-') ? fieldIdOrKey : `field-${canonicalKey}`;
+    const sectionId = explicitSectionId || FIELD_SECTION_MAP[canonicalKey];
+
     if (sectionId === 'section-ide-studio') {
       setIsStudioOpen(true);
     }
-    const el = document.getElementById(fieldId);
+    const el = document.getElementById(finalDomId);
     if (el) {
-      const yOffset = -90;
+      const yOffset = -130;
       const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
       if (sectionId) {
         setActiveSection(sectionId);
         activeSectionRef.current = sectionId;
         syncAccordionToSection(sectionId);
       }
-      setActiveField(fieldId);
+      setActiveField(finalDomId);
       setMobileDrawerOpen(false);
 
-      // Flash highlight
-      el.classList.add('ring-2', 'ring-emerald-500', 'ring-offset-2', 'transition-all');
+      // Flash highlight & stroke alert
+      el.classList.add('field-stroke-alert', 'field-stroke-pulsing');
       setTimeout(() => {
-        el.classList.remove('ring-2', 'ring-emerald-500', 'ring-offset-2');
-      }, 2000);
+        el.classList.remove('field-stroke-pulsing');
+      }, 4000);
 
       // Focus if input or textarea
       const inputEl = el.querySelector('input, textarea, select') || (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el : null);
@@ -1462,6 +1583,21 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
   // Form Field Updater
   const updateField = (field, value) => {
+    // If field was flagged as invalid and user is typing, remove error stroke immediately
+    if (invalidFields.includes(field)) {
+      const el = document.getElementById('field-' + field);
+      if (el) {
+        el.classList.remove('field-stroke-alert', 'field-stroke-pulsing');
+      }
+      setInvalidFields(prev => {
+        const next = prev.filter(k => k !== field);
+        if (next.length === 0) {
+          setErrorMessage(null);
+        }
+        return next;
+      });
+    }
+
     setFormData(prev => {
       const next = { ...prev, [field]: value };
       triggerAutoSave(next);
@@ -1838,27 +1974,93 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     showLocalToast('info', lang === 'en' ? 'Item removed.' : 'Item dihapus.');
   };
 
+
+  // Helper to trigger stroke on all missing fields and auto-scroll to the first one
+  const triggerFieldStrokeAndScroll = useCallback((rawKeys = []) => {
+    const canonicalKeys = [...new Set(
+      rawKeys.map(k => FIELD_MAP[k] || k).filter(Boolean)
+    )];
+
+    if (canonicalKeys.length === 0) return;
+
+    setInvalidFields(canonicalKeys);
+    setStrokeActive(true);
+
+    if (strokeTimerRef.current) {
+      clearTimeout(strokeTimerRef.current);
+    }
+
+    // Apply stroke and pulse to all missing fields
+    canonicalKeys.forEach(k => {
+      const el = document.getElementById('field-' + k);
+      if (el) {
+        el.classList.add('field-stroke-alert', 'field-stroke-pulsing');
+      }
+    });
+
+    // Auto-scroll to the FIRST missing field
+    const firstKey = canonicalKeys.find(k => !!document.getElementById('field-' + k)) || canonicalKeys[0];
+    const targetEl = document.getElementById('field-' + firstKey);
+
+    if (targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      const y = window.pageYOffset + rect.top;
+      window.scrollTo({ top: Math.max(0, y - 130), behavior: 'smooth' });
+
+      setTimeout(() => {
+        const input = targetEl.querySelector('input, textarea, select');
+        if (input) input.focus();
+      }, 400);
+
+      const secId = FIELD_SECTION_MAP[firstKey];
+      if (secId) {
+        setActiveSection(secId);
+        syncAccordionToSection(secId);
+      }
+      setActiveField(firstKey);
+    }
+
+    // After 5 seconds, stop the pulsing animation but retain the solid alert border until filled
+    strokeTimerRef.current = setTimeout(() => {
+      canonicalKeys.forEach(k => {
+        const el = document.getElementById('field-' + k);
+        if (el) {
+          el.classList.remove('field-stroke-pulsing');
+        }
+      });
+      setStrokeActive(false);
+    }, 5000);
+  }, [syncAccordionToSection]);
+
   // Final Blueprint Submission (Generate Contract & PRD)
   const handleFinalSubmit = async (e) => {
     e?.preventDefault();
     setErrorMessage(null);
 
-    // Form validation
-    if (!formData.clientName || !formData.email || !formData.namaBisnis) {
-      setErrorMessage(
-        lang === 'en'
-          ? 'Please complete the Project Name, PIC Name, and PIC Email.'
-          : 'Mohon lengkapi Nama Proyek, Nama PIC, dan Email PIC.'
-      );
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      return;
-    }
+    // Client-side validation: detect all unfilled required fields
+    const missing = [];
+    if (!formData.namaBisnis?.trim()) missing.push('namaBisnis');
+    if (!formData.masalahUtama?.trim()) missing.push('masalahUtama');
+    if (!formData.tujuanUtama?.trim()) missing.push('tujuanUtama');
+    if (!formData.targetAudiens?.trim()) missing.push('targetAudiens');
+    if (!formData.aktorSistem?.trim()) missing.push('aktorSistem');
+    if (!formData.fiturWajib?.trim()) missing.push('fiturWajib');
+    if (!formData.alurKerja?.trim()) missing.push('alurKerja');
+    if (!formData.clientName?.trim()) missing.push('clientName');
+    if (!formData.email?.trim()) missing.push('email');
+    if (!formData.phone?.trim()) missing.push('phone');
 
-    if (!formData.phone) {
-      setErrorMessage(
+    if (missing.length > 0) {
+      const msg = lang === 'en'
+        ? `Please complete ${missing.length} required field(s) before locking your blueprint.`
+        : `Terdapat ${missing.length} parameter wajib yang belum diisi. Layar telah otomatis diarahkan ke field pertama yang perlu dilengkapi.`;
+      setErrorMessage(msg);
+      triggerFieldStrokeAndScroll(missing);
+      showLocalToast(
+        'error',
         lang === 'en'
-          ? 'Please enter a valid WhatsApp / Phone number for verification.'
-          : 'Mohon isi nomor WhatsApp aktif untuk verifikasi.'
+          ? `Missing ${missing.length} required field(s). Please review highlighted inputs.`
+          : `Mohon lengkapi ${missing.length} parameter wajib yang disorot.`
       );
       return;
     }
@@ -1890,17 +2092,42 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       const result = await response.json();
 
       if (response.ok && result.success) {
+        // Clear any remaining stroke alert classes
+        invalidFields.forEach(k => {
+          const el = document.getElementById('field-' + k);
+          if (el) el.classList.remove('field-stroke-alert', 'field-stroke-pulsing');
+        });
+        setInvalidFields([]);
         try { localStorage.removeItem('neriah_blueprint_autosave'); } catch (e) {}
         setSuccessData(result.data);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
+        let missingKeys = [];
+        if (result.errors && typeof result.errors === 'object') {
+          missingKeys = Object.keys(result.errors).map(k => FIELD_MAP[k] || k);
+        }
+
         const errorDetails = result.errors 
           ? Object.values(result.errors).flat().join(', ') 
           : (result.message || 'Terjadi kesalahan saat memproses data.');
         setErrorMessage(errorDetails);
+
+        if (missingKeys.length > 0) {
+          triggerFieldStrokeAndScroll(missingKeys);
+          showLocalToast(
+            'error',
+            lang === 'en'
+              ? `${missingKeys.length} required parameter(s) need attention.`
+              : `${missingKeys.length} parameter wajib belum lengkap. Periksa field yang disorot.`
+          );
+        }
       }
     } catch (err) {
-      setErrorMessage('Terjadi gangguan jaringan atau koneksi. Silakan coba sesaat lagi.');
+      setErrorMessage(
+        lang === 'en'
+          ? 'Network or server communication error. Please check your connection and try again.'
+          : 'Terjadi gangguan jaringan atau koneksi. Silakan coba sesaat lagi.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -1997,6 +2224,39 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 font-sans relative">
+      <style>{`
+        @keyframes fieldStrokePulse {
+          0%, 100% {
+            box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.85), 0 0 22px rgba(244, 63, 94, 0.35);
+            border-color: #f43f5e;
+          }
+          50% {
+            box-shadow: 0 0 0 6px rgba(244, 63, 94, 0.3), 0 0 32px rgba(244, 63, 94, 0.65);
+            border-color: #fb7185;
+          }
+        }
+        .field-stroke-alert {
+          position: relative !important;
+          border: 2px solid #f43f5e !important;
+          background-color: rgba(244, 63, 94, 0.04) !important;
+          padding: 0.75rem !important;
+          margin-left: -0.75rem !important;
+          margin-right: -0.75rem !important;
+          border-radius: 0px !important;
+          transition: all 0.25s ease-in-out !important;
+        }
+        .dark .field-stroke-alert {
+          background-color: rgba(244, 63, 94, 0.08) !important;
+        }
+        .field-stroke-pulsing {
+          animation: fieldStrokePulse 1.2s ease-in-out infinite !important;
+        }
+        .field-stroke-alert input,
+        .field-stroke-alert textarea,
+        .field-stroke-alert select {
+          border-color: #f43f5e !important;
+        }
+      `}</style>
 
       {/* FLOATING TOAST NOTIFICATION */}
       <AnimatePresence>
@@ -4297,9 +4557,68 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {errorMessage && (
-              <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-mono flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{errorMessage}</span>
+              <div 
+                id="blueprint-validation-banner"
+                className="p-5 bg-rose-50 dark:bg-rose-950/40 border-2 border-rose-500 text-zinc-900 dark:text-zinc-100 rounded-none shadow-sm transition-all duration-300"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-1.5 bg-rose-500 text-white rounded-none shrink-0 mt-0.5">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
+                      <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                        {invalidFields.length > 0
+                          ? (lang === 'en'
+                              ? `Action Required: ${invalidFields.length} Mandatory Parameter(s) Incomplete`
+                              : `Perhatian: ${invalidFields.length} Parameter Wajib Belum Diisi`)
+                          : (lang === 'en' ? 'Submission Incomplete' : 'Validasi Belum Lengkap')}
+                      </h4>
+                      {invalidFields.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => jumpToField(invalidFields[0])}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono font-bold bg-rose-600 hover:bg-rose-700 text-white border border-rose-600 rounded-none transition cursor-pointer"
+                        >
+                          <span>{lang === 'en' ? 'Scroll to First Field' : 'Gulir ke Field Pertama'}</span>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-rose-800 dark:text-rose-300 mb-3 leading-relaxed font-sans">
+                      {lang === 'en'
+                        ? 'The screen has auto-scrolled and incomplete fields have been marked with a pulsing stroke highlight. Click any parameter button below to jump directly to it:'
+                        : 'Layar telah digulir otomatis dan parameter yang belum diisi diberi efek garis tepi (stroke) merah berkedip. Klik salah satu tombol di bawah untuk melompat langsung ke field terkait:'}
+                    </p>
+
+                    {invalidFields.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-2.5 border-t border-rose-200 dark:border-rose-900/60">
+                        {invalidFields.map(key => {
+                          const labelObj = FIELD_LABELS[key];
+                          const labelText = labelObj ? (labelObj[lang] || labelObj.id) : key;
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => jumpToField(key)}
+                              className="group inline-flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-zinc-900 border border-rose-300 dark:border-rose-700 hover:border-rose-500 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-600 text-rose-700 dark:text-rose-300 text-xs font-mono rounded-none transition shadow-xs cursor-pointer"
+                            >
+                              <span className="font-bold">{labelText}</span>
+                              <ArrowUpRight className="w-3 h-3 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {(!invalidFields || invalidFields.length === 0) && (
+                      <p className="text-xs font-mono text-rose-700 dark:text-rose-400 mt-1">
+                        {errorMessage}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

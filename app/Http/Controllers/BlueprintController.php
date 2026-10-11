@@ -261,11 +261,11 @@ class BlueprintController extends Controller
                 }
 
                 if ($existingRecord->created_at && ! $isExempt) {
-                    $tier = strtolower($existingRecord->user_metadata['retail_tier'] ?? 'lite');
+                    $tier = strtolower($existingRecord->user_metadata['package_tier'] ?? $existingRecord->user_metadata['retail_tier'] ?? 'lite');
                     $allowedDays = match ($tier) {
-                        'lite' => 30,
-                        'pro' => 180,
-                        'ultimate' => 365,
+                        'retail_lite', 'lite' => 30,
+                        'retail_pro', 'pro' => 180,
+                        'retail_ultimate', 'ultimate' => 365,
                         default => 30,
                     };
                     $expirationDate = $existingRecord->created_at->copy()->addDays($allowedDays);
@@ -336,11 +336,11 @@ class BlueprintController extends Controller
                     }
 
                     if (! $isExempt && $record->created_at) {
-                        $tier = strtolower($record->user_metadata['retail_tier'] ?? 'lite');
+                        $tier = strtolower($record->user_metadata['package_tier'] ?? $record->user_metadata['retail_tier'] ?? 'lite');
                         $allowedDays = match ($tier) {
-                            'lite' => 30,
-                            'pro' => 180,
-                            'ultimate' => 365,
+                            'retail_lite', 'lite' => 30,
+                            'retail_pro', 'pro' => 180,
+                            'retail_ultimate', 'ultimate' => 365,
                             default => 30,
                         };
                         $expirationDate = $record->created_at->copy()->addDays($allowedDays);

@@ -332,8 +332,10 @@ class MidtransWebhookController extends Controller
             $name = $cachedOrder['name'] ?? $txDetails['name'] ?? $lead?->name ?? $existingTx?->user?->name ?? 'Licensed Client';
             $phone = $cachedOrder['phone'] ?? $txDetails['phone'] ?? $lead?->phone;
             $company = $cachedOrder['company'] ?? $txDetails['company'] ?? $lead?->company_name ?? ($name . ' Project');
-            $packageTier = $cachedOrder['package_tier'] ?? $txDetails['package_tier'] ?? $lead?->metadata['package_interest'] ?? 'retail_lite';
             $isRetail = str_starts_with($orderId, 'NPRO-LC-') || str_starts_with($orderId, 'NPRO-LIC-') || ($cachedOrder['is_retail'] ?? false) || ($txDetails['is_retail'] ?? false);
+            $packageTierFallback = $isRetail ? 'retail_lite' : 'full_mvp';
+            $packageTier = $cachedOrder['package_tier'] ?? $txDetails['package_tier'] ?? $lead?->metadata['package_interest'] ?? $packageTierFallback;
+            
             $grossAmount = $cachedOrder['gross_amount'] ?? $existingTx?->total_idr ?? $request->input('gross_amount', 0);
 
             if ($email) {
@@ -346,8 +348,9 @@ class MidtransWebhookController extends Controller
                     ]
                 );
 
-                if (method_exists($user, 'assignRole') && !$user->hasRole('client_retail') && !$user->hasRole('super_admin')) {
-                    $user->assignRole('client_retail');
+                $roleToAssign = $isRetail ? 'client_retail' : 'client_partner';
+                if (method_exists($user, 'assignRole') && !$user->hasRole($roleToAssign) && !$user->hasRole('super_admin')) {
+                    $user->assignRole($roleToAssign);
                 }
 
                 // Check for existing blueprint to prevent duplicate creation

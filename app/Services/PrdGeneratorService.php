@@ -4327,10 +4327,23 @@ PROMPT;
         $md .= "2. **Tombstone Soft Deletes**: Penghapusan data offline tidak langsung menghapus baris fisik SQLite melainkan menandai `is_deleted = 1` dengan `deleted_at = now()`. Saat disinkronkan ke server, server mencatat `deleted_at` dan mempropagasi penghapusan ini ke perangkat lain saat `GET /api/v1/sync/pull`.\n";
         $md .= "3. **Idempotency Protection**: Header `X-Idempotency-Key` di-cache di Redis server selama 24 jam. Jika koneksi seluler putus saat pengiriman dan mobile app melakukan retry, server mendeteksi mutasi duplikat dan langsung mengembalikan status sukses tanpa memicu duplikasi data.\n\n";
 
-        // 6. Technology Stack & Architecture Decision
+        // 6. Enterprise Governance & Disaster Recovery
+        $md .= "## 6. Enterprise Governance & Disaster Recovery (World-Class Standards)\n\n";
+        $md .= "### A. Metrik Ketahanan Bencana (Disaster Recovery SLA)\n";
+        $md .= "- **RPO (Recovery Point Objective)**: 5 Menit. Sistem dijamin tidak akan kehilangan data transaksi lebih dari 5 menit jika terjadi kegagalan fatal pada datacenter. Diimplementasikan via PostgreSQL WAL Archiving & Point-in-Time Recovery (PITR).\n";
+        $md .= "- **RTO (Recovery Time Objective)**: 1 Jam. Waktu maksimal yang dibutuhkan untuk menghidupkan kembali sistem di zona/region cadangan sejak sistem utama dinyatakan mati total.\n\n";
+        $md .= "### B. Protokol Kepatuhan Hukum & Data Governance (UU PDP / GDPR)\n";
+        $md .= "- **PII Data Masking**: Data sensitif (NIK, Nomor Kartu Kredit, Password) tidak akan dirender dalam bentuk teks murni pada Dasbor Admin, meskipun diakses oleh Superadmin.\n";
+        $md .= "- **Right to be Forgotten**: Sistem menyediakan fungsi *Soft Delete* berjenjang (Tombstone) dan *Hard Purge* periodik untuk menghapus data pribadi pengguna (termasuk pada tabel log relasional) secara permanen apabila pengguna memintanya, guna mematuhi UU PDP Indonesia.\n\n";
+        $md .= "### C. Pemisahan Deployment dan Release (Feature Flags)\n";
+        $md .= "- **Dark Launching**: Sistem akan menggunakan arsitektur *Feature Toggles* (Feature Flags) untuk fitur-fitur berisiko tinggi (mis. integrasi payment gateway baru). Hal ini memungkinkan kode dideploy ke *Production* dengan aman (Zero Downtime), namun fitur tersebut dapat diaktifkan/dinonaktifkan secara dinamis (Canary Release) tanpa perlu melakukan *re-deploy* server.\n\n";
+        $md .= "### D. Infrastructure as Code (IaC) Asset Handoff\n";
+        $md .= "- **Immutable Infrastructure**: Konfigurasi server (Nginx, PostgreSQL, Redis, Worker) tidak dikonfigurasi secara manual (*ClickOps*). Seluruh topologi dideklarasikan dalam bentuk skrip Infrastructure as Code (mis. *Nixpacks, Docker Compose, atau Ansible*). File skrip infrastruktur ini menjadi bagian integral dari *Source Code* yang diserahterimakan kepada klien (Anti-Vendor Lock-in dan Anti-Drift).\n\n";
+
+        // 7. Technology Stack & Architecture Decision
         $isDecoupled = ($prd['architecture_evaluation']['architecture_pattern_evaluation']['is_decoupled'] ?? false);
         $archTitle = $isDecoupled ? 'Enterprise Decoupled & Headless Architecture' : 'Modern Monolith (Decoupled-Ready)';
-        $md .= "## 6. Keputusan Arsitektur & Rekomendasi Stack ({$archTitle})\n\n";
+        $md .= "## 7. Keputusan Arsitektur & Rekomendasi Stack ({$archTitle})\n\n";
         $md .= "| Lapisan | Teknologi | Peran & Justifikasi Arsitektur |\n";
         $md .= "|---|---|---|\n";
         foreach ($tech as $layer => $info) {
@@ -4338,10 +4351,10 @@ PROMPT;
         }
         $md .= "\n";
 
-        // 6.5 Cetak Biru Arsitektur Decoupled & Ekosistem Multi-Pihak (Modern 2026+ Standards)
+        // 7.5 Cetak Biru Arsitektur Decoupled & Ekosistem Multi-Pihak (Modern 2026+ Standards)
         if (!empty($prd['decoupled_tooling_strategy'])) {
             $ds = $prd['decoupled_tooling_strategy'];
-            $md .= "## 6.5 Cetak Biru Arsitektur Decoupled & Ekosistem Multi-Pihak (2026+ Modern Tooling)\n\n";
+            $md .= "## 7.5 Cetak Biru Arsitektur Decoupled & Ekosistem Multi-Pihak (2026+ Modern Tooling)\n\n";
             $md .= "> " . $ds['summary'] . "\n\n";
             $md .= "### A. Matriks Tools Multi-Pihak (Frontend, Mobile, Backend & API)\n\n";
             $md .= "| Kategori Pihak | Rekomendasi Utama (2026+) | Alternatif / DB Lokal | Peran Arsitektur |\n";
@@ -4377,8 +4390,8 @@ PROMPT;
         }
 
 
-        // 7. Anti-AI-Slop Frontend Design System
-        $md .= "## 7. Panduan Rekayasa Frontend: Desain Sistem Anti-AI-Slop\n\n";
+        // 8. Frontend Slop Engineering Guidelines
+        $md .= "## 8. Panduan Rekayasa Frontend: Desain Sistem Anti-AI-Slop\n\n";
         $md .= "### " . $slop['philosophy']['title'] . "\n";
         $md .= $slop['philosophy']['description'] . "\n\n";
         $md .= "- **Display Typography**: " . $slop['typography']['display'] . "\n";
@@ -4398,8 +4411,8 @@ PROMPT;
         $md .= "- **Skeleton Loaders**: " . $slop['component_primitives']['skeletons'] . "\n";
         $md .= "- **Zero Native Dialogs**: " . $slop['component_primitives']['dialog_and_toasts'] . "\n\n";
 
-        // 8. Backend Scalability Manifesto
-        $md .= "## 8. Manifesto Skalabilitas Backend & Standar PostgreSQL\n\n";
+        // 9. Backend Scalability Manifesto
+        $md .= "## 9. Manifesto Skalabilitas Backend & Standar PostgreSQL\n\n";
         foreach ($scalability as $item) {
             $md .= "### " . $item['rule'] . "\n";
             $md .= $item['explanation'] . "\n\n";
@@ -4408,7 +4421,7 @@ PROMPT;
         // 9. AI Agent Handoff Protocol & Developer Education
         $eduDeck = self::getDeveloperEducationDeck($blueprint->nama_bisnis ?: $blueprint->client_name);
         $strat = $eduDeck['orchestration_strategy'] ?? [];
-        $md .= "## 9. Panduan Edukasi Developer & Protokol Handoff AI Code Agent (Anti Context-Rot)\n\n";
+        $md .= "## 10. Panduan Edukasi Developer & Protokol Handoff AI Code Agent (Anti Context-Rot)\n\n";
         
         if (!empty($strat)) {
             $md .= "### " . ($strat['question'] ?? 'Strategi Orkestrasi AI: Apakah PRD Diberikan Sekaligus atau Sedikit demi Sedikit?') . "\n\n";
@@ -4465,7 +4478,7 @@ PROMPT;
 
         // 9.5 AI-Shield & Autonomous Exploit Defense
         $aiShield = $prd['ai_security_blueprint'] ?? self::generateAiSecurityBlueprint($projectName, $extraContext ?? []);
-        $md .= "## 9.5 AI-Shield & Secure Ingestion Pipeline (Pertahanan Eksploitasi Otonom AI)\n\n";
+        $md .= "## 10.5 AI-Shield & Secure Ingestion Pipeline (Pertahanan Eksploitasi Otonom AI)\n\n";
         $md .= "> **Latar Belakang & Vektor Serangan**: " . ($aiShield['incident_case_study']['context'] ?? '') . "\n";
         $md .= "> **Analisis Insiden Exploit Gym**: " . ($aiShield['incident_case_study']['attack_vector'] ?? '') . "\n\n";
         $md .= "| Kode Modul | Nama Modul Pertahanan | Peran & Tipe Arsitektur | Mekanisme Proteksi |\n";
@@ -4481,7 +4494,7 @@ PROMPT;
 
         // 9.6 20 Agentic AI Concepts Matrix
         $agenticMatrix = $prd['agentic_ai_matrix'] ?? self::generateAgenticAiConceptsMatrix($projectName, $mvpFeatures);
-        $md .= "## 9.6 Matriks 20 Konsep AI Agentic & Rekomendasi Terarah untuk Klien\n\n";
+        $md .= "## 10.6 Matriks 20 Konsep AI Agentic & Rekomendasi Terarah untuk Klien\n\n";
         $md .= "> **Efisiensi Investasi**: Mengeliminasi kompleksitas berlebih dan memastikan sistem klien hanya mengadopsi konsep AI yang bernilai nyata bagi bisnis.\n\n";
         $md .= "| No | Konsep Agentic AI | Pilar Arsitektur | Status Rekomendasi | Aplikasi Nyata untuk Sistem Klien |\n";
         $md .= "|---|---|---|---|---|\n";
@@ -4497,7 +4510,7 @@ PROMPT;
 
         // 9.7 Server Hardware Capacity Sizing Engine
         $serverSizing = $prd['server_hardware_sizing'] ?? self::calculateServerHardwareSizing($projectName, $exec['problem_statement'] ?? '', $mvpFeatures, $extraContext ?? []);
-        $md .= "## 9.7 Analisis Kapasitas Spesifikasi Server (Hardware Sizing Engine)\n\n";
+        $md .= "## 10.7 Analisis Kapasitas Spesifikasi Server (Hardware Sizing Engine)\n\n";
         $md .= "- **Rekomendasi Paket Server**: **" . ($serverSizing['tier_name'] ?? 'Production VPS') . "**\n";
         $md .= "- **Profil Beban Kerja**: " . ($serverSizing['workload_profile'] ?? '-') . "\n";
         $md .= "- **Estimasi Investasi Server**: **" . ($serverSizing['estimated_monthly_investment']['idr'] ?? '-') . "** (" . ($serverSizing['estimated_monthly_investment']['usd'] ?? '-') . ")\n\n";
@@ -4507,8 +4520,8 @@ PROMPT;
         $md .= "- **Penyimpanan NVMe PCIe 4.0**: " . ($serverSizing['specifications']['storage']['capacity'] ?? '-') . " (" . ($serverSizing['specifications']['storage']['speed'] ?? '') . ")\n";
         $md .= "- **Bandwidth Jaringan**: " . ($serverSizing['specifications']['network']['bandwidth'] ?? '-') . " (" . ($serverSizing['specifications']['network']['port_speed'] ?? '') . ")\n\n";
 
-        // 10. Governance & DoD
-        $md .= "## 10. Tata Kelola, Kualitas & Definition of Done (DoD)\n\n";
+        // 11. Governance & DoD
+        $md .= "## 11. Tata Kelola, Kualitas & Definition of Done (DoD)\n\n";
         foreach ($governance['definition_of_done'] ?? [] as $dod) {
             $md .= "- [x] {$dod}\n";
         }
@@ -4517,7 +4530,7 @@ PROMPT;
         // 10.5 Itemized Scope Breakdown
         $itemized = $prd['itemized_cost_breakdown'] ?? self::calculateItemizedEstimation($blueprint);
         if (!empty($itemized['items'])) {
-            $md .= "## 10.5 Rincian Biaya Spesifikasi Berdasarkan Poin Input Klien (Itemized Scope Metric)\n\n";
+            $md .= "## 11.5 Rincian Biaya Spesifikasi Berdasarkan Poin Input Klien (Itemized Scope Metric)\n\n";
             $md .= "> **Transparansi Investasi**: Setiap komponen biaya diturunkan langsung secara matematis dari formulir spesifikasi yang diajukan oleh pihak klien.\n\n";
             $md .= "| Kategori | Kode | Komponen / Fitur Spesifik | Kompleksitas | Bobot Biaya |\n";
             $md .= "|---|---|---|---|---|\n";
@@ -4534,8 +4547,8 @@ PROMPT;
             $md .= "| **PELUNASAN SETELAH LOLOS UAT & SERAH TERIMA** | | | | **Rp " . number_format($itemized['standard_pelunasan'] ?? 0, 0, ',', '.') . "** |\n\n";
         }
 
-        // 11. Velocity Pricing
-        $md .= "## 11. Opsi Akselerasi Peluncuran (Velocity Pricing Continuum)\n\n";
+        // 12. Velocity Pricing
+        $md .= "## 12. Opsi Akselerasi Peluncuran (Velocity Pricing Continuum)\n\n";
         $md .= "| Opsi Paket | Estimasi Durasi | Nilai Investasi | Termin DP (50%) | Alokasi Squad & Engine |\n";
         $md .= "|---|---|---|---|---|\n";
         foreach ($pricing as $p) {

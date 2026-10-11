@@ -13,9 +13,42 @@ use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class BlueprintController extends Controller
 {
+    /**
+     * Enforce strict security access to blueprint documents.
+     * Prevents IDOR leaks on paid tiers (Lite, Pro, Ultimate, MVP).
+     */
+    private function authorizeBlueprintAccess(VisionBlueprint $blueprint): void
+    {
+        $user = Auth::user();
+        
+        // Lead Architects / Super Admins bypass
+        if ($user && ($user->isSuperAdmin() || $user->hasRole('super_admin') || str_contains($user->email, 'neriahpro'))) {
+            return;
+        }
+
+        // Guest access allowed for Free Grant / Spark Tier
+        $tier = $blueprint->user_metadata['retail_tier'] ?? $blueprint->user_metadata['package_tier'] ?? 'lite';
+        if ($tier === 'retail_spark' || $blueprint->is_free_grant) {
+            return;
+        }
+
+        // Paid tiers mandate login
+        if (! $user) {
+            abort(403, 'Akses Ditolak: Sesuai kebijakan, wajib login/daftar akun untuk mengakses & mengunduh dokumen lisensi berbayar Anda.');
+        }
+
+        // Check exact ownership
+        $blueprintUserId = $blueprint->user_metadata['user_id'] ?? null;
+        $blueprintEmail = $blueprint->email ?? '';
+
+        if ($blueprintUserId !== $user->id && strtolower(trim($blueprintEmail)) !== strtolower(trim($user->email))) {
+            abort(403, 'Akses Ditolak: Dokumen ini terproteksi hak cipta Neriah Pro dan hanya dapat diakses oleh pemilik lisensi terdaftar.');
+        }
+    }
     /**
      * Show the public Project OS & Vision Blueprint Questionnaire form.
      */
@@ -415,6 +448,7 @@ class BlueprintController extends Controller
         }
 
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
 
         $isScopeLocked = $blueprint->isScopeFrozen();
         $isDpConfirmed = $blueprint->isDpConfirmed();
@@ -935,6 +969,7 @@ class BlueprintController extends Controller
     public function downloadPdf(string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
         
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.blueprint', [
@@ -951,6 +986,7 @@ class BlueprintController extends Controller
     public function downloadMd(string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
         
         $md = \App\Services\PrdGeneratorService::toMarkdown($blueprint, $prd);
@@ -967,6 +1003,7 @@ class BlueprintController extends Controller
     public function rawMd(string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
         
         $md = \App\Services\PrdGeneratorService::toMarkdown($blueprint, $prd);
@@ -982,6 +1019,7 @@ class BlueprintController extends Controller
     public function downloadCursorrules(Request $request, string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
         if (empty($prd)) {
             $prd = \App\Services\PrdGeneratorService::generate($blueprint);
@@ -1133,6 +1171,7 @@ class BlueprintController extends Controller
     public function exportScaffold(string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
 
         $zipPath = \App\Services\ScaffoldGeneratorService::createZipArchive($blueprint);
 
@@ -1147,6 +1186,7 @@ class BlueprintController extends Controller
     public function previewScaffold(string $slug): JsonResponse
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
 
         $files = \App\Services\ScaffoldGeneratorService::generateFiles($blueprint);
         $customizations = $blueprint->user_metadata['scaffold_customizations'] ?? [];
@@ -1166,6 +1206,7 @@ class BlueprintController extends Controller
     public function saveScaffoldFile(Request $request, string $slug): JsonResponse
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
 
         $request->validate([
             'filename' => 'required|string|max:255',
@@ -1206,6 +1247,7 @@ class BlueprintController extends Controller
     public function resetScaffoldFile(Request $request, string $slug): JsonResponse
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
 
         $request->validate([
             'filename' => 'required|string|max:255',

@@ -2165,14 +2165,14 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 $pkgTitle = $isEn ? "Tier 01: Spark Free Idea Audit (Rp {$sparkPrice} - Initial Validation)" : "Paket 1: Spark Free Idea Audit (Rp {$sparkPrice} - Validasi Ide Awal)";
                                 $pkgBadge = 'SPARK FREE AUDIT';
                             } elseif ($cleanRt === 'lite') {
-                                $pkgTitle = $isEn ? "Tier 02: Lite PRD & Database (Rp {$litePrice} - System Blueprint)" : "Paket 2: Lite PRD & Database (Rp {$litePrice} - Cetak Biru Sistem)";
-                                $pkgBadge = 'LITE PRD & DB';
+                                $pkgTitle = $isEn ? "Tier 02: Starter AI Architect (Rp {$litePrice} - System Blueprint)" : "Paket 2: Starter AI Architect (Rp {$litePrice} - Cetak Biru Sistem)";
+                                $pkgBadge = 'STARTER AI ARCHITECT';
                             } elseif ($cleanRt === 'pro') {
-                                $pkgTitle = $isEn ? "Tier 03: Pro Production Blueprint (Rp {$proPrice} - Ready to Code)" : "Paket 3: Pro Production Blueprint (Rp {$proPrice} - Siap Koding)";
-                                $pkgBadge = 'PRO PRODUCTION STACK';
+                                $pkgTitle = $isEn ? "Tier 03: Pro Agentic Blueprint (Rp {$proPrice} - Ready to Code)" : "Paket 3: Pro Agentic Blueprint (Rp {$proPrice} - Siap Koding)";
+                                $pkgBadge = 'PRO AGENTIC BLUEPRINT';
                             } elseif ($cleanRt === 'ultimate' || $cleanRt === 'enterprise') {
-                                $pkgTitle = $isEn ? "Tier 04: Ultimate Software Factory OS (Rp {$ultimatePrice} - Complete 7 Pillars)" : "Paket 4: Ultimate Software Factory OS (Rp {$ultimatePrice} - Lengkap 7 Pilar)";
-                                $pkgBadge = 'ULTIMATE 7-PILLAR OS';
+                                $pkgTitle = $isEn ? "Tier 04: Enterprise Factory OS (Rp {$ultimatePrice} - Complete 7 Pillars)" : "Paket 4: Enterprise Factory OS (Rp {$ultimatePrice} - Lengkap 7 Pilar)";
+                                $pkgBadge = 'ENTERPRISE FACTORY OS';
                             }
                         } elseif ($selectedVelocityMeta) {
                             if ($selectedVelocityMeta === 'fast_track' || str_contains($selectedVelocityMeta, 'fast') || str_contains($selectedVelocityMeta, 'swarm')) {

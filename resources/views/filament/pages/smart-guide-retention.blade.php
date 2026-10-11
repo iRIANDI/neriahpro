@@ -425,7 +425,7 @@
                         <td style="color: var(--sg-text-muted);" x-text="t[lang].tb_spark_cycle"></td>
                     </tr>
                     <tr>
-                        <td style="font-weight: 700; color: #0284c7;">Lite Blueprint</td>
+                        <td style="font-weight: 700; color: #0284c7;">Starter AI Architect</td>
                         <td style="font-family: ui-monospace, monospace; font-weight: 700; color: #0284c7;">Rp 99.000</td>
                         <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">~Rp 1.000 (20k tok)</td>
                         <td style="font-family: ui-monospace, monospace; color: var(--sg-text-muted);">~Rp 2.000 (Midtrans)</td>
@@ -622,14 +622,14 @@
                     <div style="padding: 8px; background: var(--sg-card-bg); border: 1px solid var(--sg-border); font-size: 10px; font-family: ui-monospace, monospace;">
                         <span style="color: #d97706; font-weight: 700;">BATASAN / HOOK RASA TANGGUNG:</span>
                         <div style="color: var(--sg-text-muted); margin-top: 2px;">Tanpa skema SQL DDL, tanpa Docker, & tanpa AI rules. Dibatasi 2x audit tamu.</div>
-                        <div style="color: #0284c7; margin-top: 4px; font-weight: 700;">👉 Upsell: Upgrade ke Lite PRD (Rp 99rb) untuk skema database siap import!</div>
+                        <div style="color: #0284c7; margin-top: 4px; font-weight: 700;">👉 Upsell: Upgrade ke Starter AI Architect (Rp 99rb) untuk skema database siap import!</div>
                     </div>
                 </div>
 
                 <!-- Lite PRD Card -->
                 <div class="sg-subcard" style="border-top: 3px solid #0284c7;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <strong style="font-size: 13px; color: #0284c7;">02. Lite PRD Generator</strong>
+                        <strong style="font-size: 13px; color: #0284c7;">02. Starter AI Architect</strong>
                         <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #0284c7; font-size: 11px;">Rp 99.000</span>
                     </div>
                     <div style="font-size: 10px; font-family: ui-monospace, monospace; padding: 2px 6px; background: rgba(2, 132, 199, 0.1); color: #0284c7; margin-bottom: 8px;">
@@ -654,7 +654,7 @@
                 <!-- Pro Production Card -->
                 <div class="sg-subcard" style="border-top: 3px solid #10b981; background: rgba(16, 185, 129, 0.03);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <strong style="font-size: 13px; color: #10b981;">03. Pro Production PRD ★</strong>
+                        <strong style="font-size: 13px; color: #10b981;">03. Pro Agentic Blueprint ★</strong>
                         <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #10b981; font-size: 11px;">Rp 399.000</span>
                     </div>
                     <div style="font-size: 10px; font-family: ui-monospace, monospace; padding: 2px 6px; background: rgba(16, 185, 129, 0.1); color: #10b981; margin-bottom: 8px;">
@@ -662,7 +662,7 @@
                     </div>
                     <div style="font-size: 11px; color: var(--sg-text-title); font-weight: 700; margin-bottom: 4px;">Deliverables:</div>
                     <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
-                        <li><strong style="color: #10b981;">Seperti di Paket Lite PRD</strong>, ditambah:</li>
+                        <li><strong style="color: #10b981;">Seperti di Paket Starter</strong>, ditambah:</li>
                         <li>Pilar 1 (Spec): OpenAPI 3.1 Spec & Idempotensi</li>
                         <li>Pilar 3 (Scaffold): Container Docker Siap Pakai</li>
                         <li>Pilar 4 (Seeder): Database Seeder Sintetik 25 Data</li>
@@ -688,7 +688,7 @@
                     </div>
                     <div style="font-size: 11px; color: var(--sg-text-title); font-weight: 700; margin-bottom: 4px;">Deliverables:</div>
                     <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
-                        <li><strong style="color: #8b5cf6;">Seperti di Paket Pro Production</strong>, ditambah:</li>
+                        <li><strong style="color: #8b5cf6;">Seperti di Paket Pro Agentic Blueprint</strong>, ditambah:</li>
                         <li>Pilar 2 (UI/UX): Tokens JSON & Wireframe 4 Layar</li>
                         <li>Pilar 6 (QA Test): Automated Pest Contract-First Tests</li>
                         <li>Pilar 7 (DevOps): CI/CD GitHub Actions & deploy.sh</li>
@@ -976,8 +976,8 @@ function smartGuideApp() {
                 sec6_a1: '"Halo Kak, betul sekali! Lisensi yang Kakak beli memberikan hak unduh dan akses arsip SELAMANYA untuk proyek [Nama Proyek Pertama] tanpa biaya bulanan. Untuk membangun arsitektur sistem baru dengan spesifikasi, DDL, dan scope yang berbeda, sistem kami membutuhkan komputasi AI baru sehingga memerlukan 1 lisensi terpisah per entitas proyek."',
                 sec6_q2: 'Q: "Saya sudah punya blueprint Pro, tapi tim saya bingung cara kodingnya. Bisa tolong kodingin?"',
                 sec6_a2: '"Tentu bisa sekali Kak! Paket Blueprint adalah paket Self-Service untuk tim internal Kakak. Namun jika Kakak ingin sistem ini dibangun 100% turnkey dan siap pakai oleh Software Architect & Senior Engineer Neriah Pro, Kakak dapat meng-upgrade ke Kontrak Monolith MVP Studio (mulai Rp 50 Juta). Dokumen Blueprint Kakak akan langsung kami gunakan sebagai acuan sprint produksi!"',
-                sec6_q3: 'Q: "Kenapa di Paket Lite belum ada Docker dan AI coding rules? Kan saya juga developer?"',
-                sec6_a3: '"Pertanyaan bagus sekali Kak! Paket Lite (Rp 99rb) memang dirancang sangat hemat dan lean khusus bagi developer yang hanya butuh spesifikasi PRD formal dan skema SQL DDL mentah untuk diimpor ke database lokal. Namun jika Kakak ingin menghemat 40+ jam kerja tanpa harus pusing setup Docker compose, synthetic mock data seeder, dan AI coding agent rules (.cursorrules) yang siap di-prompting di Cursor / Windsurf, selisih Rp 300rb ke Paket Pro (Rp 399rb) adalah investasi paling efisien yang langsung melipatgandakan kecepatan koding Kakak hari ini juga!"',
+                sec6_q3: 'Q: "Kenapa di Paket Starter belum ada Docker dan AI coding rules? Kan saya juga developer?"',
+                sec6_a3: '"Pertanyaan bagus sekali Kak! Paket Starter AI Architect (Rp 99rb) memang dirancang sangat hemat dan lean khusus bagi developer yang hanya butuh spesifikasi PRD formal dan skema SQL DDL mentah untuk diimpor ke database lokal. Namun jika Kakak ingin menghemat 40+ jam kerja tanpa harus pusing setup Docker compose, synthetic mock data seeder, dan AI coding agent rules (.cursorrules) yang siap di-prompting di Cursor / Windsurf, selisih Rp 300rb ke Paket Pro (Rp 399rb) adalah investasi paling efisien yang langsung melipatgandakan kecepatan koding Kakak hari ini juga!"',
                 sec6_q4: 'Q: "Apa bedanya beli Blueprint Ultimate (Rp 1.49 Jt) dibanding kontrak Studio MVP (Rp 50 Jt)?"',
                 sec6_a4: '"Perbedaannya terletak pada SIAPA YANG MENULIS KODE Kak! Paket Ultimate Software Factory OS (Rp 1.49 Jt) memberikan seluruh 7 pilar cetak biru, wireframe, unit test suite, dan pipeline CI/CD lengkap untuk dieksekusi oleh tim programmer internal Kakak sendiri, ditambah 1 jam konsultasi arsitek. Sedangkan Kontrak Monolith MVP Studio (Rp 50 Jt) adalah layanan turnkey penuh di mana Senior Architect dan Engineer Neriah Pro yang menulis 100% kode aplikasi, memasang VPS, mengintegrasikan payment, dan memberikan garansi bug 3 bulan. Menariknya, biaya Rp 1.49 Jt ini otomatis memotong DP 50% jika Kakak memutuskan lanjut koding bersama kami!"'
             },
@@ -1061,8 +1061,8 @@ function smartGuideApp() {
                 sec6_a1: '"Hi! Exactly right! Your purchased license grants LIFETIME download and archive access to [Project Name] without monthly fees. To architect a brand new system with different DDL, specifications, and scope, our system initiates a new AI synthesis cycle requiring a separate license per project entity."',
                 sec6_q2: 'Q: "I have the Pro blueprint, but my team doesn\'t know how to code it. Can you build it?"',
                 sec6_a2: '"Absolutely! The Blueprint is a Self-Service package for internal execution. If you prefer our Senior Architects and Engineers to build this 100% turnkey, you can upgrade directly to our Monolith MVP Studio Contract (from Rp 50 Million). Your existing blueprint will serve as the exact production sprint specification!"',
-                sec6_q3: 'Q: "Why doesn\'t the Lite package include Docker and AI coding rules? I\'m a developer too."',
-                sec6_a3: '"Great question! The Lite tier (Rp 99k) is designed to be ultra-lean for solo developers who only need the formal PRD specification and raw SQL DDL to import directly into local databases. However, if you want to save 40+ engineering hours and eliminate manual setup of Docker containers, synthetic mock data seeders, and AI coding agent rules (.cursorrules) ready for Cursor / Windsurf, the Rp 300k jump to Pro (Rp 399k) is the most cost-effective lever to immediately supercharge your development velocity today!"',
+                sec6_q3: 'Q: "Why doesn\'t the Starter package include Docker and AI coding rules? I\'m a developer too."',
+                sec6_a3: '"Great question! The Starter AI Architect tier (Rp 99k) is designed to be ultra-lean for solo developers who only need the formal PRD specification and raw SQL DDL to import directly into local databases. However, if you want to save 40+ engineering hours and eliminate manual setup of Docker containers, synthetic mock data seeders, and AI coding agent rules (.cursorrules) ready for Cursor / Windsurf, the Rp 300k jump to Pro (Rp 399k) is the most cost-effective lever to immediately supercharge your development velocity today!"',
                 sec6_q4: 'Q: "What is the difference between buying the Ultimate Blueprint (Rp 1.49M) vs hiring Studio MVP (Rp 50M)?"',
                 sec6_a4: '"The core difference is WHO WRITES THE CODE! The Ultimate Software Factory OS (Rp 1.49M) provides all 7 pillars of blueprint specifications, wireframes, contract test suites, and CI/CD pipelines for your internal developers to execute, plus a 1-hour Principal Architect consultation. Meanwhile, the Studio Monolith MVP Contract (Rp 50M) is a 100% turnkey service where Neriah Pro senior architects and engineers write every line of production code, harden your VPS, integrate payment gateways, and back it with a 3-month SLA warranty. Best of all, your advisory investment is 100% credited toward the 50% Down Payment if you proceed with our engineering studio!"'
             }

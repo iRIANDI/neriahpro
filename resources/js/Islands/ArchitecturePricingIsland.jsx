@@ -50,7 +50,7 @@ export const PACKAGE_REGISTRY = {
   },
   retail_lite: {
     id: 'retail_lite',
-    name: 'Lite PRD Generator',
+    name: 'Starter AI Architect',
     category: 'blueprint_self_service',
     execution_model: 'self_service',
     is_paid: true,
@@ -60,7 +60,7 @@ export const PACKAGE_REGISTRY = {
   },
   retail_pro: {
     id: 'retail_pro',
-    name: 'Pro Production PRD',
+    name: 'Pro Agentic Blueprint',
     category: 'blueprint_self_service',
     execution_model: 'self_service',
     is_paid: true,
@@ -70,7 +70,7 @@ export const PACKAGE_REGISTRY = {
   },
   retail_ultimate: {
     id: 'retail_ultimate',
-    name: 'Ultimate Advisory',
+    name: 'Enterprise Factory OS',
     category: 'blueprint_self_service',
     execution_model: 'self_service',
     is_paid: true,
@@ -425,14 +425,14 @@ export default function ArchitecturePricingIsland({
     {
       q: isEn ? 'Are Instant Architectural Blueprint packages 100% self-service without Neriah Pro coding?' : 'Apakah paket Instant Architectural Blueprint 100% self-service tanpa keterlibatan koding Neriah Pro?',
       a: isEn 
-        ? 'Yes, absolutely. Instant Architectural Blueprint packages (Spark, Lite, Pro, Ultimate) are pure digital architectural specifications and engineering deliverables (26-parameter PRD, PostgreSQL Strict ULID DDL SQL, Mermaid diagrams, Jira/Linear WBS, Decoupled 2026+ matrix, OpenAPI 3.1 contracts). They are designed for you, your in-house engineering team, freelancers, or AI coding agents to build the software independently. Neriah Pro does NOT write application code for these self-service packages. If you need Neriah Pro engineers to build, code, and deploy your software turnkey, select our Custom Engineering Studio contracts below (Full MVP Monolith or UMKM Starter).'
-        : 'Ya, benar 100%. Paket Instant Architectural Blueprint (Spark, Lite, Pro, Ultimate) adalah produk spesifikasi arsitektur digital mandiri (PRD 26 parameter, skema DDL PostgreSQL Strict ULID, Diagram Mermaid, WBS sprint Jira-ready, matriks Decoupled 2026+, dan kontrak OpenAPI 3.1). Seluruh aset ini diperuntukkan bagi Anda, tim programmer in-house, freelancer, atau AI coding agent Anda untuk membangun dan mengoding aplikasinya sendiri. Neriah Pro sama sekali TIDAK terlibat dalam penulisan koding untuk paket self-service ini. Apabila Anda membutuhkan tim arsitek dan engineer Neriah Pro untuk mengoding, menguji, dan mendeploy aplikasi sampai siap pakai di server VPS, silakan pilih Layanan Custom Engineering Studio kami di bawah (Full MVP Monolith atau UMKM Starter).'
+        ? 'Yes, absolutely. Instant Architectural Blueprint packages (Spark, Starter, Pro Agentic, Enterprise) are pure digital architectural specifications and engineering deliverables (26-parameter PRD, PostgreSQL Strict ULID DDL SQL, Mermaid diagrams, Jira/Linear WBS, Decoupled 2026+ matrix, OpenAPI 3.1 contracts). They are designed for you, your in-house engineering team, freelancers, or AI coding agents to build the software independently. Neriah Pro does NOT write application code for these self-service packages. If you need Neriah Pro engineers to build, code, and deploy your software turnkey, select our Custom Engineering Studio contracts below (Full MVP Monolith or UMKM Starter).'
+        : 'Ya, benar 100%. Paket Instant Architectural Blueprint (Spark, Starter, Pro Agentic, Enterprise) adalah produk spesifikasi arsitektur digital mandiri (PRD 26 parameter, skema DDL PostgreSQL Strict ULID, Diagram Mermaid, WBS sprint Jira-ready, matriks Decoupled 2026+, dan kontrak OpenAPI 3.1). Seluruh aset ini diperuntukkan bagi Anda, tim programmer in-house, freelancer, atau AI coding agent Anda untuk membangun dan mengoding aplikasinya sendiri. Neriah Pro sama sekali TIDAK terlibat dalam penulisan koding untuk paket self-service ini. Apabila Anda membutuhkan tim arsitek dan engineer Neriah Pro untuk mengoding, menguji, dan mendeploy aplikasi sampai siap pakai di server VPS, silakan pilih Layanan Custom Engineering Studio kami di bawah (Full MVP Monolith atau UMKM Starter).'
     },
     {
       q: isEn ? 'Do I need to log in to subscribe or use the Instant Blueprint packages?' : 'Apakah perlu login untuk berlangganan atau menggunakan paket Instant Blueprint?',
       a: isEn
-        ? 'For the Spark (Free) tier, NO login is required — you can generate quick idea audits instantly in Guest Mode without creating an account. For paid packages (Lite, Pro, Ultimate), logging in or creating a Neriah Pro account is mandatory. An account ensures your digital license, persistent PRD version history, lifetime download access, and AI re-prompt tokens are securely preserved.'
-        : 'Untuk paket Spark (Free), Anda TIDAK PERLU login sama sekali — Anda dapat langsung menggunakannya dalam Guest Mode tanpa registrasi ataupun kartu kredit. Namun untuk paket berbayar (Lite, Pro, dan Ultimate), Anda diwajibkan login atau mendaftar akun Neriah Pro terlebih dahulu. Kepemilikan akun ini diperlukan untuk mencatat lisensi digital resmi, mengamankan hak unduh seumur hidup (lifetime download), serta menyimpan riwayat versi dokumen PRD dan token regenerasi AI Anda.'
+        ? 'For the Spark (Free) tier, NO login is required — you can generate quick idea audits instantly in Guest Mode without creating an account. For paid packages (Starter, Pro Agentic, Enterprise), logging in or creating a Neriah Pro account is mandatory. An account ensures your digital license, persistent PRD version history, lifetime download access, and AI re-prompt tokens are securely preserved.'
+        : 'Untuk paket Spark (Free), Anda TIDAK PERLU login sama sekali — Anda dapat langsung menggunakannya dalam Guest Mode tanpa registrasi ataupun kartu kredit. Namun untuk paket berbayar (Starter, Pro Agentic, dan Enterprise), Anda diwajibkan login atau mendaftar akun Neriah Pro terlebih dahulu. Kepemilikan akun ini diperlukan untuk mencatat lisensi digital resmi, mengamankan hak unduh seumur hidup (lifetime download), serta menyimpan riwayat versi dokumen PRD dan token regenerasi AI Anda.'
     },
     {
       q: isEn ? 'What are the usage limits and reset cycles for the free Spark package?' : 'Berapa batas kuota dan siklus reset untuk paket gratis (Spark)?',
@@ -443,8 +443,8 @@ export default function ArchitecturePricingIsland({
     {
       q: isEn ? 'What is the validity period and revision window for each package?' : 'Berapa lama masa berlaku akses dokumen dan jendela revisi untuk masing-masing paket?',
       a: isEn
-        ? 'All paid tiers (Lite, Pro, Ultimate) grant lifetime download and reading access to your generated blueprints. In addition: Lite provides a 30-day form parameter revision window; Pro provides a 6-month window for unlimited AI re-prompts, schema tweaks, and architecture regenerations; Ultimate provides 1 year of priority enterprise updates plus a 60-day window to schedule your 60-minute 1-on-1 Google Meet session with our Lead Architect. For custom development contracts, Full MVP includes a 3-month SLA bug warranty post-deployment.'
-        : 'Semua paket berbayar (Lite, Pro, Ultimate) memberikan hak akses dan unduh dokumen seumur hidup (Lifetime Download). Selain itu: Paket Lite memiliki jendela revisi form parameter selama 30 hari; Paket Pro menyediakan 6 bulan akses regenerasi AI sepuasnya (unlimited re-prompt) dan pembaruan arsitektur; Paket Ultimate mencakup 1 tahun prioritas pembaruan skema enterprise serta jendela 60 hari untuk memesan sesi Google Meet 60 menit bersama Lead Architect Neriah Pro. Untuk kontrak custom development, Full MVP dilengkapi 3 bulan garansi bug dan SLA prioritas pasca-peluncuran live.'
+        ? 'All paid tiers (Starter, Pro Agentic, Enterprise) grant lifetime download and reading access to your generated blueprints. In addition: Lite provides a 30-day form parameter revision window; Pro provides a 6-month window for unlimited AI re-prompts, schema tweaks, and architecture regenerations; Ultimate provides 1 year of priority enterprise updates plus a 60-day window to schedule your 60-minute 1-on-1 Google Meet session with our Lead Architect. For custom development contracts, Full MVP includes a 3-month SLA bug warranty post-deployment.'
+        : 'Semua paket berbayar (Starter, Pro Agentic, Enterprise) memberikan hak akses dan unduh dokumen seumur hidup (Lifetime Download). Selain itu: Paket Lite memiliki jendela revisi form parameter selama 30 hari; Paket Pro menyediakan 6 bulan akses regenerasi AI sepuasnya (unlimited re-prompt) dan pembaruan arsitektur; Paket Ultimate mencakup 1 tahun prioritas pembaruan skema enterprise serta jendela 60 hari untuk memesan sesi Google Meet 60 menit bersama Lead Architect Neriah Pro. Untuk kontrak custom development, Full MVP dilengkapi 3 bulan garansi bug dan SLA prioritas pasca-peluncuran live.'
     },
     {
       q: isEn ? 'Why should we pay Rp 2,500,000 for Advisory Blueprint if we already have in-house programmers?' : 'Mengapa butuh Jasa Blueprint Studio (Rp 2.500.000) jika kami sudah memiliki programmer in-house?',
@@ -525,8 +525,8 @@ export default function ArchitecturePricingIsland({
     {
       q: isEn ? 'What is the Refund Policy and Money-Back Guarantee for blueprints and custom development?' : 'Bagaimana kebijakan pengembalian dana (Refund Policy) dan garansi hasil pengerjaan?',
       a: isEn
-        ? 'Self-service digital blueprints (Spark, Lite, Pro, Ultimate) deliver instant digital assets and are non-refundable once unlocked/downloaded, except in verified technical delivery failures reported within 7 days. For Custom Engineering Studio contracts, we provide a 30-Day SLA Bug Warranty post-deployment. If a client requests termination before sprint kickoff, the 50% Down Payment is refunded 100% (minus payment gateway administrative fees). Once sprints commence, refunds are evaluated proportionally against unstarted sprint milestones.'
-        : 'Produk blueprint digital mandiri (Spark, Lite, Pro, Ultimate) merupakan aset digital instan dan bersifat non-refundable setelah diunduh/dibuka, kecuali terdapat kendala teknis sistem yang terverifikasi dalam 7 hari kerja. Untuk kontrak Custom Engineering Studio, Neriah Pro memberikan Garansi SLA 30 Hari pasca-live di server VPS untuk perbaikan bug gratis. Apabila klien membatalkan proyek sebelum sprint dimulai, DP 50% dikembalikan 100% (dikurangi biaya admin payment gateway Midtrans). Jika pembatalan terjadi saat sprint berjalan, pengembalian dihitung proporsional terhadap milestone sprint yang belum dikerjakan.'
+        ? 'Self-service digital blueprints (Spark, Starter, Pro Agentic, Enterprise) deliver instant digital assets and are non-refundable once unlocked/downloaded, except in verified technical delivery failures reported within 7 days. For Custom Engineering Studio contracts, we provide a 30-Day SLA Bug Warranty post-deployment. If a client requests termination before sprint kickoff, the 50% Down Payment is refunded 100% (minus payment gateway administrative fees). Once sprints commence, refunds are evaluated proportionally against unstarted sprint milestones.'
+        : 'Produk blueprint digital mandiri (Spark, Starter, Pro Agentic, Enterprise) merupakan aset digital instan dan bersifat non-refundable setelah diunduh/dibuka, kecuali terdapat kendala teknis sistem yang terverifikasi dalam 7 hari kerja. Untuk kontrak Custom Engineering Studio, Neriah Pro memberikan Garansi SLA 30 Hari pasca-live di server VPS untuk perbaikan bug gratis. Apabila klien membatalkan proyek sebelum sprint dimulai, DP 50% dikembalikan 100% (dikurangi biaya admin payment gateway Midtrans). Jika pembatalan terjadi saat sprint berjalan, pengembalian dihitung proporsional terhadap milestone sprint yang belum dikerjakan.'
     },
     {
       q: isEn ? 'How does Neriah Pro handle duplicate orders or double payments?' : 'Bagaimana Neriah Pro menangani pesanan ganda (double payment) atau kelebihan transfer?',
@@ -824,7 +824,7 @@ export default function ArchitecturePricingIsland({
               </div>
             </div>
 
-            {/* TIER 02: LITE PRD */}
+            {/* TIER 02: STARTER AI ARCHITECT */}
             <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex flex-col justify-between rounded-none hover:border-cyan-500/60 transition group relative">
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -837,13 +837,13 @@ export default function ArchitecturePricingIsland({
                 </div>
 
                 <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5 font-sans">
-                  {isEn ? 'Lite PRD & Database' : 'Lite PRD & Database'}
+                  {isEn ? 'Starter AI Architect' : 'Starter AI Architect'}
                 </h3>
 
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
                   {isEn 
-                    ? 'Official 26-parameter PRD document and ready-to-import SQL database schema.' 
-                    : 'Dokumen PRD resmi 26 parameter dan skema database SQL siap import untuk developer.'}
+                    ? 'AI-generated 26-parameter PRD document and ready-to-import SQL database schema.' 
+                    : 'Dokumen PRD 26 parameter hasil generasi AI dan skema database SQL siap import untuk startup Anda.'}
                 </p>
 
                 {/* Compact Price Box */}
@@ -897,7 +897,7 @@ export default function ArchitecturePricingIsland({
                   onClick={() => openBookingModal('retail_lite')}
                   className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-2.5 px-3 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none cursor-pointer"
                 >
-                  <span>{isEn ? 'GET LITE PRD' : 'PILIH PAKET LITE'}</span>
+                  <span>{isEn ? 'GET STARTER PACK' : 'PILIH PAKET STARTER'}</span>
                   <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
@@ -920,13 +920,13 @@ export default function ArchitecturePricingIsland({
                 </div>
 
                 <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5 font-sans">
-                  {isEn ? 'Pro Production Blueprint' : 'Pro Production Blueprint'}
+                  {isEn ? 'Pro Agentic Blueprint' : 'Pro Agentic Blueprint'}
                 </h3>
 
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
                   {isEn 
-                    ? 'Production blueprint with Docker containers, system diagrams, and AI coding agent rules.' 
-                    : 'Cetak biru produksi lengkap dengan Docker, diagram arsitektur, dan panduan AI coding.'}
+                    ? 'Complete 7-pillar OS blueprint with Docker, system diagrams, and strict AI coding rules.' 
+                    : 'Cetak biru OS 7-pilar lengkap dengan Docker, diagram sistem, dan instruksi AI agentic yang ketat.'}
                 </p>
 
                 {/* Compact Price Box */}
@@ -948,7 +948,7 @@ export default function ArchitecturePricingIsland({
                 {/* Inclusive Header & Features */}
                 <div className="space-y-2 mb-6">
                   <div className="p-2 mb-2 bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold">
-                    ⭐ {isEn ? 'Includes all Lite PRD features, plus:' : 'Mencakup seluruh fitur Lite PRD, ditambah:'}
+                    ⭐ {isEn ? 'Includes all Starter AI Architect features, plus:' : 'Mencakup seluruh fitur Starter AI Architect, ditambah:'}
                   </div>
                   {(isEn ? [
                     'Pillar 3 (Scaffold): Container Stack (docker-compose.yml, PHP 8.4, PG 16, Redis, Nginx)',
@@ -1001,13 +1001,13 @@ export default function ArchitecturePricingIsland({
                 </div>
 
                 <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5 font-sans">
-                  {isEn ? 'Ultimate Factory OS' : 'Ultimate Factory OS'}
+                  {isEn ? 'Enterprise Factory OS' : 'Enterprise Factory OS'}
                 </h3>
 
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
                   {isEn 
-                    ? 'Complete 7-pillar architecture with UI wireframes, automated testing, and 1-on-1 architect call.' 
-                    : 'Arsitektur lengkap 7 pilar, wireframe UI/UX, testing otomatis, dan sesi konsultasi 1-on-1 bersama Arsitek.'}
+                    ? 'Enterprise 7-pillar architecture with Pest testing, GitHub Actions CI/CD, and 1-on-1 Architect session.' 
+                    : 'Arsitektur 7-pilar enterprise dengan pengujian Pest otomatis, GitHub Actions CI/CD, dan sesi 1-on-1 Arsitek.'}
                 </p>
 
                 {/* Compact Price Box */}
@@ -1524,9 +1524,9 @@ export default function ArchitecturePricingIsland({
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
                     {isEn ? (
-                      <>Spark: <strong>Guest Mode (No Login)</strong><br />Lite, Pro, Ultimate: <strong>Verified Account Required</strong></>
+                      <>Spark: <strong>Guest Mode (No Login)</strong><br />Starter, Pro Agentic, Enterprise: <strong>Verified Account Required</strong></>
                     ) : (
-                      <>Spark: <strong>Guest Mode (Tanpa Login)</strong><br />Lite, Pro, Ultimate: <strong>Wajib Login Akun</strong></>
+                      <>Spark: <strong>Guest Mode (Tanpa Login)</strong><br />Starter, Pro Agentic, Enterprise: <strong>Wajib Login Akun</strong></>
                     )}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
@@ -1547,9 +1547,9 @@ export default function ArchitecturePricingIsland({
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
                     {isEn ? (
-                      <>Spark: <strong>2 Audits/Mo (Resets on 1st)</strong><br />Lite/Pro/Ultimate: <strong>1 Project per License</strong></>
+                      <>Spark: <strong>2 Audits/Mo (Resets on 1st)</strong><br />Starter/Pro Agentic/Enterprise: <strong>1 Project per License</strong></>
                     ) : (
-                      <>Spark: <strong>2x Audit/Bulan (Reset tiap tgl 1)</strong><br />Lite/Pro/Ultimate: <strong>1 Proyek per Lisensi</strong></>
+                      <>Spark: <strong>2x Audit/Bulan (Reset tiap tgl 1)</strong><br />Starter/Pro Agentic/Enterprise: <strong>1 Proyek per Lisensi</strong></>
                     )}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
@@ -1591,7 +1591,7 @@ export default function ArchitecturePricingIsland({
                     {isEn ? '7 Pillars of Software Factory OS' : '7 Pilar Software Factory OS'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                    {isEn ? 'Spark: 1 | Lite: 2 | Pro: 5 | Ultimate: Complete 7' : 'Spark: 1 | Lite: 2 | Pro: 5 | Ultimate: Lengkap 7'}
+                    {isEn ? 'Spark: 1 | Starter: 2 | Pro Agentic: 5 | Enterprise: Complete 7' : 'Spark: 1 | Starter: 2 | Pro Agentic: 5 | Enterprise: Lengkap 7'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
                     {isEn ? 'Pillar 1 (PRD & DDL) + WBS 5 Sprints' : 'Pilar 1 (PRD & DDL) + WBS 5 Sprint'}
@@ -1636,9 +1636,9 @@ export default function ArchitecturePricingIsland({
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
                     {isEn ? (
-                      <>Spark: 7-Day Guest Session<br />Lite: Lifetime Download + 30-Day Revisions<br />Pro: Lifetime Download + 6-Mo AI Regen<br />Ultimate: Lifetime + 1-Yr Updates + 60-Day Meet</>
+                      <>Spark: 7-Day Guest Session<br />Starter: Lifetime Download + 30-Day Revisions<br />Pro Agentic: Lifetime Download + 6-Mo AI Regen<br />Enterprise: Lifetime + 1-Yr Updates + 60-Day Meet</>
                     ) : (
-                      <>Spark: 7hr Guest Session<br />Lite: Unduh Selamanya + 30hr Revisi<br />Pro: Unduh Selamanya + 6bln AI Regen<br />Ultimate: Selamanya + 1th Update + 60hr Meet</>
+                      <>Spark: 7hr Guest Session<br />Starter: Unduh Selamanya + 30hr Revisi<br />Pro Agentic: Unduh Selamanya + 6bln AI Regen<br />Enterprise: Selamanya + 1th Update + 60hr Meet</>
                     )}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
@@ -1697,9 +1697,9 @@ export default function ArchitecturePricingIsland({
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
                     {isEn ? (
-                      <>Spark: Lean 5 Features<br />Lite, Pro, Ultimate: <strong>Full (JSON & MD)</strong></>
+                      <>Spark: Lean 5 Features<br />Starter, Pro Agentic, Enterprise: <strong>Full (JSON & MD)</strong></>
                     ) : (
-                      <>Spark: Lean 5 Fitur<br />Lite, Pro, Ultimate: <strong>Lengkap (JSON & MD)</strong></>
+                      <>Spark: Lean 5 Fitur<br />Starter, Pro Agentic, Enterprise: <strong>Lengkap (JSON & MD)</strong></>
                     )}
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
@@ -1726,9 +1726,9 @@ export default function ArchitecturePricingIsland({
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
                     {isEn ? (
-                      <>Lite, Pro, Ultimate: <strong>Ready-to-Import SQL DDL</strong></>
+                      <>Starter, Pro Agentic, Enterprise: <strong>Ready-to-Import SQL DDL</strong></>
                     ) : (
-                      <>Lite, Pro, Ultimate: <strong>DDL SQL Siap Import</strong></>
+                      <>Starter, Pro Agentic, Enterprise: <strong>DDL SQL Siap Import</strong></>
                     )}
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
@@ -1758,9 +1758,9 @@ export default function ArchitecturePricingIsland({
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
                     {isEn ? (
-                      <>Pro & Ultimate: <strong>Next.js 15, Cloudflare, OpenAPI 3.1</strong></>
+                      <>Pro & Enterprise: <strong>Next.js 15, Cloudflare, OpenAPI 3.1</strong></>
                     ) : (
-                      <>Pro & Ultimate: <strong>Next.js 15, Cloudflare, OpenAPI 3.1</strong></>
+                      <>Pro & Enterprise: <strong>Next.js 15, Cloudflare, OpenAPI 3.1</strong></>
                     )}
                   </td>
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
@@ -1786,7 +1786,7 @@ export default function ArchitecturePricingIsland({
                     {isEn ? 'Synthetic Data Seeder (Pillar 4)' : 'Synthetic Data Seeder (Pilar 4)'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                    {isEn ? 'Pro/Ultimate: Blueprint Seeder Script' : 'Pro/Ultimate: Cetak Biru Seeder Sintetis'}
+                    {isEn ? 'Pro/Enterprise: Blueprint Seeder Script' : 'Pro/Enterprise: Cetak Biru Seeder Sintetis'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
                     {isEn ? 'Data Dictionary & Mock Specs' : 'Kamus Data & Spesifikasi Mock'}
@@ -1808,7 +1808,7 @@ export default function ArchitecturePricingIsland({
                     {isEn ? 'AI Coding Directives (Pillar 5)' : 'Aturan Koding Agen AI (Pilar 5)'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                    {isEn ? 'Pro/Ultimate: .cursorrules & AGENTS.md' : 'Pro/Ultimate: .cursorrules & AGENTS.md'}
+                    {isEn ? 'Pro/Enterprise: .cursorrules & AGENTS.md' : 'Pro/Enterprise: .cursorrules & AGENTS.md'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
                     {isEn ? 'Architecture Rules for Client Team' : 'Template Aturan AI Khusus Tim Klien'}
@@ -1830,7 +1830,7 @@ export default function ArchitecturePricingIsland({
                     {isEn ? 'Contract-First Tests (Pillar 6)' : 'Uji Kontrak Otomatis (Pilar 6)'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                    {isEn ? 'Ultimate: ApiContractTest Specs' : 'Ultimate: Spesifikasi ApiContractTest'}
+                    {isEn ? 'Enterprise: ApiContractTest Specs' : 'Enterprise: Spesifikasi ApiContractTest'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
                     {isEn ? 'Acceptance Criteria & Test Matrix' : 'Kriteria UAT & Matriks Skenario Uji'}
@@ -1852,7 +1852,7 @@ export default function ArchitecturePricingIsland({
                     {isEn ? 'Cloud CI/CD & deploy.sh (Pillar 7)' : 'Cloud CI/CD & deploy.sh (Pilar 7)'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                    {isEn ? 'Ultimate: GitHub Actions & deploy.sh Code' : 'Ultimate: GitHub Actions & deploy.sh'}
+                    {isEn ? 'Enterprise: GitHub Actions & deploy.sh Code' : 'Enterprise: GitHub Actions & deploy.sh'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
                     {isEn ? 'VPS Topology & Hardening Guide' : 'Panduan Topologi VPS & Hardening'}
@@ -2119,7 +2119,7 @@ export default function ArchitecturePricingIsland({
                       <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'Checkout Ultimate Advisory PRD' : 'Checkout Lisensi Ultimate Advisory PRD'} (Rp {pricingSettings.retail_ultimate_price || '1.490.000'})
+                      {isEn ? 'Checkout Enterprise Factory OS' : 'Checkout Lisensi Enterprise Factory OS'} (Rp {pricingSettings.retail_ultimate_price || '1.490.000'})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn 
@@ -2134,7 +2134,7 @@ export default function ArchitecturePricingIsland({
                       <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'Checkout Pro Production PRD' : 'Checkout Lisensi Pro Production PRD'} (Rp {pricingSettings.retail_pro_price || '399.000'})
+                      {isEn ? 'Checkout Pro Agentic Blueprint' : 'Checkout Lisensi Pro Agentic Blueprint'} (Rp {pricingSettings.retail_pro_price || '399.000'})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn 
@@ -2149,7 +2149,7 @@ export default function ArchitecturePricingIsland({
                       <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'Checkout Lite PRD Generator' : 'Checkout Lisensi Lite PRD Generator'} (Rp {pricingSettings.retail_lite_price || '99.000'})
+                      {isEn ? 'Checkout Starter AI Architect' : 'Checkout Lisensi Starter AI Architect'} (Rp {pricingSettings.retail_lite_price || '99.000'})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn 
@@ -2304,9 +2304,9 @@ export default function ArchitecturePricingIsland({
                     >
                       <optgroup label={isEn ? "INSTANT ARCHITECTURAL BLUEPRINT (100% SELF-SERVICE // ZERO NERIAH PRO CODING)" : "INSTANT ARCHITECTURAL BLUEPRINT (100% SELF-SERVICE // TANPA KODING NERIAH PRO)"}>
                         <option value="retail_spark">{isEn ? 'Spark Free Audit (Free / Guest Mode - Monthly Reset)' : 'Spark Free Audit (Rp 0 - Guest Mode / Reset Tiap Bulan)'}</option>
-                        <option value="retail_lite">{isEn ? `Lite PRD Generator (Rp ${pricingSettings.retail_lite_price || '99.000'} - Login Required)` : `Lite PRD Generator (Rp ${pricingSettings.retail_lite_price || '99.000'} - Wajib Login)`}</option>
-                        <option value="retail_pro">{isEn ? `Pro Production PRD & WBS (Rp ${pricingSettings.retail_pro_price || '399.000'} - Login Required)` : `Pro Production PRD & WBS (Rp ${pricingSettings.retail_pro_price || '399.000'} - Wajib Login)`}</option>
-                        <option value="retail_ultimate">{isEn ? `Ultimate Advisory + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Verified Account)` : `Ultimate Advisory + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Akun Terverifikasi)`}</option>
+                        <option value="retail_lite">{isEn ? `Starter AI Architect (Rp ${pricingSettings.retail_lite_price || '99.000'} - Login Required)` : `Starter AI Architect (Rp ${pricingSettings.retail_lite_price || '99.000'} - Wajib Login)`}</option>
+                        <option value="retail_pro">{isEn ? `Pro Agentic Blueprint (Rp ${pricingSettings.retail_pro_price || '399.000'} - Login Required)` : `Pro Agentic Blueprint (Rp ${pricingSettings.retail_pro_price || '399.000'} - Wajib Login)`}</option>
+                        <option value="retail_ultimate">{isEn ? `Enterprise Factory OS + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Verified Account)` : `Enterprise Factory OS + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Akun Terverifikasi)`}</option>
                       </optgroup>
                       <optgroup label={isEn ? "NERIAH PRO CUSTOM ENGINEERING STUDIO (EXECUTED DIRECTLY BY NERIAH PRO)" : "NERIAH PRO CUSTOM ENGINEERING STUDIO (DIKERJAKAN LANGSUNG OLEH NERIAH PRO)"}>
                         <option value="full_mvp">{isEn ? 'Enterprise Rapid Monolith MVP (5 Sprints - 50% DP Rp 25,000,000)' : 'Enterprise Rapid Monolith MVP (5 Sprint - DP 50% Rp 25.000.000)'}</option>

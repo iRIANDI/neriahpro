@@ -851,7 +851,7 @@ export default function HeroIsland({
                           <span className="text-emerald-600 dark:text-emerald-400 font-bold">Rp 0 (Gratis)</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span>• <strong>Lite PRD:</strong> 26 Param &amp; PostgreSQL DDL</span>
+                          <span>• <strong>Starter AI Architect:</strong> 26 Param &amp; PostgreSQL DDL</span>
                           <span className="text-zinc-500">Rp {retailLitePrice}</span>
                         </div>
                         <div className="flex justify-between items-center">

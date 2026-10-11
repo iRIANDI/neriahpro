@@ -1735,7 +1735,7 @@
                     </p>
                     @if(!isset($pendingRetailOrders) || $pendingRetailOrders->isEmpty())
                         <a href="/pricing" class="inline-block mt-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold uppercase tracking-wider rounded-none">
-                            {{ $isEn ? 'ORDER LITE OR PRO PRD (STARTING RP 99.000) →' : 'PESAN LISENSI LITE / PRO (MULAI RP 99RB) →' }}
+                            {{ $isEn ? 'ORDER STARTER OR PRO PACKAGES (STARTING RP 99.000) →' : 'PESAN LISENSI STARTER / PRO (MULAI RP 99RB) →' }}
                         </a>
                     @endif
                 </div>
@@ -1746,9 +1746,9 @@
                             $tier = $license->user_metadata['retail_tier'] ?? $license->user_metadata['package_tier'] ?? 'retail_lite';
                             $tierLabel = match($tier) {
                                 'retail_spark', 'spark' => 'Spark Free Audit (Rp 0)',
-                                'retail_pro', 'pro' => 'Pro Production PRD (Rp 399.000)',
-                                'retail_ultimate', 'ultimate' => 'Ultimate Advisory PRD (Rp 1.490.000)',
-                                default => 'Lite PRD Generator (Rp 99.000)',
+                                'retail_pro', 'pro' => 'Pro Agentic Blueprint (Rp 399.000)',
+                                'retail_ultimate', 'ultimate' => 'Enterprise Factory OS (Rp 1.490.000)',
+                                default => 'Starter AI Architect (Rp 99.000)',
                             };
                             $allowedDays = match($tier) {
                                 'retail_pro', 'pro' => 180,

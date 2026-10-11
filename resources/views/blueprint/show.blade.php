@@ -8446,16 +8446,19 @@ class ProcessSecureDataset implements ShouldQueue
             <div class="flex items-center gap-1.5 mb-3 font-mono text-xs border-b border-zinc-800 pb-2 shrink-0 overflow-x-auto custom-prd-scrollbar py-1 select-none">
                 <template x-for="tab in [
                     { id: 'docker-compose.yml', label: 'docker-compose.yml' },
-                    { id: 'openapi.json', label: 'openapi.json (Swagger)' },
+                    { id: 'openapi.json', label: 'openapi.json (Swagger 3.0)' },
                     { id: 'schema_complete.sql', label: 'schema_complete.sql (PostgreSQL)' },
+                    { id: 'design/wireframes/screens.md', label: 'screens.md (UI/UX Wireframes)' },
+                    { id: 'design/tokens.json', label: 'tokens.json (Design System)' },
                     { id: 'routes/web.php', label: 'routes/web.php (Laravel 13)' },
                     { id: 'routes/api.php', label: 'routes/api.php (Sanctum)' },
                     { id: 'app/api/route.ts', label: 'Next.js App Router (TypeScript)' },
                     { id: 'database/seeders/SyntheticDataSeeder.php', label: 'SyntheticDataSeeder.php' },
                     { id: '.cursorrules', label: '.cursorrules (AI Agent)' },
+                    { id: 'AGENTS.md', label: 'AGENTS.md (AI Agent System)' },
                     { id: 'tests/Feature/ApiContractTest.php', label: 'ApiContractTest.php' },
-                    { id: 'deploy.sh', label: 'deploy.sh (CI/CD)' },
-                    { id: 'design/tokens.json', label: 'design/tokens.json' },
+                    { id: 'deploy.sh', label: 'deploy.sh (CI/CD 6 Skenario)' },
+                    { id: '.github/workflows/deploy.yml', label: 'deploy.yml (GitHub Actions)' },
                     { id: 'README.md', label: 'README.md' }
                 ]" :key="tab.id">
                     <button 

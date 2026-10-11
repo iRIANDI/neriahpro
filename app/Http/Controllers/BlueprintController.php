@@ -140,7 +140,7 @@ class BlueprintController extends Controller
 
         // 2. Validate inputs
         $request->validate([
-            'idea_text' => 'nullable|string|max:30000',
+            'idea_text' => 'nullable|string|max:100000',
             'files.*' => 'nullable|file|max:15360|mimes:pdf,doc,docx,txt,md,rtf,csv,tsv,xlsx,pptx,png,jpg,jpeg,webp',
             'locale' => 'nullable|string|in:id,en',
             'ai_model' => 'nullable|string|max:50',

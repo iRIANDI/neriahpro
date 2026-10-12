@@ -8,6 +8,7 @@ use App\Models\Document;
 use App\Models\CmsGlobalSetting;
 use App\Services\MidtransSnapService;
 use App\Services\BlueprintDiscoveryService;
+use App\Services\BlueprintRefinementService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
@@ -1170,7 +1171,27 @@ class BlueprintController extends Controller
      * Partial / Granular Segment Edit & AI Regeneration.
      * Allows Retail users or SuperAdmins to modify specific PRD segments without resetting the entire document.
      */
-    public function tweakSegment(Request $request, string $slug): JsonResponse
+    /**
+     * Retrieve the grounded source specification corpus (MarkItDown, uploaded files, original brief).
+     */
+    public function getSourceCorpus(Request $request, string $slug, BlueprintRefinementService $refinementService): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $corpusData = $refinementService->getSourceCorpus($blueprint);
+
+        return response()->json([
+            'success' => true,
+            'data' => $corpusData,
+        ]);
+    }
+
+    /**
+     * Partial / Granular Segment Edit & Grounded AI Refinement.
+     * Allows Retail users or SuperAdmins to modify or deepen specific PRD segments based on Source Corpus.
+     */
+    public function tweakSegment(Request $request, string $slug, BlueprintRefinementService $refinementService): JsonResponse
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
@@ -1192,6 +1213,9 @@ class BlueprintController extends Controller
             'mode' => 'required|in:manual,ai',
             'prompt' => 'nullable|string',
             'content' => 'nullable|string',
+            'ai_provider' => 'nullable|string',
+            'feature_id' => 'nullable|string',
+            'spec_index' => 'nullable|integer',
         ]);
 
         $key = $request->input('segment_key');
@@ -1242,76 +1266,33 @@ class BlueprintController extends Controller
         }
 
         if ($mode === 'ai') {
-            $prompt = $request->input('prompt');
-            $prd = $blueprint->prd_content ?? [];
-            $existingData = "";
-            
-            if (str_contains($key, '.')) {
-                $parts = explode('.', $key);
-                $existingData = json_encode($prd[$parts[0]][$parts[1]] ?? '', JSON_PRETTY_PRINT);
-            } else {
-                $existingData = json_encode($prd[$key] ?? '', JSON_PRETTY_PRINT);
-            }
-            
-            $aiService = new \App\Services\Ai\GoogleGeminiService();
-            $systemInstruction = "You are a Senior System Architect modifying a specific segment of a PRD Blueprint. Maintain the existing tone, structure, and language (Indonesian). The user wants you to modify this specific segment based on their prompt. Return ONLY the modified content, without markdown wrappers if it's plain text, or valid JSON without ```json wrappers if the input was JSON. DO NOT include any introductory or concluding text. Just the raw response.";
-            
-            $userPrompt = "ORIGINAL SEGMENT CONTENT (JSON/TEXT):\n{$existingData}\n\nUSER MODIFICATION REQUEST:\n{$prompt}\n\nPlease regenerate this segment incorporating the request. Return the exact structure (JSON or text).";
-
-            $response = $aiService->generateText($userPrompt, $systemInstruction);
-            
-            if ($response) {
-                $cleaned = trim($response);
-                if (str_starts_with($cleaned, '```json')) {
-                    $cleaned = str_replace(['```json', '```'], '', $cleaned);
-                } elseif (str_starts_with($cleaned, '```')) {
-                    $cleaned = str_replace('```', '', $cleaned);
-                }
-                $cleaned = trim($cleaned);
-                
-                $decoded = json_decode($cleaned, true);
-                $newContent = $decoded !== null ? $decoded : $cleaned;
-
-                if (str_contains($key, '.')) {
-                    $parts = explode('.', $key);
-                    $prd[$parts[0]][$parts[1]] = $newContent;
-                } else {
-                    $prd[$key] = $newContent;
-                }
-
-                // Impact Matrix (Ripple Effect - Upstream to Downstream)
-                $impactMatrix = [
-                    'executive_summary' => ['system_actors', 'mvp_features', 'database_erd'],
-                    'masalah_utama' => ['executive_summary', 'system_actors', 'mvp_features'],
-                    'system_actors' => ['mvp_features', 'alurs_kerja', 'database_erd', 'custom_ai_agent_rules'],
-                    'mvp_features' => ['alurs_kerja', 'database_erd', 'custom_ai_agent_rules'],
-                    'alurs_kerja' => ['database_erd', 'custom_ai_agent_rules'],
-                    'database_erd' => ['custom_ai_agent_rules'],
+            try {
+                $additionalContext = [
+                    'feature_id' => $request->input('feature_id'),
+                    'spec_index' => $request->filled('spec_index') ? (int) $request->input('spec_index') : null,
                 ];
-                $baseKey = str_contains($key, '.') ? explode('.', $key)[0] : $key;
-                if (isset($impactMatrix[$baseKey])) {
-                    $impacted = $prd['_impacted_segments'] ?? [];
-                    foreach ($impactMatrix[$baseKey] as $iKey) {
-                        if (!in_array($iKey, $impacted)) $impacted[] = $iKey;
-                    }
-                    $prd['_impacted_segments'] = $impacted;
-                }
-                if (isset($prd['_impacted_segments'])) {
-                    $prd['_impacted_segments'] = array_values(array_filter($prd['_impacted_segments'], fn($item) => $item !== $baseKey && $item !== $key));
-                }
 
-                $blueprint->update(['prd_content' => $prd]);
+                $result = $refinementService->refineSegment(
+                    $blueprint,
+                    $key,
+                    $request->input('prompt'),
+                    $request->input('ai_provider'),
+                    $additionalContext
+                );
 
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Segmen berhasil diregenerasi oleh AI.',
+                return response()->json($result);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Refinement failed: ' . $e->getMessage(), [
+                    'exception' => $e
                 ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal memperdalam segmen: ' . $e->getMessage(),
+                ], 500);
             }
-
-            return response()->json(['success' => false, 'message' => 'AI gagal memproses segmen.'], 500);
         }
 
-        return response()->json(['success' => false, 'message' => 'Invalid mode'], 400);
+        return response()->json(['success' => false, 'message' => 'Mode tidak valid.'], 400);
     }
 
     /**

@@ -33,6 +33,7 @@ Route::post('/api/blueprint/analyze-idea', [BlueprintController::class, 'analyze
 Route::post('/api/blueprint/supplement-idea', [BlueprintController::class, 'supplementIdea'])->name('api.blueprint.supplement-idea')->middleware('throttle:30,1');
 Route::post('/api/blueprint/autosave', [BlueprintController::class, 'autoSave'])->name('api.blueprint.autosave')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/tweak-segment', [BlueprintController::class, 'tweakSegment'])->name('api.blueprint.tweak-segment')->middleware('throttle:60,1');
+Route::get('/api/blueprint/{slug}/source-corpus', [BlueprintController::class, 'getSourceCorpus'])->name('api.blueprint.source-corpus')->middleware('throttle:60,1');
 Route::post('/api/blueprint/reset', [BlueprintController::class, 'resetDraft'])->name('api.blueprint.reset')->middleware('throttle:30,1');
 Route::get('/blueprint', [BlueprintController::class, 'create'])->name('blueprint.create');
 Route::get('/blueprint/{slug}', [BlueprintController::class, 'show'])->name('blueprint.show');

@@ -982,15 +982,35 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 },
                 scaffoldModalOpen: false,
                 
-                // Tweak Segment Feature
+                // Tweak & Grounded AI Deepener Feature
                 tweakModalOpen: false,
                 tweakSegmentKey: '',
                 tweakSegmentTitle: '',
-                tweakMode: 'manual',
+                tweakMode: 'ai',
                 tweakContent: '',
                 tweakPrompt: '',
                 tweakLoading: false,
-                openTweakModal(key, title, content) {
+                tweakAiProvider: 'auto',
+                tweakFeatureId: null,
+                tweakSpecIndex: null,
+                sourceCorpusLoading: false,
+                sourceCorpusData: null,
+                sourceCorpusExpanded: false,
+                async loadSourceCorpus() {
+                    if (this.sourceCorpusData) return;
+                    this.sourceCorpusLoading = true;
+                    try {
+                        const res = await fetch('{{ route('api.blueprint.source-corpus', $blueprint->slug) }}');
+                        const json = await res.json();
+                        if (json && json.success) {
+                            this.sourceCorpusData = json.data;
+                        }
+                    } catch(e) {}
+                    finally {
+                        this.sourceCorpusLoading = false;
+                    }
+                },
+                openTweakModal(key, title, content, featureId = null, specIndex = null) {
                     if ({{ ($isScopeLocked ?? false) ? 'true' : 'false' }} && '{{ $blueprint->project_status }}' !== 'Retail License' && !{{ auth()->user()?->isSuperAdmin() ? 'true' : 'false' }}) {
                         if (window.showToast) {
                             window.showToast({ type: 'warning', title: 'AKSES DITOLAK', message: 'Dokumen berada dalam status Scope Lock (Kontrak Studio).' });
@@ -1000,9 +1020,12 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     this.tweakSegmentKey = key;
                     this.tweakSegmentTitle = title;
                     this.tweakContent = typeof content === 'object' ? JSON.stringify(content, null, 2) : (content || '');
-                    this.tweakMode = 'manual';
+                    this.tweakMode = 'ai';
                     this.tweakPrompt = '';
+                    this.tweakFeatureId = featureId;
+                    this.tweakSpecIndex = specIndex;
                     this.tweakModalOpen = true;
+                    this.loadSourceCorpus();
                 },
                 async submitTweak() {
                     this.tweakLoading = true;
@@ -1018,19 +1041,30 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 segment_key: this.tweakSegmentKey,
                                 mode: this.tweakMode,
                                 prompt: this.tweakPrompt,
-                                content: this.tweakContent
+                                content: this.tweakContent,
+                                ai_provider: this.tweakAiProvider,
+                                feature_id: this.tweakFeatureId,
+                                spec_index: this.tweakSpecIndex,
                             })
                         });
                         const data = await res.json();
                         if (data && data.success) {
-                            if (window.showToast) window.showToast({ type: 'success', title: 'BERHASIL', message: data.message });
+                            if (window.showToast) {
+                                window.showToast({ 
+                                    type: 'success', 
+                                    title: 'BERHASIL DIPERDALAM', 
+                                    message: data.message || 'Segmen berhasil diperbarui berdasarkan Dokumen Acuan.' 
+                                });
+                            }
                             this.tweakModalOpen = false;
-                            setTimeout(() => window.location.reload(), 1000);
+                            setTimeout(() => window.location.reload(), 1200);
                         } else {
-                            throw new Error(data.message || 'Gagal menyimpan.');
+                            throw new Error(data.message || 'Gagal memperdalam segmen.');
                         }
                     } catch(err) {
-                        if (window.showToast) window.showToast({ type: 'error', title: 'ERROR', message: err.message });
+                        if (window.showToast) {
+                            window.showToast({ type: 'error', title: 'ERROR PENAJAMAN', message: err.message });
+                        }
                     } finally {
                         this.tweakLoading = false;
                     }
@@ -3119,10 +3153,17 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">02</span>
                             <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Pengguna & Hak Akses (Aktor / RBAC)</h2>
                         </div>
-                        <button @click="openTweakModal('system_actors', 'Pengguna & Hak Akses (Aktor / RBAC)', {{ json_encode($prd['system_actors'] ?? []) }})" class="px-3 py-1.5 border {{ $isActorsImpacted ? 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }} font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0 cursor-pointer">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                            TWEAK
-                        </button>
+                        @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
+                            <button 
+                                type="button" 
+                                @click="openTweakModal('system_actors', 'Pengguna & Hak Akses (Aktor / RBAC)', {{ json_encode($prd['system_actors'] ?? []) }})" 
+                                class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
+                                title="Sinkronkan dan perdalam peran serta matriks izin RBAC dari Dokumen Acuan Proyek"
+                            >
+                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                <span>PERDALAM DARI DOKUMEN ACUAN</span>
+                            </button>
+                        @endif
                     </div>
                     @if($isActorsImpacted)
                     <div class="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-mono text-amber-700 dark:text-amber-400 mt-1">
@@ -3185,10 +3226,19 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 no-print">
-                        @if(!($isScopeLocked ?? false))
+                        @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
+                            <button 
+                                type="button" 
+                                @click="openTweakModal('features', 'Seluruh Fitur MVP (Fase 1)', {{ json_encode($prd['engineering_specs']['mvp_specs'] ?? ($prd['features']['mvp_phase1'] ?? [])) }})" 
+                                class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition cursor-pointer"
+                                title="Perdalam dan sinkronkan seluruh fitur dari Dokumen Acuan Proyek (MarkItDown Corpus)"
+                            >
+                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                <span>PERDALAM DARI DOKUMEN ACUAN</span>
+                            </button>
                             <button type="button" @click="taskEditorOpen = true" class="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono font-bold border border-amber-500/30 flex items-center gap-1.5 transition cursor-pointer">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                <span>ELABORASI &amp; SESUAIKAN TASK</span>
+                                <span>ELABORASI TASK</span>
                             </button>
                         @else
                             <div class="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs font-mono font-bold border border-zinc-700 flex items-center gap-1.5 cursor-not-allowed" title="Dokumen ini telah ditandatangani secara digital dengan integritas SHA-256 (Scope Freeze). Setiap perubahan task harus melalui Addendum.">
@@ -3358,6 +3408,17 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                             <span>SALIN PROMPT FITUR</span>
                                         </button>
+                                        @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
+                                            <button 
+                                                type="button" 
+                                                @click="openTweakModal('feature_single', 'Fitur: {{ addslashes($spec['title'] ?? '') }}', {{ json_encode($spec) }}, '{{ $featKey }}', {{ $specIdx }})" 
+                                                class="px-2.5 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 text-xs font-mono font-bold border border-sky-500/30 flex items-center gap-1 transition cursor-pointer"
+                                                title="Perdalam rincian Gherkin, edge cases, dan Acceptance Criteria fitur ini dari Dokumen Acuan"
+                                            >
+                                                <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                                <span>PERDALAM FITUR</span>
+                                            </button>
+                                        @endif
                                         <button 
                                             type="button" 
                                             @click="expanded = !expanded" 
@@ -4604,10 +4665,17 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </button>
                             </div>
 
-                            <button @click="openTweakModal('alurs_kerja', 'Alur Kerja Utama (User Flow)', {{ json_encode($prd['alurs_kerja'] ?? []) }})" class="px-3 py-1.5 border {{ $isFlowImpacted ? 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }} font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0 cursor-pointer">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                TWEAK
-                            </button>
+                            @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
+                                <button 
+                                    type="button" 
+                                    @click="openTweakModal('alurs_kerja', 'Alur Kerja Utama (User Flow)', {{ json_encode($prd['alurs_kerja'] ?? []) }})" 
+                                    class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
+                                    title="Perluas percabangan dan exception flow dari Dokumen Acuan Proyek"
+                                >
+                                    <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    <span>PERDALAM ALUR KERJA DARI DOKUMEN ACUAN</span>
+                                </button>
+                            @endif
                         </div>
                     </div>
                     @if($isFlowImpacted)
@@ -4777,10 +4845,17 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">07</span>
                             <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Database ERD &amp; Skema Relasi (PostgreSQL Strict ULID)</h2>
                         </div>
-                        <button @click="openTweakModal('database_erd', 'Database ERD', {{ json_encode($prd['database_erd'] ?? []) }})" class="px-3 py-1.5 border {{ $isErdImpacted ? 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }} font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0 w-fit">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                            TWEAK
-                        </button>
+                        @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
+                            <button 
+                                type="button" 
+                                @click="openTweakModal('database_erd', 'Database ERD (PostgreSQL Strict ULID)', {{ json_encode($prd['erd_schema']['tables'] ?? ($prd['database_erd'] ?? [])) }})" 
+                                class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
+                                title="Sinkronkan dan perdalam skema tabel serta relasi ERD dari Dokumen Acuan Proyek"
+                            >
+                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                <span>PERDALAM ERD DARI DOKUMEN ACUAN</span>
+                            </button>
+                        @endif
                     </div>
                     @if($isErdImpacted)
                     <div class="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-mono text-amber-700 dark:text-amber-400 mt-1">
@@ -9347,57 +9422,206 @@ class ProcessSecureDataset implements ShouldQueue
         };
     </script>
     <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
-    <!-- Tweak Segment / Partial Regeneration Modal -->
-    <div x-show="tweakModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" style="display: none;">
-        <div class="absolute inset-0 bg-zinc-900/80 backdrop-blur-sm" @click="tweakModalOpen = false" x-transition.opacity></div>
-        <div class="relative bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl" x-transition>
+    <!-- Tweak Segment / AI Grounded Architecture Deepener Modal -->
+    <div x-show="tweakModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6" style="display: none;">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="tweakModalOpen = false" x-transition.opacity></div>
+        <div class="relative bg-white dark:bg-zinc-950 border-2 border-zinc-900 dark:border-zinc-700 w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl rounded-none" x-transition>
+            
             <!-- Header -->
-            <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
+            <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0 flex items-start justify-between gap-3">
                 <div>
-                    <h3 class="font-black text-lg text-zinc-900 dark:text-zinc-100 uppercase" x-text="tweakSegmentTitle"></h3>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5" x-text="locale === 'en' ? 'Manually edit your business rules or use AI prompt to re-generate this segment (RAG-Assisted).' : 'Edit manual aturan bisnis Anda atau gunakan prompt AI untuk me-regenerate segment ini (RAG-Assisted).'"></p>
+                    <div class="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>AI ARCHITECTURE DEEPENER // GROUNDED SPEC TWEAKER</span>
+                    </div>
+                    <h3 class="font-black text-lg sm:text-xl text-zinc-900 dark:text-zinc-100 uppercase tracking-tight" x-text="tweakSegmentTitle"></h3>
+                    <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
+                        Lengkapi dan perdalam segmen spesifikasi ini dengan berpijak langsung pada Dokumen Acuan Proyek (MarkItDown Corpus, Berkas Lampiran, &amp; Brief Awal).
+                    </p>
                 </div>
-                <button @click="tweakModalOpen = false" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button type="button" @click="tweakModalOpen = false" class="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white bg-zinc-100 dark:bg-zinc-800 transition rounded-none font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
 
             <!-- Content Area -->
-            <div class="flex-1 overflow-y-auto p-4 custom-prd-scrollbar space-y-4">
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6 custom-prd-scrollbar space-y-4">
                 
-                <div class="flex gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-2">
-                    <button @click="tweakMode = 'manual'" :class="tweakMode === 'manual' ? 'text-emerald-600 dark:text-emerald-400 font-bold border-b-2 border-emerald-500' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'" class="pb-2 text-sm uppercase transition" x-text="locale === 'en' ? 'Manual Tweak' : 'Manual Tweak'"></button>
-                    <button @click="tweakMode = 'ai'" :class="tweakMode === 'ai' ? 'text-indigo-600 dark:text-indigo-400 font-bold border-b-2 border-indigo-500' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'" class="pb-2 text-sm uppercase transition" x-text="locale === 'en' ? 'AI Regenerate (Prompt)' : 'AI Regenerate (Prompt)'"></button>
+                <!-- Grounded Source Corpus Indicator Panel -->
+                <div class="bg-zinc-100/80 dark:bg-zinc-900/70 border border-zinc-300 dark:border-zinc-700 p-3 sm:p-4 rounded-none">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="relative flex h-2.5 w-2.5">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            <div>
+                                <div class="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider flex items-center gap-2">
+                                    <span>GROUNDED SOURCE CORPUS</span>
+                                    <span class="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold">TERKUNCI KE DOKUMEN ACUAN</span>
+                                </div>
+                                <div class="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    <template x-if="sourceCorpusLoading">
+                                        <span>Memindai berkas spesifikasi &amp; MarkItDown...</span>
+                                    </template>
+                                    <template x-if="!sourceCorpusLoading && sourceCorpusData">
+                                        <span x-text="sourceCorpusData.source_files.length + ' berkas acuan terdeteksi (' + (sourceCorpusData.word_count || 0).toLocaleString() + ' kata, ' + (sourceCorpusData.character_count || 0).toLocaleString() + ' karakter)'"></span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button 
+                            type="button" 
+                            @click="sourceCorpusExpanded = !sourceCorpusExpanded" 
+                            class="px-2.5 py-1 text-xs font-mono font-bold border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 flex items-center gap-1.5 transition self-start sm:self-auto shrink-0"
+                        >
+                            <svg class="w-3.5 h-3.5 transition-transform" :class="sourceCorpusExpanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <span x-text="sourceCorpusExpanded ? 'Tutup Ringkasan Acuan' : 'Lihat Ringkasan Acuan'"></span>
+                        </button>
+                    </div>
+
+                    <!-- Collapsible Corpus Preview -->
+                    <div x-show="sourceCorpusExpanded" x-collapse class="mt-3 pt-3 border-t border-zinc-300 dark:border-zinc-700 space-y-2">
+                        <template x-if="sourceCorpusData && sourceCorpusData.source_files">
+                            <div class="flex flex-wrap gap-1.5 mb-2">
+                                <template x-for="f in sourceCorpusData.source_files" :key="f.name">
+                                    <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-[10px] font-mono text-zinc-800 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        <span x-text="f.name + ' (' + f.size_kb + ' KB)'"></span>
+                                    </span>
+                                </template>
+                            </div>
+                        </template>
+
+                        <div class="max-h-40 overflow-y-auto bg-zinc-950 text-zinc-300 font-mono text-[11px] p-3 border border-zinc-800 custom-prd-scrollbar select-all leading-relaxed whitespace-pre-wrap" x-text="sourceCorpusData ? sourceCorpusData.corpus_text.slice(0, 1500) + (sourceCorpusData.corpus_text.length > 1500 ? '\n\n[... sisa ' + (sourceCorpusData.character_count - 1500).toLocaleString() + ' karakter lainnya terindeks untuk AI ...]' : '') : 'Belum ada konten.'"></div>
+                    </div>
                 </div>
 
-                <!-- Manual Mode -->
-                <div x-show="tweakMode === 'manual'">
-                    <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2" x-text="locale === 'en' ? 'Content Editor (Markdown / Text / JSON)' : 'Editor Konten (Markdown / Text / JSON)'"></label>
-                    <textarea x-model="tweakContent" rows="15" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 font-mono text-sm p-3 focus:outline-none focus:border-emerald-500 custom-prd-scrollbar" :placeholder="locale === 'en' ? 'Type new business rules / JSON code here...' : 'Ketik aturan bisnis / kode JSON baru di sini...'"></textarea>
+                <!-- Mode Switch Tabs -->
+                <div class="flex gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                    <button 
+                        type="button" 
+                        @click="tweakMode = 'ai'" 
+                        :class="tweakMode === 'ai' ? 'bg-emerald-600 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700'" 
+                        class="px-4 py-2 text-xs font-mono uppercase tracking-wider transition flex items-center gap-1.5"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>AI DEEPENER DARI ACUAN (REKOMENDASI)</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="tweakMode = 'manual'" 
+                        :class="tweakMode === 'manual' ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700'" 
+                        class="px-4 py-2 text-xs font-mono uppercase tracking-wider transition flex items-center gap-1.5"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <span>EDITOR MANUAL (JSON / CODE)</span>
+                    </button>
                 </div>
 
                 <!-- AI Mode -->
                 <div x-show="tweakMode === 'ai'" class="space-y-4">
+                    <!-- Model / Provider Selector -->
                     <div>
-                        <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2" x-text="locale === 'en' ? 'AI Instructions (Prompt)' : 'Instruksi AI (Prompt)'"></label>
-                        <textarea x-model="tweakPrompt" rows="3" class="w-full bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-300 dark:border-indigo-700 text-zinc-900 dark:text-zinc-100 p-3 text-sm focus:outline-none focus:border-indigo-500" :placeholder="locale === 'en' ? 'Example: &quot;Please add a rule for AI to always use Filament V3 and Spatie Permission for RBAC...&quot;' : 'Contoh: &quot;Tolong tambahkan aturan agar AI selalu menggunakan Filament V3 dan Spatie Permission untuk RBAC...&quot;'"></textarea>
-                        <p class="text-[10px] text-zinc-500 mt-1" x-text="locale === 'en' ? 'The system will read this segment\'s original content and regenerate it based on your instructions above.' : 'Sistem akan membaca konten asli segmen ini dan merancang ulang isinya sesuai instruksi Anda di atas.'"></p>
+                        <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5">
+                            PILIH ENGINE MULTI-MODEL AI:
+                        </label>
+                        <select x-model="tweakAiProvider" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono px-3 py-2.5 outline-none focus:border-emerald-500 rounded-none">
+                            <option value="auto">Auto Failover Multi-Provider (DeepSeek-R1 -> Gemini 2.5 -> Claude 3.7 -> OpenAI)</option>
+                            <option value="gemini">Google Gemini 2.5 Flash / Pro (High Context Speed)</option>
+                            <option value="deepseek">DeepSeek-R1 Reasoning Engine (Ultra Deep Logic)</option>
+                            <option value="anthropic">Anthropic Claude 3.7 Sonnet (Hybrid Architecture Thinking)</option>
+                            <option value="openai">OpenAI GPT-4o / o3-mini (High Precision Structured Output)</option>
+                        </select>
                     </div>
+
+                    <!-- Directive Textarea -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                                INSTRUKSI PENAJAMAN KHUSUS (OPSIONAL):
+                            </label>
+                            <span class="text-[10px] font-mono text-zinc-400">Kosongkan jika ingin AI memperdalam otomatis</span>
+                        </div>
+                        <textarea 
+                            x-model="tweakPrompt" 
+                            rows="4" 
+                            class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 p-3 text-xs sm:text-sm font-sans focus:outline-none focus:border-emerald-500 rounded-none leading-relaxed" 
+                            placeholder="Contoh instruksi: &quot;Fokus perdalam modul rekonsiliasi pembayaran kasir, sertakan tabel ledger transaksi keuangan, serta validasi skenario timeout webhook Midtrans...&quot;"
+                        ></textarea>
+                    </div>
+
+                    <!-- AI Architecture Standards Checklist -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                        <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-600 dark:text-zinc-400">
+                            <div class="font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">✓ Strict ULID &amp; O(1)</div>
+                            <div>Skema database &amp; entitas patuh standar performa jutaan data.</div>
+                        </div>
+                        <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-600 dark:text-zinc-400">
+                            <div class="font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">✓ Gherkin &amp; Edge Cases</div>
+                            <div>Skenario pengujian konkret bebas placeholder generik.</div>
+                        </div>
+                        <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-600 dark:text-zinc-400">
+                            <div class="font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">✓ Auto-Sync Diagram</div>
+                            <div>Diagram Mermaid &amp; DDL SQL PostgreSQL terupdate otomatis.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Mode -->
+                <div x-show="tweakMode === 'manual'">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                            EDITOR KONTEN STRUKTURAL (JSON / MARKDOWN):
+                        </label>
+                        <span class="text-[10px] font-mono text-zinc-400">Edit langsung data mentah segmen ini</span>
+                    </div>
+                    <textarea 
+                        x-model="tweakContent" 
+                        rows="14" 
+                        class="w-full bg-zinc-950 text-emerald-400 border border-zinc-700 font-mono text-xs p-3 focus:outline-none focus:border-emerald-500 custom-prd-scrollbar leading-relaxed rounded-none" 
+                        placeholder="Ketik data JSON atau aturan bisnis baru di sini..."
+                    ></textarea>
                 </div>
 
             </div>
 
             <!-- Footer -->
-            <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex justify-end gap-3 shrink-0">
-                <button type="button" @click="tweakModalOpen = false" class="px-5 py-2.5 text-xs font-bold uppercase text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition" x-text="locale === 'en' ? 'Cancel' : 'Batal'"></button>
-                
-                <button type="button" @click="submitTweak()" :disabled="tweakLoading" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-xs transition flex items-center justify-center gap-2 disabled:opacity-50 min-w-[140px]">
-                    <span x-show="!tweakLoading" x-text="tweakMode === 'manual' ? (locale === 'en' ? 'Save Segment' : 'Simpan Segmen') : (locale === 'en' ? 'Generate AI' : 'Generate AI')"></span>
-                    <span x-show="tweakLoading" class="flex items-center gap-2">
-                        <svg class="animate-spin w-4 h-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <span x-text="locale === 'en' ? 'Processing...' : 'Memproses...'"></span>
-                    </span>
-                </button>
+            <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between gap-3 shrink-0">
+                <div class="text-[11px] font-mono text-zinc-500 hidden sm:block">
+                    Perubahan akan disimpan permanen ke <code class="text-emerald-600 dark:text-emerald-400">prd_content</code> &amp; <code class="text-emerald-600 dark:text-emerald-400">prd.md</code>.
+                </div>
+
+                <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                    <button 
+                        type="button" 
+                        @click="tweakModalOpen = false" 
+                        class="px-4 py-2 text-xs font-mono font-bold uppercase text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 transition rounded-none"
+                    >
+                        Batal
+                    </button>
+                    
+                    <button 
+                        type="button" 
+                        @click="submitTweak()" 
+                        :disabled="tweakLoading" 
+                        class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black uppercase text-xs transition flex items-center justify-center gap-2 disabled:opacity-50 min-w-[170px] rounded-none shadow-[2px_2px_0px_#065f46]"
+                    >
+                        <template x-if="!tweakLoading">
+                            <span class="flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                <span x-text="tweakMode === 'manual' ? 'SIMPAN PERUBAHAN' : 'EKSEKUSI PENDALAMAN AI'"></span>
+                            </span>
+                        </template>
+                        <template x-if="tweakLoading">
+                            <span class="flex items-center gap-2">
+                                <svg class="animate-spin w-4 h-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span x-text="tweakMode === 'manual' ? 'Menyimpan...' : 'Membedah Acuan...'"></span>
+                            </span>
+                        </template>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

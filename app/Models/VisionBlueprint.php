@@ -78,6 +78,16 @@ class VisionBlueprint extends Model
         return $this->morphMany(Document::class, 'related');
     }
 
+    public function issues(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ProjectIssue::class, 'vision_blueprint_id');
+    }
+
+    public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ProjectComment::class, 'vision_blueprint_id');
+    }
+
     /**
      * Domains and hosting assets linked to this project.
      */

@@ -148,8 +148,10 @@ class MidtransWebhookController extends Controller
 
                 if ($document->related instanceof VisionBlueprint) {
                     $blueprint = $document->related;
+                    $isRetail = (isset($blueprint->user_metadata['retail_tier']) || str_contains(strtolower($blueprint->slug ?? ''), '-retail-'));
                     $blueprint->update([
-                        'project_status' => 'In Development (DP Paid)',
+                        'project_status' => $isRetail ? 'Retail License' : 'In Development (DP Paid)',
+                        'is_published' => true,
                     ]);
                     $blueprint->provisionStagingUrl();
                     if (!$blueprint->signed_agreement) {
@@ -176,8 +178,10 @@ class MidtransWebhookController extends Controller
                 $blueprint = VisionBlueprint::find($targetId) 
                     ?? (strlen($targetId) < 26 ? VisionBlueprint::where('id', 'LIKE', $targetId . '%')->first() : null);
                 if ($blueprint) {
+                    $isRetail = (isset($blueprint->user_metadata['retail_tier']) || str_contains(strtolower($blueprint->slug ?? ''), '-retail-'));
                     $blueprint->update([
-                        'project_status' => 'In Development (DP Paid)',
+                        'project_status' => $isRetail ? 'Retail License' : 'In Development (DP Paid)',
+                        'is_published' => true,
                     ]);
                     $blueprint->provisionStagingUrl();
                     if (!$blueprint->signed_agreement) {
@@ -235,8 +239,10 @@ class MidtransWebhookController extends Controller
                 foreach ($cachedOrder['slugs'] as $slug) {
                     $blueprint = VisionBlueprint::where('slug', $slug)->first();
                     if ($blueprint) {
+                        $isRetail = (isset($blueprint->user_metadata['retail_tier']) || str_contains(strtolower($blueprint->slug ?? ''), '-retail-'));
                         $blueprint->update([
-                            'project_status' => 'In Development (DP Paid)',
+                            'project_status' => $isRetail ? 'Retail License' : 'In Development (DP Paid)',
+                            'is_published' => true,
                         ]);
                         $blueprint->provisionStagingUrl();
                         if (!$blueprint->signed_agreement) {

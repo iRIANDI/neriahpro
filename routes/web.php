@@ -55,6 +55,9 @@ Route::post('/blueprint/{slug}/tasks/update', [BlueprintController::class, 'upda
 Route::post('/api/blueprint/{slug}/checkpoint', [BlueprintController::class, 'updateCheckpoint'])->name('api.blueprint.checkpoint');
 Route::post('/api/pricing/inquiry', [BlueprintController::class, 'pricingInquiry'])->name('api.pricing.inquiry')->middleware('throttle:30,1');
 
+// Project Thread / UAT Ticketing Routes
+Route::post('/blueprint/{slug}/issues', [App\Http\Controllers\ProjectThreadController::class, 'storeIssue'])->name('blueprint.issues.store');
+Route::post('/blueprint/{slug}/issues/{issueId}/comments', [App\Http\Controllers\ProjectThreadController::class, 'storeComment'])->name('blueprint.issues.comments.store');
 // Payment Gateway Webhooks (Midtrans DLQ Handler & Notification Aliases)
 Route::match(['get', 'post'], '/api/webhook/midtrans', function (\Illuminate\Http\Request $request) {
     if ($request->isMethod('get')) {

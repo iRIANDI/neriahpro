@@ -560,6 +560,12 @@ const ensureSnapReady = (snapUrl, clientKey) => {
       a: isEn
         ? 'Unpaid orders in "Awaiting Payment" status expire and cancel automatically after 24 hours without penalty. For active studio projects, cancellation requests must be submitted via email to support@neriahpro.com or through your project client portal before sprint development starts. Once sprint development commences, work completed and repository commits are frozen and handed over in full according to the contract scope.'
         : 'Pesanan dengan status "Awaiting Payment" otomatis kadaluarsa dan dibatalkan secara sistem setelah 24 jam tanpa penalti. Untuk proyek studio aktif, permohonan pembatalan harus dikirimkan melalui email support@neriahpro.com atau portal klien sebelum sprint dimulai. Apabila pembatalan diajukan saat sprint tengah berlangsung, seluruh koding, skema database, dan dokumen yang telah diselesaikan akan diserahterimakan seutuhnya sesuai ruang lingkup termin yang berjalan.'
+    },
+    {
+      q: isEn ? 'How can I request changes (Change Request / Addendum) if the scope expands during development?' : 'Bagaimana jika saya ingin menambah fitur atau mengubah scope (Change Request) di tengah jalan?',
+      a: isEn
+        ? 'Neriah Pro implements a strict Scope Locking protocol. Any feature request outside the initially agreed PRD blueprint must be submitted formally via the "Change Request (CR) / Addendum" module in your Customer Portal Dashboard. We do not accept arbitrary scope changes via WhatsApp or Email. Once submitted, our Principal Architect will evaluate the CR and issue a supplementary Addendum invoice with an estimated timeline adjustment. Coding for the new feature will only begin after the Addendum is signed and paid.'
+        : 'Neriah Pro menerapkan protokol Scope Locking yang ketat untuk mencegah kelebihan beban kerja (scope creep). Seluruh permintaan fitur baru atau perubahan logika yang keluar dari spesifikasi dokumen PRD awal WAJIB diajukan secara resmi melalui modul "Change Request (CR) / Addendum" di Customer Portal Dashboard. Kami tidak menerima sisipan revisi dadakan via WhatsApp atau telepon. Setelah form diajukan, Principal Architect kami akan mengevaluasi CR tersebut dan menerbitkan Invoice Addendum beserta penyesuaian estimasi waktu. Pengerjaan fitur tambahan baru akan dimulai setelah Addendum disetujui dan dilunasi.'
     }
   ];
 
@@ -662,14 +668,14 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   }`}
                 >
                   <ShoppingBag className="w-4 h-4 shrink-0" />
-                  <span className="whitespace-nowrap font-bold">{isEn ? '01. Retail Packages' : '01. Paket Retail'}</span>
-                  <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
-                    pricingSectionTab === 'retail' 
-                      ? 'bg-black text-white shadow-xs' 
-                      : 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
-                  }`}>
-                    {isEn ? 'SELF-SERVICE' : 'MANDIRI'}
-                  </span>
+                  <div className="flex flex-col items-start leading-tight text-left">
+                    <span className="whitespace-nowrap font-bold">{isEn ? '01. Retail Packages' : '01. Paket Retail'}</span>
+                    <span className={`whitespace-nowrap text-[9px] font-black tracking-widest uppercase ${
+                      pricingSectionTab === 'retail' 
+                        ? 'text-zinc-200' 
+                        : 'text-zinc-500'
+                    }`}>SELF-SERVICE</span>
+                  </div>
                 </button>
 
                 {/* TAB 2: PROJECT STUDIO */}
@@ -684,14 +690,14 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   }`}
                 >
                   <Rocket className="w-4 h-4 shrink-0 text-emerald-500 dark:text-emerald-600" />
-                  <span className="whitespace-nowrap font-bold">{isEn ? '02. Studio Packages' : '02. Paket Studio'}</span>
-                  <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
-                    pricingSectionTab === 'project' 
-                      ? 'bg-emerald-500 text-white shadow-xs' 
-                      : 'bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700'
-                  }`}>
-                    {isEn ? 'TURNKEY' : 'KODING'}
-                  </span>
+                  <div className="flex flex-col items-start leading-tight text-left">
+                    <span className="whitespace-nowrap font-bold">{isEn ? '02. Studio Packages' : '02. Paket Studio'}</span>
+                    <span className={`whitespace-nowrap text-[9px] font-black tracking-widest uppercase ${
+                      pricingSectionTab === 'project' 
+                        ? 'text-zinc-200' 
+                        : 'text-zinc-500'
+                    }`}>TURNKEY</span>
+                  </div>
                 </button>
 
                 {/* TAB 3: MATRIX */}
@@ -706,14 +712,14 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   }`}
                 >
                   <Layers className="w-4 h-4 shrink-0" />
-                  <span className="whitespace-nowrap font-bold">{isEn ? '03. Comparison Matrix' : '03. Matriks Perbandingan'}</span>
-                  <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
-                    pricingSectionTab === 'matrix' 
-                      ? 'bg-black text-white shadow-xs' 
-                      : 'bg-cyan-100 text-cyan-950 border border-cyan-400 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-700'
-                  }`}>
-                    7 PILAR
-                  </span>
+                  <div className="flex flex-col items-start leading-tight text-left">
+                    <span className="whitespace-nowrap font-bold">{isEn ? '03. Comparison Matrix' : '03. Matriks Perbandingan'}</span>
+                    <span className={`whitespace-nowrap text-[9px] font-black tracking-widest uppercase ${
+                      pricingSectionTab === 'matrix' 
+                        ? 'text-zinc-200' 
+                        : 'text-zinc-500'
+                    }`}>7 PILAR</span>
+                  </div>
                 </button>
 
                 {/* TAB 4: FAQ */}
@@ -728,14 +734,14 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   }`}
                 >
                   <HelpCircle className="w-4 h-4 shrink-0" />
-                  <span className="whitespace-nowrap font-bold">{isEn ? '04. FAQ Project OS' : '04. FAQ Project OS'}</span>
-                  <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black tracking-wide ${
-                    pricingSectionTab === 'faq' 
-                      ? 'bg-black text-white shadow-xs' 
-                      : 'bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700'
-                  }`}>
-                    19 FAQ
-                  </span>
+                  <div className="flex flex-col items-start leading-tight text-left">
+                    <span className="whitespace-nowrap font-bold">{isEn ? '04. FAQ Project OS' : '04. FAQ Project OS'}</span>
+                    <span className={`whitespace-nowrap text-[9px] font-black tracking-widest uppercase ${
+                      pricingSectionTab === 'faq' 
+                        ? 'text-zinc-200' 
+                        : 'text-zinc-500'
+                    }`}>19 FAQ</span>
+                  </div>
                 </button>
 
               </div>
@@ -982,6 +988,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     'Pillar 4 (Seeder): Synthetic Mock Data Seeder Engine (100+ Realistic Records)',
                     'Pillar 5 (AI Agent): AI Coding Agent Directives (.cursorrules, CLAUDE.md, AGENTS.md)',
                     'Visual System Blueprint: 6 Complete Diagrams (Architecture, ERD, Data Flow, Sequence)',
+                    'Change Request (CR) / Addendum Module: Integrated form for scope updates',
                     'API Foundation: Pre-built RESTful API Routes (Laravel 13 & Next.js App Router)',
                     'White-Label License: Full rights to re-brand and deliver directly to your clients',
                   ] : [
@@ -989,6 +996,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     'Pilar 4 (Data Awal): Generator data awal sintetis (Synthetic Data Seeder 100+ baris)',
                     'Pilar 5 (Panduan AI): Aturan koding untuk agen AI (.cursorrules, CLAUDE.md, AGENTS.md)',
                     'Cetak Biru Visual: 6 Diagram sistem lengkap (Arsitektur, ERD, Alur Data, Sequence)',
+                    'Modul Change Request (CR) / Addendum: Formulir resmi pengajuan revisi scope',
                     'Fondasi API: Rute API RESTful siap pakai (Laravel 13 & Next.js App Router)',
                     'Lisensi Bebas Merek: Hak penuh re-brand dan serahkan langsung ke klien Anda',
                   ]).map((f, i) => (
@@ -1303,6 +1311,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     'One-Click Cloud CI/CD Pipeline (GitHub Actions & deploy.sh 6 scenarios)',
                     '100% Source Code & Server Credentials Handover (Zero Vendor Lock-in)',
                     '3-Month Full Priority SLA Bug Warranty & Dedicated Lead Architect Maintenance',
+                    'Official Change Request (CR) / Addendum Module via Customer Portal Dashboard',
                   ] : [
                     'Managed Sprint Capacity: Slot terisolasi di Batch 1, 2, atau Q1 dengan Anti-Collision Engine',
                     'Seluruh 7 Pilar Software Factory OS Dikodingkan Penuh (Laravel 13, Filament v5, React 19)',
@@ -1316,6 +1325,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     'Pipeline Otomasi Cloud CI/CD (GitHub Actions & deploy.sh 6 skenario deploy aman)',
                     '100% Penyerahan Source Code Repo GitHub Privat & Kredensial Server (No Lock-in)',
                     'Garansi Perbaikan Bug SLA Prioritas 3 Bulan Penuh & Maintenance Terjadwal',
+                    'Modul Change Request (CR) / Addendum Resmi terintegrasi di Customer Portal',
                   ]).map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
@@ -1895,7 +1905,32 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   </td>
                 </tr>
 
-                {/* 9F. PROTEKSI TRANSAKSI IDEMPOTEN */}
+                {/* 9F. CHANGE REQUEST (CR) / ADDENDUM */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {formatPillar(isEn ? 'Change Request (CR) / Addendum' : 'Change Request (CR) / Addendum')}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
+                    {isEn ? 'Pro/Enterprise: Official Request Form' : 'Pro/Enterprise: Form Pengajuan Terintegrasi'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    {isEn ? 'Manual SLA Revision System' : 'Sistem Revisi SLA Manual'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? 'Automated CR Dashboard (No Email/WA)' : 'Dashboard CR Resmi (Tanpa Email/WA)'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? 'Included in Warranty SLA' : 'Termasuk dalam Garansi SLA'}</span>
+                    </span>
+                  </td>
+                </tr>
+
+                {/* 9G. PROTEKSI TRANSAKSI IDEMPOTEN */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
                     {isEn ? 'Idempotent Payment Engine' : 'Proteksi Transaksi Idempoten'}

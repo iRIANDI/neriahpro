@@ -1180,7 +1180,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     return Math.round(finalContract * 0.50);
                 },
                 isPayingSnap: false,
-                executionTrack: '{{ request('track') === 'retail' ? 'retail' : 'studio' }}',
+                executionTrack: '{{ ($blueprint->project_status === \'Retail License\' || request(\'track\') === \'retail\') ? \'retail\' : \'studio\' }}',
                 retailCheckingOut: false,
                 async checkoutRetail(packageTier) {
                     this.retailCheckingOut = true;
@@ -1511,8 +1511,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 </head>
 <body x-data="blueprintApp()" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
+    <!-- 1. TOP UTILITY HEADER (FULL SITE NAVIGATION + DUAL TIER LANGUAGE + THEME TOGGLE) -->
+    <x-global-navigation :global-settings="$globalSettings ?? []" />
+
     <!-- Header Navigation Bar (Sharp Precision Theme) -->
-    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-2.5 px-4 sm:px-6 sticky top-0 z-50 no-print transition-colors">
+    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-2.5 px-4 sm:px-6 sticky top-[88px] sm:top-[96px] z-40 no-print transition-colors">
         <div class="w-full max-w-[1700px] mx-auto flex items-center justify-between gap-2 sm:gap-3">
             <!-- Left Branding -->
             <div class="flex items-center gap-3 shrink-0">
@@ -1598,13 +1601,6 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </a>
                 </div>
 
-                <!-- Theme Toggle Button -->
-                <button type="button" onclick="toggleTheme()" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono rounded-none border border-zinc-300 dark:border-zinc-700 transition shrink-0 flex items-center gap-1 cursor-pointer whitespace-nowrap" title="Toggle Dark/Light Mode">
-                    <svg class="w-3.5 h-3.5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    <svg class="w-3.5 h-3.5 block dark:hidden text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                    <span class="hidden xl:inline text-[11px] font-bold">THEME</span>
-                </button>
-
                 <!-- Dedicated AI AGENT HELPER Trigger -->
                 <button type="button" @click="showAiPromptModal = true" class="px-2.5 sm:px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Buka Pusat Helper Prompt AI Agent (Antigravity, Cursor, Claude Code, Windsurf)">
                     <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
@@ -1629,84 +1625,6 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <span class="hidden md:inline">LOCKED</span>
                     </span>
                 @endif
-                
-                <div class="h-6 w-px bg-zinc-300 dark:bg-zinc-700 mx-0.5 hidden sm:block shrink-0"></div>
-
-                @php
-                    $rawCart = session('neriah_cart', []);
-                    $cartCount = count($rawCart);
-                    $minRemaining = null;
-                    $now = \Illuminate\Support\Carbon::now();
-                    foreach ($rawCart as $c) {
-                        try {
-                            $exp = isset($c['expires_at'])
-                                ? \Illuminate\Support\Carbon::parse($c['expires_at'])
-                                : (isset($c['added_at']) ? \Illuminate\Support\Carbon::parse($c['added_at'])->addHours(24) : $now->copy()->addHours(24));
-                            $rem = max(0, (int) $now->diffInSeconds($exp, false));
-                            if ($rem > 0 && ($minRemaining === null || $rem < $minRemaining)) {
-                                $minRemaining = $rem;
-                            }
-                        } catch (\Throwable $e) {
-                            // ignore malformed entry
-                        }
-                    }
-                @endphp
-
-                <!-- Cart Navigation Button with Anti-Ghost Hold Timer -->
-                <a href="{{ route('cart.index') }}" class="px-2.5 sm:px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap">
-                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    <span>CART</span>
-                    @if($cartCount > 0)
-                        <span class="px-1.5 py-0.2 bg-emerald-500 text-black text-[10px] font-bold">{{ $cartCount }}</span>
-                        @if($minRemaining)
-                            <span class="text-[10px] text-amber-500 font-bold hidden xl:inline" id="nav-cart-timer" data-rem="{{ $minRemaining }}">⏱️ {{ gmdate('H:i:s', $minRemaining) }}</span>
-                        @endif
-                    @endif
-                </a>
-
-                @auth
-                    <!-- User Dropdown Navigation Board -->
-                    <div class="relative shrink-0" @click.outside="userMenuOpen = false">
-                        <button @click="userMenuOpen = !userMenuOpen" class="px-2.5 sm:px-3 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black hover:bg-black dark:hover:bg-emerald-400 text-xs font-mono uppercase font-bold border border-zinc-900 dark:border-emerald-500 flex items-center gap-1.5 cursor-pointer transition shrink-0 whitespace-nowrap">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                            <span class="max-w-[110px] truncate">{{ explode(' ', Auth::user()->name)[0] }}</span>
-                            <svg class="w-3 h-3 transition-transform" :class="userMenuOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <!-- Navigation Board Dropdown Menu -->
-                        <div x-show="userMenuOpen" x-cloak x-transition.opacity.duration.150ms class="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-emerald-500 shadow-2xl z-[100] font-mono">
-                            <div class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800">
-                                <div class="text-[9px] text-zinc-400 uppercase tracking-widest font-bold">AKTOR TERAUTENTIKASI</div>
-                                <div class="text-xs font-bold text-zinc-900 dark:text-white truncate mt-0.5">{{ Auth::user()->name }}</div>
-                                <div class="text-[10px] text-emerald-600 dark:text-emerald-400 truncate">{{ Auth::user()->email }}</div>
-                                <span class="inline-block mt-2 px-2 py-0.5 text-[9px] bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 uppercase font-bold">
-                                    ROLE: {{ Auth::user()->roles->first()?->name ?? (Auth::user()->role ?? 'AUTHENTICATED') }}
-                                </span>
-                            </div>
-                            <div class="py-1 text-xs">
-                                <a href="{{ url('/admin') }}" class="flex items-center gap-2.5 px-4 py-2.5 font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border-b border-zinc-100 dark:border-zinc-800 transition">
-                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                    <span>ADMIN CONTROL PANEL</span>
-                                </a>
-                                <a href="{{ route('cart.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-b border-zinc-100 dark:border-zinc-800 transition">
-                                    <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                    <span>CART BELANJA & ESCROW</span>
-                                </a>
-                            </div>
-                            <form method="POST" action="{{ Route::has('logout') ? route('logout') : url('/logout') }}" class="m-0">
-                                @csrf
-                                <button type="submit" class="w-full text-left flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer">
-                                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                                    <span>LOG OUT</span>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                @else
-                    <a href="{{ Route::has('login') ? route('login') : url('/login') }}" class="px-2.5 sm:px-3 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none transition flex items-center gap-1 shrink-0 whitespace-nowrap">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
-                        LOGIN
-                    </a>
-                @endauth
             </div>
         </div>
     </header>
@@ -3194,6 +3112,46 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
                 </div>
 
+                <!-- MODULE: CHANGE REQUEST (CR) & ADDENDUM -->
+                <div class="mb-8 p-5 bg-amber-500/10 border-2 border-amber-500/50 flex flex-col gap-4 rounded-none">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div>
+                            <h4 class="text-amber-600 dark:text-amber-500 font-bold font-mono text-sm uppercase">🚀 Modul Change Request (CR) / Addendum</h4>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-xs font-sans mt-1 max-w-2xl">
+                                {{ $isEn ? 'Project already in progress or scope frozen? Request additional features anytime. Neriah Pro Team will estimate Story Points (SP) and issue a mini-SPK.' : 'Proyek sudah berjalan atau scope terkunci? Jangan khawatir. Anda bisa meminta fitur tambahan (Addendum) kapan saja. Tim Neriah Pro akan menghitung estimasi Story Points (SP) dan menerbitkan mini-SPK.' }}
+                            </p>
+                        </div>
+                        <button type="button" onclick="document.getElementById('modal-cr').style.display='flex'" class="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-xs transition border border-amber-600 shadow-[2px_2px_0px_#b45309] active:shadow-[0px_0px_0px_#b45309] active:translate-y-[2px] whitespace-nowrap">
+                            {{ $isEn ? '+ REQUEST ADDENDUM' : '+ AJUKAN FITUR TAMBAHAN' }}
+                        </button>
+                    </div>
+
+                    @php
+                        $crIssues = $blueprint->issues()->where('type', 'change_request')->latest()->get();
+                    @endphp
+                    @if($crIssues->count() > 0)
+                        <div class="mt-4 border-t border-amber-500/20 pt-4 space-y-3">
+                            <h5 class="font-mono text-[10px] uppercase font-bold text-amber-700 dark:text-amber-500 tracking-wider">Draft & Active Change Requests:</h5>
+                            @foreach($crIssues as $cr)
+                                <div class="bg-white/50 dark:bg-zinc-900/50 border border-amber-500/30 p-3 rounded-none flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="px-2 py-0.5 {{ $cr->status === 'open' ? 'bg-amber-500 text-black' : 'bg-emerald-500 text-black' }} font-bold font-mono text-[9px] uppercase">{{ $cr->status }}</span>
+                                            <span class="font-mono text-[10px] text-zinc-500">{{ $cr->created_at->format('d M Y, H:i') }}</span>
+                                        </div>
+                                        <h6 class="font-bold text-sm text-zinc-900 dark:text-white">{{ $isEn ? ($cr->title['en'] ?? '') : ($cr->title['id'] ?? '') }}</h6>
+                                        <p class="text-xs text-zinc-600 dark:text-zinc-400 font-sans mt-1">{{ $isEn ? ($cr->description['en'] ?? '') : ($cr->description['id'] ?? '') }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="block font-mono text-[10px] text-zinc-500">Estimasi Biaya:</span>
+                                        <span class="font-bold text-sm text-zinc-900 dark:text-white">{{ $cr->status === 'open' ? 'Menunggu Penilaian' : 'Tersedia di Dashboard' }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
                 <!-- Deep Vertical Slice Engineering Hub -->
                 @php
                     $mvpEngineeringSpecs = $prd['features']['mvp_phase1'] ?? ($prd['engineering_specs']['mvp_specs'] ?? []);
@@ -3330,6 +3288,14 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                             class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition"
                                         >
                                             5. PROMPT AGENT DIRECTIVE
+                                        </button>
+                                        <button 
+                                            @click="specTab = &apos;uat&apos;" 
+                                            :class="specTab === &apos;uat&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition flex items-center gap-1.5"
+                                        >
+                                            <span class="w-1.5 h-1.5 bg-sky-500 rounded-none animate-pulse block"></span>
+                                            6. UAT &amp; FEEDBACK THREAD
                                         </button>
                                     </div>
 
@@ -3479,6 +3445,105 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                                 </button>
                                             </div>
                                             <pre id="prompt-code-{{ $specIdx }}" class="bg-zinc-950 p-3 text-[11px] text-emerald-300/90 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap font-mono border border-zinc-800">{{ $spec['code_agent_directive'] ?? ($spec['agent_directive_prompt'] ?? '') }}</pre>
+                                        </div>
+                                    </div>
+                                    <!-- Tab 6: UAT & Thread -->
+                                    @php
+                                        // Retrieve issues for this specific feature
+                                        $featureIssues = $blueprint->issues()->where('feature_id', $featKey)->with('comments')->latest()->get();
+                                    @endphp
+                                    <div x-show="specTab === 'uat'" class="space-y-4 font-mono text-xs" style="display: none;">
+                                        <!-- Micro Chat / Thread Container -->
+                                        <div class="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                                            <div class="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                                                <div class="flex items-center gap-2 text-zinc-800 dark:text-zinc-200 font-bold uppercase tracking-wider">
+                                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
+                                                    {{ $isEn ? 'Feature QA Thread' : 'Thread QA Fitur' }}
+                                                </div>
+                                                <span class="px-2 py-0.5 bg-amber-500 text-black font-bold text-[9px] uppercase">
+                                                    {{ $isEn ? 'LIVE SYNC' : 'SINKRONISASI LIVE' }}
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Messages Area -->
+                                            <div class="p-4 bg-zinc-50 dark:bg-zinc-950 min-h-[150px] max-h-[300px] overflow-y-auto custom-prd-scrollbar space-y-4">
+                                                @if($featureIssues->isEmpty())
+                                                    <div class="text-center text-zinc-400 dark:text-zinc-500 text-[10px] py-4">
+                                                        {{ $isEn ? 'No feedback recorded yet. Be the first to start the thread.' : 'Belum ada tiket atau masukan. Mulai thread QA pertama.' }}
+                                                    </div>
+                                                @else
+                                                    @foreach($featureIssues as $issue)
+                                                        @php
+                                                            $issueTitle = is_array($issue->title) ? ($issue->title[app()->getLocale()] ?? $issue->title['id'] ?? '') : $issue->title;
+                                                            $issueDesc = is_array($issue->description) ? ($issue->description[app()->getLocale()] ?? $issue->description['id'] ?? '') : $issue->description;
+                                                        @endphp
+                                                        <!-- Original Issue -->
+                                                        <div class="flex gap-3">
+                                                            <div class="w-6 h-6 bg-zinc-200 dark:bg-zinc-800 rounded-none shrink-0 flex items-center justify-center font-bold text-[10px] text-zinc-500">
+                                                                {{ substr($issue->user?->name ?? 'U', 0, 1) }}
+                                                            </div>
+                                                            <div class="flex-1 space-y-1">
+                                                                <div class="flex items-center gap-2">
+                                                                    <span class="font-bold text-zinc-900 dark:text-white">{{ $issue->user?->name ?? 'Customer' }}</span>
+                                                                    <span class="text-[9px] text-zinc-400">{{ $issue->created_at->diffForHumans() }}</span>
+                                                                    @if($issue->type === 'bug')
+                                                                        <span class="px-1.5 py-0.5 bg-red-500/10 text-red-500 text-[9px] font-bold">BUG</span>
+                                                                    @else
+                                                                        <span class="px-1.5 py-0.5 bg-sky-500/10 text-sky-500 text-[9px] font-bold">FEEDBACK</span>
+                                                                    @endif
+                                                                </div>
+                                                                <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
+                                                                    <strong class="block mb-1 text-zinc-900 dark:text-white">{{ $issueTitle }}</strong>
+                                                                    {{ $issueDesc }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Comments -->
+                                                        @foreach($issue->comments as $comment)
+                                                            @php
+                                                                $commentContent = is_array($comment->content) ? ($comment->content[app()->getLocale()] ?? $comment->content['id'] ?? '') : $comment->content;
+                                                                $isOwner = $comment->user_id === $blueprint->user_id;
+                                                            @endphp
+                                                            <div class="flex gap-3 ml-8">
+                                                                <div class="w-6 h-6 {{ $isOwner ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500' : 'bg-emerald-500 text-black' }} rounded-none shrink-0 flex items-center justify-center font-bold text-[10px]">
+                                                                    {{ $isOwner ? substr($comment->user?->name ?? 'C', 0, 1) : 'S' }}
+                                                                </div>
+                                                                <div class="flex-1 space-y-1">
+                                                                    <div class="flex items-center gap-2">
+                                                                        <span class="font-bold text-zinc-900 dark:text-white">{{ $isOwner ? ($comment->user?->name ?? 'Customer') : 'Studio Team' }}</span>
+                                                                        <span class="text-[9px] text-zinc-400">{{ $comment->created_at->diffForHumans() }}</span>
+                                                                    </div>
+                                                                    <div class="p-2.5 {{ $isOwner ? 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300' : 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50 text-emerald-900 dark:text-emerald-100' }} border">
+                                                                        {{ $commentContent }}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+
+                                                        <!-- Reply Form for Issue -->
+                                                        <div class="ml-8 mt-2">
+                                                            <form class="flex gap-2" onsubmit="event.preventDefault(); submitFeatureComment('{{ $issue->id }}', '{{ $blueprint->slug }}', this);">
+                                                                <input type="text" name="content" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 px-2 py-1.5 text-[10px] focus:border-emerald-500 focus:ring-0 rounded-none transition" placeholder="{{ $isEn ? 'Reply to this thread...' : 'Balas di thread ini...' }}" required>
+                                                                <button type="submit" class="px-3 py-1.5 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold uppercase tracking-wider transition rounded-none shrink-0 cursor-pointer text-[10px]">
+                                                                    {{ $isEn ? 'REPLY' : 'BALAS' }}
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                        <hr class="border-zinc-200 dark:border-zinc-800 my-4">
+                                                    @endforeach
+                                                @endif
+                                            </div>
+
+                                            <!-- Input Area (New Issue) -->
+                                            <div class="p-3 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800">
+                                                <form class="flex gap-2" onsubmit="event.preventDefault(); submitFeatureFeedback('{{ $featKey }}', '{{ $blueprint->slug }}', this);">
+                                                    <input type="text" name="title" class="w-full bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 px-3 py-2 text-xs focus:border-emerald-500 focus:ring-0 rounded-none transition" placeholder="{{ $isEn ? 'Type new feedback or issue title...' : 'Ketik judul tiket atau masukan baru...' }}" required>
+                                                    <button type="submit" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-wider transition rounded-none shrink-0 cursor-pointer">
+                                                        {{ $isEn ? 'START THREAD' : 'BUAT TIKET' }}
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -6895,16 +6960,68 @@ class ProcessSecureDataset implements ShouldQueue
 
                     <!-- TRACK CONTENT A: JALUR MANDIRI RETAIL CARDS & INSTANT SNAP CHECKOUT -->
                     <div x-show="executionTrack === 'retail'" x-cloak class="space-y-6 pt-2">
-                        <div class="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-mono">
-                            <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase block mb-1">
-                                ✓ LISENSI SOFTWARE FACTORY OS LANGSUNG AKTIF DI CUSTOMER PORTAL
-                            </span>
-                            <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                Pilih paket lisensi di bawah. Begitu pembayaran Midtrans Snap (QRIS/VA) diverifikasi, file cetak biru, skema SQL DDL, dan starter-kit ZIP langsung dapat diunduh permanen di <a href="/customer/dashboard" target="_blank" class="underline text-emerald-500 font-bold">Portal Klien Anda</a>.
-                            </p>
-                        </div>
+                        @if($blueprint->project_status === 'Retail License')
+                            <!-- RETAIL LICENSE ACTIVE -->
+                            <div class="p-5 bg-emerald-500/10 dark:bg-emerald-950/20 border-2 border-emerald-500/50 rounded-none space-y-4">
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                    <div class="flex items-center gap-3">
+                                        <span class="w-10 h-10 bg-emerald-500 text-black flex items-center justify-center font-bold text-lg flex-shrink-0">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                        </span>
+                                        <div>
+                                            <div class="text-xs uppercase font-mono tracking-wider text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-2">
+                                                <span>STATUS: LISENSI RETAIL AKTIF</span>
+                                                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                            </div>
+                                            <h4 class="text-sm font-bold text-zinc-900 dark:text-white font-sans mt-0.5">
+                                                Lisensi Berhasil Diverifikasi
+                                            </h4>
+                                            <p class="text-xs text-zinc-600 dark:text-zinc-300 font-sans mt-0.5">
+                                                Pembayaran lisensi mandiri Anda telah sukses. Anda dapat mengunduh berkas lengkap di bawah ini, atau menuju portal pelanggan.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-emerald-500/20 no-print">
+                                    <a 
+                                        href="{{ route('blueprint.download-md', $blueprint->slug) }}"
+                                        class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                        title="Unduh File Asli Markdown (.MD) untuk AI Coding Agent"
+                                    >
+                                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        <span>Unduh PRD (.MD)</span>
+                                    </a>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <a 
+                                        href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}"
+                                        class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/50 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                        title="Unduh .cursorrules / CLAUDE.md untuk AI Coding Agent"
+                                    >
+                                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                        <span>Unduh .cursorrules</span>
+                                    </a>
+
+                                    <a 
+                                        href="/customer/dashboard"
+                                        class="bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                    >
+                                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                        <span>Portal Klien</span>
+                                    </a>
+                                </div>
+                            </div>
+                        @else
+                            <div class="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase block mb-1">
+                                    ✓ LISENSI SOFTWARE FACTORY OS LANGSUNG AKTIF DI CUSTOMER PORTAL
+                                </span>
+                                <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                    Pilih paket lisensi di bawah. Begitu pembayaran Midtrans Snap (QRIS/VA) diverifikasi, file cetak biru, skema SQL DDL, dan starter-kit ZIP langsung dapat diunduh permanen di <a href="/customer/dashboard" target="_blank" class="underline text-emerald-500 font-bold">Portal Klien Anda</a>.
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <!-- TIER 02: LITE -->
                             <div class="p-4 sm:p-5 bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-700 flex flex-col justify-between rounded-none">
                                 <div>
@@ -6997,8 +7114,9 @@ class ProcessSecureDataset implements ShouldQueue
                                 </button>
                             </div>
                         </div>
+                            </div>
+                        @endif
                     </div>
-                </div>
 
                 <!-- TRACK CONTENT B: JALUR TURNKEY STUDIO (CONTRACT SIGNING & DP 50%) -->
                 <div x-show="executionTrack === 'studio'">
@@ -8644,6 +8762,123 @@ class ProcessSecureDataset implements ShouldQueue
             }
         };
 
+        window.submitChangeRequest = async function(slug, formEl) {
+            const btn = formEl.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'MENGIRIM...';
+            btn.disabled = true;
+
+            const titleInput = formEl.querySelector('input[name="title"]');
+            const descInput = formEl.querySelector('textarea[name="description"]');
+            
+            try {
+                const response = await fetch(`/blueprint/${slug}/issues`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        feature_id: 'change_request_global',
+                        title: titleInput.value,
+                        description: descInput.value,
+                        type: 'change_request'
+                    })
+                });
+
+                if (response.ok) {
+                    if (window.showToast) window.showToast({ type: 'success', title: 'Request Addendum Dikirim', message: 'Tim kami akan mereview request ini dan mengirimkan estimasi SP.' });
+                    titleInput.value = '';
+                    descInput.value = '';
+                    document.getElementById('modal-cr').style.display = 'none';
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    if (window.showToast) window.showToast({ type: 'error', title: 'Error', message: 'Gagal mengirim tiket addendum.' });
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        window.submitFeatureFeedback = async function(featureId, slug, formEl) {
+            const btn = formEl.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '...';
+            btn.disabled = true;
+
+            const titleInput = formEl.querySelector('input[name="title"]');
+            const title = titleInput.value;
+            
+            try {
+                const response = await fetch(`/blueprint/${slug}/issues`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        feature_id: featureId,
+                        title: title,
+                        description: title, // Using title as description for quick feedback
+                        type: 'bug'
+                    })
+                });
+
+                if (response.ok) {
+                    if (window.showToast) window.showToast({ type: 'success', title: 'Success', message: 'Tiket QA berhasil dikirim.' });
+                    titleInput.value = '';
+                    window.location.reload(); // Quick refresh to show new issue
+                } else {
+                    if (window.showToast) window.showToast({ type: 'error', title: 'Error', message: 'Gagal mengirim tiket.' });
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        window.submitFeatureComment = async function(issueId, slug, formEl) {
+            const btn = formEl.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '...';
+            btn.disabled = true;
+
+            const contentInput = formEl.querySelector('input[name="content"]');
+            const content = contentInput.value;
+            
+            try {
+                const response = await fetch(`/blueprint/${slug}/issues/${issueId}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ content: content })
+                });
+
+                if (response.ok) {
+                    if (window.showToast) window.showToast({ type: 'success', title: 'Success', message: 'Komentar ditambahkan.' });
+                    contentInput.value = '';
+                    window.location.reload(); // Quick refresh to show new comment
+                } else {
+                    if (window.showToast) window.showToast({ type: 'error', title: 'Error', message: 'Gagal menambahkan komentar.' });
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
         window.copyFeaturePrompt = function(btnEl, codeId) {
             const el = document.getElementById(codeId);
             if (!el) return;
@@ -8812,6 +9047,31 @@ class ProcessSecureDataset implements ShouldQueue
             }
         });
     </script>
+
+    <!-- MODULE: CHANGE REQUEST MODAL -->
+    <div id="modal-cr" style="display: none;" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-zinc-950 border-2 border-amber-500 w-full max-w-2xl rounded-none shadow-2xl relative">
+            <button type="button" onclick="document.getElementById('modal-cr').style.display='none'" class="absolute top-4 right-4 text-zinc-500 hover:text-white bg-zinc-100 dark:bg-zinc-900 px-3 py-1 text-xs font-bold font-mono transition">X</button>
+            <div class="p-6 border-b border-zinc-200 dark:border-zinc-800 bg-amber-500/10">
+                <h3 class="font-black text-amber-600 dark:text-amber-500 text-lg uppercase font-mono">Request Change / Addendum Fitur Baru</h3>
+                <p class="text-zinc-600 dark:text-zinc-400 text-xs mt-1 font-sans">Jelaskan fitur tambahan atau perubahan scope yang Anda inginkan. Kami akan mengestimasi ulang Story Points (SP) dan biaya tambahannya.</p>
+            </div>
+            <form onsubmit="event.preventDefault(); submitChangeRequest('{{ $blueprint->slug }}', this);" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider mb-1">Judul / Nama Fitur Baru</label>
+                    <input type="text" name="title" required class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 p-2.5 text-sm text-zinc-900 dark:text-white rounded-none focus:outline-none focus:border-amber-500 transition" placeholder="Contoh: Modul Laporan Ekspor PDF">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider mb-1">Detail Spesifikasi & Business Logic</label>
+                    <textarea name="description" required rows="4" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 p-2.5 text-sm text-zinc-900 dark:text-white rounded-none focus:outline-none focus:border-amber-500 transition" placeholder="Jelaskan cara kerja fitur ini, apa saja tombolnya, dan output apa yang diharapkan..."></textarea>
+                </div>
+                <div class="pt-4 flex items-center justify-end gap-3 border-t border-zinc-200 dark:border-zinc-800">
+                    <button type="button" onclick="document.getElementById('modal-cr').style.display='none'" class="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold uppercase text-xs hover:bg-zinc-300 dark:hover:bg-zinc-700 transition">Batal</button>
+                    <button type="submit" class="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-xs transition border border-amber-600 shadow-[2px_2px_0px_#b45309] active:translate-y-[2px] active:shadow-none">Kirim Request Addendum</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     @if($googleTranslateEnabled)
     <!-- Hidden Google Translate Element & Loader -->

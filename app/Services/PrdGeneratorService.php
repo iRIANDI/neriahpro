@@ -4054,6 +4054,15 @@ PROMPT;
         }
 
         $md .= "\n---\n\n";
+        $md .= "# ⚠️ PANDUAN EKSEKUSI ESTAFET UNTUK DEVELOPER (COCKPIT METHOD) ⚠️\n\n";
+        $md .= "> **BERHENTI! JANGAN COPY-PASTE SELURUH FILE INI SEKALIGUS KE DALAM AI AGENT (CURSOR / CLAUDE / WINDSURF)!**\n";
+        $md .= "> Menyalin ribuan baris PRD sekaligus akan menyebabkan **Context Rot / Amnesia AI**, di mana AI akan berhalusinasi, melewatkan aturan penting, dan merusak struktur arsitektur (seperti lupa menggunakan ULID, merusak styling, atau mengabaikan Gherkin).\n\n";
+        $md .= "**CARA PENGGUNAAN YANG BENAR (METODE ESTAFET / SPRINT COCKPIT):**\n";
+        $md .= "1. **Langkah 0 (Fondasi & Infrastruktur):** Copy bagian *Tech Stack, Architecture Manifesto, Aturan Anti-AI-Slop, dan ERD Diagram* terlebih dahulu. Minta AI membangun `Migration`, `Model`, `Seeder`, `Filament Resource` kosong, dan aturan `UI/UX` dasarnya.\n";
+        $md .= "2. **Langkah 1 (Fitur Spesifik):** Setelah fondasi ter-commit ke Git, copy **hanya satu** blok spesifikasi Fitur (misal MVP Phase 1 - Modul A) beserta Skenario Gherkin-nya ke dalam prompt baru.\n";
+        $md .= "3. **Langkah 2 (Iterasi Berikutnya):** Setelah fitur sebelumnya selesai, diuji (`php artisan test`), dan di-commit, ulangi proses estafet untuk blok fitur selanjutnya.\n";
+        $md .= "4. **Gunakan Dashboard Cockpit:** Untuk pengalaman terbaik, gunakan UI tombol **Sprint Cockpit (0/6)** di dashboard Neriah Pro Anda, yang secara otomatis memotong PRD ini menjadi porsi estafet yang presisi.\n\n";
+        $md .= "---\n\n";
 
         // 1. Executive Discovery
         $md .= "## 1. Executive Technical Discovery & Problem Statement\n\n";

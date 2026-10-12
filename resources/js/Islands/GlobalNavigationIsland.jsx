@@ -163,6 +163,8 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+
   const toggleTheme = () => {
     if (isDarkMode) {
       document.documentElement.classList.remove('dark');
@@ -172,6 +174,9 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
       document.documentElement.classList.add('dark');
       localStorage.setItem('neriah_theme', 'dark');
       setIsDarkMode(true);
+    }
+    if (typeof window !== 'undefined' && window.reRenderActiveMermaid) {
+      setTimeout(() => window.reRenderActiveMermaid(), 50);
     }
   };
 
@@ -184,7 +189,9 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
   ];
 
   return (
-    <header className="fixed top-0 w-full z-50 transition-colors font-sans">
+    <>
+      <div className="h-[88px] sm:h-[96px] w-full shrink-0" aria-hidden="true"></div>
+      <header className="fixed top-0 w-full z-50 transition-colors font-sans">
       
       {/* 1. TOP ANNOUNCEMENT BAR (HIGH RETENTION & SHAREABLE ALERT) */}
       <div className="bg-zinc-900 border-b border-zinc-800 text-zinc-300 py-1.5 px-4 text-xs font-mono flex items-center justify-between">
@@ -244,7 +251,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-8 font-mono text-xs uppercase tracking-wider font-bold">
-            <a href="/" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
+            <a href="/" className={`transition ${currentPath === '/' ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
               {lang === 'id' ? 'Beranda' : 'Home'}
             </a>
 
@@ -298,7 +305,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
               </div>
             )}
 
-            <a href="/pricing" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition flex items-center gap-1.5">
+            <a href="/pricing" className={`transition flex items-center gap-1.5 ${currentPath.startsWith('/pricing') ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
               <span>{lang === 'id' ? 'Paket & Harga' : 'Pricing'}</span>
               <span className="px-1 py-0.2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-bold">PROMO</span>
             </a>
@@ -307,8 +314,8 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
               {lang === 'id' ? 'Standar Rekayasa' : 'Engineering'}
             </a>
 
-            <a href="/customer/dashboard" className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-none bg-emerald-500"></span>
+            <a href="/customer/dashboard" className={`transition flex items-center gap-1.5 ${currentPath.startsWith('/customer/dashboard') ? 'text-emerald-600 dark:text-emerald-400 font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400'}`}>
+              <span className={`w-1.5 h-1.5 rounded-none ${currentPath.startsWith('/customer/dashboard') ? 'bg-emerald-600 dark:bg-emerald-400' : 'bg-emerald-500'}`}></span>
               <span>{lang === 'id' ? 'Portal Klien' : 'Client Portal'}</span>
             </a>
 
@@ -651,10 +658,10 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                 )}
               </div>
 
-              <a href="/" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
+              <a href="/" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 ${currentPath === '/' ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
                 Beranda
               </a>
-              <a href="/pricing" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
+              <a href="/pricing" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between ${currentPath.startsWith('/pricing') ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
                 <span>{lang === 'id' ? 'Paket & Biaya Layanan' : 'Pricing & Packages'}</span>
                 <span className="px-1.5 py-0.5 bg-emerald-500 text-black text-[9px] font-black">PROMO</span>
               </a>
@@ -676,7 +683,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
               <a href="#architecture" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
                 Standar Arsitektur Enterprise
               </a>
-              <a href="/customer/dashboard" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
+              <a href="/customer/dashboard" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between ${currentPath.startsWith('/customer/dashboard') ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
                 <span>{lang === 'id' ? 'Portal Klien (Dashboard)' : 'Client Portal (Dashboard)'}</span>
                 <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 text-[9px] font-bold">AKUN</span>
               </a>
@@ -704,5 +711,6 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
       </nav>
     </header>
+    </>
   );
 }

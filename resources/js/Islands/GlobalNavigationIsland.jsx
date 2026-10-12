@@ -18,10 +18,14 @@ import {
   ShoppingCart,
   Clock,
   AlertCircle,
-  Check
+  Check,
+  User,
+  LogIn,
+  LogOut,
+  Key
 } from 'lucide-react';
 
-export default function GlobalNavigationIsland({ settings, featureFlags, cartData }) {
+export default function GlobalNavigationIsland({ settings, featureFlags, cartData, authUser }) {
   const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
   const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
   const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
@@ -38,6 +42,15 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
   const [mobileLangOpen, setMobileLangOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
+  // Client Portal Auth Modal State (Login & Register)
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState('login'); // 'login' | 'register'
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  const csrfToken = typeof document !== 'undefined' 
+    ? document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+    : '';
+
   // Cart state & Real-time Anti-Ghost Hold countdown
   const [cartState, setCartState] = useState({
     count: 0,
@@ -242,10 +255,22 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
             </span>
           </a>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center gap-8 font-mono text-xs uppercase tracking-wider font-bold">
+          {/* Desktop Navigation Links (Curated for High Retention) */}
+          <div className="hidden md:flex items-center gap-7 font-mono text-xs uppercase tracking-wider font-bold">
             <a href="/" className={`transition ${currentPath === '/' ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
               {lang === 'id' ? 'Beranda' : 'Home'}
+            </a>
+
+            {isBlueprintEnabled && (
+              <a href="/pricing#retail" className={`transition flex items-center gap-1.5 ${currentPath === '/blueprint' ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
+                <span>Project OS (PRD)</span>
+                <span className="px-1 py-0.2 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[9px] font-bold">ACTIVE</span>
+              </a>
+            )}
+
+            <a href="/pricing" className={`transition flex items-center gap-1.5 ${currentPath.startsWith('/pricing') ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
+              <span>{lang === 'id' ? 'Paket & Investasi' : 'Pricing'}</span>
+              <span className="px-1 py-0.2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-bold">PROMO</span>
             </a>
 
             {/* Dropdown: Layanan HUB (Only visible if at least one service is enabled) */}
@@ -255,9 +280,9 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                 onMouseEnter={() => setServicesDropdownOpen(true)}
                 onMouseLeave={() => setServicesDropdownOpen(false)}
               >
-                <button className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition py-2">
+                <button className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition py-2 cursor-pointer">
                   <span>{lang === 'id' ? 'Layanan HUB' : 'Services Hub'}</span>
-                  <ChevronDown className="w-3.5 h-3.5" />
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${servicesDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
                 </button>
 
                 <AnimatePresence>
@@ -267,15 +292,15 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 5 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute top-full left-0 w-72 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-xl p-3 space-y-1 text-left"
+                      className="absolute top-full left-0 w-72 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-xl p-3 space-y-1 text-left z-50 font-sans"
                     >
                       {isBlueprintEnabled && (
                         <a href="/pricing#retail" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
                           <div className="flex items-center justify-between mb-0.5">
-                            <span className="font-bold text-zinc-900 dark:text-white text-xs">Project OS (PRD)</span>
+                            <span className="font-bold text-zinc-900 dark:text-white text-xs font-mono">Project OS (PRD)</span>
                             <span className="px-1 py-0.2 bg-emerald-500 text-black text-[9px] font-bold">ACTIVE</span>
                           </div>
-                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
+                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-tight">
                             {lang === 'id' ? 'Generator PRD & Skema ERD Otomatis' : 'Automated PRD & ERD Schema'}
                           </p>
                         </a>
@@ -284,10 +309,10 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                       {isCvProEnabled && (
                         <a href="/cv-pro" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
                           <div className="flex items-center justify-between mb-0.5">
-                            <span className="font-bold text-zinc-900 dark:text-white text-xs">CV Generator</span>
+                            <span className="font-bold text-zinc-900 dark:text-white text-xs font-mono">Studio CV Pro</span>
                             <span className="px-1 py-0.2 bg-purple-500 text-white text-[9px] font-bold">PRO STUDIO</span>
                           </div>
-                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans leading-tight">
+                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-tight">
                             {lang === 'id' ? 'Studio CV Visual & Portofolio Klien' : 'Visual Resume & Portfolio Studio'}
                           </p>
                         </a>
@@ -297,24 +322,6 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                 </AnimatePresence>
               </div>
             )}
-
-            <a href="/pricing" className={`transition flex items-center gap-1.5 ${currentPath.startsWith('/pricing') ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
-              <span>{lang === 'id' ? 'Paket & Harga' : 'Pricing'}</span>
-              <span className="px-1 py-0.2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-bold">PROMO</span>
-            </a>
-
-            <a href="#architecture" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
-              {lang === 'id' ? 'Standar Rekayasa' : 'Engineering'}
-            </a>
-
-            <a href="/customer/dashboard" className={`transition flex items-center gap-1.5 ${currentPath.startsWith('/customer/dashboard') ? 'text-emerald-600 dark:text-emerald-400 font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400'}`}>
-              <span className={`w-1.5 h-1.5 rounded-none ${currentPath.startsWith('/customer/dashboard') ? 'bg-emerald-600 dark:bg-emerald-400' : 'bg-emerald-500'}`}></span>
-              <span>{lang === 'id' ? 'Portal Klien' : 'Client Portal'}</span>
-            </a>
-
-            <a href="/admin/login" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">
-              Portal Admin
-            </a>
           </div>
 
           {/* Action CTAs */}
@@ -527,6 +534,91 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
               </AnimatePresence>
             </div>
 
+            {/* Client Portal / Auth Button */}
+            {authUser ? (
+              <div 
+                className="relative"
+                onMouseEnter={() => setUserDropdownOpen(true)}
+                onMouseLeave={() => setUserDropdownOpen(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-1.5 py-2 px-3 border border-emerald-500/50 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-mono text-xs font-bold rounded-none transition cursor-pointer"
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="max-w-[110px] truncate">{authUser.name || 'Portal Klien'}</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${userDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {userDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 5 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full right-0 mt-1 w-64 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl p-2.5 z-50 font-sans text-xs space-y-1.5 rounded-none"
+                    >
+                      <div className="px-2 py-1.5 border-b border-zinc-200 dark:border-zinc-800">
+                        <div className="text-[10px] font-mono text-zinc-400 uppercase font-bold">AKUN TERVERIFIKASI</div>
+                        <div className="font-bold text-zinc-900 dark:text-white truncate">{authUser.name}</div>
+                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">{authUser.email}</div>
+                      </div>
+
+                      <a 
+                        href="/customer/dashboard"
+                        className="w-full text-left px-2.5 py-2 flex items-center justify-between hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-mono text-xs font-bold transition rounded-none"
+                      >
+                        <span>{lang === 'id' ? 'Dashboard Proyek' : 'Project Dashboard'}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-emerald-500" />
+                      </a>
+
+                      <a 
+                        href="/customer/dashboard#blueprints"
+                        className="w-full text-left px-2.5 py-2 flex items-center justify-between hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-mono text-xs font-bold transition rounded-none"
+                      >
+                        <span>{lang === 'id' ? 'Cetak Biru Saya' : 'My Blueprints'}</span>
+                        <FileText className="w-3.5 h-3.5 text-zinc-400" />
+                      </a>
+
+                      {authUser.is_admin && (
+                        <a 
+                          href="/admin"
+                          className="w-full text-left px-2.5 py-2 flex items-center justify-between hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-mono text-xs font-bold transition rounded-none border-t border-zinc-100 dark:border-zinc-800"
+                        >
+                          <span className="text-amber-600 dark:text-amber-400">Admin Control Center</span>
+                          <Lock className="w-3.5 h-3.5 text-amber-500" />
+                        </a>
+                      )}
+
+                      <form action="/logout" method="POST" className="pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                        <input type="hidden" name="_token" value={csrfToken} />
+                        <button
+                          type="submit"
+                          className="w-full text-left px-2.5 py-2 flex items-center justify-between text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 font-mono text-xs font-bold transition rounded-none cursor-pointer"
+                        >
+                          <span>{lang === 'id' ? 'Keluar (Logout)' : 'Sign Out'}</span>
+                          <LogOut className="w-3.5 h-3.5" />
+                        </button>
+                      </form>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <button
+                type="button"
+                id="top-nav-login-btn"
+                onClick={() => { setAuthModalTab('login'); setAuthModalOpen(true); }}
+                className="flex items-center gap-1.5 py-2 px-3 text-xs font-mono font-bold border border-zinc-300 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition rounded-none cursor-pointer shadow-xs"
+                title="Masuk ke Portal Klien"
+              >
+                <User className="w-3.5 h-3.5 text-emerald-500" />
+                <span>{lang === 'id' ? 'Portal Klien' : 'Client Portal'}</span>
+              </button>
+            )}
+
             {isBlueprintEnabled ? (
               <a
                 href="/pricing#retail"
@@ -680,50 +772,89 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
               </div>
 
               <a href="/" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 ${currentPath === '/' ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
-                Beranda
+                {lang === 'id' ? 'Beranda' : 'Home'}
               </a>
+
+              {isBlueprintEnabled && (
+                <a href="/pricing#retail" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
+                  <span>Project OS (PRD Generator)</span>
+                  <span className="px-1.5 py-0.2 bg-emerald-500 text-black text-[9px] font-black">ACTIVE</span>
+                </a>
+              )}
+
               <a href="/pricing" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between ${currentPath.startsWith('/pricing') ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
-                <span>{lang === 'id' ? 'Paket & Biaya Layanan' : 'Pricing & Packages'}</span>
+                <span>{lang === 'id' ? 'Paket & Investasi Layanan' : 'Pricing & Packages'}</span>
                 <span className="px-1.5 py-0.5 bg-emerald-500 text-black text-[9px] font-black">PROMO</span>
               </a>
-              {isBlueprintEnabled && (
-                <a href="/pricing#retail" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                  Project OS (PRD Generator) &rarr;
-                </a>
-              )}
+
               {isCvProEnabled && (
                 <a href="/cv-pro" className="block py-2 text-purple-600 dark:text-purple-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                  CV Pro Studio &rarr;
+                  Studio CV Pro &rarr;
                 </a>
               )}
-              {hasAnyService && (
-                <a href="#services" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                  Aplikasi Solusi Kebutuhan Hidup
-                </a>
-              )}
-              <a href="#architecture" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                Standar Arsitektur Enterprise
-              </a>
-              <a href="/customer/dashboard" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between ${currentPath.startsWith('/customer/dashboard') ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
-                <span>{lang === 'id' ? 'Portal Klien (Dashboard)' : 'Client Portal (Dashboard)'}</span>
-                <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 text-[9px] font-bold">AKUN</span>
-              </a>
-              <a href="/admin/login" className="block py-2 text-zinc-800 dark:text-zinc-200 font-bold">
-                Login Administrator
-              </a>
+
+              {/* Mobile Client Portal / Auth Access */}
+              <div className="pt-2 pb-1 border-t border-zinc-200 dark:border-zinc-800">
+                <div className="text-[10px] font-mono text-zinc-400 uppercase font-bold mb-2">
+                  {lang === 'id' ? 'PORTAL KLIEN // RUANG KERJA' : 'CLIENT WORKSPACE'}
+                </div>
+
+                {authUser ? (
+                  <div className="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span className="font-bold text-zinc-900 dark:text-white text-xs">{authUser.name}</span>
+                    </div>
+                    <a
+                      href="/customer/dashboard"
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-black py-2 px-3 text-center block text-xs uppercase font-mono"
+                    >
+                      {lang === 'id' ? 'Buka Dashboard Proyek →' : 'Open Dashboard →'}
+                    </a>
+                    <form action="/logout" method="POST">
+                      <input type="hidden" name="_token" value={csrfToken} />
+                      <button
+                        type="submit"
+                        className="w-full text-center py-1.5 text-[11px] font-mono text-rose-500 hover:underline"
+                      >
+                        {lang === 'id' ? 'Keluar (Logout)' : 'Sign Out'}
+                      </button>
+                    </form>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setMobileMenuOpen(false); setAuthModalTab('login'); setAuthModalOpen(true); }}
+                      className="py-2.5 px-3 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black font-bold text-xs uppercase font-mono text-center flex items-center justify-center gap-1.5"
+                    >
+                      <LogIn className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" />
+                      <span>{lang === 'id' ? 'Masuk' : 'Login'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setMobileMenuOpen(false); setAuthModalTab('register'); setAuthModalOpen(true); }}
+                      className="py-2.5 px-3 border border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase font-mono text-center flex items-center justify-center gap-1.5"
+                    >
+                      <span>{lang === 'id' ? 'Daftar' : 'Register'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {isBlueprintEnabled ? (
                 <a 
                   href="/pricing#retail" 
-                  className="w-full bg-emerald-500 text-black font-black py-3 text-center block rounded-none uppercase"
+                  className="w-full bg-emerald-500 text-black font-black py-3 text-center block rounded-none uppercase font-mono text-xs mt-3"
                 >
-                  Buat Blueprint Proyek Sekarang &rarr;
+                  {lang === 'id' ? 'Buat Blueprint Proyek Sekarang →' : 'Build Blueprint Now →'}
                 </a>
               ) : (
                 <a 
                   href="#services" 
-                  className="w-full bg-emerald-500 text-black font-black py-3 text-center block rounded-none uppercase"
+                  className="w-full bg-emerald-500 text-black font-black py-3 text-center block rounded-none uppercase font-mono text-xs mt-3"
                 >
-                  Jelajahi Layanan &rarr;
+                  {lang === 'id' ? 'Jelajahi Layanan →' : 'Explore Services →'}
                 </a>
               )}
             </motion.div>
@@ -732,6 +863,236 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
       </nav>
     </header>
+
+    {/* 4. CLIENT PORTAL AUTH MODAL (LOGIN & REGISTER TABS) */}
+    <AnimatePresence>
+      {authModalOpen && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* Backdrop Dismiss */}
+          <div className="absolute inset-0" onClick={() => setAuthModalOpen(false)} />
+
+          {/* Modal Dialog Box */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.15 }}
+            className="relative w-full max-w-md bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl p-6 sm:p-7 rounded-none z-10 font-sans"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setAuthModalOpen(false)}
+              className="absolute top-4 right-4 p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-none transition cursor-pointer"
+              title={lang === 'en' ? 'Close' : 'Tutup'}
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Header Badge & Title */}
+            <div className="space-y-1.5 mb-5 pr-8">
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-none bg-emerald-500 animate-pulse"></span>
+                <span>{lang === 'en' ? 'CLIENT PORTAL GATEWAY' : 'PORTAL KLIEN // GATEWAY AMAN'}</span>
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
+                {authModalTab === 'register' 
+                  ? (lang === 'en' ? 'Create Client Account' : 'Daftar Akun Portal Klien')
+                  : (lang === 'en' ? 'Access Client Portal' : 'Masuk ke Portal Klien')}
+              </h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed font-sans">
+                {lang === 'en'
+                  ? 'Access and manage your project blueprints, WBS Gantt timelines, and official invoices.'
+                  : 'Kelola cetak biru arsitektur, sprint pengerjaan, dan invoice proyek Anda secara terpusat.'}
+              </p>
+            </div>
+
+            {/* Tab Switcher (Login vs Register) */}
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 mb-5 font-mono text-xs">
+              <button
+                type="button"
+                onClick={() => setAuthModalTab('login')}
+                className={`py-2 text-center uppercase tracking-wider font-bold transition rounded-none cursor-pointer ${
+                  authModalTab === 'login'
+                    ? 'bg-zinc-900 text-white dark:bg-white dark:text-black shadow-xs font-black'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+              >
+                {lang === 'en' ? '01. Sign In' : '01. Masuk Akun'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthModalTab('register')}
+                className={`py-2 text-center uppercase tracking-wider font-bold transition rounded-none cursor-pointer ${
+                  authModalTab === 'register'
+                    ? 'bg-zinc-900 text-white dark:bg-white dark:text-black shadow-xs font-black'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+              >
+                {lang === 'en' ? '02. Register' : '02. Daftar Baru'}
+              </button>
+            </div>
+
+            {/* Form Content: TAB 1 LOGIN */}
+            {authModalTab === 'login' && (
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const emailVal = e.target.email?.value || '';
+                  window.location.href = `/customer/login?email=${encodeURIComponent(emailVal)}`;
+                }} 
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                    {lang === 'en' ? 'Email Address' : 'Alamat E-mail'}
+                  </label>
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="nama@perusahaan.com"
+                    className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-sans rounded-none focus:border-emerald-500 outline-none transition"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                      {lang === 'en' ? 'Password' : 'Kata Sandi'}
+                    </label>
+                    <a href="/customer/login" className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 hover:underline">
+                      {lang === 'en' ? 'Forgot?' : 'Lupa?'}
+                    </a>
+                  </div>
+                  <input
+                    name="password"
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-sans rounded-none focus:border-emerald-500 outline-none transition"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-xs font-mono py-3 px-4 rounded-none transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <span>{lang === 'en' ? 'Sign In to Portal →' : 'Masuk ke Portal Klien →'}</span>
+                </button>
+
+                <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                  <span>{lang === 'en' ? 'No account yet?' : 'Belum punya akun?'}</span>
+                  <button
+                    type="button"
+                    onClick={() => setAuthModalTab('register')}
+                    className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
+                  >
+                    {lang === 'en' ? 'Register here' : 'Daftar di sini'}
+                  </button>
+                </div>
+
+                <a
+                  href="/customer/login"
+                  className="w-full block text-center py-2 text-[11px] font-mono text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-800 transition"
+                >
+                  {lang === 'en' ? 'Open Full 2FA Security Login Page →' : 'Buka Halaman Login Lengkap (2-FA OTP) →'}
+                </a>
+              </form>
+            )}
+
+            {/* Form Content: TAB 2 REGISTER */}
+            {authModalTab === 'register' && (
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const nameVal = e.target.name?.value || '';
+                  const emailVal = e.target.email?.value || '';
+                  window.location.href = `/customer/login?mode=register&name=${encodeURIComponent(nameVal)}&email=${encodeURIComponent(emailVal)}`;
+                }} 
+                className="space-y-3.5"
+              >
+                <div>
+                  <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                    {lang === 'en' ? 'Full Name' : 'Nama Lengkap'}
+                  </label>
+                  <input
+                    name="name"
+                    type="text"
+                    required
+                    placeholder="Alex Pratama"
+                    className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-sans rounded-none focus:border-emerald-500 outline-none transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                    {lang === 'en' ? 'Work / Business Email' : 'Email Kerja / Bisnis'}
+                  </label>
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="alex@perusahaan.com"
+                    className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-sans rounded-none focus:border-emerald-500 outline-none transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                    {lang === 'en' ? 'Password' : 'Kata Sandi (Min. 8 Karakter)'}
+                  </label>
+                  <input
+                    name="password"
+                    type="password"
+                    required
+                    minLength={8}
+                    placeholder="Minimal 8 karakter"
+                    className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-sans rounded-none focus:border-emerald-500 outline-none transition"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-xs font-mono py-3 px-4 rounded-none transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <span>{lang === 'en' ? 'Continue to Full Verification →' : 'Lanjut ke Verifikasi Akun →'}</span>
+                </button>
+
+                <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                  <span>{lang === 'en' ? 'Already registered?' : 'Sudah punya akun?'}</span>
+                  <button
+                    type="button"
+                    onClick={() => setAuthModalTab('login')}
+                    className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
+                  >
+                    {lang === 'en' ? 'Sign In here' : 'Masuk di sini'}
+                  </button>
+                </div>
+
+                <a
+                  href="/customer/login?mode=register"
+                  className="w-full block text-center py-2 text-[11px] font-mono text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-800 transition"
+                >
+                  {lang === 'en' ? 'Open Full Registration Page →' : 'Buka Halaman Registrasi Lengkap →'}
+                </a>
+              </form>
+            )}
+
+            {/* Security Badge */}
+            <div className="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-center gap-1.5 text-[10px] font-mono text-zinc-400">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <span>{lang === 'en' ? 'AES-256 Encrypted & 2-Factor Protected' : 'Enkripsi AES-256 & Proteksi 2-Factor OTP'}</span>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
     </>
   );
 }

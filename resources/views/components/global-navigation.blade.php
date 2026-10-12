@@ -62,6 +62,13 @@
         'items' => $cartItems,
         'min_remaining_seconds' => $minRemaining,
     ];
+
+    $authUser = auth()->check() ? [
+        'id' => auth()->id(),
+        'name' => auth()->user()->name,
+        'email' => auth()->user()->email,
+        'is_admin' => auth()->user()->hasRole('super_admin') || auth()->user()->email === 'yoseph.iriandi.tambunan@gmail.com',
+    ] : null;
 @endphp
 
 <!-- Global Navigation Island -->
@@ -69,4 +76,5 @@
     'settings' => $getSettingVal('main_navigation', null),
     'featureFlags' => $featureFlags,
     'cartData' => $cartData,
+    'authUser' => $authUser,
 ])

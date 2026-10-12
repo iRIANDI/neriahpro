@@ -79,6 +79,16 @@
                 captchaError: '',
 
                 init() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('mode') === 'register') {
+                        this.mode = 'register';
+                    }
+                    if (urlParams.get('email')) {
+                        this.email = decodeURIComponent(urlParams.get('email'));
+                    }
+                    if (urlParams.get('name')) {
+                        this.name = decodeURIComponent(urlParams.get('name'));
+                    }
                     this.generateCaptcha();
                 },
 

@@ -99,6 +99,18 @@
     </script>
 
     <style>
+        :root {
+            --global-nav-h: 88px;
+            --toolbar-h: 48px;
+        }
+        @media (min-width: 640px) {
+            :root {
+                --global-nav-h: 96px;
+            }
+        }
+        .prd-scroll-target {
+            scroll-margin-top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 48px) + 16px) !important;
+        }
         [x-cloak] { display: none !important; }
         .goog-te-banner-frame { display: none !important; }
         body { top: 0 !important; }
@@ -508,6 +520,32 @@
         let isProgrammaticScroll = false;
         let programmaticScrollTimer = null;
 
+        window.syncNavMetrics = function() {
+            try {
+                const globalHeader = document.querySelector('header.fixed') || document.querySelector('nav');
+                const toolbar = document.getElementById('blueprint-toolbar');
+                if (globalHeader) {
+                    const h = globalHeader.getBoundingClientRect().height || globalHeader.offsetHeight;
+                    if (h > 0) {
+                        document.documentElement.style.setProperty('--global-nav-h', Math.round(h) + 'px');
+                    }
+                }
+                if (toolbar) {
+                    const th = toolbar.getBoundingClientRect().height || toolbar.offsetHeight;
+                    if (th > 0) {
+                        document.documentElement.style.setProperty('--toolbar-h', Math.round(th) + 'px');
+                    }
+                }
+            } catch (e) {}
+        };
+        window.addEventListener('resize', window.syncNavMetrics);
+        window.addEventListener('scroll', window.syncNavMetrics, { passive: true });
+        window.addEventListener('load', window.syncNavMetrics);
+        document.addEventListener('DOMContentLoaded', window.syncNavMetrics);
+        setTimeout(window.syncNavMetrics, 50);
+        setTimeout(window.syncNavMetrics, 300);
+        setTimeout(window.syncNavMetrics, 1000);
+
         window.jumpToSection = function(id) {
             const el = document.getElementById(id);
             if (!el) return;
@@ -519,9 +557,17 @@
                 isProgrammaticScroll = false;
             }, 850);
 
-            const yOffset = -80;
-            const y = Math.max(0, el.getBoundingClientRect().top + window.pageYOffset + yOffset);
-            window.scrollTo({ top: y, behavior: 'smooth' });
+            // Compute exact offset: global nav + toolbar + 16px breathing room
+            window.syncNavMetrics();
+            const globalHeader = document.querySelector('header.fixed') || document.querySelector('nav');
+            const toolbar = document.getElementById('blueprint-toolbar');
+            const globalH = globalHeader ? (globalHeader.getBoundingClientRect().height || globalHeader.offsetHeight) : 88;
+            const toolbarH = toolbar ? (toolbar.getBoundingClientRect().height || toolbar.offsetHeight) : 48;
+            const extraGap = 16;
+            const totalOffset = globalH + toolbarH + extraGap;
+
+            const targetY = Math.max(0, el.getBoundingClientRect().top + window.pageYOffset - totalOffset);
+            window.scrollTo({ top: targetY, behavior: 'smooth' });
 
             // Visual pulse highlight
             el.classList.add('outline-2', 'outline-emerald-500', 'transition-all');
@@ -1584,7 +1630,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     <x-global-navigation :global-settings="$globalSettings ?? []" />
 
     <!-- Header Navigation Bar (Sharp Precision Theme - Centered Actions Toolbar) -->
-    <header class="bg-white dark:bg-zinc-900 border-y border-zinc-200 dark:border-zinc-800 py-2.5 px-4 sm:px-6 mt-2 sm:mt-2.5 mb-2 sm:mb-2.5 sticky top-[88px] sm:top-[96px] z-40 no-print transition-colors shadow-xs">
+    <header id="blueprint-toolbar" 
+            class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-2.5 px-4 sm:px-6 sticky z-40 no-print transition-all shadow-xs mt-0 mb-4"
+            style="top: var(--global-nav-h, 88px);">
         <div class="w-full max-w-[1700px] mx-auto flex items-center justify-center flex-wrap gap-2 sm:gap-2.5">
             <!-- Back to Client Portal Button -->
             <a href="/customer/dashboard" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Kembali ke Portal Klien">
@@ -1882,7 +1930,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             
             <!-- DESKTOP DEDICATED STICKY NAVIGATION SIDEBAR (xl:flex) -->
             <aside 
-                class="w-72 xl:w-80 shrink-0 hidden xl:flex flex-col sticky top-20 max-h-[calc(100vh-6rem)] bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-none overflow-hidden z-20 font-mono shadow-sm no-print"
+                class="w-72 xl:w-80 shrink-0 hidden xl:flex flex-col sticky z-20 font-mono shadow-sm no-print bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-none overflow-hidden"
+                style="top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 48px) + 16px); max-height: calc(100vh - var(--global-nav-h, 88px) - var(--toolbar-h, 48px) - 32px);"
                 x-on:wheel.passive="(e) => {
                     const scrollEl = $el.querySelector('.custom-prd-scrollbar');
                     if (scrollEl && !scrollEl.contains(e.target)) {
@@ -2779,7 +2828,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
             <!-- SECTION 1: EXECUTIVE TECHNICAL DISCOVERY -->
             @php $isExecutiveImpacted = in_array('executive_summary', $prd['_impacted_segments'] ?? []); @endphp
-            <section id="section-1" class="bg-white dark:bg-zinc-900 border {{ $isExecutiveImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24 transition-all">
+            <section id="section-1" class="bg-white dark:bg-zinc-900 border {{ $isExecutiveImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target transition-all">
                 <div class="flex flex-col gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2">
@@ -2882,7 +2931,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     $prd['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint)
                 );
             @endphp
-            <section id="section-1-5" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
+            <section id="section-1-5" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-4">
                     <div class="flex items-center gap-2">
                         <span class="w-8 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01.5</span>
@@ -3063,7 +3112,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
             <!-- SECTION 2: PENGGUNA & HAK AKSES (RBAC) -->
             @php $isActorsImpacted = in_array('system_actors', $prd['_impacted_segments'] ?? []); @endphp
-            <section id="section-2" class="bg-white dark:bg-zinc-900 border {{ $isActorsImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24 transition-all">
+            <section id="section-2" class="bg-white dark:bg-zinc-900 border {{ $isActorsImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target transition-all">
                 <div class="flex flex-col gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2">
@@ -3126,7 +3175,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             </section>
 
             <!-- SECTION 3: SPESIFIKASI REKAYASA FITUR (DEEP VERTICAL SLICES & AGENT DIRECTIVE) -->
-            <section id="section-3" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
+            <section id="section-3" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-6">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">03</span>
@@ -3263,7 +3312,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <div 
                                 id="card-feat-{{ $specIdx }}"
                                 x-data="{ specTab: &apos;gherkin&apos;, expanded: true }" 
-                                class="bg-zinc-50 dark:bg-zinc-950 border-2 rounded-none transition scroll-mt-24"
+                                class="bg-zinc-50 dark:bg-zinc-950 border-2 rounded-none transition prd-scroll-target"
                                 :class="isStepCompleted('{{ $featKey }}') ? 'border-emerald-500/80 shadow-xs' : 'border-zinc-200 dark:border-zinc-800'"
                             >
                                 <!-- Feature Spec Header Bar -->
@@ -3653,7 +3702,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             </section>
 
             <!-- SECTION 3.5: PUSAT ORKESTRASI & SPRINT COCKPIT AI CODING AGENT -->
-            <section id="section-3-5" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
+            <section id="section-3-5" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-4">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">04</span>
@@ -4277,7 +4326,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             </section>
 
             <!-- SECTION 3.8: VIRTUAL ARCHITECTURE STUDIO (THE 4 VIRTUAL CHARTS COMMAND CENTER) -->
-            <section id="section-3-8" class="bg-white dark:bg-zinc-900 border-2 border-sky-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
+            <section id="section-3-8" class="bg-white dark:bg-zinc-900 border-2 border-sky-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-sky-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">05</span>
@@ -4525,7 +4574,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 }
             @endphp
             @php $isFlowImpacted = in_array('alurs_kerja', $prd['_impacted_segments'] ?? []); @endphp
-            <section id="section-4" class="bg-white dark:bg-zinc-900 border {{ $isFlowImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24 transition-all">
+            <section id="section-4" class="bg-white dark:bg-zinc-900 border {{ $isFlowImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target transition-all">
                 <div class="flex flex-col gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div class="flex items-center gap-2">
@@ -4721,7 +4770,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
             <!-- SECTION 5: ENTERPRISE DATABASE ERD & SCHEMA BLUEPRINT -->
             @php $isErdImpacted = in_array('database_erd', $prd['_impacted_segments'] ?? []); @endphp
-            <section id="section-5" class="bg-white dark:bg-zinc-900 border {{ $isErdImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24 transition-all">
+            <section id="section-5" class="bg-white dark:bg-zinc-900 border {{ $isErdImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target transition-all">
                 <div class="flex flex-col gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div class="flex items-center gap-2">
@@ -5016,7 +5065,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     $blueprint->user_metadata ?? []
                 );
             @endphp
-            <section id="section-6" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
+            <section id="section-6" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">08</span>
@@ -6676,7 +6725,7 @@ class ProcessSecureDataset implements ShouldQueue
             </section>
 
             <!-- SECTION 09: OPSI VELOCITY PENGERJAAN & AKSESORIS AI GEMINI ULTRA (PRICING & SPRINT SELECTION) -->
-            <section id="section-7" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
+            <section id="section-7" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
@@ -6825,7 +6874,7 @@ class ProcessSecureDataset implements ShouldQueue
             </section>
 
             <!-- SECTION 10: TIMELINE & GANTT MILESTONE (ALIGNED TO VELOCITY) -->
-            <section id="section-8" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
+            <section id="section-8" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex items-center justify-between gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">10</span>
@@ -6869,7 +6918,7 @@ class ProcessSecureDataset implements ShouldQueue
             </section>
 
             <!-- SECTION 11: STANDAR TATA KELOLA, KUALITAS & SLA SERAH TERIMA (GOVERNANCE & SLA) -->
-            <section id="section-9" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
+            <section id="section-9" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">11</span>
@@ -6959,7 +7008,7 @@ class ProcessSecureDataset implements ShouldQueue
             </section>
 
             <!-- SECTION 10: SCOPE FREEZE, DIGITAL CONTRACT & DP MIDTRANS (CRUCIAL) -->
-            <section id="section-10" class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-2 border-emerald-600 dark:border-emerald-500 p-6 sm:p-8 mb-8 rounded-none scroll-mt-24 shadow-sm">
+            <section id="section-10" class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-2 border-emerald-600 dark:border-emerald-500 p-6 sm:p-8 mb-8 rounded-none prd-scroll-target shadow-sm">
                 <!-- Staging Sandbox Environment Banner (If Provisioned) -->
                 @if($blueprint->staging_url)
                     <div class="mb-6 p-4 sm:p-5 bg-emerald-500/10 dark:bg-zinc-950 border border-emerald-500/40 text-zinc-800 dark:text-zinc-200">

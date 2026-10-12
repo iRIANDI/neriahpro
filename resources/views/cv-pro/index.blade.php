@@ -78,10 +78,7 @@
     @endphp
 
     <!-- Global Navigation -->
-    @react('GlobalNavigationIsland', [
-        'settings' => $getSettingVal('main_navigation', null),
-        'featureFlags' => $featureFlags,
-    ])
+    <x-global-navigation :global-settings="$globalSettings" />
 
     <main class="flex-1 pt-14">
         @php

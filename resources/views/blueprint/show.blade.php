@@ -1315,6 +1315,20 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 devPlaybookOpen: true,
                 activeDevPhase: 1,
                 copyMasterPromptSuccess: false,
+                isDarkMode: document.documentElement.classList.contains('dark'),
+                toggleTheme() {
+                    if (this.isDarkMode) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('neriah_theme', 'light');
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('neriah_theme', 'dark');
+                    }
+                    this.isDarkMode = !this.isDarkMode;
+                    if (window.dispatchEvent) {
+                        window.dispatchEvent(new Event('theme-changed'));
+                    }
+                },
                 locale: localStorage.getItem('neriah_blueprint_lang') || '{{ app()->getLocale() === "en" ? "en" : "id" }}',
                 setLocale(l) {
                     this.locale = l;
@@ -1588,6 +1602,16 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
             <!-- Right Actions Toolbar -->
             <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                <!-- Theme Toggle (Blueprint PRD Header) -->
+                <button type="button" @click="toggleTheme()" class="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center cursor-pointer shrink-0" :title="isDarkMode ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'">
+                    <template x-if="isDarkMode">
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </template>
+                    <template x-if="!isDarkMode">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    </template>
+                </button>
+
                 <!-- One-Click Scaffold & Boilerplate Exporter Modal Button -->
                 <button type="button" @click="openScaffoldModal()" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap" title="Ekspor Docker Compose, SQL Migrasi, & Struktur Route">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -2815,7 +2839,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     @if($isExecutiveImpacted)
                     <div class="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-mono text-amber-700 dark:text-amber-400 mt-1">
                         <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <p><strong>NEEDS REVIEW:</strong> Segmen ini terdeteksi <em>stale</em> karena perubahan manual/tweak di segmen lain yang memiliki ketergantungan erat. Harap klik TWEAK lalu tinjau atau regenerate AI agar selaras kembali.</p>
+                        <p x-html="locale === 'en' ? '<strong>NEEDS REVIEW:</strong> This segment is detected as <em>stale</em> due to manual tweaks in strongly dependent upstream segments. Please click TWEAK and review or AI regenerate to align it.' : '<strong>NEEDS REVIEW:</strong> Segmen ini terdeteksi <em>stale</em> karena perubahan manual/tweak di segmen lain yang memiliki ketergantungan erat. Harap klik TWEAK lalu tinjau atau regenerate AI agar selaras kembali.'"></p>
                     </div>
                     @endif
                 </div>
@@ -4691,7 +4715,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     @if($isErdImpacted)
                     <div class="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-mono text-amber-700 dark:text-amber-400 mt-1">
                         <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <p><strong>NEEDS REVIEW:</strong> Segmen ERD ini terdeteksi <em>stale</em>. Anda baru saja melakukan tweak pada komponen hulu (seperti Fitur / Masalah Utama), harap sesuaikan skema tabel agar selaras dengan fitur terbaru tersebut.</p>
+                        <p x-html="locale === 'en' ? '<strong>NEEDS REVIEW:</strong> This ERD segment is detected as <em>stale</em>. You recently tweaked upstream components (like Features / Core Problems), please adjust the table schemas to align with the latest features.' : '<strong>NEEDS REVIEW:</strong> Segmen ERD ini terdeteksi <em>stale</em>. Anda baru saja melakukan tweak pada komponen hulu (seperti Fitur / Masalah Utama), harap sesuaikan skema tabel agar selaras dengan fitur terbaru tersebut.'"></p>
                     </div>
                     @endif
                 </div>
@@ -9262,7 +9286,7 @@ class ProcessSecureDataset implements ShouldQueue
             <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
                 <div>
                     <h3 class="font-black text-lg text-zinc-900 dark:text-zinc-100 uppercase" x-text="tweakSegmentTitle"></h3>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Edit manual aturan bisnis Anda atau gunakan prompt AI untuk me-regenerate segment ini (RAG-Assisted).</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5" x-text="locale === 'en' ? 'Manually edit your business rules or use AI prompt to re-generate this segment (RAG-Assisted).' : 'Edit manual aturan bisnis Anda atau gunakan prompt AI untuk me-regenerate segment ini (RAG-Assisted).'"></p>
                 </div>
                 <button @click="tweakModalOpen = false" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -9273,22 +9297,22 @@ class ProcessSecureDataset implements ShouldQueue
             <div class="flex-1 overflow-y-auto p-4 custom-prd-scrollbar space-y-4">
                 
                 <div class="flex gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-2">
-                    <button @click="tweakMode = 'manual'" :class="tweakMode === 'manual' ? 'text-emerald-600 dark:text-emerald-400 font-bold border-b-2 border-emerald-500' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'" class="pb-2 text-sm uppercase transition">Manual Tweak</button>
-                    <button @click="tweakMode = 'ai'" :class="tweakMode === 'ai' ? 'text-indigo-600 dark:text-indigo-400 font-bold border-b-2 border-indigo-500' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'" class="pb-2 text-sm uppercase transition">AI Regenerate (Prompt)</button>
+                    <button @click="tweakMode = 'manual'" :class="tweakMode === 'manual' ? 'text-emerald-600 dark:text-emerald-400 font-bold border-b-2 border-emerald-500' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'" class="pb-2 text-sm uppercase transition" x-text="locale === 'en' ? 'Manual Tweak' : 'Manual Tweak'"></button>
+                    <button @click="tweakMode = 'ai'" :class="tweakMode === 'ai' ? 'text-indigo-600 dark:text-indigo-400 font-bold border-b-2 border-indigo-500' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'" class="pb-2 text-sm uppercase transition" x-text="locale === 'en' ? 'AI Regenerate (Prompt)' : 'AI Regenerate (Prompt)'"></button>
                 </div>
 
                 <!-- Manual Mode -->
                 <div x-show="tweakMode === 'manual'">
-                    <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">Editor Konten (Markdown / Text / JSON)</label>
-                    <textarea x-model="tweakContent" rows="15" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 font-mono text-sm p-3 focus:outline-none focus:border-emerald-500 custom-prd-scrollbar" placeholder="Ketik aturan bisnis / kode JSON baru di sini..."></textarea>
+                    <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2" x-text="locale === 'en' ? 'Content Editor (Markdown / Text / JSON)' : 'Editor Konten (Markdown / Text / JSON)'"></label>
+                    <textarea x-model="tweakContent" rows="15" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 font-mono text-sm p-3 focus:outline-none focus:border-emerald-500 custom-prd-scrollbar" :placeholder="locale === 'en' ? 'Type new business rules / JSON code here...' : 'Ketik aturan bisnis / kode JSON baru di sini...'"></textarea>
                 </div>
 
                 <!-- AI Mode -->
                 <div x-show="tweakMode === 'ai'" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2">Instruksi AI (Prompt)</label>
-                        <textarea x-model="tweakPrompt" rows="3" class="w-full bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-300 dark:border-indigo-700 text-zinc-900 dark:text-zinc-100 p-3 text-sm focus:outline-none focus:border-indigo-500" placeholder="Contoh: 'Tolong tambahkan aturan agar AI selalu menggunakan Filament V3 dan Spatie Permission untuk RBAC...'"></textarea>
-                        <p class="text-[10px] text-zinc-500 mt-1">Sistem akan membaca konten asli segmen ini dan merancang ulang isinya sesuai instruksi Anda di atas.</p>
+                        <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2" x-text="locale === 'en' ? 'AI Instructions (Prompt)' : 'Instruksi AI (Prompt)'"></label>
+                        <textarea x-model="tweakPrompt" rows="3" class="w-full bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-300 dark:border-indigo-700 text-zinc-900 dark:text-zinc-100 p-3 text-sm focus:outline-none focus:border-indigo-500" :placeholder="locale === 'en' ? 'Example: &quot;Please add a rule for AI to always use Filament V3 and Spatie Permission for RBAC...&quot;' : 'Contoh: &quot;Tolong tambahkan aturan agar AI selalu menggunakan Filament V3 dan Spatie Permission untuk RBAC...&quot;'"></textarea>
+                        <p class="text-[10px] text-zinc-500 mt-1" x-text="locale === 'en' ? 'The system will read this segment\'s original content and regenerate it based on your instructions above.' : 'Sistem akan membaca konten asli segmen ini dan merancang ulang isinya sesuai instruksi Anda di atas.'"></p>
                     </div>
                 </div>
 
@@ -9296,13 +9320,13 @@ class ProcessSecureDataset implements ShouldQueue
 
             <!-- Footer -->
             <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex justify-end gap-3 shrink-0">
-                <button type="button" @click="tweakModalOpen = false" class="px-5 py-2.5 text-xs font-bold uppercase text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">Batal</button>
+                <button type="button" @click="tweakModalOpen = false" class="px-5 py-2.5 text-xs font-bold uppercase text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition" x-text="locale === 'en' ? 'Cancel' : 'Batal'"></button>
                 
                 <button type="button" @click="submitTweak()" :disabled="tweakLoading" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-xs transition flex items-center justify-center gap-2 disabled:opacity-50 min-w-[140px]">
-                    <span x-show="!tweakLoading" x-text="tweakMode === 'manual' ? 'Simpan Segmen' : 'Generate AI'"></span>
+                    <span x-show="!tweakLoading" x-text="tweakMode === 'manual' ? (locale === 'en' ? 'Save Segment' : 'Simpan Segmen') : (locale === 'en' ? 'Generate AI' : 'Generate AI')"></span>
                     <span x-show="tweakLoading" class="flex items-center gap-2">
                         <svg class="animate-spin w-4 h-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Memproses...
+                        <span x-text="locale === 'en' ? 'Processing...' : 'Memproses...'"></span>
                     </span>
                 </button>
             </div>

@@ -27,6 +27,33 @@
             }
         }
 
+        $getSettingVal = function($key, $default = null) use (&$globalSettings) {
+            try {
+                if (!isset($globalSettings[$key])) return $default;
+                $item = $globalSettings[$key];
+                if ($item instanceof \__PHP_Incomplete_Class) return $default;
+                if (is_object($item)) return $item->value ?? $default;
+                if (is_array($item)) return $item['value'] ?? $default;
+                return $default;
+            } catch (\Throwable) {
+                return $default;
+            }
+        };
+
+        $featureFlags = [
+            'enable_cv_pro' => (bool) $getSettingVal('feature_enable_cv_pro', true),
+            'pricing_show_cv_tab' => (bool) $getSettingVal('pricing_show_cv_tab', false),
+            'enable_pricing' => (bool) $getSettingVal('feature_enable_cv_pricing', true),
+            'enable_job_hub' => (bool) $getSettingVal('feature_enable_cv_job_hub', true),
+            'enable_keuangan' => (bool) $getSettingVal('feature_enable_cv_keuangan', true),
+            'enable_mock_interview' => (bool) $getSettingVal('feature_enable_cv_mock_interview', true),
+            'enable_linkedin_suite' => (bool) $getSettingVal('feature_enable_cv_linkedin_suite', true),
+            'enable_vision_blueprint' => (bool) $getSettingVal('feature_enable_vision_blueprint', true),
+            'enable_client_onboarding' => (bool) $getSettingVal('feature_enable_client_onboarding', true),
+            'enable_digital_contract' => (bool) $getSettingVal('feature_enable_digital_contract', true),
+            'midtrans_mode' => (bool) $getSettingVal('midtrans_compliance_strict_mode', true),
+        ];
+
         $pageTitle = 'Digital Services Hub';
         if (is_array($page->title)) {
             $pageTitle = $page->title[app()->getLocale()] ?? $page->title['en'] ?? $page->title['id'] ?? 'Digital Services Hub';
@@ -119,6 +146,7 @@
     @endphp
     @react('BreadcrumbIsland', ['paths' => $breadcrumbPaths])
 
+    <main class="flex-grow">
         @php
             $hasRenderedPricing = false;
         @endphp

@@ -213,15 +213,8 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
             )}
           </div>
 
+          {/* Empty Space for alignment since theme toggle is moved */}
           <div className="flex items-center gap-3">
-            {/* Dark / Light Mode Switch */}
-            <button 
-              onClick={toggleTheme} 
-              className="text-zinc-400 hover:text-white transition p-1 flex items-center gap-1 cursor-pointer" 
-              title={isDarkMode ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'}
-            >
-              {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5" />}
-            </button>
           </div>
         </div>
       </div>
@@ -326,6 +319,14 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
           {/* Action CTAs */}
           <div className="hidden sm:flex items-center gap-3">
+            {/* Dark / Light Mode Switch (Desktop) */}
+            <button 
+              onClick={toggleTheme} 
+              className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition p-1.5 flex items-center gap-1 cursor-pointer border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-none shadow-xs" 
+              title={isDarkMode ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'}
+            >
+              {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-500" /> : <Moon className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />}
+            </button>
             {/* Unified Language Selector Dropdown (Tier 1 Native & Tier 2 Global) */}
             <div 
               className="relative"
@@ -545,17 +546,37 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 rounded-none flex items-center gap-1.5"
-          >
-            {cartState.count > 0 && (
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            )}
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          {/* Mobile Actions (Language, Theme, Menu) */}
+          <div className="flex md:hidden items-center gap-2">
+            {/* Mobile Dark / Light Mode Switch */}
+            <button 
+              onClick={toggleTheme} 
+              className="p-2 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 rounded-none flex items-center" 
+              title={isDarkMode ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'}
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />}
+            </button>
 
+            {/* Mobile Language Button (Minimalist) */}
+            <button 
+              onClick={() => setMobileLangOpen(!mobileLangOpen)}
+              className="p-2 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 rounded-none flex items-center gap-1 font-mono text-[10px] font-bold"
+            >
+              <Globe className="w-4 h-4 text-emerald-500" />
+              <span>{activeTier2 ? activeTier2.toUpperCase() : lang.toUpperCase()}</span>
+            </button>
+
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 rounded-none flex items-center gap-1.5"
+            >
+              {cartState.count > 0 && (
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              )}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Dropdown Menu */}

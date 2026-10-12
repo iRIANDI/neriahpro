@@ -356,6 +356,17 @@ class VisionBlueprint extends Model
     }
 
     /**
+     * Check if blueprint is a digital self-service retail license.
+     */
+    public function isRetailLicense(): bool
+    {
+        return $this->project_status === 'Retail License'
+            || !empty($this->user_metadata['retail_tier'])
+            || !empty($this->user_metadata['package_tier'])
+            || str_contains(strtolower($this->slug ?? ''), '-retail-');
+    }
+
+    /**
      * Check if project scope is locked/frozen (anti-dispute).
      */
     public function isScopeFrozen(): bool
@@ -363,7 +374,8 @@ class VisionBlueprint extends Model
         return $this->signed_agreement 
             || $this->isDpConfirmed() 
             || !empty($this->document_sha256) 
-            || $this->documents()->where('scope_locked', true)->exists();
+            || $this->documents()->where('scope_locked', true)->exists()
+            || $this->isRetailLicense();
     }
 
     /**

@@ -87,6 +87,9 @@ class BlueprintController extends Controller
         if ($slug) {
             $existingBp = VisionBlueprint::where('slug', $slug)->first();
             if ($existingBp) {
+                if ($existingBp->isScopeFrozen()) {
+                    return redirect()->route('blueprint.show', $existingBp->slug);
+                }
                 $initialData = [
                     'namaBisnis' => $existingBp->nama_bisnis,
                     'clientName' => $existingBp->client_name,
@@ -465,6 +468,15 @@ class BlueprintController extends Controller
 
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
+
+        // Auto-heal: If this is a Retail License (or has a retail tier / paid order) but is_published is false, publish it immediately!
+        if ($blueprint->isRetailLicense() && ! $blueprint->is_published) {
+            $blueprint->update([
+                'is_published' => true,
+                'project_status' => 'Retail License',
+            ]);
+            $blueprint->refresh();
+        }
 
         $isScopeLocked = $blueprint->isScopeFrozen();
         $isDpConfirmed = $blueprint->isDpConfirmed();

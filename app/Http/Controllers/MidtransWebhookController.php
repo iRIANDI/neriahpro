@@ -371,6 +371,7 @@ class MidtransWebhookController extends Controller
                         'email' => $email,
                         'phone' => $phone,
                         'project_status' => $isRetail ? 'Retail License' : 'In Development (DP Paid)',
+                        'is_published' => true,
                         'is_free_grant' => false,
                         'user_metadata' => [
                             'user_id' => $user->id,
@@ -381,6 +382,12 @@ class MidtransWebhookController extends Controller
                             'purchased_at' => now()->toIso8601String(),
                             'lead_id' => $leadId,
                         ],
+                    ]);
+                    $blueprint->generateAndSavePrd();
+                } else {
+                    $blueprint->update([
+                        'is_published' => true,
+                        'project_status' => $isRetail ? 'Retail License' : 'In Development (DP Paid)',
                     ]);
                 }
 

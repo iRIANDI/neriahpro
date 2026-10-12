@@ -1592,114 +1592,73 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 <span>PORTAL KLIEN</span>
             </a>
 
-            <!-- Real-time Live Collaborative Presence Indicator -->
-            <div x-show="collaborators.length > 1" x-cloak class="flex items-center gap-2 px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-mono shrink-0 whitespace-nowrap">
-                <span class="w-2 h-2 bg-emerald-500 rounded-none animate-pulse"></span>
-                <span class="text-zinc-700 dark:text-zinc-300 font-bold" x-text="collaborators.length + ' Kolaborator Live'"></span>
-            </div>
-
-            <!-- Theme Toggle (Blueprint PRD Header) -->
-            <button type="button" @click="toggleTheme()" class="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center cursor-pointer shrink-0" :title="isDarkMode ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'">
-                <template x-if="isDarkMode">
-                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                </template>
-                <template x-if="!isDarkMode">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                </template>
-            </button>
-
-            <!-- One-Click Scaffold & Boilerplate Exporter Modal Button -->
-            <button type="button" @click="openScaffoldModal()" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap" title="Ekspor Docker Compose, SQL Migrasi, & Struktur Route">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                <span class="hidden sm:inline">EXPORT SCAFFOLD</span>
-                <span class="sm:hidden">SCAFFOLD</span>
-            </button>
-
-            <!-- Unified Language Selector Dropdown (Tier 1 Native & Tier 2 Global) -->
-            <div x-data="{ openLang: false, activeTier2: '' }" class="relative inline-block text-left shrink-0" @click.outside="openLang = false">
-                <button type="button" @click="openLang = !openLang" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap" title="Pilih Bahasa (Tier 1 & Tier 2)">
-                    <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
-                    <span class="uppercase text-[11px]" x-text="activeTier2 ? activeTier2 : locale.toUpperCase()">ID</span>
-                    <span class="text-[10px] text-zinc-400 hidden sm:inline" x-text="activeTier2 ? '(Global)' : (locale === 'id' ? '(ID)' : '(EN)')"></span>
-                    <svg class="w-3 h-3 text-zinc-400 transition-transform duration-150" :class="openLang ? 'rotate-180 text-emerald-500' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
-
-                <div x-show="openLang" x-cloak class="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-56 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-2xl z-[100] py-1.5 font-mono text-xs max-h-72 overflow-y-auto custom-prd-scrollbar space-y-1">
-                    <!-- TIER 1 // NATIVE PRECISE -->
-                    <div class="px-2.5 py-1 text-[10px] uppercase font-bold text-zinc-400 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-                        <span>TIER 1 // NATIVE PRECISE</span>
-                        <span class="text-[9px] px-1 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">RESMI</span>
-                    </div>
-                    <button type="button" @click="setLocale('id'); activeTier2 = ''; if(window.translateLanguage){ document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname; } openLang = false;" class="w-full text-left px-3 py-1.5 flex items-center justify-between text-xs transition cursor-pointer" :class="(!activeTier2 && locale === 'id') ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'">
-                        <span class="flex items-center gap-2"><span>🇮🇩</span><span>Bahasa Indonesia</span></span>
-                        <span class="text-[10px] text-emerald-500 font-bold font-mono" x-show="!activeTier2 && locale === 'id'">✓ ID</span>
-                    </button>
-                    <button type="button" @click="setLocale('en'); activeTier2 = ''; if(window.translateLanguage){ document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname; } openLang = false;" class="w-full text-left px-3 py-1.5 flex items-center justify-between text-xs transition cursor-pointer" :class="(!activeTier2 && locale === 'en') ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'">
-                        <span class="flex items-center gap-2"><span>🇺🇸</span><span>English (US)</span></span>
-                        <span class="text-[10px] text-emerald-500 font-bold font-mono" x-show="!activeTier2 && locale === 'en'">✓ EN</span>
-                    </button>
-
-                    @if($googleTranslateEnabled)
-                    <!-- TIER 2 // GLOBAL TRANSLATE -->
-                    <div class="px-2.5 py-1 text-[10px] uppercase font-bold text-zinc-400 border-y border-zinc-200 dark:border-zinc-800 flex items-center justify-between mt-1">
-                        <span>TIER 2 // GLOBAL TRANSLATE</span>
-                        <span class="text-[9px] text-zinc-400 font-mono">GOOGLE AI</span>
-                    </div>
-                    @foreach($allowedLangList as $lCode)
-                        @php
-                            $info = $langLabels[$lCode] ?? ['flag' => '🌐', 'name' => strtoupper($lCode)];
-                        @endphp
-                        <button type="button" @click="activeTier2 = '{{ strtoupper($lCode) }}'; window.translateLanguage('{{ $lCode }}'); openLang = false;" class="w-full text-left px-3 py-1.5 flex items-center justify-between text-xs transition cursor-pointer" :class="activeTier2 === '{{ strtoupper($lCode) }}' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'">
-                            <span class="flex items-center gap-2"><span>{{ $info['flag'] }}</span><span>{{ $info['name'] }}</span></span>
-                            <span class="text-[10px] text-zinc-400 uppercase font-mono">{{ $lCode }}</span>
-                        </button>
-                    @endforeach
-                    @endif
-                </div>
-            </div>
-
-            <!-- Unified Document Actions: Print, PDF, MD, .cursorrules -->
-            <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
-                <button type="button" onclick="window.printPrdDocument()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Cetak PRD (Print)">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                    <span class="hidden md:inline">PRINT</span>
-                </button>
-                <a href="{{ route('blueprint.download-pdf', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Dokumen PDF Resmi">
-                    <span>PDF</span>
-                </a>
-                <a href="{{ route('blueprint.download-md', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Markdown Asli (.MD)">
-                    <span class="hidden sm:inline">MD</span>
-                </a>
-                <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition flex items-center gap-1" title="Unduh .cursorrules / CLAUDE.md untuk AI IDE">
-                    <span class="hidden xl:inline">.CURSORRULES</span>
-                    <span class="xl:hidden">RULES</span>
-                </a>
-            </div>
-
-            <!-- Dedicated AI AGENT HELPER Trigger -->
-            <button type="button" @click="showAiPromptModal = true" class="px-2.5 sm:px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Buka Pusat Helper Prompt AI Agent (Antigravity, Cursor, Claude Code, Windsurf)">
-                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                <span class="hidden md:inline">PROMPT AGENT</span>
-            </button>
-
-            <!-- AI Orchestration Sprint Cockpit Button in Header -->
-            <button type="button" @click="jumpTo('section-3-5')" class="px-2.5 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none border border-zinc-700 dark:border-emerald-400 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Buka AI Agent Sprint Execution Cockpit">
-                <span class="w-1.5 h-1.5 rounded-none" :class="getDevCompletedCount() > 0 ? 'bg-emerald-400 dark:bg-black animate-pulse' : 'bg-amber-400 dark:bg-black'"></span>
-                <span class="hidden lg:inline">COCKPIT:</span>
-                <span x-text="getDevCompletedCount() + '/' + {{ $totalDevSteps }}"></span>
-            </button>
-
-            @if(!($blueprint->signed_agreement || ($isScopeLocked ?? false)))
-                <a href="{{ route('blueprint.create', ['slug' => $blueprint->slug]) }}" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 transition flex items-center gap-1 shrink-0 whitespace-nowrap" title="Lengkapi / Tambah Kebutuhan di Studio">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                    <span class="hidden xl:inline" x-text="locale === 'en' ? 'EDIT SPEC' : 'LENGKAPI'">LENGKAPI</span>
-                </a>
-            @else
-                <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-xs font-mono uppercase font-bold border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 cursor-not-allowed select-none shrink-0 whitespace-nowrap" 
-                      title="{{ $blueprint->project_status === 'Retail License' ? 'Lisensi PRD telah diterbitkan dan tidak dapat diregenerasi.' : 'Scope Terkunci: Dokumen telah ditandatangani dan tidak dapat diregenerasi.' }}">
-                    <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    <span class="hidden md:inline">{{ $blueprint->project_status === 'Retail License' ? 'RETAIL LICENSE' : 'LOCKED' }}</span>
+            @if(!$blueprint->is_published)
+                <span class="px-2.5 py-1 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-xs font-mono uppercase font-bold border border-amber-300 dark:border-amber-800 flex items-center gap-1.5 select-none shrink-0 whitespace-nowrap">
+                    <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    <span>ACCESS RESTRICTED // PRIVATE DRAFT</span>
                 </span>
+            @else
+                <!-- Real-time Live Collaborative Presence Indicator -->
+                <div x-show="collaborators.length > 1" x-cloak class="flex items-center gap-2 px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-mono shrink-0 whitespace-nowrap">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-none animate-pulse"></span>
+                    <span class="text-zinc-700 dark:text-zinc-300 font-bold" x-text="collaborators.length + ' Kolaborator Live'"></span>
+                </div>
+
+                <!-- One-Click Scaffold & Boilerplate Exporter Modal Button -->
+                <button type="button" @click="openScaffoldModal()" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap" title="Ekspor Docker Compose, SQL Migrasi, & Struktur Route">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span class="hidden sm:inline">EXPORT SCAFFOLD</span>
+                    <span class="sm:hidden">SCAFFOLD</span>
+                </button>
+
+                <!-- Unified Document Actions: Print, PDF, MD, .cursorrules -->
+                <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
+                    <button type="button" onclick="window.printPrdDocument()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Cetak PRD (Print)">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        <span class="hidden md:inline">PRINT</span>
+                    </button>
+                    <a href="{{ route('blueprint.download-pdf', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Dokumen PDF Resmi">
+                        <span>PDF</span>
+                    </a>
+                    <a href="{{ route('blueprint.download-md', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Markdown Asli (.MD)">
+                        <span class="hidden sm:inline">MD</span>
+                    </a>
+                    <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition flex items-center gap-1" title="Unduh .cursorrules / CLAUDE.md untuk AI IDE">
+                        <span class="hidden xl:inline">.CURSORRULES</span>
+                        <span class="xl:hidden">RULES</span>
+                    </a>
+                </div>
+
+                <!-- Dedicated AI AGENT HELPER Trigger -->
+                <button type="button" @click="showAiPromptModal = true" class="px-2.5 sm:px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Buka Pusat Helper Prompt AI Agent (Antigravity, Cursor, Claude Code, Windsurf)">
+                    <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    <span class="hidden md:inline">PROMPT AGENT</span>
+                </button>
+
+                <!-- AI Orchestration Sprint Cockpit Button in Header -->
+                <button type="button" @click="jumpTo('section-3-5')" class="px-2.5 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none border border-zinc-700 dark:border-emerald-400 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Buka AI Agent Sprint Execution Cockpit">
+                    <span class="w-1.5 h-1.5 rounded-none" :class="getDevCompletedCount() > 0 ? 'bg-emerald-400 dark:bg-black animate-pulse' : 'bg-amber-400 dark:bg-black'"></span>
+                    <span class="hidden lg:inline">COCKPIT:</span>
+                    <span x-text="getDevCompletedCount() + '/' + {{ $totalDevSteps }}"></span>
+                </button>
+
+                @php
+                    $isRetailLicense = ($blueprint->project_status === 'Retail License' || !empty($blueprint->user_metadata['retail_tier']) || !empty($blueprint->user_metadata['package_tier']) || str_contains(strtolower($blueprint->slug ?? ''), '-retail-'));
+                    $isLocked = $blueprint->signed_agreement || ($isScopeLocked ?? false) || $isRetailLicense;
+                @endphp
+
+                @if(!$isLocked)
+                    <a href="{{ route('blueprint.create', ['slug' => $blueprint->slug]) }}" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 transition flex items-center gap-1 shrink-0 whitespace-nowrap" title="Lengkapi / Tambah Kebutuhan di Studio">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <span class="hidden xl:inline" x-text="locale === 'en' ? 'EDIT SPEC' : 'LENGKAPI'">LENGKAPI</span>
+                    </a>
+                @else
+                    <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-xs font-mono uppercase font-bold border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 cursor-not-allowed select-none shrink-0 whitespace-nowrap" 
+                          title="{{ $isRetailLicense ? 'Lisensi Retail telah diterbitkan dan tidak dapat diubah.' : 'Scope Terkunci: Dokumen telah ditandatangani dan tidak dapat diubah.' }}">
+                        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <span class="hidden md:inline">{{ $isRetailLicense ? 'RETAIL LICENSE' : 'SCOPE LOCKED' }}</span>
+                    </span>
+                @endif
             @endif
         </div>
     </header>

@@ -7,11 +7,19 @@ use Illuminate\Http\Request;
 use App\Models\VisionBlueprint;
 use App\Models\ProjectIssue;
 use App\Models\ProjectComment;
+use Illuminate\Support\Facades\Schema;
 
 class ProjectThreadController extends Controller
 {
     public function storeIssue(Request $request, $slug)
     {
+        if (!Schema::hasTable('project_issues')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Layanan tiket sedang dalam pemeliharaan (tabel database belum aktif).'
+            ], 503);
+        }
+
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         
         $validated = $request->validate([
@@ -41,6 +49,13 @@ class ProjectThreadController extends Controller
 
     public function storeComment(Request $request, $slug, $issueId)
     {
+        if (!Schema::hasTable('project_comments') || !Schema::hasTable('project_issues')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Layanan komentar sedang dalam pemeliharaan (tabel database belum aktif).'
+            ], 503);
+        }
+
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $issue = ProjectIssue::where('id', $issueId)->where('vision_blueprint_id', $blueprint->id)->firstOrFail();
 

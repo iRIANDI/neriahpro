@@ -3177,7 +3177,13 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
 
                     @php
-                        $crIssues = $blueprint->issues()->where('type', 'change_request')->latest()->get();
+                        try {
+                            $crIssues = \Illuminate\Support\Facades\Schema::hasTable('project_issues')
+                                ? $blueprint->issues()->where('type', 'change_request')->latest()->get()
+                                : collect();
+                        } catch (\Throwable $e) {
+                            $crIssues = collect();
+                        }
                     @endphp
                     @if($crIssues->count() > 0)
                         <div class="mt-4 border-t border-amber-500/20 pt-4 space-y-3">
@@ -3500,7 +3506,13 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     <!-- Tab 6: UAT & Thread -->
                                     @php
                                         // Retrieve issues for this specific feature
-                                        $featureIssues = $blueprint->issues()->where('feature_id', $featKey)->with('comments')->latest()->get();
+                                        try {
+                                            $featureIssues = \Illuminate\Support\Facades\Schema::hasTable('project_issues')
+                                                ? $blueprint->issues()->where('feature_id', $featKey)->with('comments')->latest()->get()
+                                                : collect();
+                                        } catch (\Throwable $e) {
+                                            $featureIssues = collect();
+                                        }
                                     @endphp
                                     <div x-show="specTab === 'uat'" class="space-y-4 font-mono text-xs" style="display: none;">
                                         <!-- Micro Chat / Thread Container -->

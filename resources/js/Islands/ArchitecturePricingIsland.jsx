@@ -654,95 +654,76 @@ const ensureSnapReady = (snapUrl, clientKey) => {
 
             {/* 2. DYNAMIC 4-TAB NAVIGATION SWITCHER (RETAIL | STUDIO | MATRIX | FAQ) */}
             <div className="flex justify-center mb-8 sm:mb-10 w-full px-2 sm:px-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 p-1.5 bg-zinc-200/80 dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs font-mono text-xs w-full max-w-6xl gap-1.5 sm:gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 p-1.5 bg-zinc-100 dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs font-mono text-xs w-full max-w-6xl gap-1.5 sm:gap-2">
                 
-                {/* TAB 1: RETAIL */}
-                <button
-                  type="button"
-                  id="tab-btn-retail"
-                  onClick={() => switchPricingTab('retail')}
-                  className={`px-3 py-3 font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer ${
-                    pricingSectionTab === 'retail'
-                      ? 'bg-emerald-600 text-white shadow-xs font-mono'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <ShoppingBag className="w-4 h-4 shrink-0" />
-                  <div className="flex flex-col items-start leading-tight text-left">
-                    <span className="whitespace-nowrap font-bold">{isEn ? '01. Retail Packages' : '01. Paket Retail'}</span>
-                    <span className={`whitespace-nowrap text-[9px] font-black tracking-widest uppercase ${
-                      pricingSectionTab === 'retail' 
-                        ? 'text-zinc-200' 
-                        : 'text-zinc-500'
-                    }`}>SELF-SERVICE</span>
-                  </div>
-                </button>
-
-                {/* TAB 2: PROJECT STUDIO */}
-                <button
-                  type="button"
-                  id="tab-btn-project"
-                  onClick={() => switchPricingTab('project')}
-                  className={`px-3 py-3 font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer ${
-                    pricingSectionTab === 'project'
-                      ? 'bg-zinc-900 text-white dark:bg-white dark:text-black shadow-xs font-mono'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <Rocket className="w-4 h-4 shrink-0 text-emerald-500 dark:text-emerald-600" />
-                  <div className="flex flex-col items-start leading-tight text-left">
-                    <span className="whitespace-nowrap font-bold">{isEn ? '02. Studio Packages' : '02. Paket Studio'}</span>
-                    <span className={`whitespace-nowrap text-[9px] font-black tracking-widest uppercase ${
-                      pricingSectionTab === 'project' 
-                        ? 'text-zinc-200' 
-                        : 'text-zinc-500'
-                    }`}>TURNKEY</span>
-                  </div>
-                </button>
-
-                {/* TAB 3: MATRIX */}
-                <button
-                  type="button"
-                  id="tab-btn-matrix"
-                  onClick={() => switchPricingTab('matrix')}
-                  className={`px-3 py-3 font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer ${
-                    pricingSectionTab === 'matrix'
-                      ? 'bg-emerald-600 text-white shadow-xs font-mono'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <Layers className="w-4 h-4 shrink-0" />
-                  <div className="flex flex-col items-start leading-tight text-left">
-                    <span className="whitespace-nowrap font-bold">{isEn ? '03. Comparison Matrix' : '03. Matriks Perbandingan'}</span>
-                    <span className={`whitespace-nowrap text-[9px] font-black tracking-widest uppercase ${
-                      pricingSectionTab === 'matrix' 
-                        ? 'text-zinc-200' 
-                        : 'text-zinc-500'
-                    }`}>7 PILAR</span>
-                  </div>
-                </button>
-
-                {/* TAB 4: FAQ */}
-                <button
-                  type="button"
-                  id="tab-btn-faq"
-                  onClick={() => switchPricingTab('faq')}
-                  className={`px-3 py-3 font-black uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2 cursor-pointer ${
-                    pricingSectionTab === 'faq'
-                      ? 'bg-emerald-600 text-white shadow-xs font-mono'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-300/50 dark:hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <HelpCircle className="w-4 h-4 shrink-0" />
-                  <div className="flex flex-col items-start leading-tight text-left">
-                    <span className="whitespace-nowrap font-bold">{isEn ? '04. FAQ Project OS' : '04. FAQ Project OS'}</span>
-                    <span className={`whitespace-nowrap text-[9px] font-black tracking-widest uppercase ${
-                      pricingSectionTab === 'faq' 
-                        ? 'text-zinc-200' 
-                        : 'text-zinc-500'
-                    }`}>19 FAQ</span>
-                  </div>
-                </button>
+                {[
+                  {
+                    id: 'retail',
+                    num: '01',
+                    title: isEn ? 'Retail Packages' : 'Paket Retail',
+                    sub: 'SELF-SERVICE',
+                    icon: ShoppingBag,
+                  },
+                  {
+                    id: 'project',
+                    num: '02',
+                    title: isEn ? 'Studio Packages' : 'Paket Studio',
+                    sub: 'TURNKEY',
+                    icon: Rocket,
+                  },
+                  {
+                    id: 'matrix',
+                    num: '03',
+                    title: isEn ? 'Comparison Matrix' : 'Matriks Perbandingan',
+                    sub: '7 PILAR',
+                    icon: Layers,
+                  },
+                  {
+                    id: 'faq',
+                    num: '04',
+                    title: 'FAQ Project OS',
+                    sub: '19 FAQ',
+                    icon: HelpCircle,
+                  }
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = pricingSectionTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      id={`tab-btn-${tab.id}`}
+                      onClick={() => switchPricingTab(tab.id)}
+                      className={`group px-3.5 py-3 uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2.5 cursor-pointer border-2 ${
+                        isActive
+                          ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-white dark:text-zinc-950 dark:border-white shadow-sm font-mono'
+                          : 'bg-white/70 hover:bg-white text-zinc-700 hover:text-zinc-950 border-zinc-200/90 hover:border-zinc-400 dark:bg-zinc-950/70 dark:hover:bg-zinc-800/80 dark:text-zinc-300 dark:hover:text-white dark:border-zinc-800/90 dark:hover:border-zinc-700 font-mono'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 shrink-0 transition-colors ${
+                        isActive 
+                          ? 'text-emerald-400 dark:text-emerald-600' 
+                          : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'
+                      }`} />
+                      <div className="flex flex-col items-start leading-tight text-left">
+                        <span className={`whitespace-nowrap font-bold text-xs ${
+                          isActive 
+                            ? 'text-white dark:text-zinc-950 font-black' 
+                            : 'text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-950 dark:group-hover:text-white'
+                        }`}>
+                          {tab.num}. {tab.title}
+                        </span>
+                        <span className={`whitespace-nowrap text-[9px] font-mono font-black tracking-widest uppercase mt-0.5 px-1.5 py-0.2 rounded-none border ${
+                          isActive
+                            ? 'bg-zinc-800 text-emerald-400 border-zinc-700 dark:bg-emerald-100 dark:text-emerald-950 dark:border-emerald-300'
+                            : 'bg-zinc-200/60 text-zinc-600 border-zinc-300/80 dark:bg-zinc-900 dark:text-zinc-400 dark:border-zinc-800 group-hover:text-zinc-800 dark:group-hover:text-zinc-200'
+                        }`}>
+                          {tab.sub}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
 
               </div>
             </div>

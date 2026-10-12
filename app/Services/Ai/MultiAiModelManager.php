@@ -310,8 +310,9 @@ class MultiAiModelManager
      */
     protected static function callGemini(string $apiKey, string $model, string $prompt, string $system, string $tier): ?string
     {
-        $maxTokens = $tier === 'prd' ? 4000 : 800;
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+        $maxTokens = $tier === 'prd' ? 8192 : 4000;
+        $cleanModel = ltrim($model, 'models/');
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$cleanModel}:generateContent?key={$apiKey}";
 
         $payload = [
             'contents' => [
@@ -327,7 +328,7 @@ class MultiAiModelManager
             $payload['systemInstruction'] = ['parts' => [['text' => $system]]];
         }
 
-        $timeout = $tier === 'prd' ? 30 : 10;
+        $timeout = $tier === 'prd' ? 60 : 30;
         $response = Http::timeout($timeout)->post($url, $payload);
 
         if ($response->successful()) {
@@ -344,7 +345,7 @@ class MultiAiModelManager
      */
     protected static function callAnthropic(string $apiKey, string $model, string $prompt, string $system, string $tier): ?string
     {
-        $maxTokens = $tier === 'prd' ? 4000 : 800;
+        $maxTokens = $tier === 'prd' ? 8192 : 4000;
         $url = "https://api.anthropic.com/v1/messages";
 
         $payload = [
@@ -360,7 +361,7 @@ class MultiAiModelManager
             $payload['system'] = $system;
         }
 
-        $timeout = $tier === 'prd' ? 30 : 10;
+        $timeout = $tier === 'prd' ? 60 : 30;
         $response = Http::timeout($timeout)
             ->withHeaders([
                 'x-api-key' => $apiKey,
@@ -386,7 +387,7 @@ class MultiAiModelManager
         $baseUrl = self::getBaseUrl($provider);
         $url = "{$baseUrl}/chat/completions";
 
-        $maxTokens = $tier === 'prd' ? 4000 : 800;
+        $maxTokens = $tier === 'prd' ? 8192 : 4000;
 
         $messages = [];
         if (!empty($system)) {
@@ -411,7 +412,7 @@ class MultiAiModelManager
             $headers['X-Title'] = 'Neriah Pro Studio OS';
         }
 
-        $timeout = $tier === 'prd' ? 35 : 12;
+        $timeout = $tier === 'prd' ? 60 : 35;
         $response = Http::timeout($timeout)
             ->withHeaders($headers)
             ->post($url, $payload);

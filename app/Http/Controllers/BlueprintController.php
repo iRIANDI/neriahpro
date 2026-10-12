@@ -1288,7 +1288,7 @@ class BlueprintController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Gagal memperdalam segmen: ' . $e->getMessage(),
-                ], 500);
+                ], 422);
             }
         }
 
@@ -1496,7 +1496,7 @@ class BlueprintController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage() ?: 'Terjadi kesalahan saat memproses pendalaman file dengan AI.',
-            ], 500);
+            ], 422);
         }
     }
 

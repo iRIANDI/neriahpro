@@ -577,14 +577,78 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [isDarkMode, setIsDarkMode] = useState(false);
   const t = TRANSLATIONS[lang];
 
+  // Requested tier from URL query (?tier=spark, ?package=starter, etc.)
+  const requestedTier = useMemo(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      return sp.get('tier') || sp.get('package') || sp.get('package_tier') || initialData.selected_tier || initialData.tier || '';
+    } catch (e) {
+      return initialData.selected_tier || initialData.tier || '';
+    }
+  }, [initialData]);
+
+  // Track Default Presets Generator (Prevents Studio 50/50 contract terms from leaking into Retail licenses)
+  const getTrackDefaults = useCallback((track, tier = '') => {
+    const isEn = lang === 'en';
+    const cleanTier = String(tier || requestedTier || '').toLowerCase();
+    if (track === 'retail') {
+      let defaultBudget = isEn 
+        ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)' 
+        : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)';
+      let defaultTermin = isEn
+        ? 'Spark Package (Free): $0 / Free Instant Architectural Audit & Blueprint Access'
+        : 'Paket Spark (Gratis): Rp 0 / Akses Audit Arsitektur & Cetak Biru Gratis 100%';
+
+      if (cleanTier === 'starter' || cleanTier === 'lite' || cleanTier === 'retail_starter' || cleanTier === 'retail_lite') {
+        defaultBudget = isEn ? 'Starter: Rp 190,000 (PRD 26 Parameters, Strict ULID DDL & AI Directives)' : 'Starter: Rp 190.000 (PRD 26 Parameter, Schema DDL & AI Directives)';
+        defaultTermin = isEn ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
+      } else if (cleanTier === 'pro' || cleanTier === 'retail_pro') {
+        defaultBudget = isEn ? 'Pro: Rp 490,000 (Full Architecture Bundle: DDL, Docker Compose & Seeder)' : 'Pro: Rp 490.000 (Bundel Lengkap DDL, Docker Compose & Seeder)';
+        defaultTermin = isEn ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
+      } else if (cleanTier === 'ultimate' || cleanTier === 'retail_ultimate') {
+        defaultBudget = isEn ? 'Ultimate: Rp 1,490,000 (Full 7 Pillars Software Factory OS Turnkey Starter Kit)' : 'Ultimate: Rp 1.490.000 (Full 7 Pilar Software Factory OS Turnkey Starter Kit)';
+        defaultTermin = isEn ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
+      }
+
+      return {
+        kisaranBudget: defaultBudget,
+        garansiSla: isEn
+          ? 'Self-Service Delivery: Instant PRD Fortune 500, Strict ULID DDL & Docker Starter Kit Handover'
+          : 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit',
+        terminPembayaran: defaultTermin,
+      };
+    }
+
+    // Studio Defaults
+    return {
+      kisaranBudget: isEn
+        ? '$1,000 - $3,000 USD (Growth / Custom Business Portal - Multi-Role & Gateway)'
+        : 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
+      garansiSla: isEn
+        ? '30 Days Post-Launch Bug Warranty Free of Charge + Full Private GitHub Repository Handover'
+        : '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
+      terminPembayaran: isEn
+        ? 'Standard 50/50: 50% Kickoff DP & 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap)'
+        : 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+    };
+  }, [lang, requestedTier]);
+
   // Execution Track: 'retail' (Jalur Mandiri) vs 'studio' (Jalur Turnkey Dedicated)
   const [currentTrack, setCurrentTrack] = useState(() => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const qTrack = urlParams.get('track');
       if (qTrack === 'studio' || qTrack === 'retail') return qTrack;
+      const qTier = urlParams.get('tier') || urlParams.get('package') || urlParams.get('package_tier');
+      if (qTier && (qTier.includes('retail') || ['spark', 'starter', 'pro', 'ultimate', 'lite'].includes(qTier.toLowerCase()))) {
+        return 'retail';
+      }
+      if (qTier && ['advisory', 'starter_umkm', 'mvp', 'full_mvp'].includes(qTier.toLowerCase())) {
+        return 'studio';
+      }
     } catch (e) {}
     if (initialData?.selected_track === 'studio' || initialData?.track === 'studio') return 'studio';
+    if (initialData?.selected_tier && ['spark', 'starter', 'pro', 'ultimate', 'lite'].includes(String(initialData.selected_tier).toLowerCase())) return 'retail';
     return 'retail';
   });
 
@@ -595,6 +659,44 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       url.searchParams.set('track', newTrack);
       window.history.replaceState({}, '', url.toString());
     } catch (e) {}
+
+    // Auto-align fields 21, 22, 23 to match new track to prevent leaking Studio 50/50 into Retail and vice versa
+    const trackDefs = getTrackDefaults(newTrack, requestedTier);
+    setFormData(prev => {
+      const isRetailTarget = newTrack === 'retail';
+      let nextBudget = prev.kisaranBudget;
+      let nextSla = prev.garansiSla;
+      let nextTermin = prev.terminPembayaran;
+
+      if (isRetailTarget) {
+        if (!nextBudget || nextBudget.includes('15.000.000') || nextBudget.includes('Growth') || nextBudget.includes('50.000.000') || nextBudget.includes('Advisory') || nextBudget.includes('Starter UMKM')) {
+          nextBudget = trackDefs.kisaranBudget;
+        }
+        if (!nextSla || nextSla.includes('Garansi Bug') || nextSla.includes('Pascameluncur')) {
+          nextSla = trackDefs.garansiSla;
+        }
+        if (!nextTermin || nextTermin.includes('50/50') || nextTermin.includes('Milestone') || nextTermin.includes('DP Kickoff')) {
+          nextTermin = trackDefs.terminPembayaran;
+        }
+      } else {
+        if (!nextBudget || nextBudget.includes('Spark') || nextBudget.includes('Starter: Rp 190') || nextBudget.includes('Pro: Rp 490') || nextBudget.includes('Ultimate: Rp 1.490')) {
+          nextBudget = trackDefs.kisaranBudget;
+        }
+        if (!nextSla || nextSla.includes('Lisensi Mandiri') || nextSla.includes('Akses Seumur Hidup') || nextSla.includes('Dukungan Arsitektur')) {
+          nextSla = trackDefs.garansiSla;
+        }
+        if (!nextTermin || nextTermin.includes('Spark') || nextTermin.includes('Pembayaran Penuh 100%') || nextTermin.includes('Self-Service Delivery')) {
+          nextTermin = trackDefs.terminPembayaran;
+        }
+      }
+
+      return {
+        ...prev,
+        kisaranBudget: nextBudget,
+        garansiSla: nextSla,
+        terminPembayaran: nextTermin,
+      };
+    });
   };
 
   // Country code selector
@@ -751,9 +853,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   // Toast Notification State
   const [toast, setToast] = useState(null);
 
+  // Centralized Toast Notification (Single Source of Truth - Prevents Double Toast)
   const showLocalToast = useCallback((type, message, title = '') => {
-    if (window.showToast) {
+    if (typeof window !== 'undefined' && window.showToast) {
       window.showToast({ type, message, title });
+      return;
     }
     setToast({ type, message, title });
     setTimeout(() => {
@@ -809,9 +913,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     kepatuhanKeamanan: initialData.kepatuhanKeamanan || 'Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)',
 
     // BLOK F: Budget, Garansi SLA & PIC (6)
-    kisaranBudget: initialData.kisaranBudget || 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
-    garansiSla: initialData.garansiSla || '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
-    terminPembayaran: initialData.terminPembayaran || 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+    kisaranBudget: (currentTrack === 'retail' && (!initialData.kisaranBudget || initialData.kisaranBudget.includes('15.000.000') || initialData.kisaranBudget.includes('Growth') || initialData.kisaranBudget.includes('50.000.000')))
+      ? getTrackDefaults('retail', requestedTier).kisaranBudget
+      : (initialData.kisaranBudget || 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)'),
+    garansiSla: (currentTrack === 'retail' && (!initialData.garansiSla || initialData.garansiSla.includes('Garansi Bug') || initialData.garansiSla.includes('Pascameluncur')))
+      ? getTrackDefaults('retail', requestedTier).garansiSla
+      : (initialData.garansiSla || '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub'),
+    terminPembayaran: (currentTrack === 'retail' && (!initialData.terminPembayaran || initialData.terminPembayaran.includes('50/50') || initialData.terminPembayaran.includes('Milestone') || initialData.terminPembayaran.includes('DP Kickoff')))
+      ? getTrackDefaults('retail', requestedTier).terminPembayaran
+      : (initialData.terminPembayaran || 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)'),
     clientName: initialData.clientName || '',
     email: initialData.email || '',
     phone: initialData.phone || '',
@@ -1798,9 +1908,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       jangkauanPasar: 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
       outOfScope: '',
       kepatuhanKeamanan: 'Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)',
-      kisaranBudget: 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
-      garansiSla: '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
-      terminPembayaran: 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+      kisaranBudget: getTrackDefaults(currentTrack, requestedTier).kisaranBudget,
+      garansiSla: getTrackDefaults(currentTrack, requestedTier).garansiSla,
+      terminPembayaran: getTrackDefaults(currentTrack, requestedTier).terminPembayaran,
       clientName: '',
       email: '',
       phone: '',
@@ -4462,45 +4572,105 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           <div className="space-y-6 mb-8">
             {/* Field 21: kisaranBudget */}
             <div id="field-kisaranBudget">
-              <label className={labelClass}>
-                {lang === 'en' ? '21. Investment Budget Allocation *' : '21. Alokasi Kisaran Budget Investasi *'}
-              </label>
+              <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+                <label className={labelClass}>
+                  {currentTrack === 'retail'
+                    ? (lang === 'en' ? '21. Software Factory OS License Allocation *' : '21. Alokasi Lisensi Digital Retail (Software Factory OS) *')
+                    : (lang === 'en' ? '21. Dedicated Studio Investment Budget *' : '21. Alokasi Kisaran Budget Investasi Turnkey Studio *')}
+                </label>
+                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${
+                  currentTrack === 'retail'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
+                    : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
+                }`}>
+                  {currentTrack === 'retail'
+                    ? (lang === 'en' ? 'Self-Service (In-House Team)' : 'Jalur Mandiri (Programmer Sendiri)')
+                    : (lang === 'en' ? 'Dedicated Studio (Turnkey)' : 'Jalur Turnkey (Dedicated Studio)')}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2 font-sans">
+                {currentTrack === 'retail'
+                  ? (lang === 'en' ? 'Choose your Software Factory OS architectural blueprint bundle for internal coding (zero development agency markup).' : 'Pilih paket lisensi bundel cetak biru arsitektur Fortune 500 untuk dikoding tim internal Anda.')
+                  : (lang === 'en' ? 'Turnkey end-to-end development by Neriah Pro Senior Architect with bug warranty & managed sprint.' : 'Estimasi alokasi investasi pengerjaan penuh turnkey oleh tim Neriah Pro bergaransi SLA.')}
+              </p>
+              
+              {/* Presets */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {(currentTrack === 'retail' ? [
+                  lang === 'en' ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)' : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)',
+                  lang === 'en' ? 'Starter: Rp 190,000 (PRD 26 Parameters, Strict ULID DDL & AI Directives)' : 'Starter: Rp 190.000 (PRD 26 Parameter, Schema DDL & AI Directives)',
+                  lang === 'en' ? 'Pro: Rp 490,000 (Full Architecture Bundle: DDL, Docker Compose & Seeder)' : 'Pro: Rp 490.000 (Bundel Lengkap DDL, Docker Compose & Seeder)',
+                  lang === 'en' ? 'Ultimate: Rp 1,490,000 (Full 7 Pillars Software Factory OS Turnkey Starter Kit)' : 'Ultimate: Rp 1.490.000 (Full 7 Pilar Software Factory OS Turnkey Starter Kit)',
+                ] : [
+                  lang === 'en' ? 'Advisory Tier: Rp 2,500,000 (PRD 26 Parameters, Strict DDL & Gantt WBS)' : 'Advisory Tier: Rp 2.500.000 (PRD 26 Parameter, Strict DDL & Gantt WBS)',
+                  lang === 'en' ? 'UMKM Digital Starter: Rp 3,750,000 (Cashier Web Engine & Admin Dashboard)' : 'UMKM Digital Starter: Rp 3.750.000 (Engine Transaksi Web Kasir & Admin Dashboard)',
+                  lang === 'en' ? '$1,000 - $3,000 USD (Growth / Custom Business Portal - Multi-Role & Gateway)' : 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
+                  lang === 'en' ? 'Enterprise Monolith: Rp 50,000,000 (Dedicated Senior Architect Squad - Full Turnkey)' : 'Enterprise Monolith: Rp 50.000.000 (Dedicated Senior Architect Squad - Full Turnkey)',
+                ]).map((tierOpt, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => updateField('kisaranBudget', tierOpt)}
+                    className={`px-3 py-1.5 text-xs font-mono border transition ${
+                      formData.kisaranBudget === tierOpt
+                        ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
+                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
+                    }`}
+                  >
+                    {tierOpt}
+                  </button>
+                ))}
+              </div>
               <input
                 type="text"
                 value={formData.kisaranBudget}
                 onChange={(e) => updateField('kisaranBudget', e.target.value)}
-                placeholder={lang === 'en' ? "e.g. $1,000 - $3,000 USD (Growth Monolith)" : "Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)"}
+                placeholder={currentTrack === 'retail' ? "Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)" : "Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)"}
                 className={inputClass}
               />
             </div>
 
-            {/* Field 22: garansiSla (NEW & CRITICAL) */}
+            {/* Field 22: garansiSla */}
             <div id="field-garansiSla">
-              <label className={labelClass}>
-                {lang === 'en'
-                  ? '22. Post-Launch Bug Warranty, SLA & Git Repo Handover *'
-                  : '22. Skema Garansi Pascameluncur, SLA & Serah Terima Repo Git *'}
-              </label>
+              <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+                <label className={labelClass}>
+                  {currentTrack === 'retail'
+                    ? (lang === 'en' ? '22. Deliverable Model & Technical Support *' : '22. Model Serah Terima Berkas & Dukungan Teknis Lisensi Retail *')
+                    : (lang === 'en' ? '22. Post-Launch Bug Warranty, SLA & Git Repo Handover *' : '22. Skema Garansi Pascameluncur, SLA & Serah Terima Repo Git *')}
+                </label>
+                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${
+                  currentTrack === 'retail'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
+                    : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
+                }`}>
+                  {currentTrack === 'retail'
+                    ? (lang === 'en' ? 'Self-Service Assets Handover' : 'Serah Terima Artefak Siap Pakai')
+                    : (lang === 'en' ? 'Studio Bug Warranty & SLA' : 'Garansi Pengerjaan Kode Studio')}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2 font-sans">
+                {currentTrack === 'retail'
+                  ? (lang === 'en' ? 'Because your internal team develops the code, Neriah Pro delivers verified ready-to-run architecture assets & lifetime portal access.' : 'Karena koding dikerjakan mandiri oleh programmer Anda, Neriah Pro menyerahkan seluruh artefak arsitektur terverifikasi & akses unduhan seumur hidup.')
+                  : (lang === 'en' ? 'Managed quality assurance and bug fixing warranty directly by Neriah Pro engineering squad.' : 'Jaminan penanganan bug pascameluncur dan pemeliharaan kode langsung oleh Neriah Pro.')}
+              </p>
               <div className="flex flex-wrap gap-2 mb-2">
-                {[
-                  lang === 'en'
-                    ? '30 Days Post-Launch Bug Warranty Free of Charge + Full Private GitHub Repository Handover'
-                    : '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
-                  lang === 'en'
-                    ? '60 Days Bug Warranty + GitHub Handover + Operational Staff Training Session'
-                    : '60 Hari Garansi Bug + Handover Repo Git + Sesi Training Staf Operasional',
-                  lang === 'en'
-                    ? '30-Day Warranty + Ongoing Monthly Managed Maintenance SLA (Automated Backups & Security Patches)'
-                    : 'Garansi 30 Hari + Kontrak Managed Maintenance Bulanan (SLA Backup & Security Patch)'
-                ].map((sla, idx) => (
+                {(currentTrack === 'retail' ? [
+                  lang === 'en' ? 'Self-Service Delivery: Instant PRD Fortune 500, Strict ULID DDL & Docker Starter Kit Handover' : 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit',
+                  lang === 'en' ? 'Permanent Access: Lifetime Downloads & Artifact Archives in Neriah Pro Client Portal' : 'Akses Seumur Hidup: Unduhan Permanen Berkas & Arsip Dokumen di Portal Klien Neriah Pro',
+                  lang === 'en' ? 'Architectural Validation: Verification Support via AI Co-Pilot & Client Portal Gateway' : 'Dukungan Arsitektur: Konsultasi Verifikasi Spesifikasi via AI Co-Pilot & Portal Klien',
+                ] : [
+                  lang === 'en' ? '30 Days Post-Launch Bug Warranty Free of Charge + Full Private GitHub Repository Handover' : '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
+                  lang === 'en' ? '60 Days Bug Warranty + GitHub Handover + Operational Staff Training Session' : '60 Hari Garansi Bug + Handover Repo Git + Sesi Training Staf Operasional',
+                  lang === 'en' ? '30-Day Warranty + Ongoing Monthly Managed Maintenance SLA (Automated Backups & Security Patches)' : 'Garansi 30 Hari + Kontrak Managed Maintenance Bulanan (SLA Backup & Security Patch)',
+                ]).map((sla, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => updateField('garansiSla', sla)}
                     className={`px-3 py-1.5 text-xs font-mono border transition ${
                       formData.garansiSla === sla
-                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
-                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
+                        ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
+                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
                     }`}
                   >
                     {sla}
@@ -4515,33 +4685,47 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               />
             </div>
 
-            {/* Field 23: terminPembayaran (NEW & CRITICAL) */}
+            {/* Field 23: terminPembayaran */}
             <div id="field-terminPembayaran">
-              <label className={labelClass}>
-                {lang === 'en'
-                  ? '23. Payment Milestone Terms & Schedule *'
-                  : '23. Integrasi Skema Termin Pembayaran & Jadwal Milestone *'}
-              </label>
+              <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+                <label className={labelClass}>
+                  {currentTrack === 'retail'
+                    ? (lang === 'en' ? '23. Retail License Transaction & Access Scheme *' : '23. Skema Transaksi & Akses Lisensi Retail *')
+                    : (lang === 'en' ? '23. Payment Milestone Terms & Schedule *' : '23. Integrasi Skema Termin Pembayaran & Jadwal Milestone *')}
+                </label>
+                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${
+                  currentTrack === 'retail'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
+                    : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
+                }`}>
+                  {currentTrack === 'retail'
+                    ? (lang === 'en' ? 'Instant Access (No 50/50 DP)' : 'Akses Instan (Tanpa Termin DP 50/50)')
+                    : (lang === 'en' ? 'Escrow DP 50% Contract' : 'Kontrak Escrow Termin DP 50%')}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2 font-sans">
+                {currentTrack === 'retail'
+                  ? (lang === 'en' ? 'Self-service licenses are instant deliverables. No milestone lock, no agency contractual terms.' : 'Lisensi retail adalah produk digital instan mandiri. Bukan kontrak pengerjaan agensi ber-termin 50/50.')
+                  : (lang === 'en' ? 'Turnkey studio development with milestones protected by Escrow DP 50% & UAT sign-off.' : 'Pengerjaan koding studio dengan termin bertahap yang dilindungi garansi serah terima UAT.')}
+              </p>
               <div className="flex flex-wrap gap-2 mb-2">
-                {[
-                  lang === 'en'
-                    ? 'Standard 50/50: 50% Kickoff DP & 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap)'
-                    : 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
-                  lang === 'en'
-                    ? 'Milestone 30/40/30: 30% Kickoff DP, 40% MVP Demo Completed, 30% Final Go-Live Settlement'
-                    : 'Termin Milestone 30/40/30: 30% DP Kickoff, 40% Demo MVP Selesai, 30% Pelunasan Go-Live',
-                  lang === 'en'
-                    ? '100% Full Upfront Payment (Priority Dedicated Squad Allocation)'
-                    : 'Termin Pelunasan Penuh 100% Upfront (Prioritas Utama Dedicated Squad)'
-                ].map((termin, idx) => (
+                {(currentTrack === 'retail' ? [
+                  lang === 'en' ? 'Spark Package (Free): $0 / Free Instant Architectural Audit & Blueprint Access' : 'Paket Spark (Gratis): Rp 0 / Akses Audit Arsitektur & Cetak Biru Gratis 100%',
+                  lang === 'en' ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)',
+                  lang === 'en' ? 'Direct Self-Service: Automated Real-Time Webhook Verification & License Key Issuance' : 'Self-Service Delivery: Verifikasi Otomatis Webhook Midtrans Real-Time & Lisensi Instan',
+                ] : [
+                  lang === 'en' ? 'Standard 50/50: 50% Kickoff DP & 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap)' : 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+                  lang === 'en' ? 'Milestone 30/40/30: 30% Kickoff DP, 40% MVP Demo Completed, 30% Final Go-Live Settlement' : 'Termin Milestone 30/40/30: 30% DP Kickoff, 40% Demo MVP Selesai, 30% Pelunasan Go-Live',
+                  lang === 'en' ? '100% Full Upfront Payment (Priority Dedicated Squad Allocation)' : 'Termin Pelunasan Penuh 100% Upfront (Prioritas Utama Dedicated Squad)',
+                ]).map((termin, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => updateField('terminPembayaran', termin)}
                     className={`px-3 py-1.5 text-xs font-mono border transition ${
                       formData.terminPembayaran === termin
-                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
-                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
+                        ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
+                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
                     }`}
                   >
                     {termin}

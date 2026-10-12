@@ -635,8 +635,22 @@ class BlueprintDiscoveryService
         ];
 
         $proactiveSuggestions = $this->generateProactiveSuggestions($corpus, $domain, $isEn);
-        $completeness = $this->calculateCompleteness($baseData, $isEn);
         $trackRecommendation = $this->evaluateTrackRecommendation($baseData, $corpus, $domain, $isEn);
+
+        // Align fields 21, 22, 23 if retail track is recommended to prevent leaking Studio 50/50 terms into self-service licenses
+        if (($trackRecommendation['recommended_track'] ?? '') === 'retail') {
+            $baseData['kisaranBudget'] = $isEn
+                ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)'
+                : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)';
+            $baseData['garansiSla'] = $isEn
+                ? 'Self-Service Delivery: Instant PRD Fortune 500, Strict ULID DDL & Docker Starter Kit Handover'
+                : 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit';
+            $baseData['terminPembayaran'] = $isEn
+                ? 'Spark Package (Free): $0 / Free Instant Architectural Audit & Blueprint Access'
+                : 'Paket Spark (Gratis): Rp 0 / Akses Audit Arsitektur & Cetak Biru Gratis 100%';
+        }
+
+        $completeness = $this->calculateCompleteness($baseData, $isEn);
 
         return array_merge($baseData, [
             'domain' => $domain,

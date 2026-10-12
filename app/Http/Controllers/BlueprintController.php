@@ -152,6 +152,31 @@ class BlueprintController extends Controller
             $initialData['package_tier'] = $tier;
         }
 
+        $isRetail = ($track === 'retail' || in_array(strtolower((string) $tier), ['spark', 'starter', 'pro', 'ultimate', 'lite', 'retail_spark', 'retail_starter', 'retail_pro', 'retail_ultimate']));
+        if ($isRetail) {
+            $initialData['selected_track'] = 'retail';
+            $initialData['track'] = 'retail';
+            if (empty($initialData['kisaranBudget']) || str_contains($initialData['kisaranBudget'], 'Growth') || str_contains($initialData['kisaranBudget'], '15.000.000')) {
+                $tierLower = strtolower((string) $tier);
+                if ($tierLower === 'starter' || $tierLower === 'lite' || $tierLower === 'retail_starter' || $tierLower === 'retail_lite') {
+                    $initialData['kisaranBudget'] = 'Starter: Rp 190.000 (PRD 26 Parameter, Schema DDL & AI Directives)';
+                    $initialData['terminPembayaran'] = 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
+                } elseif ($tierLower === 'pro' || $tierLower === 'retail_pro') {
+                    $initialData['kisaranBudget'] = 'Pro: Rp 490.000 (Bundel Lengkap DDL, Docker Compose & Seeder)';
+                    $initialData['terminPembayaran'] = 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
+                } elseif ($tierLower === 'ultimate' || $tierLower === 'retail_ultimate') {
+                    $initialData['kisaranBudget'] = 'Ultimate: Rp 1.490.000 (Full 7 Pilar Software Factory OS Turnkey Starter Kit)';
+                    $initialData['terminPembayaran'] = 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
+                } else {
+                    $initialData['kisaranBudget'] = 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)';
+                    $initialData['terminPembayaran'] = 'Paket Spark (Gratis): Rp 0 / Akses Audit Arsitektur & Cetak Biru Gratis 100%';
+                }
+            }
+            if (empty($initialData['garansiSla']) || str_contains($initialData['garansiSla'], 'Garansi Bug') || str_contains($initialData['garansiSla'], 'Pascameluncur')) {
+                $initialData['garansiSla'] = 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit';
+            }
+        }
+
         return view('blueprint.create', [
             'globalSettings' => $globalSettings,
             'initialData' => $initialData,

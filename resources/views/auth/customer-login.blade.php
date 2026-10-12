@@ -89,6 +89,25 @@
                     if (urlParams.get('name')) {
                         this.name = decodeURIComponent(urlParams.get('name'));
                     }
+                    if (urlParams.get('otp')) {
+                        const rawOtp = urlParams.get('otp').replace(/\D/g, '').slice(0, 6);
+                        if (rawOtp.length === 6) {
+                            this.step = 'otp';
+                            this.otp = rawOtp;
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                                navigator.clipboard.writeText(rawOtp).catch(() => {});
+                            }
+                            if (window.showToast) {
+                                setTimeout(() => {
+                                    window.showToast({
+                                        type: 'success',
+                                        title: this.lang === 'en' ? 'OTP Auto-Filled' : 'OTP Terisi Otomatis',
+                                        message: this.lang === 'en' ? 'Code ' + rawOtp + ' loaded from 1-click link.' : 'Kode ' + rawOtp + ' berhasil dimuat dari link 1-klik.'
+                                    });
+                                }, 300);
+                            }
+                        }
+                    }
                     this.generateCaptcha();
                 },
 
@@ -355,6 +374,33 @@
                         this.showAlert((this.lang === 'en' ? 'Verification error: ' : 'Terjadi kesalahan sistem: ') + err.message, 'error');
                     } finally {
                         this.isLoading = false;
+                    }
+                },
+
+                async pasteOtpFromClipboard() {
+                    try {
+                        if (!navigator.clipboard || !navigator.clipboard.readText) {
+                            throw new Error('Clipboard API not available');
+                        }
+                        const text = await navigator.clipboard.readText();
+                        const cleaned = (text || '').replace(/\D/g, '').slice(0, 6);
+                        if (cleaned.length === 6) {
+                            this.otp = cleaned;
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: this.lang === 'en' ? 'OTP Pasted' : 'OTP Ditempel',
+                                    message: this.lang === 'en' ? 'Code ' + cleaned + ' pasted from clipboard.' : 'Kode ' + cleaned + ' berhasil ditempel dari clipboard.'
+                                });
+                            }
+                            this.verifyOtp();
+                        } else if (cleaned.length > 0) {
+                            this.otp = cleaned;
+                        } else {
+                            this.showAlert(this.lang === 'en' ? 'No 6-digit code detected in clipboard.' : 'Tidak ditemukan kode OTP 6-digit pada clipboard.', 'error');
+                        }
+                    } catch (e) {
+                        this.showAlert(this.lang === 'en' ? 'Could not access clipboard. Please paste manually (Ctrl+V).' : 'Tidak dapat membaca clipboard otomatis. Silakan tempel manual dengan Ctrl+V.', 'info');
                     }
                 }
             };
@@ -707,8 +753,23 @@
                         class="w-full text-center tracking-[0.4em] font-mono text-2xl font-black bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-emerald-600 dark:text-emerald-400 px-4 py-3 rounded-none outline-none transition-colors"
                         :disabled="isLoading"
                         autocomplete="one-time-code"
+                        @input="otp = otp.replace(/\D/g, '').slice(0, 6); if (otp.length === 6) { verifyOtp(); }"
                         autofocus
                     />
+
+                    <!-- Quick Paste from Clipboard Toolbar -->
+                    <div class="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+                        <button 
+                            type="button" 
+                            @click="pasteOtpFromClipboard()" 
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[11px] font-mono font-bold uppercase transition cursor-pointer"
+                            title="Tempel kode OTP dari clipboard"
+                        >
+                            <span>📋</span>
+                            <span x-text="lang === 'en' ? 'PASTE FROM CLIPBOARD' : 'TEMPEL DARI CLIPBOARD'">{{ $isEn ? 'PASTE FROM CLIPBOARD' : 'TEMPEL DARI CLIPBOARD' }}</span>
+                        </button>
+                        <span class="text-[10px] font-mono text-zinc-500" x-text="lang === 'en' ? '⚡ Auto-submits on 6 digits' : '⚡ Otomatis masuk saat 6 digit'">{{ $isEn ? '⚡ Auto-submits on 6 digits' : '⚡ Otomatis masuk saat 6 digit' }}</span>
+                    </div>
 
                     <!-- New Password Input (Only when resetting password) -->
                     <div x-show="mode === 'forgot_password'" x-cloak class="mt-3">

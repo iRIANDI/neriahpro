@@ -96,8 +96,18 @@ HTML,
             <p style="margin-top: 0;">Hello,</p>
             <p>We received a login request for your Neriah Pro account with email address: <strong style="color: {{theme_bold_text}};">{{email}}</strong>. Use the 6-digit OTP code below to verify your session:</p>
             <div style="margin: 28px 0; padding: 24px; background-color: {{theme_box_bg}}; border: 1px dashed {{theme_box_border}}; border-radius: 4px; text-align: center;">
-                <div style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 38px; font-weight: 900; letter-spacing: 0.25em; color: {{theme_otp_color}}; margin: 0;">{{otp}}</div>
-                <div style="margin-top: 10px; font-size: 12px; color: {{theme_subtext}};">Valid for <strong>{{expiry_minutes}} minutes</strong> from the time this email was sent.</div>
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: {{theme_subtext}}; margin-bottom: 8px; font-family: ui-monospace, SFMono-Regular, monospace; font-weight: 700;">
+                    Click Code to Select All
+                </div>
+                <div style="display: inline-block; padding: 8px 20px; background-color: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 4px; user-select: all; -webkit-user-select: all; -moz-user-select: all; cursor: pointer;" title="Click to select code">
+                    <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 38px; font-weight: 900; letter-spacing: 0.25em; color: {{theme_otp_color}}; margin: 0; display: inline-block;">{{otp}}</span>
+                </div>
+                <div style="margin-top: 18px;">
+                    <a href="{{login_url}}" target="_blank" style="display: inline-block; background-color: {{theme_btn_bg}}; color: {{theme_btn_text}}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; padding: 12px 24px; text-decoration: none; border-radius: 4px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);">
+                        📋 Open &amp; Auto-Fill OTP (1-Click) &rarr;
+                    </a>
+                </div>
+                <div style="margin-top: 14px; font-size: 12px; color: {{theme_subtext}};">Valid for <strong>{{expiry_minutes}} minutes</strong> from the time this email was sent.</div>
             </div>
             <div style="background-color: {{theme_alert_bg}}; border-left: 3px solid {{theme_alert_border}}; padding: 14px 16px; margin: 24px 0 16px 0; border-radius: 2px; font-size: 12px; color: {{theme_alert_text}}; line-height: 1.5;">
                 <strong>Security Warning:</strong> Never share this OTP code with anyone, including anyone claiming to represent Neriah Pro. Our team will never ask for your OTP code.

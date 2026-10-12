@@ -206,6 +206,8 @@ class EmailTemplate extends Model
             $expiry = $replacements['{{expiry_minutes}}'] ?? '10';
             $supportEmail = $replacements['{{support_email}}'] ?? 'support@neriahpro.com';
             $requestedAt = $replacements['{{requested_at}}'] ?? (now()->timezone('Asia/Jakarta')->format('d M Y, H:i:s') . ' WIB');
+            $appUrl = $replacements['{{app_url}}'] ?? config('app.url', 'https://neriahpro.com');
+            $loginUrl = $replacements['{{login_url}}'] ?? (rtrim($appUrl, '/') . '/customer/login?email=' . urlencode($email) . '&otp=' . urlencode($otp));
 
             $isEn = ($locale === 'en');
 
@@ -219,6 +221,8 @@ class EmailTemplate extends Model
             $introText = $isEn ? 'We received a login request for your Neriah Pro account with email address' : 'Kami menerima permintaan login ke akun Neriah Pro untuk alamat e-mail';
             $instructionText = $isEn ? 'Use the 6-digit OTP code below to verify your session' : 'Gunakan kode OTP 6-digit di bawah ini untuk memverifikasi sesi Anda';
             $expiryText = $isEn ? "Valid for <strong>{$expiry} minutes</strong> from the time this email was sent." : "Berlaku selama <strong>{$expiry} menit</strong> sejak email ini dikirimkan.";
+            $copyHintText = $isEn ? 'Click Code to Select All' : 'Klik Kode untuk Seleksi Otomatis';
+            $copyBtnText = $isEn ? '📋 Copy & 1-Click Auto-Fill ➔' : '📋 Salin & Masuk Cepat (1-Klik) ➔';
             $warningLabel = $isEn ? 'Security Warning' : 'Peringatan Keamanan';
             $warningText = $isEn ? 'Never share this OTP code with anyone, including anyone claiming to represent Neriah Pro. Our team will never ask for your OTP code.' : 'Jangan berikan kode OTP ini kepada siapa pun, termasuk pihak yang mengatasnamakan Neriah Pro. Tim kami tidak pernah meminta kode OTP Anda.';
             $ignoreText = $isEn ? 'If you did not request this login, please ignore this email. Your account remains secure as the OTP cannot be used without direct access to this email.' : 'Jika Anda tidak merasa melakukan permintaan ini, abaikan email ini. Akun Anda tetap aman karena kode OTP tidak dapat digunakan tanpa akses langsung ke email ini.';
@@ -248,8 +252,18 @@ class EmailTemplate extends Model
             <p style="margin-top: 0;">{$greetingText}</p>
             <p>{$introText}: <strong style="color: {$tokens['{{theme_bold_text}}']};">{$email}</strong>. {$instructionText}:</p>
             <div style="margin: 28px 0; padding: 24px; background-color: {$tokens['{{theme_box_bg}}']}; border: 1px dashed {$tokens['{{theme_box_border}}']}; border-radius: 4px; text-align: center;">
-                <div style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 38px; font-weight: 900; letter-spacing: 0.25em; color: {$tokens['{{theme_otp_color}}']}; margin: 0;">{$otp}</div>
-                <div style="margin-top: 10px; font-size: 12px; color: {$tokens['{{theme_subtext}}']};">{$expiryText}</div>
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: {$tokens['{{theme_subtext}}']}; margin-bottom: 8px; font-family: ui-monospace, SFMono-Regular, monospace; font-weight: 700;">
+                    {$copyHintText}
+                </div>
+                <div style="display: inline-block; padding: 8px 20px; background-color: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 4px; user-select: all; -webkit-user-select: all; -moz-user-select: all; cursor: pointer;" title="{$copyHintText}">
+                    <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 38px; font-weight: 900; letter-spacing: 0.25em; color: {$tokens['{{theme_otp_color}}']}; margin: 0; display: inline-block;">{$otp}</span>
+                </div>
+                <div style="margin-top: 18px;">
+                    <a href="{$loginUrl}" target="_blank" style="display: inline-block; background-color: {$tokens['{{theme_btn_bg}}']}; color: {$tokens['{{theme_btn_text}}']}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; padding: 12px 24px; text-decoration: none; border-radius: 4px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);">
+                        {$copyBtnText}
+                    </a>
+                </div>
+                <div style="margin-top: 14px; font-size: 12px; color: {$tokens['{{theme_subtext}}']};">{$expiryText}</div>
             </div>
             <div style="background-color: {$tokens['{{theme_alert_bg}}']}; border-left: 3px solid {$tokens['{{theme_alert_border}}']}; padding: 14px 16px; margin: 24px 0 16px 0; border-radius: 2px; font-size: 12px; color: {$tokens['{{theme_alert_text}}']}; line-height: 1.5;">
                 <strong>{$warningLabel}:</strong> {$warningText}

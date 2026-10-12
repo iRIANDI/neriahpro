@@ -33,6 +33,8 @@ class CustomerOtpMail extends Mailable
             'expiry_minutes' => (string) $expiryMinutes,
             'requested_at' => now()->timezone('Asia/Jakarta')->format('d M Y, H:i:s') . ' WIB',
             'support_email' => 'support@neriahpro.com',
+            'app_url' => config('app.url', 'https://neriahpro.com'),
+            'login_url' => rtrim(config('app.url', 'https://neriahpro.com'), '/') . '/customer/login?email=' . urlencode($email) . '&otp=' . urlencode($otp),
         ], locale: (string) $this->locale, theme: (string) $this->theme);
     }
 

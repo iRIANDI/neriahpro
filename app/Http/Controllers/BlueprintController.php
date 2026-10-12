@@ -1459,6 +1459,48 @@ class BlueprintController extends Controller
     }
 
     /**
+     * Refine an active scaffold file using Grounded Multi-Model AI based on Source Corpus.
+     */
+    public function refineScaffoldFile(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        // Security check for scope locking unless Retail License or SuperAdmin
+        if ($blueprint->scope_locked && !($blueprint->project_status === 'Retail License' || (auth()->user()?->isSuperAdmin() ?? false))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Spesifikasi telah dikunci (Scope Frozen). Pengubahan memerlukan Change Request resmi.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'filename' => 'required|string|max:255',
+            'prompt' => 'nullable|string|max:3000',
+            'ai_provider' => 'nullable|string|in:auto,gemini,deepseek,anthropic,openai',
+        ]);
+
+        try {
+            $refinementService = app(\App\Services\BlueprintRefinementService::class);
+            $result = $refinementService->refineScaffoldFile(
+                $blueprint,
+                $validated['filename'],
+                $validated['prompt'] ?? null,
+                $validated['ai_provider'] ?? 'auto'
+            );
+
+            return response()->json($result);
+        } catch (\Throwable $e) {
+            Log::error("Failed to refine scaffold file {$validated['filename']} for blueprint {$slug}: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'Terjadi kesalahan saat memproses pendalaman file dengan AI.',
+            ], 500);
+        }
+    }
+
+    /**
      * Real-time Live Presence & Collaborative Cursor Heartbeat.
      * Records collaborator coordinates, active section, and role into cache.
      */

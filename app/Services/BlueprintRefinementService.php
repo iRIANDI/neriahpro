@@ -654,4 +654,96 @@ TXT;
         $prd[$segmentKey] = $parsedData;
         return $prd;
     }
+
+    /**
+     * Deepen and refine a specific scaffold file (screens.md, tokens.json, SyntheticDataSeeder.php, ApiContractTest.php, etc.)
+     * grounded in the Source Corpus.
+     */
+    public function refineScaffoldFile(
+        VisionBlueprint $blueprint,
+        string $filename,
+        ?string $userInstruction = null,
+        ?string $preferredAiProvider = null
+    ): array {
+        $sourceData = $this->getSourceCorpus($blueprint);
+        $corpusText = $sourceData['corpus_text'];
+        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise');
+
+        // Resolve current content
+        $allFiles = ScaffoldGeneratorService::generateFiles($blueprint);
+        $currentContent = $allFiles[$filename] ?? '';
+
+        $systemInstruction = <<<INSTRUCTION
+Anda adalah Principal Software Architect di Neriah Pro Software Factory OS.
+Tugas Anda adalah memperdalam dan meng-elaborasi file scaffold/codebase spesifik "{$filename}" untuk proyek enterprise "{$businessName}".
+
+PANDUAN UTAMA:
+1. SUMBER KEBENARAN TERTINGGI: Anda WAJIB berpijak dan menyelaraskan isi file dengan DOKUMEN ACUAN SUMBER yang diberikan. Ekstrak data riil, nama modul, aturan bisnis, dan spesifikasi konkret. Dilarang keras berasumsi atau membuat konten acak.
+2. SYNTAX PURITY: Keluarkan HANYA kode/konten file mentah yang valid untuk tipe file tersebut tanpa pembungkus markdown (kecuali file tersebut memang file markdown seperti screens.md atau README.md atau .cursorrules).
+3. STANDAR ENTERPRISE NERIAH PRO:
+   - Jika file PHP/Laravel/Seeder: Gunakan Strict ULID 26 karakter untuk Primary Keys, keyset cursor O(1), dan relasi yang konsisten.
+   - Jika file Test: Gunakan format Pest/PHPUnit contract tests dengan ekspektasi status HTTP dan JSON structure konkret.
+   - Jika file Wireframe/Design: Rinci setiap layar, aktor pengguna, komponen UI/UX, dan flow interaksi.
+INSTRUCTION;
+
+        $prompt = <<<PROMPT
+DOKUMEN ACUAN SUMBER (GROUND TRUTH):
+---
+{$corpusText}
+---
+
+NAMA FILE TARGET: {$filename}
+
+KONTEN AWAL FILE SAAT INI:
+---
+{$currentContent}
+---
+
+INSTRUKSI KHUSUS PENDALAMAN DARI USER:
+{$userInstruction}
+
+Instruksi: Tulis ulang dan perdalam seluruh isi file "{$filename}" secara lengkap, komprehensif, dan siap produksi, dengan mengekstrak detail dan kebutuhan dari Dokumen Acuan Sumber di atas.
+PROMPT;
+
+        $aiResult = MultiAiModelManager::executeWithFailover(
+            $prompt,
+            $systemInstruction,
+            'discovery',
+            $preferredAiProvider
+        );
+
+        $rawAiText = $aiResult['text'] ?? null;
+        if (empty($rawAiText)) {
+            throw new \RuntimeException($aiResult['notification'] ?? 'Gagal menghubungi AI Model.');
+        }
+
+        // Clean any accidental markdown code fences if the file itself is not markdown
+        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+        $refinedContent = trim($rawAiText);
+        if ($ext !== 'md' && !in_array($filename, ['.cursorrules', 'AGENTS.md', 'CLAUDE.md'])) {
+            if (preg_match('/^```[a-z]*\s*\n(.*?)\n```$/s', $refinedContent, $matches)) {
+                $refinedContent = trim($matches[1]);
+            }
+        }
+
+        // Persist into user_metadata['scaffold_customizations']
+        $userMeta = $blueprint->user_metadata ?? [];
+        $scaffoldCustom = $userMeta['scaffold_customizations'] ?? [];
+        $scaffoldCustom[$filename] = $refinedContent;
+        $userMeta['scaffold_customizations'] = $scaffoldCustom;
+        $blueprint->update(['user_metadata' => $userMeta]);
+
+        return [
+            'success' => true,
+            'message' => "File {$filename} berhasil diperdalam dengan AI berbasis Dokumen Acuan.",
+            'filename' => $filename,
+            'content' => $refinedContent,
+            'line_count' => count(explode("\n", $refinedContent)),
+            'ai_telemetry' => [
+                'provider' => $aiResult['provider'] ?? 'ai',
+                'model' => $aiResult['model'] ?? 'default',
+            ],
+            'source_corpus_files' => count($sourceData['source_files']),
+        ];
+    }
 }

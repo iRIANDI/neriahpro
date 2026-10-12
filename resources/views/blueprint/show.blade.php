@@ -1030,6 +1030,40 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 async submitTweak() {
                     this.tweakLoading = true;
                     try {
+                        if (this.tweakSegmentKey === 'scaffold_file') {
+                            const res = await fetch('{{ route('blueprint.scaffold.refine-file', $blueprint->slug) }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    filename: this.scaffoldActiveTab,
+                                    prompt: this.tweakPrompt,
+                                    ai_provider: this.tweakAiProvider,
+                                })
+                            });
+                            const data = await res.json();
+                            if (data && data.success) {
+                                this.scaffoldFiles[this.scaffoldActiveTab] = data.content;
+                                if (!this.scaffoldCustomizedFiles.includes(this.scaffoldActiveTab)) {
+                                    this.scaffoldCustomizedFiles.push(this.scaffoldActiveTab);
+                                }
+                                if (window.showToast) {
+                                    window.showToast({ 
+                                        type: 'success', 
+                                        title: 'BERKAS DIPERDALAM', 
+                                        message: data.message || ('Berkas ' + this.scaffoldActiveTab + ' berhasil diperdalam dari Dokumen Acuan.') 
+                                    });
+                                }
+                                this.tweakModalOpen = false;
+                                return;
+                            } else {
+                                throw new Error(data.message || 'Gagal memperdalam file scaffold.');
+                            }
+                        }
+
                         const res = await fetch('{{ route('api.blueprint.tweak-segment', $blueprint->slug) }}', {
                             method: 'POST',
                             headers: {
@@ -8917,6 +8951,17 @@ class ProcessSecureDataset implements ShouldQueue
                                 <span>EDIT &amp; ELABORASI</span>
                             </button>
                         </div>
+
+                        <!-- AI Grounded Deepener Button for Active Scaffold File -->
+                        <button 
+                            type="button" 
+                            @click="openTweakModal('scaffold_file', 'Scaffold // ' + scaffoldActiveTab, scaffoldFiles[scaffoldActiveTab] || '')" 
+                            class="px-2 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition cursor-pointer flex items-center gap-1 font-mono text-[10px] font-bold"
+                            title="Perdalam file scaffold ini secara langsung menggunakan AI berbasis Dokumen Acuan"
+                        >
+                            <svg class="w-2.5 h-2.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span>PERDALAM DARI ACUAN</span>
+                        </button>
 
                         <!-- Reset to AI default button (if customized) -->
                         <template x-if="scaffoldCustomizedFiles.includes(scaffoldActiveTab)">

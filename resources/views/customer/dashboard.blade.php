@@ -755,15 +755,59 @@
                     </span>
                 </div>
 
-                <div class="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none shadow-xs cursor-pointer hover:border-amber-500 transition" @click="setTab('licenses')">
-                    <span class="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider block">
-                        {{ $isEn ? '30-DAY REVISION GUARANTEE' : 'GARANSI REVISI 30 HARI' }}
+                @php
+                    $revCount = $metrics['active_revisions'] ?? 0;
+                    $totRetail = $metrics['total_retail'] ?? 0;
+                    $maxDays = $metrics['max_allowed_days'] ?? 30;
+                    $remDays = $metrics['max_days_remaining'] ?? 0;
+                    $hasActiveRev = $metrics['has_active_revision'] ?? false;
+                @endphp
+                <div class="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none shadow-xs cursor-pointer {{ $hasActiveRev ? 'hover:border-emerald-500' : 'hover:border-zinc-500' }} transition" @click="setTab('licenses')">
+                    <span class="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider block truncate">
+                        @if($totRetail > 1)
+                            {{ $isEn ? 'MULTI-LICENSE REVISION' : 'GARANSI REVISI MULTI-LISENSI' }}
+                        @elseif($totRetail === 1)
+                            {{ $isEn ? "{$maxDays}-DAY REVISION GUARANTEE" : "GARANSI REVISI {$maxDays} HARI" }}
+                        @else
+                            {{ $isEn ? 'REVISION GUARANTEE' : 'GARANSI REVISI PARAMETER' }}
+                        @endif
                     </span>
-                    <span class="text-2xl sm:text-3xl font-black font-mono text-amber-500 mt-1 block">
-                        ACTIVE
-                    </span>
-                    <span class="text-[10px] text-zinc-500 font-sans mt-0.5 block">
-                        {{ $isEn ? 'Parameter refinements enabled' : 'Bebas penyesuaian parameter' }}
+                    <div class="flex items-baseline gap-2 mt-1">
+                        @if($hasActiveRev)
+                            @if($totRetail > 1)
+                                <span class="text-2xl sm:text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400 block">
+                                    {{ $revCount }}/{{ $totRetail }}
+                                </span>
+                                <span class="text-xs font-mono font-bold uppercase text-emerald-600 dark:text-emerald-400">
+                                    {{ $isEn ? 'ACTIVE' : 'AKTIF' }}
+                                </span>
+                            @else
+                                <span class="text-2xl sm:text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400 block">
+                                    ACTIVE
+                                </span>
+                            @endif
+                        @elseif($totRetail > 0)
+                            <span class="text-2xl sm:text-3xl font-black font-mono text-zinc-500 block">
+                                EXPIRED
+                            </span>
+                        @else
+                            <span class="text-2xl sm:text-3xl font-black font-mono text-zinc-400 dark:text-zinc-600 block">
+                                STANDBY
+                            </span>
+                        @endif
+                    </div>
+                    <span class="text-[10px] text-zinc-500 font-sans mt-0.5 block truncate">
+                        @if($hasActiveRev)
+                            @if($totRetail > 1)
+                                {{ $isEn ? "{$revCount} licenses active (up to {$remDays}d left) →" : "{$revCount} lisensi aktif (hingga {$remDays} hr tersisa) →" }}
+                            @else
+                                {{ $isEn ? "{$remDays} days remaining →" : "{$remDays} hari tersisa untuk regenerasi →" }}
+                            @endif
+                        @elseif($totRetail > 0)
+                            {{ $isEn ? 'Window closed · Click for upgrades →' : 'Masa revisi habis · Klik opsi upgrade →' }}
+                        @else
+                            {{ $isEn ? 'Activated on package order →' : 'Aktif otomatis saat aktivasi lisensi →' }}
+                        @endif
                     </span>
                 </div>
 

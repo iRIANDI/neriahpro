@@ -51,6 +51,7 @@ Route::get('/blueprint/{slug}/scaffold/preview', [BlueprintController::class, 'p
 Route::get('/blueprint/{slug}/scaffold-preview', [BlueprintController::class, 'previewScaffold'])->name('blueprint.scaffold-preview');
 Route::post('/blueprint/{slug}/scaffold/save-file', [BlueprintController::class, 'saveScaffoldFile'])->name('blueprint.scaffold.save-file');
 Route::post('/blueprint/{slug}/scaffold/reset-file', [BlueprintController::class, 'resetScaffoldFile'])->name('blueprint.scaffold.reset-file');
+Route::post('/blueprint/{slug}/scaffold/refine-file', [BlueprintController::class, 'refineScaffoldFile'])->name('blueprint.scaffold.refine-file')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/presence', [BlueprintController::class, 'updatePresence'])->name('api.blueprint.presence.update');
 Route::get('/api/blueprint/{slug}/presence', [BlueprintController::class, 'getPresence'])->name('api.blueprint.presence.get');
 Route::post('/blueprint/{slug}/tasks/update', [BlueprintController::class, 'updateTasks'])->name('blueprint.tasks.update');

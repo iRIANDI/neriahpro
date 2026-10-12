@@ -187,6 +187,68 @@ class CustomerDashboardController extends Controller
         $activeStudio = $studioProjects->filter(fn ($p) => $p->isDpConfirmed() || $p->signed_agreement)->count();
         $latestTransaction = $transactions->first();
 
+        // 100% Dynamic Multi-License Guarantee Aggregator
+        $activeRevisionCount = 0;
+        $expiredRevisionCount = 0;
+        $maxAllowedDays = 0;
+        $maxDaysRemaining = 0;
+        $nearestDaysRemaining = null;
+        $highestActiveTier = null;
+        $tierPriority = [
+            'retail_ultimate' => 3, 'ultimate' => 3,
+            'retail_pro' => 2, 'pro' => 2,
+            'retail_lite' => 1, 'lite' => 1,
+            'retail_spark' => 0, 'spark' => 0,
+        ];
+        $currentHighestPriority = -1;
+
+        foreach ($retailLicenses as $lic) {
+            $tier = strtolower($lic->user_metadata['retail_tier'] ?? $lic->user_metadata['package_tier'] ?? 'retail_lite');
+            $allowedDays = match ($tier) {
+                'retail_pro', 'pro' => 180,
+                'retail_ultimate', 'ultimate' => 365,
+                default => 30,
+            };
+            $daysPassed = $lic->created_at ? (int) $lic->created_at->diffInDays(now()) : 0;
+            $remaining = max(0, $allowedDays - $daysPassed);
+
+            if ($remaining > 0) {
+                $activeRevisionCount++;
+                if ($remaining > $maxDaysRemaining) {
+                    $maxDaysRemaining = $remaining;
+                }
+                if ($nearestDaysRemaining === null || $remaining < $nearestDaysRemaining) {
+                    $nearestDaysRemaining = $remaining;
+                }
+                $prio = $tierPriority[$tier] ?? 1;
+                if ($prio > $currentHighestPriority) {
+                    $currentHighestPriority = $prio;
+                    $highestActiveTier = $tier;
+                    $maxAllowedDays = $allowedDays;
+                }
+            } else {
+                $expiredRevisionCount++;
+                if ($allowedDays > $maxAllowedDays) {
+                    $maxAllowedDays = $allowedDays;
+                }
+            }
+        }
+
+        if (!$highestActiveTier && $retailLicenses->isNotEmpty()) {
+            foreach ($retailLicenses as $lic) {
+                $tier = strtolower($lic->user_metadata['retail_tier'] ?? $lic->user_metadata['package_tier'] ?? 'retail_lite');
+                $allowedDays = match ($tier) {
+                    'retail_pro', 'pro' => 180,
+                    'retail_ultimate', 'ultimate' => 365,
+                    default => 30,
+                };
+                if ($allowedDays > $maxAllowedDays) {
+                    $maxAllowedDays = $allowedDays;
+                    $highestActiveTier = $tier;
+                }
+            }
+        }
+
         // Resolve Google Translate settings
         $googleTranslateEnabled = (bool) CmsGlobalSetting::getVal('google_translate_enabled', true);
         $rawAllowed = CmsGlobalSetting::getVal('google_translate_allowed_languages', ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es']);
@@ -240,6 +302,14 @@ class CustomerDashboardController extends Controller
                 'total_studio' => $totalStudio,
                 'active_studio' => $activeStudio,
                 'total_spend_idr' => (float) $transactions->whereIn('status', ['settlement', 'capture', 'success'])->sum('total_idr'),
+                // 100% Dynamic Multi-License Guarantee Aggregator
+                'active_revisions' => $activeRevisionCount,
+                'expired_revisions' => $expiredRevisionCount,
+                'max_allowed_days' => $maxAllowedDays ?: 30,
+                'max_days_remaining' => $maxDaysRemaining,
+                'nearest_days_remaining' => $nearestDaysRemaining ?? 0,
+                'highest_active_tier' => $highestActiveTier,
+                'has_active_revision' => $activeRevisionCount > 0,
             ],
         ]);
     }

@@ -15,6 +15,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'admin_path' => env('FILAMENT_ADMIN_PATH', 'admin'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

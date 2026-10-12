@@ -1,6 +1,7 @@
 @php
     $user = filament()->auth()->user();
     $isMidtransReviewer = $user && ($user->hasRole('midtrans_reviewer') || $user->email === 'reviewer.midtrans@neriahpro.com');
+    $adminBase = '/' . trim(config('app.admin_path', 'admin'), '/');
 @endphp
 
 <x-filament-widgets::widget>
@@ -95,7 +96,7 @@
                 </a>
 
                 <!-- Reviewer Card 2: Vision Blueprints Admin List -->
-                <a href="/admin/vision-blueprints" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#38bdf8'" onmouseout="this.style.borderColor='#27272a'">
+                <a href="{{ $adminBase }}/vision-blueprints" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#38bdf8'" onmouseout="this.style.borderColor='#27272a'">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #38bdf8; font-weight: 700;">PROJECT BLUEPRINTS</span>
                         <span style="font-size: 12px; color: #38bdf8;">→</span>
@@ -105,7 +106,7 @@
                 </a>
 
                 <!-- Reviewer Card 3: Digital Contracts -->
-                <a href="/admin/documents" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='#27272a'">
+                <a href="{{ $adminBase }}/documents" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='#27272a'">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #10b981; font-weight: 700;">KONTRAK & LEGALITAS</span>
                         <span style="font-size: 12px; color: #10b981;">→</span>
@@ -115,7 +116,7 @@
                 </a>
 
                 <!-- Reviewer Card 4: Midtrans Transactions -->
-                <a href="/admin/transactions" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#f59e0b'" onmouseout="this.style.borderColor='#27272a'">
+                <a href="{{ $adminBase }}/transactions" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#f59e0b'" onmouseout="this.style.borderColor='#27272a'">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #f59e0b; font-weight: 700;">MIDTRANS SETTLEMENT</span>
                         <span style="font-size: 12px; color: #f59e0b;">→</span>
@@ -125,7 +126,7 @@
                 </a>
 
                 <!-- Reviewer Card 5: Products & Services Catalog -->
-                <a href="/admin/products" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#06b6d4'" onmouseout="this.style.borderColor='#27272a'">
+                <a href="{{ $adminBase }}/products" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#06b6d4'" onmouseout="this.style.borderColor='#27272a'">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #06b6d4; font-weight: 700;">COMMERCE & BILLING</span>
                         <span style="font-size: 12px; color: #06b6d4;">→</span>
@@ -135,7 +136,7 @@
                 </a>
 
                 <!-- Reviewer Card 6: Legal Policies & Refund -->
-                <a href="/admin/legal-policies" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#27272a'">
+                <a href="{{ $adminBase }}/legal-policies" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#27272a'">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #a855f7; font-weight: 700;">KEPATUHAN REGULASI</span>
                         <span style="font-size: 12px; color: #a855f7;">→</span>
@@ -145,7 +146,7 @@
                 </a>
 
                 <!-- Reviewer Card 7: Domain & Hosting Assets -->
-                <a href="/admin/domain-hosting-assets" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#38bdf8'" onmouseout="this.style.borderColor='#27272a'">
+                <a href="{{ $adminBase }}/domain-hosting-assets" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#38bdf8'" onmouseout="this.style.borderColor='#27272a'">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #38bdf8; font-weight: 700;">INFRASTRUKTUR PROYEK</span>
                         <span style="font-size: 12px; color: #38bdf8;">→</span>
@@ -155,7 +156,7 @@
                 </a>
 
                 <!-- Reviewer Card 8: CRM Leads -->
-                <a href="/admin/lead-contacts" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='#27272a'">
+                <a href="{{ $adminBase }}/lead-contacts" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='#27272a'">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #10b981; font-weight: 700;">LEAD INTAKE CRM</span>
                         <span style="font-size: 12px; color: #10b981;">→</span>
@@ -215,7 +216,7 @@
                 </a>
 
                 <!-- Superadmin Card 6: Security Threats -->
-                <a href="/admin/security-threats" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#ef4444'" onmouseout="this.style.borderColor='#27272a'">
+                <a href="{{ $adminBase }}/security-threats" style="display: block; background: #18181b; border: 1px solid #27272a; padding: 16px; text-decoration: none; transition: border-color 0.2s ease;" onmouseover="this.style.borderColor='#ef4444'" onmouseout="this.style.borderColor='#27272a'">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: #ef4444; font-weight: 700;">SECURITY AUDIT</span>
                         <span style="font-size: 12px; color: #ef4444;">→</span>

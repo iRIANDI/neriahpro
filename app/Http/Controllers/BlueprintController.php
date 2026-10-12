@@ -1638,7 +1638,7 @@ class BlueprintController extends Controller
                     ->actions([
                         \Filament\Notifications\Actions\Action::make('view_lead')
                             ->label('Buka Data Lead')
-                            ->url('/admin/lead-contacts'),
+                            ->url('/' . config('app.admin_path', 'admin') . '/lead-contacts'),
                     ])
                     ->sendToDatabase($admin);
             }

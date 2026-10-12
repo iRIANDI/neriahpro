@@ -24,7 +24,7 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        $adminPath = env('FILAMENT_ADMIN_PATH', 'admin');
+        $adminPath = config('app.admin_path', env('FILAMENT_ADMIN_PATH', 'admin'));
 
         return $panel
             ->default()

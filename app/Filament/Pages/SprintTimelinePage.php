@@ -283,7 +283,7 @@ class SprintTimelinePage extends Page
                     'target_waktu' => $b->target_waktu ?: '30 Hari Kerja',
                     'slug' => $b->slug,
                     'public_url' => url('/blueprint/' . $b->slug),
-                    'edit_url' => url('/admin/vision-blueprints/' . $b->id . '/edit'),
+                    'edit_url' => url(config('app.admin_path', 'admin') . '/vision-blueprints/' . $b->id . '/edit'),
                     'created_at' => $b->created_at?->format('d M Y'),
                     'start_date' => $b->signed_at?->format('Y-m-d') ?: $batch['start_date'],
                 ];
@@ -307,7 +307,7 @@ class SprintTimelinePage extends Page
                         'target_waktu' => 'Tahap Negosiasi PRD',
                         'slug' => null,
                         'public_url' => null,
-                        'edit_url' => url('/admin/lead-contacts/' . $l->id . '/edit'),
+                        'edit_url' => url(config('app.admin_path', 'admin') . '/lead-contacts/' . $l->id . '/edit'),
                         'created_at' => $l->created_at?->format('d M Y'),
                         'start_date' => $batch['start_date'],
                     ];

@@ -149,7 +149,7 @@ class SitemapController extends Controller
         $isCvProEnabled = (bool) ($globalSettings['feature_enable_cv_pro']->value ?? true);
         $isMidtransStrict = (bool) ($globalSettings['midtrans_compliance_strict_mode']->value ?? false);
 
-        $adminSegment = trim(env('FILAMENT_ADMIN_PATH', 'admin'), '/');
+        $adminSegment = trim(config('app.admin_path', env('FILAMENT_ADMIN_PATH', 'admin')), '/');
         $lines = [
             'User-agent: *',
             'Disallow: /' . $adminSegment . '/',

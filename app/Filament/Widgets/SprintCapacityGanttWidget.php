@@ -27,7 +27,7 @@ class SprintCapacityGanttWidget extends Widget
             'totalAssignedSlots' => $data['totalAssignedSlots'],
             'remainingOverallSlots' => $data['remainingOverallSlots'],
             'activeSprintCount' => $data['activeSprintCount'],
-            'timelineUrl' => url('/admin/sprint-timeline'),
+            'timelineUrl' => url(config('app.admin_path', 'admin') . '/sprint-timeline'),
         ];
     }
 }

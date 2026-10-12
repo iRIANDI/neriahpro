@@ -3001,8 +3001,12 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     5 Garansi Bebas Penyesalan Neriah Pro (Alasan Klien Tidak Pernah Menyesal)
                                 </span>
                             </span>
-                            <p class="text-[11px] text-zinc-500 font-sans mt-0.5" x-text="locale === 'en' ? 'Standard contractual protections applied to every enterprise software delivered by neriahpro.com.' : 'Standar perlindungan kontraktual resmi yang berlaku di setiap sistem yang dibangun neriahpro.com.'">
-                                Standar perlindungan kontraktual resmi yang berlaku di setiap sistem yang dibangun neriahpro.com.
+                            <p class="text-[11px] text-zinc-500 font-sans mt-0.5">
+                                @if($blueprint->isRetailLicense())
+                                    <span x-text="locale === 'en' ? 'Official architecture & perpetual digital license protections applied to every enterprise blueprint from neriahpro.com.' : 'Standar perlindungan lisensi digital & cetak biru arsitektur mandiri resmi neriahpro.com.'">Standar perlindungan lisensi digital &amp; cetak biru arsitektur mandiri resmi neriahpro.com.</span>
+                                @else
+                                    <span x-text="locale === 'en' ? 'Standard contractual protections applied to every enterprise software delivered by neriahpro.com.' : 'Standar perlindungan kontraktual resmi yang berlaku di setiap sistem yang dibangun neriahpro.com.'">Standar perlindungan kontraktual resmi yang berlaku di setiap sistem yang dibangun neriahpro.com.</span>
+                                @endif
                             </p>
                         </div>
                         <span class="text-[10px] font-mono px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase font-bold self-start sm:self-auto">
@@ -3012,6 +3016,24 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                     <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
                         @foreach($businessRoi['why_neriah_pro_guarantees'] ?? [] as $idx => $guarantee)
+                            @php
+                                $isRetail = $blueprint->isRetailLicense();
+                                $gTitle = $guarantee['title'] ?? '';
+                                $gDesc = $guarantee['desc'] ?? '';
+                                $gBadge = $guarantee['badge'] ?? 'GUARANTEED';
+
+                                if ($isRetail) {
+                                    if ($idx === 4 || str_contains($gTitle, '50/50') || str_contains($gDesc, 'DP 50%') || str_contains($gTitle, 'Escrow')) {
+                                        $gTitle = 'Lisensi Digital 1x Bayar & Bebas Utang Termin (100% Lunas)';
+                                        $gDesc = 'Pembelian lisensi kode arsitektur mandiri 1x bayar tanpa cicilan termin DP 50%, tanpa biaya tersembunyi, dan tanpa langganan bulanan. Anda langsung mengunduh seluruh spesifikasi PRD, DDL SQL Strict ULID, Docker scaffold, dan rules AI coding agent secara permanen.';
+                                        $gBadge = 'ONE_TIME_LICENSE';
+                                    } elseif ($idx === 1 || str_contains($gDesc, 'pengerjaan sprint')) {
+                                        $gDesc = 'Seluruh rincian fitur pada PRD ini dikunci secara kriptografis. Spesifikasi arsitektur yang Anda beli bersifat final, terverifikasi integritasnya, dan bebas biaya lisensi siluman.';
+                                    } elseif ($idx === 0) {
+                                        $gDesc = 'Seluruh hak pakai blueprint arsitektur, DDL database, dan starter code diserahkan penuh kepada Anda. Anda bebas mengembangkannya bersama tim internal tanpa ketergantungan sewa platform tertutup.';
+                                    }
+                                }
+                            @endphp
                             <div class="bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 rounded-none hover:border-emerald-500/60 transition flex flex-col justify-between">
                                 <div>
                                     <div class="flex items-center justify-between gap-1 mb-2">
@@ -3019,19 +3041,19 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                             0{{ $idx + 1 }}
                                         </span>
                                         <span class="text-[9px] font-mono px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-800 font-bold">
-                                            {{ $guarantee['badge'] ?? 'GUARANTEED' }}
+                                            {{ $gBadge }}
                                         </span>
                                     </div>
                                     <h4 class="text-xs font-bold text-zinc-900 dark:text-zinc-100 font-sans mb-1.5 leading-snug">
-                                        {{ $guarantee['title'] }}
+                                        {{ $gTitle }}
                                     </h4>
                                     <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
-                                        {{ $guarantee['desc'] }}
+                                        {{ $gDesc }}
                                     </p>
                                 </div>
                                 <div class="mt-3 pt-2 border-t border-zinc-200 dark:border-zinc-800/80 flex items-center gap-1 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    <span>TERJAMIN KONTRAK</span>
+                                    <span>{{ $isRetail ? 'TERJAMIN LISENSI DIGITAL' : 'TERJAMIN KONTRAK' }}</span>
                                 </div>
                             </div>
                         @endforeach

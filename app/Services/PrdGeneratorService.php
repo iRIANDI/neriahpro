@@ -1604,15 +1604,21 @@ class PrdGeneratorService
             $phasedStrategy = 'Mulai dengan arsitektur Modern Monolith teruji yang siap pakai dalam 14-21 hari kerja.';
         }
 
+        $isRetail = $blueprint->isRetailLicense();
+
         $noRegretGuarantees = [
             [
                 'title' => 'Kepemilikan Penuh 100% (Zero Vendor Lock-in)',
-                'desc' => 'Seluruh hak akses repositori privat GitHub dan basis data diserahkan penuh kepada Anda. Anda memegang kunci aset digital Anda sendiri tanpa ketergantungan sewa platform tertutup.',
+                'desc' => $isRetail
+                    ? 'Seluruh hak pakai blueprint arsitektur, DDL database, dan starter code diserahkan penuh kepada Anda. Anda bebas mengembangkannya bersama tim internal tanpa ketergantungan sewa platform tertutup.'
+                    : 'Seluruh hak akses repositori privat GitHub dan basis data diserahkan penuh kepada Anda. Anda memegang kunci aset digital Anda sendiri tanpa ketergantungan sewa platform tertutup.',
                 'badge' => 'FULL_IP_OWNERSHIP',
             ],
             [
                 'title' => 'Garansi Scope Freeze SHA-256 (Nol Biaya Tersembunyi)',
-                'desc' => 'Seluruh rincian fitur pada PRD ini dikunci secara kriptografis. Anda tidak akan pernah mengalami tagihan biaya tambahan siluman di tengah pengerjaan sprint.',
+                'desc' => $isRetail
+                    ? 'Seluruh rincian fitur pada PRD ini dikunci secara kriptografis. Spesifikasi arsitektur yang Anda beli bersifat final, terverifikasi integritasnya, dan bebas biaya lisensi siluman.'
+                    : 'Seluruh rincian fitur pada PRD ini dikunci secara kriptografis. Anda tidak akan pernah mengalami tagihan biaya tambahan siluman di tengah pengerjaan sprint.',
                 'badge' => 'ZERO_HIDDEN_COSTS',
             ],
             [
@@ -1626,9 +1632,13 @@ class PrdGeneratorService
                 'badge' => 'PREMIUM_AESTHETICS',
             ],
             [
-                'title' => 'Escrow Termin 50/50 Midtrans & Garansi 30 Hari Bug-Free',
-                'desc' => 'DP 50% diamankan via payment gateway resmi berizin Bank Indonesia. Pelunasan 50% hanya dibayarkan setelah Anda menguji dan menerima sistem secara nyata dengan garansi bug 30 hari penuh.',
-                'badge' => '100%_RISK_PROTECTION',
+                'title' => $isRetail
+                    ? 'Lisensi Digital 1x Bayar & Bebas Utang Termin (100% Lunas)'
+                    : 'Escrow Termin 50/50 Midtrans & Garansi 30 Hari Bug-Free',
+                'desc' => $isRetail
+                    ? 'Pembelian lisensi kode arsitektur mandiri 1x bayar tanpa cicilan termin DP 50%, tanpa biaya tersembunyi, dan tanpa langganan bulanan. Anda langsung mengunduh seluruh spesifikasi PRD, DDL SQL Strict ULID, Docker scaffold, dan rules AI coding agent secara permanen.'
+                    : 'DP 50% diamankan via payment gateway resmi berizin Bank Indonesia. Pelunasan 50% hanya dibayarkan setelah Anda menguji dan menerima sistem secara nyata dengan garansi bug 30 hari penuh.',
+                'badge' => $isRetail ? 'ONE_TIME_LICENSE' : '100%_RISK_PROTECTION',
             ],
         ];
 

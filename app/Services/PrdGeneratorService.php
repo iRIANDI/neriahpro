@@ -4759,6 +4759,14 @@ PROMPT;
         $rules .= "3. **Automated Verification**: Ensure all code syntax is strictly valid for PHP 8.4+ and runs PHPUnit / Pest tests cleanly.\n";
         $rules .= "4. **Git Discipline**: Every completed slice should be verified against regressions before concluding.\n\n";
 
+        $customRules = $prd['custom_ai_agent_rules'] ?? null;
+        if (!empty($customRules)) {
+            $rules .= "---\n\n";
+            $rules .= "## 8. CUSTOM AI AGENT DIRECTIVES (RETAIL EXTENSION)\n\n";
+            $rules .= is_string($customRules) ? $customRules : json_encode($customRules, JSON_PRETTY_PRINT);
+            $rules .= "\n\n";
+        }
+
         return $rules;
     }
 

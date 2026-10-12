@@ -1130,6 +1130,111 @@ class BlueprintController extends Controller
     }
 
     /**
+     * Partial / Granular Segment Edit & AI Regeneration.
+     * Allows Retail users or SuperAdmins to modify specific PRD segments without resetting the entire document.
+     */
+    public function tweakSegment(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        // Access Logic: Retail, SuperAdmin, or Draft can edit. Studio contracts are locked.
+        $isRetail = $blueprint->project_status === 'Retail License';
+        $isSuperAdmin = auth()->check() && auth()->user()->isSuperAdmin();
+        $isDraft = !$blueprint->signed_agreement && !$blueprint->isScopeFrozen();
+
+        if (!($isRetail || $isSuperAdmin || $isDraft)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Dokumen berada dalam status Scope Lock (Kontrak Studio) dan hanya dapat diubah melalui Change Request resmi. Hubungi admin Neriah Pro.'
+            ], 403);
+        }
+
+        $request->validate([
+            'segment_key' => 'required|string',
+            'mode' => 'required|in:manual,ai',
+            'prompt' => 'nullable|string',
+            'content' => 'nullable|string',
+        ]);
+
+        $key = $request->input('segment_key');
+        $mode = $request->input('mode');
+
+        if ($mode === 'manual') {
+            $newContent = $request->input('content');
+            
+            // Nested JSON update in prd_content
+            $prd = $blueprint->prd_content ?? [];
+            
+            if (str_contains($key, '.')) {
+                $parts = explode('.', $key);
+                if (count($parts) === 2) {
+                    $prd[$parts[0]][$parts[1]] = is_string($newContent) ? (json_decode($newContent, true) ?? $newContent) : $newContent;
+                }
+            } else {
+                $prd[$key] = is_string($newContent) ? (json_decode($newContent, true) ?? $newContent) : $newContent;
+            }
+            
+            $blueprint->update(['prd_content' => $prd]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Segmen spesifikasi berhasil diperbarui secara manual.',
+            ]);
+        }
+
+        if ($mode === 'ai') {
+            $prompt = $request->input('prompt');
+            $prd = $blueprint->prd_content ?? [];
+            $existingData = "";
+            
+            if (str_contains($key, '.')) {
+                $parts = explode('.', $key);
+                $existingData = json_encode($prd[$parts[0]][$parts[1]] ?? '', JSON_PRETTY_PRINT);
+            } else {
+                $existingData = json_encode($prd[$key] ?? '', JSON_PRETTY_PRINT);
+            }
+            
+            $aiService = new \App\Services\Ai\GoogleGeminiService();
+            $systemInstruction = "You are a Senior System Architect modifying a specific segment of a PRD Blueprint. Maintain the existing tone, structure, and language (Indonesian). The user wants you to modify this specific segment based on their prompt. Return ONLY the modified content, without markdown wrappers if it's plain text, or valid JSON without ```json wrappers if the input was JSON. DO NOT include any introductory or concluding text. Just the raw response.";
+            
+            $userPrompt = "ORIGINAL SEGMENT CONTENT (JSON/TEXT):\n{$existingData}\n\nUSER MODIFICATION REQUEST:\n{$prompt}\n\nPlease regenerate this segment incorporating the request. Return the exact structure (JSON or text).";
+
+            $response = $aiService->generateText($userPrompt, $systemInstruction);
+            
+            if ($response) {
+                $cleaned = trim($response);
+                if (str_starts_with($cleaned, '```json')) {
+                    $cleaned = str_replace(['```json', '```'], '', $cleaned);
+                } elseif (str_starts_with($cleaned, '```')) {
+                    $cleaned = str_replace('```', '', $cleaned);
+                }
+                $cleaned = trim($cleaned);
+                
+                $decoded = json_decode($cleaned, true);
+                $newContent = $decoded !== null ? $decoded : $cleaned;
+
+                if (str_contains($key, '.')) {
+                    $parts = explode('.', $key);
+                    $prd[$parts[0]][$parts[1]] = $newContent;
+                } else {
+                    $prd[$key] = $newContent;
+                }
+                $blueprint->update(['prd_content' => $prd]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Segmen berhasil diregenerasi oleh AI.',
+                ]);
+            }
+
+            return response()->json(['success' => false, 'message' => 'AI gagal memproses segmen.'], 500);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Invalid mode'], 400);
+    }
+
+    /**
      * Update and persist developer/architect execution checkpoints for a blueprint.
      * Synchronizes live progress with the customer dashboard.
      */

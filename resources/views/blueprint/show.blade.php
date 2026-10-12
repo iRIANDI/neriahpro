@@ -935,6 +935,61 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     }
                 },
                 scaffoldModalOpen: false,
+                
+                // Tweak Segment Feature
+                tweakModalOpen: false,
+                tweakSegmentKey: '',
+                tweakSegmentTitle: '',
+                tweakMode: 'manual',
+                tweakContent: '',
+                tweakPrompt: '',
+                tweakLoading: false,
+                openTweakModal(key, title, content) {
+                    if ({{ ($isScopeLocked ?? false) ? 'true' : 'false' }} && '{{ $blueprint->project_status }}' !== 'Retail License' && !{{ auth()->user()?->isSuperAdmin() ? 'true' : 'false' }}) {
+                        if (window.showToast) {
+                            window.showToast({ type: 'warning', title: 'AKSES DITOLAK', message: 'Dokumen berada dalam status Scope Lock (Kontrak Studio).' });
+                        }
+                        return;
+                    }
+                    this.tweakSegmentKey = key;
+                    this.tweakSegmentTitle = title;
+                    this.tweakContent = typeof content === 'object' ? JSON.stringify(content, null, 2) : (content || '');
+                    this.tweakMode = 'manual';
+                    this.tweakPrompt = '';
+                    this.tweakModalOpen = true;
+                },
+                async submitTweak() {
+                    this.tweakLoading = true;
+                    try {
+                        const res = await fetch('{{ route('api.blueprint.tweak-segment', $blueprint->slug) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                segment_key: this.tweakSegmentKey,
+                                mode: this.tweakMode,
+                                prompt: this.tweakPrompt,
+                                content: this.tweakContent
+                            })
+                        });
+                        const data = await res.json();
+                        if (data && data.success) {
+                            if (window.showToast) window.showToast({ type: 'success', title: 'BERHASIL', message: data.message });
+                            this.tweakModalOpen = false;
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            throw new Error(data.message || 'Gagal menyimpan.');
+                        }
+                    } catch(err) {
+                        if (window.showToast) window.showToast({ type: 'error', title: 'ERROR', message: err.message });
+                    } finally {
+                        this.tweakLoading = false;
+                    }
+                },
+
                 scaffoldLoading: false,
                 scaffoldMode: 'preview', // 'preview' or 'edit'
                 scaffoldActiveTab: 'docker-compose.yml',
@@ -2745,9 +2800,15 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
             <!-- SECTION 1: EXECUTIVE TECHNICAL DISCOVERY -->
             <section id="section-1" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
-                <div class="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                    <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01</span>
-                    <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Executive Technical Discovery</h2>
+                <div class="flex items-center justify-between gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01</span>
+                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Executive Technical Discovery</h2>
+                    </div>
+                    <button @click="openTweakModal('executive_summary', 'Executive Technical Discovery', {{ json_encode($prd['executive_summary'] ?? []) }})" class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold uppercase text-[10px] flex items-center gap-1.5 transition">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        TWEAK
+                    </button>
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-4 mb-6">
@@ -4611,6 +4672,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">07</span>
                         <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Database ERD &amp; Skema Relasi (PostgreSQL Strict ULID)</h2>
                     </div>
+                    <button @click="openTweakModal('database_erd', 'Database ERD', {{ json_encode($prd['database_erd'] ?? []) }})" class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0 w-fit">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        TWEAK
+                    </button>
+                </div>
 
                     <!-- ERD Tabs & Multi-Language Selector -->
                     <div class="flex flex-wrap items-center gap-2 font-mono text-xs no-print">
@@ -6193,6 +6259,10 @@ class ProcessSecureDataset implements ShouldQueue
                                 <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
                                 <span>{{ $isEn ? 'DOWNLOAD .CURSORRULES' : 'UNDUH .CURSORRULES' }}</span>
                             </a>
+                            <button type="button" @click="openTweakModal('custom_ai_agent_rules', 'AI Coding Agent Directives (Custom Rules)', {{ json_encode($blueprint->prd_content['custom_ai_agent_rules'] ?? '') }})" class="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase transition flex items-center justify-center gap-2 shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                <span>TWEAK / REGENERATE</span>
+                            </button>
                             <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-xl">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 <span>{{ $isEn ? 'DOWNLOAD ZIP (.ZIP)' : 'UNDUH BERKAS (.ZIP)' }}</span>
@@ -9166,6 +9236,60 @@ class ProcessSecureDataset implements ShouldQueue
         };
     </script>
     <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
+    <!-- Tweak Segment / Partial Regeneration Modal -->
+    <div x-show="tweakModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" style="display: none;">
+        <div class="absolute inset-0 bg-zinc-900/80 backdrop-blur-sm" @click="tweakModalOpen = false" x-transition.opacity></div>
+        <div class="relative bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl" x-transition>
+            <!-- Header -->
+            <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
+                <div>
+                    <h3 class="font-black text-lg text-zinc-900 dark:text-zinc-100 uppercase" x-text="tweakSegmentTitle"></h3>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Edit manual aturan bisnis Anda atau gunakan prompt AI untuk me-regenerate segment ini (RAG-Assisted).</p>
+                </div>
+                <button @click="tweakModalOpen = false" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-4 custom-prd-scrollbar space-y-4">
+                
+                <div class="flex gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                    <button @click="tweakMode = 'manual'" :class="tweakMode === 'manual' ? 'text-emerald-600 dark:text-emerald-400 font-bold border-b-2 border-emerald-500' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'" class="pb-2 text-sm uppercase transition">Manual Tweak</button>
+                    <button @click="tweakMode = 'ai'" :class="tweakMode === 'ai' ? 'text-indigo-600 dark:text-indigo-400 font-bold border-b-2 border-indigo-500' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'" class="pb-2 text-sm uppercase transition">AI Regenerate (Prompt)</button>
+                </div>
+
+                <!-- Manual Mode -->
+                <div x-show="tweakMode === 'manual'">
+                    <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">Editor Konten (Markdown / Text / JSON)</label>
+                    <textarea x-model="tweakContent" rows="15" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 font-mono text-sm p-3 focus:outline-none focus:border-emerald-500 custom-prd-scrollbar" placeholder="Ketik aturan bisnis / kode JSON baru di sini..."></textarea>
+                </div>
+
+                <!-- AI Mode -->
+                <div x-show="tweakMode === 'ai'" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2">Instruksi AI (Prompt)</label>
+                        <textarea x-model="tweakPrompt" rows="3" class="w-full bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-300 dark:border-indigo-700 text-zinc-900 dark:text-zinc-100 p-3 text-sm focus:outline-none focus:border-indigo-500" placeholder="Contoh: 'Tolong tambahkan aturan agar AI selalu menggunakan Filament V3 dan Spatie Permission untuk RBAC...'"></textarea>
+                        <p class="text-[10px] text-zinc-500 mt-1">Sistem akan membaca konten asli segmen ini dan merancang ulang isinya sesuai instruksi Anda di atas.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex justify-end gap-3 shrink-0">
+                <button type="button" @click="tweakModalOpen = false" class="px-5 py-2.5 text-xs font-bold uppercase text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition">Batal</button>
+                
+                <button type="button" @click="submitTweak()" :disabled="tweakLoading" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-xs transition flex items-center justify-center gap-2 disabled:opacity-50 min-w-[140px]">
+                    <span x-show="!tweakLoading" x-text="tweakMode === 'manual' ? 'Simpan Segmen' : 'Generate AI'"></span>
+                    <span x-show="tweakLoading" class="flex items-center gap-2">
+                        <svg class="animate-spin w-4 h-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Memproses...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
     @endif
 </body>
 </html>

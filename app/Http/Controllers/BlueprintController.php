@@ -1212,12 +1212,14 @@ class BlueprintController extends Controller
                 $prd[$key] = is_string($newContent) ? (json_decode($newContent, true) ?? $newContent) : $newContent;
             }
             
-            // Impact Matrix (Ripple Effect)
+            // Impact Matrix (Ripple Effect - Upstream to Downstream)
             $impactMatrix = [
-                'executive_summary' => ['mvp_features', 'database_erd'],
-                'masalah_utama' => ['executive_summary', 'mvp_features'],
+                'executive_summary' => ['system_actors', 'mvp_features', 'database_erd'],
+                'masalah_utama' => ['executive_summary', 'system_actors', 'mvp_features'],
+                'system_actors' => ['mvp_features', 'alurs_kerja', 'database_erd', 'custom_ai_agent_rules'],
+                'mvp_features' => ['alurs_kerja', 'database_erd', 'custom_ai_agent_rules'],
+                'alurs_kerja' => ['database_erd', 'custom_ai_agent_rules'],
                 'database_erd' => ['custom_ai_agent_rules'],
-                'mvp_features' => ['database_erd', 'custom_ai_agent_rules'],
             ];
             $baseKey = str_contains($key, '.') ? explode('.', $key)[0] : $key;
             if (isset($impactMatrix[$baseKey])) {
@@ -1277,12 +1279,14 @@ class BlueprintController extends Controller
                     $prd[$key] = $newContent;
                 }
 
-                // Impact Matrix (Ripple Effect)
+                // Impact Matrix (Ripple Effect - Upstream to Downstream)
                 $impactMatrix = [
-                    'executive_summary' => ['mvp_features', 'database_erd'],
-                    'masalah_utama' => ['executive_summary', 'mvp_features'],
+                    'executive_summary' => ['system_actors', 'mvp_features', 'database_erd'],
+                    'masalah_utama' => ['executive_summary', 'system_actors', 'mvp_features'],
+                    'system_actors' => ['mvp_features', 'alurs_kerja', 'database_erd', 'custom_ai_agent_rules'],
+                    'mvp_features' => ['alurs_kerja', 'database_erd', 'custom_ai_agent_rules'],
+                    'alurs_kerja' => ['database_erd', 'custom_ai_agent_rules'],
                     'database_erd' => ['custom_ai_agent_rules'],
-                    'mvp_features' => ['database_erd', 'custom_ai_agent_rules'],
                 ];
                 $baseKey = str_contains($key, '.') ? explode('.', $key)[0] : $key;
                 if (isset($impactMatrix[$baseKey])) {

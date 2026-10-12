@@ -1498,7 +1498,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         'section-7': { id: '09. Velocity Pricing', en: '09. Velocity Pricing' },
                         'section-8': { id: '10. Timeline Sprint Gantt', en: '10. Sprint Timeline' },
                         'section-9': { id: '11. Tata Kelola & SLA', en: '11. Governance & SLA' },
-                        'section-10': { id: '12. Kunci Scope & DP', en: '12. Scope Freeze & DP' }
+                        'section-10': { id: '{{ $blueprint->isRetailLicense() ? "12. Kunci Scope & Lisensi" : "12. Kunci Scope & DP" }}', en: '{{ $blueprint->isRetailLicense() ? "12. Scope Freeze & License" : "12. Scope Freeze & DP" }}' }
                     };
                     const s = titles[this.activeSectionId] || { id: 'Daftar Isi PRD', en: 'PRD Directory' };
                     return this.locale === 'en' ? s.en : s.id;
@@ -1837,11 +1837,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     'id' => 'section-10',
                     'num' => '12',
                     'group' => 'legal',
-                    'title_id' => 'Kunci Scope & Pembayaran DP',
-                    'title_en' => 'Scope Lock & DP Payment',
-                    'subtitle_id' => 'Segel Integritas SHA-256, Kontrak Digital & Midtrans / Voucher',
-                    'subtitle_en' => 'SHA-256 Integrity Seal, Digital Contract & Midtrans / Voucher',
-                    'badge' => 'LEGAL & DP',
+                    'title_id' => $blueprint->isRetailLicense() ? 'Kunci Scope & Lisensi Digital' : 'Kunci Scope & Pembayaran DP',
+                    'title_en' => $blueprint->isRetailLicense() ? 'Scope Lock & Digital License' : 'Scope Lock & DP Payment',
+                    'subtitle_id' => $blueprint->isRetailLicense() ? 'Segel Integritas SHA-256, Lisensi Digital Retail & Unduh Kode' : 'Segel Integritas SHA-256, Kontrak Digital & Midtrans / Voucher',
+                    'subtitle_en' => $blueprint->isRetailLicense() ? 'SHA-256 Integrity Seal, Retail Digital License & Code Download' : 'SHA-256 Integrity Seal, Digital Contract & Midtrans / Voucher',
+                    'badge' => $blueprint->isRetailLicense() ? 'LISENSI' : 'LEGAL & DP',
                 ],
             ];
 
@@ -3040,10 +3040,25 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             </section>
 
             <!-- SECTION 2: PENGGUNA & HAK AKSES (RBAC) -->
-            <section id="section-2" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
-                <div class="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                    <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">02</span>
-                    <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Pengguna & Hak Akses (Aktor / RBAC)</h2>
+            @php $isActorsImpacted = in_array('system_actors', $prd['_impacted_segments'] ?? []); @endphp
+            <section id="section-2" class="bg-white dark:bg-zinc-900 border {{ $isActorsImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24 transition-all">
+                <div class="flex flex-col gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">02</span>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Pengguna & Hak Akses (Aktor / RBAC)</h2>
+                        </div>
+                        <button @click="openTweakModal('system_actors', 'Pengguna & Hak Akses (Aktor / RBAC)', {{ json_encode($prd['system_actors'] ?? []) }})" class="px-3 py-1.5 border {{ $isActorsImpacted ? 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }} font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0 cursor-pointer">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            TWEAK
+                        </button>
+                    </div>
+                    @if($isActorsImpacted)
+                    <div class="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-mono text-amber-700 dark:text-amber-400 mt-1">
+                        <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p x-html="locale === 'en' ? '<strong>NEEDS REVIEW:</strong> System actors segment is detected as <em>stale</em> due to upstream changes. Click TWEAK to adjust actors and RBAC permissions.' : '<strong>NEEDS REVIEW:</strong> Segmen aktor sistem terdeteksi <em>stale</em> karena perubahan di segmen hulu. Klik TWEAK untuk menyesuaikan aktor dan hak akses RBAC.'"></p>
+                    </div>
+                    @endif
                 </div>
                 <div class="mb-4 text-xs font-mono text-zinc-500 dark:text-zinc-400">
                     TARGET_AUDIENCE: <span class="text-zinc-900 dark:text-zinc-100 font-bold">{{ $blueprint->target_audiens ?? ($prd['executive_summary']['target_audience'] ?? '-') }}</span>
@@ -4487,32 +4502,49 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     }
                 }
             @endphp
-            <section id="section-4" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-6">
-                    <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
-                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Alur Kerja Utama (User Flow)</h2>
-                    </div>
+            @php $isFlowImpacted = in_array('alurs_kerja', $prd['_impacted_segments'] ?? []); @endphp
+            <section id="section-4" class="bg-white dark:bg-zinc-900 border {{ $isFlowImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24 transition-all">
+                <div class="flex flex-col gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Alur Kerja Utama (User Flow)</h2>
+                        </div>
 
-                    <!-- Flow View Tabs -->
-                    <div class="flex items-center gap-1 font-mono text-xs no-print">
-                        <button 
-                            @click="flowTab = 'visual'" 
-                            :class="flowTab === 'visual' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
-                            class="px-3 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
-                        >
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                            <span>VISUAL PIPELINE</span>
-                        </button>
-                        <button 
-                            @click="flowTab = 'mermaid'; $nextTick(() => window.renderMermaidDiagram('mermaid-flow-target', 'mermaid-flow-source'))" 
-                            :class="flowTab === 'mermaid' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
-                            class="px-3 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
-                        >
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                            <span>MERMAID CHART</span>
-                        </button>
+                        <!-- Actions & Tabs -->
+                        <div class="flex flex-wrap items-center gap-2 no-print">
+                            <!-- Flow View Tabs -->
+                            <div class="flex items-center gap-1 font-mono text-xs">
+                                <button 
+                                    @click="flowTab = 'visual'" 
+                                    :class="flowTab === 'visual' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                                    class="px-3 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    <span>VISUAL PIPELINE</span>
+                                </button>
+                                <button 
+                                    @click="flowTab = 'mermaid'; $nextTick(() => window.renderMermaidDiagram('mermaid-flow-target', 'mermaid-flow-source'))" 
+                                    :class="flowTab === 'mermaid' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                                    class="px-3 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                    <span>MERMAID CHART</span>
+                                </button>
+                            </div>
+
+                            <button @click="openTweakModal('alurs_kerja', 'Alur Kerja Utama (User Flow)', {{ json_encode($prd['alurs_kerja'] ?? []) }})" class="px-3 py-1.5 border {{ $isFlowImpacted ? 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }} font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0 cursor-pointer">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                TWEAK
+                            </button>
+                        </div>
                     </div>
+                    @if($isFlowImpacted)
+                    <div class="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-mono text-amber-700 dark:text-amber-400 mt-1">
+                        <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p x-html="locale === 'en' ? '<strong>NEEDS REVIEW:</strong> User workflows are detected as <em>stale</em> due to upstream changes in Actors or Features. Click TWEAK to adjust flowchart steps and actors.' : '<strong>NEEDS REVIEW:</strong> Alur kerja sistem terdeteksi <em>stale</em> karena perubahan di segmen hulu (Aktor atau Fitur). Klik TWEAK untuk menyesuaikan tahapan alur kerja dan aktor.'"></p>
+                    </div>
+                    @endif
                 </div>
 
                 <!-- 1. Interactive Visual Flowchart (Pipeline Nodes & Connectors) -->

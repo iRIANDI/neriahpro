@@ -618,24 +618,6 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                 <span>{lang === 'id' ? 'Portal Klien' : 'Client Portal'}</span>
               </button>
             )}
-
-            {isBlueprintEnabled ? (
-              <a
-                href="/pricing#retail"
-                className="bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black font-mono text-xs uppercase tracking-widest font-black py-2.5 px-5 rounded-none transition flex items-center gap-1.5 shadow-none"
-              >
-                <span>{lang === 'id' ? 'Mulai Blueprint' : 'Launch Blueprint'}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </a>
-            ) : (
-              <a
-                href="#services"
-                className="bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black font-mono text-xs uppercase tracking-widest font-black py-2.5 px-5 rounded-none transition flex items-center gap-1.5 shadow-none"
-              >
-                <span>{lang === 'id' ? 'Eksplorasi Layanan' : 'Explore Services'}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </a>
-            )}
           </div>
 
           {/* Mobile Actions (Language, Theme, Menu) */}

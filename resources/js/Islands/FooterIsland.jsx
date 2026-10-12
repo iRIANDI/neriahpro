@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, ShieldCheck, Terminal, ArrowUpRight, MessageCircle } from 'lucide-react';
+import { Layers, ShieldCheck, ArrowUpRight, MessageCircle } from 'lucide-react';
 
 export default function FooterIsland({ settings, featureFlags, whatsappNumber = '628123456789', currentLocale }) {
   const currentYear = new Date().getFullYear();
@@ -110,13 +110,6 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                 <span>{isEn ? 'Client Dashboard' : 'Portal Klien'}</span>
-              </a>
-              <a
-                href="/admin/login"
-                className="inline-flex items-center gap-2 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-500 text-zinc-700 dark:text-zinc-300 px-3 py-2 rounded-none transition w-full justify-center text-[11px]"
-              >
-                <Terminal className="w-3.5 h-3.5" />
-                <span>{isEn ? 'Admin Console' : 'Console Admin'}</span>
               </a>
             </div>
           </div>

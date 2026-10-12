@@ -584,7 +584,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
                       {authUser.is_admin && (
                         <a 
-                          href="/admin"
+                          href={authUser.admin_path || "/admin"}
                           className="w-full text-left px-2.5 py-2 flex items-center justify-between hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-mono text-xs font-bold transition rounded-none border-t border-zinc-100 dark:border-zinc-800"
                         >
                           <span className="text-amber-600 dark:text-amber-400">Admin Control Center</span>

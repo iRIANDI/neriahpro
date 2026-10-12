@@ -24,10 +24,12 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        $adminPath = env('FILAMENT_ADMIN_PATH', 'admin');
+
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            ->path($adminPath)
             ->brandName('Neriah Pro')
             ->brandLogo(fn () => view('filament.components.brand-logo'))
             ->brandLogoHeight('2.25rem')

@@ -1584,13 +1584,20 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     <x-global-navigation :global-settings="$globalSettings ?? []" />
 
     <!-- Header Navigation Bar (Sharp Precision Theme) -->
-    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-2.5 px-4 sm:px-6 sticky top-[88px] sm:top-[96px] z-40 no-print transition-colors">
+    <header class="bg-white dark:bg-zinc-900 border-y border-zinc-200 dark:border-zinc-800 py-2.5 px-4 sm:px-6 mt-2 sm:mt-2.5 mb-2 sm:mb-2.5 sticky top-[88px] sm:top-[96px] z-40 no-print transition-colors shadow-xs">
         <div class="w-full max-w-[1700px] mx-auto flex items-center justify-between gap-2 sm:gap-3">
             <!-- Left Branding -->
-            <div class="flex items-center gap-3 shrink-0">
+            <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
                 <a href="/" class="text-sm font-black uppercase tracking-tight flex items-center gap-2 text-zinc-900 dark:text-white shrink-0">
                     <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black flex items-center justify-center text-xs font-mono font-bold rounded-none">N</span>
                     <span class="whitespace-nowrap">NERIAH<span class="text-emerald-500">PRO</span> <span class="hidden sm:inline text-zinc-400 font-normal">// PRD SPEC</span></span>
+                </a>
+
+                <!-- Back to Client Portal Button -->
+                <a href="/customer/dashboard" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Kembali ke Portal Klien">
+                    <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    <span class="hidden md:inline">PORTAL KLIEN</span>
+                    <span class="md:hidden">PORTAL</span>
                 </a>
 
                 <!-- Real-time Live Collaborative Presence Indicator -->
@@ -1746,10 +1753,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     <div>ACCESS_MODE: <span class="text-rose-600 font-bold">LOCKED_PRIVATE</span></div>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                    <a href="/admin/login" class="px-5 py-2.5 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none transition">
-                        Login Administrator
+                    <a href="/customer/dashboard" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none transition flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        <span>Kembali ke Portal Klien</span>
                     </a>
-                    <a href="/" class="px-5 py-2.5 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold rounded-none transition">
+                    <a href="/" class="px-5 py-2.5 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase font-bold rounded-none transition flex items-center justify-center">
                         Kembali ke Beranda
                     </a>
                 </div>

@@ -68,6 +68,7 @@
         'name' => auth()->user()->name,
         'email' => auth()->user()->email,
         'is_admin' => auth()->user()->hasRole('super_admin') || auth()->user()->email === 'yoseph.iriandi.tambunan@gmail.com',
+        'admin_path' => '/' . env('FILAMENT_ADMIN_PATH', 'admin'),
     ] : null;
 @endphp
 

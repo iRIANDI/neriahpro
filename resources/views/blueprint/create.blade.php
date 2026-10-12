@@ -86,8 +86,8 @@
                 <button onclick="toggleTheme()" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono rounded-none border border-zinc-300 dark:border-zinc-700 transition">
                     THEME
                 </button>
-                <a href="/admin/login" class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition">
-                    Portal Admin &rarr;
+                <a href="/customer/dashboard" class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition flex items-center gap-1">
+                    Portal Klien &rarr;
                 </a>
             </div>
         </div>

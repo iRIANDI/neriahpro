@@ -756,15 +756,11 @@
             </form>
 
             <!-- Bottom Navigation & Help -->
-            <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 text-center font-mono text-[11px] text-zinc-500 space-y-1.5">
+            <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 text-center font-mono text-[11px] text-zinc-500">
                 <div>
                     <span x-text="lang === 'en' ? 'Need an architectural blueprint?' : 'Belum memiliki cetak biru proyek?'">{{ $isEn ? 'Need an architectural blueprint?' : 'Belum memiliki cetak biru proyek?' }}</span>
                     <a href="/blueprint" class="text-emerald-600 dark:text-emerald-400 hover:underline">Spark Free Audit</a> /
                     <a href="/pricing" class="text-emerald-600 dark:text-emerald-400 hover:underline" x-text="lang === 'en' ? 'View Pricing' : 'Lihat Paket'">{{ $isEn ? 'View Pricing' : 'Lihat Paket' }}</a>
-                </div>
-                <div>
-                    <span x-text="lang === 'en' ? 'Internal Team Superadmin?' : 'Akses Administrator Tim?'">{{ $isEn ? 'Internal Team Superadmin?' : 'Akses Administrator Tim?' }}</span>
-                    <a href="/admin/login" class="text-zinc-600 dark:text-zinc-300 hover:underline font-bold" x-text="lang === 'en' ? 'Admin Control Center →' : 'Login Control Center →'">{{ $isEn ? 'Admin Control Center →' : 'Login Control Center →' }}</a>
                 </div>
             </div>
 

@@ -1620,9 +1620,10 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <span class="hidden xl:inline" x-text="locale === 'en' ? 'EDIT SPEC' : 'LENGKAPI'">LENGKAPI</span>
                     </a>
                 @else
-                    <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-xs font-mono uppercase font-bold border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 cursor-not-allowed select-none shrink-0 whitespace-nowrap" title="Scope Terkunci: Dokumen telah ditandatangani dan tidak dapat diregenerasi.">
+                    <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-xs font-mono uppercase font-bold border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 cursor-not-allowed select-none shrink-0 whitespace-nowrap" 
+                          title="{{ $blueprint->project_status === 'Retail License' ? 'Lisensi PRD telah diterbitkan dan tidak dapat diregenerasi.' : 'Scope Terkunci: Dokumen telah ditandatangani dan tidak dapat diregenerasi.' }}">
                         <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        <span class="hidden md:inline">LOCKED</span>
+                        <span class="hidden md:inline">{{ $blueprint->project_status === 'Retail License' ? 'RETAIL LICENSE' : 'LOCKED' }}</span>
                     </span>
                 @endif
             </div>

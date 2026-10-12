@@ -4734,7 +4734,6 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <span>DICTIONARY</span>
                         </button>
                     </div>
-                </div>
 
                 @php
                     $rawTables = $prd['erd_schema']['tables'] ?? [];

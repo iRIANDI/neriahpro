@@ -1175,6 +1175,25 @@ class BlueprintController extends Controller
                 $prd[$key] = is_string($newContent) ? (json_decode($newContent, true) ?? $newContent) : $newContent;
             }
             
+            // Impact Matrix (Ripple Effect)
+            $impactMatrix = [
+                'executive_summary' => ['mvp_features', 'database_erd'],
+                'masalah_utama' => ['executive_summary', 'mvp_features'],
+                'database_erd' => ['custom_ai_agent_rules'],
+                'mvp_features' => ['database_erd', 'custom_ai_agent_rules'],
+            ];
+            $baseKey = str_contains($key, '.') ? explode('.', $key)[0] : $key;
+            if (isset($impactMatrix[$baseKey])) {
+                $impacted = $prd['_impacted_segments'] ?? [];
+                foreach ($impactMatrix[$baseKey] as $iKey) {
+                    if (!in_array($iKey, $impacted)) $impacted[] = $iKey;
+                }
+                $prd['_impacted_segments'] = $impacted;
+            }
+            if (isset($prd['_impacted_segments'])) {
+                $prd['_impacted_segments'] = array_values(array_filter($prd['_impacted_segments'], fn($item) => $item !== $baseKey && $item !== $key));
+            }
+            
             $blueprint->update(['prd_content' => $prd]);
 
             return response()->json([
@@ -1220,6 +1239,26 @@ class BlueprintController extends Controller
                 } else {
                     $prd[$key] = $newContent;
                 }
+
+                // Impact Matrix (Ripple Effect)
+                $impactMatrix = [
+                    'executive_summary' => ['mvp_features', 'database_erd'],
+                    'masalah_utama' => ['executive_summary', 'mvp_features'],
+                    'database_erd' => ['custom_ai_agent_rules'],
+                    'mvp_features' => ['database_erd', 'custom_ai_agent_rules'],
+                ];
+                $baseKey = str_contains($key, '.') ? explode('.', $key)[0] : $key;
+                if (isset($impactMatrix[$baseKey])) {
+                    $impacted = $prd['_impacted_segments'] ?? [];
+                    foreach ($impactMatrix[$baseKey] as $iKey) {
+                        if (!in_array($iKey, $impacted)) $impacted[] = $iKey;
+                    }
+                    $prd['_impacted_segments'] = $impacted;
+                }
+                if (isset($prd['_impacted_segments'])) {
+                    $prd['_impacted_segments'] = array_values(array_filter($prd['_impacted_segments'], fn($item) => $item !== $baseKey && $item !== $key));
+                }
+
                 $blueprint->update(['prd_content' => $prd]);
 
                 return response()->json([

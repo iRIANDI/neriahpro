@@ -1235,7 +1235,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     return Math.round(finalContract * 0.50);
                 },
                 isPayingSnap: false,
-                executionTrack: '{{ ($blueprint->project_status === \'Retail License\' || request(\'track\') === \'retail\') ? \'retail\' : \'studio\' }}',
+                executionTrack: '{{ ($blueprint->project_status === 'Retail License' || request('track') === 'retail') ? 'retail' : 'studio' }}',
                 retailCheckingOut: false,
                 async checkoutRetail(packageTier) {
                     this.retailCheckingOut = true;
@@ -2799,16 +2799,25 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             </div>
 
             <!-- SECTION 1: EXECUTIVE TECHNICAL DISCOVERY -->
-            <section id="section-1" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
-                <div class="flex items-center justify-between gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                    <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01</span>
-                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Executive Technical Discovery</h2>
+            @php $isExecutiveImpacted = in_array('executive_summary', $prd['_impacted_segments'] ?? []); @endphp
+            <section id="section-1" class="bg-white dark:bg-zinc-900 border {{ $isExecutiveImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24 transition-all">
+                <div class="flex flex-col gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01</span>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Executive Technical Discovery</h2>
+                        </div>
+                        <button @click="openTweakModal('executive_summary', 'Executive Technical Discovery', {{ json_encode($prd['executive_summary'] ?? []) }})" class="px-3 py-1.5 border {{ $isExecutiveImpacted ? 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }} font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            TWEAK
+                        </button>
                     </div>
-                    <button @click="openTweakModal('executive_summary', 'Executive Technical Discovery', {{ json_encode($prd['executive_summary'] ?? []) }})" class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold uppercase text-[10px] flex items-center gap-1.5 transition">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        TWEAK
-                    </button>
+                    @if($isExecutiveImpacted)
+                    <div class="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-mono text-amber-700 dark:text-amber-400 mt-1">
+                        <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p><strong>NEEDS REVIEW:</strong> Segmen ini terdeteksi <em>stale</em> karena perubahan manual/tweak di segmen lain yang memiliki ketergantungan erat. Harap klik TWEAK lalu tinjau atau regenerate AI agar selaras kembali.</p>
+                    </div>
+                    @endif
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-4 mb-6">
@@ -4666,16 +4675,25 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             </section>
 
             <!-- SECTION 5: ENTERPRISE DATABASE ERD & SCHEMA BLUEPRINT -->
-            <section id="section-5" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
-                    <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">07</span>
-                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Database ERD &amp; Skema Relasi (PostgreSQL Strict ULID)</h2>
+            @php $isErdImpacted = in_array('database_erd', $prd['_impacted_segments'] ?? []); @endphp
+            <section id="section-5" class="bg-white dark:bg-zinc-900 border {{ $isErdImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid scroll-mt-24 transition-all">
+                <div class="flex flex-col gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">07</span>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Database ERD &amp; Skema Relasi (PostgreSQL Strict ULID)</h2>
+                        </div>
+                        <button @click="openTweakModal('database_erd', 'Database ERD', {{ json_encode($prd['database_erd'] ?? []) }})" class="px-3 py-1.5 border {{ $isErdImpacted ? 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }} font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0 w-fit">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            TWEAK
+                        </button>
                     </div>
-                    <button @click="openTweakModal('database_erd', 'Database ERD', {{ json_encode($prd['database_erd'] ?? []) }})" class="px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0 w-fit">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        TWEAK
-                    </button>
+                    @if($isErdImpacted)
+                    <div class="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-mono text-amber-700 dark:text-amber-400 mt-1">
+                        <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p><strong>NEEDS REVIEW:</strong> Segmen ERD ini terdeteksi <em>stale</em>. Anda baru saja melakukan tweak pada komponen hulu (seperti Fitur / Masalah Utama), harap sesuaikan skema tabel agar selaras dengan fitur terbaru tersebut.</p>
+                    </div>
+                    @endif
                 </div>
 
                     <!-- ERD Tabs & Multi-Language Selector -->

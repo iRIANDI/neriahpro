@@ -29,6 +29,13 @@
 
     <div x-data="sprintTimelineDashboard()" x-init="initDashboard()" class="st-container space-y-6">
 
+        @if(auth()->user()?->hasRole('midtrans_reviewer'))
+            <div class="p-3 bg-zinc-100 dark:bg-zinc-850 border-l-4 border-emerald-500 text-xs font-mono text-zinc-700 dark:text-zinc-300 flex flex-wrap items-center justify-between gap-2">
+                <span>🛡️ <strong>AUDIT MODE AKTIF:</strong> Tampilan matriks kapasitas sprint dan anti-collision timeline dalam mode pantau verifikasi kepatuhan Midtrans.</span>
+                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold text-[10px] uppercase">READ-ONLY AUDIT</span>
+            </div>
+        @endif
+
         {{-- TOP STATS: EXECUTIVE SPRINT VELOCITY & ANTI-COLLISION SHIELD --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {{-- Stat 1: Total Sprints Aktif --}}
@@ -123,6 +130,7 @@
                 </button>
             </div>
 
+            @if(! auth()->user()?->hasRole('midtrans_reviewer'))
             <div class="flex items-center gap-2 py-1">
                 <button
                     type="button"
@@ -133,6 +141,7 @@
                     <span>+ Kunci Slot Proyek</span>
                 </button>
             </div>
+            @endif
         </div>
 
         {{-- TAB 1: SPRINT CAPACITY & ANTI-COLLISION MATRIX --}}

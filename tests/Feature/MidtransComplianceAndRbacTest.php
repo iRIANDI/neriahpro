@@ -56,6 +56,7 @@ class MidtransComplianceAndRbacTest extends TestCase
         $this->assertTrue(\App\Filament\Resources\VisionBlueprints\VisionBlueprintResource::canViewAny());
         $this->assertTrue(\App\Filament\Resources\Documents\DocumentResource::canViewAny());
         $this->assertTrue(\App\Filament\Resources\DomainHostingAssets\DomainHostingAssetResource::canViewAny());
+        $this->assertTrue(\App\Filament\Pages\SprintTimelinePage::canAccess());
 
         // 2. Client Transactions, Services Catalog & Legal Compliance MUST be viewable by reviewer
         $this->assertTrue(\App\Filament\Resources\Transactions\TransactionResource::canViewAny());
@@ -159,5 +160,18 @@ class MidtransComplianceAndRbacTest extends TestCase
         // Direct access to Interview Sessions
         $response = $this->actingAs($reviewer)->get('/admin/interview-sessions');
         $response->assertStatus(403);
+    }
+
+    /**
+     * Test that Midtrans reviewer CAN access the Sprint Capacity & Anti-Collision Gantt Timeline (/admin/sprint-timeline)
+     */
+    public function test_midtrans_reviewer_can_access_sprint_timeline_dashboard(): void
+    {
+        $reviewer = User::where('email', 'reviewer.midtrans@neriahpro.com')->firstOrFail();
+
+        $response = $this->actingAs($reviewer)->get('/admin/sprint-timeline');
+        $response->assertStatus(200);
+        $response->assertSee('Sprint Capacity');
+        $response->assertSee('READ-ONLY AUDIT');
     }
 }

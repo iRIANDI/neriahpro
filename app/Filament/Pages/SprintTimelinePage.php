@@ -26,7 +26,7 @@ class SprintTimelinePage extends Page
     public ?string $targetBatchForAssign = null;
 
     /**
-     * Access control: Admins, Developers, and Project Managers.
+     * Access control: Admins, Developers, Project Managers, and Midtrans Reviewers.
      */
     public static function canAccess(): bool
     {
@@ -35,7 +35,8 @@ class SprintTimelinePage extends Page
             return false;
         }
 
-        if ($user->hasAnyRole(['midtrans_reviewer', 'client_retail', 'client_partner', 'client'])) {
+        // Only clients (client_retail, client_partner, client) are restricted to customer portal
+        if ($user->hasAnyRole(['client_retail', 'client_partner', 'client'])) {
             return false;
         }
 
@@ -115,6 +116,11 @@ class SprintTimelinePage extends Page
      */
     public function assignProject(string $blueprintId, string $batchKey): void
     {
+        if (auth()->user()?->hasRole('midtrans_reviewer')) {
+            Notification::make()->warning()->title('Akses Audit Terbatas')->body('Akun Midtrans Reviewer hanya memiliki akses baca (Read-Only).')->send();
+            return;
+        }
+
         $blueprint = VisionBlueprint::find($blueprintId);
         if (! $blueprint) {
             Notification::make()->danger()->title('Proyek tidak ditemukan!')->send();
@@ -139,6 +145,11 @@ class SprintTimelinePage extends Page
      */
     public function unassignProject(string $blueprintId): void
     {
+        if (auth()->user()?->hasRole('midtrans_reviewer')) {
+            Notification::make()->warning()->title('Akses Audit Terbatas')->body('Akun Midtrans Reviewer hanya memiliki akses baca (Read-Only).')->send();
+            return;
+        }
+
         $blueprint = VisionBlueprint::find($blueprintId);
         if (! $blueprint) {
             return;
@@ -161,6 +172,11 @@ class SprintTimelinePage extends Page
      */
     public function saveBatchesSettings(array $updatedBatches): void
     {
+        if (auth()->user()?->hasRole('midtrans_reviewer')) {
+            Notification::make()->warning()->title('Akses Audit Terbatas')->body('Akun Midtrans Reviewer hanya memiliki akses baca (Read-Only).')->send();
+            return;
+        }
+
         $setting = CmsGlobalSetting::firstOrNew(['key' => 'sprint_batches_config']);
         $setting->value = $updatedBatches;
         $setting->save();

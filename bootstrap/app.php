@@ -19,6 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/midtrans/*',
             'midtrans/*',
         ]);
+        $middleware->encryptCookies(except: [
+            'neriah_locale',
+            'neriah_locale_manual',
+            'neriah_auto_detected',
+            'googtrans',
+        ]);
         $middleware->append(\App\Http\Middleware\SetGlobalTimezone::class);
         $middleware->append(\App\Http\Middleware\AiThreatShield::class);
         $middleware->web(append: [

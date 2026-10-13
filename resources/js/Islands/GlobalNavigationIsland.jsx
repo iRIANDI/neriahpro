@@ -100,7 +100,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
   const [lang, setLang] = useState(() => {
     if (typeof window !== 'undefined') {
       const match = document.cookie.match(new RegExp('(^| )neriah_locale=([^;]+)'));
-      if (match) return match[2];
+      if (match && (match[2] === 'id' || match[2] === 'en')) return match[2];
       return document.documentElement.lang?.startsWith('en') ? 'en' : 'id';
     }
     return 'id';
@@ -112,7 +112,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
       if (match) {
         const parts = decodeURIComponent(match[2]).split('/');
         const target = parts[parts.length - 1];
-        if (target && target !== 'id' && target !== '') {
+        if (target && target !== 'id' && target !== '' && target.length <= 8) {
           return target;
         }
       }
@@ -354,10 +354,10 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
               >
                 <Globe className="w-3.5 h-3.5 text-emerald-500" />
                 <span className="uppercase tracking-wider font-bold">
-                  {activeTier2 ? activeTier2.toUpperCase() : lang.toUpperCase()}
+                  {activeTier2 ? activeTier2.toUpperCase() : (lang === 'en' ? 'EN' : 'ID')}
                 </span>
                 <span className="text-[10px] text-zinc-400 hidden lg:inline font-sans">
-                  {activeTier2 ? '(Global)' : (lang === 'id' ? '(ID)' : '(EN)')}
+                  {activeTier2 ? '(Global)' : (lang === 'en' ? '(EN)' : '(ID)')}
                 </span>
                 <ChevronDown className={`w-3 h-3 text-zinc-400 transition-transform duration-150 ${globalLangOpen ? 'rotate-180 text-emerald-500' : ''}`} />
               </button>
@@ -688,7 +688,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                     <Globe className="w-3.5 h-3.5 text-emerald-500" />
                     <span className="text-zinc-500 text-[10px] uppercase">BAHASA / LANG:</span>
                     <span className="text-zinc-900 dark:text-zinc-100">
-                      {activeTier2 ? `${activeTier2.toUpperCase()} (Tier 2)` : `${lang.toUpperCase()} (Tier 1)`}
+                      {activeTier2 ? `${activeTier2.toUpperCase()} (Tier 2)` : (lang === 'en' ? 'EN (Tier 1)' : 'ID (Tier 1)')}
                     </span>
                   </div>
                   <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-150 ${mobileLangOpen ? 'rotate-180 text-emerald-500' : ''}`} />

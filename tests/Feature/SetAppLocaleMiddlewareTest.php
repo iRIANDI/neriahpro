@@ -25,8 +25,8 @@ class SetAppLocaleMiddlewareTest extends TestCase
 
         $response->assertSuccessful();
         $this->assertEquals('en', app()->getLocale());
-        $response->assertCookie('neriah_locale', 'en');
-        $response->assertCookie('neriah_auto_detected', '1');
+        $response->assertPlainCookie('neriah_locale', 'en');
+        $response->assertPlainCookie('neriah_auto_detected', '1');
     }
 
     public function test_japan_visitor_auto_selects_tier_2_ja(): void
@@ -37,8 +37,8 @@ class SetAppLocaleMiddlewareTest extends TestCase
 
         $response->assertSuccessful();
         $this->assertEquals('id', app()->getLocale());
-        $response->assertCookie('googtrans', '/id/ja');
-        $response->assertCookie('neriah_auto_detected', '1');
+        $response->assertPlainCookie('googtrans', '/id/ja');
+        $response->assertPlainCookie('neriah_auto_detected', '1');
     }
 
     public function test_indonesia_visitor_stays_in_indonesian(): void
@@ -49,8 +49,8 @@ class SetAppLocaleMiddlewareTest extends TestCase
 
         $response->assertSuccessful();
         $this->assertEquals('id', app()->getLocale());
-        $response->assertCookie('neriah_locale', 'id');
-        $response->assertCookie('neriah_auto_detected', '1');
+        $response->assertPlainCookie('neriah_locale', 'id');
+        $response->assertPlainCookie('neriah_auto_detected', '1');
     }
 
     public function test_manual_preference_cookie_is_strictly_respected(): void
@@ -73,7 +73,7 @@ class SetAppLocaleMiddlewareTest extends TestCase
 
         $response->assertSuccessful();
         $this->assertEquals('en', app()->getLocale());
-        $response->assertCookie('neriah_locale', 'en');
-        $response->assertCookie('neriah_locale_manual', '1');
+        $response->assertPlainCookie('neriah_locale', 'en');
+        $response->assertPlainCookie('neriah_locale_manual', '1');
     }
 }

@@ -19,7 +19,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
         {/* Top Branding & Mission */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-zinc-200 dark:border-zinc-800">
           
-          <div className="md:col-span-5">
+          <div className="md:col-span-4">
             <a href="/" className="inline-flex items-center gap-2 text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-4">
               <span className="w-7 h-7 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black flex items-center justify-center text-xs font-mono font-bold rounded-none">
                 N
@@ -39,15 +39,15 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
 
           {/* Solutions Hub */}
           {hasAnyPillar && (
-            <div className="md:col-span-3">
+            <div className="md:col-span-2">
               <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-                {isEn ? 'Life & Tech Solutions' : 'Aplikasi & Solusi'}
+                {isEn ? 'Solutions' : 'Aplikasi'}
               </h4>
               <ul className="space-y-2.5 font-mono text-xs">
                 {isBlueprintEnabled && (
                   <li>
                     <a href="/blueprint" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                      <span>Project OS & Blueprint (PRD)</span>
+                      <span>Project OS (PRD)</span>
                       <ArrowUpRight className="w-3 h-3 text-zinc-400" />
                     </a>
                   </li>
@@ -55,7 +55,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
                 {isCvProEnabled && (
                   <li>
                     <a href="/cv-pro" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                      <span>CV Pro Studio & Karir</span>
+                      <span>CV Pro Studio</span>
                       <ArrowUpRight className="w-3 h-3 text-zinc-400" />
                     </a>
                   </li>
@@ -63,6 +63,30 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
               </ul>
             </div>
           )}
+
+          {/* Legal & Compliance Links */}
+          <div className="md:col-span-2">
+            <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
+              {isEn ? 'Legal & Policy' : 'Legal & Regulasi'}
+            </h4>
+            <ul className="space-y-2.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
+              <li>
+                <a href="/terms" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                  <span>{isEn ? 'Terms of Service' : 'Syarat & Ketentuan'}</span>
+                </a>
+              </li>
+              <li>
+                <a href="/privacy-policy" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                  <span>{isEn ? 'Privacy Policy' : 'Kebijakan Privasi'}</span>
+                </a>
+              </li>
+              <li>
+                <a href="/refund-policy" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                  <span>{isEn ? 'Refund & Warranty' : 'Kebijakan Refund'}</span>
+                </a>
+              </li>
+            </ul>
+          </div>
 
           {/* Technical Architecture Standards */}
           <div className="md:col-span-2">

@@ -2280,33 +2280,20 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                         <span>{isEn ? 'OPEN CLIENT DASHBOARD →' : 'BUKA DASHBOARD PELANGGAN →'}</span>
                       </a>
                     ) : lastOrder?.snap_token ? (
-                      <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                        <button
-                          type="button"
-                          onClick={() => triggerSnapPayment(
-                            lastOrder.snap_token, 
-                            lastOrder.order_id, 
-                            lastOrder.redirect_url, 
-                            lastOrder.snap_url, 
-                            lastOrder.client_key
-                          )}
-                          className="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2 transition cursor-pointer shadow-lg rounded-none"
-                        >
-                          <CreditCard className="w-4 h-4" />
-                          <span>{isEn ? 'PAY VIA MIDTRANS SNAP NOW →' : 'BAYAR VIA MIDTRANS SNAP (QRIS / VA) →'}</span>
-                        </button>
-                        {lastOrder.redirect_url && (
-                          <a
-                            href={lastOrder.redirect_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full sm:w-auto px-4 py-3 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-emerald-400 font-mono text-xs font-bold uppercase tracking-wider inline-flex items-center justify-center gap-1.5 border border-emerald-500/40 rounded-none transition"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>{isEn ? 'DIRECT PAYMENT TAB ↗' : 'TAB PEMBAYARAN LANGSUNG ↗'}</span>
-                          </a>
+                      <button
+                        type="button"
+                        onClick={() => triggerSnapPayment(
+                          lastOrder.snap_token, 
+                          lastOrder.order_id, 
+                          lastOrder.redirect_url, 
+                          lastOrder.snap_url, 
+                          lastOrder.client_key
                         )}
-                      </div>
+                        className="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2 transition cursor-pointer shadow-lg rounded-none"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        <span>{isEn ? 'PAY VIA MIDTRANS SNAP NOW →' : 'BAYAR VIA MIDTRANS SNAP (QRIS / VA) →'}</span>
+                      </button>
                     ) : null}
 
                     {submittedWaUrl && !isRetailTier && (

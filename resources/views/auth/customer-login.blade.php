@@ -830,7 +830,22 @@
 
     <!-- FOOTER -->
     <footer class="border-t border-zinc-200 dark:border-zinc-800 py-4 bg-white/50 dark:bg-zinc-900/50 text-center font-mono text-[11px] text-zinc-500">
-        <p>&copy; {{ date('Y') }} Neriah Pro. <span x-text="lang === 'en' ? 'All rights reserved. Secure Dual-Factor Client Workspace.' : 'Hak cipta dilindungi. Sistem Autentikasi Ganda 2-FA Portal Klien.'">{{ $isEn ? 'All rights reserved. Secure Dual-Factor Client Workspace.' : 'Hak cipta dilindungi. Sistem Autentikasi Ganda 2-FA Portal Klien.' }}</span></p>
+        <div class="max-w-md mx-auto px-4 flex flex-col items-center gap-2">
+            <p>&copy; {{ date('Y') }} Neriah Pro. <span x-text="lang === 'en' ? 'All rights reserved. Secure Dual-Factor Client Workspace.' : 'Hak cipta dilindungi. Sistem Autentikasi Ganda 2-FA Portal Klien.'">{{ $isEn ? 'All rights reserved. Secure Dual-Factor Client Workspace.' : 'Hak cipta dilindungi. Sistem Autentikasi Ganda 2-FA Portal Klien.' }}</span></p>
+            <div class="flex items-center gap-3 text-[10px]">
+                <a href="/terms" target="_blank" class="hover:text-emerald-500 underline">
+                    <span x-text="lang === 'en' ? 'Terms of Service' : 'Syarat & Ketentuan'">{{ $isEn ? 'Terms of Service' : 'Syarat & Ketentuan' }}</span>
+                </a>
+                <span>&bull;</span>
+                <a href="/privacy-policy" target="_blank" class="hover:text-emerald-500 underline">
+                    <span x-text="lang === 'en' ? 'Privacy Policy' : 'Kebijakan Privasi'">{{ $isEn ? 'Privacy Policy' : 'Kebijakan Privasi' }}</span>
+                </a>
+                <span>&bull;</span>
+                <a href="/refund-policy" target="_blank" class="hover:text-emerald-500 underline">
+                    <span x-text="lang === 'en' ? 'Refund Policy' : 'Kebijakan Refund'">{{ $isEn ? 'Refund Policy' : 'Kebijakan Refund' }}</span>
+                </a>
+            </div>
+        </div>
     </footer>
 
     <!-- ===================================================================== -->

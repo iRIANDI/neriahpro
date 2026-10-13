@@ -2160,7 +2160,22 @@
 
     <!-- 3. FOOTER -->
     <footer class="mt-20 border-t border-zinc-200 dark:border-zinc-800 py-8 bg-white dark:bg-zinc-900 text-center font-mono text-xs text-zinc-500">
-        <p>&copy; {{ date('Y') }} Neriah Pro. {{ $isEn ? 'All rights reserved. Modular Software Architecture OS.' : 'Hak cipta dilindungi. Sistem Operasi Arsitektur Perangkat Lunak Skala Enterprise.' }}</p>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; {{ date('Y') }} Neriah Pro. {{ $isEn ? 'All rights reserved. Modular Software Architecture OS.' : 'Hak cipta dilindungi. Sistem Operasi Arsitektur Perangkat Lunak Skala Enterprise.' }}</p>
+            <div class="flex flex-wrap items-center justify-center gap-4 text-[11px]">
+                <a href="/terms" target="_blank" class="hover:text-emerald-500 underline underline-offset-2">
+                    {{ $isEn ? 'Terms of Service' : 'Syarat & Ketentuan' }}
+                </a>
+                <span class="text-zinc-300 dark:text-zinc-700">&bull;</span>
+                <a href="/privacy-policy" target="_blank" class="hover:text-emerald-500 underline underline-offset-2">
+                    {{ $isEn ? 'Privacy Policy' : 'Kebijakan Privasi' }}
+                </a>
+                <span class="text-zinc-300 dark:text-zinc-700">&bull;</span>
+                <a href="/refund-policy" target="_blank" class="hover:text-emerald-500 underline underline-offset-2">
+                    {{ $isEn ? 'Refund & Warranty Policy' : 'Garansi & Kebijakan Refund' }}
+                </a>
+            </div>
+        </div>
     </footer>
 
     <script>

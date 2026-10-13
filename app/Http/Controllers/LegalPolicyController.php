@@ -9,7 +9,7 @@ use Illuminate\View\View;
 
 class LegalPolicyController extends Controller
 {
-    public function show(string $type): View
+    public function show(Request $request, string $type)
     {
         $typeMap = [
             'terms' => 'terms_and_conditions',
@@ -24,8 +24,21 @@ class LegalPolicyController extends Controller
         ];
 
         $resolvedType = $typeMap[$type] ?? 'terms_and_conditions';
-        $policy = null;
+        
+        // Resolve Locale
+        $reqLang = strtolower((string) $request->query('lang', ''));
+        if (in_array($reqLang, ['id', 'en'])) {
+            $locale = $reqLang;
+            cookie()->queue('neriah_locale', $locale, 60 * 24 * 365);
+        } else {
+            $locale = $request->cookie('neriah_locale', app()->getLocale());
+            if (!in_array($locale, ['id', 'en'])) {
+                $locale = 'id';
+            }
+        }
+        app()->setLocale($locale);
 
+        $policy = null;
         try {
             $policy = LegalPolicy::where('type', $resolvedType)->where('is_active', true)->first();
         } catch (\Throwable $e) {
@@ -69,6 +82,7 @@ class LegalPolicyController extends Controller
         return view('legal.policy', [
             'policy' => $policy,
             'resolvedType' => $resolvedType,
+            'locale' => $locale,
             'globalSettings' => $globalSettings,
         ]);
     }

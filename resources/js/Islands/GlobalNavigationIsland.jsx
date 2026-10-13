@@ -139,6 +139,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
     document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
     document.cookie = `neriah_locale=${newLang};path=/;max-age=31536000`;
+    document.cookie = 'neriah_locale_manual=1;path=/;max-age=31536000';
     setLang(newLang);
     setActiveTier2(null);
     setGlobalLangOpen(false);
@@ -148,6 +149,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
   const selectTier2Language = (code) => {
     setActiveTier2(code);
     setGlobalLangOpen(false);
+    document.cookie = 'neriah_locale_manual=1;path=/;max-age=31536000';
     if (window.translateLanguage) {
       window.translateLanguage(code);
     } else {

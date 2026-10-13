@@ -138,9 +138,11 @@ Route::post('/logout', function (\Illuminate\Http\Request $request) {
 })->name('logout');
 
 Route::get('/lang/{locale}', function (string $locale) {
-    if (in_array($locale, ['id', 'en'])) {
+    if (in_array($locale, ['id', 'en'], true)) {
         session(['locale' => $locale]);
-        cookie()->queue(cookie()->forever('neriah_locale', $locale));
+        cookie()->queue(cookie('neriah_locale', $locale, 60 * 24 * 365, '/', null, false, false));
+        cookie()->queue(cookie('neriah_locale_manual', '1', 60 * 24 * 365, '/', null, false, false));
+        cookie()->queue(cookie()->forget('googtrans'));
     }
     return redirect()->back();
 })->name('lang.switch');

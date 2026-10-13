@@ -80,6 +80,17 @@ class CmsGlobalSetting extends Model
         }
     }
 
+    /**
+     * Store or update a setting's value.
+     */
+    public static function setVal(string $key, mixed $value): static
+    {
+        return static::updateOrCreate(
+            ['key' => $key],
+            ['value' => $value]
+        );
+    }
+
     protected static function booted()
     {
         static::saved(function ($setting) {

@@ -382,5 +382,66 @@
     <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
     @endif
 
+    <!-- Intelligent Geo & Tier 2 Auto-Detection Fallback Guard -->
+    <script>
+        (function() {
+            try {
+                const cookies = document.cookie || '';
+                if (cookies.includes('neriah_locale_manual=') || cookies.includes('neriah_auto_detected=')) {
+                    return;
+                }
+
+                // Detect client timezone and browser language
+                const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || '').toLowerCase();
+                const userLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+
+                // Mark auto-detected to avoid looping
+                document.cookie = 'neriah_auto_detected=1; path=/; max-age=' + (86400 * 30);
+
+                // Indonesia Detection:
+                const isIndoTz = tz.includes('jakarta') || tz.includes('makassar') || tz.includes('jayapura') || tz.includes('pontianak');
+                const isIndoLang = userLang.startsWith('id');
+                if (isIndoTz || isIndoLang) {
+                    return; // Stay in Indonesian
+                }
+
+                // Tier 2 whitelist check
+                const allowedTier2 = {!! json_encode($allowedLangList) !!};
+                let targetTier2 = null;
+
+                if (tz.includes('tokyo') || userLang.startsWith('ja')) targetTier2 = 'ja';
+                else if (tz.includes('shanghai') || tz.includes('taipei') || tz.includes('hong_kong') || userLang.startsWith('zh')) targetTier2 = 'zh-CN';
+                else if (tz.includes('riyadh') || tz.includes('dubai') || tz.includes('cairo') || userLang.startsWith('ar')) targetTier2 = 'ar';
+                else if (tz.includes('berlin') || tz.includes('vienna') || tz.includes('zurich') || userLang.startsWith('de')) targetTier2 = 'de';
+                else if (tz.includes('paris') || tz.includes('brussels') || userLang.startsWith('fr')) targetTier2 = 'fr';
+                else if (tz.includes('madrid') || tz.includes('mexico') || tz.includes('bogota') || tz.includes('buenos_aires') || userLang.startsWith('es')) targetTier2 = 'es';
+                else if (tz.includes('seoul') || userLang.startsWith('ko')) targetTier2 = 'ko';
+                else if (tz.includes('moscow') || userLang.startsWith('ru')) targetTier2 = 'ru';
+                else if (tz.includes('lisbon') || tz.includes('sao_paulo') || userLang.startsWith('pt')) targetTier2 = 'pt';
+                else if (tz.includes('amsterdam') || userLang.startsWith('nl')) targetTier2 = 'nl';
+                else if (tz.includes('bangkok') || userLang.startsWith('th')) targetTier2 = 'th';
+                else if (tz.includes('ho_chi_minh') || userLang.startsWith('vi')) targetTier2 = 'vi';
+
+                if (targetTier2 && Array.isArray(allowedTier2) && allowedTier2.includes(targetTier2)) {
+                    // Auto-select Tier 2 for visitor's country
+                    if (window.translateLanguage) {
+                        window.translateLanguage(targetTier2);
+                    } else {
+                        document.cookie = 'googtrans=/id/' + targetTier2 + '; path=/; domain=' + window.location.hostname;
+                        document.cookie = 'googtrans=/id/' + targetTier2 + '; path=/;';
+                        location.reload();
+                    }
+                    return;
+                }
+
+                // If outside Indonesia and NOT in Tier 2 whitelist -> Auto-switch to English (Tier 1 Native)
+                const currentLocale = '{{ app()->getLocale() }}';
+                if (currentLocale !== 'en') {
+                    document.cookie = 'neriah_locale=en; path=/; max-age=' + (86400 * 30);
+                    window.location.href = '/lang/en';
+                }
+            } catch (e) {}
+        })();
+    </script>
 </body>
 </html>

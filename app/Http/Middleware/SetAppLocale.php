@@ -29,7 +29,14 @@ class SetAppLocale
             return $next($request);
         }
 
-        // 2. User has explicit manual preference saved previously -> Respect it without overriding
+        // 2. User has explicit session preference saved -> Respect it without overriding
+        if (Session::has('locale') && in_array(Session::get('locale'), ['id', 'en'], true)) {
+            $locale = Session::get('locale');
+            App::setLocale($locale);
+            return $next($request);
+        }
+
+        // 3. User has explicit manual preference saved previously in cookie -> Respect it without overriding
         $isManual = $request->hasCookie('neriah_locale_manual');
         if ($isManual) {
             $locale = $request->cookie('neriah_locale') ?: Session::get('locale', 'id');

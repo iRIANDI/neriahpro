@@ -27,12 +27,13 @@ class LegalPolicyController extends Controller
         
         // Resolve Locale
         $reqLang = strtolower((string) $request->query('lang', ''));
-        if (in_array($reqLang, ['id', 'en'])) {
+        if (in_array($reqLang, ['id', 'en'], true)) {
             $locale = $reqLang;
+            session(['locale' => $locale]);
             cookie()->queue('neriah_locale', $locale, 60 * 24 * 365);
         } else {
-            $locale = $request->cookie('neriah_locale', app()->getLocale());
-            if (!in_array($locale, ['id', 'en'])) {
+            $locale = session('locale') ?: ($request->cookie('neriah_locale') ?: app()->getLocale());
+            if (!in_array($locale, ['id', 'en'], true)) {
                 $locale = 'id';
             }
         }
@@ -93,12 +94,13 @@ class LegalPolicyController extends Controller
     public function guide(Request $request): View
     {
         $reqLang = strtolower((string) $request->query('lang', ''));
-        if (in_array($reqLang, ['id', 'en'])) {
+        if (in_array($reqLang, ['id', 'en'], true)) {
             $locale = $reqLang;
+            session(['locale' => $locale]);
             cookie()->queue('neriah_locale', $locale, 60 * 24 * 365);
         } else {
-            $locale = $request->cookie('neriah_locale', app()->getLocale());
-            if (!in_array($locale, ['id', 'en'])) {
+            $locale = session('locale') ?: ($request->cookie('neriah_locale') ?: app()->getLocale());
+            if (!in_array($locale, ['id', 'en'], true)) {
                 $locale = 'id';
             }
         }

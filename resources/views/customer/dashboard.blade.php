@@ -1711,13 +1711,14 @@
                                                     🛒 {{ $isEn ? 'RE-ORDER' : 'PESAN ULANG' }}
                                                 </a>
                                             @endif
-                                            <button 
-                                                type="button" 
-                                                onclick="window.print()" 
-                                                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 text-[10px] font-bold transition rounded-none cursor-pointer"
+                                            <a 
+                                                href="{{ route('customer.transaction.invoice', $tx->id) }}" 
+                                                target="_blank"
+                                                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 text-[10px] font-bold transition rounded-none inline-flex items-center gap-1"
+                                                title="Buka Faktur Pajak Resmi & Kwitansi Reimbursement"
                                             >
-                                                🖨️ {{ $isEn ? 'PRINT' : 'CETAK' }}
-                                            </button>
+                                                🖨️ {{ $isEn ? 'PRINT INVOICE' : 'CETAK FAKTUR' }}
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>

@@ -106,6 +106,7 @@ Route::get('/invite/{slug}', \App\Livewire\ClientInviteForm::class)->name('invit
 
 // Customer & Client Dashboard Portal
 Route::get('/customer/dashboard', [\App\Http\Controllers\CustomerDashboardController::class, 'index'])->name('customer.dashboard');
+Route::get('/customer/transaction/{id}/invoice', [\App\Http\Controllers\CustomerDashboardController::class, 'invoice'])->name('customer.transaction.invoice');
 Route::post('/customer/transaction/{id}/sync', [\App\Http\Controllers\CustomerDashboardController::class, 'syncTransaction'])->name('customer.transaction.sync')->middleware('auth');
 Route::get('/portal', fn () => redirect()->route('customer.dashboard'))->name('portal');
 
@@ -174,6 +175,19 @@ Route::prefix('api/cv-pro')->group(function () {
 // Dynamic Search Engine Architecture: Sitemap.xml & Robots.txt
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('/robots.txt', [\App\Http\Controllers\SitemapController::class, 'robots'])->name('robots');
+
+// Legal Policies (Terms of Service, Privacy Policy, Refund & Warranty Policy)
+Route::get('/terms', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'terms')->name('legal.terms');
+Route::get('/terms-and-conditions', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'terms');
+Route::get('/syarat-ketentuan', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'terms');
+
+Route::get('/privacy-policy', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'privacy-policy')->name('legal.privacy');
+Route::get('/privacy', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'privacy-policy');
+Route::get('/kebijakan-privasi', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'privacy-policy');
+
+Route::get('/refund-policy', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'refund-policy')->name('legal.refund');
+Route::get('/refund', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'refund-policy');
+Route::get('/kebijakan-pengembalian', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'refund-policy');
 
 // Fallback dynamic route for CMS pages (Must be at the very bottom)
 Route::get('/{slug?}', [PageController::class, 'show'])->where('slug', '.*');

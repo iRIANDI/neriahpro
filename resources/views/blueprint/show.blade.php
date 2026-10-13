@@ -1351,7 +1351,18 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 isPayingSnap: false,
                 executionTrack: '{{ ($blueprint->project_status === 'Retail License' || request('track') === 'retail') ? 'retail' : 'studio' }}',
                 retailCheckingOut: false,
+                agreeRetailTerms: false,
                 async checkoutRetail(packageTier) {
+                    if (!this.agreeRetailTerms) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'warning',
+                                title: 'PERSETUJUAN DIPERLUKAN',
+                                message: 'Silakan centang persetujuan Syarat & Ketentuan serta Kebijakan Refund terlebih dahulu.'
+                            });
+                        }
+                        return;
+                    }
                     this.retailCheckingOut = true;
                     try {
                         const response = await fetch('/api/pricing/inquiry', {
@@ -7312,6 +7323,23 @@ class ProcessSecureDataset implements ShouldQueue
                                 </p>
                             </div>
 
+                            <!-- PERSETUJUAN SYARAT & KETENTUAN SERTA KEBIJAKAN REFUND -->
+                            <div class="mb-4 p-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700">
+                                <label class="flex items-start gap-2.5 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        x-model="agreeRetailTerms"
+                                        class="mt-0.5 w-4 h-4 rounded-none border-zinc-300 dark:border-zinc-700 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                                    >
+                                    <span class="text-xs text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed">
+                                        Saya telah membaca dan menyetujui 
+                                        <a href="/terms" target="_blank" class="font-bold underline text-zinc-900 dark:text-white hover:text-emerald-500">Syarat &amp; Ketentuan Layanan</a>, 
+                                        <a href="/privacy-policy" target="_blank" class="font-bold underline text-zinc-900 dark:text-white hover:text-emerald-500">Kebijakan Privasi</a>, serta 
+                                        <a href="/refund-policy" target="_blank" class="font-bold underline text-zinc-900 dark:text-white hover:text-emerald-500">Garansi &amp; Kebijakan Pengembalian Dana (Refund Policy)</a> yang berlaku di Neriah Pro.
+                                    </span>
+                                </label>
+                            </div>
+
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <!-- TIER 02: LITE -->
                             <div class="p-4 sm:p-5 bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-700 flex flex-col justify-between rounded-none">
@@ -7334,8 +7362,9 @@ class ProcessSecureDataset implements ShouldQueue
                                 <button
                                     type="button"
                                     @click="checkoutRetail('retail_lite')"
-                                    :disabled="retailCheckingOut"
+                                    :disabled="retailCheckingOut || !agreeRetailTerms"
                                     class="w-full bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-mono font-bold text-xs uppercase py-3 px-3 transition cursor-pointer text-center"
+                                    :class="(!agreeRetailTerms ? 'opacity-50 cursor-not-allowed' : '')"
                                 >
                                     <span x-show="!retailCheckingOut">Beli Lisensi Lite &rarr;</span>
                                     <span x-show="retailCheckingOut">Memproses...</span>
@@ -7367,8 +7396,9 @@ class ProcessSecureDataset implements ShouldQueue
                                 <button
                                     type="button"
                                     @click="checkoutRetail('retail_pro')"
-                                    :disabled="retailCheckingOut"
+                                    :disabled="retailCheckingOut || !agreeRetailTerms"
                                     class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase py-3 px-3 transition cursor-pointer text-center shadow-xs"
+                                    :class="(!agreeRetailTerms ? 'opacity-50 cursor-not-allowed' : '')"
                                 >
                                     <span x-show="!retailCheckingOut">Beli Lisensi Pro &rarr;</span>
                                     <span x-show="retailCheckingOut">Memproses...</span>
@@ -7397,8 +7427,9 @@ class ProcessSecureDataset implements ShouldQueue
                                 <button
                                     type="button"
                                     @click="checkoutRetail('retail_ultimate')"
-                                    :disabled="retailCheckingOut"
+                                    :disabled="retailCheckingOut || !agreeRetailTerms"
                                     class="w-full bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-mono font-bold text-xs uppercase py-3 px-3 transition cursor-pointer text-center"
+                                    :class="(!agreeRetailTerms ? 'opacity-50 cursor-not-allowed' : '')"
                                 >
                                     <span x-show="!retailCheckingOut">Beli Lisensi Ultimate &rarr;</span>
                                     <span x-show="retailCheckingOut">Memproses...</span>

@@ -1024,12 +1024,28 @@ class BlueprintController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
-        $prd = $blueprint->prd_content ?? [];
+        
+        $prd = $blueprint->prd_content;
+        if (empty($prd) || !is_array($prd) || empty($prd['features'])) {
+            try {
+                $prd = \App\Services\PrdGeneratorService::generate($blueprint);
+                $blueprint->prd_content = $prd;
+                $blueprint->saveQuietly();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal auto-generate prd_content untuk PDF: ' . $e->getMessage());
+                $prd = $prd ?: [];
+            }
+        }
         
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.blueprint', [
             'blueprint' => $blueprint,
             'prd' => $prd,
-        ]);
+        ])->setPaper('a4', 'portrait')
+          ->setOptions([
+              'isHtml5ParserEnabled' => true,
+              'isRemoteEnabled' => true,
+              'defaultFont' => 'Helvetica',
+          ]);
         
         return $pdf->download('PRD_' . $blueprint->slug . '.pdf');
     }

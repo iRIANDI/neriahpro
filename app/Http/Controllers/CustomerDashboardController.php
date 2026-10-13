@@ -463,4 +463,31 @@ class CustomerDashboardController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Display printable official Tax Invoice & Reimbursement Receipt.
+     */
+    public function invoice(string $id): \Illuminate\View\View
+    {
+        $transaction = Transaction::where('id', $id)->firstOrFail();
+        
+        // Authorization: Allow transaction owner or user with matching email
+        $currentUser = auth()->user();
+        if ($currentUser && ! $currentUser->isSuperAdmin()) {
+            $isOwner = $transaction->user_id === $currentUser->id;
+            $detailsEmail = strtolower($transaction->customer_details['email'] ?? '');
+            $userEmail = strtolower($currentUser->email);
+            if (! $isOwner && $detailsEmail !== $userEmail) {
+                abort(403, 'Akses Ditolak: Anda tidak memiliki izin untuk melihat faktur ini.');
+            }
+        }
+
+        $globalSettings = CmsGlobalSetting::getAllCached();
+
+        return view('customer.invoice', [
+            'transaction' => $transaction,
+            'user' => $currentUser ?? $transaction->user,
+            'globalSettings' => $globalSettings,
+        ]);
+    }
 }

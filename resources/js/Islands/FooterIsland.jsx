@@ -118,10 +118,27 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
 
         {/* Bottom Legal & Copyright Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-500 dark:text-zinc-400">
-          <p>&copy; {currentYear} NERIAH PRO. {isEn ? 'All rights reserved.' : 'Seluruh hak cipta dilindungi undang-undang.'}</p>
-          <div className="flex items-center gap-6">
-            <span className="text-zinc-400 dark:text-zinc-500">SECURE CLOUD PLATFORM // ENTERPRISE DATA INTEGRITY</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold uppercase">SECURED</span>
+          <div>
+            <p>&copy; {currentYear} NERIAH PRO. {isEn ? 'All rights reserved.' : 'Seluruh hak cipta dilindungi undang-undang.'}</p>
+            <div className="flex flex-wrap items-center gap-4 mt-2 text-[11px]">
+              <a href="/terms" className="hover:text-emerald-500 transition underline underline-offset-2">
+                {isEn ? 'Terms of Service' : 'Syarat & Ketentuan'}
+              </a>
+              <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
+              <a href="/privacy-policy" className="hover:text-emerald-500 transition underline underline-offset-2">
+                {isEn ? 'Privacy Policy' : 'Kebijakan Privasi'}
+              </a>
+              <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
+              <a href="/refund-policy" className="hover:text-emerald-500 transition underline underline-offset-2">
+                {isEn ? 'Refund & Warranty Policy' : 'Garansi & Kebijakan Pengembalian Dana'}
+              </a>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-zinc-400 dark:text-zinc-500 text-[11px]">SECURE CLOUD PLATFORM // ENTERPRISE DATA INTEGRITY</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[11px] px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20">
+              MIDTRANS READY
+            </span>
           </div>
         </div>
 

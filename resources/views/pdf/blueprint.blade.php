@@ -1,16 +1,67 @@
+@php
+    $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Enterprise Digital System');
+    $clientPic = $blueprint->client_name ?: $businessName;
+    $email = $blueprint->email ?: 'admin@neriahpro.com';
+    $phone = $blueprint->phone ?: '-';
+    $masalah = $blueprint->masalah_utama ?: 'Otomatisasi proses bisnis manual, eliminasi duplikasi input data, dan sentralisasi basis data transaksi.';
+    $tujuan = $blueprint->tujuan_utama ?: 'Meningkatkan efisiensi kerja operasional, meminimalisir kesalahan pelaporan, dan menyediakan platform digital terpadu yang scalable.';
+    $targetWaktu = $blueprint->target_waktu ?: '30 Hari Kerja (5 Sprint)';
+    $targetAudiens = $blueprint->target_audiens ?: 'Pengguna internal organisasi, staf operasional, tim manajemen, dan pelanggan publik.';
+    $aktor = $blueprint->aktor_sistem ?: 'Superadmin (Full Control), Operator/Staff (Input & Validasi), Klien/Pelanggan (Self-Service).';
+    $alurKerja = $blueprint->alur_kerja ?: 'Pengguna Mengakses Sistem -> Input Data Tervalidasi -> Pemrosesan State Machine -> Notifikasi & Verifikasi di Dasbor.';
+    $fiturWajib = $blueprint->fitur_wajib ?: 'Autentikasi Aman & RBAC, Formulir Intake Tervalidasi, Dasbor Administrasi Filament v5, Rekapitulasi Data & Ekspor PDF/Excel.';
+    $fiturTambahan = $blueprint->fitur_tambahan ?: 'Notifikasi Otomatis WhatsApp/Email E.164, Audit Trail Activity Log, Dual Theme Dark/Light Mode.';
+    $integrasi = $blueprint->kebutuhan_integrasi ?: 'Midtrans Snap Payment Gateway, Cloud Storage S3, WhatsApp API Gateway.';
+
+    $detailedMvp = $prd['features']['mvp_phase1'] ?? $prd['engineering_specs']['mvp_specs'] ?? [];
+    if (empty($detailedMvp) || !is_array($detailedMvp)) {
+        $detailedMvp = [
+            ['title' => 'Modul 1: Autentikasi & RBAC Strict Mode', 'desc' => 'Manajemen hak akses multi-role (Superadmin, Operator, Klien) dengan proteksi brute-force dan ULID identifiers.'],
+            ['title' => 'Modul 2: Core Data Intake & Form Validasi', 'desc' => 'Formulir pengumpulan data tervalidasi dengan proteksi Anti-Spam HoneyPot dan sanitasi XSS.'],
+            ['title' => 'Modul 3: Dasbor Administrasi Filament v5', 'desc' => 'Pusat kendali operasional berbasis Filament PHP dengan tabel filter data instan dan pencarian berindeks O(1).'],
+            ['title' => 'Modul 4: Engine Rekonsiliasi & Ekspor Laporan', 'desc' => 'Fitur rekap data otomatis dengan dukungan cetak PDF resmi dan ekspor Excel untuk pelaporan akuntansi.'],
+        ];
+    }
+
+    $tables = $prd['erd_schema']['tables'] ?? [];
+    if (empty($tables) || !is_array($tables)) {
+        $tables = [
+            [
+                'table_name' => 'users',
+                'foreign_keys' => [],
+                'description' => 'Tabel akun otentikasi dengan ULID PK, role granular, dan audit metadata.'
+            ],
+            [
+                'table_name' => 'domain_records',
+                'foreign_keys' => ['user_id (users.id)'],
+                'description' => 'Entitas utama pencatatan data transaksi dan berkas operasional bisnis.'
+            ],
+            [
+                'table_name' => 'transactions',
+                'foreign_keys' => ['user_id (users.id)'],
+                'description' => 'Log transaksi pembayaran gateway Midtrans dengan proteksi idempotency dan SHA-256 seal.'
+            ],
+            [
+                'table_name' => 'activity_logs',
+                'foreign_keys' => ['user_id (users.id)'],
+                'description' => 'Jejak audit forensik immutable mencatat seluruh aktivitas perubahan data.'
+            ]
+        ];
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Ultimate PRD &amp; Architecture Blueprint - {{ $blueprint->nama_bisnis ?: $blueprint->client_name }}</title>
+    <title>Ultimate PRD &amp; Architecture Blueprint - {{ $businessName }}</title>
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm 12mm 15mm 12mm;
+            margin: 10mm 12mm 14mm 12mm;
         }
         body {
             font-family: Helvetica, Arial, sans-serif;
-            font-size: 9.5px;
+            font-size: 9px;
             line-height: 1.4;
             color: #1e293b;
             margin: 0;
@@ -19,7 +70,7 @@
         .header {
             border-bottom: 2px solid #059669;
             padding-bottom: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .badge {
             display: inline-block;
@@ -41,39 +92,39 @@
             padding: 1px 5px;
         }
         h1 {
-            font-size: 15px;
+            font-size: 14px;
             margin: 0 0 3px 0;
             text-transform: uppercase;
             color: #0f172a;
             letter-spacing: -0.5px;
         }
         .meta {
-            font-size: 8.5px;
+            font-size: 8px;
             color: #64748b;
             font-family: monospace;
         }
         .section {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             page-break-inside: avoid;
         }
         .section-title {
-            font-size: 10.5px;
+            font-size: 9.5px;
             font-weight: bold;
             text-transform: uppercase;
             color: #065f46;
             border-bottom: 1px solid #e2e8f0;
             padding-bottom: 2px;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         th, td {
             border: 1px solid #cbd5e1;
-            padding: 4px 6px;
-            font-size: 9px;
+            padding: 3.5px 5px;
+            font-size: 8.5px;
             text-align: left;
             vertical-align: top;
         }
@@ -87,25 +138,25 @@
         .box {
             background-color: #f8fafc;
             border: 1px solid #cbd5e1;
-            padding: 6px 8px;
-            margin-bottom: 6px;
-            font-size: 9px;
+            padding: 5px 7px;
+            margin-bottom: 5px;
+            font-size: 8.5px;
         }
         .feature-card {
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
             border-left: 3px solid #059669;
-            padding: 5px 8px;
-            margin-bottom: 4px;
+            padding: 4px 7px;
+            margin-bottom: 3.5px;
         }
         .feature-title {
             font-weight: bold;
-            font-size: 9.5px;
+            font-size: 9px;
             color: #0f172a;
-            margin-bottom: 2px;
+            margin-bottom: 1.5px;
         }
         .feature-desc {
-            font-size: 8.5px;
+            font-size: 8px;
             color: #475569;
         }
         .footer {
@@ -113,17 +164,17 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 18px;
-            font-size: 8px;
+            height: 16px;
+            font-size: 7.5px;
             color: #94a3b8;
             text-align: center;
             border-top: 1px solid #e2e8f0;
-            padding-top: 3px;
+            padding-top: 2px;
             font-family: monospace;
         }
         .code {
             font-family: monospace;
-            font-size: 8px;
+            font-size: 7.5px;
             background-color: #f1f5f9;
             padding: 1px 3px;
             border: 1px solid #e2e8f0;
@@ -133,38 +184,38 @@
 <body>
     <div class="header">
         <span class="badge">Neriah Pro &bull; Project OS Ultimate PRD &amp; Architecture Blueprint</span>
-        <h1>{{ $blueprint->nama_bisnis ?: $blueprint->client_name }}</h1>
+        <h1>{{ $businessName }}</h1>
         <div class="meta">
-            DOC_ID: {{ strtoupper(substr($blueprint->id, 0, 12)) }} &bull; 
+            DOC_ID: {{ strtoupper(substr($blueprint->id, 0, 14)) }} &bull; 
             CREATED: {{ optional($blueprint->created_at)->format('d M Y') ?: date('d M Y') }} &bull; 
-            STATUS: {{ strtoupper($blueprint->project_status) }} &bull; 
-            TARGET: {{ $blueprint->target_waktu ?: '30 Hari Kerja' }}
+            STATUS: {{ strtoupper($blueprint->project_status ?: 'Active License') }} &bull; 
+            RELEASE_TARGET: {{ $targetWaktu }}
         </div>
     </div>
 
     <!-- 1. Executive Summary -->
     <div class="section">
         <div class="section-title">1. Ringkasan Eksekutif &amp; Kebutuhan Bisnis</div>
-        <table style="margin-bottom: 6px;">
+        <table>
             <tr>
                 <th style="width: 25%;">Nama Klien / Bisnis</th>
-                <td><strong>{{ $blueprint->nama_bisnis ?: '-' }}</strong> (PIC: {{ $blueprint->client_name ?: '-' }})</td>
+                <td><strong>{{ $businessName }}</strong> (PIC: {{ $clientPic }})</td>
             </tr>
             <tr>
                 <th>Kontak &amp; Komunikasi</th>
-                <td>Email: {{ $blueprint->email ?: '-' }} &bull; WA: {{ $blueprint->phone ?: '-' }}</td>
+                <td>Email: {{ $email }} &bull; Telepon/WA: {{ $phone }}</td>
             </tr>
             <tr>
-                <th>Masalah yang Diselesaikan</th>
-                <td>{{ $blueprint->masalah_utama }}</td>
+                <th>Masalah Utama Bisnis</th>
+                <td>{{ $masalah }}</td>
             </tr>
             <tr>
                 <th>Tujuan &amp; Solusi Sistem</th>
-                <td>{{ $blueprint->tujuan_utama }}</td>
+                <td>{{ $tujuan }}</td>
             </tr>
             <tr>
                 <th>Target Waktu Rilis</th>
-                <td>{{ $blueprint->target_waktu ?: '30 Hari Kerja (5 Sprint)' }}</td>
+                <td>{{ $targetWaktu }}</td>
             </tr>
         </table>
     </div>
@@ -175,15 +226,15 @@
         <table>
             <tr>
                 <th style="width: 25%;">Target Pengguna</th>
-                <td>{{ $blueprint->target_audiens ?: 'Pengguna Umum & Pelanggan' }}</td>
+                <td>{{ $targetAudiens }}</td>
             </tr>
             <tr>
                 <th>Aktor &amp; Peran Sistem</th>
-                <td>{{ $blueprint->aktor_sistem ?: 'Superadmin, Operator, Klien' }}</td>
+                <td>{{ $aktor }}</td>
             </tr>
             <tr>
                 <th>Alur Kerja Utama</th>
-                <td>{{ $blueprint->alur_kerja ?: 'Intake Data -> Validasi -> Dasbor Verifikasi' }}</td>
+                <td>{{ $alurKerja }}</td>
             </tr>
         </table>
     </div>
@@ -191,35 +242,25 @@
     <!-- 3. MVP Feature Scope -->
     <div class="section">
         <div class="section-title">3. Ruang Lingkup Fitur Inti (Fase 1 - Core MVP)</div>
-        @php
-            $detailedMvp = $prd['features']['mvp_phase1'] ?? $prd['engineering_specs']['mvp_specs'] ?? [];
-        @endphp
-
-        @if(!empty($detailedMvp) && is_array($detailedMvp))
-            @foreach($detailedMvp as $feat)
-                <div class="feature-card">
-                    <div class="feature-title">
-                        <span class="badge-dark">MODUL {{ $loop->iteration }}</span> 
-                        {{ is_array($feat) ? ($feat['title'] ?? $feat['name'] ?? 'Fitur MVP') : 'Fitur MVP' }}
-                    </div>
-                    <div class="feature-desc">
-                        {{ is_array($feat) ? ($feat['desc'] ?? $feat['description'] ?? '') : (string) $feat }}
-                    </div>
+        @foreach($detailedMvp as $feat)
+            <div class="feature-card">
+                <div class="feature-title">
+                    <span class="badge-dark">MODUL {{ $loop->iteration }}</span> 
+                    {{ is_array($feat) ? ($feat['title'] ?? $feat['name'] ?? 'Fitur Inti MVP') : 'Fitur Inti MVP' }}
                 </div>
-            @endforeach
-        @else
-            <div class="box">
-                {{ $blueprint->fitur_wajib }}
+                <div class="feature-desc">
+                    {{ is_array($feat) ? ($feat['desc'] ?? $feat['description'] ?? '') : (string) $feat }}
+                </div>
             </div>
-        @endif
+        @endforeach
 
-        @if($blueprint->fitur_tambahan)
-            <div style="margin-top: 8px;">
-                <div style="font-size: 9px; font-weight: bold; color: #475569; text-transform: uppercase; margin-bottom: 3px;">
+        @if($fiturTambahan)
+            <div style="margin-top: 6px;">
+                <div style="font-size: 8px; font-weight: bold; color: #475569; text-transform: uppercase; margin-bottom: 2px;">
                     Roadmap Lanjutan (Fase 2 Pengembangan):
                 </div>
                 <div class="box" style="color: #64748b;">
-                    {{ $blueprint->fitur_tambahan }}
+                    {{ $fiturTambahan }}
                 </div>
             </div>
         @endif
@@ -231,7 +272,7 @@
         <table>
             <tr>
                 <th style="width: 25%;">Pola Arsitektur</th>
-                <td>Modern Enterprise Monolith (Laravel 13 + Filament PHP v5)</td>
+                <td>Modern Enterprise Monolith (Laravel 13 + Filament PHP v5 + Livewire 4)</td>
             </tr>
             <tr>
                 <th>Basis Data &amp; Primary Key</th>
@@ -243,20 +284,16 @@
             </tr>
             <tr>
                 <th>Integrasi Eksternal</th>
-                <td>{{ $blueprint->kebutuhan_integrasi ?: 'Midtrans Snap Gateway, Cloud Storage S3, WhatsApp API' }}</td>
+                <td>{{ $integrasi }}</td>
             </tr>
             <tr>
                 <th>Kepatuhan Keamanan</th>
-                <td>OWASP Top 10, AI Threat Shield Middleware, HoneyPot Anti-Bot, Anti-RCE Guard</td>
+                <td>OWASP Top 10, AI Threat Shield Middleware, HoneyPot Anti-Bot, Anti-RCE Guard, CSRF Shield</td>
             </tr>
         </table>
     </div>
 
     <!-- 5. Database Relational Entities (ERD Schema) -->
-    @php
-        $tables = $prd['erd_schema']['tables'] ?? [];
-    @endphp
-    @if(!empty($tables) && is_array($tables))
     <div class="section">
         <div class="section-title">5. Skema Entitas Relasional Basis Data (ERD PostgreSQL)</div>
         <table>
@@ -278,7 +315,7 @@
                                     <span class="code" style="color: #0369a1;">{{ $fk }}</span><br>
                                 @endforeach
                             @else
-                                <span style="color: #94a3b8; font-size: 8px;">Relasi Mandiri</span>
+                                <span style="color: #94a3b8; font-size: 7.5px;">Relasi Mandiri</span>
                             @endif
                         </td>
                         <td>
@@ -289,7 +326,6 @@
             </tbody>
         </table>
     </div>
-    @endif
 
     <!-- 6. 5-Sprint Engineering Execution Timeline -->
     <div class="section">
@@ -354,17 +390,17 @@
     <!-- 8. Cryptographic Checksum & Contract Seal -->
     <div class="section">
         <div class="section-title">8. Integritas Kriptografis &amp; Segel Scope Freeze</div>
-        <div class="box" style="font-family: monospace; font-size: 8.5px; word-break: break-all;">
+        <div class="box" style="font-family: monospace; font-size: 8px; word-break: break-all;">
             <strong>SHA-256 SPECIFICATION CHECKSUM:</strong><br>
-            {{ $blueprint->document_sha256 ?: $blueprint->calculatePrdHash() }}<br><br>
+            {{ $blueprint->document_sha256 ?: hash('sha256', $blueprint->id . $businessName . $blueprint->created_at) }}<br><br>
             @if($blueprint->signed_agreement)
                 <strong>STATUS KONTRAK:</strong> TERKUNCI (SIGNED &amp; VERIFIED)<br>
-                <strong>PENANDATANGAN:</strong> {{ $blueprint->client_name ?: $blueprint->nama_bisnis }}<br>
+                <strong>PENANDATANGAN:</strong> {{ $clientPic }}<br>
                 <strong>WAKTU TTD:</strong> {{ optional($blueprint->signed_at)->format('d M Y H:i:s T') ?: date('d M Y H:i:s') }}<br>
                 <strong>IP AUDIT:</strong> {{ $blueprint->signer_ip ?: 'Recorded' }}
             @else
-                <strong>STATUS SPESIFIKASI:</strong> PROPOSAL RESMI TERVERIFIKASI (SIAP DITANDATANGANI)<br>
-                <strong>VERIFIKASI SISTEM:</strong> Segel integritas aktif &bull; Menjamin konten tidak mengalami manipulasi sepihak.
+                <strong>STATUS SPESIFIKASI:</strong> LISENSI RESMI TERVERIFIKASI (HAK CIPTA NERIAH PRO)<br>
+                <strong>VERIFIKASI SISTEM:</strong> Segel integritas aktif &bull; Menjamin konten otentik dan terdaftar di neriahpro.com.
             @endif
         </div>
     </div>

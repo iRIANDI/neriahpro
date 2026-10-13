@@ -183,6 +183,7 @@ export default function ArchitecturePricingIsland({
   const [submittedWaUrl, setSubmittedWaUrl] = useState('');
   const [lastOrder, setLastOrder] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState('idle'); // 'idle' | 'pending' | 'success' | 'error'
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   // FAQ Accordion State
   const [openFaq, setOpenFaq] = useState(null);
@@ -351,6 +352,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
     setSubmitError(null);
     setLastOrder(null);
     setPaymentStatus('idle');
+    setAgreeTerms(false);
     setIsModalOpen(true);
   };
 
@@ -367,6 +369,19 @@ const ensureSnapReady = (snapUrl, clientKey) => {
   const handleSubmitInquiry = async (e) => {
     e.preventDefault();
     if (formData.honeypot) return; // bot detected
+
+    if (!agreeTerms && selectedPackage !== 'retail_spark') {
+      if (window.showToast) {
+        window.showToast({
+          type: 'warning',
+          title: isEn ? 'AGREEMENT REQUIRED' : 'PERSETUJUAN DIPERLUKAN',
+          message: isEn
+            ? 'Please check and agree to the Terms of Service and Refund Policy to proceed.'
+            : 'Anda wajib mencentang persetujuan Syarat & Ketentuan serta Kebijakan Pengembalian Dana untuk melanjutkan pemesanan.'
+        });
+      }
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -2715,11 +2730,63 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     />
                   </div>
 
+                  {/* Persetujuan Syarat & Ketentuan serta Kebijakan Refund */}
+                  {selectedPackage !== 'retail_spark' && (
+                    <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                      <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={agreeTerms}
+                          onChange={(e) => setAgreeTerms(e.target.checked)}
+                          required
+                          className="mt-0.5 w-4 h-4 rounded-xs border-zinc-300 dark:border-zinc-700 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                        />
+                        <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+                          {isEn ? (
+                            <>
+                              I have read and agree to the{' '}
+                              <a href="/terms" target="_blank" className="font-bold underline text-zinc-900 dark:text-white hover:text-emerald-500">
+                                Terms of Service
+                              </a>
+                              ,{' '}
+                              <a href="/privacy-policy" target="_blank" className="font-bold underline text-zinc-900 dark:text-white hover:text-emerald-500">
+                                Privacy Policy
+                              </a>
+                              , and{' '}
+                              <a href="/refund-policy" target="_blank" className="font-bold underline text-zinc-900 dark:text-white hover:text-emerald-500">
+                                Refund &amp; Warranty Policy
+                              </a>
+                              .
+                            </>
+                          ) : (
+                            <>
+                              Saya telah membaca dan menyetujui{' '}
+                              <a href="/terms" target="_blank" className="font-bold underline text-zinc-900 dark:text-white hover:text-emerald-500">
+                                Syarat &amp; Ketentuan Layanan
+                              </a>
+                              ,{' '}
+                              <a href="/privacy-policy" target="_blank" className="font-bold underline text-zinc-900 dark:text-white hover:text-emerald-500">
+                                Kebijakan Privasi
+                              </a>
+                              , serta{' '}
+                              <a href="/refund-policy" target="_blank" className="font-bold underline text-zinc-900 dark:text-white hover:text-emerald-500">
+                                Garansi &amp; Kebijakan Pengembalian Dana (Refund Policy)
+                              </a>
+                              .
+                            </>
+                          )}
+                        </span>
+                      </label>
+                    </div>
+                  )}
+
                   {/* Submit CTA */}
                   <button
                     type="submit"
-                    disabled={isSubmitting}
-                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-md disabled:opacity-60 cursor-pointer"
+                    disabled={isSubmitting || (!agreeTerms && selectedPackage !== 'retail_spark')}
+                    className={`w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-md cursor-pointer ${
+                      (!agreeTerms && selectedPackage !== 'retail_spark') ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   >
                     {isSubmitting ? (
                       <>

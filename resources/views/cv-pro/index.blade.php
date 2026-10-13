@@ -96,6 +96,9 @@
     @react('FooterIsland', [
         'settings' => $getSettingVal('footer_navigation', null),
         'featureFlags' => $featureFlags,
+        'whatsappNumber' => $getSettingVal('company_whatsapp', '628123456789'),
+        'supportEmail' => $getSettingVal('developer_support_email', 'support@neriahpro.com'),
+        'currentLocale' => app()->getLocale(),
     ])
 
 </body>

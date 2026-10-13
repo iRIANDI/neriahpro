@@ -1,7 +1,7 @@
 @php
     $businessName = !empty(trim((string)$blueprint->nama_bisnis)) ? $blueprint->nama_bisnis : (!empty(trim((string)$blueprint->client_name)) ? $blueprint->client_name : 'Enterprise Digital System');
     $clientPic = !empty(trim((string)$blueprint->client_name)) ? $blueprint->client_name : $businessName;
-    $email = !empty(trim((string)$blueprint->email)) ? $blueprint->email : 'admin@neriahpro.com';
+    $email = !empty(trim((string)$blueprint->email)) ? $blueprint->email : \App\Models\CmsGlobalSetting::getVal('developer_support_email', 'support@neriahpro.com');
     $phone = !empty(trim((string)$blueprint->phone)) ? $blueprint->phone : '-';
     
     $rawMasalah = trim((string)$blueprint->masalah_utama);

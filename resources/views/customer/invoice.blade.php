@@ -2,7 +2,7 @@
     $isEn = app()->getLocale() === 'en';
     $companyName = \App\Models\CmsGlobalSetting::getVal('company_name', 'Neriah Pro Digital Services');
     $companyAddress = \App\Models\CmsGlobalSetting::getVal('company_address', 'Jl. Jenderal Sudirman Kav. 52-53, SCBD, Jakarta Selatan 12190, Indonesia');
-    $companyEmail = \App\Models\CmsGlobalSetting::getVal('company_email', 'admin@neriahpro.com');
+    $companyEmail = \App\Models\CmsGlobalSetting::getVal('developer_support_email', \App\Models\CmsGlobalSetting::getVal('company_email', 'support@neriahpro.com'));
     $companyPhone = \App\Models\CmsGlobalSetting::getVal('company_whatsapp', '628123456789');
     $companyNpwp = \App\Models\CmsGlobalSetting::getVal('company_npwp', '01.234.567.8-012.000');
 

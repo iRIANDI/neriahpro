@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, ShieldCheck, ArrowUpRight, MessageCircle, X, ExternalLink, FileText, Lock, RefreshCcw } from 'lucide-react';
 
-export default function FooterIsland({ settings, featureFlags, whatsappNumber = '628123456789', currentLocale }) {
+export default function FooterIsland({ settings, featureFlags, whatsappNumber = '628123456789', currentLocale, supportEmail = 'support@neriahpro.com' }) {
   const currentYear = new Date().getFullYear();
+  const effectiveEmail = supportEmail || 'support@neriahpro.com';
   const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
   const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
   const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
@@ -139,7 +140,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
         {
           num: '5',
           head: 'Data Rights & Removal',
-          body: 'Clients maintain the right to inspect, export, or permanently delete their account data by contacting our official compliance team at admin@neriahpro.com.'
+          body: `Clients maintain the right to inspect, export, or permanently delete their account data by contacting our official compliance team at ${effectiveEmail}.`
         }
       ] : [
         {
@@ -165,7 +166,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
         {
           num: '5',
           head: 'Hak Pemilik Data',
-          body: 'Klien berhak meminta salinan data akun atau mengajukan permohonan penghapusan data permanen melalui email resmi: admin@neriahpro.com.'
+          body: `Klien berhak meminta salinan data akun atau mengajukan permohonan penghapusan data permanen melalui email resmi: ${effectiveEmail}.`
         }
       ]
     },
@@ -197,7 +198,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
         {
           num: '5',
           head: 'Claim Resolution Procedure',
-          body: 'Submit refund claims or warranty tickets to admin@neriahpro.com citing your Midtrans ULID Order ID and technical details. Our audit team responds within 24 business hours.'
+          body: `Submit refund claims or warranty tickets to ${effectiveEmail} citing your Midtrans ULID Order ID and technical details. Our audit team responds within 24 business hours.`
         }
       ] : [
         {
@@ -223,7 +224,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
         {
           num: '5',
           head: 'Alur Pengajuan Klaim Refund & Garansi',
-          body: 'Ajukan klaim refund atau tiket garansi melalui email resmi ke admin@neriahpro.com dengan menyertakan Nomor Transaksi Midtrans / ULID Order ID. Tim kami memberikan keputusan dalam 1x24 jam kerja.'
+          body: `Ajukan klaim refund atau tiket garansi melalui email resmi ke ${effectiveEmail} dengan menyertakan Nomor Transaksi Midtrans / ULID Order ID. Tim kami memberikan keputusan dalam 1x24 jam kerja.`
         }
       ]
     }
@@ -352,10 +353,10 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
                   </span>
                 </div>
                 <a
-                  href="mailto:admin@neriahpro.com"
+                  href={`mailto:${effectiveEmail}`}
                   className="font-bold text-emerald-700 dark:text-emerald-400 hover:underline uppercase"
                 >
-                  admin@neriahpro.com
+                  {effectiveEmail}
                 </a>
               </div>
             </div>

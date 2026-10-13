@@ -527,7 +527,7 @@
                         </span>
                     </div>
                     <div class="fql-user-email">
-                        {{ $user?->email ?? 'admin@neriahpro.com' }} • Timezone: {{ config('app.timezone', 'Asia/Jakarta') }}
+                        {{ $user?->email ?? \App\Models\CmsGlobalSetting::getVal('developer_support_email', 'support@neriahpro.com') }} • Timezone: {{ config('app.timezone', 'Asia/Jakarta') }}
                     </div>
                 </div>
             </div>

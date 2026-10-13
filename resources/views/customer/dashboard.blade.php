@@ -2292,7 +2292,7 @@
                     </div>
                     <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
                         <span class="font-bold text-zinc-900 dark:text-white block mb-1">BANTUAN &amp; REFUND</span>
-                        Jika berkas digital rusak atau pengerjaan gagal memenuhi klausul kontrak, ajukan klaim pengembalian dana melalui email resmi: admin@neriahpro.com.
+                        Jika berkas digital rusak atau pengerjaan gagal memenuhi klausul kontrak, ajukan klaim pengembalian dana melalui email resmi: {{ \App\Models\CmsGlobalSetting::getVal('developer_support_email', 'support@neriahpro.com') }}.
                     </div>
                 </div>
             </div>

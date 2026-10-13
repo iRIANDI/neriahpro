@@ -9573,7 +9573,8 @@ class ProcessSecureDataset implements ShouldQueue
                             PILIH ENGINE MULTI-MODEL AI:
                         </label>
                         <select x-model="tweakAiProvider" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono px-3 py-2.5 outline-none focus:border-emerald-500 rounded-none">
-                            <option value="auto">Auto Failover Multi-Provider (DeepSeek-R1 -> Gemini 2.5 -> Claude 3.7 -> OpenAI)</option>
+                            <option value="auto">Auto Failover Multi-Provider (RelayRouter / DeepSeek-R1 / Gemini / Claude)</option>
+                            <option value="relayrouter">RelayRouter AI (Universal 1-Key: Claude 3.7 / GPT-4o / DeepSeek)</option>
                             <option value="gemini">Google Gemini 2.5 Flash / Pro (High Context Speed)</option>
                             <option value="deepseek">DeepSeek-R1 Reasoning Engine (Ultra Deep Logic)</option>
                             <option value="anthropic">Anthropic Claude 3.7 Sonnet (Hybrid Architecture Thinking)</option>

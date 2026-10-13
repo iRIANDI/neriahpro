@@ -1477,7 +1477,7 @@ class BlueprintController extends Controller
         $validated = $request->validate([
             'filename' => 'required|string|max:255',
             'prompt' => 'nullable|string|max:3000',
-            'ai_provider' => 'nullable|string|in:auto,gemini,deepseek,anthropic,openai',
+            'ai_provider' => 'nullable|string|in:auto,relayrouter,gemini,deepseek,anthropic,openai',
         ]);
 
         try {

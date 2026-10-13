@@ -492,7 +492,7 @@
                 },
                 
                 init() {
-                    const allowed = ['overview', 'projects', 'licenses', 'billing', 'assets', 'account'];
+                    const allowed = ['overview', 'projects', 'licenses', 'billing', 'assets', 'account', 'guide'];
                     if (this.currentTab === 'blueprints') {
                         this.currentTab = 'licenses';
                     }
@@ -687,6 +687,22 @@
             >
                 <span>⚙️</span>
                 <span>{{ $isEn ? 'Account' : 'Pengaturan Akun' }}</span>
+            </button>
+
+            <!-- Tab 7: Smart Guide & Customer Rights -->
+            <button 
+                type="button"
+                @click="setTab('guide')"
+                :class="currentTab === 'guide' 
+                    ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-black font-bold shadow-xs' 
+                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-800'"
+                class="px-3.5 py-2 transition rounded-none uppercase flex items-center gap-2 whitespace-nowrap cursor-pointer"
+            >
+                <span>📘</span>
+                <span>{{ $isEn ? 'Smart Guide & Rights' : 'Panduan & Hak Klien' }}</span>
+                <span class="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
+                    RETENSI
+                </span>
             </button>
         </nav>
 
@@ -2154,6 +2170,132 @@
                     </div>
                 </div>
             </form>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- PANE 7: SMART RETENTION GUIDE & CUSTOMER RIGHTS/OBLIGATIONS        -->
+        <!-- =================================================================== -->
+        <div x-show="currentTab === 'guide'" x-cloak class="space-y-6">
+            <!-- Header Banner -->
+            <div class="p-6 bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 rounded-none shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
+                        <span>● {{ $isEn ? 'CLIENT RETENTION & GOVERNANCE' : 'PANDUAN RETENSI & TATA KELOLA KLIEN' }}</span>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
+                        {{ $isEn ? 'Smart Guide & Rights-Obligations Matrix' : 'Panduan Pintar & Matriks Hak vs Kewajiban' }}
+                    </h2>
+                    <p class="text-xs text-zinc-500 font-sans mt-1">
+                        {{ $isEn ? 'Transparent deliverables, IP ownership, SLA warranties, and payment procedures across all tiers.' : 'Transparansi hak kepemilikan kode, deliverable, garansi 30 hari bug, dan ketentuan pembayaran.' }}
+                    </p>
+                </div>
+
+                <a 
+                    href="/smart-guide" 
+                    target="_blank"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-mono text-xs font-bold uppercase tracking-wider transition rounded-none whitespace-nowrap"
+                >
+                    <span>{{ $isEn ? 'OPEN STANDALONE PAGE ↗' : 'BUKA HALAMAN LENGKAP ↗' }}</span>
+                </a>
+            </div>
+
+            <!-- Two-Column Governance Matrix -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Retail Track Card -->
+                <div class="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-4 shadow-xs">
+                    <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                        <div>
+                            <span class="text-[10px] font-mono font-bold text-cyan-600 dark:text-cyan-400 uppercase">JALUR MANDIRI</span>
+                            <h3 class="text-base font-black uppercase text-zinc-900 dark:text-white font-sans">Lisensi Retail Digital</h3>
+                        </div>
+                        <span class="font-mono text-xs px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 font-bold">Spark • Lite • Pro • Ultimate</span>
+                    </div>
+
+                    <div class="space-y-3 font-mono text-xs">
+                        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 space-y-1">
+                            <span class="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                                <span>✓</span> HAK KLIEN LISENSI RETAIL:
+                            </span>
+                            <ul class="list-disc list-inside text-zinc-700 dark:text-zinc-300 space-y-1 text-[11px] leading-relaxed">
+                                <li>Akses instan unduhan berkas PRD PDF (A4), OpenAPI 3.1, dan DDL SQL PostgreSQL 16.</li>
+                                <li>Hak komersialisasi tak terbatas atas produk software turunan tanpa kewajiban royalti.</li>
+                                <li>Akses prompt coding AI (.cursorrules, AGENTS.md) dan generator scaffolding (Paket Pro &amp; Ultimate).</li>
+                                <li>Khusus Ultimate: Sesi konsultasi arsitektur 1-on-1 (60 menit) via Google Meet bersama Lead Architect.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 space-y-1">
+                            <span class="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                                <span>!</span> KEWAJIBAN KLIEN:
+                            </span>
+                            <ul class="list-disc list-inside text-zinc-700 dark:text-zinc-300 space-y-1 text-[11px] leading-relaxed">
+                                <li>Menyimpan backup berkas lokal mandiri (cadangan cloud disimpan selama 365 hari).</li>
+                                <li>Dilarang mendistribusikan ulang atau menjual kembali (resell) file template mentah sebagai produk kompetitor.</li>
+                                <li>Klien bertanggung jawab atas implementasi pengerjaan coding mandiri bersama tim internal.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Studio MVP Track Card -->
+                <div class="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-4 shadow-xs">
+                    <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                        <div>
+                            <span class="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase">JALUR KONTRAK PENUH</span>
+                            <h3 class="text-base font-black uppercase text-zinc-900 dark:text-white font-sans">Proyek Studio MVP Turnkey</h3>
+                        </div>
+                        <span class="font-mono text-xs px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-300 font-bold">5 Sprint Turnkey</span>
+                    </div>
+
+                    <div class="space-y-3 font-mono text-xs">
+                        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 space-y-1">
+                            <span class="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                                <span>✓</span> HAK KLIEN PROYEK KEMITRAAN:
+                            </span>
+                            <ul class="list-disc list-inside text-zinc-700 dark:text-zinc-300 space-y-1 text-[11px] leading-relaxed">
+                                <li>Pengerjaan tuntas 5 sprint langsung oleh Senior Lead Architect (Laravel 13, Filament v5, PostgreSQL 16).</li>
+                                <li>Penyerahan 100% kepemilikan source code di GitHub Private Repository milik Klien pascapelunasan.</li>
+                                <li>Garansi 30 hari kalender pemeliharaan dan perbaikan bug/error secara gratis pascarilis produksi.</li>
+                                <li>Pemantauan harian real-time via Master Gantt Timeline dan sertifikat serah terima resmi berstempel SHA-256.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 space-y-1">
+                            <span class="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                                <span>!</span> KEWAJIBAN &amp; KOMITMEN KLIEN:
+                            </span>
+                            <ul class="list-disc list-inside text-zinc-700 dark:text-zinc-300 space-y-1 text-[11px] leading-relaxed">
+                                <li>Menandatangani Kontrak Kerja Sama Digital sebelum sprint 1 resmi dimulai.</li>
+                                <li>Melunasi Uang Muka (DP 50%) via Midtrans Snap untuk mengunci slot batch sprint engineer.</li>
+                                <li>Menyediakan data sampel, akun cloud, atau materi branding dalam 5 hari kerja pertama.</li>
+                                <li>Memahami prinsip Scope Freeze: Fitur baru di luar dokumen PRD terkunci diajukan via Addendum resmi.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLA & Midtrans Safety Notice -->
+            <div class="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-xs space-y-3">
+                <div class="flex items-center gap-2 text-zinc-900 dark:text-white font-bold uppercase">
+                    <span class="w-2.5 h-2.5 bg-emerald-500"></span>
+                    <span>KEPATUHAN PEMBAYARAN MIDTRANS &amp; SLA PENANGANAN KENDALA:</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-zinc-600 dark:text-zinc-400 text-[11px] leading-relaxed">
+                    <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                        <span class="font-bold text-zinc-900 dark:text-white block mb-1">PROTEKSI DOUBLE-PAYMENT</span>
+                        Setiap transaksi memiliki Order ID berbasis ULID unik dan verifikasi webhook idempotency SHA-256 untuk menjamin saldo Anda 100% aman.
+                    </div>
+                    <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                        <span class="font-bold text-zinc-900 dark:text-white block mb-1">GARANSI BUG &amp; SLA 30 HARI</span>
+                        Kendala kritis sistem pada masa garansi akan ditangani langsung oleh arsitek dalam SLA &lt; 4 jam pada jam operasional kerja.
+                    </div>
+                    <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                        <span class="font-bold text-zinc-900 dark:text-white block mb-1">BANTUAN &amp; REFUND</span>
+                        Jika berkas digital rusak atau pengerjaan gagal memenuhi klausul kontrak, ajukan klaim pengembalian dana melalui email resmi: admin@neriahpro.com.
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>

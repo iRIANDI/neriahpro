@@ -86,4 +86,29 @@ class LegalPolicyController extends Controller
             'globalSettings' => $globalSettings,
         ]);
     }
+
+    /**
+     * Display High-Retention Customer Smart Guide (Rights & Obligations Matrix)
+     */
+    public function guide(Request $request): View
+    {
+        $reqLang = strtolower((string) $request->query('lang', ''));
+        if (in_array($reqLang, ['id', 'en'])) {
+            $locale = $reqLang;
+            cookie()->queue('neriah_locale', $locale, 60 * 24 * 365);
+        } else {
+            $locale = $request->cookie('neriah_locale', app()->getLocale());
+            if (!in_array($locale, ['id', 'en'])) {
+                $locale = 'id';
+            }
+        }
+        app()->setLocale($locale);
+
+        $globalSettings = CmsGlobalSetting::getAllCached();
+
+        return view('legal.smart-guide', [
+            'locale' => $locale,
+            'globalSettings' => $globalSettings,
+        ]);
+    }
 }

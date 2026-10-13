@@ -189,5 +189,10 @@ Route::get('/refund-policy', [\App\Http\Controllers\LegalPolicyController::class
 Route::get('/refund', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'refund-policy');
 Route::get('/kebijakan-pengembalian', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'refund-policy');
 
+// High-Retention Customer Smart Guide (Rights & Obligations Matrix)
+Route::get('/smart-guide', [\App\Http\Controllers\LegalPolicyController::class, 'guide'])->name('legal.smart-guide');
+Route::get('/panduan-klien', [\App\Http\Controllers\LegalPolicyController::class, 'guide']);
+Route::get('/customer-guide', [\App\Http\Controllers\LegalPolicyController::class, 'guide']);
+
 // Fallback dynamic route for CMS pages (Must be at the very bottom)
 Route::get('/{slug?}', [PageController::class, 'show'])->where('slug', '.*');

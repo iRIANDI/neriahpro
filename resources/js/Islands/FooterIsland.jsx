@@ -85,6 +85,11 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
                   <span>{isEn ? 'Refund & Warranty' : 'Kebijakan Refund'}</span>
                 </a>
               </li>
+              <li>
+                <a href="/smart-guide" className="hover:text-emerald-500 transition-colors flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
+                  <span>{isEn ? 'Smart Client Guide' : 'Panduan & Hak Klien'}</span>
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -155,6 +160,10 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
               <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
               <a href="/refund-policy" className="hover:text-emerald-500 transition underline underline-offset-2">
                 {isEn ? 'Refund & Warranty Policy' : 'Garansi & Kebijakan Pengembalian Dana'}
+              </a>
+              <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
+              <a href="/smart-guide" className="hover:text-emerald-500 transition underline underline-offset-2 font-bold text-emerald-600 dark:text-emerald-400">
+                {isEn ? 'Smart Client Guide' : 'Panduan Pintar & Hak'}
               </a>
             </div>
           </div>

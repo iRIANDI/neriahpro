@@ -1,26 +1,46 @@
 @php
-    $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Enterprise Digital System');
-    $clientPic = $blueprint->client_name ?: $businessName;
-    $email = $blueprint->email ?: 'admin@neriahpro.com';
-    $phone = $blueprint->phone ?: '-';
-    $masalah = $blueprint->masalah_utama ?: 'Otomatisasi proses bisnis manual, eliminasi duplikasi input data, dan sentralisasi basis data transaksi.';
-    $tujuan = $blueprint->tujuan_utama ?: 'Meningkatkan efisiensi kerja operasional, meminimalisir kesalahan pelaporan, dan menyediakan platform digital terpadu yang scalable.';
-    $targetWaktu = $blueprint->target_waktu ?: '30 Hari Kerja (5 Sprint)';
-    $targetAudiens = $blueprint->target_audiens ?: 'Pengguna internal organisasi, staf operasional, tim manajemen, dan pelanggan publik.';
-    $aktor = $blueprint->aktor_sistem ?: 'Superadmin (Full Control), Operator/Staff (Input & Validasi), Klien/Pelanggan (Self-Service).';
-    $alurKerja = $blueprint->alur_kerja ?: 'Pengguna Mengakses Sistem -> Input Data Tervalidasi -> Pemrosesan State Machine -> Notifikasi & Verifikasi di Dasbor.';
-    $fiturWajib = $blueprint->fitur_wajib ?: 'Autentikasi Aman & RBAC, Formulir Intake Tervalidasi, Dasbor Administrasi Filament v5, Rekapitulasi Data & Ekspor PDF/Excel.';
-    $fiturTambahan = $blueprint->fitur_tambahan ?: 'Notifikasi Otomatis WhatsApp/Email E.164, Audit Trail Activity Log, Dual Theme Dark/Light Mode.';
-    $integrasi = $blueprint->kebutuhan_integrasi ?: 'Midtrans Snap Payment Gateway, Cloud Storage S3, WhatsApp API Gateway.';
+    $businessName = !empty(trim((string)$blueprint->nama_bisnis)) ? $blueprint->nama_bisnis : (!empty(trim((string)$blueprint->client_name)) ? $blueprint->client_name : 'Enterprise Digital System');
+    $clientPic = !empty(trim((string)$blueprint->client_name)) ? $blueprint->client_name : $businessName;
+    $email = !empty(trim((string)$blueprint->email)) ? $blueprint->email : 'admin@neriahpro.com';
+    $phone = !empty(trim((string)$blueprint->phone)) ? $blueprint->phone : '-';
+    
+    $rawMasalah = trim((string)$blueprint->masalah_utama);
+    $masalah = !empty($rawMasalah) 
+        ? $rawMasalah 
+        : "Otomatisasi proses bisnis dan administrasi operasional {$businessName}, eliminasi duplikasi input data manual, dan sentralisasi basis data transaksi organisasi.";
+    
+    $rawTujuan = trim((string)$blueprint->tujuan_utama);
+    $tujuan = !empty($rawTujuan) 
+        ? $rawTujuan 
+        : "Meningkatkan efisiensi kerja tim operasional {$businessName}, meminimalisir kesalahan pelaporan, dan menyediakan platform digital terpadu yang andal dan scalable.";
+    
+    $targetWaktu = !empty(trim((string)$blueprint->target_waktu)) ? $blueprint->target_waktu : '30 Hari Kerja (5 Sprint)';
+    $targetAudiens = !empty(trim((string)$blueprint->target_audiens)) ? $blueprint->target_audiens : 'Pengguna internal organisasi, staf operasional, tim manajemen, dan pelanggan publik.';
+    $aktor = !empty(trim((string)$blueprint->aktor_sistem)) ? $blueprint->aktor_sistem : 'Superadmin (Full Control), Operator/Staff (Input & Validasi), Klien/Pelanggan (Self-Service).';
+    $alurKerja = !empty(trim((string)$blueprint->alur_kerja)) ? $blueprint->alur_kerja : 'Pengguna Mengakses Sistem -> Input Data Tervalidasi -> Pemrosesan State Machine -> Notifikasi & Verifikasi di Dasbor.';
+    $fiturWajib = !empty(trim((string)$blueprint->fitur_wajib)) ? $blueprint->fitur_wajib : 'Autentikasi Aman & RBAC, Formulir Intake Tervalidasi, Dasbor Administrasi Filament v5, Rekapitulasi Data & Ekspor PDF/Excel.';
+    $fiturTambahan = !empty(trim((string)$blueprint->fitur_tambahan)) ? $blueprint->fitur_tambahan : 'Notifikasi Otomatis WhatsApp/Email E.164, Audit Trail Activity Log, Dual Theme Dark/Light Mode.';
+    $integrasi = !empty(trim((string)$blueprint->kebutuhan_integrasi)) ? $blueprint->kebutuhan_integrasi : 'Midtrans Snap Payment Gateway, Cloud Storage S3, WhatsApp API Gateway.';
 
     $detailedMvp = $prd['features']['mvp_phase1'] ?? $prd['engineering_specs']['mvp_specs'] ?? [];
     if (empty($detailedMvp) || !is_array($detailedMvp)) {
         $detailedMvp = [
-            ['title' => 'Modul 1: Autentikasi & RBAC Strict Mode', 'desc' => 'Manajemen hak akses multi-role (Superadmin, Operator, Klien) dengan proteksi brute-force dan ULID identifiers.'],
-            ['title' => 'Modul 2: Core Data Intake & Form Validasi', 'desc' => 'Formulir pengumpulan data tervalidasi dengan proteksi Anti-Spam HoneyPot dan sanitasi XSS.'],
-            ['title' => 'Modul 3: Dasbor Administrasi Filament v5', 'desc' => 'Pusat kendali operasional berbasis Filament PHP dengan tabel filter data instan dan pencarian berindeks O(1).'],
-            ['title' => 'Modul 4: Engine Rekonsiliasi & Ekspor Laporan', 'desc' => 'Fitur rekap data otomatis dengan dukungan cetak PDF resmi dan ekspor Excel untuk pelaporan akuntansi.'],
+            ['title' => 'Modul 1: Autentikasi & RBAC Strict Mode', 'desc' => 'Manajemen hak akses multi-role (Superadmin, Operator, Siswa/Klien) dengan proteksi brute-force, CSRF Shield, dan identitas ULID 26 karakter.'],
+            ['title' => 'Modul 2: Core Data Intake & Form Validasi', 'desc' => 'Formulir pengumpulan data tervalidasi terpusat dengan proteksi Anti-Spam HoneyPot, sanitasi XSS, dan unggah berkas Curator.'],
+            ['title' => 'Modul 3: Dasbor Administrasi Filament v5', 'desc' => 'Pusat kendali operasional berbasis Filament PHP v5 dengan tabel filter data instan, pencarian berindeks O(1), dan Keyset Cursor Pagination.'],
+            ['title' => 'Modul 4: Engine Rekonsiliasi & Ekspor Laporan', 'desc' => 'Fitur rekap data transaksi dan operasional otomatis dengan dukungan cetak PDF resmi berstandar A4 dan ekspor spreadsheet XLSX.'],
         ];
+    } else {
+        foreach ($detailedMvp as &$m) {
+            if (is_array($m)) {
+                $curDesc = trim((string)($m['desc'] ?? $m['description'] ?? ''));
+                if (empty($curDesc) || $curDesc === 'Spesifikasi fitur utama untuk operasional sistem.') {
+                    $mTitle = $m['title'] ?? $m['name'] ?? 'Modul Sistem';
+                    $m['desc'] = "Implementasi arsitektur {$mTitle} berbasis Laravel 13, Filament v5, dan basis data PostgreSQL 16 dengan identitas ULID terdistribusi.";
+                }
+            }
+        }
+        unset($m);
     }
 
     $tables = $prd['erd_schema']['tables'] ?? [];

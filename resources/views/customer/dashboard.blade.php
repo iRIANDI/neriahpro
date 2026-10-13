@@ -493,11 +493,17 @@
                 
                 init() {
                     const allowed = ['overview', 'projects', 'licenses', 'billing', 'assets', 'account'];
+                    if (this.currentTab === 'blueprints') {
+                        this.currentTab = 'licenses';
+                    }
                     if (!allowed.includes(this.currentTab)) {
                         this.currentTab = 'overview';
                     }
                     window.addEventListener('hashchange', () => {
-                        const hash = window.location.hash.replace('#', '');
+                        let hash = window.location.hash.replace('#', '');
+                        if (hash === 'blueprints') {
+                            hash = 'licenses';
+                        }
                         if (allowed.includes(hash)) {
                             this.currentTab = hash;
                         }

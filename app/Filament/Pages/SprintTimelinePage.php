@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 
 class SprintTimelinePage extends Page
 {
+    protected static ?string $slug = 'sprint-timeline';
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-calendar-days';
     protected static string | \UnitEnum | null $navigationGroup = 'Project Management';
     protected static ?string $navigationLabel = 'Sprint Capacity & Gantt Timeline';

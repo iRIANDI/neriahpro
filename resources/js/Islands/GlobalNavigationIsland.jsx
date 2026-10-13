@@ -569,7 +569,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                       </div>
 
                       <a 
-                        href="/customer/dashboard"
+                        href="/customer/dashboard#projects"
                         className="w-full text-left px-2.5 py-2 flex items-center justify-between hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-mono text-xs font-bold transition rounded-none"
                       >
                         <span>{lang === 'id' ? 'Dashboard Proyek' : 'Project Dashboard'}</span>
@@ -577,7 +577,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                       </a>
 
                       <a 
-                        href="/customer/dashboard#blueprints"
+                        href="/customer/dashboard#licenses"
                         className="w-full text-left px-2.5 py-2 flex items-center justify-between hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-mono text-xs font-bold transition rounded-none"
                       >
                         <span>{lang === 'id' ? 'Cetak Biru Saya' : 'My Blueprints'}</span>

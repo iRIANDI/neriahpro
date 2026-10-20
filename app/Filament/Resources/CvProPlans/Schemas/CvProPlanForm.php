@@ -9,6 +9,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Schema;
+use Filament\Support\RawJs;
 
 class CvProPlanForm
 {
@@ -65,8 +66,10 @@ class CvProPlanForm
                     ->schema([
                         TextInput::make('price_idr')
                             ->label('Harga (IDR)')
-                            ->numeric()
                             ->prefix('Rp')
+                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                            ->stripCharacters('.')
+                            ->numeric()
                             ->required()
                             ->default(0),
 

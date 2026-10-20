@@ -7,6 +7,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\KeyValue;
+use Filament\Support\RawJs;
 
 class TransactionForm
 {
@@ -45,12 +46,16 @@ class TransactionForm
                     ->schema([
                         TextInput::make('total_idr')
                             ->required()
-                            ->numeric()
-                            ->prefix('Rp'),
+                            ->prefix('Rp')
+                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                            ->stripCharacters('.')
+                            ->numeric(),
                         TextInput::make('original_currency')
                             ->default('IDR')
                             ->maxLength(255),
                         TextInput::make('original_amount')
+                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                            ->stripCharacters('.')
                             ->numeric(),
                         TextInput::make('exchange_rate')
                             ->numeric(),

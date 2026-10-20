@@ -9,6 +9,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Section;
 use Saade\FilamentAutograph\Forms\Components\SignaturePad;
+use Filament\Support\RawJs;
 
 class DocumentForm
 {
@@ -45,13 +46,17 @@ class DocumentForm
                     ->schema([
                         TextInput::make('contract_amount')
                             ->label('Total Nilai Kontrak (IDR)')
-                            ->numeric()
                             ->prefix('Rp')
+                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                            ->stripCharacters('.')
+                            ->numeric()
                             ->default(0),
                         TextInput::make('dp_amount')
                             ->label('Uang Muka / DP 50% (IDR)')
-                            ->numeric()
                             ->prefix('Rp')
+                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                            ->stripCharacters('.')
+                            ->numeric()
                             ->default(0),
                         Toggle::make('scope_locked')
                             ->label('Kunci Ruang Lingkup (Scope Locked)')

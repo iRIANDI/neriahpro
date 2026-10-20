@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
+use Filament\Support\RawJs;
 
 class DomainHostingAssetForm
 {
@@ -128,15 +129,19 @@ class DomainHostingAssetForm
                     ->schema([
                         TextInput::make('cost_price')
                             ->label('Biaya Beli / Modal Sewa (HPP)')
-                            ->numeric()
                             ->prefix('Rp')
+                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                            ->stripCharacters('.')
+                            ->numeric()
                             ->default(0)
                             ->helperText('Biaya riil yang dibayar ke provider.'),
 
                         TextInput::make('client_price')
                             ->label('Harga Tagihan ke Klien')
-                            ->numeric()
                             ->prefix('Rp')
+                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                            ->stripCharacters('.')
+                            ->numeric()
                             ->nullable()
                             ->helperText('Harga perpanjangan yang ditagihkan ke klien (jika dikelola agency).'),
 

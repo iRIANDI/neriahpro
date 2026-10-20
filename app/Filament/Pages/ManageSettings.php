@@ -22,7 +22,8 @@ use Filament\Notifications\Notification;
 use Filament\Actions\Action;
 use Saade\FilamentAutograph\Forms\Components\SignaturePad;
 use App\Support\CountryZoneHelper;
-use App\Filament\Forms\Components\UnifiedPhoneInput;
+use Filament\Schemas\Components\FusedGroup;
+use Filament\Support\RawJs;
 
 class ManageSettings extends Page implements HasForms
 {
@@ -199,13 +200,48 @@ class ManageSettings extends Page implements HasForms
                             ->id('general-setup')
                             ->icon('heroicon-m-adjustments-horizontal')
                             ->schema([
-                                UnifiedPhoneInput::make('company_whatsapp')
+                                FusedGroup::make([
+                                    Select::make('company_whatsapp_country')
+                                        ->options(CountryZoneHelper::getSelectOptions())
+                                        ->searchable()
+                                        ->placeholder('Pilih Negara...')
+                                        ->hiddenLabel()
+                                        ->live()
+                                        ->default('ID')
+                                        ->columnSpan([
+                                            'default' => 12,
+                                            'md' => 5,
+                                        ]),
+                                    TextInput::make('company_whatsapp_number')
+                                        ->placeholder('81260840428')
+                                        ->prefix(fn ($get) => CountryZoneHelper::getDialCode($get('company_whatsapp_country') ?? 'ID'))
+                                        ->hiddenLabel()
+                                        ->required()
+                                        ->live(onBlur: true)
+                                        ->columnSpan([
+                                            'default' => 12,
+                                            'md' => 7,
+                                        ]),
+                                ])
+                                    ->columns(12)
                                     ->label('Nomor WhatsApp Resmi (CS & Konsultasi Proyek)')
-                                    ->helperText('Pilih zona negara (240+ negara) dan masukkan nomor lokal tanpa awalan 0. Otomatis terformat E.164 internasional dan disinkronkan ke seluruh tombol Chat WhatsApp website, portal klien, dan invoice.')
-                                    ->countryStatePath('company_whatsapp_country')
-                                    ->numberStatePath('company_whatsapp_number')
-                                    ->default('6281260840428')
-                                    ->required(),
+                                    ->markAsRequired()
+                                    ->helperText(function ($get) {
+                                        $country = $get('company_whatsapp_country') ?? 'ID';
+                                        $number = $get('company_whatsapp_number') ?? '';
+                                        $cleanNum = CountryZoneHelper::cleanLocalNumber($number);
+                                        $dial = CountryZoneHelper::getDialCode($country);
+                                        $cleanDial = preg_replace('/\D/', '', $dial);
+                                        $e164 = $cleanDial . $cleanNum;
+
+                                        $badge = !empty($cleanNum)
+                                            ? '<span class="inline-flex items-center px-1.5 py-0.5 text-xs font-mono font-bold bg-emerald-100 text-emerald-950 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 ml-1">E.164: +' . e($e164) . '</span>'
+                                            : '<span class="inline-flex items-center px-1.5 py-0.5 text-xs font-mono text-zinc-500 dark:text-zinc-400 ml-1">(Nomor belum diisi)</span>';
+
+                                        return new \Illuminate\Support\HtmlString(
+                                            'Pilih zona negara (240+ negara) dan masukkan nomor lokal tanpa awalan 0. Format E.164 internasional otomatis tersinkron: ' . $badge
+                                        );
+                                    }),
 
                                 Select::make('app_timezone')
                                     ->label('Master Timezone (UTC Offset)')
@@ -255,14 +291,46 @@ class ManageSettings extends Page implements HasForms
                                             ->helperText('Email resmi untuk korespondensi kontrak dan dokumen hukum.')
                                             ->default('support@neriahpro.com')
                                             ->required(),
-                                        UnifiedPhoneInput::make('developer_phone')
+                                        FusedGroup::make([
+                                            Select::make('developer_phone_country')
+                                                ->options(CountryZoneHelper::getSelectOptions())
+                                                ->searchable()
+                                                ->placeholder('Pilih Negara...')
+                                                ->hiddenLabel()
+                                                ->live()
+                                                ->default('ID')
+                                                ->columnSpan([
+                                                    'default' => 12,
+                                                    'md' => 5,
+                                                ]),
+                                            TextInput::make('developer_phone_number')
+                                                ->placeholder('81260840428')
+                                                ->prefix(fn ($get) => CountryZoneHelper::getDialCode($get('developer_phone_country') ?? 'ID'))
+                                                ->hiddenLabel()
+                                                ->live(onBlur: true)
+                                                ->columnSpan([
+                                                    'default' => 12,
+                                                    'md' => 7,
+                                                ]),
+                                        ])
+                                            ->columns(12)
+                                            ->columnSpan(2)
                                             ->label('Nomor Telepon / WhatsApp Resmi Developer')
-                                            ->helperText('Nomor telepon terformat E.164 lengkap dengan dial code resmi untuk dicantumkan pada SPK Kontrak Digital.')
-                                            ->countryStatePath('developer_phone_country')
-                                            ->numberStatePath('developer_phone_number')
-                                            ->includeLeadingPlus(true)
-                                            ->default('+6281260840428')
-                                            ->columnSpan(2),
+                                            ->helperText(function ($get) {
+                                                $country = $get('developer_phone_country') ?? 'ID';
+                                                $number = $get('developer_phone_number') ?? '';
+                                                $cleanNum = CountryZoneHelper::cleanLocalNumber($number);
+                                                $dial = CountryZoneHelper::getDialCode($country);
+                                                $formatted = $dial . $cleanNum;
+
+                                                $badge = !empty($cleanNum)
+                                                    ? '<span class="inline-flex items-center px-1.5 py-0.5 text-xs font-mono font-bold bg-emerald-100 text-emerald-950 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 ml-1">E.164: ' . e($formatted) . '</span>'
+                                                    : '<span class="inline-flex items-center px-1.5 py-0.5 text-xs font-mono text-zinc-500 dark:text-zinc-400 ml-1">(Nomor belum diisi)</span>';
+
+                                                return new \Illuminate\Support\HtmlString(
+                                                    'Nomor telepon terformat E.164 resmi untuk dicantumkan pada SPK Kontrak Digital: ' . $badge
+                                                );
+                                            }),
                                         TextInput::make('developer_location')
                                             ->label('Domisili / Wilayah Hukum')
                                             ->default('Jakarta, Indonesia'),
@@ -924,16 +992,22 @@ class ManageSettings extends Page implements HasForms
                                         TextInput::make('pricing_advisory_price')
                                             ->label('Tarif Jasa Advisory & Blueprint (Rp)')
                                             ->helperText('Biaya one-time perancangan PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan WBS 5 sprint.')
+                                            ->prefix('Rp')
+                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
                                             ->default('2.500.000')
                                             ->required(),
                                         TextInput::make('pricing_mvp_price')
                                             ->label('Tarif Kontrak Full MVP Monolith (Rp)')
                                             ->helperText('Biaya pengembangan penuh enterprise modern monolith (DP 50% = Rp 25.000.000).')
+                                            ->prefix('Rp')
+                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
                                             ->default('50.000.000')
                                             ->required(),
                                         TextInput::make('pricing_umkm_price')
                                             ->label('Tarif Paket UMKM Digital Starter (Rp)')
                                             ->helperText('Biaya dasar paket digitalisasi UMKM sebelum dipotong kuota voucher subsidi.')
+                                            ->prefix('Rp')
+                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
                                             ->default('7.500.000')
                                             ->required(),
                                         TextInput::make('pricing_active_promo_banner')
@@ -949,21 +1023,29 @@ class ManageSettings extends Page implements HasForms
                                         TextInput::make('pricing_retail_spark_price')
                                             ->label('Tarif Spark / Free (Rp)')
                                             ->helperText('Akses audit ide cepat & lean PRD ringkas.')
+                                            ->prefix('Rp')
+                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
                                             ->default('0')
                                             ->required(),
                                         TextInput::make('pricing_retail_lite_price')
                                             ->label('Tarif Lite PRD (Rp)')
                                             ->helperText('PRD 26 parameter esensial + skema DDL.')
+                                            ->prefix('Rp')
+                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
                                             ->default('99.000')
                                             ->required(),
                                         TextInput::make('pricing_retail_pro_price')
                                             ->label('Tarif Pro Full PRD & WBS (Rp)')
                                             ->helperText('PRD komprehensif, Mermaid diagrams, WBS 5 sprint.')
+                                            ->prefix('Rp')
+                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
                                             ->default('399.000')
                                             ->required(),
                                         TextInput::make('pricing_retail_ultimate_price')
                                             ->label('Tarif Ultimate Advisory (Rp)')
                                             ->helperText('PRD Ultimate + AI Failover + 1-on-1 Call 60 menit.')
+                                            ->prefix('Rp')
+                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
                                             ->default('1.490.000')
                                             ->required(),
 

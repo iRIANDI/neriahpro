@@ -8,6 +8,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Toggle;
+use Filament\Support\RawJs;
 
 class ProductForm
 {
@@ -76,8 +77,10 @@ class ProductForm
                         TextInput::make('price_idr')
                             ->label('Harga (IDR)')
                             ->required()
-                            ->numeric()
                             ->prefix('Rp')
+                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                            ->stripCharacters('.')
+                            ->numeric()
                             ->default(0),
                         TextInput::make('price_usd')
                             ->label('Harga Ekivalen (USD)')

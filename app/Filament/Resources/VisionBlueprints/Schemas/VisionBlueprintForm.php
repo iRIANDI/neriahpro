@@ -37,7 +37,9 @@ class VisionBlueprintForm
                                             ->required()
                                             ->maxLength(255),
                                         TextInput::make('phone')
-                                            ->label('WhatsApp / Telepon')
+                                            ->label('WhatsApp / Telepon PIC')
+                                            ->placeholder('e.g. 6281234567890')
+                                            ->helperText('Format E.164 internasional tanpa tanda hubung atau awalan 0 (contoh: 6281260840428).')
                                             ->tel()
                                             ->maxLength(50),
                                         Select::make('project_status')

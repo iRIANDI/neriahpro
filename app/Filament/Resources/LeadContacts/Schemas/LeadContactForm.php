@@ -44,7 +44,8 @@ class LeadContactForm
 
                         TextInput::make('phone')
                             ->label('Nomor Telepon / WhatsApp')
-                            ->placeholder('e.g. 081234567890')
+                            ->placeholder('e.g. 6281234567890')
+                            ->helperText('Format E.164 internasional tanpa tanda hubung atau awalan 0 (contoh: 6281260840428).')
                             ->tel()
                             ->maxLength(50),
 

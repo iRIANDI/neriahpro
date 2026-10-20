@@ -123,6 +123,24 @@ After completing any task, you MUST always suggest which deployment script numbe
 - 🌐 **SINGLE UNIFIED NAVBAR DROPDOWN**:
   - Di navigasi, dilarang membuat switch bahasa redundant (misal dobel tombol ID/EN dan tombol Global berdampingan). Cukup gunakan SATU dropdown terpadu yang memuat dua list group: Tier 1 (Native Precise) dan Tier 2 (Global Translate).
 
+# Mandatory Rule: Strict Prohibition of Page-Level Locale Switcher Dropdowns (Standar Wajib TranslatableTabs In-Place)
+- 🚫 **HARAM HUKUMNYA DROPDOWN LOCALE SWITCHER DI SUDUT HALAMAN**:
+  - DILARANG KERAS menggunakan dropdown pemilih bahasa di pojok kanan atas halaman (`LocaleSwitcher::make()`, `LaraZeus\SpatieTranslatable`, atau page-level locale switchers) di seluruh resource dan page Filament.
+  - Menghapus 100% penggunaan `LocaleSwitcher::make()` dan trait `LaraZeus\SpatieTranslatable` dari seluruh halaman Filament (`CreateRecord`, `EditRecord`, `ListRecords`, `ManageRecords`, dan `ViewRecord`).
+  - Pojok kanan atas halaman wajib bersih dan luas tanpa dropdown bahasa global yang membingungkan.
+- 🇮🇩🇬🇧 **TAB BAHASA TIER 1 LANGSUNG PADA KOTAK INPUT MASING-MASING (`TranslatableTabs`)**:
+  - Setiap field yang menyimpan teks dwibahasa (JSON / Spatie Translatable) wajib memiliki sub-tab independen langsung di dalam form-nya menggunakan `App\Filament\Forms\Components\TranslatableTabs`:
+    - 🇮🇩 **Indonesia (ID)**
+    - 🇬🇧 **English (EN)**
+- ✨ **FITUR GOOGLE TRANSLATE 1-KLIK DI SETIAP INPUT (`GoogleTranslateService`)**:
+  - Di samping kanan label atau di dalam tab masing-masing input, terpasang tombol translasi cerdas berbasis `App\Services\Translation\GoogleTranslateService`:
+    - **Di Tab Indonesia**: Tombol `✨ Terjemahkan ke EN` → Mengklik tombol ini seketika menerjemahkan teks Indonesia dan otomatis mengisikannya ke tab Bahasa Inggris.
+    - **Di Tab English**: Tombol `✨ Terjemahkan ke ID` dan `🔄 Tarik dari ID` → Untuk menyinkronkan atau memperbarui terjemahan jika narasi Indonesia diubah.
+- ⚡ **AUTO-TRANSLATE SAAT SIMPAN (`HasTranslatableTabs`)**:
+  - Setiap Page `CreateRecord` dan `EditRecord` untuk model translatable wajib menggunakan trait `App\Filament\Concerns\HasTranslatableTabs`.
+  - Jika admin sedang buru-buru dan hanya mengisi tab Indonesia lalu menekan tombol Simpan, sistem secara otomatis menerjemahkan teks tersebut ke Bahasa Inggris di latar belakang sebelum disimpan ke database, sehingga data publik tidak pernah kosong.
+
+
 # Mandatory Rule: Country Zone Dialing Code Standard
 - 📞 **COUNTRY ZONE INPUTS**: Setiap membuat input nomor telepon atau WhatsApp, WAJIB menggunakan country code dropdown yang bisa di-search (`config/country_zones.php`, e.g. +62, +65, +1, +44, +81) untuk menegakkan standar E.164 internasional dan mengeliminasi nomor telepon tidak valid.
 

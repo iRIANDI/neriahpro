@@ -4651,6 +4651,38 @@ PROMPT;
         $rules .= "- **Anti-Collision Architecture**: Mencegah tabrakan jadwal kickoff antar klien (schedule collision) dan mencegah transaksi ganda (payment collision) menggunakan generator ULID unik dan webhook idempotency.\n";
         $rules .= "- **Zero CDN Latency Requirement**: Seluruh library JavaScript yang digunakan untuk merender visualisasi (seperti Mermaid.js, Alpine.js, Frappe Gantt) WAJIB diunduh dan disimpan secara lokal di dalam repository (`public/js/vendor/`). DILARANG KERAS memuat script via CDN eksternal.\n";
         $rules .= "- **Interactive Gantt & Timeline Monitoring**: Setiap blueprint wajib men-generate diagram Mermaid Gantt (`sprint_gantt_mermaid`) yang dapat dimonitor melalui backend admin dashboard untuk melacak ketercapaian milestone DoD (Definition of Done) per sprint.\n\n";
+
+        $rules .= "### G. Strict Prohibition of Page-Level Locale Switcher Dropdowns (Standar Wajib TranslatableTabs In-Place)\n";
+        $rules .= "- **HARAM HUKUMNYA** menggunakan dropdown pemilih bahasa di pojok kanan atas halaman (`LocaleSwitcher::make()`, `LaraZeus\\SpatieTranslatable`, atau page-level locale switchers) di seluruh resource dan page Filament:\n";
+        $rules .= "  1. **Melenyapkan Dropdown List di Kanan Atas Halaman**:\n";
+        $rules .= "     - Menghapus 100% penggunaan `LocaleSwitcher::make()` dan trait `LaraZeus\\SpatieTranslatable` dari seluruh halaman Filament (`CreateRecord`, `EditRecord`, `ListRecords`, `ManageRecords`, dan `ViewRecord`).\n";
+        $rules .= "     - Pojok kanan atas halaman wajib bersih dan luas tanpa dropdown bahasa global yang membingungkan.\n";
+        $rules .= "  2. **Tab Bahasa Tier 1 Langsung Pada Kotak Input Masing-Masing**:\n";
+        $rules .= "     - Setiap field yang menyimpan teks dwibahasa (JSON / Spatie Translatable) wajib memiliki sub-tab independen langsung di dalam form-nya menggunakan `App\\Filament\\Forms\\Components\\TranslatableTabs`:\n";
+        $rules .= "       - 🇮🇩 **Indonesia (ID)**\n";
+        $rules .= "       - 🇬🇧 **English (EN)**\n";
+        $rules .= "  3. **Fitur Google Translate 1-Klik di Setiap Input (`GoogleTranslateService`)**:\n";
+        $rules .= "     - Di samping kanan label atau di dalam tab masing-masing input, terpasang tombol translasi cerdas berbasis `App\\Services\\Translation\\GoogleTranslateService`:\n";
+        $rules .= "       - **Di Tab Indonesia**: Tombol `✨ Terjemahkan ke EN` → Mengklik tombol ini seketika menerjemahkan teks Indonesia dan otomatis mengisikannya ke tab Bahasa Inggris.\n";
+        $rules .= "       - **Di Tab English**: Tombol `✨ Terjemahkan ke ID` dan `🔄 Tarik dari ID` → Untuk menyinkronkan atau memperbarui terjemahan jika narasi Indonesia diubah.\n";
+        $rules .= "     - **Auto-Translate saat Simpan (`HasTranslatableTabs`)**:\n";
+        $rules .= "       - Setiap Page `CreateRecord` dan `EditRecord` untuk model translatable wajib menggunakan trait `App\\Filament\\Concerns\\HasTranslatableTabs`.\n";
+        $rules .= "       - Jika admin sedang buru-buru dan hanya mengisi tab Indonesia lalu menekan tombol Simpan, sistem secara otomatis menerjemahkan teks tersebut ke Bahasa Inggris di latar belakang sebelum disimpan ke database, sehingga data publik tidak pernah kosong.\n\n";
+
+        $rules .= "### H. ECC (Everything Claude Code) Universal Architecture & Multi-Agent Collaboration Protocol\n";
+        $rules .= "- **Native Antigravity & ECC Compatibility**: Project ini dirancang dengan struktur agen ECC (Everything Claude Code / Antigravity Native Layout) untuk menjamin hasil koding presisi tinggi dan bebas halusinasi.\n";
+        $rules .= "- **Ponytail Decision Ladder**:\n";
+        $rules .= "  1. *Rung 1 (Framework Native First)*: Maksimalkan fitur bawaan Laravel 13, Filament v5, dan Livewire 4 sebelum menulis kode kustom.\n";
+        $rules .= "  2. *Rung 2 (Reuse Existing Codebase)*: Gunakan kembali service, trait, dan komponen yang sudah ada sebelum menciptakan komponen baru.\n";
+        $rules .= "  3. *Rung 3 (Configuration Over Code)*: Utamakan konfigurasi environment dan file config daripada hardcoded logic.\n";
+        $rules .= "  4. *Rung 4 (Surgical & Minimalist Diff)*: Terapkan perubahan kode yang presisi, hemat token, dan anti-regresi.\n";
+        $rules .= "- **Specialized Subagents Delegation Hierarchy**:\n";
+        $rules .= "  - `architect`: Perancangan arsitektur tingkat tinggi dan kepatuhan PRD.\n";
+        $rules .= "  - `php-reviewer`: Peninjauan kepatuhan PHP 8.4, Laravel 13, dan typing constraint Filament v5.\n";
+        $rules .= "  - `database-reviewer`: Validasi skema PostgreSQL Strict ULID, indeks, dan keyset pagination O(1).\n";
+        $rules .= "  - `security-reviewer`: Audit keamanan OWASP, RBAC, dan validasi webhook payment gateway.\n";
+        $rules .= "  - `browser-qa`: Pengujian visual UI/UX, rasio kontras WCAG AAA, dan kepatuhan dark/light mode.\n";
+        $rules .= "- **Automated Slash Workflows**: `/plan` (analisis & risiko arsitektur), `/build-fix` (resolusi error minimalis), `/code-review` (audit mendalam), `/checkpoint` (titik aman pemulihan), `/tdd-workflow` (pengujian TDD).\n\n";
         $rules .= "---\n\n";
 
         // 3. UI/UX Protocols

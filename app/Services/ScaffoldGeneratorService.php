@@ -49,10 +49,13 @@ class ScaffoldGeneratorService
             'database/seeders/DatabaseSeeder.php' => self::generateDatabaseSeeder($blueprint),
             'database/seeders/SyntheticDataSeeder.php' => self::generateSyntheticDataSeeder($blueprint, $erdTables),
 
-            // Pillar 5: AI Coding Agent Rules (.cursorrules & AGENTS.md)
+            // Pillar 5: AI Coding Agent Rules (.cursorrules, AGENTS.md, & ECC Universal)
             '.cursorrules' => PrdGeneratorService::toCursorrules($blueprint, $prd),
             'CLAUDE.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
             'AGENTS.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
+            '.agents/AGENTS.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
+            '.agents/rules/translatable-tabs-standard.md' => self::generateTranslatableTabsRule(),
+            '.agents/rules/ecc-multi-agent-standard.md' => self::generateEccStandardRule(),
 
             // Pillar 6: Contract-First Testing Suite
             'tests/Feature/ApiContractTest.php' => self::generateContractTest($blueprint, $erdTables),
@@ -1769,5 +1772,67 @@ ExecStart=/usr/bin/php /var/www/html/artisan queue:work redis --sleep=3 --tries=
 WantedBy=multi-user.target
 CONF;
     }
+
+    /**
+     * Pillar 5: Generate Strict TranslatableTabs In-Place Rule.
+     */
+    public static function generateTranslatableTabsRule(): string
+    {
+        return <<<MARKDOWN
+# Strict Prohibition of Page-Level Locale Switcher Dropdowns (Standar Wajib TranslatableTabs In-Place)
+
+**HARAM HUKUMNYA** menggunakan dropdown pemilih bahasa di pojok kanan atas halaman (`LocaleSwitcher::make()`, `LaraZeus\SpatieTranslatable`, atau page-level locale switchers) di seluruh resource dan page Filament:
+
+1. **Melenyapkan Dropdown List di Kanan Atas Halaman**:
+   - Menghapus 100% penggunaan `LocaleSwitcher::make()` dan trait `LaraZeus\SpatieTranslatable` dari seluruh halaman Filament (`CreateRecord`, `EditRecord`, `ListRecords`, `ManageRecords`, dan `ViewRecord`).
+   - Pojok kanan atas halaman wajib bersih dan luas tanpa dropdown bahasa global yang membingungkan.
+
+2. **Tab Bahasa Tier 1 Langsung Pada Kotak Input Masing-Masing**:
+   - Setiap field yang menyimpan teks dwibahasa (JSON / Spatie Translatable) wajib memiliki sub-tab independen langsung di dalam form-nya menggunakan `App\Filament\Forms\Components\TranslatableTabs`:
+     - 🇮🇩 **Indonesia (ID)**
+     - 🇬🇧 **English (EN)**
+
+3. **Fitur Google Translate 1-Klik di Setiap Input (`GoogleTranslateService`)**:
+   - Di samping kanan label atau di dalam tab masing-masing input, terpasang tombol translasi cerdas berbasis `App\Services\Translation\GoogleTranslateService`:
+     - **Di Tab Indonesia**: Tombol `✨ Terjemahkan ke EN` → Mengklik tombol ini seketika menerjemahkan teks Indonesia dan otomatis mengisikannya ke tab Bahasa Inggris.
+     - **Di Tab English**: Tombol `✨ Terjemahkan ke ID` dan `🔄 Tarik dari ID` → Untuk menyinkronkan atau memperbarui terjemahan jika narasi Indonesia diubah.
+   - **Auto-Translate saat Simpan (`HasTranslatableTabs`)**:
+     - Setiap Page `CreateRecord` dan `EditRecord` untuk model translatable wajib menggunakan trait `App\Filament\Concerns\HasTranslatableTabs`.
+     - Jika admin sedang buru-buru dan hanya mengisi tab Indonesia lalu menekan tombol Simpan, sistem secara otomatis menerjemahkan teks tersebut ke Bahasa Inggris di latar belakang sebelum disimpan ke database, sehingga data publik tidak pernah kosong.
+MARKDOWN;
+    }
+
+    /**
+     * Pillar 5: Generate ECC Multi-Agent Collaboration Standard Rule.
+     */
+    public static function generateEccStandardRule(): string
+    {
+        return <<<MARKDOWN
+# Everything Claude Code (ECC) Universal Multi-Agent Collaboration Standard
+
+Project ini dirancang untuk kompatibilitas native dengan Google Antigravity 2.0 dan Everything Claude Code (ECC).
+
+## 1. Ponytail Decision Ladder
+1. **Rung 1 (Framework Native First)**: Maksimalkan fitur bawaan framework (Laravel 13, Filament v5, Livewire 4) sebelum menulis custom logic.
+2. **Rung 2 (Reuse Existing Codebase)**: Selalu periksa service, model observer, dan trait yang sudah ada sebelum membuat baru.
+3. **Rung 3 (Configuration Over Code)**: Utamakan konfigurasi environment dan file config.
+4. **Rung 4 (Surgical & Minimalist Diff)**: Buat perubahan kode yang terarah, hemat token, dan anti-regresi.
+
+## 2. Specialized Subagents Roster
+- `architect`: High-level systems architecture & PRD compliance.
+- `php-reviewer`: Laravel 13, PHP 8.4, and Filament v5 typing constraints.
+- `database-reviewer`: PostgreSQL Strict ULID, indexes, and Keyset Cursor Pagination O(1).
+- `security-reviewer`: Anti-tamper, RBAC, webhook idempotency, and OWASP Top 10.
+- `browser-qa`: Visual UI/UX, WCAG AAA text contrast, and dark/light mode fidelity.
+
+## 3. Slash Workflows
+- `/plan`: Analisis spesifikasi, risiko, dan penyusunan langkah kerja sebelum koding.
+- `/build-fix`: Identifikasi dan perbaikan minimalis build/syntax error.
+- `/code-review`: Audit mendalam terhadap keamanan, memori, dan regresi logika.
+- `/checkpoint`: Titik aman verifikasi sebelum perubahan besar.
+- `/tdd-workflow`: Penulisan pengujian otomatis contract test sebelum implementasi fitur.
+MARKDOWN;
+    }
 }
+
 

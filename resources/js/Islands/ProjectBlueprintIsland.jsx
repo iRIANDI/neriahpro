@@ -606,7 +606,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         defaultBudget = isEn ? 'Pro: Rp 490,000 (Full Architecture Bundle: DDL, Docker Compose & Seeder)' : 'Pro: Rp 490.000 (Bundel Lengkap DDL, Docker Compose & Seeder)';
         defaultTermin = isEn ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
       } else if (cleanTier === 'ultimate' || cleanTier === 'retail_ultimate') {
-        defaultBudget = isEn ? 'Ultimate: Rp 1,490,000 (Full 7 Pillars Software Factory OS Turnkey Starter Kit)' : 'Ultimate: Rp 1.490.000 (Full 7 Pilar Software Factory OS Turnkey Starter Kit)';
+        defaultBudget = isEn ? 'Ultimate: Rp 1,490,000 (Full 10 Pillars Software Factory OS Turnkey Starter Kit)' : 'Ultimate: Rp 1.490.000 (Full 10 Pilar Software Factory OS Turnkey Starter Kit)';
         defaultTermin = isEn ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
       }
 
@@ -3257,7 +3257,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <span className="text-[10px] font-bold text-zinc-500">
               {currentTrack === 'studio'
                 ? (lang === 'en' ? 'Tiers: Advisory, UMKM Starter, Full MVP' : 'Pilihan Paket: Advisory, UMKM Starter, Full MVP')
-                : (lang === 'en' ? 'Tiers: Spark, Starter, Pro, Ultimate 7 Pillars' : 'Pilihan Paket: Spark, Starter, Pro, Ultimate 7 Pilar')}
+                : (lang === 'en' ? 'Tiers: Spark, Starter, Pro, Ultimate 10 Pillars' : 'Pilihan Paket: Spark, Starter, Pro, Ultimate 10 Pilar')}
             </span>
           </div>
 
@@ -4600,7 +4600,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   lang === 'en' ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)' : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)',
                   lang === 'en' ? 'Starter: Rp 190,000 (PRD 26 Parameters, Strict ULID DDL & AI Directives)' : 'Starter: Rp 190.000 (PRD 26 Parameter, Schema DDL & AI Directives)',
                   lang === 'en' ? 'Pro: Rp 490,000 (Full Architecture Bundle: DDL, Docker Compose & Seeder)' : 'Pro: Rp 490.000 (Bundel Lengkap DDL, Docker Compose & Seeder)',
-                  lang === 'en' ? 'Ultimate: Rp 1,490,000 (Full 7 Pillars Software Factory OS Turnkey Starter Kit)' : 'Ultimate: Rp 1.490.000 (Full 7 Pilar Software Factory OS Turnkey Starter Kit)',
+                  lang === 'en' ? 'Ultimate: Rp 1,490,000 (Full 10 Pillars Software Factory OS Turnkey Starter Kit)' : 'Ultimate: Rp 1.490.000 (Full 10 Pilar Software Factory OS Turnkey Starter Kit)',
                 ] : [
                   lang === 'en' ? 'Advisory Tier: Rp 2,500,000 (PRD 26 Parameters, Strict DDL & Gantt WBS)' : 'Advisory Tier: Rp 2.500.000 (PRD 26 Parameter, Strict DDL & Gantt WBS)',
                   lang === 'en' ? 'UMKM Digital Starter: Rp 3,750,000 (Cashier Web Engine & Admin Dashboard)' : 'UMKM Digital Starter: Rp 3.750.000 (Engine Transaksi Web Kasir & Admin Dashboard)',

@@ -195,8 +195,8 @@ export default function ArchitecturePricingIsland({
   
   const formatPillar = (text) => {
     if (typeof text !== 'string') return text;
-    return text.split(/(Pilar \d|Pillar \d)/i).map((part, i) => {
-      const match = part.match(/Pil[l]?ar (\d)/i);
+    return text.split(/(Pilar \d+|Pillar \d+)/i).map((part, i) => {
+      const match = part.match(/Pil[l]?ar (\d+)/i);
       if (match) {
         const colors = {
           '1': 'text-blue-600 dark:text-blue-400 font-black px-1 bg-blue-500/10 rounded-sm',
@@ -205,9 +205,12 @@ export default function ArchitecturePricingIsland({
           '4': 'text-emerald-600 dark:text-emerald-400 font-black px-1 bg-emerald-500/10 rounded-sm',
           '5': 'text-pink-600 dark:text-pink-400 font-black px-1 bg-pink-500/10 rounded-sm',
           '6': 'text-orange-600 dark:text-orange-400 font-black px-1 bg-orange-500/10 rounded-sm',
-          '7': 'text-rose-600 dark:text-rose-400 font-black px-1 bg-rose-500/10 rounded-sm'
+          '7': 'text-rose-600 dark:text-rose-400 font-black px-1 bg-rose-500/10 rounded-sm',
+          '8': 'text-cyan-600 dark:text-cyan-400 font-black px-1 bg-cyan-500/10 rounded-sm',
+          '9': 'text-indigo-600 dark:text-indigo-400 font-black px-1 bg-indigo-500/10 rounded-sm',
+          '10': 'text-teal-600 dark:text-teal-400 font-black px-1 bg-teal-500/10 rounded-sm',
         };
-        return <span key={i} className={colors[match[1]]}>{part}</span>;
+        return <span key={i} className={colors[match[1]] || 'text-zinc-600 dark:text-zinc-400 font-black px-1 bg-zinc-500/10 rounded-sm'}>{part}</span>;
       }
       return part;
     });
@@ -490,11 +493,11 @@ const ensureSnapReady = (snapUrl, clientKey) => {
     },
     {
       q: isEn 
-        ? 'What are the "7 Pillars of Software Factory OS" included in Neriah Pro Project OS?' 
-        : 'Apa itu "7 Pilar Software Factory OS" yang menjadi standar rekayasa Project OS Neriah Pro?',
+        ? 'What are the "10 Pillars of Software Factory OS" included in Neriah Pro Project OS?' 
+        : 'Apa itu "10 Pilar Software Factory OS" yang menjadi standar rekayasa Project OS Neriah Pro?',
       a: isEn
-        ? 'The 7 Pillars constitute our turnkey engineering operating system to eliminate software failure: (1) Brain & Contract Spec: 26-parameter PRD, Mermaid dataflows, and OpenAPI 3.1 contracts. (2) Interface & UI/UX: Anti-AI-slop Clean Solid Brutalism with 100% dark/light mode fidelity and 4 core screen wireframes. (3) Scaffold Container Stack: Production-ready Docker Compose (PHP 8.4, PostgreSQL 16, Redis 7, Nginx HTTP/2). (4) Synthetic Vital Data: Seeder engine with 100+ realistic records for immediate testing. (5) AI Agent Intelligence: Strict directives (.cursorrules, AGENTS.md, CLAUDE.md) for zero-hallucination AI pair-programming. (6) QA Assurance: Automated Pest/PHPUnit ApiContractTest suite running 100% green. (7) Server CI/CD Expressway: GitHub Actions pipeline and zero-downtime deploy.sh across 6 production scenarios.'
-        : '7 Pilar Software Factory OS adalah sistem operasi rekayasa perangkat lunak enterprise Neriah Pro untuk mengeliminasi risiko kegagalan proyek: (1) Brain & Contract Spec: Dokumen PRD 26 parameter, diagram alur Mermaid, dan spesifikasi OpenAPI 3.1. (2) Interface & UI/UX: Desain Clean Solid Brutalism anti-AI-slop, 100% Dark & Light Mode, serta wireframe 4 layar utama. (3) Scaffold Container Stack: Docker Compose siap produksi (PHP 8.4, PostgreSQL 16, Redis 7, Nginx HTTP/2). (4) Synthetic Vital Data: Engine seeder 100+ baris data realistis siap uji. (5) AI Agent Intelligence: Aturan baku (.cursorrules, AGENTS.md, CLAUDE.md) untuk memandu AI coding agent tanpa halusinasi. (6) QA Assurance: Suite uji otomatis Pest / PHPUnit ApiContractTest yang lolos 100% hijau. (7) Server CI/CD Expressway: Pipeline GitHub Actions dan skrip deploy.sh 6 skenario tanpa downtime.'
+        ? 'The 10 Pillars constitute our turnkey engineering operating system to eliminate software failure: (1) Brain & Contract Spec: 26-parameter PRD, Mermaid dataflows, OpenAPI 3.1 contracts, and ADR Suite. (2) Interface & UI/UX: Anti-AI-slop Clean Solid Brutalism with 100% dark/light mode fidelity, 4 core screen wireframes, and WCAG AAA micro-states. (3) Scaffold Container Stack: Production-ready Docker Compose (PHP 8.4, PostgreSQL 16, Redis 7, Nginx HTTP/2). (4) Synthetic Vital Data: Seeder engine with 100+ realistic records and stress benchmark scale mode. (5) AI Agent Intelligence: Strict directives (.cursorrules, AGENTS.md, CLAUDE.md) + Enhanced Context Engine (ECC) rules for zero-hallucination AI pair-programming. (6) QA Assurance & E2E: Automated Pest ApiContractTest suite + Playwright browser automation running 100% green. (7) Server CI/CD Expressway: GitHub Actions pipeline and zero-downtime deploy.sh across 6 production scenarios with smoke tests. (8) Observability & Telemetry: Health probes (/healthz, /livez, /readyz), structured Prometheus metrics, and error listeners. (9) Disaster Recovery & Zero-Data-Loss: Encrypted backup/restore drills (backup.sh, restore.sh) and recovery runbooks. (10) Living Contract & Interactive Docs: Scalar interactive API reference (/docs/api) and living architecture sync.'
+        : '10 Pilar Software Factory OS adalah sistem operasi rekayasa perangkat lunak enterprise Neriah Pro untuk mengeliminasi risiko kegagalan proyek: (1) Brain & Contract Spec: Dokumen PRD 26 parameter, diagram alur Mermaid, spesifikasi OpenAPI 3.1, dan ADR Suite. (2) Interface & UI/UX: Desain Clean Solid Brutalism anti-AI-slop, 100% Dark & Light Mode, wireframe 4 layar utama, dan 4 micro-states WCAG AAA. (3) Scaffold Container Stack: Docker Compose siap produksi (PHP 8.4, PostgreSQL 16, Redis 7, Nginx HTTP/2). (4) Synthetic Vital Data: Engine seeder 100+ baris data realistis siap uji dan mode benchmark beban. (5) AI Agent Intelligence: Aturan baku (.cursorrules, AGENTS.md, CLAUDE.md) + Enhanced Context Engine (ECC) untuk memandu AI coding agent tanpa halusinasi. (6) QA Assurance & E2E: Suite uji otomatis Pest ApiContractTest + otomasi browser Playwright yang lolos 100% hijau. (7) Server CI/CD Expressway: Pipeline GitHub Actions dan skrip deploy.sh 6 skenario tanpa downtime plus smoke test. (8) Observability & Telemetry: Health probes (/healthz, /livez, /readyz), metrik terstruktur, dan error listener. (9) Disaster Recovery & Zero-Data-Loss: Skrip backup/restore terenkripsi (backup.sh, restore.sh) dan runbook pemulihan bencana. (10) Living Contract & Interactive Docs: Dokumentasi interaktif Scalar (/docs/api) dan sinkronisasi arsitektur hidup.',
     },
     {
       q: isEn 
@@ -690,7 +693,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     id: 'matrix',
                     num: '03',
                     title: isEn ? 'Comparison Matrix' : 'Matriks Perbandingan',
-                    sub: '7 PILAR',
+                    sub: '10 PILAR',
                     icon: Layers,
                   },
                   {
@@ -1027,7 +1030,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     TIER 04 // ENTERPRISE
                   </span>
                   <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[9px] font-black">
-                    {formatPillar(isEn ? 'COMPLETE 7-PILLAR OS' : 'LENGKAP 7 PILAR OS')}
+                    {formatPillar(isEn ? 'COMPLETE 10-PILLAR OS' : 'LENGKAP 10 PILAR OS')}
                   </span>
                 </div>
 
@@ -1037,8 +1040,8 @@ const ensureSnapReady = (snapUrl, clientKey) => {
 
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
                   {isEn 
-                    ? 'Enterprise 7-pillar architecture with Pest testing, GitHub Actions CI/CD, and 1-on-1 Architect session.' 
-                    : 'Arsitektur 7-pilar enterprise dengan pengujian Pest otomatis, GitHub Actions CI/CD, dan sesi 1-on-1 Arsitek.'}
+                    ? 'Enterprise 10-pillar architecture with Pest & Playwright testing, GitHub Actions CI/CD, Health Probes, and 1-on-1 Architect session.' 
+                    : 'Arsitektur 10-pilar enterprise dengan pengujian Pest & Playwright otomatis, GitHub Actions CI/CD, Health Probes, dan sesi 1-on-1 Arsitek.'}
                 </p>
 
                 {/* Compact Price Box */}
@@ -1063,15 +1066,17 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     ⭐ {isEn ? 'Includes all Pro Blueprint features, plus:' : 'Mencakup seluruh fitur Pro Blueprint, ditambah:'}
                   </div>
                   {(isEn ? [
-                    'Pillar 2 (UI/UX Design): Design Tokens JSON & 4 Core Screens Wireframe',
-                    'Pillar 6 (QA Testing): Automated Contract Feature Testing Suite (Pest/PHPUnit)',
+                    'Pillar 2 (UI/UX Design): Design Tokens JSON, 4 Core Screens Wireframe & WCAG AAA States',
+                    'Pillar 6 (QA & E2E Testing): Automated Pest Contract-First Tests & Playwright Browser Automation',
                     'Pillar 7 (DevOps CI/CD): 1-Click Cloud Deployment Pipeline (GitHub Actions & deploy.sh)',
+                    'Pillars 8-10 (Telemetry & Resilience): Health Probes (/healthz), Encrypted Backups & Scalar Interactive API Docs',
                     'Executive Call: 1 Scheduled 60-Minute 1-on-1 Session with Principal Architect',
                     'Legal Security: Official Corporate Non-Disclosure Agreement (NDA)',
                   ] : [
-                    'Pilar 2 (Desain UI/UX): Cetak biru wireframe 4 layar utama & Token Desain (JSON)',
-                    'Pilar 6 (Uji Kualitas): Paket pengujian fitur otomatis (ApiContractTest Pest/PHPUnit)',
+                    'Pilar 2 (Desain UI/UX): Cetak biru wireframe 4 layar utama, Token Desain (JSON) & Status WCAG AAA',
+                    'Pilar 6 (Uji Kualitas & E2E): Paket pengujian otomatis ApiContractTest Pest & Otomasi Browser Playwright',
                     'Pilar 7 (Otomasi Server): Jalur deployment otomatis cloud (GitHub Actions & deploy.sh)',
+                    'Pilar 8-10 (Telemetri & Ketahanan): Health Probes (/healthz), Backup Enkripsi & Dokumentasi API Scalar',
                     'Sesi Konsultasi: 1 Sesi 60 Menit 1-on-1 bersama Principal Architect',
                     'Perlindungan Hukum: Surat Perjanjian Kerahasiaan (NDA) resmi bertanda tangan digital',
                   ]).map((f, i) => (
@@ -1144,8 +1149,8 @@ const ensureSnapReady = (snapUrl, clientKey) => {
             </h2>
             <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
               {isEn
-                ? 'End-to-end custom software engineering executed directly by Neriah Pro senior architects and engineers under the Project OS standard. We write every line of production code across all 7 Pillars of Software Factory OS, enforce Managed Sprint Capacity with Anti-Collision batch scheduling, harden dedicated cloud VPS servers, integrate automated payments, and deliver turnkey systems backed by certified digital contracts, real-time Gantt tracking, and a 3-month SLA bug warranty.'
-                : 'Layanan pengerjaan software turnkey end-to-end yang dikoding, diuji, dan dideploy langsung oleh tim Senior Software Architect & Engineer Neriah Pro dengan standar Project OS. Kami menulis 100% kode produksi mencakup seluruh 7 Pilar Software Factory OS, menerapkan Managed Sprint Capacity (Kapasitas Terkelola) dengan proteksi anti-tabrakan jadwal (Anti-Collision), mengonfigurasi dedicated server VPS, mengintegrasikan payment gateway otomatis, serta memantau progres sprint transparan via Master Gantt Timeline dengan garansi bug 3 bulan penuh.'}
+                ? 'End-to-end custom software engineering executed directly by Neriah Pro senior architects and engineers under the Project OS standard. We write every line of production code across all 10 Pillars of Software Factory OS, enforce Managed Sprint Capacity with Anti-Collision batch scheduling, harden dedicated cloud VPS servers, integrate automated payments, and deliver turnkey systems backed by certified digital contracts, real-time Gantt tracking, and a 3-month SLA bug warranty.'
+                : 'Layanan pengerjaan software turnkey end-to-end yang dikoding, diuji, dan dideploy langsung oleh tim Senior Software Architect & Engineer Neriah Pro dengan standar Project OS. Kami menulis 100% kode produksi mencakup seluruh 10 Pilar Software Factory OS, menerapkan Managed Sprint Capacity (Kapasitas Terkelola) dengan proteksi anti-tabrakan jadwal (Anti-Collision), mengonfigurasi dedicated server VPS, mengintegrasikan payment gateway otomatis, serta memantau progres sprint transparan via Master Gantt Timeline dengan garansi bug 3 bulan penuh.'}
             </p>
           </div>
 
@@ -1292,11 +1297,11 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                 {/* Inclusive Header & Features */}
                 <div className="space-y-2.5 mb-6">
                   <div className="p-2 mb-2 bg-emerald-100 dark:bg-emerald-950/80 border-l-2 border-emerald-600 dark:border-emerald-400 text-emerald-950 dark:text-emerald-200 font-mono text-[10px] font-black">
-                    ⭐ {formatPillar(isEn ? 'Includes all Blueprint Advisory deliverables + Complete 7 Pillars of Software Factory OS:' : 'Mencakup seluruh hasil Blueprint Advisory + Lengkap 7 Pilar Software Factory OS:')}
+                    ⭐ {formatPillar(isEn ? 'Includes all Blueprint Advisory deliverables + Complete 10 Pillars of Software Factory OS:' : 'Mencakup seluruh hasil Blueprint Advisory + Lengkap 10 Pilar Software Factory OS:')}
                   </div>
                   {(isEn ? [
                     'Managed Sprint Capacity: Reserved slot in Batch 1, 2, or Q1 with Anti-Collision Engine',
-                    'Complete 7 Pillars of Software Factory OS Coded End-to-End (Laravel 13, Filament v5, React 19)',
+                    'Complete 10 Pillars of Software Factory OS Coded End-to-End (Laravel 13, Filament v5, React 19)',
                     'PostgreSQL 16 Strict ULID Database Architecture & Keyset Cursor Pagination O(1)',
                     'Synthetic Vital Data Seeder (100+ realistic records for instant staging testing)',
                     'AI Coding Agent Directives (.cursorrules, CLAUDE.md, AGENTS.md) ready for Cursor & Windsurf',
@@ -1310,7 +1315,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     'Official Change Request (CR) / Addendum Module via Customer Portal Dashboard',
                   ] : [
                     'Managed Sprint Capacity: Slot terisolasi di Batch 1, 2, atau Q1 dengan Anti-Collision Engine',
-                    'Seluruh 7 Pilar Software Factory OS Dikodingkan Penuh (Laravel 13, Filament v5, React 19)',
+                    'Seluruh 10 Pilar Software Factory OS Dikodingkan Penuh (Laravel 13, Filament v5, React 19)',
                     'Arsitektur Basis Data PostgreSQL 16 Strict ULID & Keyset Cursor Pagination O(1)',
                     'Synthetic Vital Data Seeder Engine (100+ data uji realistis siap pakai)',
                     'Standardisasi Aturan Koding Agen AI (.cursorrules, CLAUDE.md, AGENTS.md)',
@@ -1618,13 +1623,13 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   </td>
                 </tr>
 
-                {/* 3C. KELENGKAPAN 7 PILAR SOFTWARE FACTORY OS */}
+                {/* 3C. KELENGKAPAN 10 PILAR SOFTWARE FACTORY OS */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200 font-mono">
-                    {formatPillar(isEn ? '7 Pillars of Software Factory OS' : '7 Pilar Software Factory OS')}
+                    {formatPillar(isEn ? '10 Pillars of Software Factory OS' : '10 Pilar Software Factory OS')}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                    {isEn ? 'Spark: 1 | Starter: 2 | Pro Agentic: 5 | Enterprise: Complete 7' : 'Spark: 1 | Starter: 2 | Pro Agentic: 5 | Enterprise: Lengkap 7'}
+                    {isEn ? 'Spark: 1 | Starter: 2 | Pro Agentic: 5 | Enterprise: Complete 10' : 'Spark: 1 | Starter: 2 | Pro Agentic: 5 | Enterprise: Lengkap 10'}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
                     {formatPillar(isEn ? 'Pillar 1 (PRD & DDL) + WBS 5 Sprints' : 'Pilar 1 (PRD & DDL) + WBS 5 Sprint')}
@@ -1632,7 +1637,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
                     <span className="inline-flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>{formatPillar(isEn ? '100% Complete 7 Pillars Coded & Live' : '100% Seluruh 7 Pilar Dikodingkan sampai Live')}</span>
+                      <span>{formatPillar(isEn ? '100% Complete 10 Pillars Coded & Live' : '100% Seluruh 10 Pilar Dikodingkan sampai Live')}</span>
                     </span>
                   </td>
                   <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400 text-[11px]">
@@ -1901,7 +1906,73 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   </td>
                 </tr>
 
-                {/* 9F. CHANGE REQUEST (CR) / ADDENDUM */}
+                {/* 9F. TELEMETRY & HEALTH PROBES (PILAR 8) */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {formatPillar(isEn ? 'Health Probes & Telemetry (Pillar 8)' : 'Health Probes & Telemetri (Pilar 8)')}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
+                    {isEn ? 'Enterprise: HealthProbeController & /healthz' : 'Enterprise: HealthProbeController & /healthz'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    {isEn ? 'SLA Metrics Architecture' : 'Arsitektur Metrik SLA'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? 'Live /healthz, /livez & /readyz Probes' : 'Endpoint /healthz, /livez & /readyz Aktif'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-zinc-500 text-[11px]">
+                    {isEn ? 'Standard Uptime Health Check' : 'Cek Status Server Standar'}
+                  </td>
+                </tr>
+
+                {/* 9G. DISASTER RECOVERY & ZERO DATA LOSS (PILAR 9) */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {formatPillar(isEn ? 'Disaster Recovery & Drills (Pillar 9)' : 'Pemulihan Bencana & Backup (Pilar 9)')}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
+                    {isEn ? 'Enterprise: backup.sh & restore.sh Drills' : 'Enterprise: Skrip backup.sh & restore.sh'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    {isEn ? 'Database Backup Guide' : 'Panduan Backup Database'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? 'Automated Encrypted Backups & Runbooks' : 'Backup Terenkripsi Otomatis & Runbook SOP'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-zinc-500 text-[11px]">
+                    {isEn ? 'Manual Database Dumps' : 'Dump Database Manual'}
+                  </td>
+                </tr>
+
+                {/* 9H. LIVING CONTRACT & INTERACTIVE DOCS (PILAR 10) */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
+                    {formatPillar(isEn ? 'Living Contract & API Docs (Pillar 10)' : 'Dokumentasi Interaktif & API (Pilar 10)')}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
+                    {isEn ? 'Enterprise: Scalar OpenAPI /docs/api' : 'Enterprise: Scalar OpenAPI /docs/api'}
+                  </td>
+                  <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                    {isEn ? 'Swagger UI Reference' : 'Referensi Swagger UI'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>{isEn ? 'Interactive Scalar Documentation Live' : 'Dokumentasi Interaktif Scalar Aktif'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-zinc-500 text-[11px]">
+                    {isEn ? 'Postman Collection Export' : 'Ekspor Koleksi Postman'}
+                  </td>
+                </tr>
+
+                {/* 9I. CHANGE REQUEST (CR) / ADDENDUM */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
                     {formatPillar(isEn ? 'Change Request (CR) / Addendum' : 'Change Request (CR) / Addendum')}

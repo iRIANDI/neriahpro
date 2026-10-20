@@ -2252,7 +2252,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 $pkgTitle = $isEn ? "Tier 03: Pro Agentic Blueprint (Rp {$proPrice} - Ready to Code)" : "Paket 3: Pro Agentic Blueprint (Rp {$proPrice} - Siap Koding)";
                                 $pkgBadge = 'PRO AGENTIC BLUEPRINT';
                             } elseif ($cleanRt === 'ultimate' || $cleanRt === 'enterprise') {
-                                $pkgTitle = $isEn ? "Tier 04: Enterprise Factory OS (Rp {$ultimatePrice} - Complete 7 Pillars)" : "Paket 4: Enterprise Factory OS (Rp {$ultimatePrice} - Lengkap 7 Pilar)";
+                                $pkgTitle = $isEn ? "Tier 04: Enterprise Factory OS (Rp {$ultimatePrice} - Complete 10 Pillars)" : "Paket 4: Enterprise Factory OS (Rp {$ultimatePrice} - Lengkap 10 Pilar)";
                                 $pkgBadge = 'ENTERPRISE FACTORY OS';
                             }
                         } elseif ($selectedVelocityMeta) {
@@ -2277,7 +2277,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 {{ $pkgBadge }}
                             </span>
                         </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-[10px]">
+                        <div class="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2 text-[10px]">
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                                 <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 1' : 'PILAR 1' }}</span>
                                 <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'PRD & ERD' : 'PRD & ERD' }}</span>
@@ -2300,18 +2300,33 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                                 <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 5' : 'PILAR 5' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'AI Rules' : 'Panduan AI' }}</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'AI & ECC' : 'AI & ECC' }}</span>
                                 <span class="text-[9px] text-zinc-400 block">.cursorrules</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                                 <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 6' : 'PILAR 6' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Contract Tests' : 'Uji Kontrak' }}</span>
-                                <span class="text-[9px] text-zinc-400 block">ApiContractTest</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Contract & E2E' : 'Uji Kontrak' }}</span>
+                                <span class="text-[9px] text-zinc-400 block">Pest/E2E</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                                 <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 7' : 'PILAR 7' }}</span>
                                 <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Cloud CI/CD' : 'CI/CD Cloud' }}</span>
-                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? 'deploy.sh Pipeline' : 'Jalur deploy.sh' }}</span>
+                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? 'deploy.sh' : 'deploy.sh' }}</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 8' : 'PILAR 8' }}</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Telemetry' : 'Telemetri' }}</span>
+                                <span class="text-[9px] text-zinc-400 block">/healthz</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 9' : 'PILAR 9' }}</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Recovery' : 'Pemulihan' }}</span>
+                                <span class="text-[9px] text-zinc-400 block">backup.sh</span>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 10' : 'PILAR 10' }}</span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Living Docs' : 'Dokumen API' }}</span>
+                                <span class="text-[9px] text-zinc-400 block">Scalar API</span>
                             </div>
                         </div>
                     </div>
@@ -6464,27 +6479,27 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
                 </div>
 
-                <!-- Software Factory OS: 7-Pillar Scaffold & Repository Exporter -->
+                <!-- Software Factory OS: 10-Pillar Scaffold & Repository Exporter -->
                 <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
                     <div class="p-6 bg-zinc-50 dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
                         <div class="space-y-2">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase">SOFTWARE FACTORY OS</span>
-                                <span class="text-zinc-600 dark:text-zinc-400 text-xs uppercase font-bold">{{ $isEn ? '7 PILLARS OF PRODUCTION CODE: DOCKER • ULID • SEEDER • AGENTS • CI/CD' : '7 PILAR KODE PRODUKSI: DOCKER • ULID • SEEDER • AGENTS • CI/CD' }}</span>
+                                <span class="text-zinc-600 dark:text-zinc-400 text-xs uppercase font-bold">{{ $isEn ? '10 PILLARS OF PRODUCTION CODE: DOCKER • ULID • SEEDER • AGENTS • CI/CD • TELEMETRY • BACKUPS • DOCS' : '10 PILAR KODE PRODUKSI: DOCKER • ULID • SEEDER • AGENTS • CI/CD • TELEMETRI • BACKUP • DOKUMEN' }}</span>
                             </div>
                             <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white">
-                                {{ $isEn ? '13. Export Complete 7 Pillars Software Factory OS Repository' : '13. Ekspor Repository Lengkap 7 Pilar Software Factory OS' }}
+                                {{ $isEn ? '13. Export Complete 10 Pillars Software Factory OS Repository' : '13. Ekspor Repository Lengkap 10 Pilar Software Factory OS' }}
                             </h3>
                             <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs max-w-2xl leading-relaxed">
                                 {{ $isEn 
-                                    ? 'Your PRD architectural blueprint can be directly exported into all 7 pillars of Software Factory OS: docker-compose.yml (PHP 8.4, PostgreSQL 16, Redis 7), complete SQL schema (Strict ULID), routing (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ realistic records), AI rules (.cursorrules, CLAUDE.md, AGENTS.md), contract testing ApiContractTest.php, and 1-click cloud deploy.sh pipeline.'
-                                    : 'Blueprint arsitektur PRD Anda dapat langsung diekspor menjadi 7 pilar Software Factory OS: docker-compose.yml (PHP 8.4, PostgreSQL 16, Redis 7), skema SQL lengkap (Strict ULID), perutean (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ data realistis), aturan agen AI (.cursorrules, CLAUDE.md, AGENTS.md), pengujian kontrak ApiContractTest.php, dan skrip deploy.sh cloud 1-klik.' }}
+                                    ? 'Your PRD architectural blueprint can be directly exported into all 10 pillars of Software Factory OS: docker-compose.yml (PHP 8.4, PostgreSQL 16, Redis 7), complete SQL schema (Strict ULID), routing (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ realistic records), AI rules (.cursorrules, CLAUDE.md, AGENTS.md), contract testing ApiContractTest.php, cloud deploy.sh pipeline, Kubernetes health probes (/healthz), encrypted disaster recovery scripts (backup.sh, restore.sh), and Scalar interactive API documentation (/docs/api).'
+                                    : 'Blueprint arsitektur PRD Anda dapat langsung diekspor menjadi 10 pilar Software Factory OS: docker-compose.yml (PHP 8.4, PostgreSQL 16, Redis 7), skema SQL lengkap (Strict ULID), perutean (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ data realistis), aturan agen AI (.cursorrules, CLAUDE.md, AGENTS.md), pengujian kontrak ApiContractTest.php, skrip deploy.sh cloud 1-klik, probe kesehatan (/healthz), skrip pemulihan bencana terenkripsi (backup.sh, restore.sh), dan dokumentasi interaktif Scalar (/docs/api).' }}
                             </p>
                         </div>
                         <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
                             <button type="button" @click="openScaffoldModal()" class="w-full sm:w-auto px-5 py-3 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/60 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                <span>{{ $isEn ? 'PREVIEW CODE (7 PILLARS)' : 'PREVIEW KODE (7 PILAR)' }}</span>
+                                <span>{{ $isEn ? 'PREVIEW CODE (10 PILLARS)' : 'PREVIEW KODE (10 PILAR)' }}</span>
                             </button>
                             <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-5 py-3 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-850 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm" title="{{ $isEn ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE' }}">
                                 <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
@@ -8863,7 +8878,7 @@ class ProcessSecureDataset implements ShouldQueue
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 bg-emerald-500 rounded-none inline-block"></span>
                     <h3 class="text-sm sm:text-base font-mono font-black uppercase text-white tracking-wider">
-                        {{ $isEn ? 'SCAFFOLD & BOILERPLATE CODE EXPORTER // 7 PILLARS SOFTWARE FACTORY OS' : 'EKSPOR KODE SCAFFOLD & BOILERPLATE // 7 PILAR SOFTWARE FACTORY OS' }}
+                        {{ $isEn ? 'SCAFFOLD & BOILERPLATE CODE EXPORTER // 10 PILLARS SOFTWARE FACTORY OS' : 'EKSPOR KODE SCAFFOLD & BOILERPLATE // 10 PILAR SOFTWARE FACTORY OS' }}
                     </h3>
                 </div>
                 <button @click="scaffoldModalOpen = false" class="text-zinc-400 hover:text-white text-xl font-bold p-1 cursor-pointer">
@@ -8882,23 +8897,30 @@ class ProcessSecureDataset implements ShouldQueue
                 </a>
             </div>
 
-            <!-- Tab Selector (All 7 Pillars of Software Factory OS) -->
+            <!-- Tab Selector (All 10 Pillars of Software Factory OS) -->
             <div class="flex items-center gap-1.5 mb-3 font-mono text-xs border-b border-zinc-800 pb-2 shrink-0 overflow-x-auto custom-prd-scrollbar py-1 select-none">
                 <template x-for="tab in [
-                    { id: 'docker-compose.yml', label: 'docker-compose.yml' },
-                    { id: 'openapi.json', label: 'openapi.json (Swagger 3.0)' },
+                    { id: 'docs/product/PRODUCT-BRIEF.md', label: 'PRODUCT-BRIEF.md (Pillar 0)' },
+                    { id: 'docs/architecture/ADR-001-postgresql-ulid.md', label: 'ADR-001.md (Architecture)' },
+                    { id: 'docker-compose.yml', label: 'docker-compose.yml (Containers)' },
+                    { id: 'openapi.json', label: 'openapi.json (OpenAPI 3.1)' },
                     { id: 'schema_complete.sql', label: 'schema_complete.sql (PostgreSQL)' },
                     { id: 'design/wireframes/screens.md', label: 'screens.md (UI/UX Wireframes)' },
-                    { id: 'design/tokens.json', label: 'tokens.json (Design System)' },
+                    { id: 'design/tokens.json', label: 'tokens.json (Design Tokens)' },
                     { id: 'routes/web.php', label: 'routes/web.php (Laravel 13)' },
                     { id: 'routes/api.php', label: 'routes/api.php (Sanctum)' },
+                    { id: 'app/Http/Controllers/HealthProbeController.php', label: 'HealthProbeController.php (Pillar 8)' },
                     { id: 'app/api/route.ts', label: 'Next.js App Router (TypeScript)' },
-                    { id: 'database/seeders/SyntheticDataSeeder.php', label: 'SyntheticDataSeeder.php' },
+                    { id: 'database/seeders/SyntheticDataSeeder.php', label: 'SyntheticDataSeeder.php (Pillar 4)' },
                     { id: '.cursorrules', label: '.cursorrules (AI Agent)' },
-                    { id: 'AGENTS.md', label: 'AGENTS.md (AI Agent System)' },
-                    { id: 'tests/Feature/ApiContractTest.php', label: 'ApiContractTest.php' },
+                    { id: 'AGENTS.md', label: 'AGENTS.md (AI & ECC Rules)' },
+                    { id: 'tests/Feature/ApiContractTest.php', label: 'ApiContractTest.php (Pest Contract)' },
+                    { id: 'tests/e2e/smoke.spec.ts', label: 'smoke.spec.ts (Playwright E2E)' },
                     { id: 'deploy.sh', label: 'deploy.sh (CI/CD 6 Skenario)' },
                     { id: '.github/workflows/deploy.yml', label: 'deploy.yml (GitHub Actions)' },
+                    { id: 'scripts/backup.sh', label: 'backup.sh (Disaster Recovery)' },
+                    { id: 'scripts/restore.sh', label: 'restore.sh (Restore Drill)' },
+                    { id: 'docs/runbooks/disaster-recovery.md', label: 'disaster-recovery.md (Runbook)' },
                     { id: 'README.md', label: 'README.md' }
                 ]" :key="tab.id">
                     <button 

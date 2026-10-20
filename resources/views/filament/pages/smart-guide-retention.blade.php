@@ -553,16 +553,16 @@
     <div id="sec-matrix" class="sg-card" x-show="matchesSearch(t[lang].sec5_title + ' batasan kuota reset spark lite pro ultimate window otp pilar factory studio mvp umkm')">
         <div style="border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px;">
             <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #d97706; text-transform: uppercase; font-weight: 700;">
-                05 // 7-PILLAR SOFTWARE FACTORY OS & VALUE LADDER MATRIX
+                05 // 10-PILLAR SOFTWARE FACTORY OS & VALUE LADDER MATRIX
             </span>
             <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec5_title"></h3>
             <p style="font-size: 12px; color: var(--sg-text-muted); margin: 4px 0 0 0;" x-text="t[lang].sec5_desc"></p>
         </div>
 
-        <!-- 7 Pillars of Software Factory OS Infographic Banner -->
+        <!-- 10 Pillars of Software Factory OS Infographic Banner -->
         <div style="margin-bottom: 24px; padding: 16px; background: var(--sg-subcard-bg); border: 1px solid var(--sg-border); border-radius: 3px;">
-            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;" x-text="t[lang].sec5_banner_title || 'THE 7 PILLARS OF SOFTWARE FACTORY OS'">
-                THE 7 PILLARS OF SOFTWARE FACTORY OS (ONE-STOP DEVELOPMENT)
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;" x-text="t[lang].sec5_banner_title || 'THE 10 PILLARS OF SOFTWARE FACTORY OS'">
+                THE 10 PILLARS OF SOFTWARE FACTORY OS (ONE-STOP DEVELOPMENT)
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; font-size: 11px;">
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
@@ -579,19 +579,31 @@
                 </div>
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
                     <strong style="color: #f59e0b;" x-text="t[lang].pil4_title">Pilar 4 // Data Awal Sistem</strong>
-                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil4_desc">Synthetic Mock Data Seeder (25 Data Realistis)</div>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil4_desc">Synthetic Mock Data Seeder (100+ Data Realistis)</div>
                 </div>
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
                     <strong style="color: #8b5cf6;" x-text="t[lang].pil5_title">Pilar 5 // Panduan Agen AI</strong>
-                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil5_desc">AI Coding Rules (.cursorrules, CLAUDE.md, AGENTS.md)</div>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil5_desc">AI Coding Rules (.cursorrules, CLAUDE.md, AGENTS.md, ECC)</div>
                 </div>
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
                     <strong style="color: #ec4899;" x-text="t[lang].pil6_title">Pilar 6 // Jaminan Kualitas</strong>
-                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil6_desc">Automated Pest Feature Contract-First Tests</div>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil6_desc">Automated Pest Tests & Playwright Browser Automation</div>
                 </div>
                 <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
                     <strong style="color: #14b8a6;" x-text="t[lang].pil7_title">Pilar 7 // Jalur Otomasi Server</strong>
                     <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil7_desc">One-Click GitHub Actions CI/CD & deploy.sh</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="color: #06b6d4;" x-text="t[lang].pil8_title">Pilar 8 // Telemetri & Pantauan</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil8_desc">Health Probes (/healthz, /livez, /readyz) & Metrik Terstruktur</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="color: #6366f1;" x-text="t[lang].pil9_title">Pilar 9 // Pemulihan Bencana</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil9_desc">Backup Terenkripsi Otomatis (backup.sh & restore.sh Drills)</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="color: #0d9488;" x-text="t[lang].pil10_title">Pilar 10 // Dokumen API Hidup</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 2px;" x-text="t[lang].pil10_desc">Dokumentasi Interaktif Scalar OpenAPI (/docs/api)</div>
                 </div>
             </div>
         </div>
@@ -673,7 +685,7 @@
                     <div style="padding: 8px; background: var(--sg-card-bg); border: 1px solid var(--sg-border); font-size: 10px; font-family: ui-monospace, monospace;">
                         <span style="color: #d97706; font-weight: 700;">BATASAN / HOOK RASA TANGGUNG:</span>
                         <div style="color: var(--sg-text-muted); margin-top: 2px;">Tanpa wireframe UI, tanpa test suite otomatis, & tanpa pipeline CI/CD.</div>
-                        <div style="color: #8b5cf6; margin-top: 4px; font-weight: 700;">👉 Upsell: Butuh 7 Pilar Factory OS komplit + Sesi 1-on-1? Upgrade ke Ultimate!</div>
+                        <div style="color: #8b5cf6; margin-top: 4px; font-weight: 700;">👉 Upsell: Butuh 10 Pilar Factory OS komplit + Sesi 1-on-1? Upgrade ke Ultimate!</div>
                     </div>
                 </div>
 
@@ -684,14 +696,15 @@
                         <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #8b5cf6; font-size: 11px;">Rp 1.490.000</span>
                     </div>
                     <div style="font-size: 10px; font-family: ui-monospace, monospace; padding: 2px 6px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; margin-bottom: 8px;">
-                        TARGET: Enterprise product leaders, funded startups, & tim yang butuh 7 pilar lengkap.
+                        TARGET: Enterprise product leaders, funded startups, & tim yang butuh 10 pilar lengkap.
                     </div>
                     <div style="font-size: 11px; color: var(--sg-text-title); font-weight: 700; margin-bottom: 4px;">Deliverables:</div>
                     <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
                         <li><strong style="color: #8b5cf6;">Seperti di Paket Pro Agentic Blueprint</strong>, ditambah:</li>
-                        <li>Pilar 2 (UI/UX): Tokens JSON & Wireframe 4 Layar</li>
-                        <li>Pilar 6 (QA Test): Automated Pest Contract-First Tests</li>
+                        <li>Pilar 2 (UI/UX): Tokens JSON, 4 Layar Wireframe & Status WCAG AAA</li>
+                        <li>Pilar 6 (QA & E2E): Automated Pest Tests & Otomasi Browser Playwright</li>
                         <li>Pilar 7 (DevOps): CI/CD GitHub Actions & deploy.sh</li>
+                        <li>Pilar 8-10 (Reliability): Health Probes (/healthz), Backup Enkripsi & Dokumentasi API Scalar</li>
                         <li>Sesi Konsultasi 60 Menit bersama Principal Architect</li>
                         <li>Legal NDA Digital & 1 Tahun Prioritas Advisory</li>
                     </ul>
@@ -720,7 +733,7 @@
                         TARGET: Founder/CTO dengan tim koding sendiri yang butuh pendampingan arsitektur enterprise.
                     </div>
                     <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
-                        <li>Seluruh Output Spesifikasi 7 Pilar Software Factory OS</li>
+                        <li>Seluruh Output Spesifikasi 10 Pilar Software Factory OS</li>
                         <li>Sesi Discovery & Technical Scoping bersama Principal Architect</li>
                         <li>Non-Disclosure Agreement (NDA) Sah & 100% Hak Milik Dokumen</li>
                         <li><strong style="color: #10b981;">Jaminan Potong DP</strong>: Biaya Rp 2.5jt memotong DP jika lanjut koding</li>
@@ -762,7 +775,7 @@
                     </div>
                     <ul style="font-size: 11px; color: var(--sg-text-muted); margin: 0 0 10px 16px; padding: 0; line-height: 1.5;">
                         <li><strong style="color: #10b981;">Managed Sprint Capacity</strong>: Slot terisolasi Batch 1, 2, atau Q1 dengan Anti-Collision Engine</li>
-                        <li><strong style="color: #10b981;">Seluruh 7 Pilar Software Factory OS Dikodingkan Penuh</strong> (Laravel 13, Filament v5, React 19)</li>
+                        <li><strong style="color: #10b981;">Seluruh 10 Pilar Software Factory OS Dikodingkan Penuh</strong> (Laravel 13, Filament v5, React 19)</li>
                         <li>Arsitektur Database PostgreSQL 16 Strict ULID & Keyset Cursor Pagination O(1)</li>
                         <li>Synthetic Vital Data Seeder (100+ data uji) & Panduan Agen AI (.cursorrules, AGENTS.md)</li>
                         <li>Automated Test Suite ApiContractTest & Midtrans Snap Idempotent Webhook</li>
@@ -950,21 +963,27 @@ function smartGuideApp() {
                 sim_upsell_desc: 'Jika 5% pembeli blueprint (1 dari 20 orang) menyewa tim Neriah Pro untuk koding sistem:',
                 sim_upsell_clients: 'Estimasi Klien Studio MVP:',
                 sim_upsell_pipeline: 'Pipeline Kontrak Studio:',
-                sec5_banner_title: '7 PILAR SOFTWARE FACTORY OS (PENGEMBANGAN SISTEM SATU PINTU)',
+                sec5_banner_title: '10 PILAR SOFTWARE FACTORY OS (PENGEMBANGAN SISTEM SATU PINTU)',
                 pil1_title: 'Pilar 1 // Otak & Kontrak',
-                pil1_desc: 'Dokumen PRD 26 Parameter & Spesifikasi Kontrak OpenAPI 3.1',
+                pil1_desc: 'Dokumen PRD 26 Parameter & Spesifikasi Kontrak OpenAPI 3.1 & ADR Suite',
                 pil2_title: 'Pilar 2 // Desain UI/UX',
-                pil2_desc: 'Token Desain (JSON) & Wireframe 4 Layar Utama',
+                pil2_desc: 'Token Desain (JSON), Wireframe 4 Layar Utama & 4 Micro-States WCAG AAA',
                 pil3_title: 'Pilar 3 // Rangka Koding',
                 pil3_desc: 'Docker Compose (PHP 8.4, PG 16, Redis 7) & Rute API Siap Pakai',
                 pil4_title: 'Pilar 4 // Data Awal Sistem',
-                pil4_desc: 'Generator Data Awal Sintetis (Mock Seeder 100+ Data Realistis)',
+                pil4_desc: 'Generator Data Awal Sintetis (Mock Seeder 100+ Data Realistis & Mode Skala Beban)',
                 pil5_title: 'Pilar 5 // Panduan Agen AI',
-                pil5_desc: 'Aturan Koding Agen AI (.cursorrules, CLAUDE.md, AGENTS.md, Anti-Collision Batch & Gantt Execution)',
+                pil5_desc: 'Aturan Koding Agen AI (.cursorrules, CLAUDE.md, AGENTS.md, ECC Rules & Anti-Collision)',
                 pil6_title: 'Pilar 6 // Jaminan Kualitas',
-                pil6_desc: 'Paket Uji Fitur Kontrak Otomatis (ApiContractTest Pest/PHPUnit)',
+                pil6_desc: 'Paket Uji Kontrak Otomatis (ApiContractTest Pest & Otomasi Browser Playwright E2E)',
                 pil7_title: 'Pilar 7 // Jalur Otomasi Server',
-                pil7_desc: 'Pipeline CI/CD GitHub Actions & Skrip deploy.sh VPS Cloud',
+                pil7_desc: 'Pipeline CI/CD GitHub Actions & Skrip deploy.sh VPS Cloud (6 Skenario & Smoke Test)',
+                pil8_title: 'Pilar 8 // Telemetri & Pantauan',
+                pil8_desc: 'Health Probes (/healthz, /livez, /readyz), Metrik Terstruktur & Error Listener',
+                pil9_title: 'Pilar 9 // Pemulihan Bencana',
+                pil9_desc: 'Backup Terenkripsi Otomatis (backup.sh & restore.sh Drills) & Runbook Pemulihan',
+                pil10_title: 'Pilar 10 // Dokumen API Hidup',
+                pil10_desc: 'Dokumentasi Interaktif Scalar OpenAPI (/docs/api) & Sinkronisasi Arsitektur',
                 sec5_title: 'Matriks Penegakan Batasan Teknis & Siklus Reset',
                 sec5_desc: 'Semua batasan telah dikunci di level backend PHP & controller middleware.',
                 m_tier: 'Tingkat Paket',
@@ -983,7 +1002,7 @@ function smartGuideApp() {
                 sec6_q3: 'Q: "Kenapa di Paket Starter belum ada Docker dan AI coding rules? Kan saya juga developer?"',
                 sec6_a3: '"Pertanyaan bagus sekali Kak! Paket Starter AI Architect (Rp 99rb) memang dirancang sangat hemat dan lean khusus bagi developer yang hanya butuh spesifikasi PRD formal dan skema SQL DDL mentah untuk diimpor ke database lokal. Namun jika Kakak ingin menghemat 40+ jam kerja tanpa harus pusing setup Docker compose, synthetic mock data seeder, dan AI coding agent rules (.cursorrules) yang siap di-prompting di Cursor / Windsurf, selisih Rp 300rb ke Paket Pro (Rp 399rb) adalah investasi paling efisien yang langsung melipatgandakan kecepatan koding Kakak hari ini juga!"',
                 sec6_q4: 'Q: "Apa bedanya beli Blueprint Ultimate (Rp 1.49 Jt) dibanding kontrak Studio MVP (Rp 50 Jt)?"',
-                sec6_a4: '"Perbedaannya terletak pada SIAPA YANG MENULIS KODE Kak! Paket Ultimate Software Factory OS (Rp 1.49 Jt) memberikan seluruh 7 pilar cetak biru, wireframe, unit test suite, dan pipeline CI/CD lengkap untuk dieksekusi oleh tim programmer internal Kakak sendiri, ditambah 1 jam konsultasi arsitek. Sedangkan Kontrak Monolith MVP Studio (Rp 50 Jt) adalah layanan turnkey penuh di mana Senior Architect dan Engineer Neriah Pro yang menulis 100% kode aplikasi, memasang VPS, mengintegrasikan payment, dan memberikan garansi bug 3 bulan. Menariknya, biaya Rp 1.49 Jt ini otomatis memotong DP 50% jika Kakak memutuskan lanjut koding bersama kami!"',
+                sec6_a4: '"Perbedaannya terletak pada SIAPA YANG MENULIS KODE Kak! Paket Ultimate Software Factory OS (Rp 1.49 Jt) memberikan seluruh 10 pilar cetak biru, wireframe, unit test suite, dan pipeline CI/CD lengkap untuk dieksekusi oleh tim programmer internal Kakak sendiri, ditambah 1 jam konsultasi arsitek. Sedangkan Kontrak Monolith MVP Studio (Rp 50 Jt) adalah layanan turnkey penuh di mana Senior Architect dan Engineer Neriah Pro yang menulis 100% kode aplikasi, memasang VPS, mengintegrasikan payment, dan memberikan garansi bug 3 bulan. Menariknya, biaya Rp 1.49 Jt ini otomatis memotong DP 50% jika Kakak memutuskan lanjut koding bersama kami!"',
                 sec6_q5: 'Q: "Gimana kalau di tengah pengerjaan MVP Studio saya mau tambah fitur baru yang ngga ada di PRD awal?"',
                 sec6_a5: '"Kami punya sistem Scope Locking Kak untuk menjaga kualitas dan timeline! Jika Kakak ingin tambah fitur di luar PRD yang disepakati, Kakak bisa langsung submit via modul \'Change Request (CR) / Addendum\' di Dashboard Portal Klien. Kami tidak menerima sisipan lewat chat WA/Email ya Kak agar tidak terjadi miskomunikasi. Nanti tim arsitek kami akan evaluasi CR tersebut dan menerbitkan Invoice Addendum plus estimasi waktu tambahan. Fiturnya langsung dikerjakan setelah Addendum disetujui!"'
             },
@@ -1037,21 +1056,27 @@ function smartGuideApp() {
                 sim_upsell_desc: 'If 5% of blueprint buyers (1 in 20) hire Neriah Pro engineers to code their system turnkey:',
                 sim_upsell_clients: 'Estimated Studio MVP Clients:',
                 sim_upsell_pipeline: 'Studio MVP Pipeline Value:',
-                sec5_banner_title: 'THE 7 PILLARS OF SOFTWARE FACTORY OS (ONE-STOP DEVELOPMENT)',
+                sec5_banner_title: 'THE 10 PILLARS OF SOFTWARE FACTORY OS (ONE-STOP DEVELOPMENT)',
                 pil1_title: 'Pillar 1 // Brain & Contract Spec',
-                pil1_desc: '26-Parameter PRD Document & OpenAPI 3.1 Contract Spec',
+                pil1_desc: '26-Parameter PRD Document, OpenAPI 3.1 Contract Spec & ADR Suite',
                 pil2_title: 'Pillar 2 // Interface & UI/UX',
-                pil2_desc: 'Design Tokens JSON & 4 Core Screens Wireframe Blueprint',
+                pil2_desc: 'Design Tokens JSON, 4 Core Screens Wireframe Blueprint & WCAG AAA States',
                 pil3_title: 'Pillar 3 // Scaffold Container Stack',
                 pil3_desc: 'Docker Compose (PHP 8.4, PG 16, Redis 7) & API Routes',
                 pil4_title: 'Pillar 4 // Synthetic Vital Data',
-                pil4_desc: 'Synthetic Mock Data Seeder Engine (100+ Realistic Records)',
+                pil4_desc: 'Synthetic Mock Data Seeder Engine (100+ Realistic Records & Scale Mode)',
                 pil5_title: 'Pillar 5 // AI Agent Intelligence',
-                pil5_desc: 'AI Coding Agent Directives (.cursorrules, CLAUDE.md, AGENTS.md, Anti-Collision Batch & Gantt Execution)',
+                pil5_desc: 'AI Coding Agent Directives (.cursorrules, CLAUDE.md, AGENTS.md, ECC & Anti-Collision)',
                 pil6_title: 'Pillar 6 // Quality Assurance (QA)',
-                pil6_desc: 'Automated Feature Contract-First Tests (Pest / PHPUnit)',
+                pil6_desc: 'Automated Feature Contract-First Tests (Pest / PHPUnit) & Playwright Browser Automation',
                 pil7_title: 'Pillar 7 // Server CI/CD Expressway',
-                pil7_desc: 'One-Click Cloud GitHub Actions CI/CD & deploy.sh Pipeline',
+                pil7_desc: 'One-Click Cloud GitHub Actions CI/CD & deploy.sh Pipeline (6 Scenarios & Smoke Tests)',
+                pil8_title: 'Pillar 8 // Telemetry & Observability',
+                pil8_desc: 'Health Probes (/healthz, /livez, /readyz), Structured Metrics & Error Alert Listener',
+                pil9_title: 'Pillar 9 // Disaster Recovery & Drills',
+                pil9_desc: 'Automated Encrypted Backups (backup.sh & restore.sh Drills) & Zero-Data-Loss Runbooks',
+                pil10_title: 'Pillar 10 // Living Contract & API Docs',
+                pil10_desc: 'Scalar Interactive OpenAPI Documentation (/docs/api) & Architecture Sync',
                 sec5_title: 'Technical Limit & Reset Cycle Matrix',
                 sec5_desc: 'All constraints are enforced at the PHP backend and middleware layer.',
                 m_tier: 'Package Tier',
@@ -1070,7 +1095,7 @@ function smartGuideApp() {
                 sec6_q3: 'Q: "Why doesn\'t the Starter package include Docker and AI coding rules? I\'m a developer too."',
                 sec6_a3: '"Great question! The Starter AI Architect tier (Rp 99k) is designed to be ultra-lean for solo developers who only need the formal PRD specification and raw SQL DDL to import directly into local databases. However, if you want to save 40+ engineering hours and eliminate manual setup of Docker containers, synthetic mock data seeders, and AI coding agent rules (.cursorrules) ready for Cursor / Windsurf, the Rp 300k jump to Pro (Rp 399k) is the most cost-effective lever to immediately supercharge your development velocity today!"',
                 sec6_q4: 'Q: "What is the difference between buying the Ultimate Blueprint (Rp 1.49M) vs hiring Studio MVP (Rp 50M)?"',
-                sec6_a4: '"The core difference is WHO WRITES THE CODE! The Ultimate Software Factory OS (Rp 1.49M) provides all 7 pillars of blueprint specifications, wireframes, contract test suites, and CI/CD pipelines for your internal developers to execute, plus a 1-hour Principal Architect consultation. Meanwhile, the Studio Monolith MVP Contract (Rp 50M) is a 100% turnkey service where Neriah Pro senior architects and engineers write every line of production code, harden your VPS, integrate payment gateways, and back it with a 3-month SLA warranty. Best of all, your advisory investment is 100% credited toward the 50% Down Payment if you proceed with our engineering studio!"',
+                sec6_a4: '"The core difference is WHO WRITES THE CODE! The Ultimate Software Factory OS (Rp 1.49M) provides all 10 pillars of blueprint specifications, wireframes, contract test suites, and CI/CD pipelines for your internal developers to execute, plus a 1-hour Principal Architect consultation. Meanwhile, the Studio Monolith MVP Contract (Rp 50M) is a 100% turnkey service where Neriah Pro senior architects and engineers write every line of production code, harden your VPS, integrate payment gateways, and back it with a 3-month SLA warranty. Best of all, your advisory investment is 100% credited toward the 50% Down Payment if you proceed with our engineering studio!"',
                 sec6_q5: 'Q: "What if I want to add new features mid-development that weren\'t in the original PRD?"',
                 sec6_a5: '"We enforce a strict Scope Locking protocol to ensure elite quality and on-time delivery! If you need to add features outside the agreed PRD, you can formally submit it via the \'Change Request (CR) / Addendum\' module in your Client Portal Dashboard. We do not accept arbitrary requests via WhatsApp/Email to prevent miscommunication. Our architects will evaluate your CR and issue an Addendum Invoice along with a revised timeline estimate. The new feature development will commence immediately upon Addendum approval!"'
             }

@@ -401,7 +401,7 @@ export default function HeroIsland({
                 <div className="space-y-3 mb-8 text-xs font-sans text-zinc-700 dark:text-zinc-300">
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Dedicated Fullstack &amp; DevOps Engineering:</strong> Menulis 100% kode produksi mencakup seluruh 7 Pilar Software Factory OS.</span>
+                    <span><strong>Dedicated Fullstack &amp; DevOps Engineering:</strong> Menulis 100% kode produksi mencakup seluruh 10 Pilar Software Factory OS.</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -859,7 +859,7 @@ export default function HeroIsland({
                           <span className="text-zinc-500">Rp {retailProPrice}</span>
                         </div>
                         <div className="flex justify-between items-center text-amber-600 dark:text-amber-400 font-bold">
-                          <span>• <strong>Ultimate Factory OS:</strong> Lengkap 7 Pilar</span>
+                          <span>• <strong>Ultimate Factory OS:</strong> Lengkap 10 Pilar</span>
                           <span>Rp {retailUltimatePrice}</span>
                         </div>
                       </div>

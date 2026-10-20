@@ -594,7 +594,7 @@ class BlueprintDiscoveryService
         if ($domain === 'education_adventist') {
             $durasiHari = "45";
             $targetWaktu = $isEn ? "45 Working Days (Phase 1 Enterprise MVP Monolith - 5 Scheduled Sprints)" : "45 Hari Kerja (Fase 1 Enterprise MVP Monolith - 5 Sprint Terjadwal)";
-            $kisaranBudget = "Rp 50.000.000 (Studio Monolith MVP Turnkey Enterprise - 7 Pilar Software Factory OS)";
+            $kisaranBudget = "Rp 50.000.000 (Studio Monolith MVP Turnkey Enterprise - 10 Pilar Software Factory OS)";
             $skalaPengguna = "10.000 - 100.000 Pengguna / Bulan (Multi-Tenant Sekolah se-Indonesia, Dedicated VPS Monolith Keyset O(1))";
             $jangkauanPasar = $isEn ? "National Indonesia (UIKB & UIKT) & Regional SSD (IDR, WIB/WITA/WIT, PDP Act & SSD Working Policy Compliance)" : "Nasional Indonesia (UIKB & UIKT) & Regional SSD (IDR, Zona WIB/WITA/WIT, Kepatuhan UU PDP & SSD Working Policy)";
             $kepatuhanKeamanan = "Standar OWASP Top 10, Sandboxing Berkas, Enkripsi Catatan Pastoral/BK (Confidential Counseling Vault), Audit Trail GCAS, Kepatuhan UU PDP";
@@ -785,7 +785,7 @@ class BlueprintDiscoveryService
                         ? 'End-to-end coding, testing, and cloud deployment with SLA contract'
                         : 'Koding penuh, pengujian Pest, hingga live deployment di server VPS',
                     'highlights' => [
-                        $isEn ? '100% turnkey coding across 7 Software Factory OS pillars' : '100% turnkey koding mencakup 7 Pilar Software Factory OS',
+                        $isEn ? '100% turnkey coding across 10 Software Factory OS pillars' : '100% turnkey koding mencakup 10 Pilar Software Factory OS',
                         $isEn ? 'Managed Capacity & Anti-Collision sprint batch' : 'Alokasi slot sprint terisolasi dengan Master Gantt real-time',
                         $isEn ? 'Legally binding SLA contract & 100% copyright transfer' : 'Kontrak legal SLA bersertifikat & serah terima hak cipta 100%',
                         $isEn ? 'Staged 50% DP escrow payment via Midtrans Snap' : 'Skema pembayaran bertahap DP 50% via Midtrans Snap',

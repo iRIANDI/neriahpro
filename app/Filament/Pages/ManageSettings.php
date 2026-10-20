@@ -21,6 +21,7 @@ use App\Models\CmsGlobalSetting;
 use Filament\Notifications\Notification;
 use Filament\Actions\Action;
 use Saade\FilamentAutograph\Forms\Components\SignaturePad;
+use App\Support\CountryZoneHelper;
 
 class ManageSettings extends Page implements HasForms
 {
@@ -103,7 +104,7 @@ class ManageSettings extends Page implements HasForms
                     'url' => 'https://neriahpro.com',
                     'logo' => 'https://neriahpro.com/favicon.ico',
                     'email' => 'support@neriahpro.com',
-                    'telephone' => '+628123456789',
+                    'telephone' => '+6281260840428',
                     'address' => [
                         'street' => 'Jakarta Cyber Tower',
                         'city' => 'Jakarta',
@@ -169,6 +170,17 @@ class ManageSettings extends Page implements HasForms
                 CmsGlobalSetting::updateOrCreate(['key' => 'developer_signature_image'], ['value' => $filename]);
             }
         }
+
+        $waParsed = CountryZoneHelper::splitPhone($settings['company_whatsapp'] ?? '6281260840428');
+        $settings['company_whatsapp_country'] = $settings['company_whatsapp_country'] ?? $waParsed['iso'];
+        $settings['company_whatsapp_number'] = $settings['company_whatsapp_number'] ?? $waParsed['local_number'];
+        $settings['company_whatsapp'] = $waParsed['full_e164'];
+
+        $devParsed = CountryZoneHelper::splitPhone($settings['developer_phone'] ?? '+6281260840428');
+        $settings['developer_phone_country'] = $settings['developer_phone_country'] ?? $devParsed['iso'];
+        $settings['developer_phone_number'] = $settings['developer_phone_number'] ?? $devParsed['local_number'];
+        $settings['developer_phone'] = $devParsed['formatted'];
+
         $this->form->fill($settings);
     }
 
@@ -186,11 +198,40 @@ class ManageSettings extends Page implements HasForms
                             ->id('general-setup')
                             ->icon('heroicon-m-adjustments-horizontal')
                             ->schema([
-                                TextInput::make('company_whatsapp')
-                                    ->label('Nomor WhatsApp Resmi (CS & Konsultasi Proyek)')
-                                    ->helperText('Nomor WhatsApp resmi tanpa tanda + (contoh: 6281260840428). Otomatis memperbarui tombol Chat WhatsApp di seluruh website.')
-                                    ->default('6281260840428')
-                                    ->required(),
+                                Section::make('Nomor Kontak Resmi WhatsApp (CS & Konsultasi Proyek)')
+                                    ->description('Konfigurasi nomor WhatsApp dengan Country Zone internasional (berbasis 240+ negara standar E.164). Otomatis memperbarui tombol Chat WhatsApp di seluruh website.')
+                                    ->schema([
+                                        Select::make('company_whatsapp_country')
+                                            ->label('Zona Negara / Country Zone')
+                                            ->options(CountryZoneHelper::getSelectOptions())
+                                            ->searchable()
+                                            ->default('ID')
+                                            ->live()
+                                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                                $dial = CountryZoneHelper::getDialCode($state);
+                                                $local = CountryZoneHelper::cleanLocalNumber($get('company_whatsapp_number'));
+                                                $cleanDial = preg_replace('/\D/', '', $dial);
+                                                $set('company_whatsapp', $cleanDial . $local);
+                                            }),
+                                        TextInput::make('company_whatsapp_number')
+                                            ->label('Nomor WhatsApp (Lokal)')
+                                            ->placeholder('81260840428')
+                                            ->prefix(fn (callable $get) => CountryZoneHelper::getDialCode($get('company_whatsapp_country') ?? 'ID'))
+                                            ->helperText('Masukkan nomor tanpa awalan 0 (contoh: 81260840428).')
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                                $dial = CountryZoneHelper::getDialCode($get('company_whatsapp_country') ?? 'ID');
+                                                $local = CountryZoneHelper::cleanLocalNumber($state);
+                                                $cleanDial = preg_replace('/\D/', '', $dial);
+                                                $set('company_whatsapp', $cleanDial . $local);
+                                            }),
+                                        TextInput::make('company_whatsapp')
+                                            ->label('Nomor WhatsApp E.164 Final (Sistem)')
+                                            ->helperText('Format standar internasional E.164 (tanpa spasi/simbol) yang otomatis disinkronkan ke seluruh website & invoice.')
+                                            ->readOnly()
+                                            ->columnSpanFull()
+                                            ->required(),
+                                    ])->columns(2),
 
                                 Select::make('app_timezone')
                                     ->label('Master Timezone (UTC Offset)')
@@ -240,9 +281,32 @@ class ManageSettings extends Page implements HasForms
                                             ->helperText('Email resmi untuk korespondensi kontrak dan dokumen hukum.')
                                             ->default('support@neriahpro.com')
                                             ->required(),
+                                        Select::make('developer_phone_country')
+                                            ->label('Zona Negara Telepon')
+                                            ->options(CountryZoneHelper::getSelectOptions())
+                                            ->searchable()
+                                            ->default('ID')
+                                            ->live()
+                                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                                $dial = CountryZoneHelper::getDialCode($state);
+                                                $local = CountryZoneHelper::cleanLocalNumber($get('developer_phone_number'));
+                                                $set('developer_phone', $dial . $local);
+                                            }),
+                                        TextInput::make('developer_phone_number')
+                                            ->label('Nomor Telepon Developer (Lokal)')
+                                            ->placeholder('81260840428')
+                                            ->prefix(fn (callable $get) => CountryZoneHelper::getDialCode($get('developer_phone_country') ?? 'ID'))
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                                $dial = CountryZoneHelper::getDialCode($get('developer_phone_country') ?? 'ID');
+                                                $local = CountryZoneHelper::cleanLocalNumber($state);
+                                                $set('developer_phone', $dial . $local);
+                                            }),
                                         TextInput::make('developer_phone')
-                                            ->label('Nomor Telepon / WhatsApp Resmi')
-                                            ->default('+6281260840428'),
+                                            ->label('Nomor Telepon / WhatsApp Resmi (Kontrak)')
+                                            ->helperText('Nomor telepon terformat E.164 lengkap dengan dial code untuk SPK Kontrak Digital.')
+                                            ->readOnly()
+                                            ->columnSpanFull(),
                                         TextInput::make('developer_location')
                                             ->label('Domisili / Wilayah Hukum')
                                             ->default('Jakarta, Indonesia'),
@@ -1081,6 +1145,25 @@ class ManageSettings extends Page implements HasForms
     public function submit(): void
     {
         $data = $this->form->getState();
+
+        if (!empty($data['company_whatsapp_number']) || !empty($data['company_whatsapp_country'])) {
+            $country = $data['company_whatsapp_country'] ?? 'ID';
+            $number = $data['company_whatsapp_number'] ?? '';
+            $dial = CountryZoneHelper::getDialCode($country);
+            $cleanDial = preg_replace('/\D/', '', $dial);
+            $cleanNumber = CountryZoneHelper::cleanLocalNumber($number);
+            $data['company_whatsapp'] = $cleanDial . $cleanNumber;
+        } elseif (!empty($data['company_whatsapp'])) {
+            $data['company_whatsapp'] = preg_replace('/\D/', '', $data['company_whatsapp']);
+        }
+
+        if (!empty($data['developer_phone_number']) || !empty($data['developer_phone_country'])) {
+            $country = $data['developer_phone_country'] ?? 'ID';
+            $number = $data['developer_phone_number'] ?? '';
+            $dial = CountryZoneHelper::getDialCode($country);
+            $cleanNumber = CountryZoneHelper::cleanLocalNumber($number);
+            $data['developer_phone'] = $dial . $cleanNumber;
+        }
 
         if (!empty($data['developer_signature_pad'])) {
             $raw = $data['developer_signature_pad'];

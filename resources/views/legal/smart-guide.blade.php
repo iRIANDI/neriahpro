@@ -235,7 +235,7 @@
             <div class="border border-zinc-200 dark:border-zinc-800 overflow-x-auto bg-white dark:bg-zinc-900 shadow-xs">
                 <table class="w-full text-left font-mono text-xs border-collapse">
                     <thead>
-                        <tr class="bg-zinc-100 dark:bg-zinc-850 border-b border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100">
+                        <tr class="bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100">
                             <th class="p-3 w-1/4 uppercase">{{ $isEn ? 'Governance Parameter' : 'Parameter Tata Kelola' }}</th>
                             <th class="p-3 w-3/8 uppercase">{{ $isEn ? 'Digital Retail License Track' : 'Jalur Lisensi Retail Digital' }}</th>
                             <th class="p-3 w-3/8 uppercase">{{ $isEn ? 'Turnkey Studio Contract Track' : 'Jalur Kontrak Studio Turnkey' }}</th>

@@ -111,4 +111,21 @@ class ManageSettingsLivewireTest extends TestCase
             ->call('submit')
             ->assertHasNoErrors();
     }
+
+    public function test_country_zone_whatsapp_and_phone_save_e164(): void
+    {
+        $superadmin = User::where('email', 'yoseph.iriandi.tambunan@gmail.com')->firstOrFail();
+        $this->actingAs($superadmin);
+
+        Livewire::test(ManageSettings::class)
+            ->set('data.company_whatsapp_country', 'SG')
+            ->set('data.company_whatsapp_number', '91234567')
+            ->set('data.developer_phone_country', 'ID')
+            ->set('data.developer_phone_number', '81260840428')
+            ->call('submit')
+            ->assertHasNoErrors();
+
+        $this->assertEquals('6591234567', CmsGlobalSetting::getVal('company_whatsapp'));
+        $this->assertEquals('+6281260840428', CmsGlobalSetting::getVal('developer_phone'));
+    }
 }

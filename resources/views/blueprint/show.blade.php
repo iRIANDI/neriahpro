@@ -6501,7 +6501,7 @@ class ProcessSecureDataset implements ShouldQueue
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 <span>{{ $isEn ? 'PREVIEW CODE (10 PILLARS)' : 'PREVIEW KODE (10 PILAR)' }}</span>
                             </button>
-                            <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-5 py-3 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-850 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm" title="{{ $isEn ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE' }}">
+                            <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-5 py-3 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm" title="{{ $isEn ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE' }}">
                                 <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
                                 <span>{{ $isEn ? 'DOWNLOAD .CURSORRULES' : 'UNDUH .CURSORRULES' }}</span>
                             </a>
@@ -8554,7 +8554,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <button 
                         type="button" 
                         @click="selectedPromptAgent = 'antigravity'"
-                        :class="selectedPromptAgent === 'antigravity' ? 'bg-emerald-500 text-black font-bold border-emerald-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'"
+                        :class="selectedPromptAgent === 'antigravity' ? 'bg-emerald-500 text-black font-bold border-emerald-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2.5 text-center border transition flex flex-col items-center gap-1 cursor-pointer"
                     >
                         <span class="text-[10px] uppercase tracking-wider font-mono">Antigravity IDE</span>
@@ -8563,7 +8563,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <button 
                         type="button" 
                         @click="selectedPromptAgent = 'cursor'"
-                        :class="selectedPromptAgent === 'cursor' ? 'bg-sky-500 text-black font-bold border-sky-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'"
+                        :class="selectedPromptAgent === 'cursor' ? 'bg-sky-500 text-black font-bold border-sky-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2.5 text-center border transition flex flex-col items-center gap-1 cursor-pointer"
                     >
                         <span class="text-[10px] uppercase tracking-wider font-mono">Cursor Composer</span>
@@ -8572,7 +8572,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <button 
                         type="button" 
                         @click="selectedPromptAgent = 'claude'"
-                        :class="selectedPromptAgent === 'claude' ? 'bg-amber-500 text-black font-bold border-amber-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'"
+                        :class="selectedPromptAgent === 'claude' ? 'bg-amber-500 text-black font-bold border-amber-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2.5 text-center border transition flex flex-col items-center gap-1 cursor-pointer"
                     >
                         <span class="text-[10px] uppercase tracking-wider font-mono">Claude Code CLI</span>
@@ -8581,7 +8581,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <button 
                         type="button" 
                         @click="selectedPromptAgent = 'windsurf'"
-                        :class="selectedPromptAgent === 'windsurf' ? 'bg-purple-500 text-black font-bold border-purple-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'"
+                        :class="selectedPromptAgent === 'windsurf' ? 'bg-purple-500 text-black font-bold border-purple-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2.5 text-center border transition flex flex-col items-center gap-1 cursor-pointer"
                     >
                         <span class="text-[10px] uppercase tracking-wider font-mono">Windsurf Cascade</span>
@@ -8590,7 +8590,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <button 
                         type="button" 
                         @click="selectedPromptAgent = 'devin'"
-                        :class="selectedPromptAgent === 'devin' ? 'bg-rose-500 text-black font-bold border-rose-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'"
+                        :class="selectedPromptAgent === 'devin' ? 'bg-rose-500 text-black font-bold border-rose-400' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2.5 text-center border transition flex flex-col items-center gap-1 cursor-pointer"
                     >
                         <span class="text-[10px] uppercase tracking-wider font-mono">Devin / Copilot</span>
@@ -8606,7 +8606,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <button 
                         type="button" 
                         @click="selectedPromptSprint = 'all'"
-                        :class="selectedPromptSprint === 'all' ? 'bg-zinc-100 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        :class="selectedPromptSprint === 'all' ? 'bg-zinc-100 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2 border transition text-center cursor-pointer"
                     >
                         Master Kickoff
@@ -8614,7 +8614,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <button 
                         type="button" 
                         @click="selectedPromptSprint = 'sprint1'"
-                        :class="selectedPromptSprint === 'sprint1' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        :class="selectedPromptSprint === 'sprint1' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2 border transition text-center cursor-pointer"
                     >
                         Sprint 1: DB &amp; ULID
@@ -8622,7 +8622,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <button 
                         type="button" 
                         @click="selectedPromptSprint = 'sprint2'"
-                        :class="selectedPromptSprint === 'sprint2' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        :class="selectedPromptSprint === 'sprint2' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2 border transition text-center cursor-pointer"
                     >
                         Sprint 2: Engine
@@ -8630,7 +8630,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <button 
                         type="button" 
                         @click="selectedPromptSprint = 'sprint3'"
-                        :class="selectedPromptSprint === 'sprint3' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        :class="selectedPromptSprint === 'sprint3' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2 border transition text-center cursor-pointer"
                     >
                         Sprint 3: UI React
@@ -8638,7 +8638,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <button 
                         type="button" 
                         @click="selectedPromptSprint = 'sprint4'"
-                        :class="selectedPromptSprint === 'sprint4' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        :class="selectedPromptSprint === 'sprint4' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2 border transition text-center cursor-pointer"
                     >
                         Sprint 4: Security
@@ -8646,7 +8646,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <button 
                         type="button" 
                         @click="selectedPromptSprint = 'sprint5'"
-                        :class="selectedPromptSprint === 'sprint5' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-850'"
+                        :class="selectedPromptSprint === 'sprint5' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2 border transition text-center cursor-pointer"
                     >
                         Sprint 5: Staging
@@ -8699,7 +8699,7 @@ class ProcessSecureDataset implements ShouldQueue
                 <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     <a 
                         href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}"
-                        class="w-full sm:w-auto px-4 py-2.5 bg-zinc-850 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/30 text-xs font-mono uppercase font-bold transition flex items-center justify-center gap-1.5"
+                        class="w-full sm:w-auto px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-emerald-400 border border-emerald-500/30 text-xs font-mono uppercase font-bold transition flex items-center justify-center gap-1.5"
                         title="Unduh file .cursorrules langsung ke project"
                     >
                         <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>

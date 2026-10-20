@@ -430,7 +430,7 @@
     @react('FooterIsland', [
         'settings' => $getSettingVal('footer_links', null),
         'featureFlags' => $featureFlags,
-        'whatsappNumber' => $getSettingVal('company_whatsapp', '628123456789'),
+        'whatsappNumber' => $getSettingVal('company_whatsapp', '6281260840428'),
         'supportEmail' => $supportEmail,
         'currentLocale' => $currentLang,
     ])

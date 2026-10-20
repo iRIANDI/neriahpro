@@ -55,11 +55,11 @@ class ManageSettings extends Page implements HasForms
         $dbSettings = CmsGlobalSetting::all()->pluck('value', 'key')->toArray();
 
         $defaults = [
-            'company_whatsapp' => '628123456789',
+            'company_whatsapp' => '6281260840428',
             'app_timezone' => 'Asia/Jakarta',
             'developer_entity_name' => 'Neriah Pro',
             'developer_support_email' => 'support@neriahpro.com',
-            'developer_phone' => '+628123456789',
+            'developer_phone' => '+6281260840428',
             'developer_location' => 'Jakarta, Indonesia',
             'developer_pic_name' => 'Yoseph Iriandi Tambunan',
             'developer_pic_title' => 'Lead Software Architect & Tech Lead',
@@ -188,8 +188,8 @@ class ManageSettings extends Page implements HasForms
                             ->schema([
                                 TextInput::make('company_whatsapp')
                                     ->label('Nomor WhatsApp Resmi (CS & Konsultasi Proyek)')
-                                    ->helperText('Nomor WhatsApp resmi tanpa tanda + (contoh: 628123456789). Otomatis memperbarui tombol Chat WhatsApp di seluruh website.')
-                                    ->default('628123456789')
+                                    ->helperText('Nomor WhatsApp resmi tanpa tanda + (contoh: 6281260840428). Otomatis memperbarui tombol Chat WhatsApp di seluruh website.')
+                                    ->default('6281260840428')
                                     ->required(),
 
                                 Select::make('app_timezone')
@@ -242,7 +242,7 @@ class ManageSettings extends Page implements HasForms
                                             ->required(),
                                         TextInput::make('developer_phone')
                                             ->label('Nomor Telepon / WhatsApp Resmi')
-                                            ->default('+628123456789'),
+                                            ->default('+6281260840428'),
                                         TextInput::make('developer_location')
                                             ->label('Domisili / Wilayah Hukum')
                                             ->default('Jakarta, Indonesia'),

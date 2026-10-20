@@ -1802,7 +1802,7 @@ class BlueprintController extends Controller
 
         // Generate pre-filled WhatsApp direct message as optional secondary support
         $settings = CmsGlobalSetting::getAllCached();
-        $targetWa = $settings['company_whatsapp']->value ?? '628123456789';
+        $targetWa = $settings['company_whatsapp']->value ?? '6281260840428';
 
         $waLines = [];
         if ($isRetail) {

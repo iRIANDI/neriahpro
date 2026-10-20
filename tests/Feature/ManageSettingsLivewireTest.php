@@ -36,7 +36,7 @@ class ManageSettingsLivewireTest extends TestCase
         $this->actingAs($superadmin);
 
         Livewire::test(ManageSettings::class)
-            ->set('data.company_whatsapp', '628123456789')
+            ->set('data.company_whatsapp', '6281260840428')
             ->set('data.app_timezone', 'Asia/Jakarta')
             ->set('data.developer_entity_name', 'Neriah Pro Studio')
             ->set('data.developer_support_email', 'support@neriahpro.com')

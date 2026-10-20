@@ -1,6 +1,6 @@
 @php
     $isEn = app()->getLocale() === 'en';
-    $whatsappNumber = \App\Models\CmsGlobalSetting::getVal('company_whatsapp', '628123456789');
+    $whatsappNumber = \App\Models\CmsGlobalSetting::getVal('company_whatsapp', '6281260840428');
     $isMidtransStrict = (bool) \App\Models\CmsGlobalSetting::getVal('midtrans_compliance_strict_mode', true);
     $cvProFlag = (bool) \App\Models\CmsGlobalSetting::getVal('feature_enable_cv_pro', false);
     $isCvProEnabled = !$isMidtransStrict && $cvProFlag;

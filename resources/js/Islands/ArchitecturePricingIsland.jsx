@@ -113,7 +113,7 @@ export const PACKAGE_REGISTRY = {
 export default function ArchitecturePricingIsland({ 
   headline = 'INVESTASI TRANSPARAN & TEPAT SASARAN',
   subheadline = 'Dua skenario solusi rekayasa perangkat lunak berskala tinggi: Mulai dari blueprint teknis siap eksekusi hingga pengembangan penuh sistem monolit modern tanpa drama pembengkakan biaya.',
-  whatsappNumber = '628123456789',
+  whatsappNumber = '6281260840428',
   featureFlags = {},
   currentLocale = 'id',
   pricingSettings = {},
@@ -195,22 +195,23 @@ export default function ArchitecturePricingIsland({
   
   const formatPillar = (text) => {
     if (typeof text !== 'string') return text;
-    return text.split(/(Pilar \d+|Pillar \d+)/i).map((part, i) => {
-      const match = part.match(/Pil[l]?ar (\d+)/i);
+    return text.split(/(Pilar \d+|Pillar \d+|10 Pilar|10 Pillars)/i).map((part, i) => {
+      const match = part.match(/(?:Pil[l]?ar (\d+)|(10) Pil[l]?ars?)/i);
       if (match) {
+        const pillarNum = match[1] || match[2] || '10';
         const colors = {
-          '1': 'text-blue-600 dark:text-blue-400 font-black px-1 bg-blue-500/10 rounded-sm',
-          '2': 'text-purple-600 dark:text-purple-400 font-black px-1 bg-purple-500/10 rounded-sm',
-          '3': 'text-yellow-600 dark:text-yellow-400 font-black px-1 bg-yellow-500/10 rounded-sm',
-          '4': 'text-emerald-600 dark:text-emerald-400 font-black px-1 bg-emerald-500/10 rounded-sm',
-          '5': 'text-pink-600 dark:text-pink-400 font-black px-1 bg-pink-500/10 rounded-sm',
-          '6': 'text-orange-600 dark:text-orange-400 font-black px-1 bg-orange-500/10 rounded-sm',
-          '7': 'text-rose-600 dark:text-rose-400 font-black px-1 bg-rose-500/10 rounded-sm',
-          '8': 'text-cyan-600 dark:text-cyan-400 font-black px-1 bg-cyan-500/10 rounded-sm',
-          '9': 'text-indigo-600 dark:text-indigo-400 font-black px-1 bg-indigo-500/10 rounded-sm',
-          '10': 'text-teal-600 dark:text-teal-400 font-black px-1 bg-teal-500/10 rounded-sm',
+          '1': 'text-blue-600 dark:text-blue-400 font-black px-1.5 py-0.5 bg-blue-500/10 rounded-xs border border-blue-500/20',
+          '2': 'text-purple-600 dark:text-purple-400 font-black px-1.5 py-0.5 bg-purple-500/10 rounded-xs border border-purple-500/20',
+          '3': 'text-yellow-600 dark:text-yellow-400 font-black px-1.5 py-0.5 bg-yellow-500/10 rounded-xs border border-yellow-500/20',
+          '4': 'text-emerald-600 dark:text-emerald-400 font-black px-1.5 py-0.5 bg-emerald-500/10 rounded-xs border border-emerald-500/20',
+          '5': 'text-pink-600 dark:text-pink-400 font-black px-1.5 py-0.5 bg-pink-500/10 rounded-xs border border-pink-500/20',
+          '6': 'text-orange-600 dark:text-orange-400 font-black px-1.5 py-0.5 bg-orange-500/10 rounded-xs border border-orange-500/20',
+          '7': 'text-rose-600 dark:text-rose-400 font-black px-1.5 py-0.5 bg-rose-500/10 rounded-xs border border-rose-500/20',
+          '8': 'text-cyan-600 dark:text-cyan-400 font-black px-1.5 py-0.5 bg-cyan-500/10 rounded-xs border border-cyan-500/20',
+          '9': 'text-indigo-600 dark:text-indigo-400 font-black px-1.5 py-0.5 bg-indigo-500/10 rounded-xs border border-indigo-500/20',
+          '10': 'text-teal-600 dark:text-teal-400 font-black px-1.5 py-0.5 bg-teal-500/10 rounded-xs border border-teal-500/20',
         };
-        return <span key={i} className={colors[match[1]] || 'text-zinc-600 dark:text-zinc-400 font-black px-1 bg-zinc-500/10 rounded-sm'}>{part}</span>;
+        return <span key={i} className={colors[pillarNum] || 'text-zinc-600 dark:text-zinc-400 font-black px-1.5 py-0.5 bg-zinc-500/10 rounded-xs'}>{part}</span>;
       }
       return part;
     });
@@ -901,13 +902,13 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   </div>
                   {(isEn ? [
                     'Pillar 1 (Core Spec): Full 26-Parameter PRD Document (Chapters 1-6)',
-                    'Database Schema: PostgreSQL Strict ULID DDL SQL (Ready-to-import)',
+                    'Pillar 3 (Database Schema): PostgreSQL Strict ULID DDL SQL (Ready-to-import)',
                     'Performance Standard: O(1) Keyset & Cursor Pagination Directives',
                     'Execution Roadmap: 2 Sprints Work Breakdown Structure (Linear / Jira ready)',
                     'Official Deliverable: Licensed PDF & Markdown Export with SHA-256 Hash',
                   ] : [
                     'Pilar 1 (Spesifikasi Inti): Dokumen PRD lengkap 26 parameter (Bab 1–6)',
-                    'Skema Database: SQL PostgreSQL ULID presisi (Siap diimpor)',
+                    'Pilar 3 (Skema Database): SQL PostgreSQL ULID presisi (Siap diimpor)',
                     'Standar Kinerja: Panduan kueri cepat Keyset & Cursor Pagination O(1)',
                     'Peta Kerja Eksekusi: Rencana kerja 2 sprint terstruktur (Linear / Jira ready)',
                     'Ekspor Dokumen Resmi: Berkas PDF & Markdown berlisensi hash SHA-256',
@@ -1069,14 +1070,18 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     'Pillar 2 (UI/UX Design): Design Tokens JSON, 4 Core Screens Wireframe & WCAG AAA States',
                     'Pillar 6 (QA & E2E Testing): Automated Pest Contract-First Tests & Playwright Browser Automation',
                     'Pillar 7 (DevOps CI/CD): 1-Click Cloud Deployment Pipeline (GitHub Actions & deploy.sh)',
-                    'Pillars 8-10 (Telemetry & Resilience): Health Probes (/healthz), Encrypted Backups & Scalar Interactive API Docs',
+                    'Pillar 8 (Telemetry): Health Probes (/healthz, /livez, /readyz) & Service Monitoring',
+                    'Pillar 9 (Disaster Recovery): Automated Encrypted Backups & Zero-Data-Loss RPO Runbooks',
+                    'Pillar 10 (Living API Docs): Scalar Interactive API Playground & Contract Drift Sentinel',
                     'Executive Call: 1 Scheduled 60-Minute 1-on-1 Session with Principal Architect',
                     'Legal Security: Official Corporate Non-Disclosure Agreement (NDA)',
                   ] : [
                     'Pilar 2 (Desain UI/UX): Cetak biru wireframe 4 layar utama, Token Desain (JSON) & Status WCAG AAA',
                     'Pilar 6 (Uji Kualitas & E2E): Paket pengujian otomatis ApiContractTest Pest & Otomasi Browser Playwright',
                     'Pilar 7 (Otomasi Server): Jalur deployment otomatis cloud (GitHub Actions & deploy.sh)',
-                    'Pilar 8-10 (Telemetri & Ketahanan): Health Probes (/healthz), Backup Enkripsi & Dokumentasi API Scalar',
+                    'Pilar 8 (Telemetri): Health Probes (/healthz, /livez, /readyz) & Pemantauan Performa',
+                    'Pilar 9 (Disaster Recovery): Skrip Backup Terenkripsi & SOP Pemulihan Bencana',
+                    'Pilar 10 (Dokumen API Hidup): Scalar Interactive API Playground & Contract Drift Sentinel',
                     'Sesi Konsultasi: 1 Sesi 60 Menit 1-on-1 bersama Principal Architect',
                     'Perlindungan Hukum: Surat Perjanjian Kerahasiaan (NDA) resmi bertanda tangan digital',
                   ]).map((f, i) => (
@@ -1196,25 +1201,25 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     {isEn ? 'DELIVERABLES INCLUDED:' : 'OUTPUT YANG DIDAPATKAN:'}
                   </div>
                   {(isEn ? [
-                    'Comprehensive 26-Parameter PRD Document (Chapters 1-6) + Interactive Mermaid Charts',
-                    'PostgreSQL 16 Strict ULID Database Schema & Keyset Cursor O(1) DDL SQL',
-                    'Work Breakdown Structure (WBS) 5 Sprints & Master Mermaid Gantt Chart',
-                    'Standard AI Coding Agent Directives (.cursorrules, AGENTS.md) for internal devs',
-                    '1-on-1 Technical Scoping Session with Principal Architect (Google Meet)',
+                    'Pillar 1 (PRD & Spec): Comprehensive 26-Parameter PRD Document (Chapters 1-6) + Interactive Mermaid Charts',
+                    'Pillar 3 (Database Architecture): PostgreSQL 16 Strict ULID Database Schema & Keyset Cursor O(1) DDL SQL',
+                    'Pillar 5 (AI Agent Rules): Standard AI Coding Agent Directives (.cursorrules, AGENTS.md) for internal devs',
+                    'Execution Roadmap: Work Breakdown Structure (WBS) 5 Sprints & Master Mermaid Gantt Chart',
+                    'Executive Scoping: 1-on-1 Technical Scoping Session with Principal Architect (Google Meet)',
                     '100% DP Credit: Fee Rp 2.5M automatically deducts 50% DP if upgrading to Full MVP!',
                     'Corporate Non-Disclosure Agreement (NDA) & 100% Client Intellectual Property',
                   ] : [
-                    'Dokumen PRD Arsitektur Lengkap 26 Parameter (Bab 1–6) + Diagram Alur Mermaid',
-                    'Skema Basis Data PostgreSQL 16 Strict ULID & Keyset Cursor O(1) DDL SQL Siap Import',
-                    'Work Breakdown Structure (WBS) 5 Sprint & Visualisasi Master Mermaid Gantt Chart',
-                    'Standar Aturan Agen AI (.cursorrules, AGENTS.md) untuk tim developer internal Anda',
-                    '1 Sesi Konsultasi & Scoping Teknis 1-on-1 bersama Principal Architect (Google Meet)',
+                    'Pilar 1 (PRD & Kontrak): Dokumen PRD Arsitektur Lengkap 26 Parameter (Bab 1–6) + Diagram Alur Mermaid',
+                    'Pilar 3 (Fondasi Data): Skema Basis Data PostgreSQL 16 Strict ULID & Keyset Cursor O(1) DDL SQL Siap Import',
+                    'Pilar 5 (Panduan AI): Standar Aturan Agen AI (.cursorrules, AGENTS.md) untuk tim developer internal Anda',
+                    'Peta Kerja Eksekusi: Work Breakdown Structure (WBS) 5 Sprint & Visualisasi Master Mermaid Gantt Chart',
+                    'Sesi Scoping Eksekutif: 1 Sesi Scoping Teknis 1-on-1 bersama Principal Architect (Google Meet)',
                     'Garansi Kredit DP 100%: Biaya Rp 2.5 Jt otomatis memotong DP 50% jika lanjut ke Full MVP!',
                     'Dokumen Legal NDA Resmi & 100% Hak Milik Dokumen / Kode diserahkan ke klien',
                   ]).map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                      <span>{feat}</span>
+                      <span className="text-[11px] leading-tight">{formatPillar(feat)}</span>
                     </div>
                   ))}
                 </div>
@@ -1300,37 +1305,43 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     ⭐ {formatPillar(isEn ? 'Includes all Blueprint Advisory deliverables + Complete 10 Pillars of Software Factory OS:' : 'Mencakup seluruh hasil Blueprint Advisory + Lengkap 10 Pilar Software Factory OS:')}
                   </div>
                   {(isEn ? [
+                    'Pillar 1 (Brain & Contract): 26-Parameter PRD, OpenAPI 3.1 Spec & WBS 5 Sprints Roadmap',
+                    'Pillar 2 (Clean Brutalist UI): Design Tokens JSON, 4 Core Wireframes & WCAG AAA States',
+                    'Pillar 3 (Scaffold & Engine): Laravel 13, Filament v5, PostgreSQL 16 Strict ULID & Keyset O(1)',
+                    'Pillar 4 (Realistic Data): Synthetic Mock Data Seeder Engine (100+ records for instant staging)',
+                    'Pillar 5 (AI Coding Directives): Repository-tailored Agent Directives (.cursorrules, CLAUDE.md, AGENTS.md)',
+                    'Pillar 6 (Automated Testing): ApiContractTest Pest & Playwright Browser Automation Suite (100% Green)',
+                    'Pillar 7 (DevOps CI/CD): 1-Click Cloud Deployment Pipeline (GitHub Actions & deploy.sh 6 scenarios)',
+                    'Pillar 8 (Telemetry & Probes): Health Probes (/healthz, /livez, /readyz) & Dedicated Observability',
+                    'Pillar 9 (Disaster Recovery): Automated Encrypted Backups (AES-256), RPO < 1 Hour & Drill Runbooks',
+                    'Pillar 10 (Living API Docs): Scalar Interactive API Playground & Contract Drift Sentinel Live',
                     'Managed Sprint Capacity: Reserved slot in Batch 1, 2, or Q1 with Anti-Collision Engine',
-                    'Complete 10 Pillars of Software Factory OS Coded End-to-End (Laravel 13, Filament v5, React 19)',
-                    'PostgreSQL 16 Strict ULID Database Architecture & Keyset Cursor Pagination O(1)',
-                    'Synthetic Vital Data Seeder (100+ realistic records for instant staging testing)',
-                    'AI Coding Agent Directives (.cursorrules, CLAUDE.md, AGENTS.md) ready for Cursor & Windsurf',
-                    'Automated Feature Contract-First Tests (ApiContractTest Pest / PHPUnit Suite)',
-                    'Automated Payments (Midtrans Snap: QRIS, VA, Cards) with Idempotent Anti-Duplicate Webhook',
-                    'Real-Time Master Gantt Timeline & Milestone Transparency in Customer Portal',
-                    'Dedicated Production VPS Hardening (Docker/Nixpacks, Nginx HTTP/2, SSL, Redis Caching)',
-                    'One-Click Cloud CI/CD Pipeline (GitHub Actions & deploy.sh 6 scenarios)',
-                    '100% Source Code & Server Credentials Handover (Zero Vendor Lock-in)',
-                    '3-Month Full Priority SLA Bug Warranty & Dedicated Lead Architect Maintenance',
+                    'Automated Payments: Midtrans Snap (QRIS, VA, Cards) with Idempotent Anti-Duplicate Webhook',
+                    'Master Gantt Timeline Real-Time & Milestone Transparency in Customer Portal',
+                    '100% Private GitHub Repo & Dedicated VPS Credentials Handover (Zero Vendor Lock-in)',
+                    '3-Month Full Priority SLA Bug Warranty & Maintenance by Lead Architect',
                     'Official Change Request (CR) / Addendum Module via Customer Portal Dashboard',
                   ] : [
+                    'Pilar 1 (Otak & Kontrak): Dokumen PRD 26 parameter, OpenAPI 3.1 & WBS 5 Sprint Roadmap',
+                    'Pilar 2 (UI/UX Clean Brutalist): Design Tokens JSON, Wireframe 4 Layar Inti & Status WCAG AAA',
+                    'Pilar 3 (Rangka & Engine): Laravel 13, Filament v5, PostgreSQL 16 Strict ULID & Keyset O(1)',
+                    'Pilar 4 (Data Nyata): Synthetic Mock Data Seeder Engine (100+ baris data realistis staging)',
+                    'Pilar 5 (Panduan AI): Aturan koding AI Agen (.cursorrules, CLAUDE.md, AGENTS.md)',
+                    'Pilar 6 (Uji Mutu Otomatis): ApiContractTest Pest & Otomasi Browser Playwright E2E (100% Lolos)',
+                    'Pilar 7 (Jalur CI/CD Cloud): GitHub Actions & deploy.sh 6 skenario deploy zero-downtime',
+                    'Pilar 8 (Telemetri & Observabilitas): Health Probes (/healthz, /livez, /readyz) & Pemantauan Performa',
+                    'Pilar 9 (Ketahanan & Backup): Disaster Recovery RPO < 1 jam, Snapshot & Backup Terenkripsi AES-256',
+                    'Pilar 10 (Dokumentasi API Hidup): Scalar Interactive API Playground & Contract Drift Sentinel',
                     'Managed Sprint Capacity: Slot terisolasi di Batch 1, 2, atau Q1 dengan Anti-Collision Engine',
-                    'Seluruh 10 Pilar Software Factory OS Dikodingkan Penuh (Laravel 13, Filament v5, React 19)',
-                    'Arsitektur Basis Data PostgreSQL 16 Strict ULID & Keyset Cursor Pagination O(1)',
-                    'Synthetic Vital Data Seeder Engine (100+ data uji realistis siap pakai)',
-                    'Standardisasi Aturan Koding Agen AI (.cursorrules, CLAUDE.md, AGENTS.md)',
-                    'Paket Uji Kontrak Fitur Otomatis (ApiContractTest Pest / PHPUnit Suite)',
-                    'Integrasi Pembayaran Otomatis (Midtrans Snap: QRIS/VA/Kartu) & Webhook Idempoten',
-                    'Pelacakan Real-Time Master Gantt Timeline & Faktur Pajak di Customer Portal',
-                    'Konfigurasi Dedicated Server VPS (Docker/Nixpacks, Nginx HTTP/2, SSL, Redis Caching)',
-                    'Pipeline Otomasi Cloud CI/CD (GitHub Actions & deploy.sh 6 skenario deploy aman)',
-                    '100% Penyerahan Source Code Repo GitHub Privat & Kredensial Server (No Lock-in)',
-                    'Garansi Perbaikan Bug SLA Prioritas 3 Bulan Penuh & Maintenance Terjadwal',
+                    'Integrasi Pembayaran Otomatis: Midtrans Snap (QRIS/VA/Kartu) & Webhook Idempoten Anti-Duplikasi',
+                    'Master Gantt Timeline Real-Time & Transparansi Milestone di Customer Portal',
+                    '100% Penyerahan Source Code Repo GitHub Privat & Kredensial Server VPS (No Lock-in)',
+                    'Garansi SLA Prioritas 3 Bulan Penuh & Maintenance Terjadwal Langsung oleh Lead Architect',
                     'Modul Change Request (CR) / Addendum Resmi terintegrasi di Customer Portal',
                   ]).map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                      <span>{feat}</span>
+                      <span className="text-[11px] leading-tight">{formatPillar(feat)}</span>
                     </div>
                   ))}
                 </div>
@@ -1424,7 +1435,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   ]).map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                      <span>{feat}</span>
+                      <span className="text-[11px] leading-tight">{formatPillar(feat)}</span>
                     </div>
                   ))}
                 </div>
@@ -1731,7 +1742,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                 {/* 7. PRD 26 PARAMETER */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                    {isEn ? '26-Parameter PRD' : 'PRD 26 Parameter'}
+                    {formatPillar(isEn ? '26-Parameter PRD (Pillar 1)' : 'PRD 26 Parameter (Pilar 1)')}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
                     {isEn ? (
@@ -1760,7 +1771,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                 {/* 8. POSTGRESQL STRICT ULID DDL */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                    {isEn ? 'PostgreSQL Strict ULID DDL' : 'PostgreSQL Strict ULID DDL'}
+                    {formatPillar(isEn ? 'Strict ULID Schema & Docker (Pillar 3)' : 'Skema Strict ULID & Docker (Pilar 3)')}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
                     {isEn ? (
@@ -1792,7 +1803,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                 {/* 9. CETAK BIRU DECOUPLED 2026+ */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                    {isEn ? 'Decoupled Blueprint 2026+' : 'Cetak Biru Decoupled 2026+'}
+                    {formatPillar(isEn ? 'UI Tokens & Wireframes (Pillar 2)' : 'Design Tokens & Wireframe (Pilar 2)')}
                   </td>
                   <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
                     {isEn ? (

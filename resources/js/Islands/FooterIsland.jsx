@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, ShieldCheck, ArrowUpRight, MessageCircle, X, ExternalLink, FileText, Lock, RefreshCcw } from 'lucide-react';
 
-export default function FooterIsland({ settings, featureFlags, whatsappNumber = '628123456789', currentLocale, supportEmail = 'support@neriahpro.com' }) {
+export default function FooterIsland({ settings, featureFlags, whatsappNumber = '6281260840428', currentLocale, supportEmail = 'support@neriahpro.com' }) {
   const currentYear = new Date().getFullYear();
   const effectiveEmail = supportEmail || 'support@neriahpro.com';
   const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);

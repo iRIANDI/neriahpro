@@ -37,7 +37,7 @@ class CmsSeeder extends Seeder
         CmsGlobalSetting::updateOrCreate(
             ['key' => 'company_whatsapp'],
             [
-                'value' => '628123456789',
+                'value' => '6281260840428',
             ]
         );
 

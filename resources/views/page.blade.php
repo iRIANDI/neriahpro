@@ -198,7 +198,7 @@
                         }
                     @endphp
                     @react($pluginName, array_merge($pluginData, [
-                        'whatsappNumber' => $getSettingVal('company_whatsapp', '628123456789'),
+                        'whatsappNumber' => $getSettingVal('company_whatsapp', '6281260840428'),
                         'featureFlags' => $featureFlags,
                         'currentLocale' => $locale,
                         'authUser' => auth()->check() ? [
@@ -231,7 +231,7 @@
 
         @if(($page->slug ?? '') === 'pricing' && ! $hasRenderedPricing)
             @react('ArchitecturePricingIsland', [
-                'whatsappNumber' => $getSettingVal('company_whatsapp', '628123456789'),
+                'whatsappNumber' => $getSettingVal('company_whatsapp', '6281260840428'),
                 'featureFlags' => $featureFlags,
                 'currentLocale' => app()->getLocale(),
                 'pricingSettings' => [
@@ -258,7 +258,7 @@
     @react('FooterIsland', [
         'settings' => $getSettingVal('footer_links', null),
         'featureFlags' => $featureFlags,
-        'whatsappNumber' => $getSettingVal('company_whatsapp', '628123456789'),
+        'whatsappNumber' => $getSettingVal('company_whatsapp', '6281260840428'),
         'supportEmail' => $getSettingVal('developer_support_email', 'support@neriahpro.com'),
         'currentLocale' => app()->getLocale(),
     ])

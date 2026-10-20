@@ -1193,9 +1193,25 @@ MARKDOWN;
                     'text' => 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 font-mono text-xs py-2 px-3 rounded-xs focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100',
                 ],
                 'table' => [
-                    'wrapper' => 'w-full overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-xs',
-                    'header_cell' => 'bg-zinc-50 dark:bg-zinc-900 px-4 py-3 text-left font-mono text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800',
-                    'body_cell' => 'px-4 py-3 text-xs font-sans text-zinc-900 dark:text-zinc-100 border-b border-zinc-100 dark:border-zinc-900',
+                    'wrapper' => 'w-full overflow-x-auto border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-xs relative',
+                    'floating_header' => 'sticky top-0 z-20 bg-zinc-100/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800',
+                    'header_cell' => 'px-4 py-3 text-left font-mono text-[10px] font-black uppercase tracking-wider text-zinc-600 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800 select-none',
+                    'frozen_col_left' => 'sticky left-0 z-30 bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800',
+                    'frozen_col_right' => 'sticky right-0 z-30 bg-zinc-50 dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800',
+                    'row' => 'border-b border-zinc-100 dark:border-zinc-900 transition-colors duration-150',
+                    'row_zebra' => 'odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/60 dark:even:bg-zinc-900/40',
+                    'row_hover' => 'hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80',
+                    'cell' => 'px-4 py-3 text-xs font-sans text-zinc-900 dark:text-zinc-100 transition-all',
+                    'cell_hover_focus' => 'hover:ring-1 hover:ring-inset hover:ring-emerald-500/60 hover:bg-emerald-500/5 dark:hover:bg-emerald-500/10 cursor-pointer',
+                    'multi_select_checkbox' => 'w-4 h-4 rounded-none border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-emerald-600 focus:ring-0 focus:ring-offset-0 cursor-pointer',
+                    'batch_action_bar' => 'sticky bottom-4 z-40 max-w-xl mx-auto bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2.5 rounded-xs shadow-2xl flex items-center justify-between border border-zinc-700 dark:border-zinc-300 font-mono text-xs',
+                    'density' => [
+                        'compact' => 'py-1.5 px-3 text-xs leading-none',
+                        'normal' => 'py-3 px-4 text-xs leading-normal',
+                        'relaxed' => 'py-4 px-5 text-sm leading-relaxed',
+                    ],
+                    'column_visibility_menu' => 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-xs p-2 text-xs font-mono',
+                    'quick_export_button' => 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 px-2.5 py-1 text-[11px] font-mono font-bold rounded-xs transition-colors',
                 ],
             ],
             'micro_states' => [
@@ -1271,30 +1287,55 @@ This document specifies the exact screen layout wireframes, ASCII spatial diagra
 
 ---
 
-## 2. Resource Management Index (`/resources` or `/{$primaryEntity}`)
+## 2. Ultimate Enterprise Resource Table (`/resources` or `/{$primaryEntity}`)
 
 ```
-+---------------------------------------------------------------------------------------+
-|  FILTER & TOOLBAR:                                                                    |
-|  [ Search by Keyword...        (X) ]   [ Filter: All v ]   [ [GRID] | [LIST] ]  [+ ADD] |
-+---------------------------------------------------------------------------------------+
-|  DATA TABLE / GRID VIEW:                                                              |
-|  +-------------------+-------------------+--------------------+---------------------+ |
-|  | ID (ULID)         | NAME / TITLE      | CREATED AT         | ACTION              | |
-|  +-------------------+-------------------+--------------------+---------------------+ |
-|  | 01J9V9XYZ... [CP] | Alpha Logistics   | 08 Oct 2026, 14:00 | [View] [Edit] [Del] | |
-|  | 01J9V9XYZ... [CP] | Beta Enterprise   | 08 Oct 2026, 13:45 | [View] [Edit] [Del] | |
-|  +-------------------+-------------------+--------------------+---------------------+ |
-|                                                                                       |
-|  PAGINATION:                                                                          |
-|  [Showing 1-25 of 14,820]                    [< Prev Cursor]   [Next Cursor >]        |
-+---------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------------+
+|  TOOLBAR & CONTROLS:                                                                                                    |
+|  [ Search keyword...       (X) ] [ Density: Compact|Normal|Relaxed ] [ Columns v ] [ Export: CSV|JSON ] [ [G]|[L] ] [+ADD] |
++-------------------------------------------------------------------------------------------------------------------------+
+|  FLOATING STICKY HEADER (sticky top-0 z-20 backdrop-blur-md):                                                           |
+|  +----+------------------------+---------------------+-------------------+---------------------+--------------------+ |
+|  | [X]| ID (ULID) [FREEZE LEFT]| NAME / TITLE (Sort^)| CATEGORY / TAGS   | CREATED AT (Sortv)  | ACTION [FREEZE R]  | |
+|  +----+------------------------+---------------------+-------------------+---------------------+--------------------+ |
+|  ZEBRA ROWS (odd/even) + HOVER HIGHLIGHT (row elevation + cell focus ring):                                             |
+|  | [x]| 01J9V9XYZK001... [PIN] | Villa Seminyak Oasis| [LUXURY] [POOL]   | 20 Oct 2026, 14:00  | [Edit] [Audit] [X] | |
+|  | [ ]| 01J9V9XYZK002... [PIN] | Canggu Sunset Haven | [BEACH] [SURF]    | 20 Oct 2026, 13:45  | [Edit] [Audit] [X] | |
+|  | [x]| 01J9V9XYZK003... [PIN] | Ubud Forest Sanctum | [RETREAT] [SPA]   | 20 Oct 2026, 12:30  | [Edit] [Audit] [X] | |
+|  +----+------------------------+---------------------+-------------------+---------------------+--------------------+ |
+|                                                                                                                         |
+|  [ FLOATING BATCH ACTION BAR (2 Items Selected): [Export Selected (CSV)] [Bulk Status Update v] [Delete Selected (X)] ]|
+|                                                                                                                         |
+|  KEYSET CURSOR PAGINATION O(1):                                                                                         |
+|  [Cursor: 01J9V9XYZK... | Showing 25 records]                          [< Prev Keyset Cursor]   [Next Keyset Cursor >]  |
++-------------------------------------------------------------------------------------------------------------------------+
 ```
 
-### Strict Requirements:
-1. **Search Clear Button ("X")**: Input has interactive "X" icon to purge query in 1 click.
-2. **Dual View Toggle**: Instant switcher between Grid Cards (`grid grid-cols-1 md:grid-cols-3 gap-4`) and List Table.
-3. **Cursor Pagination**: Powered by keyset pointers (`cursorPaginate()`), never offset pagination.
+### Ultimate Enterprise Table Specifications:
+1. **100% Dark & Light Mode Contrast & Unique Hover Micro-Effects**:
+   - Light mode text: `text-zinc-950 font-bold`, dark mode text: `dark:text-zinc-50`.
+   - Zebra striping: `odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/70 dark:even:bg-zinc-900/40`.
+   - Row hover state: `hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80 transition-colors`.
+   - Cell hover focus ring: `hover:ring-1 hover:ring-inset hover:ring-emerald-500/60 hover:bg-emerald-500/5 dark:hover:bg-emerald-500/10 cursor-pointer`.
+2. **Subtle & Thin Round Corners (Strict Ban on Capsule/Pills)**:
+   - Wrapper: `border border-zinc-200 dark:border-zinc-800 rounded-none sm:rounded-xs`.
+   - Inputs, buttons, and badges: strictly `rounded-none` or `rounded-xs` (max `rounded-sm`). Dilarang keras menggunakan `rounded-full`.
+3. **Floating Sticky Header & Freezable Columns / Rows**:
+   - Header is `sticky top-0 z-20 bg-zinc-100/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800`.
+   - Freezable Left Column (Checkbox & ID): `sticky left-0 z-30 bg-zinc-50 dark:bg-zinc-900 shadow-[1px_0_0_0_rgba(0,0,0,0.08)] dark:shadow-[1px_0_0_0_rgba(255,255,255,0.08)]`.
+   - Freezable Right Column (Action Controls): `sticky right-0 z-30 bg-zinc-50 dark:bg-zinc-900 shadow-[-1px_0_0_0_rgba(0,0,0,0.08)] dark:shadow-[-1px_0_0_0_rgba(255,255,255,0.08)]`.
+4. **Multi-Select & Floating Batch Action Bar**:
+   - Master checkbox in header toggles current cursor selection.
+   - When 1+ rows are selected, a floating pill-less action bar emerges at `sticky bottom-4 z-40 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2.5 rounded-xs shadow-2xl` with batch deletion, status update, and export.
+5. **Row Density Switcher**:
+   - Toggle buttons: Compact (`py-1.5 px-3 text-xs`), Normal (`py-3 px-4 text-xs`), Relaxed (`py-4 px-5 text-sm`).
+6. **Column Visibility Selector & Tri-State Sorting**:
+   - Dropdown allows toggling column rendering on/off with state persisted in `localStorage`.
+   - Header click cycles sort state: Ascending (▲), Descending (▼), Unsorted.
+7. **Bulletproof O(1) Keyset Cursor Pagination & Search**:
+   - Powered strictly by `cursorPaginate()`, zero offset degradation.
+   - Search input contains instant clear button `(X)` to purge query in 1 click.
+   - One-click CSV and JSON data export for current filter or selected rows.
 
 ---
 

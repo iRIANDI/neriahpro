@@ -56,16 +56,17 @@ After completing any task, you MUST always suggest which deployment script numbe
   - Always use the centralized floating Toast notification system: `window.showToast({ type: 'success'|'error'|'warning'|'info', title: '...', message: '...' })`.
   - For interactive confirmations or data entry, use curated Tailwind + Alpine.js dialogs with backdrop-blur, smooth transition animations, and dark/light mode fidelity.
 
-# Mandatory Rule: Subtle Round Corners (Strict Ban on Capsule/Pill Shapes)
-- 📐 **SUBTLE & THIN CORNERS**: UI/UX border radius MUST be subtle and thin (`rounded-none`, `rounded-xs`, `rounded-sm`, max `rounded-md`).
-- 🚫 **STRICT BAN ON CAPSULE/PILL BUTTONS**: NEVER use `rounded-full` or thick capsule shapes on buttons, cards, or inputs. Excessive rounding looks like generic "AI slop" templates and wastes clickable bounding areas.
+# Mandatory Rule: Subtle Round Corners & Zero-Capsule Standard (Strict Ban on Capsule/Pill Shapes)
+- 📐 **SUBTLE & THIN CORNERS / ZERO CORNERS**: UI/UX border radius MUST be subtle and thin (`rounded-none`, `rounded-xs` (2px), `rounded-sm` (4px), max `rounded-md` (6px)). Provide clean options without round corners (`rounded-none`) for sharp technical aesthetic.
+- 🚫 **STRICT BAN ON CAPSULE/PILL BUTTONS**: NEVER use `rounded-full` or thick capsule shapes on buttons, cards, badges, or inputs. Excessive rounding looks like generic "AI slop" templates and wastes clickable bounding areas.
 
 # Mandatory Rule: Clean Solid Brutalist Theme (Strict Ban on Gaudy Multi-Color Gradients)
 - 🚫 **HINDARI GRADIENT STYLE**: Hindari gradient style dalam membuat theme UI.
 - 🎨 **SOLID, MONOCHROME & SHARP BRUTALISM**: Gunakan warna solid, sleek monochrome, border presisi tajam (`border-zinc-200 dark:border-zinc-800`), dan background solid (`bg-white dark:bg-zinc-950`). Jangan gunakan background gradien warna-warni yang mencolok yang terkesan "AI slop / template murahan".
 
-# Mandatory Rule: Comprehensive Dark & Light Mode Fidelity
-- 🌓 **100% DARK & LIGHT MODE COMPLIANCE**: Selalu buat theme dark / light dan pastikan setiap komponen yang dibuat comply dengan theme ini.
+# Mandatory Rule: Comprehensive Dark & Light Mode Fidelity & Unique Hover Micro-Effects
+- 🌓 **100% DARK & LIGHT MODE COMPLIANCE**: Selalu buat theme dark / light dan pastikan setiap komponen yang dibuat comply dengan theme ini secara seimbang.
+- ✨ **UNIQUE HOVER MICRO-EFFECTS**: Setiap elemen interaktif (tombol, baris tabel, kartu, tab) WAJIB memiliki efek hover unik yang tetap mempertahankan kontras tema: elevasi latar belakang halus (`hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80`), penegasan border (`hover:border-zinc-400 dark:hover:border-zinc-600`), atau focus ring aksen (`hover:ring-1 hover:ring-emerald-500/60`). Dilarang keras efek hover yang membuat teks kehilangan kontras atau bertabrakan warna.
 - 🎨 **SEAMLESS CONTRAST & LEGIBILITY**: Gunakan pasangan class Tailwind secara disiplin (`bg-white dark:bg-zinc-950`, `text-zinc-900 dark:text-zinc-100`, `border-zinc-200 dark:border-zinc-800`, `hover:bg-zinc-100 dark:hover:bg-zinc-900`). Dilarang keras membuat komponen yang hanya terlihat bagus di salah satu mode (misal teks hitam di background gelap).
 
 # Mandatory Rule: High-Contrast Text Legibility & Strict Ban on Low-Contrast "AI Slop" (Anti-Tenggelam)
@@ -97,9 +98,16 @@ After completing any task, you MUST always suggest which deployment script numbe
 - 🚀 **MILLIONS OF RECORDS & VIEWERS**: CMS pages and global configurations must leverage Redis or `Cache::rememberForever()` to guarantee O(1) response times sub-10ms.
 - 🔄 **EVENT-DRIVEN CACHE INVALIDATION**: Model observers (`booted()` on `CmsPage` and `CmsGlobalSetting`) must automatically forget page and setting caches immediately upon creation, update, or deletion.
 
-# Mandatory Rule: Bulletproof Table & List Scalability (Millions of Records & Viewers)
+# Mandatory Rule: Bulletproof Table & List Scalability (Millions of Records & Viewers // Ultimate Enterprise Table)
 - 📊 **TABEL WAJIB SEARCH & PAGINATION O(1)**: Tabel wajib menggunakan search berindeks dan pagination yang bulletproof untuk skalabilitas jutaan data dan viewer: Keyset Cursor Pagination O(1) (`cursorPaginate()`). Dilarang keras menggunakan offset-based pagination (`paginate()`).
-- 🔲 **DUAL VIEW (GRID & LIST VIEW)**: Setiap membuat list data, pastikan selalu sediakan search, pagination, dan tampilan Grid View dan List View switcher untuk menjamin fleksibilitas dan kenyamanan pengguna dalam melihat data berskala besar.
+- 📌 **FLOATING STICKY HEADER**: Header tabel WAJIB tetap melayang saat di-scroll vertikal (`sticky top-0 z-20 bg-zinc-100/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800`).
+- 🧊 **FREEZE COLUMNS (PIN KOLOM KIRI & KANAN)**: Mendukung pembekuan kolom saat scroll horizontal: Kolom seleksi checkbox dan Primary ID beku di kiri (`sticky left-0 z-30`), dan kolom aksi beku di kanan (`sticky right-0 z-30`).
+- ☑️ **MULTI-SELECT & FLOATING BATCH ACTION BAR**: Checkbox di setiap baris dan 'Select All' di header. Saat 1+ baris terpilih, munculkan floating batch bar di bawah layar (`sticky bottom-4 z-40 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2.5 rounded-xs shadow-2xl`) untuk ekspor massal, ubah status, atau hapus.
+- 🦓 **ZEBRA EFFECT & CELL HOVER FOCUS RING**: Baris selang-seling (`odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/60 dark:even:bg-zinc-900/40`), elevasi hover baris (`hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80`), dan cell yang disorot kursor mouse mendapatkan focus ring aksen (`hover:ring-1 hover:ring-inset hover:ring-emerald-500/60 cursor-pointer`).
+- 📏 **ROW DENSITY SWITCHER**: Sediakan opsi kerapatan baris: Compact (`py-1.5 px-3 text-xs`), Normal (`py-3 px-4 text-xs`), Relaxed (`py-4 px-5 text-sm`).
+- 👁️ **COLUMN VISIBILITY SELECTOR & TRI-STATE SORTING**: Sediakan menu dropdown untuk menyembunyikan/menampilkan kolom secara dinamis, dan sorting 3 status (Ascending, Descending, Unsorted) dengan ikon panah aktif.
+- 📥 **QUICK EXPORT (CSV / JSON)**: Tombol ekspor cepat 1-klik untuk baris terseleksi atau seluruh hasil query cursor saat ini.
+- 🔲 **DUAL VIEW (GRID & LIST VIEW)**: Setiap membuat list data, pastikan selalu sediakan search, pagination O(1), dan tampilan Grid View dan List View switcher untuk menjamin fleksibilitas dan kenyamanan pengguna dalam melihat data berskala besar.
 - ✖️ **INSTANT CLEAR BUTTON ("X") PADA SEARCH FIELD**: Field search selalu wajib ada icon "X" (tombol hapus instan) untuk menghapus teks yang sudah ada di dalam textfield search secara instan dengan satu klik tanpa harus menekan tombol backspace berulang kali.
 
 # Mandatory Rule: SEO Browser Tab Title Standard

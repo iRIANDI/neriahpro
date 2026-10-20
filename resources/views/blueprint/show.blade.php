@@ -5147,39 +5147,39 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </span>
                             </div>
 
-                            <div class="overflow-x-auto">
+                            <div class="overflow-x-auto max-h-96 overflow-y-auto custom-prd-scrollbar relative border-t border-zinc-200 dark:border-zinc-800">
                                 <table class="w-full text-left text-xs border-collapse">
-                                    <thead>
-                                        <tr class="bg-zinc-100 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold">
-                                            <th class="py-2 px-3">Column Name</th>
-                                            <th class="py-2 px-3">Tier 1 Label</th>
-                                            <th class="py-2 px-3">Data Type</th>
-                                            <th class="py-2 px-3">Index</th>
-                                            <th class="py-2 px-3">Nullable</th>
-                                            <th class="py-2 px-3">Description / Notes</th>
+                                    <thead class="sticky top-0 z-10 bg-zinc-100/95 dark:bg-zinc-900/95 backdrop-blur-md">
+                                        <tr class="border-b border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 uppercase font-mono font-black text-[10px] tracking-wider select-none">
+                                            <th class="py-2.5 px-3">Column Name</th>
+                                            <th class="py-2.5 px-3">Tier 1 Label</th>
+                                            <th class="py-2.5 px-3">Data Type</th>
+                                            <th class="py-2.5 px-3">Index</th>
+                                            <th class="py-2.5 px-3">Nullable</th>
+                                            <th class="py-2.5 px-3">Description / Notes</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800 font-mono">
+                                    <tbody class="divide-y divide-zinc-200/70 dark:divide-zinc-800/70 font-mono">
                                         @foreach($table['columns'] ?? [] as $col)
-                                            <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition">
-                                                <td class="py-2 px-3 font-bold text-zinc-900 dark:text-zinc-100">{{ $col['name'] }}</td>
-                                                <td class="py-2 px-3 text-zinc-700 dark:text-zinc-300 font-sans" x-text="erdLang === 'id' ? '{{ $col['label']['id'] ?? ($col['notes'] ?? '-') }}' : '{{ $col['label']['en'] ?? ($col['name'] ?? '-') }}'"></td>
-                                                <td class="py-2 px-3 text-emerald-600 dark:text-emerald-400 font-bold">{{ $col['type'] }}</td>
-                                                <td class="py-2 px-3">
+                                            <tr class="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/60 dark:even:bg-zinc-900/40 hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80 transition-colors group">
+                                                <td class="py-2 px-3 font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50 cursor-pointer">{{ $col['name'] }}</td>
+                                                <td class="py-2 px-3 text-zinc-700 dark:text-zinc-300 font-sans hover:ring-1 hover:ring-inset hover:ring-emerald-500/50" x-text="erdLang === 'id' ? '{{ $col['label']['id'] ?? ($col['notes'] ?? '-') }}' : '{{ $col['label']['en'] ?? ($col['name'] ?? '-') }}'"></td>
+                                                <td class="py-2 px-3 text-emerald-600 dark:text-emerald-400 font-bold hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $col['type'] }}</td>
+                                                <td class="py-2 px-3 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">
                                                     @if($col['index'] === 'PRIMARY')
-                                                        <span class="px-1.5 py-0.5 bg-emerald-500 text-black font-bold text-[10px]">PRIMARY</span>
+                                                        <span class="px-1.5 py-0.5 bg-emerald-500 text-black font-black text-[9px] rounded-none">PRIMARY</span>
                                                     @elseif(str_contains(strtolower($col['type']), 'foreign') || str_contains($col['name'], '_id'))
-                                                        <span class="px-1.5 py-0.5 bg-sky-500 text-white font-bold text-[10px]">FOREIGN</span>
+                                                        <span class="px-1.5 py-0.5 bg-sky-500 text-white font-black text-[9px] rounded-none">FOREIGN</span>
                                                     @elseif($col['index'] === 'UNIQUE')
-                                                        <span class="px-1.5 py-0.5 bg-purple-500 text-white font-bold text-[10px]">UNIQUE</span>
+                                                        <span class="px-1.5 py-0.5 bg-purple-500 text-white font-black text-[9px] rounded-none">UNIQUE</span>
                                                     @elseif($col['index'] === 'INDEX')
-                                                        <span class="px-1.5 py-0.5 bg-blue-500 text-white font-bold text-[10px]">INDEX</span>
+                                                        <span class="px-1.5 py-0.5 bg-blue-500 text-white font-black text-[9px] rounded-none">INDEX</span>
                                                     @else
                                                         <span class="text-zinc-400 text-[10px]">-</span>
                                                     @endif
                                                 </td>
-                                                <td class="py-2 px-3 text-zinc-500">{{ $col['nullable'] ? 'YES' : 'NO' }}</td>
-                                                <td class="py-2 px-3 font-sans text-zinc-600 dark:text-zinc-400">{{ $col['notes'] ?? '-' }}</td>
+                                                <td class="py-2 px-3 text-zinc-500 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $col['nullable'] ? 'YES' : 'NO' }}</td>
+                                                <td class="py-2 px-3 font-sans text-zinc-600 dark:text-zinc-400 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $col['notes'] ?? '-' }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -5549,9 +5549,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <span>Perbandingan Benchmark Provider Server Riil:</span>
                             <span class="text-[10px] text-zinc-500">Transparansi Pasar Terbuka</span>
                         </div>
-                        <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800">
-                            <table class="w-full text-[11px] text-left">
-                                <thead class="bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 uppercase font-mono text-[10px] border-b border-zinc-200 dark:border-zinc-800">
+                        <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800 max-h-72 overflow-y-auto custom-prd-scrollbar relative">
+                            <table class="w-full text-[11px] text-left border-collapse">
+                                <thead class="sticky top-0 z-10 bg-zinc-100/95 dark:bg-zinc-900/95 backdrop-blur-md text-zinc-700 dark:text-zinc-300 uppercase font-mono text-[10px] font-black border-b border-zinc-200 dark:border-zinc-800 select-none">
                                     <tr>
                                         <th class="py-2.5 px-3">Provider Cloud</th>
                                         <th class="py-2.5 px-3">Tipe Paket</th>
@@ -5559,16 +5559,16 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                         <th class="py-2.5 px-3">Kelebihan Operasional</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800/60 font-mono">
+                                <tbody class="divide-y divide-zinc-200/70 dark:divide-zinc-800/60 font-mono">
                                     @foreach($serverSizing['benchmark_providers'] as $p)
-                                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/60 transition">
-                                            <td class="py-2 px-3">
-                                                <strong class="text-zinc-900 dark:text-white block">{{ $p['name'] }}</strong>
-                                                <span class="text-[9px] text-emerald-600 dark:text-emerald-400 uppercase font-bold">{{ $p['badge'] }}</span>
+                                        <tr class="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/60 dark:even:bg-zinc-900/40 hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80 transition-colors group">
+                                            <td class="py-2 px-3 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50 cursor-pointer">
+                                                <strong class="text-zinc-900 dark:text-white block group-hover:text-emerald-600 dark:group-hover:text-emerald-400">{{ $p['name'] }}</strong>
+                                                <span class="px-1.5 py-0.2 bg-emerald-500 text-black font-black text-[9px] rounded-none uppercase">{{ $p['badge'] }}</span>
                                             </td>
-                                            <td class="py-2 px-3 text-zinc-700 dark:text-zinc-300">{{ $p['plan'] }}</td>
-                                            <td class="py-2 px-3 font-bold text-emerald-600 dark:text-emerald-400">{{ $p['est_cost'] }}</td>
-                                            <td class="py-2 px-3 text-zinc-600 dark:text-zinc-400 font-sans text-[11px]">{{ $p['pros'] }}</td>
+                                            <td class="py-2 px-3 text-zinc-700 dark:text-zinc-300 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $p['plan'] }}</td>
+                                            <td class="py-2 px-3 font-bold text-emerald-600 dark:text-emerald-400 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $p['est_cost'] }}</td>
+                                            <td class="py-2 px-3 text-zinc-600 dark:text-zinc-400 font-sans text-[11px] hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $p['pros'] }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -5606,32 +5606,32 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <p class="text-zinc-600 dark:text-zinc-400 text-xs mb-4 font-sans leading-relaxed">
                             Nama domain tidak harus mahal untuk memulai bisnis. Klien bebas memilih ekstensi domain yang paling sesuai dengan modal dan target pasar:
                         </p>
-                        <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800 mb-4">
-                            <table class="w-full text-[11px] text-left">
-                                <thead class="bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 uppercase font-mono text-[10px] border-b border-zinc-200 dark:border-zinc-800">
-                                    <tr>
-                                        <th class="py-2.5 px-3">Ekstensi (TLD)</th>
-                                        <th class="py-2.5 px-3">Kategori</th>
-                                        <th class="py-2.5 px-3">Estimasi Biaya Resmi</th>
-                                        <th class="py-2.5 px-3">Otoritas &amp; Legalitas</th>
-                                        <th class="py-2.5 px-3">Paling Cocok Untuk</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800/60 font-mono">
-                                    @foreach($domainMatrix as $dm)
-                                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/60 transition">
-                                            <td class="py-2.5 px-3">
-                                                <strong class="text-base font-black text-emerald-600 dark:text-emerald-400">{{ $dm['tld'] }}</strong>
-                                            </td>
-                                            <td class="py-2.5 px-3 text-zinc-800 dark:text-zinc-200 font-bold">{{ $dm['category'] }}</td>
-                                            <td class="py-2.5 px-3 text-zinc-900 dark:text-white font-black">{{ $dm['est_price'] }}</td>
-                                            <td class="py-2.5 px-3 text-zinc-600 dark:text-zinc-400 text-[10px]">{{ $dm['authority'] }}</td>
-                                            <td class="py-2.5 px-3 text-zinc-700 dark:text-zinc-300 font-sans text-[11px]">{{ $dm['best_for'] }}</td>
+                            <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800 mb-4 max-h-80 overflow-y-auto custom-prd-scrollbar relative">
+                                <table class="w-full text-[11px] text-left border-collapse">
+                                    <thead class="sticky top-0 z-10 bg-zinc-100/95 dark:bg-zinc-900/95 backdrop-blur-md text-zinc-700 dark:text-zinc-300 uppercase font-mono text-[10px] font-black border-b border-zinc-200 dark:border-zinc-800 select-none">
+                                        <tr>
+                                            <th class="py-2.5 px-3">Ekstensi (TLD)</th>
+                                            <th class="py-2.5 px-3">Kategori</th>
+                                            <th class="py-2.5 px-3">Estimasi Biaya Resmi</th>
+                                            <th class="py-2.5 px-3">Otoritas &amp; Legalitas</th>
+                                            <th class="py-2.5 px-3">Paling Cocok Untuk</th>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody class="divide-y divide-zinc-200/70 dark:divide-zinc-800/60 font-mono">
+                                        @foreach($domainMatrix as $dm)
+                                            <tr class="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/60 dark:even:bg-zinc-900/40 hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80 transition-colors group">
+                                                <td class="py-2.5 px-3 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50 cursor-pointer">
+                                                    <strong class="text-base font-black text-emerald-600 dark:text-emerald-400 group-hover:underline">{{ $dm['tld'] }}</strong>
+                                                </td>
+                                                <td class="py-2.5 px-3 text-zinc-800 dark:text-zinc-200 font-bold hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $dm['category'] }}</td>
+                                                <td class="py-2.5 px-3 text-zinc-900 dark:text-white font-black hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $dm['est_price'] }}</td>
+                                                <td class="py-2.5 px-3 text-zinc-600 dark:text-zinc-400 text-[10px] hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $dm['authority'] }}</td>
+                                                <td class="py-2.5 px-3 text-zinc-700 dark:text-zinc-300 font-sans text-[11px] hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $dm['best_for'] }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                     </div>
                 @endif
 

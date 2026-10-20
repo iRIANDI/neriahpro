@@ -4626,11 +4626,18 @@ PROMPT;
         $rules .= "- **Foreign Keys**: ALWAYS use `->foreignUlid('parent_id')` to match ULID primary keys.\n";
         $rules .= "- **Zero Auto-Increment**: NEVER use `\$table->id()` or auto-incrementing integers for business domain entities.\n\n";
 
-        $rules .= "### B. Keyset Cursor Pagination O(1) & Table Scalability\n";
-        $rules .= "- **Tabel Wajib Search & Pagination O(1)**: Setiap tabel wajib dilengkapi fitur search berindeks dan pagination bulletproof untuk jutaan data dan viewer: Keyset Cursor Pagination O(1) (`cursorPaginate()`). Dilarang keras menggunakan offset pagination (`paginate()`).\n";
+        $rules .= "### B. Keyset Cursor Pagination O(1) & Ultimate Enterprise Table Standard\n";
+        $rules .= "- **Tabel Wajib Search & Pagination O(1)**: Setiap tabel wajib menggunakan search berindeks dan pagination bulletproof untuk jutaan data dan viewer: Keyset Cursor Pagination O(1) (`cursorPaginate()`). Dilarang keras menggunakan offset pagination (`paginate()`).\n";
         $rules .= "- **Mandatory Keyset**: ALWAYS use `cursorPaginate()` with stable keyset fallbacks (e.g. `->orderBy('id', 'asc')`).\n";
-        $rules .= "- **Dual View (Grid & List View)**: Setiap membuat komponen list data, selalu sediakan search, pagination O(1), dan tombol toggle tampilan Grid View dan List View switcher untuk menjamin skalabilitas jutaan data dan kenyamanan visual.\n";
-        $rules .= "- **Instant Clear Button (\"X\") pada Search Field**: Field search selalu wajib ada icon \"X\" (tombol hapus instan) untuk menghapus teks yang sudah ada di dalam textfield search secara instan dengan satu klik.\n\n";
+        $rules .= "- **Floating Sticky Header**: Header tabel wajib melayang saat scroll (`sticky top-0 z-20 bg-zinc-100/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800`).\n";
+        $rules .= "- **Freeze Column (Pin Kolom Kiri/Kanan)**: Wajib mendukung pinning kolom: Kolom seleksi & Primary ID beku di kiri (`sticky left-0 z-30`), dan kolom aksi beku di kanan (`sticky right-0 z-30`).\n";
+        $rules .= "- **Multi-Select & Floating Batch Action Bar**: Checkbox di setiap baris + 'Select All' di header. Saat 1+ baris terpilih, munculkan floating batch bar di bawah layar (`sticky bottom-4 z-40 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2.5 rounded-xs shadow-2xl`) untuk aksi massal (Export CSV, Update Status, Hapus).\n";
+        $rules .= "- **Zebra Effect & Cell Focus Micro-Hover**: Baris selang-seling (`odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/60 dark:even:bg-zinc-900/40`), efek hover baris pekat (`hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80`), dan cell yang disorot kursor mouse mendapatkan focus ring aksen (`hover:ring-1 hover:ring-inset hover:ring-emerald-500/60 cursor-pointer`).\n";
+        $rules .= "- **Density Switcher**: Dukung 3 tingkat kerapatan baris: Compact (`py-1.5 px-3 text-xs`), Normal (`py-3 px-4 text-xs`), Relaxed (`py-4 px-5 text-sm`).\n";
+        $rules .= "- **Column Visibility Selector & Tri-State Sort**: Sediakan dropdown untuk mematikan/menghidupkan kolom dinamis, dan header yang dapat di-sort (Asc, Desc, None) dengan ikon panah aktif.\n";
+        $rules .= "- **Quick Export**: Sediakan tombol ekspor 1-klik ke format CSV dan JSON untuk baris yang terpilih atau hasil query cursor saat ini.\n";
+        $rules .= "- **Dual View (Grid & List View)**: Setiap membuat komponen list data, selalu sediakan tombol toggle tampilan Grid View dan List View switcher untuk fleksibilitas visual.\n";
+        $rules .= "- **Instant Clear Button (\"X\") pada Search Field**: Field search selalu wajib ada icon \"X\" (tombol hapus instan) untuk mereset kata kunci secara instan dengan satu klik.\n\n";
 
         $rules .= "### C. Zero Tolerance for Magic Strings & Fuzzy Searches (\"Anti-Dosa Hardcode / Prefix WHERE LIKE\")\n";
         $rules .= "- NEVER identify entities, transactions, or state via fuzzy string matching (`WHERE LIKE 'retail_%'`, `LIKE '%APEX%'`, demo aliases, or slugs). Fuzzy prefix searching is fundamentally broken for long-term scalability.\n";
@@ -4687,16 +4694,17 @@ PROMPT;
 
         // 3. UI/UX Protocols
         $rules .= "## 3. UI/UX & FRONTEND DIRECTIVES\n\n";
-        $rules .= "### A. Subtle Round Corners (Strict Ban on Capsule/Pill Shapes)\n";
-        $rules .= "- UI/UX border radius MUST be subtle (`rounded-none`, `rounded-xs`, `rounded-sm`, max `rounded-md`).\n";
-        $rules .= "- STRICT BAN on `rounded-full` capsule buttons or pills. They look generic, reduce clickable area, and degrade enterprise aesthetics.\n\n";
+        $rules .= "### A. Subtle Round Corners & Zero-Capsule Standard\n";
+        $rules .= "- **Border Radius Tipis / Opsi Tanpa Round Corner**: UI/UX border radius WAJIB subtil dan tipis (`rounded-none`, `rounded-xs` (2px), `rounded-sm` (4px), maksimal `rounded-md` (6px)). Sediakan opsi murni tanpa round corner (`rounded-none`) untuk nuansa sharp brutalism teknikal.\n";
+        $rules .= "- **STRICT BAN ON CAPSULE/PILL SHAPES**: DILARANG KERAS menggunakan `rounded-full` atau bentuk kapsul/pil pada tombol, kartu, badge, atau input. Bentuk kapsul mereduksi area klik, membuang ruang visual, dan tampak seperti template murahan 'AI-Slop'.\n\n";
 
         $rules .= "### B. Clean Solid Brutalist Theme (Strict Ban on Gaudy Multi-Color Gradients)\n";
         $rules .= "- **Hindari Gradient Style**: Hindari gradient style dalam membuat theme UI.\n";
         $rules .= "- **Solid & Sharp Brutalism**: Gunakan warna solid, sleek monochrome, border presisi tajam (`border-zinc-200 dark:border-zinc-800`), dan background solid (`bg-white dark:bg-zinc-950`). Jangan gunakan background gradien warna-warni yang mencolok (\"AI slop / template murahan\").\n\n";
 
-        $rules .= "### C. Comprehensive Dark & Light Mode Fidelity\n";
-        $rules .= "- **100% Dark & Light Mode Compliance**: Selalu buat theme dark / light dan pastikan setiap komponen yang dibuat comply dengan theme ini.\n";
+        $rules .= "### C. Comprehensive Dark & Light Mode Fidelity & Unique Hover Micro-Effects\n";
+        $rules .= "- **100% Dark & Light Mode Compliance**: Selalu buat theme dark / light dan pastikan setiap komponen yang dibuat comply dengan theme ini secara seimbang.\n";
+        $rules .= "- **Unique Hover Micro-Effects**: Saat kursor mouse menyentuh elemen interaktif (tombol, baris tabel, kartu, tab), WAJIB menyajikan efek hover unik yang tetap mematuhi tema: elevasi latar belakang halus (`hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80`), penegasan border (`hover:border-zinc-400 dark:hover:border-zinc-600`), atau focus ring aksen (`hover:ring-1 hover:ring-emerald-500/60`). Dilarang keras efek hover yang membuat teks kehilangan kontras atau bertabrakan warna.\n";
         $rules .= "- **Consistent Contrast**: Gunakan pasangan class Tailwind secara disiplin (`bg-white dark:bg-zinc-950`, `text-zinc-900 dark:text-zinc-100`, `border-zinc-200 dark:border-zinc-800`, `hover:bg-zinc-100 dark:hover:bg-zinc-900`). Dilarang keras membuat komponen yang hanya terlihat bagus di salah satu mode.\n\n";
 
         $rules .= "### D. High-Contrast Text Legibility & Strict Ban on Low-Contrast \"AI Slop\" (Anti-Tenggelam)\n";

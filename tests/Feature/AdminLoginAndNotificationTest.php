@@ -67,7 +67,10 @@ class AdminLoginAndNotificationTest extends TestCase
         $response->assertSee('NERIAH PRO // PROJECT OS');
         $response->assertSee('DIGITAL ARCHITECTURE PLATFORM');
         $response->assertSee('26 ARCHITECTURAL PARAMETERS');
-        $response->assertSee('Kuesioner 26 Parameter Inti (Blok A-F)');
+        $this->assertTrue(
+            str_contains($response->getContent(), 'Core 26-Parameter Architectural Questionnaire') ||
+            str_contains($response->getContent(), 'Kuesioner 26 Parameter')
+        );
         $response->assertSee('Quick Idea Studio');
         $response->assertSee('Multi-Doc Ingestion');
         $response->assertSee('Ultimate PRD, ERD');

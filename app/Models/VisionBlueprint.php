@@ -374,8 +374,7 @@ class VisionBlueprint extends Model
         return $this->signed_agreement 
             || $this->isDpConfirmed() 
             || !empty($this->document_sha256) 
-            || $this->documents()->where('scope_locked', true)->exists()
-            || $this->isRetailLicense();
+            || $this->documents()->where('scope_locked', true)->exists();
     }
 
     /**

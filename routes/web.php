@@ -9,6 +9,11 @@ use App\Http\Controllers\PageController;
 
 use App\Http\Controllers\BlueprintController;
 
+// Health Probes & SRE Telemetry Endpoints
+Route::get('/healthz', [\App\Http\Controllers\HealthProbeController::class, 'healthz'])->name('healthz');
+Route::get('/livez', [\App\Http\Controllers\HealthProbeController::class, 'livez'])->name('livez');
+Route::get('/readyz', [\App\Http\Controllers\HealthProbeController::class, 'readyz'])->name('readyz');
+
 Route::post('/api/onboarding', [OnboardingController::class, 'store']);
 Route::post('/api/vision-blueprint', [VisionBlueprintController::class, 'store'])->middleware('throttle:30,1');
 

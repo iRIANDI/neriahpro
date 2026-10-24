@@ -1,0 +1,33 @@
+{
+    frankenphp
+    admin off
+}
+
+:{$PORT:80} {
+    root * /app/public
+    encode zstd gzip
+
+    # Direct Disk Mapping untuk public storage (Harmonis dengan persistent storage)
+    handle_path /storage/* {
+        root * /app/storage/app/public
+        file_server
+    }
+
+    # Cache-Control untuk aset build Vite (Immutable)
+    @static {
+        path /build/*
+    }
+    header @static Cache-Control "public, max-age=31536000, immutable"
+
+    # Security Headers (A+ Standard)
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    # FrankenPHP Server untuk Dynamic Laravel Routing
+    php_server
+}

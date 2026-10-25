@@ -205,7 +205,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
   return (
     <>
-      <div className="h-[88px] sm:h-[96px] w-full shrink-0" aria-hidden="true"></div>
+      <div className="h-[96px] sm:h-[104px] lg:h-[108px] w-full shrink-0" aria-hidden="true"></div>
       <header className="fixed top-0 w-full z-50 transition-colors font-sans">
       
       {/* 1. TOP ANNOUNCEMENT BAR (HIGH RETENTION & SHAREABLE ALERT) */}

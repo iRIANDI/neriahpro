@@ -1145,19 +1145,24 @@ const ensureSnapReady = (snapUrl, clientKey) => {
           transition={{ duration: 0.2 }}
           className="mb-20"
         >
-          <div className="text-center max-w-3xl mx-auto mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold mb-3 rounded-none">
+          <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold mb-2.5 rounded-none">
               <Crown className="w-3.5 h-3.5" />
-              <span>{isEn ? 'NERIAH PRO ENGINEERING STUDIO // FULL CUSTOM CONTRACTS' : 'NERIAH PRO ENGINEERING STUDIO // KONTRAK PENGERJAAN PENUH'}</span>
+              <span>{isEn ? 'NERIAH PRO STUDIO // TURNKEY CONTRACTS' : 'NERIAH PRO STUDIO // KONTRAK TURNKEY'}</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2 font-sans">
-              {isEn ? 'Full Custom Engineering & Development Contracts' : 'Layanan Pengembangan Penuh & Pengerjaan Kode oleh Tim Neriah Pro'}
+            <h2 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2 font-sans">
+              {isEn ? 'Turnkey Software Engineering by Senior Architects' : 'Kontrak Rekayasa Software & Kode oleh Tim Senior Architect'}
             </h2>
-            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed max-w-2xl mx-auto mb-4">
               {isEn
-                ? 'End-to-end custom software engineering executed directly by Neriah Pro senior architects and engineers under the Project OS standard. We write every line of production code across all 10 Pillars of Software Factory OS, enforce Managed Sprint Capacity with Anti-Collision batch scheduling, harden dedicated cloud VPS servers, integrate automated payments, and deliver turnkey systems backed by certified digital contracts, real-time Gantt tracking, and a 3-month SLA bug warranty.'
-                : 'Layanan pengerjaan software turnkey end-to-end yang dikoding, diuji, dan dideploy langsung oleh tim Senior Software Architect & Engineer Neriah Pro dengan standar Project OS. Kami menulis 100% kode produksi mencakup seluruh 10 Pilar Software Factory OS, menerapkan Managed Sprint Capacity (Kapasitas Terkelola) dengan proteksi anti-tabrakan jadwal (Anti-Collision), mengonfigurasi dedicated server VPS, mengintegrasikan payment gateway otomatis, serta memantau progres sprint transparan via Master Gantt Timeline dengan garansi bug 3 bulan penuh.'}
+                ? 'Full turnkey production development across all 10 Pillars of Software Factory OS. Includes dedicated VPS hardening, isolated sprint batches (Anti-Collision), and a full 3-month bug warranty.'
+                : 'Pengerjaan kode produksi turnkey (10 Pilar Software Factory OS) langsung oleh tim Senior Architect Neriah Pro. Dilengkapi kapasitas sprint terisolasi (Anti-Collision), dedicated cloud VPS, dan garansi bug 3 bulan penuh.'}
             </p>
+            <div className="inline-flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300">
+              <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">⚡ 100% Kode Turnkey</span>
+              <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">🛡️ Batch Terjadwal (Anti-Collision)</span>
+              <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">🔒 Garansi SLA 3 Bulan</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">

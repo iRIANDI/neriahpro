@@ -42,15 +42,15 @@ class PrdGeneratorService
         // Parse Phase 2 Features
         $phase2Items = self::parseItems($fiturTambahan);
 
-        // Generate Deep Granular Engineering Specs for MVP & Phase 2
-        $detailedMvpSpecs = self::generateDetailedFeatureSpecs($mvpItems, $businessName, $actorItems, 'mvp');
-        $detailedPhase2Specs = self::generateDetailedFeatureSpecs($phase2Items, $businessName, $actorItems, 'phase2');
+        // Generate tailored ERD Database Schema with strict ULID standards & LLM reasoning
+        $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems, $blueprint, $preferredAiProvider);
+
+        // Generate Deep Granular Engineering Specs for MVP & Phase 2 (with dynamic AI reasoning and ERD column injection)
+        $detailedMvpSpecs = self::generateDetailedFeatureSpecs($mvpItems, $businessName, $actorItems, 'mvp', $blueprint, $erdTables, $preferredAiProvider);
+        $detailedPhase2Specs = self::generateDetailedFeatureSpecs($phase2Items, $businessName, $actorItems, 'phase2', $blueprint, $erdTables, $preferredAiProvider);
 
         // Parse Workflow Stages with granular engineering decomposition
         $workflowStages = self::parseWorkflow($alurKerja, $businessName);
-
-        // Generate tailored ERD Database Schema with strict ULID standards & LLM reasoning
-        $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems, $blueprint, $preferredAiProvider);
 
         // Extract ultimate blueprint context from metadata
         $metadata = $blueprint->user_metadata ?? [];
@@ -1355,7 +1355,7 @@ PROMPT;
                 ['category' => 'Hosting & Cloud Storage', 'name' => 'Cloudflare Pages (Frontend) + Dedicated VPS (API) + R2', 'desc' => '300+ Edge POPs global + 100% Resource Isolation + $0 Egress Bandwidth Storage'],
                 ['category' => 'AI Acceleration Engine', 'name' => 'Gemini Ultra / Pro API SDK', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
             ] : [
-                ['category' => 'Backend Core', 'name' => 'Laravel 13 Modern Monolith', 'desc' => 'PHP 8.4/8.5 Property Hooks, Eloquent ORM, Action Handlers, Queues'],
+                ['category' => 'Backend Core', 'name' => 'Laravel 13 Modern Monolith', 'desc' => 'PHP 8.5+ Property Hooks, Eloquent ORM, Action Handlers, Queues'],
                 ['category' => 'Admin & Operations', 'name' => 'Filament PHP v5 Enterprise', 'desc' => 'Dasbor kendali instan, Filter Keyset, Export PDF/Excel, RBAC Shield'],
                 ['category' => 'Frontend Layer', 'name' => 'Island Architecture (React 19 + Framer Motion)', 'desc' => 'Interaktivitas fluid 60fps, micro-animations, Canva-style canvas capability'],
                 ['category' => 'AI Database Engine', 'name' => 'PostgreSQL 16+ (pgvector)', 'desc' => 'Vector embeddings, HNSW semantic search, JSONB documents, ULID standard'],
@@ -2717,8 +2717,37 @@ PROMPT;
     /**
      * Generate granular engineering specifications for each feature.
      */
-    protected static function generateDetailedFeatureSpecs(array $rawItems, string $businessName, array $actorItems, string $tier = 'mvp'): array
+    protected static function generateDetailedFeatureSpecs(
+        array $rawItems, 
+        string $businessName, 
+        array $actorItems, 
+        string $tier = 'mvp',
+        ?VisionBlueprint $blueprint = null,
+        array $erdTables = [],
+        ?string $preferredAiProvider = null
+    ): array
     {
+        // 1. Attempt Dynamic AI Reasoning from Blueprint & Document Corpus if Blueprint provided
+        if ($blueprint) {
+            try {
+                $aiSpecs = self::synthesizeFeatureSpecsWithAi(
+                    $businessName,
+                    $rawItems,
+                    $actorItems,
+                    $blueprint,
+                    $erdTables,
+                    $tier,
+                    $preferredAiProvider
+                );
+                if (!empty($aiSpecs) && is_array($aiSpecs) && count($aiSpecs) >= count($rawItems)) {
+                    return $aiSpecs;
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::info("AI Feature Spec synthesis fallback to deterministic heuristics: " . $e->getMessage());
+            }
+        }
+
+        // 2. Deterministic Heuristic Fallback Engine (with concrete ERD column injection)
         $specs = [];
         $index = 1;
         $prefix = ($tier === 'mvp') ? 'MVP' : 'ROADMAP';
@@ -2733,7 +2762,7 @@ PROMPT;
             $cleanSlug = strtoupper(substr(str_replace('-', '_', $slug), 0, 14));
             $featureId = sprintf('FEAT-%s-%02d-%s', $prefix, $index, $cleanSlug);
 
-            $analysis = self::analyzeFeatureDomain($title, $desc, $businessName, $clientActor, $primaryActor, $index, $prefix);
+            $analysis = self::analyzeFeatureDomain($title, $desc, $businessName, $clientActor, $primaryActor, $index, $prefix, $erdTables);
 
             // Compute Story Points, Complexity Sizing, and Sprint Phase
             $storyPoints = 3;
@@ -2771,6 +2800,8 @@ PROMPT;
                 'complexity_label' => $complexityLabel,
                 'sprint_phase' => $sprintPhase,
                 'target_files' => $boundedFiles,
+                'related_table' => $analysis['related_table'] ?? null,
+                'related_table_data' => $analysis['related_table_data'] ?? null,
                 'user_story' => $analysis['user_story'],
                 'acceptance_criteria' => $analysis['acceptance_criteria'],
                 'frontend' => $analysis['frontend'],
@@ -2786,9 +2817,274 @@ PROMPT;
     }
 
     /**
-     * Intelligently analyze feature domain and extract concrete engineering tasks.
+     * Synthesize granular engineering specifications with deep LLM reasoning from uploaded documents / corpus.
      */
-    protected static function analyzeFeatureDomain(string $title, string $desc, string $businessName, string $clientActor, string $primaryActor, int $index, string $prefix): array
+    protected static function synthesizeFeatureSpecsWithAi(
+        string $businessName,
+        array $rawItems,
+        array $actorItems,
+        VisionBlueprint $blueprint,
+        array $erdTables,
+        string $tier = 'mvp',
+        ?string $preferredAiProvider = null
+    ): array {
+        $masalah = $blueprint->masalah_utama ?: 'Otomatisasi proses bisnis operasional.';
+        $tujuan = $blueprint->tujuan_utama ?: 'Efisiensi dan akurasi data.';
+        $slug = $blueprint->slug ?: Str::slug($businessName);
+
+        // Fetch corpus if available from disk or metadata
+        $corpusContent = "";
+        try {
+            $corpusFile = storage_path("app/projects/{$slug}/markdown/synthesized_corpus.md");
+            if (file_exists($corpusFile)) {
+                $corpusContent = mb_substr(file_get_contents($corpusFile), 0, 8000);
+            }
+        } catch (\Throwable $e) {}
+
+        if (empty($corpusContent) && !empty($blueprint->user_metadata['raw_corpus'])) {
+            $corpusContent = mb_substr((string) $blueprint->user_metadata['raw_corpus'], 0, 8000);
+        }
+
+        $featuresStr = implode("\n", array_map(function($idx, $item) {
+            return ($idx + 1) . ". " . ($item['title'] ?? '') . ": " . ($item['desc'] ?? '');
+        }, array_keys($rawItems), $rawItems));
+
+        $actorsStr = implode("\n", array_map(function($idx, $act) {
+            return ($idx + 1) . ". " . ($act['name'] ?? '') . " (" . ($act['badge'] ?? '') . "): " . ($act['role'] ?? '');
+        }, array_keys($actorItems), $actorItems));
+
+        $erdSummaryStr = implode("\n", array_map(function($t) {
+            $colNames = implode(', ', array_map(fn($c) => $c['name'] . ' (' . $c['type'] . ')', array_slice($t['columns'] ?? [], 0, 8)));
+            return "- Table `{$t['name']}`: {$colNames}";
+        }, $erdTables));
+
+        $prefix = ($tier === 'mvp') ? 'MVP' : 'ROADMAP';
+
+        $prompt = <<<PROMPT
+You are a Principal Software Architect and Product Specification Engineer specializing in Laravel 13 (PHP 8.5+), Filament v5, and PostgreSQL 16 Strict ULID.
+Analyze this system specification and attached client documentation:
+Project: "{$businessName}"
+Problem Statement: "{$masalah}"
+Success Metrics: "{$tujuan}"
+Features to elaborate:
+{$featuresStr}
+System Actors & RBAC:
+{$actorsStr}
+Database Tables Available:
+{$erdSummaryStr}
+Attached Brief / Corpus Context:
+{$corpusContent}
+
+Task:
+Decompose each feature into a deep, rigorous, domain-specific engineering specification that 100% mirrors the client's actual business domain and documents.
+Avoid generic descriptions. Use concrete business terms, actual domain logic, real validation rules, and accurate edge cases.
+
+MANDATORY RULES:
+1. Every feature must have a concrete User Story: "Sebagai [Aktor], saya ingin [Aksi] sehingga [Manfaat Bisnis]".
+2. Every feature must have 3 concrete Acceptance Criteria scenarios (Given-When-Then) reflecting the true business domain.
+3. Every feature must specify a primary table name from the Database Tables list.
+4. Output JSON Array ONLY with schema:
+[
+  {
+    "title": "Exact or refined feature title",
+    "desc": "Detailed functional explanation",
+    "category": "SECURITY_RBAC|DISCOVERY_CATALOG|DATA_INTAKE_TRANSACTION|ADMIN_GOVERNANCE|EXPORT_REPORTING|NOTIFICATION_GATEWAY|CORE_FEATURE",
+    "category_label": "Indonesian readable category label",
+    "story_points": 3,
+    "complexity_label": "Standard (3 SP)|High (5 SP)|Complex (8 SP)",
+    "sprint_phase": "Sprint 1 (Fondasi & CRUD)|Sprint 2 (Integrasi & Mutasi)|Sprint 3 (Fitur Lanjutan & Async)",
+    "related_table": "table_name_from_db_list",
+    "target_files": ["app/Models/Example.php", "database/migrations/xxxx_create_examples_table.php", "app/Filament/Resources/ExampleResource.php", "resources/views/example/index.blade.php"],
+    "user_story": "Sebagai ...",
+    "acceptance_criteria": [
+      {
+        "scenario": "Scenario title",
+        "given": "Given condition",
+        "when": "When action occurs",
+        "then": "Then expected outcome"
+      }
+    ],
+    "frontend": {
+      "design_tokens": "Styling tokens and theme rules",
+      "states": "Interactive states (loading, toast feedback)",
+      "components": ["Component1.blade.php", "Component2.js"],
+      "tasks": ["Task 1", "Task 2"]
+    },
+    "backend": {
+      "model_and_migration": "Model and schema notes",
+      "scalability_guardrail": "Keyset cursor pagination O(1) and index strategy",
+      "tasks": ["Task 1", "Task 2"]
+    },
+    "integration": {
+      "endpoint": "/api/v1/resource-name",
+      "middleware": ["web", "auth"],
+      "request_schema": "{\"field\": \"value\"}",
+      "response_schema": "{\"success\": true, \"data\": {}}",
+      "tasks": ["Task 1", "Task 2"]
+    },
+    "mission": "Concrete mission directive describing what the AI code agent must implement."
+  }
+]
+PROMPT;
+
+        $systemInstruction = "You are the world's leading Software Architect and Product Specification Engineer. You output valid JSON array ONLY, zero markdown fences, zero conversational preamble.";
+
+        $aiRes = \App\Services\Ai\MultiAiModelManager::executeWithFailover($prompt, $systemInstruction, 'discovery', $preferredAiProvider);
+
+        if (empty($aiRes['text'])) {
+            return [];
+        }
+
+        $jsonText = trim($aiRes['text']);
+        if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/', $jsonText, $m)) {
+            $jsonText = trim($m[1]);
+        }
+
+        $decoded = json_decode($jsonText, true);
+        if (!is_array($decoded) || empty($decoded)) {
+            return [];
+        }
+
+        $specs = [];
+        $index = 1;
+
+        foreach ($decoded as $item) {
+            $title = $item['title'] ?? ('Fitur ' . $index);
+            $desc = $item['desc'] ?? 'Spesifikasi fungsional inti untuk operasional sistem.';
+            $slug = Str::slug($title);
+            $cleanSlug = strtoupper(substr(str_replace('-', '_', $slug), 0, 14));
+            $featureId = sprintf('FEAT-%s-%02d-%s', $prefix, $index, $cleanSlug);
+
+            $relatedTableName = $item['related_table'] ?? '';
+            $relatedTableObj = null;
+            if (!empty($relatedTableName)) {
+                foreach ($erdTables as $tbl) {
+                    if (strtolower($tbl['name'] ?? '') === strtolower($relatedTableName)) {
+                        $relatedTableObj = $tbl;
+                        break;
+                    }
+                }
+            }
+            if (!$relatedTableObj) {
+                $relatedTableObj = self::matchRelatedTable($title, $desc, $erdTables);
+            }
+
+            $modelName = Str::studly(Str::singular(explode('-', $slug)[0] ?? 'Record'));
+            $verifyCommand = "php artisan test --filter=" . $modelName . "Test";
+
+            $targetFiles = !empty($item['target_files']) && is_array($item['target_files'])
+                ? $item['target_files']
+                : [
+                    "app/Models/{$modelName}.php",
+                    "database/migrations/xxxx_create_" . strtolower(Str::plural($modelName)) . "_table.php",
+                    "app/Filament/Resources/{$modelName}Resource.php",
+                    "resources/views/" . strtolower($cleanSlug) . "/index.blade.php",
+                ];
+
+            $mission = $item['mission'] ?? "Implementasikan modul {$title} sesuai spesifikasi arsitektur Laravel 13 (PHP 8.5+), Filament v5, dan PostgreSQL ULID.";
+            $acceptanceCriteria = $item['acceptance_criteria'] ?? [];
+            $integration = $item['integration'] ?? null;
+
+            $agentPrompt = self::buildAgentPrompt(
+                $featureId,
+                $title,
+                $businessName,
+                $mission,
+                $targetFiles,
+                $verifyCommand,
+                $relatedTableObj,
+                $acceptanceCriteria,
+                $integration,
+                $index
+            );
+
+            $specs[] = [
+                'id' => $featureId,
+                'index' => $index,
+                'tier' => $tier,
+                'title' => $title,
+                'desc' => $desc,
+                'category' => $item['category'] ?? 'CORE_FEATURE',
+                'category_label' => $item['category_label'] ?? 'Modul Inti Bisnis',
+                'story_points' => $item['story_points'] ?? 3,
+                'complexity_label' => $item['complexity_label'] ?? 'Standard (3 SP)',
+                'sprint_phase' => $item['sprint_phase'] ?? 'Sprint 1 (Fondasi & CRUD)',
+                'target_files' => $targetFiles,
+                'related_table' => $relatedTableObj['name'] ?? null,
+                'related_table_data' => $relatedTableObj,
+                'user_story' => $item['user_story'] ?? "Sebagai Pengguna, saya ingin menggunakan fitur {$title}.",
+                'acceptance_criteria' => $acceptanceCriteria,
+                'frontend' => $item['frontend'] ?? [],
+                'backend' => $item['backend'] ?? [],
+                'integration' => $integration,
+                'code_agent_directive' => $agentPrompt,
+            ];
+
+            $index++;
+        }
+
+        return $specs;
+    }
+
+    /**
+     * Intelligently match a feature with the most relevant table from the ERD schema.
+     */
+    protected static function matchRelatedTable(string $title, string $desc, array $erdTables): ?array
+    {
+        if (empty($erdTables)) {
+            return null;
+        }
+
+        $lower = strtolower($title . ' ' . $desc);
+
+        // 1. Direct match on users table
+        if (str_contains($lower, 'user') || str_contains($lower, 'pengguna') || str_contains($lower, 'auth') || str_contains($lower, 'login') || str_contains($lower, 'rbac')) {
+            foreach ($erdTables as $tbl) {
+                if (($tbl['name'] ?? '') === 'users') {
+                    return $tbl;
+                }
+            }
+        }
+
+        // 2. Direct match on domain table names
+        foreach ($erdTables as $tbl) {
+            $tName = strtolower($tbl['name'] ?? '');
+            if ($tName === 'users' || $tName === 'activity_logs') continue;
+
+            $singular = Str::singular($tName);
+            if (str_contains($lower, $tName) || str_contains($lower, $singular)) {
+                return $tbl;
+            }
+        }
+
+        // 3. Match by partial words
+        $words = preg_split('/[\s_-]+/', $lower);
+        foreach ($erdTables as $tbl) {
+            $tName = strtolower($tbl['name'] ?? '');
+            if ($tName === 'users' || $tName === 'activity_logs') continue;
+            foreach ($words as $w) {
+                if (strlen($w) >= 4 && str_contains($tName, $w)) {
+                    return $tbl;
+                }
+            }
+        }
+
+        // 4. Fallback to first domain table
+        foreach ($erdTables as $tbl) {
+            $tName = strtolower($tbl['name'] ?? '');
+            if ($tName !== 'users' && $tName !== 'activity_logs') {
+                return $tbl;
+            }
+        }
+
+        return $erdTables[0] ?? null;
+    }
+
+    /**
+     * Intelligently analyze feature domain and extract concrete engineering tasks.
+     * Serves as a deterministic graceful fallback when LLM API reasoning is unavailable.
+     */
+    protected static function analyzeFeatureDomain(string $title, string $desc, string $businessName, string $clientActor, string $primaryActor, int $index, string $prefix, array $erdTables = []): array
     {
         $lower = strtolower($title . ' ' . $desc);
         $titleSlug = Str::slug($title);
@@ -2797,32 +3093,51 @@ PROMPT;
             $modelName = 'BusinessRecord';
         }
 
+        $relatedTable = self::matchRelatedTable($title, $desc, $erdTables);
+
         // Domain 1: AUTH & RBAC
         if (str_contains($lower, 'autentikasi') || str_contains($lower, 'login') || str_contains($lower, 'rbac') || str_contains($lower, 'user') || str_contains($lower, 'pengguna')) {
+            $ac = [
+                [
+                    'scenario' => 'Login Berhasil dengan Kredensial Valid',
+                    'given' => "Pengguna telah terdaftar di database dengan peran yang sah ({$primaryActor} atau {$clientActor}).",
+                    'when' => 'Pengguna memasukkan email dan kata sandi yang sesuai pada form login.',
+                    'then' => 'Sistem mengautentikasi sesi, meregenerasi Session ID untuk mencegah session fixation, dan mengarahkan pengguna ke dasbor sesuai peran.',
+                ],
+                [
+                    'scenario' => 'Blokir Akses Ilegal (RBAC Boundary)',
+                    'given' => "Pengguna terautentikasi dengan peran {$clientActor}.",
+                    'when' => 'Pengguna mencoba mengakses URL atau endpoint khusus milik Superadmin.',
+                    'then' => 'Sistem menolak request dengan status HTTP 403 Forbidden, menampilkan halaman error yang ramah, dan mencatat log audit percobaan akses.',
+                ],
+                [
+                    'scenario' => 'Proteksi Brute-Force Rate Limiting',
+                    'given' => 'Form login menerima permintaan percobaan otentikasi bertubi-tubi.',
+                    'when' => 'Terjadi 5 kali kegagalan login dalam kurun waktu 1 menit dari IP yang sama.',
+                    'then' => 'Sistem mengunci sementara proses login selama 60 detik dengan respons HTTP 429 Too Many Requests.',
+                ],
+            ];
+            $integration = [
+                'endpoint' => 'POST /api/v1/auth/login & POST /logout',
+                'middleware' => ['web', 'throttle:5,1'],
+                'request_schema' => '{"email": "admin@' . Str::slug($businessName) . '.com", "password": "SecurePassword123!", "remember": true}',
+                'response_schema' => '{"success": true, "user": {"id": "01J...ULID", "name": "Admin", "role": "superadmin"}, "redirect_url": "/admin"}',
+                'tasks' => [
+                    'Daftarkan route auth dengan pembatasan laju (throttling 5 request/menit).',
+                    'Pastikan token CSRF divalidasi pada setiap request mutasi.',
+                ],
+            ];
+            $mission = "Implementasikan modul Otentikasi & RBAC dengan Laravel 13 (PHP 8.5+), Filament v5, dan PostgreSQL Strict ULID.";
+            $targetFiles = ['app/Models/User.php', 'database/migrations/xxxx_create_users_table.php', 'app/Http/Requests/Auth/LoginRequest.php', 'resources/views/auth/login.blade.php'];
+            $verifyCommand = "php artisan test --filter=AuthenticationTest";
+
             return [
                 'category' => 'SECURITY_RBAC',
                 'category_label' => 'Otentikasi & Keamanan Akses',
+                'related_table' => $relatedTable['name'] ?? 'users',
+                'related_table_data' => $relatedTable,
                 'user_story' => "Sebagai {$primaryActor} atau {$clientActor}, saya ingin dapat mengautentikasi diri secara aman dengan sesi terisolasi dan izin akses berbasis peran (RBAC), sehingga data sensitif organisasi terlindungi dari akses ilegal.",
-                'acceptance_criteria' => [
-                    [
-                        'scenario' => 'Login Berhasil dengan Kredensial Valid',
-                        'given' => "Pengguna telah terdaftar di database dengan peran yang sah ({$primaryActor} atau {$clientActor}).",
-                        'when' => 'Pengguna memasukkan email dan kata sandi yang sesuai pada form login.',
-                        'then' => 'Sistem mengautentikasi sesi, meregenerasi Session ID untuk mencegah session fixation, dan mengarahkan pengguna ke dasbor sesuai peran.',
-                    ],
-                    [
-                        'scenario' => 'Blokir Akses Ilegal (RBAC Boundary)',
-                        'given' => "Pengguna terautentikasi dengan peran {$clientActor}.",
-                        'when' => 'Pengguna mencoba mengakses URL atau endpoint khusus milik Superadmin.',
-                        'then' => 'Sistem menolak request dengan status HTTP 403 Forbidden, menampilkan halaman error yang ramah, dan mencatat log audit percobaan akses.',
-                    ],
-                    [
-                        'scenario' => 'Proteksi Brute-Force Rate Limiting',
-                        'given' => 'Form login menerima permintaan percobaan otentikasi bertubi-tubi.',
-                        'when' => 'Terjadi 5 kali kegagalan login dalam kurun waktu 1 menit dari IP yang sama.',
-                        'then' => 'Sistem mengunci sementara proses login selama 60 detik dengan respons HTTP 429 Too Many Requests.',
-                    ],
-                ],
+                'acceptance_criteria' => $ac,
                 'frontend' => [
                     'design_tokens' => 'Form auth high-contrast (bukan template abu-abu hambar), surface zinc-900 di dark mode / crisp white di light mode, focus-ring emerald-500 dengan transition-all duration-200.',
                     'states' => 'Loading pulse bar pada tombol submit saat auth diproses, error banner inline dengan warna rose-500, auto-focus pada field email.',
@@ -2842,53 +3157,65 @@ PROMPT;
                         'Terapkan middleware `CheckRole` atau Filament Shield Policy untuk isolasi hak akses.',
                     ],
                 ],
-                'integration' => [
-                    'endpoint' => 'POST /api/v1/auth/login & POST /logout',
-                    'middleware' => ['web', 'throttle:5,1'],
-                    'request_schema' => '{"email": "admin@' . Str::slug($businessName) . '.com", "password": "SecurePassword123!", "remember": true}',
-                    'response_schema' => '{"success": true, "user": {"id": "01J...ULID", "name": "Admin", "role": "superadmin"}, "redirect_url": "/admin"}',
-                    'tasks' => [
-                        'Daftarkan route auth dengan pembatasan laju (throttling 5 request/menit).',
-                        'Pastikan token CSRF divalidasi pada setiap request mutasi.',
-                    ],
-                ],
+                'integration' => $integration,
                 'code_agent_directive' => self::buildAgentPrompt(
                     sprintf('FEAT-%s-%02d-AUTH_RBAC', $prefix, $index),
                     $title,
                     $businessName,
-                    "Implementasikan modul Otentikasi & RBAC dengan Laravel 13, Filament v5, dan PostgreSQL Strict ULID.",
-                    ['app/Models/User.php', 'database/migrations/xxxx_create_users_table.php', 'app/Http/Requests/Auth/LoginRequest.php', 'resources/views/auth/login.blade.php'],
-                    "php artisan test --filter=AuthenticationTest"
+                    $mission,
+                    $targetFiles,
+                    $verifyCommand,
+                    $relatedTable,
+                    $ac,
+                    $integration,
+                    $index
                 ),
             ];
         }
 
         // Domain 2: KATALOG / LISTING / PENCARIAN / FILTER
         if (str_contains($lower, 'katalog') || str_contains($lower, 'filter') || str_contains($lower, 'cari') || str_contains($lower, 'search') || str_contains($lower, 'produk') || str_contains($lower, 'properti') || str_contains($lower, 'daftar')) {
+            $ac = [
+                [
+                    'scenario' => 'Filter Reaktif Sub-100ms Tanpa Reload Halaman Penuh',
+                    'given' => 'Katalog memiliki data yang siap ditampilkan.',
+                    'when' => 'Pengguna memilih parameter filter (kategori, kisaran harga, atau lokasi).',
+                    'then' => 'Daftar item diperbarui secara reaktif dalam waktu <100ms dengan mempertahankan posisi scroll dan riwayat URL query string.',
+                ],
+                [
+                    'scenario' => 'Ketersediaan Skeleton Loader dan Empty State',
+                    'given' => 'Pencarian dilakukan dengan kata kunci spesifik.',
+                    'when' => 'Data sedang diunduh dari server ATAU tidak ada hasil yang cocok.',
+                    'then' => 'Sistem menampilkan Skeleton Loader shimmer (anti layout-shift) saat loading, atau Empty State empatik dengan tombol Reset Filter jika data nihil.',
+                ],
+                [
+                    'scenario' => 'Stabilitas Paginasi Keyset Cursor O(1)',
+                    'given' => 'Katalog menampung puluhan ribu data.',
+                    'when' => 'Pengguna melakukan navigasi halaman selanjutnya (Load More).',
+                    'then' => 'Sistem menggunakan cursorPaginate() berbasis pointer ID ULID sehingga performa query database tetap O(1) konstan tanpa beban memory leak.',
+                ],
+            ];
+            $integration = [
+                'endpoint' => 'GET /api/v1/catalog?cursor=...&category=...&q=...',
+                'middleware' => ['web', 'throttle:60,1'],
+                'request_schema' => '{"q": "Jakarta", "category_id": "01J...", "min_price": 50000000, "cursor": "eyJpZCI..."}',
+                'response_schema' => '{"data": [{"id": "01J...", "title": "Unit A", "price": 150000000}], "next_cursor": "eyJpZCI...", "has_more": true}',
+                'tasks' => [
+                    'Daftarkan endpoint API / Livewire Action dengan response JSON terformat.',
+                    'Integrasikan ETag dan HTTP Cache-Control (max-age=60) untuk optimasi bandwidth.',
+                ],
+            ];
+            $mission = "Bangun modul Katalog & Filter Data Interaktif dengan Keyset Cursor Pagination O(1) dan UI Anti-AI-Slop.";
+            $targetFiles = ['app/Models/CatalogItem.php', 'database/migrations/xxxx_create_catalog_items_table.php', 'app/Http/Controllers/CatalogController.php', 'resources/views/catalog/index.blade.php'];
+            $verifyCommand = "php artisan test --filter=CatalogFilterTest";
+
             return [
                 'category' => 'DISCOVERY_CATALOG',
                 'category_label' => 'Katalog & Pencarian O(1)',
+                'related_table' => $relatedTable['name'] ?? 'catalog_items',
+                'related_table_data' => $relatedTable,
                 'user_story' => "Sebagai {$clientActor}, saya ingin menelusuri katalog data {$businessName} dengan filter dinamis dan pencarian instan, sehingga saya dapat menemukan informasi yang paling cocok dengan kebutuhan saya dalam waktu singkat.",
-                'acceptance_criteria' => [
-                    [
-                        'scenario' => 'Filter Reaktif Sub-100ms Tanpa Reload Halaman Penuh',
-                        'given' => 'Katalog memiliki data yang siap ditampilkan.',
-                        'when' => 'Pengguna memilih parameter filter (kategori, kisaran harga, atau lokasi).',
-                        'then' => 'Daftar item diperbarui secara reaktif dalam waktu <100ms dengan mempertahankan posisi scroll dan riwayat URL query string.',
-                    ],
-                    [
-                        'scenario' => 'Ketersediaan Skeleton Loader dan Empty State',
-                        'given' => 'Pencarian dilakukan dengan kata kunci spesifik.',
-                        'when' => 'Data sedang diunduh dari server ATAU tidak ada hasil yang cocok.',
-                        'then' => 'Sistem menampilkan Skeleton Loader shimmer (anti layout-shift) saat loading, atau Empty State empatik dengan tombol Reset Filter jika data nihil.',
-                    ],
-                    [
-                        'scenario' => 'Stabilitas Paginasi Keyset Cursor O(1)',
-                        'given' => 'Katalog menampung puluhan ribu data.',
-                        'when' => 'Pengguna melakukan navigasi halaman selanjutnya (Load More).',
-                        'then' => 'Sistem menggunakan cursorPaginate() berbasis pointer ID ULID sehingga performa query database tetap O(1) konstan tanpa beban memory leak.',
-                    ],
-                ],
+                'acceptance_criteria' => $ac,
                 'frontend' => [
                     'design_tokens' => 'Grid asimetris modern (1 kolom mobile, 2 kolom tablet, 3-4 kolom desktop), aspect-ratio 16:9/4:3 gambar dengan object-cover (anti squish), badge kategori HSL berkarakter.',
                     'states' => 'Skeleton cards beranimasi shimmer saat fetch data, hover card lift effect (hover:-translate-y-1 hover:shadow-lg transition-all duration-300), empty state dengan tombol Reset.',
@@ -2908,53 +3235,65 @@ PROMPT;
                         'Pastikan eager loading `with(...)` diterapkan untuk mematikan ancaman N+1 query problem.',
                     ],
                 ],
-                'integration' => [
-                    'endpoint' => 'GET /api/v1/catalog?cursor=...&category=...&q=...',
-                    'middleware' => ['web', 'throttle:60,1'],
-                    'request_schema' => '{"q": "Jakarta", "category_id": "01J...", "min_price": 50000000, "cursor": "eyJpZCI..."}',
-                    'response_schema' => '{"data": [{"id": "01J...", "title": "Unit A", "price": 150000000}], "next_cursor": "eyJpZCI...", "has_more": true}',
-                    'tasks' => [
-                        'Daftarkan endpoint API / Livewire Action dengan response JSON terformat.',
-                        'Integrasikan ETag dan HTTP Cache-Control (max-age=60) untuk optimasi bandwidth.',
-                    ],
-                ],
+                'integration' => $integration,
                 'code_agent_directive' => self::buildAgentPrompt(
                     sprintf('FEAT-%s-%02d-CATALOG_FILTER', $prefix, $index),
                     $title,
                     $businessName,
-                    "Bangun modul Katalog & Filter Data Interaktif dengan Keyset Cursor Pagination O(1) dan UI Anti-AI-Slop.",
-                    ['app/Models/CatalogItem.php', 'database/migrations/xxxx_create_catalog_items_table.php', 'app/Http/Controllers/CatalogController.php', 'resources/views/catalog/index.blade.php'],
-                    "php artisan test --filter=CatalogFilterTest"
+                    $mission,
+                    $targetFiles,
+                    $verifyCommand,
+                    $relatedTable,
+                    $ac,
+                    $integration,
+                    $index
                 ),
             ];
         }
 
         // Domain 3: INTAKE / FORMULIR / PESANAN / RESERVASI / TRANSAKSI / DOA
         if (str_contains($lower, 'form') || str_contains($lower, 'intake') || str_contains($lower, 'reservasi') || str_contains($lower, 'pesan') || str_contains($lower, 'transaksi') || str_contains($lower, 'doa') || str_contains($lower, 'warta') || str_contains($lower, 'konsultasi')) {
+            $ac = [
+                [
+                    'scenario' => 'Validasi Data Masukan Secara Real-Time',
+                    'given' => 'Pengguna sedang mengisi kolom nomor telepon, email, dan data wajib.',
+                    'when' => 'Pengguna mengetik format yang keliru (misal menginput angka 0 di awal nomor WhatsApp ber-country code).',
+                    'then' => 'Sistem otomatis memfilter atau menampilkan petunjuk inline ramah sebelum formulir dikirim.',
+                ],
+                [
+                    'scenario' => 'Pencegahan Double-Submit via Idempotency Key',
+                    'given' => 'Formulir siap dikirim dengan payload valid.',
+                    'when' => 'Pengguna menekan tombol submit berkali-kali karena koneksi internet lambat.',
+                    'then' => 'Sistem memproses request pertama dengan token idempotency unik, mendisabled tombol, dan mengabaikan request duplikat tanpa error.',
+                ],
+                [
+                    'scenario' => 'Pencatatan Transaksi & Penerbitan Kode Referensi',
+                    'given' => 'Data formulir berhasil lolos validasi server-side.',
+                    'when' => 'Transaksi disimpan ke database.',
+                    'then' => 'Sistem membungkus operasi dalam DB::transaction, menghasilkan kode referensi unik, mencatat IP & timestamp audit trail, serta mendispatch event background notifikasi.',
+                ],
+            ];
+            $integration = [
+                'endpoint' => 'POST /api/v1/intake',
+                'middleware' => ['web', 'throttle:15,1'],
+                'request_schema' => '{"name": "Budi Santoso", "country_code": "62", "phone": "81234567890", "notes": "Pengajuan minat unit A"}',
+                'response_schema' => '{"success": true, "reference_code": "NPRO-TRX-2026-9812", "message": "Pendaftaran berhasil dicatat."}',
+                'tasks' => [
+                    'Daftarkan endpoint API intake dengan header `X-Idempotency-Key`.',
+                    'Hubungkan submission dengan queue worker untuk pengiriman notifikasi instan.',
+                ],
+            ];
+            $mission = "Bangun modul Formulir Intake & Transaksi dengan validasi server-side ketat, idempotency guard, dan UI modern.";
+            $targetFiles = ['app/Models/Intake.php', 'database/migrations/xxxx_create_intakes_table.php', 'app/Http/Requests/StoreIntakeRequest.php', 'app/Actions/CreateIntakeAction.php'];
+            $verifyCommand = "php artisan test --filter=IntakeSubmissionTest";
+
             return [
                 'category' => 'DATA_INTAKE_TRANSACTION',
                 'category_label' => 'Formulir Intake & Transaksi Terverifikasi',
+                'related_table' => $relatedTable['name'] ?? 'intakes',
+                'related_table_data' => $relatedTable,
                 'user_story' => "Sebagai {$clientActor}, saya ingin mengisi formulir intake/reservasi dengan alur yang terpandu dan validasi instan, sehingga permintaan saya tercatat akurat dan langsung mendapatkan konfirmasi resmi.",
-                'acceptance_criteria' => [
-                    [
-                        'scenario' => 'Validasi Data Masukan Secara Real-Time',
-                        'given' => 'Pengguna sedang mengisi kolom nomor telepon, email, dan data wajib.',
-                        'when' => 'Pengguna mengetik format yang keliru (misal menginput angka 0 di awal nomor WhatsApp ber-country code).',
-                        'then' => 'Sistem otomatis memfilter atau menampilkan petunjuk inline ramah sebelum formulir dikirim.',
-                    ],
-                    [
-                        'scenario' => 'Pencegahan Double-Submit via Idempotency Key',
-                        'given' => 'Formulir siap dikirim dengan payload valid.',
-                        'when' => 'Pengguna menekan tombol submit berkali-kali karena koneksi internet lambat.',
-                        'then' => 'Sistem memproses request pertama dengan token idempotency unik, mendisabled tombol, dan mengabaikan request duplikat tanpa error.',
-                    ],
-                    [
-                        'scenario' => 'Pencatatan Transaksi & Penerbitan Kode Referensi',
-                        'given' => 'Data formulir berhasil lolos validasi server-side.',
-                        'when' => 'Transaksi disimpan ke database.',
-                        'then' => 'Sistem membungkus operasi dalam DB::transaction, menghasilkan kode referensi unik, mencatat IP & timestamp audit trail, serta mendispatch event background notifikasi.',
-                    ],
-                ],
+                'acceptance_criteria' => $ac,
                 'frontend' => [
                     'design_tokens' => 'Floating input labels, selector kode negara bendera interaktif, step progress bar indikatif, validasi error inline dengan aksen rose-500, focus ring emerald-500.',
                     'states' => 'Tombol kirim memiliki state loading spinner micro, konfirmasi sukses menggunakan modal modern backdrop-blur atau redirect halaman terima kasih ber-QR code.',
@@ -2974,53 +3313,65 @@ PROMPT;
                         'Action class `CreateIntakeAction` yang menangani logika bisnis secara terisolasi.',
                     ],
                 ],
-                'integration' => [
-                    'endpoint' => 'POST /api/v1/intake',
-                    'middleware' => ['web', 'throttle:15,1'],
-                    'request_schema' => '{"name": "Budi Santoso", "country_code": "62", "phone": "81234567890", "notes": "Pengajuan minat unit A"}',
-                    'response_schema' => '{"success": true, "reference_code": "NPRO-TRX-2026-9812", "message": "Pendaftaran berhasil dicatat."}',
-                    'tasks' => [
-                        'Daftarkan endpoint API intake dengan header `X-Idempotency-Key`.',
-                        'Hubungkan submission dengan queue worker untuk pengiriman notifikasi instan.',
-                    ],
-                ],
+                'integration' => $integration,
                 'code_agent_directive' => self::buildAgentPrompt(
                     sprintf('FEAT-%s-%02d-DATA_INTAKE', $prefix, $index),
                     $title,
                     $businessName,
-                    "Bangun modul Formulir Intake & Transaksi dengan validasi server-side ketat, idempotency guard, dan UI modern.",
-                    ['app/Models/Intake.php', 'database/migrations/xxxx_create_intakes_table.php', 'app/Http/Requests/StoreIntakeRequest.php', 'app/Actions/CreateIntakeAction.php'],
-                    "php artisan test --filter=IntakeSubmissionTest"
+                    $mission,
+                    $targetFiles,
+                    $verifyCommand,
+                    $relatedTable,
+                    $ac,
+                    $integration,
+                    $index
                 ),
             ];
         }
 
         // Domain 4: DASBOR / ADMIN / GOVERNANCE / FILAMENT
         if (str_contains($lower, 'dasbor') || str_contains($lower, 'admin') || str_contains($lower, 'rekap') || str_contains($lower, 'kelola') || str_contains($lower, 'approval')) {
+            $ac = [
+                [
+                    'scenario' => 'Pemuatan Dasbor Agregasi Cepat (<150ms)',
+                    'given' => 'Database memiliki puluhan ribu catatan transaksi.',
+                    'when' => 'Admin membuka halaman utama dasbor operasional.',
+                    'then' => 'Widget ringkasan metrik menampilkan data agregasi dari cache Redis / query terindeks tanpa menyebabkan slow query pada server.',
+                ],
+                [
+                    'scenario' => 'Tabel Administrasi dengan Filter Cepat & Inline Actions',
+                    'given' => 'Admin sedang mengelola antrean permohonan masuk.',
+                    'when' => 'Admin memfilter berdasarkan status (Pending, Disetujui, Ditolak).',
+                    'then' => 'Tabel Filament v5 menampilkan data relevan secara instan dengan aksi persetujuan (Approve/Reject) langsung dari baris tabel.',
+                ],
+                [
+                    'scenario' => 'Audit Trail Pencatatan Setiap Aksi Perubahan',
+                    'given' => 'Data penting mengalami perubahan status oleh staf admin.',
+                    'when' => 'Perubahan disimpan ke sistem.',
+                    'then' => 'Sistem mencatat identitas admin, alamat IP, timestamp waktu, dan diff nilai sebelum/sesudah di tabel audit trail.',
+                ],
+            ];
+            $integration = [
+                'endpoint' => 'GET /admin/resources & POST /admin/resources/action',
+                'middleware' => ['web', 'auth:web'],
+                'request_schema' => '{"action": "approve", "record_id": "01J...ULID", "reason": "Dokumen lengkap"}',
+                'response_schema' => '{"success": true, "message": "Status berhasil diperbarui."}',
+                'tasks' => [
+                    'Integrasikan audit trail observer pada model untuk mencatat aktivitas admin.',
+                    'Hubungkan trigger approval dengan background job dispatch notifikasi.',
+                ],
+            ];
+            $mission = "Implementasikan Dasbor Administrasi Filament v5 dengan schema form aman dan tabel filter instan.";
+            $targetFiles = ['app/Filament/Resources/RecordResource.php', 'app/Filament/Widgets/StatsOverview.php', 'app/Policies/RecordPolicy.php'];
+            $verifyCommand = "php artisan test --filter=AdminPanelAccessTest";
+
             return [
                 'category' => 'GOVERNANCE_OPERATIONS',
                 'category_label' => 'Dasbor Operasional & Tata Kelola',
+                'related_table' => $relatedTable['name'] ?? null,
+                'related_table_data' => $relatedTable,
                 'user_story' => "Sebagai {$primaryActor}, saya ingin memantau KPI bisnis, meninjau data masuk, dan memproses status approval dalam satu panel kendali terpusat, sehingga operasional harian berjalan tanpa hambatan.",
-                'acceptance_criteria' => [
-                    [
-                        'scenario' => 'Pemuatan Dasbor Agregasi Cepat (<150ms)',
-                        'given' => 'Database memiliki puluhan ribu catatan transaksi.',
-                        'when' => 'Admin membuka halaman utama dasbor operasional.',
-                        'then' => 'Widget ringkasan metrik menampilkan data agregasi dari cache Redis / query terindeks tanpa menyebabkan slow query pada server.',
-                    ],
-                    [
-                        'scenario' => 'Tabel Administrasi dengan Filter Cepat & Inline Actions',
-                        'given' => 'Admin sedang mengelola antrean permohonan masuk.',
-                        'when' => 'Admin memfilter berdasarkan status (Pending, Disetujui, Ditolak).',
-                        'then' => 'Tabel Filament v5 menampilkan data relevan secara instan dengan aksi persetujuan (Approve/Reject) langsung dari baris tabel.',
-                    ],
-                    [
-                        'scenario' => 'Audit Trail Pencatatan Setiap Aksi Perubahan',
-                        'given' => 'Data penting mengalami perubahan status oleh staf admin.',
-                        'when' => 'Perubahan disimpan ke sistem.',
-                        'then' => 'Sistem mencatat identitas admin, alamat IP, timestamp waktu, dan diff nilai sebelum/sesudah di tabel audit trail.',
-                    ],
-                ],
+                'acceptance_criteria' => $ac,
                 'frontend' => [
                     'design_tokens' => 'Antarmuka Filament v5 Enterprise dengan dark mode onyx / light mode crisp, widget card dengan indikator pertumbuhan tren persentase, status badge bersahabat.',
                     'states' => 'Skeleton table rows saat data berpindah halaman, modal dialog konfirmasi yang elegan untuk aksi destruktif (tanpa window.confirm).',
@@ -3040,47 +3391,58 @@ PROMPT;
                         'Optimasi query tabel admin dengan indeks kolom status dan created_at.',
                     ],
                 ],
-                'integration' => [
-                    'endpoint' => 'GET /admin/resources & POST /admin/resources/action',
-                    'middleware' => ['web', 'auth:web'],
-                    'request_schema' => '{"action": "approve", "record_id": "01J...ULID", "reason": "Dokumen lengkap"}',
-                    'response_schema' => '{"success": true, "message": "Status berhasil diperbarui."}',
-                    'tasks' => [
-                        'Integrasikan audit trail observer pada model untuk mencatat aktivitas admin.',
-                        'Hubungkan trigger approval dengan background job dispatch notifikasi.',
-                    ],
-                ],
+                'integration' => $integration,
                 'code_agent_directive' => self::buildAgentPrompt(
                     sprintf('FEAT-%s-%02d-ADMIN_OPS', $prefix, $index),
                     $title,
                     $businessName,
-                    "Implementasikan Dasbor Administrasi Filament v5 dengan schema form aman dan tabel filter instan.",
-                    ['app/Filament/Resources/RecordResource.php', 'app/Filament/Widgets/StatsOverview.php', 'app/Policies/RecordPolicy.php'],
-                    "php artisan test --filter=AdminPanelAccessTest"
+                    $mission,
+                    $targetFiles,
+                    $verifyCommand,
+                    $relatedTable,
+                    $ac,
+                    $integration,
+                    $index
                 ),
             ];
         }
 
         // Domain 5: EKSPOR / LAPORAN / PDF / EXCEL
         if (str_contains($lower, 'ekspor') || str_contains($lower, 'laporan') || str_contains($lower, 'pdf') || str_contains($lower, 'excel') || str_contains($lower, 'cetak')) {
+            $ac = [
+                [
+                    'scenario' => 'Ekspor Excel Tanpa Kehabisan Memori Server (Chunking)',
+                    'given' => 'Terdapat ribuan baris data yang diekspor.',
+                    'when' => 'Admin menekan tombol Ekspor Excel.',
+                    'then' => 'Sistem men-streaming data menggunakan generator chunk (cursor), menghasilkan file .XLSX dengan header beku (freeze panes) dalam <3 detik tanpa lonjakan RAM.',
+                ],
+                [
+                    'scenario' => 'Cetak Dokumen PDF Terstandarisasi',
+                    'given' => 'Admin atau pengguna mencetak tanda bukti atau rangkuman laporan.',
+                    'when' => 'File PDF diunduh.',
+                    'then' => 'Tata letak mematuhi standar A4 cetak rapi, dilengkapi kop resmi, nomor halaman dinamis, dan verifikasi cryptographic hash atau QR code.',
+                ],
+            ];
+            $integration = [
+                'endpoint' => 'GET /admin/reports/export?format=xlsx&start_date=2026-01-01&end_date=2026-12-31',
+                'middleware' => ['web', 'auth:web'],
+                'request_schema' => 'Query parameters: format (xlsx|pdf), start_date, end_date, status',
+                'response_schema' => 'Binary file stream with Content-Disposition attachment',
+                'tasks' => [
+                    'Daftarkan route download laporan dengan proteksi otorisasi admin.',
+                ],
+            ];
+            $mission = "Bangun fitur Ekspor Laporan PDF & Excel hemat memori menggunakan streaming cursor.";
+            $targetFiles = ['app/Services/ReportExportService.php', 'app/Http/Controllers/ReportExportController.php', 'resources/views/pdf/report.blade.php'];
+            $verifyCommand = "php artisan test --filter=ReportExportTest";
+
             return [
                 'category' => 'REPORTING_EXPORT',
                 'category_label' => 'Pelaporan & Ekspor Data (PDF / Excel)',
+                'related_table' => $relatedTable['name'] ?? null,
+                'related_table_data' => $relatedTable,
                 'user_story' => "Sebagai {$primaryActor}, saya ingin mengunduh laporan rekapitulasi data dalam format PDF dan Excel terformat rapi, sehingga saya dapat menyajikan data resmi ke pemangku kepentingan tanpa perlu merapikan dokumen manual.",
-                'acceptance_criteria' => [
-                    [
-                        'scenario' => 'Ekspor Excel Tanpa Kehabisan Memori Server (Chunking)',
-                        'given' => 'Terdapat ribuan baris data yang diekspor.',
-                        'when' => 'Admin menekan tombol Ekspor Excel.',
-                        'then' => 'Sistem men-streaming data menggunakan generator chunk (cursor), menghasilkan file .XLSX dengan header beku (freeze panes) dalam <3 detik tanpa lonjakan RAM.',
-                    ],
-                    [
-                        'scenario' => 'Cetak Dokumen PDF Terstandarisasi',
-                        'given' => 'Admin atau pengguna mencetak tanda bukti atau rangkuman laporan.',
-                        'when' => 'File PDF diunduh.',
-                        'then' => 'Tata letak mematuhi standar A4 cetak rapi, dilengkapi kop resmi, nomor halaman dinamis, dan verifikasi cryptographic hash atau QR code.',
-                    ],
-                ],
+                'acceptance_criteria' => $ac,
                 'frontend' => [
                     'design_tokens' => 'Modal pemilih filter tanggal (Date Range Picker), dropdown format (Excel XLSX, PDF Dokumen) dengan icon representatif, download progress feedback.',
                     'states' => 'Tombol unduh beralih ke state animasi progress saat file disintesis, toast notifikasi sukses saat file mulai terunduh.',
@@ -3098,46 +3460,58 @@ PROMPT;
                         'Desain template Blade khusus PDF (`resources/views/pdf/report.blade.php`) dengan styling ramah DomPDF.',
                     ],
                 ],
-                'integration' => [
-                    'endpoint' => 'GET /admin/reports/export?format=xlsx&start_date=2026-01-01&end_date=2026-12-31',
-                    'middleware' => ['web', 'auth:web'],
-                    'request_schema' => 'Query parameters: format (xlsx|pdf), start_date, end_date, status',
-                    'response_schema' => 'Binary file stream with Content-Disposition attachment',
-                    'tasks' => [
-                        'Daftarkan route download laporan dengan proteksi otorisasi admin.',
-                    ],
-                ],
+                'integration' => $integration,
                 'code_agent_directive' => self::buildAgentPrompt(
                     sprintf('FEAT-%s-%02d-EXPORT_REPORT', $prefix, $index),
                     $title,
                     $businessName,
-                    "Bangun fitur Ekspor Laporan PDF & Excel hemat memori menggunakan streaming cursor.",
-                    ['app/Services/ReportExportService.php', 'app/Http/Controllers/ReportExportController.php', 'resources/views/pdf/report.blade.php'],
-                    "php artisan test --filter=ReportExportTest"
+                    $mission,
+                    $targetFiles,
+                    $verifyCommand,
+                    $relatedTable,
+                    $ac,
+                    $integration,
+                    $index
                 ),
             ];
         }
 
         // Domain 6: NOTIFIKASI & WHATSAPP GATEWAY
         if (str_contains($lower, 'notifikasi') || str_contains($lower, 'whatsapp') || str_contains($lower, 'gateway') || str_contains($lower, 'email') || str_contains($lower, 'wa')) {
+            $ac = [
+                [
+                    'scenario' => 'Pengiriman Notifikasi WhatsApp via Background Queue',
+                    'given' => 'Terjadi event pemicu (misal formulir baru atau update status).',
+                    'when' => 'Event didispatch oleh sistem.',
+                    'then' => 'Pesan WhatsApp dikirimkan melalui background queue job dalam <5 detik tanpa memperlambat respon halaman web bagi pengguna.',
+                ],
+                [
+                    'scenario' => 'Ketahanan Terhadap API Gateway Downtime (Retry Backoff)',
+                    'given' => 'API provider WhatsApp mengalami network timeout atau error sementara.',
+                    'when' => 'Job pengiriman notifikasi dieksekusi.',
+                    'then' => 'Sistem otomatis mencoba ulang (retry 3x dengan jeda bertingkat) dan mencatat status di log sistem tanpa merusak data transaksi utama.',
+                ],
+            ];
+            $integration = [
+                'endpoint' => 'POST /api/webhooks/whatsapp/delivery-report',
+                'middleware' => ['api'],
+                'request_schema' => '{"message_id": "WA-12345", "status": "DELIVERED", "timestamp": 1790866000}',
+                'response_schema' => '{"success": true}',
+                'tasks' => [
+                    'Daftarkan webhook listener untuk menerima status laporan pengiriman (DLR) dari gateway WhatsApp.',
+                ],
+            ];
+            $mission = "Bangun sistem Notifikasi WhatsApp asinkron dengan Queue Jobs dan mekanisme retry cerdas.";
+            $targetFiles = ['app/Services/WhatsAppGatewayService.php', 'app/Jobs/SendWhatsAppNotificationJob.php', 'database/migrations/xxxx_create_notification_logs_table.php'];
+            $verifyCommand = "php artisan test --filter=WhatsAppNotificationTest";
+
             return [
                 'category' => 'COMMUNICATION_DISPATCH',
                 'category_label' => 'Notifikasi WhatsApp & Gateway Terotomasi',
+                'related_table' => $relatedTable['name'] ?? 'notification_logs',
+                'related_table_data' => $relatedTable,
                 'user_story' => "Sebagai {$clientActor} dan {$primaryActor}, saya ingin menerima notifikasi status real-time via WhatsApp dan Email setiap kali ada aktivitas transaksi penting, sehingga seluruh pihak mendapatkan konfirmasi instan tanpa koordinasi manual.",
-                'acceptance_criteria' => [
-                    [
-                        'scenario' => 'Pengiriman Notifikasi WhatsApp via Background Queue',
-                        'given' => 'Terjadi event pemicu (misal formulir baru atau update status).',
-                        'when' => 'Event didispatch oleh sistem.',
-                        'then' => 'Pesan WhatsApp dikirimkan melalui background queue job dalam <5 detik tanpa memperlambat respon halaman web bagi pengguna.',
-                    ],
-                    [
-                        'scenario' => 'Ketahanan Terhadap API Gateway Downtime (Retry Backoff)',
-                        'given' => 'API provider WhatsApp mengalami network timeout atau error sementara.',
-                        'when' => 'Job pengiriman notifikasi dieksekusi.',
-                        'then' => 'Sistem otomatis mencoba ulang (retry 3x dengan jeda bertingkat) dan mencatat status di log sistem tanpa merusak data transaksi utama.',
-                    ],
-                ],
+                'acceptance_criteria' => $ac,
                 'frontend' => [
                     'design_tokens' => 'Badge status notifikasi terkirim (Warna emerald untuk Terkirim, amber untuk Dalam Antrean, rose untuk Gagal kirim), preview template pesan.',
                     'states' => 'Indikator live sync status pesan di tabel admin.',
@@ -3155,46 +3529,58 @@ PROMPT;
                         'Buat Job class `SendWhatsAppNotificationJob` yang mengimplementasikan `ShouldQueue`.',
                     ],
                 ],
-                'integration' => [
-                    'endpoint' => 'POST /api/webhooks/whatsapp/delivery-report',
-                    'middleware' => ['api'],
-                    'request_schema' => '{"message_id": "WA-12345", "status": "DELIVERED", "timestamp": 1790866000}',
-                    'response_schema' => '{"success": true}',
-                    'tasks' => [
-                        'Daftarkan webhook listener untuk menerima status laporan pengiriman (DLR) dari gateway WhatsApp.',
-                    ],
-                ],
+                'integration' => $integration,
                 'code_agent_directive' => self::buildAgentPrompt(
                     sprintf('FEAT-%s-%02d-WA_NOTIF', $prefix, $index),
                     $title,
                     $businessName,
-                    "Bangun sistem Notifikasi WhatsApp asinkron dengan Queue Jobs dan mekanisme retry cerdas.",
-                    ['app/Services/WhatsAppGatewayService.php', 'app/Jobs/SendWhatsAppNotificationJob.php', 'database/migrations/xxxx_create_notification_logs_table.php'],
-                    "php artisan test --filter=WhatsAppNotificationTest"
+                    $mission,
+                    $targetFiles,
+                    $verifyCommand,
+                    $relatedTable,
+                    $ac,
+                    $integration,
+                    $index
                 ),
             ];
         }
 
         // Domain 7: GENERAL BUSINESS CORE SPECIFICATION
         $cleanSlug = strtoupper(substr(str_replace('-', '_', $titleSlug), 0, 14));
+        $ac = [
+            [
+                'scenario' => 'Eksekusi Fungsional Utama Berjalan Normal',
+                'given' => "Pengguna memiliki hak akses terhadap modul {$title}.",
+                'when' => 'Pengguna menjalankan alur utama fitur sesuai petunjuk sistem.',
+                'then' => 'Sistem memproses data secara akurat, menyimpan hasil dengan integritas ACID, dan memperbarui status tampilan secara reaktif.',
+            ],
+            [
+                'scenario' => 'Penanganan Error dan Validasi Input',
+                'given' => 'Data yang diberikan tidak memenuhi syarat spesifikasi.',
+                'when' => 'Data dikirimkan ke server.',
+                'then' => 'Sistem mengembalikan pesan peringatan yang jelas dan mencegah penyimpanan data yang rusak.',
+            ],
+        ];
+        $integration = [
+            'endpoint' => '/api/v1/' . Str::kebab(Str::plural($modelName)),
+            'middleware' => ['web'],
+            'request_schema' => '{"title": "Sample Record", "status": "active"}',
+            'response_schema' => '{"success": true, "data": {"id": "01J...", "title": "Sample Record"}}',
+            'tasks' => [
+                'Daftarkan endpoint RESTful atau Livewire Handler dengan kontrak data ketat.',
+            ],
+        ];
+        $mission = "Implementasikan modul {$title} sesuai spesifikasi arsitektur Laravel 13 (PHP 8.5+), Filament v5, dan PostgreSQL Strict ULID.";
+        $targetFiles = ['app/Models/' . $modelName . '.php', 'app/Actions/' . $modelName . 'Action.php'];
+        $verifyCommand = "php artisan test --filter=" . $modelName . "Test";
+
         return [
             'category' => 'CORE_FEATURE',
             'category_label' => 'Modul Inti Bisnis',
+            'related_table' => $relatedTable['name'] ?? Str::snake(Str::plural($modelName)),
+            'related_table_data' => $relatedTable,
             'user_story' => "Sebagai {$clientActor}, saya ingin menggunakan fitur {$title} pada sistem {$businessName}, sehingga {$desc}.",
-            'acceptance_criteria' => [
-                [
-                    'scenario' => 'Eksekusi Fungsional Utama Berjalan Normal',
-                    'given' => "Pengguna memiliki hak akses terhadap modul {$title}.",
-                    'when' => 'Pengguna menjalankan alur utama fitur sesuai petunjuk sistem.',
-                    'then' => 'Sistem memproses data secara akurat, menyimpan hasil dengan integritas ACID, dan memperbarui status tampilan secara reaktif.',
-                ],
-                [
-                    'scenario' => 'Penanganan Error dan Validasi Input',
-                    'given' => 'Data yang diberikan tidak memenuhi syarat spesifikasi.',
-                    'when' => 'Data dikirimkan ke server.',
-                    'then' => 'Sistem mengembalikan pesan peringatan yang jelas dan mencegah penyimpanan data yang rusak.',
-                ],
-            ],
+            'acceptance_criteria' => $ac,
             'frontend' => [
                 'design_tokens' => 'Desain komponen berkarakter dengan tipografi tajam, margin konsisten, transisi interaksi halus, dan kompatibilitas dark/light mode.',
                 'states' => 'Loading skeleton saat proses komputasi berlangsung, feedback aksi menggunakan sistem Toast, bukan dialog alert native.',
@@ -3212,45 +3598,151 @@ PROMPT;
                     "Service atau Action class untuk merangkum logika bisnis secara independen.",
                 ],
             ],
-            'integration' => [
-                'endpoint' => '/api/v1/' . Str::kebab(Str::plural($modelName)),
-                'middleware' => ['web'],
-                'request_schema' => '{"title": "Sample Record", "status": "active"}',
-                'response_schema' => '{"success": true, "data": {"id": "01J...", "title": "Sample Record"}}',
-                'tasks' => [
-                    'Daftarkan endpoint RESTful atau Livewire Handler dengan kontrak data ketat.',
-                ],
-            ],
+            'integration' => $integration,
             'code_agent_directive' => self::buildAgentPrompt(
                 sprintf('FEAT-%s-%02d-%s', $prefix, $index, $cleanSlug),
                 $title,
                 $businessName,
-                "Implementasikan modul {$title} sesuai spesifikasi arsitektur Laravel 13, Filament v5, dan PostgreSQL ULID.",
-                ['app/Models/' . $modelName . '.php', 'app/Actions/' . $modelName . 'Action.php'],
-                "php artisan test --filter=" . $modelName . "Test"
+                $mission,
+                $targetFiles,
+                $verifyCommand,
+                $relatedTable,
+                $ac,
+                $integration,
+                $index
             ),
         ];
     }
 
     /**
      * Build an exact copy-pasteable prompt template for AI Coding Agents.
+     * Injects concrete ERD table schemas, Acceptance Criteria (Given-When-Then),
+     * API integration payloads, and prerequisite step gating.
      */
-    protected static function buildAgentPrompt(string $featureId, string $title, string $businessName, string $mission, array $targetFiles, string $verifyCommand): string
-    {
+    protected static function buildAgentPrompt(
+        string $featureId,
+        string $title,
+        string $businessName,
+        string $mission,
+        array $targetFiles,
+        string $verifyCommand,
+        ?array $relatedTable = null,
+        array $acceptanceCriteria = [],
+        ?array $integration = null,
+        int $stepIndex = 1
+    ): string {
         $filesStr = implode("\n- ", $targetFiles);
+
+        // 1. Prerequisite step dependency warning
+        $stepPrerequisite = "";
+        if ($stepIndex > 1) {
+            $stepPrerequisite = <<<DEP
+#### ⚠️ PREREQUISITE STEP DEPENDENCY (STRICT GATING):
+- **Prerequisite**: STEP 1 (Fondasi Global, Database Schema ULID, Base Layout, and Core Auth) MUST be 100% completed and verified before starting this feature.
+- **Strict Rule**: Do NOT create or run isolated feature logic that references unmigrated tables or unconfigured base classes. Ensure baseline database tables and user roles exist first.
+DEP;
+        } else {
+            $stepPrerequisite = <<<DEP
+#### 🚀 STEP 1 - FOUNDATIONAL STEP (GLOBAL FOUNDATION):
+- **Role**: Foundational root of the system.
+- **Strict Rule**: Create core database migrations with ULID primary keys, authentication/RBAC guardrails, base layouts, and central configuration before implementing downstream domain features.
+DEP;
+        }
+
+        // 2. Concrete ERD schema section
+        $schemaSection = "";
+        if (!empty($relatedTable) && !empty($relatedTable['name'])) {
+            $tblName = $relatedTable['name'];
+            $tblDesc = $relatedTable['description'] ?? 'Domain operational table.';
+            $colsFormatted = [];
+            foreach ($relatedTable['columns'] ?? [] as $col) {
+                $cName = $col['name'] ?? 'column';
+                $cType = $col['type'] ?? 'string';
+                $cNullable = !empty($col['nullable']) ? 'nullable' : 'required';
+                $cIndex = !empty($col['is_index']) ? ' [INDEXED]' : '';
+                $cDesc = $col['description'] ?? '';
+                $colsFormatted[] = "  * `{$cName}` ({$cType}, {$cNullable}{$cIndex}): {$cDesc}";
+            }
+            $colsStr = !empty($colsFormatted) ? implode("\n", $colsFormatted) : "  * `id` (ULID, primary key)\n  * timestamps";
+
+            $schemaSection = <<<SCHEMA
+#### Concrete Database Table Target (`{$tblName}`):
+- **Table**: `{$tblName}`
+- **Purpose**: {$tblDesc}
+- **Primary Key Standard**: ALWAYS use ULID (`CHAR(26)` / `->ulid('id')->primary()`). NEVER use AUTO_INCREMENT, ->id(), or ->uuid().
+- **Table Columns Specification**:
+{$colsStr}
+SCHEMA;
+        } else {
+            $schemaSection = <<<SCHEMA
+#### Database Schema Specification:
+- Use PostgreSQL 16 Strict ULID (`->ulid('id')->primary()`) on business domain models.
+- Foreign keys must use `->foreignUlid('parent_id')`.
+- All list queries must use Keyset Cursor Pagination (`cursorPaginate()`).
+SCHEMA;
+        }
+
+        // 3. Concrete Acceptance Criteria (DoD)
+        $acSection = "";
+        if (!empty($acceptanceCriteria)) {
+            $scenarios = [];
+            foreach ($acceptanceCriteria as $ac) {
+                $scName = $ac['scenario'] ?? 'Skenario Fungsional';
+                $scGiven = $ac['given'] ?? 'Kondisi awal valid.';
+                $scWhen = $ac['when'] ?? 'Aksi pengguna dijalankan.';
+                $scThen = $ac['then'] ?? 'Sistem memberikan respons yang diharapkan.';
+                $scenarios[] = "- **Scenario: {$scName}**\n  - **Given**: {$scGiven}\n  - **When**: {$scWhen}\n  - **Then**: {$scThen}";
+            }
+            $acStr = implode("\n", $scenarios);
+            $acSection = <<<AC
+#### Concrete Acceptance Criteria (Definition of Done):
+{$acStr}
+AC;
+        }
+
+        // 4. API & Integration Contract
+        $integrationSection = "";
+        if (!empty($integration) && !empty($integration['endpoint'])) {
+            $mwStr = is_array($integration['middleware'] ?? null)
+                ? implode(', ', $integration['middleware'])
+                : ($integration['middleware'] ?? 'web');
+            $reqSchema = is_string($integration['request_schema'] ?? '')
+                ? $integration['request_schema']
+                : json_encode($integration['request_schema'] ?? [], JSON_PRETTY_PRINT);
+            $resSchema = is_string($integration['response_schema'] ?? '')
+                ? $integration['response_schema']
+                : json_encode($integration['response_schema'] ?? [], JSON_PRETTY_PRINT);
+
+            $integrationSection = <<<INTG
+#### API & Integration Contract:
+- **Endpoint**: `{$integration['endpoint']}`
+- **Middleware**: `[{$mwStr}]`
+- **Request Contract**:
+```json
+{$reqSchema}
+```
+- **Response Contract**:
+```json
+{$resSchema}
+```
+INTG;
+        }
+
         return <<<PROMPT
 ### AI CODE AGENT MISSION // SPEC-DRIVEN DIRECTIVE
 **Feature ID**: `{$featureId}`
 **Feature Title**: {$title}
 **Project Scope**: {$businessName}
 
+{$stepPrerequisite}
+
 #### Context & Architectural Guardrails:
-1. **Framework & Engine**: Laravel 13, Filament v5, Livewire 4, PostgreSQL 16+.
+1. **Framework & Engine**: Laravel 13 (PHP 8.5+), Filament v5, Livewire 4, PostgreSQL 16+.
 2. **Primary Key Standard**: ALWAYS use ULID (`->ulid('id')->primary()`) on business tables. NEVER use AUTO_INCREMENT, ->id(), or ->uuid().
 3. **Pagination Rule**: ALWAYS use Keyset Cursor Pagination (`cursorPaginate()`) with `->orderBy('id', 'asc')`. NEVER use offset `paginate()`.
 4. **Anti-AI-Slop & Precision UI**:
    - **Zero Native Dialogs**: Strict ban on `window.alert()`, `confirm()`, and `prompt()`. ALWAYS use centralized floating Toast (`window.showToast`) and curated Tailwind backdrop-blur modals.
-   - **Subtle Round Corners**: Use thin, crisp borders/corners (`rounded-xs`, `rounded-sm`, max `rounded-md`). STRICTLY AVOID capsule/pill shapes (`rounded-full`).
+   - **Subtle Round Corners**: Use thin, crisp borders/corners (`rounded-none`, `rounded-xs`, `rounded-sm`, max `rounded-md`). STRICTLY AVOID capsule/pill shapes (`rounded-full`).
    - **Interactive & 3D**: High-contrast typography pairing, loading skeletons, Framer Motion or Three.js 60fps micro-animations, avoiding generic AI slop.
    - **Thousand Separators**: Every number or currency >= 1,000 must use thousand separator masking (e.g. `10.000.000` / `10,000,000`).
    - **Local FontAwesome Icons**: Use representative local SVG icons (`config/fontawesome.php`), never external icon fonts with CDN latency.
@@ -3271,6 +3763,12 @@ PROMPT;
 11. **Filament v5 Form Rule**: Always use `\Filament\Schemas\Schema` method signature for `form()`.
 12. **Filament v5 Curator Image Standard**: Every image upload input in Filament v5 MUST use Curator Picker and specify a shallow directory mapping (maximum 1-2 levels, e.g. ->directory('products') or ->directory('branding')). Deep recursive directory nesting is strictly forbidden to optimize Linux OS filesystem inodes and eliminate RAM overhead during folder scans.
 13. **Full-Featured Rich Text Standard**: Every textarea for lengthy descriptions/articles MUST use a standardized full-featured Rich Text Editor class (e.g. `\App\Support\FilamentRichEditor::make(...)`) with all toolbar capabilities enabled (H1-H6, formatting, lists, tables, links, code) AND integrated Curator media picker for image insertions.
+
+{$schemaSection}
+
+{$acSection}
+
+{$integrationSection}
 
 #### Target Files to Create / Modify:
 - {$filesStr}
@@ -3370,8 +3868,8 @@ PROMPT;
                 'explanation' => 'NEVER use offset-based paginate(). Always use cursorPaginate() with explicit keyset pointers (->orderBy("id", "asc")). Menjamin query tetap berkecepatan sub-10ms meskipun tabel mencapai jutaan baris data.',
             ],
             'modern_php' => [
-                'rule' => 'PHP 8.4/8.5 Standards & Property Hooks',
-                'explanation' => 'Memanfaatkan Property Hooks, First-Class Callables, Typed DTOs, dan Form Requests untuk menjamin integritas tipe data dan mencegah type-juggling bugs.',
+                'rule' => 'PHP 8.5+ Standards & Property Hooks',
+                'explanation' => 'Memanfaatkan Property Hooks, Asymmetric Visibility, First-Class Callables, Typed DTOs, dan Form Requests untuk menjamin integritas tipe data dan performa runtime maksimal.',
             ],
             'concurrency' => [
                 'rule' => 'Redis-Backed Queue Workers & Idempotency Keys',
@@ -3905,7 +4403,7 @@ PROMPT;
         $code .= "        Waf[\"Cyber Threat Defense<br/><small>Rate Limiter, Anti-Bot & Honeypot</small>\"]\n";
         $code .= "    end\n\n";
         $code .= "    subgraph ServerHost[\"3. {$hosting}\"]\n";
-        $code .= "        AppMonolith[\"Laravel 13 Modern Monolith<br/><small>PHP 8.4/8.5 FPM & Filament v5 Admin Suite</small>\"]\n";
+        $code .= "        AppMonolith[\"Laravel 13 Modern Monolith<br/><small>PHP 8.5+ FPM & Filament v5 Admin Suite</small>\"]\n";
         $code .= "        Islands[\"Reactive Frontend Islands<br/><small>Livewire 4 & Flux UI Engine</small>\"]\n";
         $code .= "    end\n\n";
         $code .= "    subgraph DataStorage[\"4. Basis Data & Migrasi Data Warisan\"]\n";
@@ -4926,7 +5424,7 @@ PROMPT;
         $rules .= "  4. *Rung 4 (Surgical & Minimalist Diff)*: Terapkan perubahan kode yang presisi, hemat token, dan anti-regresi.\n";
         $rules .= "- **Specialized Subagents Delegation Hierarchy**:\n";
         $rules .= "  - `architect`: Perancangan arsitektur tingkat tinggi dan kepatuhan PRD.\n";
-        $rules .= "  - `php-reviewer`: Peninjauan kepatuhan PHP 8.4, Laravel 13, dan typing constraint Filament v5.\n";
+        $rules .= "  - `php-reviewer`: Peninjauan kepatuhan PHP 8.5+, Laravel 13, dan typing constraint Filament v5.\n";
         $rules .= "  - `database-reviewer`: Validasi skema PostgreSQL Strict ULID, indeks, dan keyset pagination O(1).\n";
         $rules .= "  - `security-reviewer`: Audit keamanan OWASP, RBAC, dan validasi webhook payment gateway.\n";
         $rules .= "  - `browser-qa`: Pengujian visual UI/UX, rasio kontras WCAG AAA, dan kepatuhan dark/light mode.\n";
@@ -5047,7 +5545,7 @@ PROMPT;
         $rules .= "## 7. AI CODE-GEN EXECUTION WORKFLOW\n";
         $rules .= "1. **Vertical Slice Implementation**: Always implement one module end-to-end (Migration -> Model -> Policy/Form -> UI/View -> Test) before proceeding to the next.\n";
         $rules .= "2. **Minimalist & Surgical Diffs**: Never rewrite whole files unnecessarily. Keep diffs precise and token-efficient.\n";
-        $rules .= "3. **Automated Verification**: Ensure all code syntax is strictly valid for PHP 8.4+ and runs PHPUnit / Pest tests cleanly.\n";
+        $rules .= "3. **Automated Verification**: Ensure all code syntax is strictly valid for PHP 8.5+ and runs PHPUnit / Pest tests cleanly.\n";
         $rules .= "4. **Git Discipline**: Every completed slice should be verified against regressions before concluding.\n\n";
 
         $customRules = $prd['custom_ai_agent_rules'] ?? null;

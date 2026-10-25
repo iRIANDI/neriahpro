@@ -4161,6 +4161,22 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             $promptCodeId = 'prompt-step-feat-' . $specIdx;
                         @endphp
                         <div x-show="devActiveStep === {{ $stepNum }}" class="space-y-4">
+                            <!-- Prerequisite Step Dependency Banner -->
+                            <div x-show="!isStepCompleted('step_foundation')" class="p-3 bg-amber-500/10 border border-amber-500/40 text-amber-900 dark:text-amber-200 text-xs font-mono flex items-start gap-2.5">
+                                <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                <div class="flex-1 space-y-1">
+                                    <div class="font-bold uppercase tracking-wider text-[11px] text-amber-800 dark:text-amber-300">
+                                        {{ $isEn ? '⚠️ PREREQUISITE WARNING: STEP 1 (GLOBAL FOUNDATION) NOT YET VERIFIED' : '⚠️ PERINGATAN DEPENDENSI: LANGKAH 1 (FONDASI GLOBAL) BELUM DIVERIFIKASI' }}
+                                    </div>
+                                    <p class="text-[11px] font-sans leading-relaxed text-zinc-700 dark:text-zinc-300">
+                                        {{ $isEn ? 'This feature depends on baseline ULID database tables, base layouts, and authentication configured in Step 1. We strongly advise completing and verifying Step 1 first to prevent schema collisions.' : 'Fitur ini membutuhkan skema database ULID, layout dasar, dan autentikasi yang dibuat di Langkah 1 (Fondasi Global). Sangat disarankan menyelesaikan Langkah 1 terlebih dahulu untuk mencegah konflik kode.' }}
+                                    </p>
+                                    <button type="button" @click="devActiveStep = 0" class="text-amber-700 dark:text-amber-400 underline font-bold hover:text-amber-600 text-[11px]">
+                                        {{ $isEn ? '← Return to Step 1 (Global Foundation)' : '← Kembali Selesaikan Langkah 1 (Fondasi Global)' }}
+                                    </button>
+                                </div>
+                            </div>
+
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                                 <div>
                                     <div class="flex items-center gap-2 mb-1">
@@ -4206,6 +4222,61 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Related Table Schema & Acceptance Criteria Grid -->
+                            @if(!empty($spec['related_table_data']) || !empty($spec['acceptance_criteria']))
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <!-- Related Table Schema Card -->
+                                    @if(!empty($spec['related_table_data']))
+                                        @php
+                                            $relTbl = $spec['related_table_data'];
+                                        @endphp
+                                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                                                    TARGET TABEL ERD: <span class="font-mono text-zinc-900 dark:text-white">{{ $relTbl['name'] ?? ($spec['related_table'] ?? '-') }}</span>
+                                                </span>
+                                                <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-mono">POSTGRESQL ULID</span>
+                                            </div>
+                                            <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-tight">
+                                                {{ $relTbl['description'] ?? 'Tabel operasional modul inti.' }}
+                                            </p>
+                                            <div class="space-y-1 max-h-36 overflow-y-auto custom-prd-scrollbar border-t border-zinc-200 dark:border-zinc-800 pt-1.5">
+                                                @foreach(array_slice($relTbl['columns'] ?? [], 0, 8) as $col)
+                                                    <div class="flex items-center justify-between text-[10px] font-mono py-0.5">
+                                                        <span class="text-zinc-800 dark:text-zinc-200">{{ $col['name'] ?? '' }}</span>
+                                                        <span class="text-zinc-500 dark:text-zinc-400">{{ $col['type'] ?? '' }}{{ !empty($col['is_index']) ? ' • idx' : '' }}</span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <!-- Acceptance Criteria DoD Card -->
+                                    @if(!empty($spec['acceptance_criteria']))
+                                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                                            <span class="text-sky-700 dark:text-sky-400 text-[10px] font-bold uppercase tracking-wider block">
+                                                ACCEPTANCE CRITERIA (DEFINITION OF DONE):
+                                            </span>
+                                            <div class="space-y-2 max-h-40 overflow-y-auto custom-prd-scrollbar text-[11px]">
+                                                @foreach($spec['acceptance_criteria'] as $acIdx => $acItem)
+                                                    <div class="p-2 bg-white dark:bg-black/60 border border-zinc-200 dark:border-zinc-800/80 space-y-1">
+                                                        <div class="font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                                                            <span class="w-1.5 h-1.5 bg-sky-500 inline-block"></span>
+                                                            <span>{{ $acItem['scenario'] ?? ('Skenario ' . ($acIdx + 1)) }}</span>
+                                                        </div>
+                                                        <div class="text-[10px] text-zinc-600 dark:text-zinc-400 font-sans space-y-0.5 pl-3 border-l border-zinc-200 dark:border-zinc-800">
+                                                            <div><strong>Given:</strong> {{ $acItem['given'] ?? '-' }}</div>
+                                                            <div><strong>When:</strong> {{ $acItem['when'] ?? '-' }}</div>
+                                                            <div><strong>Then:</strong> {{ $acItem['then'] ?? '-' }}</div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
 
                             <!-- Pre-Crafted Vertical Slice Prompt -->
                             <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 space-y-2">
@@ -6555,8 +6626,8 @@ class ProcessSecureDataset implements ShouldQueue
                             </h3>
                             <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs max-w-2xl leading-relaxed">
                                 {{ $isEn 
-                                    ? 'Your PRD architectural blueprint can be directly exported into all 10 pillars of Software Factory OS: docker-compose.yml (PHP 8.4, PostgreSQL 16, Redis 7), complete SQL schema (Strict ULID), routing (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ realistic records), AI rules (.cursorrules, CLAUDE.md, AGENTS.md), contract testing ApiContractTest.php, cloud deploy.sh pipeline, Kubernetes health probes (/healthz), encrypted disaster recovery scripts (backup.sh, restore.sh), and Scalar interactive API documentation (/docs/api).'
-                                    : 'Blueprint arsitektur PRD Anda dapat langsung diekspor menjadi 10 pilar Software Factory OS: docker-compose.yml (PHP 8.4, PostgreSQL 16, Redis 7), skema SQL lengkap (Strict ULID), perutean (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ data realistis), aturan agen AI (.cursorrules, CLAUDE.md, AGENTS.md), pengujian kontrak ApiContractTest.php, skrip deploy.sh cloud 1-klik, probe kesehatan (/healthz), skrip pemulihan bencana terenkripsi (backup.sh, restore.sh), dan dokumentasi interaktif Scalar (/docs/api).' }}
+                                    ? 'Your PRD architectural blueprint can be directly exported into all 10 pillars of Software Factory OS: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), complete SQL schema (Strict ULID), routing (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ realistic records), AI rules (.cursorrules, CLAUDE.md, AGENTS.md), contract testing ApiContractTest.php, cloud deploy.sh pipeline, Kubernetes health probes (/healthz), encrypted disaster recovery scripts (backup.sh, restore.sh), and Scalar interactive API documentation (/docs/api).'
+                                    : 'Blueprint arsitektur PRD Anda dapat langsung diekspor menjadi 10 pilar Software Factory OS: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), skema SQL lengkap (Strict ULID), perutean (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ data realistis), aturan agen AI (.cursorrules, CLAUDE.md, AGENTS.md), pengujian kontrak ApiContractTest.php, skrip deploy.sh cloud 1-klik, probe kesehatan (/healthz), skrip pemulihan bencana terenkripsi (backup.sh, restore.sh), dan dokumentasi interaktif Scalar (/docs/api).' }}
                             </p>
                         </div>
                         <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
@@ -8954,7 +9025,7 @@ class ProcessSecureDataset implements ShouldQueue
             <!-- Modal Info Banner -->
             <div class="mb-3 p-2.5 bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                 <div>
-                    <span class="text-emerald-400 font-bold">{{ $isEn ? 'Target Stack:' : 'Target Framework:' }}</span> Laravel 13 (PHP 8.4) &bull; PostgreSQL 16 Strict ULID &bull; Redis 7 &bull; Next.js App Router
+                    <span class="text-emerald-400 font-bold">{{ $isEn ? 'Target Stack:' : 'Target Framework:' }}</span> Laravel 13 (PHP 8.5+) &bull; PostgreSQL 16 Strict ULID &bull; Redis 7 &bull; Next.js App Router
                 </div>
                 <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[11px] flex items-center gap-1.5 transition cursor-pointer w-fit">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>

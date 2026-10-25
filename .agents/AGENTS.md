@@ -171,7 +171,7 @@ After completing any task, you MUST always suggest which deployment script numbe
 - 🏛️ **FULL CUSTOM ENGINEERING STUDIO STANDARDS (7 PILARS TURNKEY)**:
   - Layanan Pengembangan Penuh & Pengerjaan Kode oleh Tim Neriah Pro (`ArchitecturePricingIsland.jsx` Studio Contracts) wajib patuh pada standar Project OS:
     1. *Advisory Tier (Rp 2.5 Jt)*: Dokumen PRD 26 parameter, PostgreSQL 16 Strict ULID DDL, WBS 5 Sprint Mermaid Gantt, dan jaminan potongan 100% biaya advisory terhadap DP 50% jika berlanjut ke Full MVP.
-    2. *Full Monolith MVP Tier (Rp 50 Jt, DP 50%)*: 100% turnkey dikerjakan langsung oleh Senior Architect mencakup seluruh 7 Pilar Software Factory OS (PRD, Strict ULID Keyset O(1), Docker PHP 8.4/PG 16/Redis 7/Nginx, Synthetic Seeder 100+ baris, AI Agent Rules .cursorrules/AGENTS.md, ApiContractTest Pest, CI/CD deploy.sh), Master Gantt Timeline real-time di Customer Portal (`/customer/dashboard`), Midtrans Snap payment idempotency, Dedicated VPS hardening, dan garansi SLA 3 bulan penuh.
+    2. *Full Monolith MVP Tier (Rp 50 Jt, DP 50%)*: 100% turnkey dikerjakan langsung oleh Senior Architect mencakup seluruh 7 Pilar Software Factory OS (PRD, Strict ULID Keyset O(1), Docker PHP 8.5+/PG 16/Redis 7/Nginx, Synthetic Seeder 100+ baris, AI Agent Rules .cursorrules/AGENTS.md, ApiContractTest Pest, CI/CD deploy.sh), Master Gantt Timeline real-time di Customer Portal (`/customer/dashboard`), Midtrans Snap payment idempotency, Dedicated VPS hardening, dan garansi SLA 3 bulan penuh.
     3. *UMKM Digital Starter Tier (Rp 3.75 Jt)*: Engine transaksi web, kasir, database PostgreSQL Strict ULID terpusat, Filament v5 admin dashboard Bahasa Indonesia, pembayaran QRIS/VA otomatis, notifikasi WhatsApp E.164, dan domain cloud hosting bergaransi 1 bulan.
 
 # Mandatory Rule: Curator Picker & Shallow Storage Hierarchy (Server Inodes & RAM Optimization)
@@ -249,11 +249,11 @@ After completing any task, you MUST always suggest which deployment script numbe
   ])
   ```
 
-### 6. Nixpacks, PHP Versioning & Modern PHP Syntax Compatibility (PHP 8.4 & 8.5)
+### 6. Nixpacks, PHP Versioning & Modern PHP Syntax Compatibility (PHP 8.5+)
 - **Nixpacks PHP Provider Detection**:
   - Nixpacks (used by Coolify / Railway) automatically provisions the PHP runtime binary by directly parsing the `"require": { "php": "..." }` constraint in `composer.json`.
   - ⚠️ Environment variables like `NIXPACKS_PHP_VERSION` in `nixpacks.toml` or Coolify environment settings are **ignored** by Nixpacks's PHP provider when choosing the Nix package.
-- **PHP 8.4+ Syntax in Modern Packages (Property Hooks)**:
+- **PHP 8.5+ Syntax in Modern Packages (Property Hooks)**:
   - Framework dependencies in Laravel 13 (notably `symfony/http-foundation`) use PHP 8.4 property hooks syntax:
     ```php
     public ParameterBag $attributes {

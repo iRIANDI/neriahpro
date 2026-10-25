@@ -789,7 +789,7 @@ HTML;
     {
         $lower = strtolower($role);
         if (str_contains($lower, 'architect') || str_contains($lower, 'backend')) {
-            return ['Laravel 13', 'PHP 8.4', 'Distributed Database Architecture', 'Redis Caching', 'Docker CI/CD', 'Enterprise Architecture', 'High-Throughput APIs', 'RESTful API', 'System Architecture'];
+            return ['Laravel 13', 'PHP 8.5+', 'Distributed Database Architecture', 'Redis Caching', 'Docker CI/CD', 'Enterprise Architecture', 'High-Throughput APIs', 'RESTful API', 'System Architecture'];
         }
         if (str_contains($lower, 'frontend') || str_contains($lower, 'react') || str_contains($lower, 'full stack')) {
             return ['React 19', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Vite', 'State Management', 'REST / GraphQL', 'Responsive Design'];

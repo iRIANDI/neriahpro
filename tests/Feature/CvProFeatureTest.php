@@ -48,7 +48,7 @@ class CvProFeatureTest extends TestCase
                         ],
                     ],
                 ],
-                'skills' => ['Laravel', 'PostgreSQL', 'Redis', 'Docker', 'REST API', 'PHP 8.4'],
+                'skills' => ['Laravel', 'PostgreSQL', 'Redis', 'Docker', 'REST API', 'PHP 8.5+'],
                 'education' => [
                     [
                         'institution' => 'Universitas Indonesia',

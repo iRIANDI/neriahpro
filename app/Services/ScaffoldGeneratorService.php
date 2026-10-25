@@ -120,7 +120,7 @@ version: '3.8'
 # ==============================================================================
 
 services:
-  # 1. Main Application Container (PHP 8.4 FPM with High-Concurrency Extensions)
+  # 1. Main Application Container (PHP 8.5+ FPM with High-Concurrency Extensions)
   app:
     build:
       context: .
@@ -1856,7 +1856,7 @@ jobs:
       - name: Setup PHP Runtime
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, redis
           coverage: none
 
@@ -2073,7 +2073,7 @@ Project ini dirancang untuk kompatibilitas native dengan Google Antigravity 2.0 
 
 ## 2. Specialized Subagents Roster
 - `architect`: High-level systems architecture & PRD compliance.
-- `php-reviewer`: Laravel 13, PHP 8.4, and Filament v5 typing constraints.
+- `php-reviewer`: Laravel 13, PHP 8.5+, and Filament v5 typing constraints.
 - `database-reviewer`: PostgreSQL Strict ULID, indexes, and Keyset Cursor Pagination O(1).
 - `security-reviewer`: Anti-tamper, RBAC, webhook idempotency, and OWASP Top 10.
 - `browser-qa`: Visual UI/UX, WCAG AAA text contrast, and dark/light mode fidelity.

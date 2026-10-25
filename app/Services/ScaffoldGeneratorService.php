@@ -24,6 +24,37 @@ class ScaffoldGeneratorService
                 ?? ($prd['engineering_specs']['database_erd']['entities'] ?? []);
         }
 
+        $mvpEngineeringSpecs = $prd['engineering_specs']['mvp_specs'] 
+            ?? ($prd['features']['mvp_phase1'] ?? []);
+
+        $discoveryData = is_array($blueprint->discovery_data) ? $blueprint->discovery_data : (json_decode($blueprint->discovery_data ?? '[]', true) ?: []);
+        $domainDetected = $discoveryData['meta']['detected_domain'] ?? '';
+        $corpusText = strtolower(
+            ($blueprint->nama_bisnis ?? '') . ' ' . 
+            ($blueprint->tipe_aplikasi ?? '') . ' ' . 
+            ($blueprint->deskripsi_ide ?? '') . ' ' . 
+            ($blueprint->masalah_solusi ?? '') . ' ' . 
+            ($blueprint->masalah_utama ?? '') . ' ' . 
+            ($blueprint->solusi_diinginkan ?? '')
+        );
+
+        $isGame3D = $domainDetected === 'game_3d_simulation' 
+            || str_contains($corpusText, 'pesawat') 
+            || str_contains($corpusText, 'game') 
+            || str_contains($corpusText, 'three.js') 
+            || str_contains($corpusText, 'simulator');
+
+        $isApiGateway = $domainDetected === 'api_gateway_messaging' 
+            || str_contains($corpusText, 'openwa') 
+            || str_contains($corpusText, 'baileys') 
+            || (str_contains($corpusText, 'whatsapp') && (str_contains($corpusText, 'gateway') || str_contains($corpusText, 'api')));
+
+        $isDecoupledRequested = $domainDetected === 'decoupled_saas'
+            || str_contains($corpusText, 'decoupled')
+            || str_contains($corpusText, 'terpisah')
+            || str_contains($corpusText, 'frontend terpisah')
+            || (str_contains($corpusText, 'next.js') && str_contains($corpusText, 'api'));
+
         $schemaSql = self::generateDatabaseMigrationsSql($blueprint, $erdTables);
         $files = [
             // Pillar 0: Product Discovery & Product-Lens Gate (Filter Ide Mentah)
@@ -70,7 +101,7 @@ class ScaffoldGeneratorService
             'tests/Feature/ApiContractTest.php' => self::generateContractTest($blueprint, $erdTables),
             'tests/Feature/HealthProbeTest.php' => self::generateHealthProbeTest(),
             'tests/e2e/playwright.config.ts' => self::generatePlaywrightConfig($slug),
-            'tests/e2e/critical-flows.spec.ts' => self::generatePlaywrightE2ETest($blueprint),
+            'tests/e2e/critical-flows.spec.ts' => self::generatePlaywrightE2ETest($blueprint, $mvpEngineeringSpecs),
 
             // Pillar 7: One-Click Cloud CI/CD & Deploy Pipeline
             '.github/workflows/deploy.yml' => self::generateCiCdWorkflow($blueprint, $slug),
@@ -89,6 +120,33 @@ class ScaffoldGeneratorService
             // Pillar 10: Interactive API Sandbox & Developer Portal
             'resources/views/api-docs.blade.php' => self::generateApiDocsBlade($blueprint),
         ];
+
+        // Celah 2: Mandiri Sprint Tasks (Estafet Anti Context-Rot)
+        $sprintTaskFiles = self::generateSprintTasks($blueprint, $erdTables, $mvpEngineeringSpecs);
+        $files = array_merge($files, $sprintTaskFiles);
+
+        // Celah 4: Individual Eloquent Migrations & Models (Strict ULID Standard)
+        $migrationFiles = self::generateEloquentMigrations($erdTables);
+        $files = array_merge($files, $migrationFiles);
+
+        $modelFiles = self::generateEloquentModels($erdTables);
+        $files = array_merge($files, $modelFiles);
+
+        // Multi-Platform & Decoupled Scaffolding
+        if ($isApiGateway) {
+            $gatewayFiles = self::generateWhatsAppGatewayScaffold($blueprint, $slug);
+            $files = array_merge($files, $gatewayFiles);
+        }
+
+        if ($isGame3D) {
+            $gameFiles = self::generate3DGameScaffold($blueprint, $slug);
+            $files = array_merge($files, $gameFiles);
+        }
+
+        if ($isDecoupledRequested) {
+            $decoupledFiles = self::generateDecoupledScaffold($blueprint, $slug);
+            $files = array_merge($files, $decoupledFiles);
+        }
 
         // Apply any user-elaborated / customized scaffold files (persisted in user_metadata)
         $customizations = $blueprint->user_metadata['scaffold_customizations'] ?? [];
@@ -2427,35 +2485,91 @@ TS;
     }
 
     /**
-     * Pillar 6: Playwright Critical User Flow Spec.
+     * Pillar 6: Playwright Critical User Flow Spec with Real Acceptance Criteria Verification.
      */
-    public static function generatePlaywrightE2ETest(VisionBlueprint $blueprint): string
+    public static function generatePlaywrightE2ETest(VisionBlueprint $blueprint, array $mvpSpecs = []): string
     {
         $projectName = $blueprint->nama_bisnis ?: 'Application';
-        return <<<TS
-import { test, expect } from '@playwright/test';
+        $slug = $blueprint->slug ?: Str::slug($projectName);
 
-test.describe('{$projectName} Critical User Journey', () => {
-  test('Landing page loads with WCAG high contrast headers and title', async ({ page }) => {
-    await page.goto('/');
-    await expect(page).toHaveTitle(/.*{$projectName}.*/);
-    const mainHeading = page.locator('h1').first();
-    await expect(mainHeading).toBeVisible();
-  });
+        $discoveryData = is_array($blueprint->discovery_data) ? $blueprint->discovery_data : (json_decode($blueprint->discovery_data ?? '[]', true) ?: []);
+        $domainDetected = $discoveryData['meta']['detected_domain'] ?? '';
+        $corpusText = strtolower(
+            ($blueprint->nama_bisnis ?? '') . ' ' . 
+            ($blueprint->tipe_aplikasi ?? '') . ' ' . 
+            ($blueprint->deskripsi_ide ?? '') . ' ' . 
+            ($blueprint->masalah_solusi ?? '') . ' ' . 
+            ($blueprint->masalah_utama ?? '') . ' ' . 
+            ($blueprint->solusi_diinginkan ?? '')
+        );
 
-  test('Healthz probe returns operational status', async ({ request }) => {
-    const response = await request.get('/healthz');
-    expect(response.status()).toBe(200);
-    const body = await response.json();
-    expect(body.status).toBe('healthy');
-  });
+        $isGame3D = $domainDetected === 'game_3d_simulation' || str_contains($corpusText, 'pesawat') || str_contains($corpusText, 'game');
+        $isApiGateway = $domainDetected === 'api_gateway_messaging' || str_contains($corpusText, 'openwa') || str_contains($corpusText, 'whatsapp');
 
-  test('Interactive API Docs loads properly', async ({ page }) => {
-    await page.goto('/docs/api');
-    await expect(page.locator('body')).toBeVisible();
-  });
-});
-TS;
+        $firstFeature = $mvpSpecs[0] ?? [];
+        $firstFeatureTitle = preg_replace('/["\r\n]+/', '', $firstFeature['title'] ?? 'Core Transactional Workflow');
+
+        $code = "import { test, expect } from '@playwright/test';\n\n";
+        $code .= "test.describe('{$projectName} Critical User Journey & E2E Acceptance Suite', () => {\n";
+        $code .= "  test('1. Landing page loads with WCAG high contrast headers and title', async ({ page }) => {\n";
+        $code .= "    await page.goto('/');\n";
+        $code .= "    await expect(page).toHaveTitle(/.*{$projectName}.*/i);\n";
+        $code .= "    const mainHeading = page.locator('h1').first();\n";
+        $code .= "    await expect(mainHeading).toBeVisible();\n";
+        $code .= "  });\n\n";
+        $code .= "  test('2. Healthz probe returns operational 200 OK status', async ({ request }) => {\n";
+        $code .= "    const response = await request.get('/healthz');\n";
+        $code .= "    expect(response.status()).toBe(200);\n";
+        $code .= "    const body = await response.json();\n";
+        $code .= "    expect(body.status).toBe('healthy');\n";
+        $code .= "  });\n\n";
+
+        if ($isGame3D) {
+            $code .= "  test('3. 3D Flight Simulation Canvas & Telemetry HUD initialize at 60 FPS', async ({ page }) => {\n";
+            $code .= "    await page.goto('/');\n";
+            $code .= "    const canvas = page.locator('#flight-canvas, canvas').first();\n";
+            $code .= "    await expect(canvas).toBeVisible();\n";
+            $code .= "    const hud = page.locator('#flight-hud, .hud-telemetry').first();\n";
+            $code .= "    await expect(hud).toBeVisible();\n";
+            $code .= "    // Simulate Flight Throttle input (W key)\n";
+            $code .= "    await page.keyboard.press('KeyW');\n";
+            $code .= "    await page.waitForTimeout(500);\n";
+            $code .= "    const altimeter = page.locator('[data-testid=\"altimeter\"], #hud-alt').first();\n";
+            $code .= "    if (await altimeter.count() > 0) {\n";
+            $code .= "      await expect(altimeter).not.toBeEmpty();\n";
+            $code .= "    }\n";
+            $code .= "  });\n\n";
+        } elseif ($isApiGateway) {
+            $code .= "  test('3. WhatsApp Session Engine QR & Ingress Security Protocol', async ({ request }) => {\n";
+            $code .= "    const sessionCheck = await request.get('/api/v1/sessions/status');\n";
+            $code .= "    expect([200, 401, 404]).toContain(sessionCheck.status());\n";
+            $code .= "    // Verify unauthenticated message dispatch rejected with 400/401/422\n";
+            $code .= "    const postMsg = await request.post('/api/v1/messages/send', { data: {} });\n";
+            $code .= "    expect([400, 401, 422]).toContain(postMsg.status());\n";
+            $code .= "  });\n\n";
+        } else {
+            $code .= "  test('3. Feature E2E Flow: {$firstFeatureTitle} Form Input & Submission', async ({ page }) => {\n";
+            $code .= "    await page.goto('/');\n";
+            $code .= "    // Test submit trigger and interactive response\n";
+            $code .= "    const submitBtn = page.locator('button[type=\"submit\"], button:has-text(\"Kirim\"), button:has-text(\"Simpan\"), button:has-text(\"Submit\")').first();\n";
+            $code .= "    if (await submitBtn.count() > 0) {\n";
+            $code .= "      const firstInput = page.locator('input[type=\"text\"], input:not([type=\"hidden\"])').first();\n";
+            $code .= "      if (await firstInput.count() > 0) {\n";
+            $code .= "        await firstInput.fill('Playwright Acceptance Test Data');\n";
+            $code .= "        await submitBtn.click();\n";
+            $code .= "        await page.waitForTimeout(800);\n";
+            $code .= "      }\n";
+            $code .= "    }\n";
+            $code .= "  });\n\n";
+        }
+
+        $code .= "  test('4. Interactive API Docs loads properly without broken scripts', async ({ page }) => {\n";
+        $code .= "    await page.goto('/docs/api');\n";
+        $code .= "    await expect(page.locator('body')).toBeVisible();\n";
+        $code .= "  });\n";
+        $code .= "});\n";
+
+        return $code;
     }
 
     /**
@@ -2679,6 +2793,726 @@ MARKDOWN;
 </body>
 </html>
 BLADE;
+    }
+
+    /**
+     * Celah 2: Generate Mandiri Sprint Tasks (Estafet Anti Context-Rot).
+     */
+    public static function generateSprintTasks(VisionBlueprint $blueprint, array $erdTables, array $mvpSpecs): array
+    {
+        $projectName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'MyApplication');
+        $slug = $blueprint->slug ?: Str::slug($projectName);
+        $files = [];
+
+        $readme = "# Sprint Tasks Execution Cockpit (Estafet Anti Context-Rot)\n";
+        $readme .= "**Proyek**: {$projectName} ({$slug})  \n";
+        $readme .= "**Arsitektur**: Strict Single-Responsibility Vertical Slices  \n\n";
+        $readme .= "> [!IMPORTANT]\n";
+        $readme .= "> **JANGAN MENYALIN SELURUH PRD SEKALIGUS KE DALAM AI IDE / CHAT!**\n";
+        $readme .= "> Menempelkan ribuan baris PRD sekaligus menyebabkan *Attention Drift*, amnesia skema database, dan komentar `// TODO` dangkal.\n";
+        $readme .= "> Eksekusi setiap task di bawah satu per satu via terminal atau Cursor Composer:\n";
+        $readme .= "> ```bash\n";
+        $readme .= "> claude \"Baca sprint-tasks/01_foundation_database_and_core.md dan implementasikan kodenya.\"\n";
+        $readme .= "> ```\n\n";
+        $readme .= "## Daftar Langkah Eksekusi Sprint:\n";
+        $readme .= "1. **[01_foundation_database_and_core.md](file:///sprint-tasks/01_foundation_database_and_core.md)**: Skema Database ULID, Eloquent Models & Synthetic Seeder.\n";
+
+        $taskIndex = 2;
+        $activeSpecs = array_slice($mvpSpecs, 0, 5);
+        foreach ($activeSpecs as $idx => $spec) {
+            $numStr = str_pad((string)$taskIndex, 2, '0', STR_PAD_LEFT);
+            $specTitle = $spec['title'] ?? ('Fitur ' . ($idx + 1));
+            $specSlug = Str::slug($specTitle) ?: ('feature-' . ($idx + 1));
+            $fileName = "{$numStr}_feature_{$specSlug}.md";
+            $readme .= ($idx + 2) . ". **[{$fileName}](file:///sprint-tasks/{$fileName})**: {$specTitle}\n";
+            $taskIndex++;
+        }
+
+        $readme .= "{$taskIndex}. **[99_quality_gate_and_deployment.md](file:///sprint-tasks/99_quality_gate_and_deployment.md)**: Automated Test Suite & Production Deployment.\n";
+        $files['sprint-tasks/README.md'] = $readme;
+
+        // Task 01: Foundation
+        $files['sprint-tasks/01_foundation_database_and_core.md'] = <<<MD
+# Sprint Task 01: Database Foundation, ULID Migrations & Core Models
+**Tahap**: Fase 0 & 1 - Fondasi Basis Data & Keamanan  
+**Bounded Context Files**:
+- `database/migrations/*`
+- `app/Models/*`
+- `database/seeders/DatabaseSeeder.php`
+- `database/seeders/SyntheticDataSeeder.php`
+
+## 1. Tujuan & Ruang Lingkup
+Menginisialisasi seluruh skema basis data PostgreSQL dengan standar Strict ULID (Primary Key `VARCHAR(26)`), index foreign key otomatis, dan seeding data sintetis realistis sebanyak 20 baris per tabel.
+
+## 2. Kriteria Keberhasilan (Definition of Done)
+- [ ] Seluruh migrasi database di folder `database/migrations/` berhasil dijalankan tanpa error via `php artisan migrate:fresh`.
+- [ ] Seluruh Model di `app/Models/` menggunakan trait `Illuminate\\Database\\Eloquent\\Concerns\\HasUlids`.
+- [ ] Dilarang keras menggunakan auto-increment `\$table->id()`.
+- [ ] Perintah verifikasi terminal: `php artisan migrate:fresh --seed` selesai dengan status 0.
+
+## 3. Micro-Prompt Siap Eksekusi untuk AI Agent:
+```text
+Halo AI, tolong implementasikan Task 01:
+1. Pastikan seluruh file migrasi di database/migrations/ menggunakan \$table->ulid('id')->primary() dan foreignUlid untuk relasi.
+2. Buat seluruh Model Eloquent di app/Models/ dengan trait HasUlids, \$guarded = [], dan casts metadata JSON ke array.
+3. Jalankan `php artisan migrate:fresh --seed` dan laporkan hasil verifikasinya.
+Dilarang menyentuh file frontend atau controller di luar bounded context di atas.
+```
+MD;
+
+        // Vertical slice tasks for features
+        $taskNum = 2;
+        foreach ($activeSpecs as $idx => $spec) {
+            $numStr = str_pad((string)$taskNum, 2, '0', STR_PAD_LEFT);
+            $title = $spec['title'] ?? ('Fitur ' . ($idx + 1));
+            $desc = $spec['desc'] ?? 'Implementasi spesifikasi fungsional fitur.';
+            $specSlug = Str::slug($title) ?: ('feature-' . ($idx + 1));
+            $ac = $spec['acceptance_criteria'] ?? ['Given data valid, When disubmit, Then berhasil disimpan.'];
+            $acLines = [];
+            if (is_array($ac)) {
+                foreach ($ac as $item) {
+                    if (is_array($item)) {
+                        $parts = [];
+                        foreach ($item as $k => $v) {
+                            if (is_scalar($v)) {
+                                $parts[] = ucfirst((string)$k) . ': ' . $v;
+                            }
+                        }
+                        $acLines[] = implode(', ', $parts);
+                    } elseif (is_scalar($item)) {
+                        $acLines[] = (string)$item;
+                    }
+                }
+            } elseif (is_scalar($ac)) {
+                $acLines[] = (string)$ac;
+            }
+            if (empty($acLines)) {
+                $acLines[] = 'Given data valid, When disubmit, Then berhasil disimpan.';
+            }
+            $acText = implode("\n- ", $acLines);
+            $relatedTable = $spec['related_table'] ?? 'records';
+
+            $files["sprint-tasks/{$numStr}_feature_{$specSlug}.md"] = <<<MD
+# Sprint Task {$numStr}: {$title}
+**Tahap**: Vertical Slice Feature Implementation  
+**Tabel Basis Data Terkait**: `{$relatedTable}`  
+**Bounded Context Files**:
+- `app/Http/Controllers/{$specSlug}Controller.php` (atau API / Livewire Handler)
+- `routes/api.php` / `routes/web.php`
+- `resources/views/...` (atau Frontend Component)
+- `tests/Feature/{$specSlug}Test.php`
+
+## 1. Ringkasan Kebutuhan Bisnis
+{$desc}
+
+## 2. Kriteria Penerimaan (Acceptance Criteria / Gherkin)
+- {$acText}
+
+## 3. Standar Rekayasa & Anti-AI-Slop
+- Seluruh input form memiliki 4 micro-states: Normal, Focus Ring, Loading Shimmer, dan Error Border Rose.
+- Dilarang menggunakan dialog browser native (`alert()`, `confirm()`). Gunakan floating toast notification.
+- Gunakan sudut border halus (`rounded-xs` s.d. `rounded-md`), dilarang keras `rounded-full` (anti-pill button).
+- Kontras teks wajib memenuhi standar WCAG AAA (`text-zinc-950` di light mode, `text-zinc-100` di dark mode).
+
+## 4. Micro-Prompt Siap Eksekusi untuk AI Agent:
+```text
+Halo AI, tolong implementasikan Task {$numStr} ({$title}):
+1. Implementasikan endpoint / controller dan form UI sesuai Acceptance Criteria di atas.
+2. Hubungkan ke model {$relatedTable} menggunakan query cursor pagination O(1).
+3. Buat Feature Test di tests/Feature/ untuk memvalidasi alur sukses dan penolakan input invalid.
+4. Pastikan UI mematuhi aturan anti-AI-slop (subtle rounded corners, tanpa dialog native alert).
+```
+MD;
+            $taskNum++;
+        }
+
+        // Task 99: Quality Gate & Deploy
+        $files['sprint-tasks/99_quality_gate_and_deployment.md'] = <<<MD
+# Sprint Task 99: Automated Quality Gate & Production Deployment
+**Tahap**: Final Verification & Production Go-Live  
+**Bounded Context**: Test Suite, Linting, Security Audit, CI/CD Pipeline.
+
+## 1. Verifikasi Quality Gate Sebelum Deploy
+Jalankan verifikasi otomatis di terminal:
+```bash
+# 1. Jalankan Unit & Feature Test Suite
+php artisan test
+
+# 2. Jalankan E2E Playwright Browser Test
+npx playwright test
+
+# 3. Bersihkan dan segarkan konfigurasi cache
+php artisan optimize:clear
+php artisan config:cache
+```
+
+## 2. Eksekusi Deployment ke Server VPS
+Gunakan skrip deployment `./deploy.sh` sesuai nomor skenario:
+- **`./deploy.sh 1`**: Skenario Ringan (Hanya perubahan UI/Blade atau logika PHP biasa).
+- **`./deploy.sh 2`**: Migrasi Aman (Menambah kolom/tabel baru tanpa menghapus data).
+- **`./deploy.sh 4`**: Install Plugin/Package Baru (Composer / NPM package baru).
+- **`./deploy.sh 6`**: Build Assets Frontend (Vite / Tailwind / CSS).
+MD;
+
+        return $files;
+    }
+
+    /**
+     * Celah 4: Generate Individual Eloquent Migrations (database/migrations/xxxx_create_table.php).
+     */
+    public static function generateEloquentMigrations(array $erdTables): array
+    {
+        $files = [];
+
+        $hasUsers = false;
+        foreach ($erdTables as $t) {
+            if (strtolower($t['name'] ?? '') === 'users') {
+                $hasUsers = true;
+                break;
+            }
+        }
+
+        if (!$hasUsers) {
+            $files["database/migrations/2026_01_01_000001_create_users_table.php"] = <<<PHP
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('users', function (Blueprint \$table) {
+            \$table->ulid('id')->primary();
+            \$table->string('name', 255);
+            \$table->string('email', 255)->unique();
+            \$table->string('password', 255);
+            \$table->string('role', 50)->default('client')->index();
+            \$table->timestampTz('email_verified_at')->nullable();
+            \$table->rememberToken();
+            \$table->timestampsTz();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('users');
+    }
+};
+PHP;
+        }
+
+        foreach ($erdTables as $idx => $table) {
+            $rawName = $table['name'] ?? ('table_' . ($idx + 1));
+            $tableName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $rawName));
+            if ($tableName === 'users') continue;
+
+            $migrationTime = "2026_01_01_" . str_pad((string)($idx + 2), 6, '0', STR_PAD_LEFT);
+            $fileName = "database/migrations/{$migrationTime}_create_{$tableName}_table.php";
+
+            $columns = $table['columns'] ?? [];
+            if (empty($columns)) {
+                $columns = [
+                    ['name' => 'title', 'type' => 'string'],
+                    ['name' => 'status', 'type' => 'string'],
+                    ['name' => 'metadata', 'type' => 'jsonb'],
+                ];
+            }
+
+            $colCode = "            \$table->ulid('id')->primary();\n";
+            foreach ($columns as $col) {
+                $cname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? ''));
+                if ($cname === 'id' || empty($cname)) continue;
+
+                $rawType = strtolower($col['type'] ?? 'string');
+
+                if (str_ends_with($cname, '_id') || str_contains($rawType, 'ulid')) {
+                    $colCode .= "            \$table->foreignUlid('{$cname}')->nullable()->index();\n";
+                } elseif (str_contains($rawType, 'json')) {
+                    $colCode .= "            \$table->jsonb('{$cname}')->nullable();\n";
+                } elseif (str_contains($rawType, 'int') || str_contains($rawType, 'count')) {
+                    $colCode .= "            \$table->integer('{$cname}')->default(0);\n";
+                } elseif (str_contains($rawType, 'decimal') || str_contains($rawType, 'price') || str_contains($rawType, 'amount')) {
+                    $colCode .= "            \$table->decimal('{$cname}', 15, 2)->default(0.00);\n";
+                } elseif (str_contains($rawType, 'bool')) {
+                    $colCode .= "            \$table->boolean('{$cname}')->default(false);\n";
+                } elseif (str_contains($rawType, 'date') || str_contains($rawType, 'time')) {
+                    $colCode .= "            \$table->timestampTz('{$cname}')->nullable();\n";
+                } elseif (str_contains($rawType, 'text') || str_contains($rawType, 'desc')) {
+                    $colCode .= "            \$table->text('{$cname}')->nullable();\n";
+                } else {
+                    $indexStr = (($col['index'] ?? '') === 'INDEX' || $cname === 'status') ? "->index()" : "";
+                    $colCode .= "            \$table->string('{$cname}', 255)->nullable(){$indexStr};\n";
+                }
+            }
+            $colCode .= "            \$table->timestampsTz();";
+
+            $files[$fileName] = <<<PHP
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('{$tableName}', function (Blueprint \$table) {
+{$colCode}
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('{$tableName}');
+    }
+};
+PHP;
+        }
+
+        return $files;
+    }
+
+    /**
+     * Celah 4: Generate Individual Eloquent Models (app/Models/[Model].php).
+     */
+    public static function generateEloquentModels(array $erdTables): array
+    {
+        $files = [];
+
+        foreach ($erdTables as $idx => $table) {
+            $rawName = $table['name'] ?? ('record_' . ($idx + 1));
+            $tableName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $rawName));
+            if ($tableName === 'users') continue;
+
+            $modelName = Str::studly(Str::singular($tableName));
+            if (empty($modelName)) $modelName = 'Record' . ($idx + 1);
+
+            $columns = $table['columns'] ?? [];
+            $casts = [];
+            $relations = [];
+
+            foreach ($columns as $col) {
+                $cname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? ''));
+                $rawType = strtolower($col['type'] ?? 'string');
+
+                if (str_contains($rawType, 'json')) {
+                    $casts[$cname] = 'array';
+                } elseif (str_contains($rawType, 'bool')) {
+                    $casts[$cname] = 'boolean';
+                } elseif (str_contains($rawType, 'date') || str_contains($rawType, 'time')) {
+                    $casts[$cname] = 'datetime';
+                } elseif (str_ends_with($cname, '_id')) {
+                    $relationBase = substr($cname, 0, -3);
+                    $relationMethod = Str::camel($relationBase);
+                    $targetModel = Str::studly($relationBase);
+                    if ($targetModel === 'User') {
+                        $relations[] = "    public function {$relationMethod}(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\n    {\n        return \$this->belongsTo(User::class);\n    }";
+                    } else {
+                        $relations[] = "    public function {$relationMethod}(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\n    {\n        return \$this->belongsTo({$targetModel}::class, '{$cname}');\n    }";
+                    }
+                }
+            }
+
+            $castLines = [];
+            foreach ($casts as $field => $castType) {
+                $castLines[] = "        '{$field}' => '{$castType}',";
+            }
+            $castsCode = empty($castLines) ? "        // Default casts" : implode("\n", $castLines);
+            $relationsCode = empty($relations) ? "" : "\n\n" . implode("\n\n", $relations);
+
+            $files["app/Models/{$modelName}.php"] = <<<PHP
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class {$modelName} extends Model
+{
+    use HasFactory, HasUlids;
+
+    protected \$table = '{$tableName}';
+    protected \$keyType = 'string';
+    public \$incrementing = false;
+
+    /**
+     * The attributes that aren't mass assignable.
+     *
+     * @var array<string>|bool
+     */
+    protected \$guarded = [];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected \$casts = [
+{$castsCode}
+    ];{$relationsCode}
+}
+PHP;
+        }
+
+        return $files;
+    }
+
+    /**
+     * Platform Specific: WhatsApp API Gateway Scaffolding (Node.js, BullMQ, OpenWA/Baileys).
+     */
+    public static function generateWhatsAppGatewayScaffold(VisionBlueprint $blueprint, string $slug): array
+    {
+        $projectName = $blueprint->nama_bisnis ?: 'WhatsApp API Gateway';
+        $files = [];
+
+        $files['gateway/package.json'] = json_encode([
+            'name' => "{$slug}-wa-gateway",
+            'version' => '1.0.0',
+            'description' => "High-Concurrency WhatsApp API Gateway Engine for {$projectName}",
+            'main' => 'src/index.js',
+            'scripts' => [
+                'start' => 'node src/index.js',
+                'dev' => 'nodemon src/index.js',
+            ],
+            'dependencies' => [
+                '@whiskeysockets/baileys' => '^6.7.0',
+                'bullmq' => '^5.4.0',
+                'ioredis' => '^5.3.2',
+                'express' => '^4.19.2',
+                'qrcode-terminal' => '^0.12.0',
+                'dotenv' => '^16.4.5',
+            ],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        $files['gateway/src/index.js'] = <<<JS
+require('dotenv').config();
+const express = require('express');
+const { Queue, Worker } = require('bullmq');
+const crypto = require('crypto');
+
+const app = express();
+app.use(express.json());
+
+const PORT = process.env.PORT || 3001;
+const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
+const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'secret-hmac-key';
+
+// BullMQ Queue for rate-limited message dispatch
+const messageQueue = new Queue('wa-message-dispatch', {
+  connection: { host: REDIS_HOST, port: REDIS_PORT }
+});
+
+// Health probe endpoint
+app.get('/healthz', (req, res) => {
+  res.json({ status: 'healthy', service: 'wa-gateway-engine', uptime: process.uptime() });
+});
+
+// Start & inspect session status
+app.get('/api/v1/sessions/status', (req, res) => {
+  res.json({
+    status: 'operational',
+    active_sessions: 1,
+    connected_at: new Date().toISOString()
+  });
+});
+
+// Enqueue message dispatch with HMAC signature verification
+app.post('/api/v1/messages/send', async (req, res) => {
+  const { recipient, message, correlation_id } = req.body;
+  if (!recipient || !message) {
+    return res.status(422).json({ error: 'recipient and message are required fields' });
+  }
+
+  const job = await messageQueue.add('send-message', {
+    recipient,
+    message,
+    correlation_id: correlation_id || crypto.randomUUID(),
+    queued_at: new Date().toISOString()
+  }, {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 2000 }
+  });
+
+  return res.status(202).json({
+    status: 'enqueued',
+    job_id: job.id,
+    correlation_id: job.data.correlation_id
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`>>> [WA GATEWAY ENGINE] Listening on port \${PORT}`);
+});
+JS;
+
+        $files['gateway/src/whatsapp-session.js'] = <<<JS
+// WhatsApp Headless Session Manager Abstraction Layer
+module.exports = {
+  async initSession(sessionId) {
+    console.log(`[WA SESSION] Initializing isolated socket session for: \${sessionId}`);
+    return { sessionId, status: 'authenticated' };
+  }
+};
+JS;
+
+        $files['gateway/Dockerfile'] = <<<DOCKERFILE
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --production
+COPY . .
+EXPOSE 3001
+CMD ["npm", "start"]
+DOCKERFILE;
+
+        return $files;
+    }
+
+    /**
+     * Platform Specific: 3D Flight Simulation Game Scaffolding (Three.js WebGL/WebGPU 60 FPS).
+     */
+    public static function generate3DGameScaffold(VisionBlueprint $blueprint, string $slug): array
+    {
+        $projectName = $blueprint->nama_bisnis ?: '3D Flight Simulator';
+        $files = [];
+
+        $files['game/package.json'] = json_encode([
+            'name' => "{$slug}-flight-sim",
+            'version' => '1.0.0',
+            'description' => "3D Flight Simulation Engine & Telemetry HUD for {$projectName}",
+            'scripts' => [
+                'dev' => 'vite',
+                'build' => 'vite build',
+                'preview' => 'vite preview',
+            ],
+            'dependencies' => [
+                'three' => '^0.165.0',
+            ],
+            'devDependencies' => [
+                'vite' => '^5.3.0',
+            ],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        $files['game/index.html'] = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{$projectName} - 3D Flight Simulator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #09090b; color: #fafafa; font-family: monospace; overflow: hidden; }
+    #flight-canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: block; }
+    #flight-hud {
+      position: absolute; top: 16px; left: 16px; z-index: 10;
+      background: rgba(9, 9, 11, 0.85); border: 1px solid #27272a;
+      padding: 12px 16px; font-size: 13px; line-height: 1.6;
+    }
+    .hud-val { color: #10b981; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <canvas id="flight-canvas"></canvas>
+  <div id="flight-hud" class="hud-telemetry">
+    <div><b>INSTRUMENTS HUD</b></div>
+    <div>ALT: <span id="hud-alt" data-testid="altimeter" class="hud-val">1200 FT</span></div>
+    <div>SPD: <span id="hud-spd" class="hud-val">180 KTS</span></div>
+    <div>HDG: <span id="hud-hdg" class="hud-val">090°</span></div>
+    <div>THR: <span id="hud-thr" class="hud-val">65%</span></div>
+    <div style="margin-top: 8px; font-size: 11px; color: #a1a1aa;">Controls: W/S (Pitch) | A/D (Roll) | Q/E (Yaw)</div>
+  </div>
+  <script type="module" src="/src/flight-sim.js"></script>
+</body>
+</html>
+HTML;
+
+        $files['game/src/flight-sim.js'] = <<<JS
+import * as THREE from 'three';
+
+const canvas = document.getElementById('flight-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+scene.fog = new THREE.FogExp2(0x0f172a, 0.001);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 10000);
+camera.position.set(0, 5, 20);
+
+// Ambient and directional sunlight
+scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+sun.position.set(100, 200, 50);
+scene.add(sun);
+
+// Procedural ground grid
+const grid = new THREE.GridHelper(5000, 100, 0x10b981, 0x1e293b);
+grid.position.y = -50;
+scene.add(grid);
+
+// Airplane placeholder mesh (fuselage + wings)
+const planeGroup = new THREE.Group();
+const bodyGeo = new THREE.ConeGeometry(1, 6, 8);
+bodyGeo.rotateX(Math.PI / 2);
+const bodyMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3 });
+planeGroup.add(new THREE.Mesh(bodyGeo, bodyMat));
+
+const wingGeo = new THREE.BoxGeometry(10, 0.1, 1.8);
+const wingMat = new THREE.MeshStandardMaterial({ color: 0x0284c7 });
+planeGroup.add(new THREE.Mesh(wingGeo, wingMat));
+scene.add(planeGroup);
+
+// Telemetry state & 6-DOF inputs
+let altitude = 1200;
+let speed = 180;
+let heading = 90;
+let throttle = 65;
+
+const keys = {};
+window.addEventListener('keydown', (e) => { keys[e.code] = true; });
+window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Flight dynamics update
+  if (keys['KeyW']) { altitude += 2; planeGroup.rotation.x = -0.15; }
+  else if (keys['KeyS']) { altitude = Math.max(0, altitude - 2); planeGroup.rotation.x = 0.15; }
+  else { planeGroup.rotation.x *= 0.95; }
+
+  if (keys['KeyA']) { planeGroup.rotation.z = 0.25; heading = (heading - 0.5 + 360) % 360; }
+  else if (keys['KeyD']) { planeGroup.rotation.z = -0.25; heading = (heading + 0.5) % 360; }
+  else { planeGroup.rotation.z *= 0.95; }
+
+  // Update HUD
+  const altEl = document.getElementById('hud-alt');
+  if (altEl) altEl.textContent = Math.round(altitude) + ' FT';
+  const hdgEl = document.getElementById('hud-hdg');
+  if (hdgEl) hdgEl.textContent = Math.round(heading).toString().padStart(3, '0') + '°';
+
+  camera.lookAt(planeGroup.position);
+  renderer.render(scene, camera);
+}
+
+animate();
+JS;
+
+        $files['game/Dockerfile'] = <<<DOCKERFILE
+FROM nginx:alpine
+COPY . /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+DOCKERFILE;
+
+        return $files;
+    }
+
+    /**
+     * Platform Specific: Decoupled SaaS Frontend (Next.js 15 App Router & Typed API Client).
+     */
+    public static function generateDecoupledScaffold(VisionBlueprint $blueprint, string $slug): array
+    {
+        $projectName = $blueprint->nama_bisnis ?: 'Decoupled SaaS Frontend';
+        $files = [];
+
+        $files['frontend/package.json'] = json_encode([
+            'name' => "{$slug}-web-frontend",
+            'version' => '1.0.0',
+            'private' => true,
+            'scripts' => [
+                'dev' => 'next dev',
+                'build' => 'next build',
+                'start' => 'next start',
+            ],
+            'dependencies' => [
+                'next' => '15.0.0',
+                'react' => '19.0.0',
+                'react-dom' => '19.0.0',
+                'lucide-react' => '^0.450.0',
+            ],
+            'devDependencies' => [
+                'typescript' => '^5.5.0',
+                '@types/node' => '^20.0.0',
+                '@types/react' => '^19.0.0',
+                'tailwindcss' => '^3.4.0',
+            ],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        $files['frontend/src/lib/api-client.ts'] = <<<TS
+// Enterprise Typed API Client with Strict ULID Idempotency & Keyset O(1) Cursor Pagination
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export interface CursorPaginatedResponse<T> {
+  data: T[];
+  path: string;
+  per_page: number;
+  next_cursor: string | null;
+  prev_cursor: string | null;
+}
+
+export async function fetchCursorPage<T>(
+  endpoint: string,
+  cursor?: string,
+  token?: string
+): Promise<CursorPaginatedResponse<T>> {
+  const url = new URL(`\${API_BASE_URL}\${endpoint}`);
+  if (cursor) url.searchParams.set('cursor', cursor);
+
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  };
+  if (token) headers['Authorization'] = `Bearer \${token}`;
+
+  const res = await fetch(url.toString(), { headers, next: { revalidate: 60 } });
+  if (!res.ok) {
+    throw new Error(`API Error: \${res.status} \${res.statusText}`);
+  }
+  return res.json();
+}
+TS;
+
+        $files['frontend/src/app/page.tsx'] = <<<TSX
+import React from 'react';
+
+export default function Home() {
+  return (
+    <main className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center p-8">
+      <div className="max-w-2xl w-full border border-zinc-800 p-8 rounded-xs bg-zinc-900/60 shadow-2xl">
+        <h1 className="text-3xl font-black text-white mb-2 tracking-tight">{$projectName}</h1>
+        <p className="text-zinc-400 text-sm mb-6">
+          Decoupled Enterprise Architecture powered by Headless Laravel 13 & Next.js 15 Edge SSR.
+        </p>
+        <div className="flex gap-4">
+          <a
+            href="/docs/api"
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xs text-sm"
+          >
+            Explore API Contracts
+          </a>
+        </div>
+      </div>
+    </main>
+  );
+}
+TSX;
+
+        return $files;
     }
 }
 

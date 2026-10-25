@@ -68,13 +68,38 @@ class PrdGeneratorService
             'termin_pembayaran' => $metadata['termin_pembayaran'] ?? 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
         ];
 
-        // Dynamic Decoupled Architecture Detection
+        // Dynamic Decoupled & Multi-Platform Architecture Detection
         $targetPlatformLower = strtolower($extraContext['target_platform'] ?? '');
         $hostingLower = strtolower($extraContext['preferensi_hosting'] ?? '');
         $scaleLower = strtolower($extraContext['skala_pengguna'] ?? '');
         $archPrefLower = strtolower($extraContext['architecture_preference'] ?? '');
+        $corpusCombined = strtolower($businessName . ' ' . $masalah . ' ' . $tujuan . ' ' . $fiturWajib . ' ' . $integrasi . ' ' . $targetPlatformLower);
 
-        $isDecoupledRequested = str_contains($targetPlatformLower, 'decoupled') ||
+        $isGame3D = str_contains($targetPlatformLower, 'webgl') ||
+                    str_contains($targetPlatformLower, 'webgpu') ||
+                    str_contains($targetPlatformLower, 'three.js') ||
+                    str_contains($targetPlatformLower, 'game') ||
+                    str_contains($targetPlatformLower, 'pesawat') ||
+                    str_contains($targetPlatformLower, 'flight') ||
+                    str_contains($corpusCombined, 'game 3d') ||
+                    str_contains($corpusCombined, 'pesawat') ||
+                    str_contains($corpusCombined, 'flight simulator') ||
+                    str_contains($corpusCombined, 'aerodinamika') ||
+                    str_contains($corpusCombined, 'webgl');
+
+        $isApiGateway = str_contains($targetPlatformLower, 'api gateway') ||
+                        str_contains($targetPlatformLower, 'whatsapp gateway') ||
+                        str_contains($targetPlatformLower, 'openwa') ||
+                        str_contains($targetPlatformLower, 'baileys') ||
+                        str_contains($corpusCombined, 'openwa') ||
+                        str_contains($corpusCombined, 'baileys') ||
+                        str_contains($corpusCombined, 'whatsapp api') ||
+                        str_contains($corpusCombined, 'api gateway whatsapp') ||
+                        str_contains($corpusCombined, 'gateway messaging') ||
+                        str_contains($corpusCombined, 'bullmq');
+
+        $isDecoupledRequested = $isGame3D || $isApiGateway ||
+                                str_contains($targetPlatformLower, 'decoupled') ||
                                 str_contains($targetPlatformLower, 'headless') ||
                                 str_contains($targetPlatformLower, 'microservices') ||
                                 str_contains($hostingLower, 'decoupled') ||
@@ -96,85 +121,163 @@ class PrdGeneratorService
         $itemizedEstimation = self::calculateItemizedEstimation($blueprint);
         $aiTelemetry = self::synthesizeAiPrdTelemetry($blueprint, $businessName, $masalah, $tujuan, $preferredAiProvider);
 
-        $techStack = $isDecoupledRequested ? [
-            'frontend' => [
-                'name' => 'Next.js 15 App Router (React 19 + Turbopack) / Nuxt 3',
-                'role' => 'Headless Consumer Web, Edge SSR & ISR, Sub-20ms Global TTFB, SEO Web Vitals Sempurna',
-            ],
-            'mobile_app' => [
-                'name' => 'Flutter 3.x / React Native (Expo SDK 52+)',
-                'role' => 'Native Mobile Client (Android & iOS), Offline-First UI, Background Sync Worker (WorkManager)',
-            ],
-            'backend' => [
-                'name' => 'Headless Laravel 13 RESTful API & Queue Engine',
-                'role' => 'Core Business Logic, Eloquent ORM, Strict ACID Transactions, Event Sourcing & Workers',
-            ],
-            'admin_panel' => [
-                'name' => 'Filament v5 Enterprise Backoffice',
-                'role' => 'Pusat Kendali Operasional Internal, Rekapitulasi Data, RBAC Shield & Metric Widgets',
-            ],
-            'api_contract' => [
-                'name' => 'OpenAPI 3.1 & Scalar Interactive Docs',
-                'role' => 'Kontrak API Terstandarisasi, Autogenerasi TypeScript Types (Zod), Zero Ambiguity Integration',
-            ],
-            'local_database' => [
-                'name' => 'SQLite 3 Encrypted (Drift / Room / WatermelonDB)',
-                'role' => 'Zero-Latency Offline-First Local Storage, Mutation Journal, Client-Side Keyset Cache',
-            ],
-            'database' => [
-                'name' => 'PostgreSQL 16+ Strict ULID & PgBouncer',
-                'role' => 'ACID Relational Storage, JSONB indexing, Keyset Cursor Pagination O(1), Source of Truth',
-            ],
-            'sync_protocol' => [
-                'name' => 'Bi-Directional Delta Sync with Idempotency Key (X-Idempotency-Key)',
-                'role' => 'Deterministic Sync Protocol (/api/v1/sync/push & pull), Last-Write-Wins (LWW) with ULID Timestamps',
-            ],
-            'cache_and_queue' => [
-                'name' => 'Redis 7+ Cluster & Kafka / RabbitMQ Event Broker',
-                'role' => 'Sub-millisecond Token Blacklist, Rate Limiting, & Event-Driven Asynchronous Messaging',
-            ],
-            'infrastructure' => [
-                'name' => 'Cloudflare Pages (Edge Frontend) + Dedicated VPS via Coolify (API Engine)',
-                'role' => '300+ Edge POPs (<20ms global latency) + 100% Resource Isolation Backend + Cloudflare R2 ($0 Egress)',
-            ],
-        ] : [
-            'backend' => [
-                'name' => 'Laravel 13 Modern Monolith',
-                'role' => 'Core Business Engine, Eloquent ORM, RESTful/Action Handlers, Queues',
-            ],
-            'admin_panel' => [
-                'name' => 'Filament v5 Enterprise Suite',
-                'role' => 'Admin Panel, Rapid Data Filtering, Metric Widgets, RBAC Shield',
-            ],
-            'frontend' => [
-                'name' => 'Island Architecture (React 19 + Framer Motion + Tailwind CSS)',
-                'role' => 'Ultra-fluid interactive forms, Canva-style canvas capability, 60fps micro-animations',
-            ],
-            'mobile_app' => [
-                'name' => 'Flutter 3.x / React Native (Cross-Platform iOS & Android)',
-                'role' => 'Native Mobile Client, Offline-First UI, Background Sync Worker (WorkManager)',
-            ],
-            'local_database' => [
-                'name' => 'SQLite (Drift / Room / WatermelonDB) Encrypted',
-                'role' => 'Zero-Latency Offline-First Local Storage, Mutation Journal, Client-Side Keyset Cache',
-            ],
-            'database' => [
-                'name' => 'PostgreSQL 16+ (Strict ULID Schema)',
-                'role' => 'ACID Relational Storage, JSONB indexing, Keyset Cursor Pagination, Central Source of Truth',
-            ],
-            'sync_protocol' => [
-                'name' => 'Bi-Directional Delta Sync with Idempotency Engine',
-                'role' => 'Deterministic Sync Protocol (/api/v1/sync/push & pull), Last-Write-Wins (LWW) with ULID Timestamps, Exponential Backoff Retries',
-            ],
-            'cache_and_queue' => [
-                'name' => 'Redis / Predis Engine',
-                'role' => 'High-throughput Session, Cache, & Async Background Queue Jobs',
-            ],
-            'infrastructure' => [
-                'name' => 'Dedicated VPS via Nixpacks & Docker',
-                'role' => 'Isolasi resource 100%, Cloudflare CDN fronting, Nginx HTTP/2 reverse-proxy',
-            ],
-        ];
+        if ($isGame3D) {
+            $techStack = [
+                'game_engine' => [
+                    'name' => 'Three.js / WebGL 2.0 & WebGPU Hardware Acceleration',
+                    'role' => 'Ultra-fluid 60 FPS client-side 3D rendering loop, custom GLSL atmospheric shaders, and low draw-call batching',
+                ],
+                'physics_engine' => [
+                    'name' => 'Rapier 3D / Cannon.js 6-DOF Aerodynamic Simulator',
+                    'role' => 'Simulasi gaya angkat (lift), gaya hambat (drag), engine thrust, stall dynamics, and responsive pitch/roll/yaw flight physics',
+                ],
+                'asset_pipeline' => [
+                    'name' => 'Cloudflare R2 Object Storage & CDN ($0 Egress)',
+                    'role' => 'Streaming aset model 3D GLTF/GLB terkompresi Draco, heightmap terrain textures, and spatial stereo audio',
+                ],
+                'input_system' => [
+                    'name' => 'HTML5 Gamepad API & Virtual Stick Navigator',
+                    'role' => 'Dukungan kontrol presisi perangkat keras: Keyboard/Mouse, touch screen virtual sticks, serta USB Flight Sticks / HOTAS',
+                ],
+                'backend' => [
+                    'name' => 'Headless Telemetry & Leaderboard API (Laravel 13 / Node.js API)',
+                    'role' => 'Verifikasi skor anti-cheat, sinkronisasi telemetri penerbangan, dan manajemen akun pilot terisolasi',
+                ],
+                'database' => [
+                    'name' => 'PostgreSQL 16+ Strict ULID & Keyset Cursor O(1)',
+                    'role' => 'Leaderboard rekor global, audit log telemetri replay penerbangan, and user flight profiles',
+                ],
+                'realtime_network' => [
+                    'name' => 'WebSockets / Socket.io Real-Time Feeds',
+                    'role' => 'Live leaderboard ranking broadcasts, multiplayer squadron state, and event notifications',
+                ],
+                'infrastructure' => [
+                    'name' => 'Decoupled Edge CDN Frontend + Dedicated High-Speed VPS Backend',
+                    'role' => 'Sub-20ms global asset delivery, zero-lag browser game initialization, and hardened server-side authority',
+                ],
+            ];
+            $architecturePhilosophy = 'Untuk menjamin pengalaman simulator penerbangan 3D yang sangat mulus langsung dari browser web tanpa instalasi software, sistem ini dirancang menggunakan Arsitektur Decoupled 3D WebGL / WebGPU (Three.js 60 FPS Engine & Rapier 6-DOF Physics) yang terhubung dengan Headless Telemetry Backend. Validasi anti-cheat dijalankan di sisi server dengan integritas PostgreSQL Strict ULID dan streaming aset super cepat via Cloudflare R2.';
+        } elseif ($isApiGateway) {
+            $techStack = [
+                'core_engine' => [
+                    'name' => 'Node.js 22 LTS Async High-Concurrency Messaging Runner',
+                    'role' => 'Non-blocking I/O event loop capable of handling thousands of concurrent inbound/outbound messaging sockets',
+                ],
+                'whatsapp_runtime' => [
+                    'name' => 'Headless Isolated WhatsApp Daemon (OpenWA / Baileys Engine)',
+                    'role' => 'Dedicated sandboxed Chromium process per session with automated memory garbage collection and QR pairing intake',
+                ],
+                'queue_broker' => [
+                    'name' => 'Redis 7+ Cluster & BullMQ Distributed Worker Pools',
+                    'role' => 'Asynchronous message buffering, rate limiting jitter, auto-retries with exponential backoff, and SIM ban prevention',
+                ],
+                'webhook_dispatcher' => [
+                    'name' => 'HMAC-SHA256 Cryptographic Webhook Dispatcher',
+                    'role' => 'Sub-millisecond delivery of incoming messages, delivery receipts, and connection events to subscriber endpoints',
+                ],
+                'admin_cockpit' => [
+                    'name' => 'Filament v5 Enterprise Operations Panel',
+                    'role' => 'Pusat kendali operasional, status kesehatan sesi, grafik throughput real-time, kuota tenant, and broadcast campaigns',
+                ],
+                'api_contract' => [
+                    'name' => 'OpenAPI 3.1 & Scalar Interactive Sandbox Documentation',
+                    'role' => 'Living REST API documentation with sandbox testing, Bearer token authentication, and auto-generated client SDKs',
+                ],
+                'database' => [
+                    'name' => 'PostgreSQL 16+ Strict ULID & Keyset Cursor O(1)',
+                    'role' => 'Tenants, API keys, delivery receipts, and contact lists persisted with high-speed indexes and partitioned tables',
+                ],
+                'infrastructure' => [
+                    'name' => 'Multi-Core Dedicated Cloud VPS (min. 8-16GB RAM for Chromium) + Nginx Rate Limiter',
+                    'role' => 'Hardware isolation, dedicated swap space, Nginx reverse proxy with token-bucket rate limiting, and systemd daemons',
+                ],
+            ];
+            $architecturePhilosophy = 'Untuk menghadirkan platform SaaS WhatsApp API Gateway dengan throughput tinggi dan keandalan tingkat enterprise, sistem ini menggunakan arsitektur Decoupled Event-Driven Microservices (Node.js High-Concurrency Engine, OpenWA/Baileys isolated sessions, dan Redis BullMQ). Seluruh pengiriman pesan di-buffer secara asinkron dengan proteksi anti-ban, diverifikasi menggunakan HMAC cryptographic signatures, dan dikelola via Filament v5 Operations Cockpit.';
+        } elseif ($isDecoupledRequested) {
+            $techStack = [
+                'frontend' => [
+                    'name' => 'Next.js 15 App Router (React 19 + Turbopack) / Nuxt 3',
+                    'role' => 'Headless Consumer Web, Edge SSR & ISR, Sub-20ms Global TTFB, SEO Web Vitals Sempurna',
+                ],
+                'mobile_app' => [
+                    'name' => 'Flutter 3.x / React Native (Expo SDK 52+)',
+                    'role' => 'Native Mobile Client (Android & iOS), Offline-First UI, Background Sync Worker (WorkManager)',
+                ],
+                'backend' => [
+                    'name' => 'Headless Laravel 13 RESTful API & Queue Engine',
+                    'role' => 'Core Business Logic, Eloquent ORM, Strict ACID Transactions, Event Sourcing & Workers',
+                ],
+                'admin_panel' => [
+                    'name' => 'Filament v5 Enterprise Backoffice',
+                    'role' => 'Pusat Kendali Operasional Internal, Rekapitulasi Data, RBAC Shield & Metric Widgets',
+                ],
+                'api_contract' => [
+                    'name' => 'OpenAPI 3.1 & Scalar Interactive Docs',
+                    'role' => 'Kontrak API Terstandarisasi, Autogenerasi TypeScript Types (Zod), Zero Ambiguity Integration',
+                ],
+                'local_database' => [
+                    'name' => 'SQLite 3 Encrypted (Drift / Room / WatermelonDB)',
+                    'role' => 'Zero-Latency Offline-First Local Storage, Mutation Journal, Client-Side Keyset Cache',
+                ],
+                'database' => [
+                    'name' => 'PostgreSQL 16+ Strict ULID & PgBouncer',
+                    'role' => 'ACID Relational Storage, JSONB indexing, Keyset Cursor Pagination O(1), Source of Truth',
+                ],
+                'sync_protocol' => [
+                    'name' => 'Bi-Directional Delta Sync with Idempotency Key (X-Idempotency-Key)',
+                    'role' => 'Deterministic Sync Protocol (/api/v1/sync/push & pull), Last-Write-Wins (LWW) with ULID Timestamps',
+                ],
+                'cache_and_queue' => [
+                    'name' => 'Redis 7+ Cluster & Kafka / RabbitMQ Event Broker',
+                    'role' => 'Sub-millisecond Token Blacklist, Rate Limiting, & Event-Driven Asynchronous Messaging',
+                ],
+                'infrastructure' => [
+                    'name' => 'Cloudflare Pages (Edge Frontend) + Dedicated VPS via Coolify (API Engine)',
+                    'role' => '300+ Edge POPs (<20ms global latency) + 100% Resource Isolation Backend + Cloudflare R2 ($0 Egress)',
+                ],
+            ];
+            $architecturePhilosophy = 'Untuk mendukung tim rekayasa multi-disiplin, multi-channel mobile & web apps, serta performa edge global sub-20ms, sistem ini dirancang menggunakan arsitektur Enterprise Decoupled & Headless (Next.js 15 App Router / Nuxt 3, Flutter Mobile Client, dan Headless Laravel 13 RESTful/OpenAPI 3.1). Seluruh data transaksi diorkestrasi dengan PostgreSQL Strict ULID dan protokol sinkronisasi delta dengan proteksi idempotency.';
+        } else {
+            $techStack = [
+                'backend' => [
+                    'name' => 'Laravel 13 Modern Monolith',
+                    'role' => 'Core Business Engine, Eloquent ORM, RESTful/Action Handlers, Queues',
+                ],
+                'admin_panel' => [
+                    'name' => 'Filament v5 Enterprise Suite',
+                    'role' => 'Admin Panel, Rapid Data Filtering, Metric Widgets, RBAC Shield',
+                ],
+                'frontend' => [
+                    'name' => 'Island Architecture (React 19 + Framer Motion + Tailwind CSS)',
+                    'role' => 'Ultra-fluid interactive forms, Canva-style canvas capability, 60fps micro-animations',
+                ],
+                'mobile_app' => [
+                    'name' => 'Flutter 3.x / React Native (Cross-Platform iOS & Android)',
+                    'role' => 'Native Mobile Client, Offline-First UI, Background Sync Worker (WorkManager)',
+                ],
+                'local_database' => [
+                    'name' => 'SQLite (Drift / Room / WatermelonDB) Encrypted',
+                    'role' => 'Zero-Latency Offline-First Local Storage, Mutation Journal, Client-Side Keyset Cache',
+                ],
+                'database' => [
+                    'name' => 'PostgreSQL 16+ (Strict ULID Schema)',
+                    'role' => 'ACID Relational Storage, JSONB indexing, Keyset Cursor Pagination, Central Source of Truth',
+                ],
+                'sync_protocol' => [
+                    'name' => 'Bi-Directional Delta Sync with Idempotency Engine',
+                    'role' => 'Deterministic Sync Protocol (/api/v1/sync/push & pull), Last-Write-Wins (LWW) with ULID Timestamps, Exponential Backoff Retries',
+                ],
+                'cache_and_queue' => [
+                    'name' => 'Redis / Predis Engine',
+                    'role' => 'High-throughput Session, Cache, & Async Background Queue Jobs',
+                ],
+                'infrastructure' => [
+                    'name' => 'Dedicated VPS via Nixpacks & Docker',
+                    'role' => 'Isolasi resource 100%, Cloudflare CDN fronting, Nginx HTTP/2 reverse-proxy',
+                ],
+            ];
+            $architecturePhilosophy = 'Untuk menjamin efisiensi biaya server, ketahanan jangka panjang, dan kecepatan peluncuran (Rapid Time-to-Market), sistem ini dirancang menggunakan arsitektur Modern Monolith (Laravel 13 & Filament PHP) yang Decoupled-Ready. Seluruh tabel bisnis menggunakan Primary Key ULID untuk skalabilitas terdistribusi dan kompatibilitas penuh PostgreSQL.';
+        }
 
         return [
             'meta' => [
@@ -3037,7 +3140,7 @@ PROMPT;
 
         $lower = strtolower($title . ' ' . $desc);
 
-        // 1. Direct match on users table
+        // 1. Direct match on users / auth table
         if (str_contains($lower, 'user') || str_contains($lower, 'pengguna') || str_contains($lower, 'auth') || str_contains($lower, 'login') || str_contains($lower, 'rbac')) {
             foreach ($erdTables as $tbl) {
                 if (($tbl['name'] ?? '') === 'users') {
@@ -3046,7 +3149,7 @@ PROMPT;
             }
         }
 
-        // 2. Direct match on domain table names
+        // 2. Direct exact or singular match on domain table names
         foreach ($erdTables as $tbl) {
             $tName = strtolower($tbl['name'] ?? '');
             if ($tName === 'users' || $tName === 'activity_logs') continue;
@@ -3057,19 +3160,82 @@ PROMPT;
             }
         }
 
-        // 3. Match by partial words
-        $words = preg_split('/[\s_-]+/', $lower);
-        foreach ($erdTables as $tbl) {
-            $tName = strtolower($tbl['name'] ?? '');
-            if ($tName === 'users' || $tName === 'activity_logs') continue;
-            foreach ($words as $w) {
-                if (strlen($w) >= 4 && str_contains($tName, $w)) {
-                    return $tbl;
+        // 3. Technical domain synonym mapping (Anti-Disconnection Bridge)
+        $synonymMap = [
+            'vehicle_check' => ['inspection', 'inspeksi', 'pemeriksaan', 'kondisi', 'qc'],
+            'inspection' => ['vehicle_checks', 'inspections', 'work_orders', 'maintenance_logs', 'servis', 'cek'],
+            'vehicle' => ['vehicles', 'cars', 'fleets', 'armada', 'kendaraan', 'motorcycles', 'truk'],
+            'whatsapp_session' => ['sesi', 'session', 'openwa', 'baileys', 'connection', 'qr_code', 'socket', 'device'],
+            'message_log' => ['message', 'pesan', 'broadcast', 'chat', 'outbox', 'inbox', 'dispatch'],
+            'webhook_subscription' => ['webhook', 'callback', 'event', 'listener', 'subscriber'],
+            'aircraft' => ['plane', 'pesawat', 'flight', 'hangar', 'model', 'aerodinamika'],
+            'flight_mission' => ['mission', 'misi', 'checkpoint', 'course', 'lintasan', 'air_ring'],
+            'leaderboard' => ['score', 'skor', 'rekor', 'ranking', 'papan_peringkat', 'anti_cheat', 'telemetri'],
+            'invoice' => ['tagihan', 'billing', 'bill', 'receipt', 'kwitansi', 'pembayaran', 'payment'],
+            'order' => ['pesanan', 'booking', 'reservasi', 'sewa', 'transaksi'],
+            'dormitory' => ['asrama', 'kamar', 'boarding', 'room', 'dean', 'exeat'],
+            'work_study' => ['kerja_tangan', 'work_study', 'labor', 'timesheet', 'vokasi'],
+            'student' => ['siswa', 'santri', 'murid', 'pelajar', 'student'],
+            'curriculum' => ['lms', 'pembelajaran', 'materi', 'ujian', 'cbt', 'nilai', 'rapor'],
+        ];
+
+        foreach ($synonymMap as $canonical => $synonyms) {
+            $matchesConcept = false;
+            foreach ($synonyms as $syn) {
+                if (str_contains($lower, $syn)) {
+                    $matchesConcept = true;
+                    break;
+                }
+            }
+
+            if ($matchesConcept) {
+                foreach ($erdTables as $tbl) {
+                    $tName = strtolower($tbl['name'] ?? '');
+                    if (str_contains($tName, $canonical) || in_array($tName, $synonyms)) {
+                        return $tbl;
+                    }
                 }
             }
         }
 
-        // 4. Fallback to first domain table
+        // 4. Column attribute matching (Score based on how many columns match feature description)
+        $bestTable = null;
+        $highestScore = 0;
+
+        foreach ($erdTables as $tbl) {
+            $tName = strtolower($tbl['name'] ?? '');
+            if ($tName === 'users' || $tName === 'activity_logs') continue;
+
+            $score = 0;
+            $columns = $tbl['columns'] ?? [];
+            foreach ($columns as $col) {
+                $cName = strtolower($col['name'] ?? '');
+                if (in_array($cName, ['id', 'created_at', 'updated_at', 'deleted_at'])) continue;
+
+                if (str_contains($lower, $cName)) {
+                    $score += 3;
+                }
+            }
+
+            // Word partial matches in table name
+            $words = preg_split('/[\s_-]+/', $lower);
+            foreach ($words as $w) {
+                if (strlen($w) >= 4 && str_contains($tName, $w)) {
+                    $score += 2;
+                }
+            }
+
+            if ($score > $highestScore) {
+                $highestScore = $score;
+                $bestTable = $tbl;
+            }
+        }
+
+        if ($bestTable && $highestScore >= 3) {
+            return $bestTable;
+        }
+
+        // 5. Fallback to first domain table
         foreach ($erdTables as $tbl) {
             $tName = strtolower($tbl['name'] ?? '');
             if ($tName !== 'users' && $tName !== 'activity_logs') {
@@ -4393,6 +4559,124 @@ PROMPT;
         $migration = preg_replace('/["\r\n]+/', '', $extraContext['migrasi_data'] ?? 'Database Baru Bersih');
         $warranty = preg_replace('/["\r\n]+/', '', $extraContext['garansi_sla'] ?? '30 Hari Garansi Bug + Repo Git');
         $payment = preg_replace('/["\r\n]+/', '', $extraContext['termin_pembayaran'] ?? 'Termin Standar 50/50');
+
+        $discoveryData = is_array($blueprint->discovery_data) ? $blueprint->discovery_data : (json_decode($blueprint->discovery_data ?? '[]', true) ?: []);
+        $domainDetected = $discoveryData['meta']['detected_domain'] ?? '';
+        $corpusText = strtolower(($blueprint->nama_bisnis ?? '') . ' ' . ($blueprint->deskripsi_ide ?? '') . ' ' . ($blueprint->masalah_solusi ?? '') . ' ' . ($extraContext['target_platform'] ?? ''));
+
+        $isGame3D = $domainDetected === 'game_3d_simulation' 
+            || str_contains($corpusText, 'pesawat') 
+            || str_contains($corpusText, 'game') 
+            || str_contains($corpusText, 'three.js') 
+            || str_contains($corpusText, 'simulator');
+
+        $isApiGateway = $domainDetected === 'api_gateway_messaging' 
+            || str_contains($corpusText, 'openwa') 
+            || str_contains($corpusText, 'baileys') 
+            || (str_contains($corpusText, 'whatsapp') && (str_contains($corpusText, 'gateway') || str_contains($corpusText, 'api')));
+
+        $isDecoupledRequested = $domainDetected === 'decoupled_saas'
+            || str_contains($corpusText, 'decoupled')
+            || str_contains($corpusText, 'terpisah')
+            || str_contains($corpusText, 'frontend terpisah')
+            || (str_contains($corpusText, 'next.js') && str_contains($corpusText, 'api'));
+
+        if ($isGame3D) {
+            $code = "flowchart TB\n";
+            $code .= "    subgraph Clients[\"1. Client Runtime & 3D Rendering (60 FPS)\"]\n";
+            $code .= "        Canvas3D[\"Three.js WebGL / WebGPU Viewport<br/><small>GLTF Models, PBR Shaders, HUD Telemetry</small>\"]\n";
+            $code .= "        PhysicsLoop[\"Rapier / Cannon Physics Engine<br/><small>6-DOF Flight Dynamics & Collision Mesh</small>\"]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph EdgeAssets[\"2. Global Asset CDN & Object Storage\"]\n";
+            $code .= "        CloudflareCDN[\"Cloudflare Edge CDN<br/><small>Sub-20ms 3D Asset Cache & Brotli</small>\"]\n";
+            $code .= "        R2Bucket[(\"Cloudflare R2 Object Storage<br/><small>GLB Models, Textures, Audio ($0 Egress)</small>\")]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph GameBackend[\"3. Dedicated Game & Telemetry Server\"]\n";
+            $code .= "        WsServer[\"High-Throughput WebSocket Server<br/><small>State Synchronization, Anti-Cheat, Room Lobby</small>\"]\n";
+            $code .= "        ScoreEngine[\"Flight Score & Telemetry Validator<br/><small>Rate Limiter & Input Verification</small>\"]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph DataStorage[\"4. Persistence & Session Broker\"]\n";
+            $code .= "        PgSql[(\"PostgreSQL 16 Engine<br/><small>Strict ULID PK, Pilot Profiles, Leaderboards O(1)</small>\")]\n";
+            $code .= "        Redis[(\"Redis In-Memory Store<br/><small>Active Sessions, Heartbeat & Lobby Cache</small>\")]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph Handover[\"5. Serah Terima & Garansi\"]\n";
+            $code .= "        Repo[\"Private GitHub Repo<br/><small>Three.js Source, Assets Pipeline, Docker</small>\"]\n";
+            $code .= "        SlaNote[\"Garansi Bug: {$warranty}\"]\n";
+            $code .= "    end\n\n";
+            $code .= "    Clients --> EdgeAssets\n";
+            $code .= "    Clients <--> GameBackend\n";
+            $code .= "    GameBackend --> DataStorage\n";
+            $code .= "    GameBackend -.-> Handover\n";
+            return trim($code);
+        }
+
+        if ($isApiGateway) {
+            $code = "flowchart TB\n";
+            $code .= "    subgraph Consumers[\"1. Client Apps & API Subscribers\"]\n";
+            $code .= "        ApiClients[\"External CRM, ERP, E-Commerce<br/><small>RESTful API & OpenAPI 3.1 Contract</small>\"]\n";
+            $code .= "        WebhookReceivers[\"Client Webhook Endpoints<br/><small>HMAC-SHA256 Signed Event Listeners</small>\"]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph IngressSecurity[\"2. Ingress & Cyber Defense\"]\n";
+            $code .= "        Nginx[\"Nginx Reverse Proxy & HTTP/2<br/><small>SSL Termination, Token-Bucket Rate Limiter</small>\"]\n";
+            $code .= "        Waf[\"Cyber Shield & Honeypot<br/><small>IP Whitelisting & Malicious Payload Blocker</small>\"]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph GatewayCore[\"3. {$hosting}\"]\n";
+            $code .= "        NodeEngine[\"Node.js High-Concurrency Engine<br/><small>Session Controller & API Handlers</small>\"]\n";
+            $code .= "        WaWorkers[\"Chromium Sandbox Worker Pool<br/><small>OpenWA / Baileys Isolated Socket Sessions</small>\"]\n";
+            $code .= "        BullQueue[\"BullMQ Distributed Job Queue<br/><small>Anti-Ban Rate Jitter & Auto Retries</small>\"]\n";
+            $code .= "        WebhookDispatcher[\"HMAC Webhook Dispatcher<br/><small>Realtime Delivery Status & Incoming Inbound</small>\"]\n";
+            $code .= "        AdminOps[\"Filament v5 Operations Cockpit<br/><small>Tenant Quotas, QR Codes, Realtime Telemetry</small>\"]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph DataStorage[\"4. Persistence & Event Broker\"]\n";
+            $code .= "        PgSql[(\"PostgreSQL 16 Engine<br/><small>Strict ULID PK, Tenants, Logs, Keyset O(1)</small>\")]\n";
+            $code .= "        Redis[(\"Redis 7+ Cluster<br/><small>BullMQ State, Session Tokens & Rate Limits</small>\")]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph Handover[\"5. Serah Terima & SLA\"]\n";
+            $code .= "        Repo[\"Private GitHub Repo<br/><small>Docker Compose, Node Daemon, Filament Admin</small>\"]\n";
+            $code .= "        SlaNote[\"Garansi Bug: {$warranty}\"]\n";
+            $code .= "    end\n\n";
+            $code .= "    ApiClients --> IngressSecurity\n";
+            $code .= "    IngressSecurity --> NodeEngine\n";
+            $code .= "    NodeEngine --> BullQueue\n";
+            $code .= "    BullQueue --> WaWorkers\n";
+            $code .= "    WaWorkers --> WebhookDispatcher\n";
+            $code .= "    WebhookDispatcher --> WebhookReceivers\n";
+            $code .= "    NodeEngine --> DataStorage\n";
+            $code .= "    AdminOps --> DataStorage\n";
+            $code .= "    GatewayCore -.-> Handover\n";
+            return trim($code);
+        }
+
+        if ($isDecoupledRequested) {
+            $code = "flowchart TB\n";
+            $code .= "    subgraph EdgeFrontend[\"1. Edge Frontend & Consumer Tier\"]\n";
+            $code .= "        WebClient[\"Next.js 15 App Router / Nuxt 3<br/><small>Cloudflare Pages Edge SSR, Sub-20ms TTFB</small>\"]\n";
+            $code .= "        MobileClient[\"Flutter 3.x / React Native App<br/><small>Encrypted SQLite Offline-First & Delta Sync</small>\"]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph ApiIngress[\"2. Ingress & Security Tier\"]\n";
+            $code .= "        ApiGateway[\"Nginx Reverse Proxy & HTTP/2<br/><small>SSL Termination, Token Bucket Rate Limiting</small>\"]\n";
+            $code .= "        OpenApiSpec[\"OpenAPI 3.1 & Scalar Engine<br/><small>Strict Contract Validation & Zod Schema</small>\"]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph BackendCore[\"3. Headless API & Ops ({$hosting})\"]\n";
+            $code .= "        HeadlessApi[\"Headless Laravel 13 REST Engine<br/><small>Strict ACID Transactions, FormRequests & DTOs</small>\"]\n";
+            $code .= "        FilamentOps[\"Filament v5 Enterprise Backoffice<br/><small>Internal Admin Operations & RBAC Shield</small>\"]\n";
+            $code .= "        QueueWorkers[\"Background Queue Workers<br/><small>Async Tasks, Notifications, Webhooks</small>\"]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph Persistence[\"4. Enterprise Storage & Cache Tier\"]\n";
+            $code .= "        PgSql[(\"PostgreSQL 16 Engine<br/><small>Strict ULID PK & Keyset Cursor O(1)</small>\")]\n";
+            $code .= "        Redis[(\"Redis 7+ Cluster<br/><small>Token Blacklist, Cache & Queue Broker</small>\")]\n";
+            $code .= "    end\n\n";
+            $code .= "    subgraph Handover[\"5. Serah Terima & Garansi\"]\n";
+            $code .= "        Repo[\"Private GitHub Repositories<br/><small>Frontend Web Repo + Headless Backend Repo</small>\"]\n";
+            $code .= "        SlaNote[\"Garansi Bug: {$warranty}\"]\n";
+            $code .= "    end\n\n";
+            $code .= "    EdgeFrontend --> ApiIngress\n";
+            $code .= "    ApiIngress --> HeadlessApi\n";
+            $code .= "    HeadlessApi --> Persistence\n";
+            $code .= "    FilamentOps --> Persistence\n";
+            $code .= "    BackendCore -.-> Handover\n";
+            return trim($code);
+        }
 
         $code = "flowchart TB\n";
         $code .= "    subgraph Clients[\"1. Target Platform & Aksesibilitas Perangkat\"]\n";

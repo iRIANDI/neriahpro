@@ -4,14 +4,16 @@ import { Layers, ShieldCheck, ArrowUpRight, MessageCircle, X, ExternalLink, File
 export default function FooterIsland({ 
   settings, 
   featureFlags, 
-  whatsappNumber = '6281260840428', 
+  whatsappNumber = '6281380448253', 
   currentLocale, 
   supportEmail = 'support@neriahpro.com',
-  companyAddress = 'Jl. Jenderal Sudirman Kav. 52-53, SCBD, Jakarta Selatan 12190, Indonesia'
+  companyAddress = 'Gianyar, Bali, Indonesia',
+  ownerName = 'Yoseph Iriandi',
+  ownerTitle = 'Independent Full-Stack Developer & Software Architect'
 }) {
   const currentYear = new Date().getFullYear();
   const effectiveEmail = supportEmail || 'support@neriahpro.com';
-  const cleanWaNumber = (whatsappNumber || '6281260840428').replace(/\D/g, '');
+  const cleanWaNumber = (whatsappNumber || '6281380448253').replace(/\D/g, '');
   const formattedPhone = cleanWaNumber.startsWith('62')
     ? `+62 ${cleanWaNumber.substring(2, 5)}-${cleanWaNumber.substring(5, 9)}-${cleanWaNumber.substring(9)}`
     : `+${cleanWaNumber}`;
@@ -472,24 +474,24 @@ export default function FooterIsland({
           {/* Technical Architecture Standards */}
           <div className="md:col-span-2">
             <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-              {isEn ? 'Architecture' : 'Standar Arsitektur'}
+              {isEn ? 'Developer Skills' : 'Keahlian Rekayasa'}
             </h4>
             <ul className="space-y-2.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>Enterprise Monolith</span>
+                <span>Full-Stack Web Systems</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>Distributed Database</span>
+                <span>PostgreSQL &amp; Strict ULID</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>Optimized Keyset Engine</span>
+                <span>Midtrans API &amp; Webhooks</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>Isolated Dedicated VPS</span>
+                <span>Clean Code &amp; Linux VPS</span>
               </li>
             </ul>
           </div>
@@ -497,9 +499,22 @@ export default function FooterIsland({
           {/* Direct Office Address & Fast Connect */}
           <div className="md:col-span-3">
             <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-              {isEn ? 'Office & Fast Connect' : 'Kantor & Kontak Resmi'}
+              {isEn ? 'Developer & Contact' : 'Identitas & Kontak Resmi'}
             </h4>
             <div className="space-y-3 font-mono text-xs">
+              {/* Owner / Developer Profile */}
+              <div className="pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                <div className="font-bold text-zinc-900 dark:text-zinc-100 text-xs">
+                  {ownerName}
+                </div>
+                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono">
+                  {ownerTitle}
+                </div>
+                <div className="text-[10px] text-zinc-500 font-sans mt-0.5">
+                  {isEn ? 'Individual Merchant / Developer Profile' : 'Profil Usaha Perorangan (Jalur KTP)'}
+                </div>
+              </div>
+
               {/* Physical Office Address */}
               <div className="text-zinc-600 dark:text-zinc-400 flex items-start gap-2 leading-relaxed">
                 <MapPin className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -527,13 +542,13 @@ export default function FooterIsland({
               {/* Service Hours */}
               <div className="text-zinc-500 dark:text-zinc-400 text-[10px] flex items-center gap-2 pt-1 border-t border-zinc-200 dark:border-zinc-800">
                 <Clock className="w-3 h-3 text-zinc-400 shrink-0" />
-                <span>{isEn ? 'Mon - Fri, 09:00 - 18:00 WIB' : 'Senin - Jumat, 09:00 - 18:00 WIB'}</span>
+                <span>{isEn ? 'Mon - Fri, 09:00 - 18:00 WITA' : 'Senin - Jumat, 09:00 - 18:00 WITA'}</span>
               </div>
 
               {/* Action Buttons */}
               <div className="space-y-2 pt-1">
                 <a
-                  href={`https://wa.me/${cleanWaNumber}?text=Halo%20Neriah%20Pro,%20saya%20ingin%20konsultasi%20proyek%20teknologi`}
+                  href={`https://wa.me/${cleanWaNumber}?text=Halo%20Yoseph%20Iriandi,%20saya%20ingin%20konsultasi%20layanan%20pengembangan%20software`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-3 py-2 rounded-none transition w-full justify-center"
@@ -557,7 +572,7 @@ export default function FooterIsland({
         {/* Bottom Legal & Copyright Bar (Toggles Accordion Above) */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-500 dark:text-zinc-400">
           <div>
-            <p>&copy; {currentYear} NERIAH PRO. {isEn ? 'All rights reserved.' : 'Seluruh hak cipta dilindungi undang-undang.'}</p>
+            <p>&copy; {currentYear} NERIAH PRO by {ownerName}. {isEn ? 'Professional Independent Developer Services.' : 'Layanan Rekayasa Software Mandiri.'}</p>
             <div className="flex flex-wrap items-center gap-4 mt-2 text-[11px]">
               <button
                 type="button"

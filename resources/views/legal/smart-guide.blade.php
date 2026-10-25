@@ -430,9 +430,11 @@
     @react('FooterIsland', [
         'settings' => $getSettingVal('footer_links', null),
         'featureFlags' => $featureFlags,
-        'whatsappNumber' => $getSettingVal('company_whatsapp', '6281260840428'),
+        'whatsappNumber' => $getSettingVal('company_whatsapp', '6281380448253'),
         'supportEmail' => $supportEmail,
-        'companyAddress' => $getSettingVal('company_address', 'Jl. Jenderal Sudirman Kav. 52-53, SCBD, Jakarta Selatan 12190, Indonesia'),
+        'companyAddress' => $getSettingVal('company_address', 'Gianyar, Bali, Indonesia'),
+        'ownerName' => $getSettingVal('company_owner_name', 'Yoseph Iriandi'),
+        'ownerTitle' => $getSettingVal('company_owner_title', 'Independent Full-Stack Developer & Software Architect'),
         'currentLocale' => $currentLang,
     ])
 

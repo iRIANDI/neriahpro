@@ -58,26 +58,31 @@ class ManageSettings extends Page implements HasForms
         $dbSettings = CmsGlobalSetting::all()->pluck('value', 'key')->toArray();
 
         $defaults = [
-            'company_whatsapp' => '6281260840428',
+            'company_whatsapp' => '6281380448253',
+            'company_owner_name' => 'Yoseph Iriandi',
+            'company_owner_title' => 'Independent Full-Stack Developer & Software Architect',
+            'company_address' => 'Gianyar, Bali, Indonesia',
+            'business_profile_mode' => 'individual',
+            'service_agreement_title' => 'Developer Service Agreement (Kesepakatan Layanan Pengembang)',
             'app_timezone' => 'Asia/Jakarta',
-            'developer_entity_name' => 'Neriah Pro',
+            'developer_entity_name' => 'Neriah Pro (Yoseph Iriandi)',
             'developer_support_email' => 'support@neriahpro.com',
-            'developer_phone' => '+6281260840428',
-            'developer_location' => 'Jakarta, Indonesia',
-            'developer_pic_name' => 'Yoseph Iriandi Tambunan',
-            'developer_pic_title' => 'Lead Software Architect & Tech Lead',
-            'developer_seal_text' => 'NERIAH PRO VERIFIED ARCHITECT',
+            'developer_phone' => '+6281380448253',
+            'developer_location' => 'Gianyar, Bali, Indonesia',
+            'developer_pic_name' => 'Yoseph Iriandi',
+            'developer_pic_title' => 'Independent Full-Stack Developer & Software Architect',
+            'developer_seal_text' => 'NERIAH PRO INDEPENDENT DEVELOPER',
             'midtrans_terms_mandatory' => true,
-            'midtrans_terms_checkbox_label_id' => 'Saya telah membaca dan menyetujui Syarat & Ketentuan Layanan, Kebijakan Pengembalian Dana, Penanganan Pembayaran Ganda, dan Ketentuan Pembatalan Neriah Pro.',
-            'midtrans_terms_checkbox_label_en' => 'I have read and agree to the Terms of Service, Refund Policy, Double-Payment Protection, and Project Cancellation Terms of Neriah Pro.',
-            'midtrans_terms_content_id' => "1. Lisensi & Hak Cipta: Setiap blueprint dan kode sumber yang telah dilunasi menjadi hak milik penuh klien.\n2. Batasan Revisi: Revisi spesifikasi gratis dibatasi sesuai tier yang dipilih (Spark 2x/bln, Lite 30 hari, Pro 6 bulan, Ultimate 1 tahun).\n3. Penguncian Scope: Setelah uang muka (DP) 50% atau pelunasan terkonfirmasi, ruang lingkup proyek dikunci (scope frozen) untuk menjaga ketepatan waktu sprint engineering.",
-            'midtrans_terms_content_en' => "1. License & Intellectual Property: Blueprints and source code settled in full are 100% owned by the client.\n2. Revision Window: Free AI revisions are limited by tier (Spark 2x/mo, Lite 30 days, Pro 6 months, Ultimate 1 year).\n3. Scope Locking: Once 50% DP or full settlement is confirmed, project scope is frozen to ensure engineering milestone delivery.",
-            'midtrans_refund_policy_id' => "1. Garansi SLA: Paket Turnkey Studio MVP dilindungi 30 Hari Garansi Bug pasca peluncuran resmi.\n2. Jaminan Refund 100%: Pengembalian dana penuh 100% berlaku jika terjadi kegagalan teknis fatal dari pihak Neriah Pro sebelum dimulainya sprint pengembangan.\n3. Non-Refundable Post-Delivery: Karena produk digital dan blueprint arsitektur bersifat kekayaan intelektual langsung pakai, pembayaran yang telah diselesaikan setelah serah terima berkas tidak dapat dikembalikan sepihak.",
-            'midtrans_refund_policy_en' => "1. SLA Warranty: Studio MVP Turnkey packages include a 30-Day Bug Warranty after official deployment.\n2. 100% Refund Guarantee: Full 100% refund applies if critical technical failure occurs on Neriah Pro's side prior to sprint commencement.\n3. Non-Refundable Post-Delivery: Due to the intellectual nature of digital blueprints, fees paid after document delivery are non-refundable for unilateral client cancellations.",
-            'midtrans_double_payment_policy_id' => "1. Deteksi Idempotency: Sistem Neriah Pro mendeteksi setiap transaksi menggunakan ID pesanan unik untuk mencegah duplikasi.\n2. Reversal Otomatis: Jika pelanggan tidak sengaja melakukan transfer ganda melalui gateway bank, sistem otomatis mencatat di Dead Letter Queue (DLQ).\n3. Pengembalian Dana: Kelebihan pembayaran akan diverifikasi dan dikembalikan ke rekening asal dalam 3 - 5 hari kerja tanpa potongan biaya sistem.",
-            'midtrans_double_payment_policy_en' => "1. Idempotency Detection: Neriah Pro utilizes unique order IDs to prevent duplicate transaction charges.\n2. Automated Reversal: If duplicate transfers occur due to bank network retries, the event is trapped in the Dead Letter Queue (DLQ).\n3. Refund Timeline: Excess payments are verified and reimbursed to the source account within 3 - 5 business days with zero deduction.",
-            'midtrans_cancellation_policy_id' => "1. Sebelum Kickoff / DP: Pembatalan pesanan dapat dilakukan kapan saja tanpa penalti biaya.\n2. Pasca Pembayaran DP 50%: Jika klien membatalkan proyek secara sepihak saat sprint pengembangan telah berlangsung, DP yang telah dibayarkan dialokasikan untuk kompensasi jam kerja arsitek (non-refundable), namun seluruh berkas blueprint dan kode yang telah dikerjakan tetap diserahkan kepada klien.",
-            'midtrans_cancellation_policy_en' => "1. Prior to Kickoff / DP: Orders can be cancelled anytime with zero penalty.\n2. Post-DP 50% Kickoff: If the client cancels unilaterally while development sprints are active, the DP is allocated toward incurred engineering hours (non-refundable), while all produced blueprints and source code remain delivered to the client.",
+            'midtrans_terms_checkbox_label_id' => 'Saya telah membaca dan menyetujui Kesepakatan Layanan Developer, Kebijakan Pengembalian Dana, Penanganan Pembayaran Ganda, dan Ketentuan Pembatalan Neriah Pro.',
+            'midtrans_terms_checkbox_label_en' => 'I have read and agree to the Developer Service Agreement, Refund Policy, Double-Payment Protection, and Project Cancellation Terms of Neriah Pro.',
+            'midtrans_terms_content_id' => "1. Lisensi & Hak Pakai: Setiap blueprint dan kode sumber yang telah dilunasi diserahkan hak gunanya secara penuh kepada klien.\n2. Batasan Bantuan Revisi: Bantuan revisi dibatasi sesuai tier yang dipilih (Spark 2x/bln, Lite 30 hari, Pro 6 bulan, Ultimate 1 tahun).\n3. Penguncian Lingkup Kerja: Setelah uang muka (DP) 50% atau pelunasan terkonfirmasi, ruang lingkup pengerjaan disepakati bersama untuk menjamin ketepatan waktu deliverable.",
+            'midtrans_terms_content_en' => "1. License & Deliverables: Blueprints and source code settled in full are 100% transferred to the client.\n2. Revision Window: Revision assistance is scoped by tier (Spark 2x/mo, Lite 30 days, Pro 6 months, Ultimate 1 year).\n3. Scope Agreement: Once 50% DP or full settlement is confirmed, project scope is agreed upon to ensure milestone completion.",
+            'midtrans_refund_policy_id' => "1. Garansi Bug 30 Hari: Paket Pengerjaan Turnkey Studio dilindungi 30 Hari Garansi Bug pasca serah terima.\n2. Jaminan Refund 100%: Pengembalian dana penuh 100% berlaku jika terjadi kendala teknis fatal dari pihak Developer sebelum pengerjaan dimulai.\n3. Kebijakan Produk Digital: Karena produk digital dan blueprint arsitektur bersifat langsung diakses seketika, pembayaran yang telah diselesaikan setelah berkas diunduh tidak dapat dibatalkan sepihak. Pengembalian dana yang disetujui diproses dalam 7–14 hari kerja.",
+            'midtrans_refund_policy_en' => "1. 30-Day Bug Warranty: Turnkey Studio packages include 30-day bug fix warranty after handover.\n2. 100% Refund Guarantee: Full 100% refund applies if critical technical impediment occurs on Developer side prior to work start.\n3. Digital Deliverable Policy: Because digital blueprints are accessed immediately upon payment, fees paid after download are non-refundable for unilateral cancellation. Approved refunds are credited back in 7-14 business days.",
+            'midtrans_double_payment_policy_id' => "1. Deteksi Idempotency: Sistem Neriah Pro mendeteksi setiap transaksi menggunakan ID pesanan unik untuk mencegah duplikasi.\n2. Reversal Otomatis: Jika pelanggan tidak sengaja melakukan transfer ganda melalui gateway bank, sistem otomatis mencatat transaksi berlebih.\n3. Pengembalian Dana: Kelebihan pembayaran akan diverifikasi dan dikembalikan ke rekening asal dalam 3 - 5 hari kerja tanpa potongan biaya sistem.",
+            'midtrans_double_payment_policy_en' => "1. Idempotency Detection: Neriah Pro utilizes unique order IDs to prevent duplicate transaction charges.\n2. Automated Reversal: If duplicate transfers occur due to bank network retries, the event is trapped and audited.\n3. Refund Timeline: Excess payments are verified and reimbursed to the source account within 3 - 5 business days with zero deduction.",
+            'midtrans_cancellation_policy_id' => "1. Sebelum Kickoff / DP: Pembatalan pesanan dapat dilakukan kapan saja tanpa penalti biaya.\n2. Pasca Pembayaran DP 50%: Jika klien membatalkan proyek secara sepihak saat pengerjaan telah berlangsung, DP yang telah dibayarkan dialokasikan untuk kompensasi jam kerja developer, dan seluruh berkas yang telah dikerjakan tetap diserahkan kepada klien.",
+            'midtrans_cancellation_policy_en' => "1. Prior to Kickoff / DP: Orders can be cancelled anytime with zero penalty.\n2. Post-DP 50% Kickoff: If the client cancels unilaterally while development is active, the DP is allocated toward incurred developer hours, while all produced blueprints and source code remain delivered to the client.",
             'ai_default_provider' => 'relayrouter',
             'ai_relayrouter_api_key' => config('ai.providers.relayrouter.api_key', 'sk-Uz4TzEyHYy5PSFvXvgi0guhlrauD6iWofllyoYwFDg1JxlzE'),
             'ai_relayrouter_base_url' => config('ai.providers.relayrouter.base_url', 'https://api.relayrouter.ai/v1'),
@@ -92,26 +97,26 @@ class ManageSettings extends Page implements HasForms
             'feature_enable_cv_keuangan' => true,
             'feature_enable_cv_mock_interview' => true,
             'feature_enable_cv_linkedin_suite' => true,
-            'site_tagline_id' => 'Arsitektur Perangkat Lunak Skala Jutaan Pengguna',
-            'site_tagline_en' => 'Enterprise Software Architecture Operating System',
-            'seo_meta_title_id' => 'neriahpro.com - Digital Services Hub',
-            'seo_meta_title_en' => 'neriahpro.com - Digital Services Hub',
-            'seo_meta_description_id' => 'Jasa arsitektur perangkat lunak skala enterprise, cetak biru PRD 26 parameter, dan kontrak SPK digital.',
-            'seo_meta_description_en' => 'Enterprise software architecture services, 26-parameter PRD blueprints, and digital contracts.',
+            'site_tagline_id' => 'Layanan Pengembangan Software & Arsitektur Sistem Digital Profesional',
+            'site_tagline_en' => 'Professional Software Development & Digital Architecture Services',
+            'seo_meta_title_id' => 'neriahpro.com - Independent Developer & Digital Services',
+            'seo_meta_title_en' => 'neriahpro.com - Independent Developer & Digital Services',
+            'seo_meta_description_id' => 'Layanan rekayasa perangkat lunak mandiri oleh Yoseph Iriandi, cetak biru PRD sistem digital, dan kesepakatan layanan pengembang resmi.',
+            'seo_meta_description_en' => 'Independent software engineering services by Yoseph Iriandi, digital system PRD blueprints, and professional developer service agreements.',
             'seo_schema' => [
                 'organization' => [
                     'type' => 'Organization',
                     'name' => 'Neriah Pro',
-                    'legal_name' => 'Neriah Pro Studio',
+                    'legal_name' => 'Neriah Pro (Yoseph Iriandi)',
                     'url' => 'https://neriahpro.com',
                     'logo' => 'https://neriahpro.com/favicon.ico',
                     'email' => 'support@neriahpro.com',
-                    'telephone' => '+6281260840428',
+                    'telephone' => '+6281380448253',
                     'address' => [
-                        'street' => 'Jakarta Cyber Tower',
-                        'city' => 'Jakarta',
-                        'region' => 'DKI Jakarta',
-                        'postal_code' => '12950',
+                        'street' => 'Gianyar, Bali',
+                        'city' => 'Gianyar',
+                        'region' => 'Bali',
+                        'postal_code' => '80511',
                         'country' => 'ID',
                     ],
                 ],
@@ -277,18 +282,43 @@ class ManageSettings extends Page implements HasForms
                             ->icon('heroicon-m-pencil-square')
                             ->badge('Pihak Kedua')
                             ->schema([
-                                Section::make('Identitas Pihak Kedua (Pengembang Sistem / Studio)')
-                                    ->description('Konfigurasi nama entitas, kontak, dan alamat resmi Neriah Pro yang dicantumkan pada kontrak hukum digital.')
+                                Section::make('Profil Usaha & Kepatuhan Payment Gateway (Jalur Akun KTP / Perorangan)')
+                                    ->description('Konfigurasi identitas pemilik, domisili fisik, dan peran profesional untuk menjamin kepatuhan pendaftaran akun perorangan (KTP) di Midtrans & Bank Acquirer BNI.')
                                     ->schema([
+                                        Select::make('business_profile_mode')
+                                            ->label('Mode Profil Usaha')
+                                            ->options([
+                                                'individual' => 'Usaha Perorangan (Independent Developer / Solo Studio - Jalur KTP)',
+                                                'corporate' => 'Badan Usaha (PT / CV / Corporate Studio)',
+                                            ])
+                                            ->helperText('Pilih "Usaha Perorangan" agar copywriting website selaras dengan verifikasi KTP dan tidak ditolak regulasi perizinan PT/CV.')
+                                            ->default('individual')
+                                            ->required(),
+                                        TextInput::make('company_owner_name')
+                                            ->label('Nama Lengkap Pemilik (Sesuai KTP)')
+                                            ->helperText('Nama individu yang didaftarkan ke Midtrans. Wajib sama persis dengan KTP yang diunggah.')
+                                            ->default('Yoseph Iriandi')
+                                            ->required(),
+                                        TextInput::make('company_owner_title')
+                                            ->label('Titel Profesional / Posisi')
+                                            ->helperText('Contoh: Independent Full-Stack Developer & Software Architect')
+                                            ->default('Independent Full-Stack Developer & Software Architect')
+                                            ->required(),
+                                        TextInput::make('company_address')
+                                            ->label('Alamat Domisili Fisik Lengkap (Sesuai KTP / Usaha)')
+                                            ->helperText('Alamat fisik yang ditampilkan di footer website dan faktur komersial. Wajib sama dengan alamat domisili di dashboard Midtrans.')
+                                            ->default('Gianyar, Bali, Indonesia')
+                                            ->required()
+                                            ->columnSpanFull(),
                                         TextInput::make('developer_entity_name')
-                                            ->label('Nama Entitas Pihak Kedua')
-                                            ->helperText('Nama resmi studio/agensi (cukup "Neriah Pro", belum berbadan hukum PT).')
-                                            ->default('Neriah Pro')
+                                            ->label('Nama Brand Layanan')
+                                            ->helperText('Nama brand layanan (misal "Neriah Pro (Yoseph Iriandi)").')
+                                            ->default('Neriah Pro (Yoseph Iriandi)')
                                             ->required(),
                                         TextInput::make('developer_support_email')
-                                            ->label('Email Resmi Support & Kontrak')
+                                            ->label('Email Dukungan Resmi')
                                             ->email()
-                                            ->helperText('Email resmi untuk korespondensi kontrak dan dokumen hukum.')
+                                            ->helperText('Email resmi untuk korespondensi kontrak dan dokumen pembayaran.')
                                             ->default('support@neriahpro.com')
                                             ->required(),
                                         FusedGroup::make([
@@ -304,7 +334,7 @@ class ManageSettings extends Page implements HasForms
                                                     'md' => 5,
                                                 ]),
                                             TextInput::make('developer_phone_number')
-                                                ->placeholder('81260840428')
+                                                ->placeholder('81380448253')
                                                 ->prefix(fn ($get) => CountryZoneHelper::getDialCode($get('developer_phone_country') ?? 'ID'))
                                                 ->hiddenLabel()
                                                 ->live(onBlur: true)
@@ -333,7 +363,12 @@ class ManageSettings extends Page implements HasForms
                                             }),
                                         TextInput::make('developer_location')
                                             ->label('Domisili / Wilayah Hukum')
-                                            ->default('Jakarta, Indonesia'),
+                                            ->default('Gianyar, Bali, Indonesia'),
+                                        TextInput::make('service_agreement_title')
+                                            ->label('Judul Dokumen Perjanjian Layanan')
+                                            ->helperText('Gunakan "Developer Service Agreement" atau "Kesepakatan Layanan Pengembang" untuk akun perorangan.')
+                                            ->default('Developer Service Agreement (Kesepakatan Layanan Pengembang)')
+                                            ->required(),
                                     ])->columns(2),
 
                                 Section::make('Penanggung Jawab Teknis & Tanda Tangan Developer')
@@ -342,15 +377,15 @@ class ManageSettings extends Page implements HasForms
                                         TextInput::make('developer_pic_name')
                                             ->label('Nama Lengkap Penanggung Jawab (PIC)')
                                             ->helperText('Nama yang dicantumkan di bawah tanda tangan Pihak Kedua.')
-                                            ->default('Yoseph Iriandi Tambunan')
+                                            ->default('Yoseph Iriandi')
                                             ->required(),
                                         TextInput::make('developer_pic_title')
                                             ->label('Jabatan / Peran PIC')
-                                            ->default('Lead Software Architect & Tech Lead')
+                                            ->default('Independent Full-Stack Developer & Software Architect')
                                             ->required(),
                                         TextInput::make('developer_seal_text')
                                             ->label('Teks Segel Digital Korporat')
-                                            ->default('NERIAH PRO VERIFIED ARCHITECT')
+                                            ->default('NERIAH PRO INDEPENDENT DEVELOPER')
                                             ->required()
                                             ->columnSpanFull(),
                                         \App\Support\FilamentCuratorHelper::picker('developer_signature_image', 'signatures', 'Tanda Tangan Digital Developer (Opsi A: Upload Berkas / Curator)')
@@ -373,7 +408,7 @@ class ManageSettings extends Page implements HasForms
                                     ])->columns(2),
 
                                 Section::make('Kepatuhan Midtrans, Syarat & Ketentuan, serta Kebijakan Refund & Double-Payment')
-                                    ->description('Konfigurasi teks persetujuan checkout pembayaran Midtrans Snap, jaminan garansi SLA, penanganan double payment, dan klausul pembatalan dalam 2 bahasa (Tier 1: ID & EN).')
+                                    ->description('Konfigurasi teks persetujuan checkout pembayaran Midtrans Snap, jaminan garansi bug, penanganan double payment, dan klausul pembatalan dalam 2 bahasa (Tier 1: ID & EN).')
                                     ->schema([
                                         Toggle::make('midtrans_terms_mandatory')
                                             ->label('Wajibkan Centang Syarat & Ketentuan di Modal Pembayaran')
@@ -381,45 +416,71 @@ class ManageSettings extends Page implements HasForms
                                             ->default(true),
                                         TextInput::make('midtrans_terms_checkbox_label_id')
                                             ->label('Label Checkbox Persetujuan (Indonesia)')
-                                            ->default('Saya telah membaca dan menyetujui Syarat & Ketentuan Layanan, Kebijakan Pengembalian Dana, Penanganan Pembayaran Ganda, dan Ketentuan Pembatalan Neriah Pro.')
+                                            ->default('Saya telah membaca dan menyetujui Kesepakatan Layanan Developer, Kebijakan Pengembalian Dana, Penanganan Pembayaran Ganda, dan Ketentuan Pembatalan Neriah Pro.')
                                             ->required(),
                                         TextInput::make('midtrans_terms_checkbox_label_en')
                                             ->label('Label Checkbox Persetujuan (English)')
-                                            ->default('I have read and agree to the Terms of Service, Refund Policy, Double-Payment Protection, and Project Cancellation Terms of Neriah Pro.')
+                                            ->default('I have read and agree to the Developer Service Agreement, Refund Policy, Double-Payment Protection, and Project Cancellation Terms of Neriah Pro.')
                                             ->required(),
                                         Textarea::make('midtrans_terms_content_id')
                                             ->label('Syarat & Ketentuan Layanan (Indonesia)')
                                             ->rows(4)
-                                            ->default("1. Lisensi & Hak Cipta: Setiap blueprint dan kode sumber yang telah dilunasi menjadi hak milik penuh klien.\n2. Batasan Revisi: Revisi spesifikasi gratis dibatasi sesuai tier yang dipilih (Spark 2x/bln, Lite 30 hari, Pro 6 bulan, Ultimate 1 tahun).\n3. Penguncian Scope: Setelah uang muka (DP) 50% atau pelunasan terkonfirmasi, ruang lingkup proyek dikunci (scope frozen) untuk menjaga ketepatan waktu sprint engineering."),
+                                            ->default("1. Lisensi & Hak Pakai: Setiap blueprint dan kode sumber yang telah dilunasi diserahkan hak gunanya secara penuh kepada klien.\n2. Batasan Bantuan Revisi: Bantuan revisi dibatasi sesuai tier yang dipilih (Spark 2x/bln, Lite 30 hari, Pro 6 bulan, Ultimate 1 tahun).\n3. Penguncian Lingkup Kerja: Setelah uang muka (DP) 50% atau pelunasan terkonfirmasi, ruang lingkup pengerjaan disepakati bersama untuk menjamin ketepatan waktu deliverable."),
                                         Textarea::make('midtrans_terms_content_en')
                                             ->label('Terms of Service (English)')
                                             ->rows(4)
-                                            ->default("1. License & Intellectual Property: Blueprints and source code settled in full are 100% owned by the client.\n2. Revision Window: Free AI revisions are limited by tier (Spark 2x/mo, Lite 30 days, Pro 6 months, Ultimate 1 year).\n3. Scope Locking: Once 50% DP or full settlement is confirmed, project scope is frozen to ensure engineering milestone delivery."),
+                                            ->default("1. License & Deliverables: Blueprints and source code settled in full are 100% transferred to the client.\n2. Revision Window: Revision assistance is scoped by tier (Spark 2x/mo, Lite 30 days, Pro 6 months, Ultimate 1 year).\n3. Scope Agreement: Once 50% DP or full settlement is confirmed, project scope is agreed upon to ensure milestone completion."),
                                         Textarea::make('midtrans_refund_policy_id')
                                             ->label('Kebijakan Jaminan Garansi & Pengembalian Dana / Refund (Indonesia)')
                                             ->rows(4)
-                                            ->default("1. Garansi SLA: Paket Turnkey Studio MVP dilindungi 30 Hari Garansi Bug pasca peluncuran resmi.\n2. Jaminan Refund 100%: Pengembalian dana penuh 100% berlaku jika terjadi kegagalan teknis fatal dari pihak Neriah Pro sebelum dimulainya sprint pengembangan.\n3. Non-Refundable Post-Delivery: Karena produk digital dan blueprint arsitektur bersifat kekayaan intelektual langsung pakai, pembayaran yang telah diselesaikan setelah serah terima berkas tidak dapat dikembalikan sepihak."),
+                                            ->default("1. Garansi Bug 30 Hari: Paket Pengerjaan Turnkey Studio dilindungi 30 Hari Garansi Bug pasca serah terima.\n2. Jaminan Refund 100%: Pengembalian dana penuh 100% berlaku jika terjadi kendala teknis fatal dari pihak Developer sebelum pengerjaan dimulai.\n3. Kebijakan Produk Digital: Karena produk digital dan blueprint arsitektur bersifat langsung diakses seketika, pembayaran yang telah diselesaikan setelah berkas diunduh tidak dapat dibatalkan sepihak. Pengembalian dana yang disetujui diproses dalam 7–14 hari kerja."),
                                         Textarea::make('midtrans_refund_policy_en')
                                             ->label('Warranty & Refund Policy (English)')
                                             ->rows(4)
-                                            ->default("1. SLA Warranty: Studio MVP Turnkey packages include a 30-Day Bug Warranty after official deployment.\n2. 100% Refund Guarantee: Full 100% refund applies if critical technical failure occurs on Neriah Pro's side prior to sprint commencement.\n3. Non-Refundable Post-Delivery: Due to the intellectual nature of digital blueprints, fees paid after document delivery are non-refundable for unilateral client cancellations."),
+                                            ->default("1. 30-Day Bug Warranty: Turnkey Studio packages include 30-day bug fix warranty after handover.\n2. 100% Refund Guarantee: Full 100% refund applies if critical technical impediment occurs on Developer side prior to work start.\n3. Digital Deliverable Policy: Because digital blueprints are accessed immediately upon payment, fees paid after download are non-refundable for unilateral cancellation. Approved refunds are credited back in 7-14 business days."),
                                         Textarea::make('midtrans_double_payment_policy_id')
                                             ->label('Kebijakan Penanganan Pembayaran Ganda / Double Payment (Indonesia)')
                                             ->rows(4)
-                                            ->default("1. Deteksi Idempotency: Sistem Neriah Pro mendeteksi setiap transaksi menggunakan ID pesanan unik untuk mencegah duplikasi.\n2. Reversal Otomatis: Jika pelanggan tidak sengaja melakukan transfer ganda melalui gateway bank, sistem otomatis mencatat di Dead Letter Queue (DLQ).\n3. Pengembalian Dana: Kelebihan pembayaran akan diverifikasi dan dikembalikan ke rekening asal dalam 3 - 5 hari kerja tanpa potongan biaya sistem."),
+                                            ->default("1. Deteksi Idempotency: Sistem Neriah Pro mendeteksi setiap transaksi menggunakan ID pesanan unik untuk mencegah duplikasi.\n2. Reversal Otomatis: Jika pelanggan tidak sengaja melakukan transfer ganda melalui gateway bank, sistem otomatis mencatat transaksi berlebih.\n3. Pengembalian Dana: Kelebihan pembayaran akan diverifikasi dan dikembalikan ke rekening asal dalam 3 - 5 hari kerja tanpa potongan biaya sistem."),
                                         Textarea::make('midtrans_double_payment_policy_en')
                                             ->label('Double-Payment Anti-Collision Policy (English)')
                                             ->rows(4)
-                                            ->default("1. Idempotency Detection: Neriah Pro utilizes unique order IDs to prevent duplicate transaction charges.\n2. Automated Reversal: If duplicate transfers occur due to bank network retries, the event is trapped in the Dead Letter Queue (DLQ).\n3. Refund Timeline: Excess payments are verified and reimbursed to the source account within 3 - 5 business days with zero deduction."),
+                                            ->default("1. Idempotency Detection: Neriah Pro utilizes unique order IDs to prevent duplicate transaction charges.\n2. Automated Reversal: If duplicate transfers occur due to bank network retries, the event is trapped and audited.\n3. Refund Timeline: Excess payments are verified and reimbursed to the source account within 3 - 5 business days with zero deduction."),
                                         Textarea::make('midtrans_cancellation_policy_id')
                                             ->label('Kebijakan Pembatalan Proyek (Indonesia)')
                                             ->rows(4)
-                                            ->default("1. Sebelum Kickoff / DP: Pembatalan pesanan dapat dilakukan kapan saja tanpa penalti biaya.\n2. Pasca Pembayaran DP 50%: Jika klien membatalkan proyek secara sepihak saat sprint pengembangan telah berlangsung, DP yang telah dibayarkan dialokasikan untuk kompensasi jam kerja arsitek (non-refundable), namun seluruh berkas blueprint dan kode yang telah dikerjakan tetap diserahkan kepada klien."),
+                                            ->default("1. Sebelum Kickoff / DP: Pembatalan pesanan dapat dilakukan kapan saja tanpa penalti biaya.\n2. Pasca Pembayaran DP 50%: Jika klien membatalkan proyek secara sepihak saat pengerjaan telah berlangsung, DP yang telah dibayarkan dialokasikan untuk kompensasi jam kerja developer, dan seluruh berkas yang telah dikerjakan tetap diserahkan kepada klien."),
                                         Textarea::make('midtrans_cancellation_policy_en')
                                             ->label('Project Cancellation Policy (English)')
                                             ->rows(4)
-                                            ->default("1. Prior to Kickoff / DP: Orders can be cancelled anytime with zero penalty.\n2. Post-DP 50% Kickoff: If the client cancels unilaterally while development sprints are active, the DP is allocated toward incurred engineering hours (non-refundable), while all produced blueprints and source code remain delivered to the client."),
+                                            ->default("1. Prior to Kickoff / DP: Orders can be cancelled anytime with zero penalty.\n2. Post-DP 50% Kickoff: If the client cancels unilaterally while development is active, the DP is allocated toward incurred developer hours, while all produced blueprints and source code remain delivered to the client."),
                                     ])->columns(2),
+
+                                Section::make('Panduan Hak Akses & Alur Uji Coba Reviewer Midtrans')
+                                    ->description('Informasi alur publik yang diuji oleh tim verifikator Midtrans dan Bank Acquirer BNI.')
+                                    ->collapsible()
+                                    ->schema([
+                                        Placeholder::make('midtrans_reviewer_guidance')
+                                            ->hiddenLabel()
+                                            ->content(new \Illuminate\Support\HtmlString('
+                                                <div class="space-y-3 text-xs font-mono leading-relaxed text-zinc-700 dark:text-zinc-300">
+                                                    <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100">
+                                                        <strong class="font-bold text-sm block mb-1">✓ APA SAJA YANG DAPAT DIAKSES TIM REVIEWER MIDTRANS:</strong>
+                                                        <ol class="list-decimal ml-4 space-y-1 mt-1 text-[11px]">
+                                                            <li><strong>Katalog Publik & Halaman Utama:</strong> URL <code>https://neriahpro.com</code> dan <code>https://neriahpro.com/pricing</code>.</li>
+                                                            <li><strong>Alur Guest Checkout (Tanpa Wajib Login):</strong> Reviewer dapat memilih paket retail (Rp 99.000 atau Rp 0), mengisi form pemesanan dengan email uji coba, dan langsung memicu pop-up Snap Midtrans.</li>
+                                                            <li><strong>Pilihan Pembayaran (QRIS, VA BNI, Kartu Kredit):</strong> Reviewer menguji pop-up Snap untuk memastikan QRIS dan Virtual Account muncul dengan nominal di bawah batas limit BI Rp 10 Juta.</li>
+                                                            <li><strong>Halaman Kebijakan Hukum di Footer:</strong> Reviewer membuka tautan Terms of Service, Privacy Policy, dan Refund Policy yang memuat nama pemilik (Yoseph Iriandi), SLA refund 7-14 hari kerja, dan alamat fisik (Gianyar, Bali).</li>
+                                                            <li><strong>Invoice Komersial & Bukti Bayar:</strong> Di portal klien <code>/customer/dashboard</code> tanpa jargon Faktur Pajak.</li>
+                                                        </ol>
+                                                    </div>
+                                                    <div class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-100">
+                                                        <strong class="font-bold text-sm block mb-1">⚠️ AREA YANG TIDAK BOLEH DIAKSES REVIEWER MIDTRANS:</strong>
+                                                        <p class="text-[11px]">Panel Admin Backend (<code>/admin</code>) adalah area privat internal yang memuat API Keys (Midtrans Server Key, AI Keys, DB Settings) dan data sensitif pengguna. Reviewer Midtrans <strong>tidak memerlukan dan tidak boleh diberikan</strong> kredensial login ke panel admin.</p>
+                                                    </div>
+                                                </div>
+                                            ')),
+                                    ]),
                             ]),
 
                         Tabs\Tab::make('Multi-AI Model Hub')

@@ -37,7 +37,42 @@ class CmsSeeder extends Seeder
         CmsGlobalSetting::updateOrCreate(
             ['key' => 'company_whatsapp'],
             [
-                'value' => '6281260840428',
+                'value' => '6281380448253',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'company_owner_name'],
+            [
+                'value' => 'Yoseph Iriandi',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'company_owner_title'],
+            [
+                'value' => 'Independent Full-Stack Developer & Software Architect',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'company_address'],
+            [
+                'value' => 'Gianyar, Bali, Indonesia',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'business_profile_mode'],
+            [
+                'value' => 'individual',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'service_agreement_title'],
+            [
+                'value' => 'Developer Service Agreement (Kesepakatan Layanan Pengembang)',
             ]
         );
 

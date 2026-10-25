@@ -201,21 +201,21 @@ export default function HeroIsland({
           {/* Status Pill */}
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase tracking-widest mb-5 rounded-none">
             <span className="w-2 h-2 bg-emerald-500 rounded-none animate-pulse"></span>
-            <span>NERIAH PRO // DUAL-TRACK SOFTWARE ENGINEERING &amp; ARCHITECTURE PLATFORM</span>
+            <span>NERIAH PRO // PROFESSIONAL DEVELOPER SERVICES &amp; ARCHITECTURE</span>
           </div>
 
           {/* Master Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold uppercase tracking-tight leading-[1.08] mb-5 text-zinc-900 dark:text-zinc-50 font-sans">
             {headline || (isEn 
-              ? 'ENTERPRISE SOFTWARE ARCHITECTURE & ENGINEERING PLATFORM.'
-              : 'PUSAT ARSITEKTUR & REKAYASA SISTEM DIGITAL KELAS ENTERPRISE.')}
+              ? 'PROFESSIONAL SOFTWARE ARCHITECTURE & DEVELOPER SERVICES.'
+              : 'LAYANAN ARSITEKTUR & REKAYASA SISTEM DIGITAL PROFESIONAL.')}
           </h1>
 
           {/* Subheadline: Dual-Track Clarification */}
           <p className="text-sm sm:text-base md:text-lg text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-8 max-w-3xl">
             {subheadline || (isEn
-              ? <>Two modern engineering paths: Acquire instant self-service software factory licenses (<strong>Retail</strong>) to deploy with your own team, or build mission-critical systems with our dedicated software engineering studio (<strong>Project Studio</strong>).</>
-              : <>Dua jalur solusi rekayasa modern untuk bisnis dan founder: Beli lisensi arsitektur siap pakai (<strong>Retail</strong>) untuk di-deploy mandiri, atau bangun sistem skala besar bersama tim dedicated engineer kami (<strong>Project Studio</strong>).</>)}
+              ? <>Two practical software engineering paths: Acquire instant self-service blueprint licenses (<strong>Retail</strong>) to build independently, or collaborate directly with an experienced independent full-stack developer (<strong>Project Studio</strong>).</>
+              : <>Dua jalur solusi rekayasa software modern: Beli lisensi cetak biru arsitektur siap pakai (<strong>Retail</strong>) untuk di-deploy mandiri, atau bangun sistem khusus bersama pengembang berpengalaman (<strong>Project Studio</strong>).</>)}
           </p>
 
           {/* Dual Action Primary CTA Buttons */}
@@ -302,8 +302,8 @@ export default function HeroIsland({
                 </h3>
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-5 leading-relaxed">
                   {isEn 
-                    ? 'Targeted for Software Engineers, Solo Founders, CTOs, & Independent Teams who have coding capacity and want battle-tested enterprise architecture instantly.'
-                    : 'Untuk Developer, Solo Founder, CTO, & Tim Teknis Mandiri yang punya kapasitas koding sendiri dan butuh arsitektur kelas enterprise tanpa bikin dari nol.'}
+                    ? 'Targeted for Software Engineers, Solo Founders, and Independent Teams who have coding capacity and want battle-tested digital architecture.'
+                    : 'Untuk Programmer, Solo Founder, dan Tim Mandiri yang punya kapasitas koding sendiri dan butuh cetak biru arsitektur terstruktur.'}
                 </p>
 
                 {/* Price Display */}
@@ -389,11 +389,11 @@ export default function HeroIsland({
                       Rp {umkmPrice}
                     </span>
                     <span className="text-xs font-mono text-zinc-500">
-                      {isEn ? '(UMKM) / Custom Quotation (Enterprise)' : '(UMKM) / Custom Quotation (Enterprise)'}
+                      {isEn ? '(UMKM) / Custom Quotation' : '(UMKM) / Custom Quotation'}
                     </span>
                   </div>
                   <div className="text-[11px] font-mono text-blue-600 dark:text-blue-400 mt-1">
-                    {isEn ? '✓ 50% Milestone Payment & Legally-binding SLA Contract' : '✓ Pembayaran Bertahap DP 50% & Kontrak Digital Bersertifikat'}
+                    {isEn ? '✓ 50% Milestone Payment & Developer Service Agreement' : '✓ Pembayaran Bertahap DP 50% & Kesepakatan Layanan Pengembang'}
                   </div>
                 </div>
 
@@ -926,10 +926,10 @@ export default function HeroIsland({
                         {isEn ? 'INVESTMENT' : 'BIAYA INVESTASI'}
                       </div>
                       <div className="text-lg font-black font-mono text-zinc-900 dark:text-white">
-                        Rp {pricingSettings?.studio_umkm_price || '3.750.000'} <span className="text-xs font-normal text-zinc-500">(UMKM) / Custom Quotation (Enterprise)</span>
+                        Rp {pricingSettings?.studio_umkm_price || '3.750.000'} <span className="text-xs font-normal text-zinc-500">(UMKM) / Custom Quotation</span>
                       </div>
                       <div className="text-[10px] font-mono text-blue-600 dark:text-blue-400 mt-0.5">
-                        {isEn ? 'Staged 50% DP Milestone • SLA Contract' : 'Termin Bertahap DP 50% • Kontrak Legal Bersertifikat'}
+                        {isEn ? 'Staged 50% DP Milestone • Developer Service Agreement' : 'Termin Bertahap DP 50% • Kesepakatan Layanan Pengembang'}
                       </div>
                     </div>
 

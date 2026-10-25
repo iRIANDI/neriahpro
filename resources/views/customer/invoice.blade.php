@@ -1,10 +1,12 @@
 @php
     $isEn = app()->getLocale() === 'en';
-    $companyName = \App\Models\CmsGlobalSetting::getVal('company_name', 'Neriah Pro Digital Services');
-    $companyAddress = \App\Models\CmsGlobalSetting::getVal('company_address', 'Jl. Jenderal Sudirman Kav. 52-53, SCBD, Jakarta Selatan 12190, Indonesia');
-    $companyEmail = \App\Models\CmsGlobalSetting::getVal('developer_support_email', \App\Models\CmsGlobalSetting::getVal('company_email', 'support@neriahpro.com'));
-    $companyPhone = \App\Models\CmsGlobalSetting::getVal('company_whatsapp', '6281260840428');
-    $companyNpwp = \App\Models\CmsGlobalSetting::getVal('company_npwp', '01.234.567.8-012.000');
+    $companyName = \App\Models\CmsGlobalSetting::getVal('developer_entity_name', 'Neriah Pro (Yoseph Iriandi)');
+    $companyOwner = \App\Models\CmsGlobalSetting::getVal('company_owner_name', 'Yoseph Iriandi');
+    $companyOwnerTitle = \App\Models\CmsGlobalSetting::getVal('company_owner_title', 'Independent Full-Stack Developer & Software Architect');
+    $companyAddress = \App\Models\CmsGlobalSetting::getVal('company_address', 'Gianyar, Bali, Indonesia');
+    $companyEmail = \App\Models\CmsGlobalSetting::getVal('developer_support_email', 'support@neriahpro.com');
+    $companyPhone = \App\Models\CmsGlobalSetting::getVal('company_whatsapp', '6281380448253');
+    $companyNpwp = \App\Models\CmsGlobalSetting::getVal('company_npwp', '');
 
     $invoiceNumber = 'INV-' . ($transaction->created_at ? $transaction->created_at->format('Ymd') : date('Ymd')) . '-' . strtoupper(substr($transaction->id, 0, 8));
     $orderRef = $transaction->midtrans_order_id ?: ('NPRO-' . substr($transaction->id, 0, 10));
@@ -109,15 +111,16 @@
                         NERIAH PRO
                     </span>
                     <span class="text-xs font-mono text-zinc-500 font-bold uppercase">
-                        ENGINEERING OS
+                        INDEPENDENT DEVELOPER
                     </span>
                 </div>
                 <h1 class="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
                     {{ $companyName }}
                 </h1>
                 <p class="text-xs text-zinc-600 dark:text-zinc-400 font-sans mt-1 max-w-md leading-relaxed">
-                    {{ $companyAddress }}<br>
-                    <strong>NPWP:</strong> {{ $companyNpwp }} &bull; <strong>Email:</strong> {{ $companyEmail }} &bull; <strong>WA:</strong> +{{ $companyPhone }}
+                    <strong>Owner / Developer:</strong> {{ $companyOwner }} ({{ $companyOwnerTitle }})<br>
+                    <strong>Domisili:</strong> {{ $companyAddress }}<br>
+                    <strong>Email:</strong> {{ $companyEmail }} &bull; <strong>WA:</strong> +{{ $companyPhone }}
                 </p>
             </div>
 

@@ -695,14 +695,14 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     id: 'matrix',
                     num: '03',
                     title: isEn ? 'Comparison Matrix' : 'Matriks Perbandingan',
-                    sub: '10 PILAR',
+                    sub: isEn ? '10 PILLARS' : '10 PILAR',
                     icon: Layers,
                   },
                   {
                     id: 'faq',
                     num: '04',
-                    title: 'FAQ Project OS',
-                    sub: '19 FAQ',
+                    title: isEn ? 'Project OS FAQ' : 'FAQ Project OS',
+                    sub: isEn ? '19 FAQS' : '19 FAQ',
                     icon: HelpCircle,
                   }
                 ].map((tab) => {
@@ -1159,9 +1159,15 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                 : 'Pengerjaan kode produksi turnkey (10 Pilar Software Factory OS) langsung oleh tim Senior Architect Neriah Pro. Dilengkapi kapasitas sprint terisolasi (Anti-Collision), dedicated cloud VPS, dan garansi bug 3 bulan penuh.'}
             </p>
             <div className="inline-flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300">
-              <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">⚡ 100% Kode Turnkey</span>
-              <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">🛡️ Batch Terjadwal (Anti-Collision)</span>
-              <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">🔒 Garansi SLA 3 Bulan</span>
+              <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+                {isEn ? '⚡ 100% Turnkey Code' : '⚡ 100% Kode Turnkey'}
+              </span>
+              <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+                {isEn ? '🛡️ Scheduled Batches (Anti-Collision)' : '🛡️ Batch Terjadwal (Anti-Collision)'}
+              </span>
+              <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+                {isEn ? '🔒 3-Month SLA Warranty' : '🔒 Garansi SLA 3 Bulan'}
+              </span>
             </div>
           </div>
 
@@ -1409,7 +1415,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                       </span>
                     </div>
                     <span className="text-[10px] font-mono px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-black">
-                      SUBSIDI 50%
+                      {isEn ? '50% SUBSIDY' : 'SUBSIDI 50%'}
                     </span>
                   </div>
                   <div className="text-[10px] font-mono text-zinc-500 pt-1 border-t border-zinc-200 dark:border-zinc-800">

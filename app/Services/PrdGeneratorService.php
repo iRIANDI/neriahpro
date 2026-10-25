@@ -4581,6 +4581,42 @@ PROMPT;
             || str_contains($corpusText, 'frontend terpisah')
             || (str_contains($corpusText, 'next.js') && str_contains($corpusText, 'api'));
 
+        $isBioinformatics = $domainDetected === 'bioinformatics_genomics'
+            || str_contains($corpusText, 'crispr')
+            || str_contains($corpusText, 'genom')
+            || str_contains($corpusText, 'dna sequencing')
+            || str_contains($corpusText, 'fasta')
+            || str_contains($corpusText, 'bioinformatika');
+
+        $isFintechLedger = $domainDetected === 'fintech_ledger_banking'
+            || str_contains($corpusText, 'double-entry')
+            || str_contains($corpusText, 'ledger')
+            || str_contains($corpusText, 'core banking')
+            || str_contains($corpusText, 'buku besar')
+            || str_contains($corpusText, 'pembukuan berpasangan');
+
+        $isIotRobotics = $domainDetected === 'iot_telemetry_robotics'
+            || str_contains($corpusText, 'mqtt')
+            || str_contains($corpusText, 'telemetri')
+            || str_contains($corpusText, 'telemetry')
+            || str_contains($corpusText, 'robotik')
+            || str_contains($corpusText, 'drone')
+            || str_contains($corpusText, 'emqx');
+
+        $isAiAgentRag = $domainDetected === 'ai_agent_rag_pipeline'
+            || str_contains($corpusText, 'rag')
+            || str_contains($corpusText, 'vector database')
+            || str_contains($corpusText, 'langgraph')
+            || str_contains($corpusText, 'pgvector')
+            || str_contains($corpusText, 'agentic');
+
+        $isCybersecurity = $domainDetected === 'cybersecurity_siem_zerotrust'
+            || str_contains($corpusText, 'siem')
+            || str_contains($corpusText, 'zero trust')
+            || str_contains($corpusText, 'soc')
+            || str_contains($corpusText, 'honeypot')
+            || str_contains($corpusText, 'threat hunting');
+
         if ($isGame3D) {
             $code = "flowchart TB\n";
             $code .= "    subgraph Clients[\"1. Client Runtime & 3D Rendering (60 FPS)\"]\n";

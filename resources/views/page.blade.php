@@ -137,7 +137,7 @@
     <!-- Breadcrumb (Dynamic, hidden on home) -->
     @php
         $breadcrumbPaths = [
-            ['label' => 'Home', 'url' => '/'],
+            ['label' => app()->getLocale() === 'id' ? 'Beranda' : 'Home', 'url' => '/'],
         ];
         if($page->slug !== 'home') {
             $title = $page->title[app()->getLocale()] ?? $page->title['en'] ?? (is_string($page->title) ? $page->title : 'Neriah Pro');

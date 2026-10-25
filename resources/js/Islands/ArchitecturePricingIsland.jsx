@@ -18,6 +18,7 @@ import {
   CheckCircle2, 
   X, 
   MessageSquare, 
+  MessageCircle,
   Send, 
   Loader2, 
   Clock, 
@@ -70,7 +71,7 @@ export const PACKAGE_REGISTRY = {
   },
   retail_ultimate: {
     id: 'retail_ultimate',
-    name: 'Enterprise Factory OS',
+    name: 'Ultimate Architecture Blueprint',
     category: 'blueprint_self_service',
     execution_model: 'self_service',
     is_paid: true,
@@ -80,10 +81,10 @@ export const PACKAGE_REGISTRY = {
   },
   full_mvp: {
     id: 'full_mvp',
-    name: 'Enterprise Rapid Monolith MVP',
+    name: 'Custom Full Monolith MVP',
     category: 'studio_engineering',
     execution_model: 'studio_contract',
-    is_paid: true,
+    is_paid: false,
     requires_login: false,
     requires_sprint_batch: true,
     requires_kickoff_slot: true,
@@ -1028,7 +1029,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-mono text-[10px] font-black tracking-wider uppercase text-zinc-700 dark:text-zinc-300">
-                    TIER 04 // ENTERPRISE
+                    TIER 04 // ULTIMATE ARCHITECTURE
                   </span>
                   <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[9px] font-black">
                     {formatPillar(isEn ? 'COMPLETE 10-PILLAR OS' : 'LENGKAP 10 PILAR OS')}
@@ -1036,13 +1037,13 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                 </div>
 
                 <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5 font-sans">
-                  {isEn ? 'Enterprise Factory OS' : 'Enterprise Factory OS'}
+                  {isEn ? 'Ultimate Architecture Blueprint OS' : 'Ultimate Architecture Blueprint OS'}
                 </h3>
 
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
                   {isEn 
-                    ? 'Enterprise 10-pillar architecture with Pest & Playwright testing, GitHub Actions CI/CD, Health Probes, and 1-on-1 Architect session.' 
-                    : 'Arsitektur 10-pilar enterprise dengan pengujian Pest & Playwright otomatis, GitHub Actions CI/CD, Health Probes, dan sesi 1-on-1 Arsitek.'}
+                    ? 'Complete 10-pillar architecture with Pest & Playwright automated testing, GitHub Actions CI/CD, Health Probes, and 1-on-1 Architect session.' 
+                    : 'Arsitektur lengkap 10-pilar dengan pengujian Pest & Playwright otomatis, GitHub Actions CI/CD, Health Probes, dan sesi konsultasi 1-on-1 dengan Arsitek.'}
                 </p>
 
                 {/* Compact Price Box */}
@@ -1349,14 +1350,14 @@ const ensureSnapReady = (snapUrl, clientKey) => {
 
               <div>
                 <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 text-center mb-3 font-bold">
-                  {isEn ? '100% Executed by Neriah Pro Team (Zero Freelancer Drama)' : '100% Dikerjakan Neriah Pro sampai Live (Tanpa Drama Freelancer)'}
+                  {isEn ? '100% Executed Directly by Yoseph Iriandi (Zero Junior Subcontracting)' : '100% Dikerjakan Langsung oleh Yoseph Iriandi (Tanpa Lempar ke Junior)'}
                 </div>
                 <div className="space-y-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
                   <button
                     onClick={() => openBookingModal('full_mvp')}
                     className="w-full bg-emerald-500 hover:bg-emerald-400 text-white py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-lg cursor-pointer"
                   >
-                    <span>{isEn ? 'RESERVE SPRINT (50% DP)' : 'RESERVASI PROYEK (DP 50%)'}</span>
+                    <span>{isEn ? 'RESERVE SPRINT & SCOPING SESSION' : 'RESERVASI BATCH SPRINT & SCOPING'}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
@@ -2211,45 +2212,45 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
                       <Clock className="w-3 h-3" />
-                      <span>{isEn ? 'NERIAH PRO STUDIO // MAX 2 PROJECTS / CYCLE' : 'NERIAH PRO STUDIO // MAKSIMAL 2 PROYEK / SIKLUS'}</span>
+                      <span>{isEn ? 'INDEPENDENT DEVELOPER // MAX 2 PROJECTS / CYCLE' : 'PENGEMBANG INDEPENDEN // MAKSIMAL 2 PROYEK / SIKLUS'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'RESERVE SPRINT BATCH & CONTRACT' : 'RESERVASI BATCH SPRINT & KONTRAK MVP'}
+                      {isEn ? 'RESERVE SPRINT BATCH & SCOPING SESSION' : 'RESERVASI BATCH SPRINT & SESI SCOPING'}
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn 
-                        ? 'End-to-end production software engineering executed 100% by Neriah Pro architects and engineers with digital legal contract.'
-                        : 'Pengembangan penuh aplikasi web skala jutaan pengguna yang dikerjakan 100% oleh tim Neriah Pro dengan kontrak hukum digital dan DP 50% terproteksi.'}
+                        ? 'End-to-end production software engineering executed directly by Lead Architect Yoseph Iriandi under Developer Service Agreement.'
+                        : 'Pengembangan penuh sistem web monolit modern yang dikerjakan langsung oleh Senior Architect Yoseph Iriandi dengan Developer Service Agreement dan termin bertahap.'}
                     </p>
                   </>
                 ) : selectedPackage === 'umkm_starter' ? (
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
                       <Sparkles className="w-3 h-3" />
-                      <span>{isEn ? 'NERIAH PRO STUDIO // LOCAL BUSINESS SUBSIDY' : 'NERIAH PRO STUDIO // PROGRAM SUBSIDI UMKM 50%'}</span>
+                      <span>{isEn ? 'INDEPENDENT DEVELOPER // LOCAL BUSINESS SUBSIDY' : 'PENGEMBANG INDEPENDEN // PROGRAM SUBSIDI UMKM 50%'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
                       {isEn ? 'CLAIM 50% SUBSIDY QUOTA' : 'KLAIM KUOTA SUBSIDI 50% (RP 3.750.000)'}
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn 
-                        ? 'Digital transformation system built directly by Neriah Pro. Turnkey ready with Indonesian admin dashboard and payment integration.'
-                        : 'Aplikasi web transaksional yang dibangun langsung oleh tim Neriah Pro sampai live. Termasuk admin dashboard bahasa Indonesia dan payment gateway QRIS.'}
+                        ? 'Digital transformation system built directly by Lead Architect Yoseph Iriandi. Turnkey ready with Indonesian admin dashboard and payment integration.'
+                        : 'Aplikasi web transaksional yang dibangun langsung oleh Yoseph Iriandi sampai live. Termasuk admin dashboard bahasa Indonesia dan payment gateway QRIS.'}
                     </p>
                   </>
                 ) : selectedPackage === 'blueprint_advisory' ? (
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
                       <FileText className="w-3 h-3" />
-                      <span>{isEn ? 'NERIAH PRO STUDIO // ARCHITECTURE ADVISORY' : 'NERIAH PRO STUDIO // JASA ADVISORY BLUEPRINT'}</span>
+                      <span>{isEn ? 'INDEPENDENT DEVELOPER // ARCHITECTURE ADVISORY' : 'PENGEMBANG INDEPENDEN // JASA ADVISORY BLUEPRINT'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
                       {isEn ? 'ORDER ADVISORY BLUEPRINT (RP 2.500.000)' : 'PESAN JASA ADVISORY BLUEPRINT (RP 2.5 JT)'}
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn 
-                        ? 'Receive full 26-parameter PRD, PostgreSQL Strict ULID ERD, and 5-sprint WBS with personal discovery call. Biaya Rp 2.5jt memotong DP 50% if upgrading to Full MVP.'
-                        : 'Dapatkan cetak biru teknis lengkap (PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan WBS 5 Sprint) dengan pendampingan scoping Lead Architect.'}
+                        ? 'Receive full 26-parameter PRD, PostgreSQL Strict ULID ERD, and 5-sprint WBS with personal discovery call. Rp 2.5M fee is 100% credited toward DP if upgrading to Full MVP.'
+                        : 'Dapatkan cetak biru teknis lengkap (PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan WBS 5 Sprint) dengan pendampingan scoping Lead Architect Yoseph Iriandi (Memotong DP 100%).'}
                     </p>
                   </>
                 ) : selectedPackage === 'retail_ultimate' ? (
@@ -2259,7 +2260,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                       <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'Checkout Enterprise Factory OS' : 'Checkout Lisensi Enterprise Factory OS'} (Rp {pricingSettings.retail_ultimate_price || '1.490.000'})
+                      {isEn ? 'Checkout Ultimate Architecture Blueprint' : 'Checkout Lisensi Ultimate Architecture Blueprint'} (Rp {pricingSettings.retail_ultimate_price || '1.490.000'})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn 
@@ -2383,10 +2384,10 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                         href={submittedWaUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full sm:w-auto px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-300 font-mono text-xs font-bold uppercase tracking-wider inline-flex items-center justify-center gap-1.5 border border-zinc-700 rounded-none transition"
+                        className="w-full sm:w-auto px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2 border border-emerald-400 rounded-none transition shadow-lg"
                       >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>{isEn ? 'WhatsApp Help (Optional)' : 'Bantuan WhatsApp (Opsional)'}</span>
+                        <MessageCircle className="w-4 h-4" />
+                        <span>{isEn ? 'CONNECT DIRECTLY ON WHATSAPP →' : 'HUBUNGI LEAD ARCHITECT DI WHATSAPP →'}</span>
                       </a>
                     )}
 
@@ -2429,14 +2430,14 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                       className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-sans"
                       required
                     >
-                      <optgroup label={isEn ? "INSTANT ARCHITECTURAL BLUEPRINT (100% SELF-SERVICE // ZERO NERIAH PRO CODING)" : "INSTANT ARCHITECTURAL BLUEPRINT (100% SELF-SERVICE // TANPA KODING NERIAH PRO)"}>
+                      <optgroup label={isEn ? "INSTANT ARCHITECTURAL BLUEPRINT (100% SELF-SERVICE // ZERO CONSULTANT MARKUP)" : "INSTANT ARCHITECTURAL BLUEPRINT (100% SELF-SERVICE // TANPA BIAYA KONSULTAN)"}>
                         <option value="retail_spark">{isEn ? 'Spark Free Audit (Free / Guest Mode - Monthly Reset)' : 'Spark Free Audit (Rp 0 - Guest Mode / Reset Tiap Bulan)'}</option>
                         <option value="retail_lite">{isEn ? `Starter AI Architect (Rp ${pricingSettings.retail_lite_price || '99.000'} - Login Required)` : `Starter AI Architect (Rp ${pricingSettings.retail_lite_price || '99.000'} - Wajib Login)`}</option>
                         <option value="retail_pro">{isEn ? `Pro Agentic Blueprint (Rp ${pricingSettings.retail_pro_price || '399.000'} - Login Required)` : `Pro Agentic Blueprint (Rp ${pricingSettings.retail_pro_price || '399.000'} - Wajib Login)`}</option>
-                        <option value="retail_ultimate">{isEn ? `Enterprise Factory OS + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Verified Account)` : `Enterprise Factory OS + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Akun Terverifikasi)`}</option>
+                        <option value="retail_ultimate">{isEn ? `Ultimate Architecture Blueprint + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Verified Account)` : `Ultimate Architecture Blueprint + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Akun Terverifikasi)`}</option>
                       </optgroup>
-                      <optgroup label={isEn ? "NERIAH PRO CUSTOM ENGINEERING STUDIO (EXECUTED DIRECTLY BY NERIAH PRO)" : "NERIAH PRO CUSTOM ENGINEERING STUDIO (DIKERJAKAN LANGSUNG OLEH NERIAH PRO)"}>
-                        <option value="full_mvp">{isEn ? 'Enterprise Rapid Monolith MVP (5 Sprints - 50% DP Rp 25,000,000)' : 'Enterprise Rapid Monolith MVP (5 Sprint - DP 50% Rp 25.000.000)'}</option>
+                      <optgroup label={isEn ? "INDEPENDENT DEVELOPER ENGINEERING (EXECUTED DIRECTLY BY YOSEPH IRIANDI)" : "LAYANAN REKAYASA PENGEMBANG INDEPENDEN (DIKERJAKAN LANGSUNG OLEH YOSEPH IRIANDI)"}>
+                        <option value="full_mvp">{isEn ? 'Custom Full Monolith MVP (5 Sprints - Scoping & Custom Quotation)' : 'Custom Full Monolith MVP (5 Sprint - Sesi Scoping & Penawaran Kustom)'}</option>
                         <option value="umkm_starter">{isEn ? 'UMKM Digital Starter (50% Subsidy Program - Rp 3,750,000)' : 'UMKM Digital Starter (Program Subsidi 50% - Rp 3.750.000)'}</option>
                         <option value="blueprint_advisory">{isEn ? 'Blueprint & PRD Architecture Advisory (Rp 2,500,000)' : 'Blueprint & PRD Architecture Advisory (Rp 2.500.000)'}</option>
                       </optgroup>
@@ -2890,7 +2891,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     ) : selectedPackage === 'full_mvp' ? (
                       <>
                         <Clock className="w-4 h-4" />
-                        <span>{isEn ? 'LOCK SPRINT BATCH & REVIEW CONTRACT (DP 50%) →' : 'KUNCI SLOT BATCH & LANJUTKAN KONTRAK DP 50% →'}</span>
+                        <span>{isEn ? 'RESERVE SPRINT BATCH & SCHEDULE SCOPING →' : 'RESERVASI BATCH SPRINT & JADWAL SCOPING →'}</span>
                       </>
                     ) : selectedPackage === 'umkm_starter' ? (
                       <>
@@ -2913,7 +2914,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     </span>
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-500" />
-                      {isEn ? 'Instant Payment (QRIS / VA Midtrans)' : 'Pembayaran Instan QRIS / VA'}
+                      {isEn ? 'Instant Payment (QRIS / VA Midtrans < Rp 10M)' : 'Pembayaran Instan (QRIS / VA Midtrans < Rp 10 Jt)'}
                     </span>
                     <span className="flex items-center gap-1">
                       <FileText className="w-3 h-3 text-emerald-500" />

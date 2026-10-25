@@ -114,4 +114,45 @@ class PricingPageAndLeadInquiryTest extends TestCase
             'is_active' => true,
         ]);
     }
+
+    public function test_full_mvp_inquiry_reserves_sprint_batch_and_does_not_trigger_premature_snap_token()
+    {
+        $payload = [
+            'name' => 'Hendro Wijaya',
+            'company' => 'PT Distribusi Logistik Nusantara',
+            'email' => 'hendro@logistik.id',
+            'country_code' => '+62',
+            'phone' => '81234567899',
+            'package_tier' => 'full_mvp',
+            'sprint_batch' => 'Batch 1 (15 Okt - 25 Nov 2026)',
+            'kickoff_slot' => 'Sesi Pagi (09:00 - 11:30 WIB)',
+            'notes' => 'Sistem monolit ERP logistik skala 50.000 order harian.',
+        ];
+
+        $response = $this->postJson('/api/pricing/inquiry', $payload);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'is_paid_package' => false,
+            'snap_token' => null,
+            'package_tier' => 'full_mvp',
+        ]);
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'lead_id',
+            'whatsapp_url',
+            'is_paid_package',
+        ]);
+
+        $this->assertNotNull($response->json('whatsapp_url'));
+        $this->assertStringContainsString('Yoseph', $response->json('whatsapp_url'));
+
+        $this->assertDatabaseHas('lead_contacts', [
+            'name' => 'Hendro Wijaya',
+            'email' => 'hendro@logistik.id',
+            'status' => 'lead',
+        ]);
+    }
 }

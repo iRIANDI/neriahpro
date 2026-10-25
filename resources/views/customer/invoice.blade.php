@@ -26,10 +26,10 @@
         'retail_spark' => ['name' => 'Paket Retail Spark (Free Idea Audit)', 'desc' => 'Audit ide arsitektur & kelayakan teknis software instant.'],
         'retail_lite' => ['name' => 'Lisensi Retail Lite (Starter AI Architect)', 'desc' => 'Dokumen PRD 26 parameter, skema DDL PostgreSQL Strict ULID, lisensi akses seumur hidup.'],
         'retail_pro' => ['name' => 'Lisensi Retail Pro (Engineering Directives)', 'desc' => 'Seluruh paket Lite + AI Coding Rules (.cursorrules & AGENTS.md), synthetic seeder 100+ baris, docker config.'],
-        'retail_ultimate' => ['name' => 'Lisensi Retail Ultimate (Software Factory OS)', 'desc' => 'Seluruh paket Lite & Pro + Master Starter Repo ZIP (Laravel 13, Filament v5, Livewire 4) + 60m 1-on-1 Call.'],
-        'full_mvp' => ['name' => 'Kontrak Studio: Enterprise Rapid Monolith MVP', 'desc' => 'Pengembangan 100% turnkey tim software engineer Neriah Pro, 5 Sprint pengerjaan, garansi SLA 3 bulan.'],
-        'umkm_starter' => ['name' => 'Kontrak Studio: UMKM Digital Starter', 'desc' => 'Aplikasi web operasional & kasir terpadu, integrasi QRIS otomatis, garansi cloud hosting 1 bulan.'],
-        'blueprint_advisory' => ['name' => 'Neriah Pro Studio: 1-on-1 Architectural Advisory', 'desc' => 'Sesi scoping teknis intensif 60 menit bersama Lead Architect, DDL SQL, WBS 5 Sprint (Memotong DP 50%).'],
+        'retail_ultimate' => ['name' => 'Lisensi Retail: Ultimate Architecture Blueprint', 'desc' => 'Seluruh paket Lite & Pro + Starter Repo 10 Pilar (Laravel 13, Filament v5, Livewire 4) + Sesi 1-on-1 Call.'],
+        'full_mvp' => ['name' => 'Kesepakatan Layanan: Custom Full Monolith MVP', 'desc' => 'Pengembangan 100% turnkey dikerjakan langsung oleh Lead Architect Yoseph Iriandi, 5 Sprint pengerjaan, garansi SLA 3 bulan.'],
+        'umkm_starter' => ['name' => 'Kesepakatan Layanan: UMKM Digital Starter', 'desc' => 'Aplikasi web operasional & kasir terpadu, integrasi QRIS otomatis, garansi cloud hosting 1 bulan.'],
+        'blueprint_advisory' => ['name' => 'Layanan Konsultasi: 1-on-1 Architectural Advisory', 'desc' => 'Sesi scoping teknis intensif 60 menit bersama Lead Architect, DDL SQL, WBS 5 Sprint (Memotong DP 50%).'],
     ];
 
     $resolvedItem = $packageRegistry[$packageTier] ?? [

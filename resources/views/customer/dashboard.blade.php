@@ -1510,7 +1510,7 @@
                             $tierLabel = match($tier) {
                                 'retail_spark', 'spark' => 'Spark Free Audit (Rp 0)',
                                 'retail_pro', 'pro' => 'Pro Agentic Blueprint (Rp 399.000)',
-                                'retail_ultimate', 'ultimate' => 'Enterprise Factory OS (Rp 1.490.000)',
+                                'retail_ultimate', 'ultimate' => 'Ultimate Architecture OS (Rp 1.490.000)',
                                 default => 'Starter AI Architect (Rp 99.000)',
                             };
                             $allowedDays = match($tier) {

@@ -2252,8 +2252,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 $pkgTitle = $isEn ? "Tier 03: Pro Agentic Blueprint (Rp {$proPrice} - Ready to Code)" : "Paket 3: Pro Agentic Blueprint (Rp {$proPrice} - Siap Koding)";
                                 $pkgBadge = 'PRO AGENTIC BLUEPRINT';
                             } elseif ($cleanRt === 'ultimate' || $cleanRt === 'enterprise') {
-                                $pkgTitle = $isEn ? "Tier 04: Enterprise Factory OS (Rp {$ultimatePrice} - Complete 10 Pillars)" : "Paket 4: Enterprise Factory OS (Rp {$ultimatePrice} - Lengkap 10 Pilar)";
-                                $pkgBadge = 'ENTERPRISE FACTORY OS';
+                                $pkgTitle = $isEn ? "Tier 04: Ultimate Architecture OS (Rp {$ultimatePrice} - Complete 10 Pillars)" : "Paket 4: Ultimate Architecture OS (Rp {$ultimatePrice} - Lengkap 10 Pilar)";
+                                $pkgBadge = 'ULTIMATE ARCHITECTURE OS';
                             }
                         } elseif ($selectedVelocityMeta) {
                             if ($selectedVelocityMeta === 'fast_track' || str_contains($selectedVelocityMeta, 'fast') || str_contains($selectedVelocityMeta, 'swarm')) {

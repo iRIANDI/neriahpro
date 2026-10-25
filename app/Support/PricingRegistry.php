@@ -60,7 +60,7 @@ class PricingRegistry
         ],
         self::TIER_RETAIL_ULTIMATE => [
             'id' => self::TIER_RETAIL_ULTIMATE,
-            'name' => 'Ultimate Advisory',
+            'name' => 'Ultimate Architecture Blueprint',
             'category' => 'blueprint_self_service',
             'execution_model' => 'self_service',
             'is_paid' => true,
@@ -72,14 +72,14 @@ class PricingRegistry
         ],
         self::TIER_FULL_MVP => [
             'id' => self::TIER_FULL_MVP,
-            'name' => 'Enterprise Rapid Monolith MVP',
+            'name' => 'Custom Full Monolith MVP',
             'category' => 'studio_engineering',
             'execution_model' => 'studio_contract',
-            'is_paid' => true,
+            'is_paid' => false,
             'requires_login' => false,
             'requires_sprint_batch' => true,
             'requires_kickoff_slot' => true,
-            'default_price' => 25000000,
+            'default_price' => 0,
             'setting_key' => null,
         ],
         self::TIER_UMKM_STARTER => [

@@ -1719,7 +1719,7 @@ class BlueprintController extends Controller
         }
 
         $finalAmount = max(0, $basePrice - $discountAmount);
-        $isPaidPackage = ($finalAmount > 0 && $packageName !== 'retail_spark');
+        $isPaidPackage = ($finalAmount > 0 && $packageName !== 'retail_spark' && ($packageMeta['is_paid'] ?? true));
 
         $snapResponse = null;
         $orderId = null;
@@ -1818,7 +1818,7 @@ class BlueprintController extends Controller
             $waLines[] = "📧 *Email Terdaftar:* " . $validated['email'];
             $waLines[] = "📱 *WhatsApp:* " . $cleanPhone;
         } else {
-            $waLines[] = "Halo Lead Architect Neriah Pro, saya *{$validated['name']}*" . (!empty($company) ? " dari *{$company}*" : "") . ".";
+            $waLines[] = "Halo Mas Yoseph Iriandi (Lead Architect Neriah Pro), saya *{$validated['name']}*" . (!empty($company) ? " dari *{$company}*" : "") . ".";
             $waLines[] = "Saya mengonfirmasi reservasi paket: *{$displayPackage}*" . ($orderId ? " (Ref: {$orderId})" : "");
 
             if ($sprintBatch) {
@@ -1846,7 +1846,9 @@ class BlueprintController extends Controller
 
         $successMsg = $isRetail
             ? 'Pesanan lisensi digital mandiri Anda telah diproses. Sesi pembayaran Midtrans resmi telah dibuka.'
-            : 'Reservasi jadwal & paket Anda telah diproses. Sesi pembayaran Midtrans resmi telah disiapkan.';
+            : ($isPaidPackage
+                ? 'Reservasi jadwal & paket Anda telah diproses. Sesi pembayaran Midtrans resmi telah disiapkan.'
+                : 'Reservasi jadwal sprint & sesi scoping Anda telah dicatat. Lead Architect Yoseph Iriandi akan segera menghubungi Anda untuk koordinasi teknis.');
 
         return response()->json([
             'success' => true,

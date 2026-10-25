@@ -154,6 +154,8 @@
         'companyAddress' => $getSettingVal('company_address', 'Gianyar, Bali, Indonesia'),
         'ownerName' => $getSettingVal('company_owner_name', 'Yoseph Iriandi'),
         'ownerTitle' => $getSettingVal('company_owner_title', 'Independent Full-Stack Developer & Software Architect'),
+        'whatsappTemplateId' => $getSettingVal('company_whatsapp_template_id', 'Halo Yoseph Iriandi, saya ingin konsultasi terkait layanan pengembangan software dan arsitektur digital di Neriah Pro.'),
+        'whatsappTemplateEn' => $getSettingVal('company_whatsapp_template_en', 'Hello Yoseph Iriandi, I would like to inquire about software development and digital architecture services at Neriah Pro.'),
         'currentLocale' => $currentLang,
     ])
 

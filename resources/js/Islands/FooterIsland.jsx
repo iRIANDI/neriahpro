@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, ShieldCheck, ArrowUpRight, MessageCircle, X, ExternalLink, FileText, Lock, RefreshCcw, MapPin, Mail, Phone, Clock } from 'lucide-react';
+import { Layers, ShieldCheck, ArrowUpRight, MessageCircle, X, ExternalLink, FileText, Lock, RefreshCcw, MapPin, Mail, Clock } from 'lucide-react';
 
 export default function FooterIsland({ 
   settings, 
   featureFlags, 
   whatsappNumber = '6281380448253', 
+  whatsappTemplateId = 'Halo Yoseph Iriandi, saya ingin konsultasi terkait layanan pengembangan software dan arsitektur digital di Neriah Pro.',
+  whatsappTemplateEn = 'Hello Yoseph Iriandi, I would like to inquire about software development and digital architecture services at Neriah Pro.',
   currentLocale, 
   supportEmail = 'support@neriahpro.com',
   companyAddress = 'Gianyar, Bali, Indonesia',
@@ -25,14 +27,13 @@ export default function FooterIsland({
   const formattedPhone = cleanWaNumber.startsWith('62')
     ? `+62 ${cleanWaNumber.substring(2, 5)} ${cleanWaNumber.substring(5, 9)} ${cleanWaNumber.substring(9)}`
     : `+${cleanWaNumber}`;
-  const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
-  const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
-  const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
-  const isContractEnabled = featureFlags?.enable_digital_contract !== false;
-  const isClientOnboardingEnabled = featureFlags?.enable_client_onboarding !== false;
-  const hasAnyPillar = isBlueprintEnabled || isCvProEnabled || isContractEnabled || isClientOnboardingEnabled;
 
   const isEn = currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
+
+  const waMessage = isEn
+    ? (whatsappTemplateEn || 'Hello Yoseph Iriandi, I would like to inquire about software development and digital architecture services at Neriah Pro.')
+    : (whatsappTemplateId || 'Halo Yoseph Iriandi, saya ingin konsultasi terkait layanan pengembangan software dan arsitektur digital di Neriah Pro.');
+  const waChatUrl = `https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(waMessage)}`;
 
   // State for in-page Legal Policies Accordion above footer
   const [openPolicyTab, setOpenPolicyTab] = useState(null); // 'terms' | 'privacy' | 'refund' | null
@@ -539,11 +540,20 @@ export default function FooterIsland({
                 </a>
               </div>
 
-              {/* Explicit Phone / WhatsApp Number */}
+              {/* Official WhatsApp Contact Link */}
               <div className="text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <a href={`tel:+${cleanWaNumber}`} className="font-mono font-bold text-zinc-900 dark:text-zinc-100 hover:text-emerald-500 transition-colors text-xs">
-                  {formattedPhone}
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <a 
+                  href={waChatUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  title={isEn ? 'Chat via WhatsApp (+62 813 8044 8253)' : 'Hubungi via WhatsApp (+62 813 8044 8253)'}
+                  className="font-mono font-bold text-zinc-900 dark:text-zinc-100 hover:text-emerald-500 transition-colors text-xs flex items-center gap-1.5 group"
+                >
+                  <span>{formattedPhone}</span>
+                  <span className="text-[10px] font-sans font-semibold px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 rounded-none group-hover:border-emerald-500 transition-colors">
+                    WhatsApp
+                  </span>
                 </a>
               </div>
 
@@ -556,7 +566,7 @@ export default function FooterIsland({
               {/* Action Buttons */}
               <div className="space-y-2 pt-1">
                 <a
-                  href={`https://wa.me/${cleanWaNumber}?text=Halo%20Yoseph%20Iriandi,%20saya%20ingin%20konsultasi%20layanan%20pengembangan%20software`}
+                  href={waChatUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-3 py-2 rounded-none transition w-full justify-center"

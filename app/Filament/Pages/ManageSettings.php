@@ -59,6 +59,8 @@ class ManageSettings extends Page implements HasForms
 
         $defaults = [
             'company_whatsapp' => '6281380448253',
+            'company_whatsapp_template_id' => 'Halo Yoseph Iriandi, saya ingin konsultasi terkait layanan pengembangan software dan arsitektur digital di Neriah Pro.',
+            'company_whatsapp_template_en' => 'Hello Yoseph Iriandi, I would like to inquire about software development and digital architecture services at Neriah Pro.',
             'company_owner_name' => 'Yoseph Iriandi',
             'company_owner_title' => 'Independent Full-Stack Developer & Software Architect',
             'company_address' => 'Gianyar, Bali, Indonesia',
@@ -247,6 +249,20 @@ class ManageSettings extends Page implements HasForms
                                             'Pilih zona negara (240+ negara) dan masukkan nomor lokal tanpa awalan 0. Format E.164 internasional otomatis tersinkron: ' . $badge
                                         );
                                     }),
+
+                                TextInput::make('company_whatsapp_template_id')
+                                    ->label('Template Chat WhatsApp Otomatis (Bahasa Indonesia)')
+                                    ->helperText('Teks otomatis saat calon klien mengklik nomor kontak atau tombol WhatsApp di mode bahasa Indonesia.')
+                                    ->default('Halo Yoseph Iriandi, saya ingin konsultasi terkait layanan pengembangan software dan arsitektur digital di Neriah Pro.')
+                                    ->columnSpanFull()
+                                    ->required(),
+
+                                TextInput::make('company_whatsapp_template_en')
+                                    ->label('Template Chat WhatsApp Otomatis (English)')
+                                    ->helperText('Auto pre-filled message when visitors click the contact number or WhatsApp button on English mode.')
+                                    ->default('Hello Yoseph Iriandi, I would like to inquire about software development and digital architecture services at Neriah Pro.')
+                                    ->columnSpanFull()
+                                    ->required(),
 
                                 Select::make('app_timezone')
                                     ->label('Master Timezone (UTC Offset)')

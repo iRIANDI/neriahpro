@@ -56,6 +56,20 @@ class CmsSeeder extends Seeder
         );
 
         CmsGlobalSetting::updateOrCreate(
+            ['key' => 'company_whatsapp_template_id'],
+            [
+                'value' => 'Halo Yoseph Iriandi, saya ingin konsultasi terkait layanan pengembangan software dan arsitektur digital di Neriah Pro.',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'company_whatsapp_template_en'],
+            [
+                'value' => 'Hello Yoseph Iriandi, I would like to inquire about software development and digital architecture services at Neriah Pro.',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
             ['key' => 'developer_phone'],
             [
                 'value' => '+6281380448253',

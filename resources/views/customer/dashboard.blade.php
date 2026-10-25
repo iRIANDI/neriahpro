@@ -735,7 +735,7 @@
                         + {{ $isEn ? 'NEW BLUEPRINT' : 'BUAT PROYEK BARU' }}
                     </a>
                     <a 
-                        href="https://wa.me/{{ $whatsappNumber }}?text={{ rawurlencode('Halo Lead Architect Neriah Pro, saya ingin mendiskusikan progres proyek di dashboard pelanggan kami.') }}"
+                        href="https://wa.me/{{ $whatsappNumber }}?text={{ rawurlencode($isEn ? 'Hello Yoseph Iriandi, I would like to discuss our project progress in the customer dashboard.' : 'Halo Yoseph Iriandi, saya ingin mendiskusikan progres proyek di dashboard pelanggan kami.') }}"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="px-4 py-2 bg-zinc-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-mono text-xs font-bold uppercase tracking-wider transition rounded-none border border-zinc-700"

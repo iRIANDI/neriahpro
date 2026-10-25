@@ -1455,7 +1455,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   </button>
 
                   <a
-                    href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Halo Lead Architect Neriah Pro, saya ingin konsultasi mengenai Program Subsidi UMKM Digital Starter.')}`}
+                    href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(isEn ? 'Hello Yoseph Iriandi, I would like to consult regarding the Digital Starter program at Neriah Pro.' : 'Halo Yoseph Iriandi, saya ingin konsultasi mengenai Program Subsidi UMKM Digital Starter di Neriah Pro.')}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
@@ -2163,7 +2163,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
             </button>
 
             <a
-              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Halo Lead Architect Neriah Pro, saya ingin mendiskusikan kebutuhan arsitektur dan pengembangan software kami.')}`}
+              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(isEn ? 'Hello Yoseph Iriandi, I would like to discuss our software architecture and development requirements at Neriah Pro.' : 'Halo Yoseph Iriandi, saya ingin mendiskusikan kebutuhan arsitektur dan pengembangan software kami di Neriah Pro.')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 py-3 px-6 font-mono text-xs font-bold uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2"

@@ -178,12 +178,12 @@ class ManageSettings extends Page implements HasForms
             }
         }
 
-        $waParsed = CountryZoneHelper::splitPhone($settings['company_whatsapp'] ?? '6281260840428');
+        $waParsed = CountryZoneHelper::splitPhone($settings['company_whatsapp'] ?? '6281380448253');
         $settings['company_whatsapp_country'] = $settings['company_whatsapp_country'] ?? $waParsed['iso'];
         $settings['company_whatsapp_number'] = $settings['company_whatsapp_number'] ?? $waParsed['local_number'];
         $settings['company_whatsapp'] = $waParsed['full_e164'];
 
-        $devParsed = CountryZoneHelper::splitPhone($settings['developer_phone'] ?? '+6281260840428');
+        $devParsed = CountryZoneHelper::splitPhone($settings['developer_phone'] ?? '+6281380448253');
         $settings['developer_phone_country'] = $settings['developer_phone_country'] ?? $devParsed['iso'];
         $settings['developer_phone_number'] = $settings['developer_phone_number'] ?? $devParsed['local_number'];
         $settings['developer_phone'] = $devParsed['formatted'];
@@ -218,7 +218,7 @@ class ManageSettings extends Page implements HasForms
                                             'md' => 5,
                                         ]),
                                     TextInput::make('company_whatsapp_number')
-                                        ->placeholder('81260840428')
+                                        ->placeholder('81380448253')
                                         ->prefix(fn ($get) => CountryZoneHelper::getDialCode($get('company_whatsapp_country') ?? 'ID'))
                                         ->hiddenLabel()
                                         ->required()
@@ -1247,20 +1247,37 @@ class ManageSettings extends Page implements HasForms
         if (!empty($data['company_whatsapp_number']) || !empty($data['company_whatsapp_country'])) {
             $country = $data['company_whatsapp_country'] ?? 'ID';
             $number = $data['company_whatsapp_number'] ?? '';
+            $parsed = CountryZoneHelper::splitPhone($number, $country);
+            $country = $parsed['iso'] ?: $country;
+            $cleanNumber = $parsed['local_number'];
             $dial = CountryZoneHelper::getDialCode($country);
             $cleanDial = preg_replace('/\D/', '', $dial);
-            $cleanNumber = CountryZoneHelper::cleanLocalNumber($number);
+            $data['company_whatsapp_country'] = $country;
+            $data['company_whatsapp_number'] = $cleanNumber;
             $data['company_whatsapp'] = $cleanDial . $cleanNumber;
         } elseif (!empty($data['company_whatsapp'])) {
-            $data['company_whatsapp'] = preg_replace('/\D/', '', $data['company_whatsapp']);
+            $parsed = CountryZoneHelper::splitPhone($data['company_whatsapp']);
+            $data['company_whatsapp'] = $parsed['full_e164'];
+            $data['company_whatsapp_country'] = $parsed['iso'];
+            $data['company_whatsapp_number'] = $parsed['local_number'];
         }
 
         if (!empty($data['developer_phone_number']) || !empty($data['developer_phone_country'])) {
             $country = $data['developer_phone_country'] ?? 'ID';
             $number = $data['developer_phone_number'] ?? '';
+            $parsed = CountryZoneHelper::splitPhone($number, $country);
+            $country = $parsed['iso'] ?: $country;
+            $cleanNumber = $parsed['local_number'];
             $dial = CountryZoneHelper::getDialCode($country);
-            $cleanNumber = CountryZoneHelper::cleanLocalNumber($number);
+            $data['developer_phone_country'] = $country;
+            $data['developer_phone_number'] = $cleanNumber;
             $data['developer_phone'] = $dial . $cleanNumber;
+        }
+
+        if (isset($data['seo_schema']) && is_array($data['seo_schema']) && !empty($data['company_whatsapp'])) {
+            if (isset($data['seo_schema']['organization']) && is_array($data['seo_schema']['organization'])) {
+                $data['seo_schema']['organization']['telephone'] = '+' . $data['company_whatsapp'];
+            }
         }
 
         if (!empty($data['developer_signature_pad'])) {

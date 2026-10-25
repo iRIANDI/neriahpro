@@ -36,7 +36,7 @@ class ManageSettingsLivewireTest extends TestCase
         $this->actingAs($superadmin);
 
         Livewire::test(ManageSettings::class)
-            ->set('data.company_whatsapp', '6281260840428')
+            ->set('data.company_whatsapp', '6281380448253')
             ->set('data.app_timezone', 'Asia/Jakarta')
             ->set('data.developer_entity_name', 'Neriah Pro Studio')
             ->set('data.developer_support_email', 'support@neriahpro.com')
@@ -121,11 +121,11 @@ class ManageSettingsLivewireTest extends TestCase
             ->set('data.company_whatsapp_country', 'SG')
             ->set('data.company_whatsapp_number', '91234567')
             ->set('data.developer_phone_country', 'ID')
-            ->set('data.developer_phone_number', '81260840428')
+            ->set('data.developer_phone_number', '81380448253')
             ->call('submit')
             ->assertHasNoErrors();
 
         $this->assertEquals('6591234567', CmsGlobalSetting::getVal('company_whatsapp'));
-        $this->assertEquals('+6281260840428', CmsGlobalSetting::getVal('developer_phone'));
+        $this->assertEquals('+6281380448253', CmsGlobalSetting::getVal('developer_phone'));
     }
 }

@@ -111,6 +111,49 @@ class CountryZoneHelper
         // Clean digits
         $digitsOnly = preg_replace('/\D/', '', $raw);
 
+        // Self-heal known corrupted prefix glitch (e.g. 93813... or 93812... from Afghanistan dropdown bug)
+        if (str_starts_with($digitsOnly, '938') && strlen($digitsOnly) >= 11) {
+            $digitsOnly = substr($digitsOnly, 2);
+        }
+
+        // 1. Explicit Indonesian prefix '62'
+        if (str_starts_with($digitsOnly, '62')) {
+            $local = ltrim(substr($digitsOnly, 2), '0');
+            return [
+                'iso' => 'ID',
+                'dial_code' => '+62',
+                'local_number' => $local,
+                'full_e164' => '62' . $local,
+                'formatted' => '+62 ' . $local,
+            ];
+        }
+
+        // 2. Indonesian local prefix with leading zero '08...'
+        if (str_starts_with($digitsOnly, '0')) {
+            $local = ltrim($digitsOnly, '0');
+            return [
+                'iso' => 'ID',
+                'dial_code' => '+62',
+                'local_number' => $local,
+                'full_e164' => '62' . $local,
+                'formatted' => '+62 ' . $local,
+            ];
+        }
+
+        // 3. Indonesian mobile number without zero or prefix '8...' (length 9-13 digits)
+        // In Indonesia, mobile numbers always start with 8 (0812, 0813, 0852, etc.).
+        // Without this check, '813...' would wrongly match Japan (+81).
+        if (str_starts_with($digitsOnly, '8') && strlen($digitsOnly) >= 9 && strlen($digitsOnly) <= 13) {
+            return [
+                'iso' => 'ID',
+                'dial_code' => '+62',
+                'local_number' => $digitsOnly,
+                'full_e164' => '62' . $digitsOnly,
+                'formatted' => '+62 ' . $digitsOnly,
+            ];
+        }
+
+        // 4. If string explicitly starts with '+', match registered country dial codes
         // Sort countries by dial code length descending so longer prefixes match first (e.g. +1-684 before +1)
         $all = static::getAll();
         usort($all, function ($a, $b) {
@@ -119,7 +162,6 @@ class CountryZoneHelper
             return strlen($cleanB) <=> strlen($cleanA);
         });
 
-        // Try to match dial code prefix from digits
         foreach ($all as $c) {
             $cleanDial = preg_replace('/\D/', '', $c['code'] ?? '');
             if ($cleanDial !== '' && str_starts_with($digitsOnly, $cleanDial)) {
@@ -136,20 +178,6 @@ class CountryZoneHelper
                     'formatted' => $code . ' ' . $local,
                 ];
             }
-        }
-
-        // Fallback: If starts with 0, assume defaultIso (usually Indonesia)
-        if (str_starts_with($digitsOnly, '0')) {
-            $local = ltrim($digitsOnly, '0');
-            $dial = static::getDialCode($defaultIso, '+62');
-            $cleanDial = preg_replace('/\D/', '', $dial);
-            return [
-                'iso' => $defaultIso,
-                'dial_code' => $dial,
-                'local_number' => $local,
-                'full_e164' => $cleanDial . $local,
-                'formatted' => $dial . ' ' . $local,
-            ];
         }
 
         // Default fallback to Indonesia

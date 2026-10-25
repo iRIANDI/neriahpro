@@ -113,7 +113,7 @@ export const PACKAGE_REGISTRY = {
 export default function ArchitecturePricingIsland({ 
   headline = 'INVESTASI TRANSPARAN & TEPAT SASARAN',
   subheadline = 'Dua skenario solusi rekayasa perangkat lunak berskala tinggi: Mulai dari blueprint teknis siap eksekusi hingga pengembangan penuh sistem monolit modern tanpa drama pembengkakan biaya.',
-  whatsappNumber = '6281260840428',
+  whatsappNumber = '6281380448253',
   featureFlags = {},
   currentLocale = 'id',
   pricingSettings = {},

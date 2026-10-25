@@ -19,7 +19,7 @@ import {
 export default function CvPricingIsland({ 
   headline = 'INVESTASI KARIR IMPIAN // PILIHAN KELAS & KUOTA CV PRO',
   subheadline = 'Pilih paket yang sesuai dengan akselerasi karir Anda. Pengunjung gratis tetap dapat mengisi form secara manual dan mengunduh PDF secara cuma-cuma.',
-  whatsappNumber = '6281260840428'
+  whatsappNumber = '6281380448253'
 }) {
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'alacarte'
 

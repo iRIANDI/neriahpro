@@ -42,6 +42,41 @@ class CmsSeeder extends Seeder
         );
 
         CmsGlobalSetting::updateOrCreate(
+            ['key' => 'company_whatsapp_country'],
+            [
+                'value' => 'ID',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'company_whatsapp_number'],
+            [
+                'value' => '81380448253',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'developer_phone'],
+            [
+                'value' => '+6281380448253',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'developer_phone_country'],
+            [
+                'value' => 'ID',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
+            ['key' => 'developer_phone_number'],
+            [
+                'value' => '81380448253',
+            ]
+        );
+
+        CmsGlobalSetting::updateOrCreate(
             ['key' => 'company_owner_name'],
             [
                 'value' => 'Yoseph Iriandi',

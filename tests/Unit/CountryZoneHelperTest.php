@@ -64,11 +64,21 @@ class CountryZoneHelperTest extends TestCase
 
     public function test_split_phone_with_leading_zero(): void
     {
-        $parsed = CountryZoneHelper::splitPhone('081260840428');
+        $parsed = CountryZoneHelper::splitPhone('081380448253');
         $this->assertEquals('ID', $parsed['iso']);
         $this->assertEquals('+62', $parsed['dial_code']);
-        $this->assertEquals('81260840428', $parsed['local_number']);
-        $this->assertEquals('6281260840428', $parsed['full_e164']);
+        $this->assertEquals('81380448253', $parsed['local_number']);
+        $this->assertEquals('6281380448253', $parsed['full_e164']);
+    }
+
+    public function test_split_phone_without_zero_or_prefix_resolves_to_indonesia(): void
+    {
+        // Must resolve to Indonesia (ID), NOT Japan (+81)
+        $parsed = CountryZoneHelper::splitPhone('81380448253');
+        $this->assertEquals('ID', $parsed['iso']);
+        $this->assertEquals('+62', $parsed['dial_code']);
+        $this->assertEquals('81380448253', $parsed['local_number']);
+        $this->assertEquals('6281380448253', $parsed['full_e164']);
     }
 
     public function test_split_phone_with_plus_and_foreign_country(): void

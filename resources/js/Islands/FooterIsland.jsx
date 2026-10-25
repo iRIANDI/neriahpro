@@ -13,9 +13,17 @@ export default function FooterIsland({
 }) {
   const currentYear = new Date().getFullYear();
   const effectiveEmail = supportEmail || 'support@neriahpro.com';
-  const cleanWaNumber = (whatsappNumber || '6281380448253').replace(/\D/g, '');
+  let rawWa = (whatsappNumber || '6281380448253').toString().replace(/\D/g, '');
+  if (rawWa.startsWith('938') && rawWa.length >= 11) {
+    rawWa = '62' + rawWa.substring(2);
+  } else if (rawWa.startsWith('08')) {
+    rawWa = '62' + rawWa.substring(1);
+  } else if (rawWa.startsWith('8') && rawWa.length >= 9 && rawWa.length <= 13) {
+    rawWa = '62' + rawWa;
+  }
+  const cleanWaNumber = rawWa.startsWith('62') ? rawWa : '6281380448253';
   const formattedPhone = cleanWaNumber.startsWith('62')
-    ? `+62 ${cleanWaNumber.substring(2, 5)}-${cleanWaNumber.substring(5, 9)}-${cleanWaNumber.substring(9)}`
+    ? `+62 ${cleanWaNumber.substring(2, 5)} ${cleanWaNumber.substring(5, 9)} ${cleanWaNumber.substring(9)}`
     : `+${cleanWaNumber}`;
   const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
   const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);

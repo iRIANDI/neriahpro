@@ -278,10 +278,10 @@ class SchemaOrgService
             'mainEntity' => [
                 [
                     '@type' => 'Question',
-                    'name' => 'Kapan saya sebaiknya memilih paket Advisory Blueprint (Rp 2,5 jt) vs Full MVP Development (Rp 50 jt)?',
+                    'name' => 'Kapan saya sebaiknya memilih paket Advisory Blueprint (Rp 2,5 jt) vs Custom Engineering Studio?',
                     'acceptedAnswer' => [
                         '@type' => 'Answer',
-                        'text' => 'Paket Advisory Blueprint (Rp 2.500.000) adalah opsi ideal bagi founder, CTO, atau pemilik bisnis yang sudah memiliki tim programmer in-house atau vendor sendiri, namun membutuhkan dokumen arsitektur komprehensif (PRD 26 parameter, skema ERD PostgreSQL Strict ULID, dan alokasi 5 sprint) agar pengerjaan tidak salah bangun dan terhindar dari scope creep. Sedangkan paket Full MVP Development (Rp 50.000.000) adalah layanan tuntas di mana Neriah Pro membangun aplikasi dari nol hingga rilis di VPS dengan jaminan Scope Locked dan garansi 30 hari.',
+                        'text' => 'Paket Advisory Blueprint (Rp 2.500.000) adalah opsi ideal bagi founder, CTO, atau pemilik bisnis yang sudah memiliki tim programmer sendiri, namun membutuhkan dokumen arsitektur komprehensif (PRD 26 parameter, skema ERD PostgreSQL Strict ULID, dan alokasi 5 sprint) agar pengerjaan tidak salah bangun dan terhindar dari scope creep. Sedangkan layanan Custom Engineering Studio adalah layanan tuntas di mana Yoseph Iriandi membangun aplikasi siap rilis di VPS dengan kesepakatan cakupan kerja (Scope Locked) dan garansi 30 hari.',
                     ],
                 ],
                 [

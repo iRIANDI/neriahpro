@@ -29,17 +29,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const islandNodes = document.querySelectorAll('[data-react-island]');
     
     islandNodes.forEach((node) => {
-        const componentName = node.getAttribute('data-react-island');
-        const Component = islands[componentName];
-        
-        if (Component) {
-            const rawProps = node.getAttribute('data-react-props');
-            const props = rawProps ? JSON.parse(rawProps) : {};
+        try {
+            const componentName = node.getAttribute('data-react-island');
+            const Component = islands[componentName];
             
-            const root = createRoot(node);
-            root.render(<Component {...props} />);
-        } else {
-            console.warn(`Island component ${componentName} not found.`);
+            if (Component) {
+                const rawProps = node.getAttribute('data-react-props');
+                const props = rawProps ? JSON.parse(rawProps) : {};
+                
+                const root = createRoot(node);
+                root.render(<Component {...props} />);
+            } else {
+                console.warn(`Island component ${componentName} not found.`);
+            }
+        } catch (err) {
+            console.error('Failed to mount island:', err);
         }
     });
 });

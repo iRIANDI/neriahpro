@@ -46,7 +46,7 @@ export default function HeroIsland({
   const retailProPrice = pricingSettings?.retail_pro_price || '399.000';
   const retailUltimatePrice = pricingSettings?.retail_ultimate_price || '1.490.000';
   const umkmPrice = pricingSettings?.umkm_price || '7.500.000';
-  const mvpPrice = pricingSettings?.mvp_price || '50.000.000';
+  const mvpPrice = pricingSettings?.mvp_price || 'Custom Quotation';
 
   // State for the Unified Idea & MarkItDown Workspace
   const [ideaText, setIdeaText] = useState('');
@@ -363,20 +363,20 @@ export default function HeroIsland({
             {/* ---------------- CARD 2: DEDICATED ENGINEERING STUDIO ---------------- */}
             <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-500 p-6 sm:p-8 flex flex-col justify-between rounded-none shadow-xs relative transition">
               <div className="absolute top-0 right-0 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black font-mono text-[10px] font-black uppercase px-3 py-1 tracking-wider">
-                {isEn ? 'TURNKEY STUDIO' : 'DEDICATED STUDIO'}
+                {isEn ? 'TURNKEY SERVICE' : 'LAYANAN MANDIRI'}
               </div>
 
               <div>
                 <div className="font-mono text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider mb-1">
-                  {isEn ? 'PATH 02 // FULL-SERVICE ENGINEERING STUDIO' : 'JALUR 02 // FULL-SERVICE DEDICATED STUDIO'}
+                  {isEn ? 'PATH 02 // PROFESSIONAL DEVELOPER SERVICES' : 'JALUR 02 // LAYANAN REKAYASA PENGEMBANG MANDIRI'}
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2">
-                  Dedicated Software Studio
+                  Independent Software Architect
                 </h3>
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-5 leading-relaxed">
                   {isEn 
-                    ? 'Targeted for Corporations, Growing Businesses, & Non-Technical Founders who need end-to-end software built, tested, and deployed with SLA guarantees.'
-                    : 'Untuk Perusahaan, Korporasi, & Pemilik Bisnis yang butuh aplikasi jadi bergaransi tanpa repot merekrut, mengelola, dan menggaji tim software engineer.'}
+                    ? 'Targeted for Startups, Growing Businesses, & Founders who need high-performance web systems built and deployed directly by an Independent Senior Architect.'
+                    : 'Untuk Startup, UMKM, & Pemilik Bisnis yang butuh aplikasi siap pakai bergaransi dikerjakan langsung oleh Lead Architect berpengalaman.'}
                 </p>
 
                 {/* Price Display */}
@@ -413,7 +413,7 @@ export default function HeroIsland({
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Kontrak Digital Legal Bersertifikat</strong> dengan jaminan SLA, NDA kerahasiaan, dan transfer hak cipta 100% (No Lock-in).</span>
+                    <span><strong>Kesepakatan Layanan Pengembang (Developer Service Agreement)</strong> resmi dengan NDA kerahasiaan dan serah terima source code 100% (No Lock-in).</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -959,7 +959,7 @@ export default function HeroIsland({
                     <div className="space-y-2 text-xs font-sans text-zinc-700 dark:text-zinc-300 mb-6">
                       <div className="flex items-start gap-2">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>100% turnkey coding oleh tim Senior Architect &amp; DevOps</span>
+                        <span>100% turnkey coding langsung oleh Lead Architect Yoseph Iriandi</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
@@ -967,7 +967,7 @@ export default function HeroIsland({
                       </div>
                       <div className="flex items-start gap-2">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>Kontrak legal SLA bersertifikat &amp; serah terima hak cipta 100%</span>
+                        <span>Kesepakatan Layanan Pengembang resmi &amp; serah terima source code 100%</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
@@ -981,7 +981,7 @@ export default function HeroIsland({
                     className="w-full bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-mono font-bold text-xs uppercase py-3 px-4 rounded-none transition flex items-center justify-center gap-2 cursor-pointer shadow-xs text-center"
                   >
                     <Rocket className="w-4 h-4 text-emerald-500" />
-                    <span>{isEn ? 'Choose Studio Track & Review SLA →' : 'Pilih Jalur Turnkey (Studio) →'}</span>
+                    <span>{isEn ? 'Choose Turnkey Service →' : 'Pilih Layanan Pengembang Mandiri →'}</span>
                   </a>
                 </div>
 

@@ -3166,7 +3166,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 $gBadge = $guarantee['badge'] ?? 'GUARANTEED';
 
                                 if ($isRetail) {
-                                    if ($idx === 4 || str_contains($gTitle, '50/50') || str_contains($gDesc, 'DP 50%') || str_contains($gTitle, 'Escrow')) {
+                                    if ($idx === 4 || str_contains($gTitle, '50/50') || str_contains($gDesc, 'DP 50%') || str_contains($gTitle, 'Escrow') || str_contains($gTitle, 'Milestone') || str_contains($gTitle, 'Termin')) {
                                         $gTitle = 'Lisensi Digital 1x Bayar & Bebas Utang Termin (100% Lunas)';
                                         $gDesc = 'Pembelian lisensi kode arsitektur mandiri 1x bayar tanpa cicilan termin DP 50%, tanpa biaya tersembunyi, dan tanpa langganan bulanan. Anda langsung mengunduh seluruh spesifikasi PRD, DDL SQL Strict ULID, Docker scaffold, dan rules AI coding agent secara permanen.';
                                         $gBadge = 'ONE_TIME_LICENSE';
@@ -7269,7 +7269,7 @@ class ProcessSecureDataset implements ShouldQueue
                                 </p>
                             </div>
                             <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs text-blue-600 dark:text-blue-400 font-bold flex items-center justify-between">
-                                <span>DP 50% Kickoff Escrow</span>
+                                <span>DP 50% Kickoff Milestone</span>
                                 <span>Pilih Jalur Studio &darr;</span>
                             </div>
                         </button>
@@ -7464,7 +7464,7 @@ class ProcessSecureDataset implements ShouldQueue
                         </span>
                         <h3 class="text-xl sm:text-2xl font-black uppercase tracking-tight flex items-center gap-2">
                             <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs inline-flex items-center justify-center rounded-none">12</span>
-                            <span x-show="locale === 'en'">Scope Lock, Digital Sign-Off &amp; Escrow</span>
+                            <span x-show="locale === 'en'">Scope Lock, Digital Sign-Off &amp; Milestone DP</span>
                             <span x-show="locale !== 'en'">Kunci Scope Proyek, Persetujuan Digital &amp; DP</span>
                         </h3>
                         <p class="text-zinc-600 dark:text-zinc-400 text-xs mt-1 font-sans">
@@ -8216,7 +8216,7 @@ class ProcessSecureDataset implements ShouldQueue
         </div>
     </div>
 
-    <!-- Interactive Midtrans Escrow & Voucher Payment Modal -->
+    <!-- Interactive Midtrans Payment & Voucher Modal -->
     <div 
         x-show="paymentModalOpen" 
         x-cloak 
@@ -8238,7 +8238,7 @@ class ProcessSecureDataset implements ShouldQueue
             <!-- Modal Header -->
             <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-4">
                 <span class="px-2 py-0.5 bg-emerald-500 text-black text-[10px] font-bold uppercase tracking-wider rounded-none">
-                    MIDTRANS SECURE ESCROW &amp; VOUCHER PORTAL
+                    MIDTRANS SECURE PAYMENT &amp; VOUCHER PORTAL
                 </span>
                 <h3 class="text-xl font-black uppercase text-zinc-900 dark:text-zinc-100 mt-2">
                     Instruksi Pembayaran DP &amp; Klaim
@@ -8733,7 +8733,7 @@ class ProcessSecureDataset implements ShouldQueue
             <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4 shrink-0">
                 <div>
                     <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
-                        <span>KEPATUHAN LAYANAN &amp; MIDTRANS ESCROW</span>
+                        <span>KEPATUHAN LAYANAN &amp; MIDTRANS SNAP PAYMENT</span>
                     </h3>
                     <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
                         Transparansi Konsumen, Garansi SLA 30 Hari, &amp; Penanganan Idempotency Transaksi
@@ -8850,7 +8850,7 @@ class ProcessSecureDataset implements ShouldQueue
 
             <!-- Footer -->
             <div class="border-t border-zinc-200 dark:border-zinc-800 pt-3 mt-4 flex items-center justify-between shrink-0">
-                <span class="text-[10px] text-zinc-500 font-mono">NERIAH PRO &bull; MIDTRANS ESCROW COMPLIANCE</span>
+                <span class="text-[10px] text-zinc-500 font-mono">NERIAH PRO &bull; MIDTRANS PAYMENT COMPLIANCE</span>
                 <button 
                     type="button" 
                     @click="showLegalTermsModal = false; agreeSignOff = true" 

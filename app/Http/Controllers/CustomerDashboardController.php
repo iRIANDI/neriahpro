@@ -374,7 +374,7 @@ class CustomerDashboardController extends Controller
                 // Fulfill order & provision blueprint / licenses
                 app(\App\Http\Controllers\MidtransWebhookController::class)->fulfillOrder($tx->midtrans_order_id, $request);
 
-                return redirect()->route('customer.dashboard')->with('success', 'Pembayaran berhasil diverifikasi oleh Midtrans Escrow! Lisensi digital Anda telah aktif.');
+                return redirect()->route('customer.dashboard')->with('success', 'Pembayaran berhasil diverifikasi oleh Midtrans! Lisensi digital Anda telah aktif.');
             } elseif (in_array($trxStatus, ['expire', 'cancel', 'deny'])) {
                 $tx->update(['status' => $trxStatus]);
 
@@ -478,7 +478,7 @@ class CustomerDashboardController extends Controller
             $detailsEmail = strtolower($transaction->customer_details['email'] ?? '');
             $userEmail = strtolower($currentUser->email);
             if (! $isOwner && $detailsEmail !== $userEmail) {
-                abort(403, 'Akses Ditolak: Anda tidak memiliki izin untuk melihat faktur ini.');
+                abort(403, 'Akses Ditolak: Anda tidak memiliki izin untuk melihat invoice ini.');
             }
         }
 

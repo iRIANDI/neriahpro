@@ -121,7 +121,7 @@ class ManageSettings extends Page implements HasForms
                 ],
             ],
             'pricing_advisory_price' => '2.500.000',
-            'pricing_mvp_price' => '50.000.000',
+            'pricing_mvp_price' => 'Custom Quotation',
             'pricing_umkm_price' => '7.500.000',
             'pricing_active_promo_banner' => 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!',
             'pricing_retail_spark_price' => '0',
@@ -997,11 +997,9 @@ class ManageSettings extends Page implements HasForms
                                             ->default('2.500.000')
                                             ->required(),
                                         TextInput::make('pricing_mvp_price')
-                                            ->label('Tarif Kontrak Full MVP Monolith (Rp)')
-                                            ->helperText('Biaya pengembangan penuh enterprise modern monolith (DP 50% = Rp 25.000.000).')
-                                            ->prefix('Rp')
-                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
-                                            ->default('50.000.000')
+                                            ->label('Tarif Kontrak Full MVP Monolith')
+                                            ->helperText('Label harga paket Full MVP (Gunakan "Custom Quotation" agar mematuhi batas limit transaksi QRIS perorangan Midtrans).')
+                                            ->default('Custom Quotation')
                                             ->required(),
                                         TextInput::make('pricing_umkm_price')
                                             ->label('Tarif Paket UMKM Digital Starter (Rp)')

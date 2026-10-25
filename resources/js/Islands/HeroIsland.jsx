@@ -260,7 +260,7 @@ export default function HeroIsland({
             </span>
             <span className="text-zinc-300 dark:text-zinc-700 hidden sm:inline">&bull;</span>
             <span className="inline-flex items-center gap-1">
-              <Check className="w-3.5 h-3.5 text-emerald-500" /> Garansi SLA &amp; Escrow Kontrak
+              <Check className="w-3.5 h-3.5 text-emerald-500" /> Garansi SLA &amp; Termin Bertahap
             </span>
           </div>
         </div>
@@ -389,11 +389,11 @@ export default function HeroIsland({
                       Rp {umkmPrice}
                     </span>
                     <span className="text-xs font-mono text-zinc-500">
-                      {isEn ? `(UMKM) / Rp ${mvpPrice}+ (Full MVP)` : `(UMKM) s/d Rp ${mvpPrice}+ (Full MVP)`}
+                      {isEn ? '(UMKM) / Custom Quotation (Enterprise)' : '(UMKM) / Custom Quotation (Enterprise)'}
                     </span>
                   </div>
                   <div className="text-[11px] font-mono text-blue-600 dark:text-blue-400 mt-1">
-                    {isEn ? '✓ 50% Milestone Escrow & Legally-binding SLA Contract' : '✓ Pembayaran Bertahap DP 50% & Kontrak Digital Bersertifikat'}
+                    {isEn ? '✓ 50% Milestone Payment & Legally-binding SLA Contract' : '✓ Pembayaran Bertahap DP 50% & Kontrak Digital Bersertifikat'}
                   </div>
                 </div>
 
@@ -409,7 +409,7 @@ export default function HeroIsland({
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Skema Escrow Bertahap:</strong> DP 50% saat penguncian kontrak &amp; 50% pelunasan setelah lolos User Acceptance Test (UAT).</span>
+                    <span><strong>Termin Pembayaran Bertahap:</strong> DP 50% saat penguncian kontrak &amp; 50% pelunasan setelah lolos User Acceptance Test (UAT).</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -693,12 +693,12 @@ export default function HeroIsland({
                 {isEn ? 'CLIENT DASHBOARD' : 'DASHBOARD TERPADU'}
               </div>
               <h4 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 mb-2">
-                Client Portal &amp; Tax Invoices
+                Client Portal &amp; Commercial Invoices
               </h4>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                 {isEn 
-                  ? 'Centralized dashboard for permanent file downloads, official tax receipts (Faktur Pajak), and digital contract records.'
-                  : 'Portal klien terpadu untuk unduhan berkas permanen, faktur pajak resmi, kwitansi pembayaran, serta arsip kontrak digital.'}
+                  ? 'Centralized dashboard for permanent file downloads, Official Commercial Invoices (Official Payment Receipts), and digital contract records.'
+                  : 'Portal klien terpadu untuk unduhan berkas permanen, Bukti Pembayaran Resmi (Official Commercial Invoice), serta arsip kontrak digital.'}
               </p>
             </div>
 
@@ -926,10 +926,10 @@ export default function HeroIsland({
                         {isEn ? 'INVESTMENT' : 'BIAYA INVESTASI'}
                       </div>
                       <div className="text-lg font-black font-mono text-zinc-900 dark:text-white">
-                        Rp {pricingSettings?.studio_umkm_price || '3.750.000'} <span className="text-xs font-normal text-zinc-500">(UMKM) s/d Rp {pricingSettings?.studio_mvp_price || '50.000.000'}</span>
+                        Rp {pricingSettings?.studio_umkm_price || '3.750.000'} <span className="text-xs font-normal text-zinc-500">(UMKM) / Custom Quotation (Enterprise)</span>
                       </div>
                       <div className="text-[10px] font-mono text-blue-600 dark:text-blue-400 mt-0.5">
-                        {isEn ? 'Staged 50% DP Escrow • SLA Contract' : 'Skema Escrow DP 50% • Kontrak Legal Bersertifikat'}
+                        {isEn ? 'Staged 50% DP Milestone • SLA Contract' : 'Termin Bertahap DP 50% • Kontrak Legal Bersertifikat'}
                       </div>
                     </div>
 
@@ -950,7 +950,7 @@ export default function HeroIsland({
                         </div>
                         <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold">
                           <span>• <strong>Full Monolith MVP:</strong> 100% Turnkey + SLA</span>
-                          <span>Rp 50.000.000</span>
+                          <span>Custom Quotation</span>
                         </div>
                       </div>
                     </div>

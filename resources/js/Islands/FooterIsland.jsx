@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, ShieldCheck, ArrowUpRight, MessageCircle, X, ExternalLink, FileText, Lock, RefreshCcw } from 'lucide-react';
+import { Layers, ShieldCheck, ArrowUpRight, MessageCircle, X, ExternalLink, FileText, Lock, RefreshCcw, MapPin, Mail, Phone, Clock } from 'lucide-react';
 
-export default function FooterIsland({ settings, featureFlags, whatsappNumber = '6281260840428', currentLocale, supportEmail = 'support@neriahpro.com' }) {
+export default function FooterIsland({ 
+  settings, 
+  featureFlags, 
+  whatsappNumber = '6281260840428', 
+  currentLocale, 
+  supportEmail = 'support@neriahpro.com',
+  companyAddress = 'Jl. Jenderal Sudirman Kav. 52-53, SCBD, Jakarta Selatan 12190, Indonesia'
+}) {
   const currentYear = new Date().getFullYear();
   const effectiveEmail = supportEmail || 'support@neriahpro.com';
+  const cleanWaNumber = (whatsappNumber || '6281260840428').replace(/\D/g, '');
+  const formattedPhone = cleanWaNumber.startsWith('62')
+    ? `+62 ${cleanWaNumber.substring(2, 5)}-${cleanWaNumber.substring(5, 9)}-${cleanWaNumber.substring(9)}`
+    : `+${cleanWaNumber}`;
   const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
   const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
   const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
@@ -125,7 +136,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
         {
           num: '2',
           head: 'Information Collected',
-          body: 'We collect contact metadata (name, email, E.164 phone number) solely for account verification, sprint notifications, and electronic tax invoice generation.'
+          body: 'We collect contact metadata (name, email, E.164 phone number) solely for account verification, sprint notifications, and electronic commercial invoice generation.'
         },
         {
           num: '3',
@@ -151,7 +162,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
         {
           num: '2',
           head: 'Informasi yang Dikumpulkan',
-          body: 'Kami mengumpulkan data kontak (nama, email, nomor WhatsApp E.164) semata-mata untuk verifikasi akun, pengiriman laporan sprint mingguan, dan penerbitan faktur pajak resmi.'
+          body: 'Kami mengumpulkan data kontak (nama, email, nomor WhatsApp E.164) semata-mata untuk verifikasi akun, pengiriman laporan sprint mingguan, dan penerbitan bukti pembayaran / invoice resmi.'
         },
         {
           num: '3',
@@ -366,7 +377,7 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
         {/* Top Branding & Mission */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-zinc-200 dark:border-zinc-800">
           
-          <div className="md:col-span-4">
+          <div className="md:col-span-3">
             <a href="/" className="inline-flex items-center gap-2 text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-4">
               <span className="w-7 h-7 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black flex items-center justify-center text-xs font-mono font-bold rounded-none">
                 N
@@ -483,28 +494,61 @@ export default function FooterIsland({ settings, featureFlags, whatsappNumber = 
             </ul>
           </div>
 
-          {/* Direct WhatsApp Channel & Admin Portal */}
-          <div className="md:col-span-2">
+          {/* Direct Office Address & Fast Connect */}
+          <div className="md:col-span-3">
             <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-              {isEn ? 'Fast Connect' : 'Koneksi Cepat'}
+              {isEn ? 'Office & Fast Connect' : 'Kantor & Kontak Resmi'}
             </h4>
             <div className="space-y-3 font-mono text-xs">
-              <a
-                href={`https://wa.me/${whatsappNumber}?text=Halo%20Neriah%20Pro,%20saya%20ingin%20konsultasi%20proyek%20teknologi`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-3 py-2 rounded-none transition w-full justify-center"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>{isEn ? 'WhatsApp Chat' : 'Chat WhatsApp'}</span>
-              </a>
-              <a
-                href="/customer/dashboard"
-                className="inline-flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 px-3 py-2 rounded-none transition w-full justify-center"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                <span>{isEn ? 'Client Dashboard' : 'Portal Klien'}</span>
-              </a>
+              {/* Physical Office Address */}
+              <div className="text-zinc-600 dark:text-zinc-400 flex items-start gap-2 leading-relaxed">
+                <MapPin className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                <span className="font-sans text-[11px] text-zinc-700 dark:text-zinc-300">
+                  {companyAddress}
+                </span>
+              </div>
+
+              {/* Official Email */}
+              <div className="text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
+                <Mail className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <a href={`mailto:${effectiveEmail}`} className="hover:text-emerald-500 transition-colors font-mono text-[11px] text-zinc-700 dark:text-zinc-300">
+                  {effectiveEmail}
+                </a>
+              </div>
+
+              {/* Explicit Phone / WhatsApp Number */}
+              <div className="text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <a href={`tel:+${cleanWaNumber}`} className="font-mono font-bold text-zinc-900 dark:text-zinc-100 hover:text-emerald-500 transition-colors text-xs">
+                  {formattedPhone}
+                </a>
+              </div>
+
+              {/* Service Hours */}
+              <div className="text-zinc-500 dark:text-zinc-400 text-[10px] flex items-center gap-2 pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                <Clock className="w-3 h-3 text-zinc-400 shrink-0" />
+                <span>{isEn ? 'Mon - Fri, 09:00 - 18:00 WIB' : 'Senin - Jumat, 09:00 - 18:00 WIB'}</span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-1">
+                <a
+                  href={`https://wa.me/${cleanWaNumber}?text=Halo%20Neriah%20Pro,%20saya%20ingin%20konsultasi%20proyek%20teknologi`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-3 py-2 rounded-none transition w-full justify-center"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>{isEn ? 'WhatsApp Chat' : 'Chat WhatsApp'}</span>
+                </a>
+                <a
+                  href="/customer/dashboard"
+                  className="inline-flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 px-3 py-2 rounded-none transition w-full justify-center"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>{isEn ? 'Client Dashboard' : 'Portal Klien'}</span>
+                </a>
+              </div>
             </div>
           </div>
 

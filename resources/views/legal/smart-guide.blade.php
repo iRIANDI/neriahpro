@@ -289,7 +289,7 @@
                             <li>{{ $isEn ? 'Right to download complete deliverables: PRD PDF, OpenAPI 3.1 YAML/JSON specifications, and PostgreSQL Strict ULID DDL SQL.' : 'Hak mengunduh berkas lengkap: Dokumen PRD PDF, spesifikasi OpenAPI 3.1 YAML/JSON, dan skema SQL PostgreSQL Strict ULID.' }}</li>
                             <li>{{ $isEn ? 'Right to build, host, and commercialize software applications without paying royalties to Neriah Pro.' : 'Hak membangun, meng-hosting, dan mengkomersialkan aplikasi perangkat lunak tanpa membayar royalti kepada Neriah Pro.' }}</li>
                             <li>{{ $isEn ? 'Right to utilize AI Agent directives (.cursorrules, AGENTS.md) in Claude, Cursor, ChatGPT, or Windsurf.' : 'Hak menggunakan instruksi terarah AI Agent (.cursorrules, AGENTS.md) pada Claude, Cursor, ChatGPT, atau Windsurf.' }}</li>
-                            <li>{{ $isEn ? 'Right to obtain official tax invoices and verifiable receipts backed by SHA-256 seal in the client portal.' : 'Hak memperoleh faktur pajak resmi dan kwitansi berstempel kriptografis SHA-256 di portal pelanggan.' }}</li>
+                            <li>{{ $isEn ? 'Right to obtain official commercial invoices and verifiable receipts backed by SHA-256 seal in the client portal.' : 'Hak memperoleh bukti pembayaran komersial resmi dan kwitansi berstempel kriptografis SHA-256 di portal pelanggan.' }}</li>
                             <li>{{ $isEn ? 'Ultimate Tier Exclusive: Right to a 1-on-1 architecture consultation call (60 minutes) via Google Meet with a Senior Architect.' : 'Khusus Lisensi Ultimate: Hak atas 1 sesi konsultasi arsitektur 1-on-1 (60 menit) via Google Meet bersama Senior Architect.' }}</li>
                         </ul>
                     </div>
@@ -373,8 +373,8 @@
                         </span>
                         <p>
                             {{ $isEn 
-                                ? 'All transactions are processed through authorized Midtrans Snap gateways. Our system enforces SHA-256 idempotency webhooks to guarantee zero double billing and automated tax invoice reconciliation.' 
-                                : 'Seluruh pembayaran di Neriah Pro diproses melalui gerbang berizin Midtrans Snap. Sistem kami menerapkan webhook idempotency berbasis tanda tangan SHA-256 untuk memastikan Klien tidak pernah ditagih ganda dan seluruh mutasi tercatat otomatis di faktur pajak.' 
+                                ? 'All transactions are processed through authorized Midtrans Snap gateways. Our system enforces SHA-256 idempotency webhooks to guarantee zero double billing and automated commercial invoice reconciliation.' 
+                                : 'Seluruh pembayaran di Neriah Pro diproses melalui gerbang berizin Midtrans Snap. Sistem kami menerapkan webhook idempotency berbasis tanda tangan SHA-256 untuk memastikan Klien tidak pernah ditagih ganda dan seluruh mutasi tercatat otomatis di invoice resmi.' 
                             }}
                         </p>
                     </div>
@@ -432,6 +432,7 @@
         'featureFlags' => $featureFlags,
         'whatsappNumber' => $getSettingVal('company_whatsapp', '6281260840428'),
         'supportEmail' => $supportEmail,
+        'companyAddress' => $getSettingVal('company_address', 'Jl. Jenderal Sudirman Kav. 52-53, SCBD, Jakarta Selatan 12190, Indonesia'),
         'currentLocale' => $currentLang,
     ])
 

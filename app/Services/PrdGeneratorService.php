@@ -1089,7 +1089,7 @@ class PrdGeneratorService
                     'Skema basis data relasional PostgreSQL dengan Primary Key ULID standar enterprise.',
                     'Pusat kendali operasional (Admin Panel) berbasis Filament PHP v5 dengan RBAC Shield.',
                     'Frontend Island Architecture (React 19) dengan interaktivitas fluid 60fps.',
-                    'Integrasi gerbang pembayaran otomatis (Midtrans Escrow) & audit logging transaksi.',
+                    'Integrasi gerbang pembayaran otomatis (Midtrans Snap) & audit logging transaksi.',
                 ],
                 'out_of_scope' => $outOfScopeList,
             ],
@@ -1634,7 +1634,7 @@ class PrdGeneratorService
             [
                 'title' => $isRetail
                     ? 'Lisensi Digital 1x Bayar & Bebas Utang Termin (100% Lunas)'
-                    : 'Escrow Termin 50/50 Midtrans & Garansi 30 Hari Bug-Free',
+                    : 'Termin 50/50 Midtrans & Garansi 30 Hari Bug-Free',
                 'desc' => $isRetail
                     ? 'Pembelian lisensi kode arsitektur mandiri 1x bayar tanpa cicilan termin DP 50%, tanpa biaya tersembunyi, dan tanpa langganan bulanan. Anda langsung mengunduh seluruh spesifikasi PRD, DDL SQL Strict ULID, Docker scaffold, dan rules AI coding agent secara permanen.'
                     : 'DP 50% diamankan via payment gateway resmi berizin Bank Indonesia. Pelunasan 50% hanya dibayarkan setelah Anda menguji dan menerima sistem secara nyata dengan garansi bug 30 hari penuh.',
@@ -1754,7 +1754,7 @@ class PrdGeneratorService
                 $items[] = [
                     'category' => 'Integrasi Pihak Ketiga',
                     'code' => 'INT-PAYMENT',
-                    'title' => 'Payment Gateway Escrow (Midtrans Snap / QRIS / VA)',
+                    'title' => 'Payment Gateway Integration (Midtrans Snap / QRIS / VA)',
                     'desc' => 'Integrasi HTTP Basic Auth Snap Token, penerima Webhook callback otomatis, log rekonsiliasi audit trail, dan perlindungan replay attack.',
                     'complexity' => 'Menengah',
                     'amount' => 2500000.00,
@@ -2100,7 +2100,7 @@ class PrdGeneratorService
                     'contract_amount' => 25000000.00,
                     'dp_amount' => 12500000.00,
                     'pelunasan_amount' => 12500000.00,
-                    'ai_quota_spec' => 'Midtrans Payment Escrow, WhatsApp Gateway & Background Redis Workers',
+                    'ai_quota_spec' => 'Midtrans Payment Gateway, WhatsApp Gateway & Background Redis Workers',
                     'squad_allocation' => '2 Fullstack Specialists (Frontend Island + Backend Architect)',
                     'cost_formula' => 'Base Core (Rp 17.5M) + Integrasi Gateway Lengkap & Dedicated VPS Setup (Rp 7.5M)',
                     'ai_swarm_specs' => [

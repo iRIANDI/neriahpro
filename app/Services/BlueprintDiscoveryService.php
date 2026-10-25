@@ -746,7 +746,7 @@ class BlueprintDiscoveryService
         $retailProPrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_pro_price', '490.000');
         $retailUltimatePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_ultimate_price', '1.490.000');
         $studioUmkmPrice = \App\Models\CmsGlobalSetting::getVal('pricing_studio_umkm_price', '3.750.000');
-        $studioMvpPrice = \App\Models\CmsGlobalSetting::getVal('pricing_studio_mvp_price', '50.000.000');
+        $studioMvpPrice = \App\Models\CmsGlobalSetting::getVal('pricing_studio_mvp_price', 'Custom Quotation');
 
         return [
             'recommended_track' => $recommendedTrack, // 'retail' | 'studio'
@@ -788,10 +788,10 @@ class BlueprintDiscoveryService
                         $isEn ? '100% turnkey coding across 10 Software Factory OS pillars' : '100% turnkey koding mencakup 10 Pilar Software Factory OS',
                         $isEn ? 'Managed Capacity & Anti-Collision sprint batch' : 'Alokasi slot sprint terisolasi dengan Master Gantt real-time',
                         $isEn ? 'Legally binding SLA contract & 100% copyright transfer' : 'Kontrak legal SLA bersertifikat & serah terima hak cipta 100%',
-                        $isEn ? 'Staged 50% DP escrow payment via Midtrans Snap' : 'Skema pembayaran bertahap DP 50% via Midtrans Snap',
+                        $isEn ? 'Staged 50% DP milestone payment via Midtrans Snap' : 'Skema pembayaran bertahap DP 50% via Midtrans Snap',
                     ],
                     'starting_price' => "Rp {$studioUmkmPrice}",
-                    'max_price' => "Rp {$studioMvpPrice}",
+                    'max_price' => str_contains((string) $studioMvpPrice, 'Custom') ? $studioMvpPrice : "Rp {$studioMvpPrice}",
                     'cta_label' => $isEn ? 'Choose Dedicated Studio →' : 'Pilih Jalur Turnkey (Project Studio) →',
                 ]
             ]

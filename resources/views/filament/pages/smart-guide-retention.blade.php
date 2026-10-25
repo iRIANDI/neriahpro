@@ -768,7 +768,7 @@
                 <div class="sg-subcard" style="border-left: 3px solid #10b981; background: rgba(16, 185, 129, 0.04);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                         <strong style="font-size: 13px; color: #10b981;">Studio // Enterprise Monolith MVP</strong>
-                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #10b981; font-size: 11px;">Rp 50.000.000 (DP 50%)</span>
+                        <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #10b981; font-size: 11px;">Custom Quotation / Enterprise (DP 50%)</span>
                     </div>
                     <div style="font-size: 10px; font-family: ui-monospace, monospace; color: #10b981; margin-bottom: 8px;">
                         TARGET: Founder startup berdana & korporat yang butuh sistem siap produksi skala jutaan pengguna.
@@ -779,7 +779,7 @@
                         <li>Arsitektur Database PostgreSQL 16 Strict ULID & Keyset Cursor Pagination O(1)</li>
                         <li>Synthetic Vital Data Seeder (100+ data uji) & Panduan Agen AI (.cursorrules, AGENTS.md)</li>
                         <li>Automated Test Suite ApiContractTest & Midtrans Snap Idempotent Webhook</li>
-                        <li>Monitoring Master Gantt Timeline & Faktur Pajak Resmi di Customer Portal</li>
+                        <li>Monitoring Master Gantt Timeline & Commercial Invoice Resmi di Customer Portal</li>
                         <li>Dedicated VPS Hardening, Redis Caching, Nginx HTTP/2, & Pipeline deploy.sh 6 Skenario</li>
                         <li>100% Repositori GitHub Privat & Kredensial Server diserahkan ke Klien (No Lock-in)</li>
                         <li><strong style="color: #10b981;">Garansi Perbaikan Bug & SLA Prioritas 3 Bulan Penuh</strong></li>

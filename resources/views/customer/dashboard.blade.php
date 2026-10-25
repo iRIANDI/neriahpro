@@ -91,7 +91,7 @@
     </script>
 
     <title>neriahpro.com - {{ $isEn ? 'Client Portal & Project Workspace' : 'Portal Pelanggan & Workspace Proyek' }}</title>
-    <meta name="description" content="{{ $isEn ? 'Unified client workspace to track software sprints, access lifetime license downloads, and view tax invoices.' : 'Workspace terpadu pelanggan untuk memantau sprint software, mengunduh lisensi seumur hidup, dan mengakses faktur pajak.' }}">
+    <meta name="description" content="{{ $isEn ? 'Unified client workspace to track software sprints, access lifetime license downloads, and view commercial invoices.' : 'Workspace terpadu pelanggan untuk memantau sprint software, mengunduh lisensi seumur hidup, dan mengakses invoice resmi.' }}">
 
     <!-- Local Fonts (Zero External Latency) -->
     <link rel="stylesheet" href="{{ asset('fonts/instrument-sans/instrument-sans.css') }}">
@@ -652,7 +652,7 @@
                 class="px-3.5 py-2 transition rounded-none uppercase flex items-center gap-2 whitespace-nowrap cursor-pointer"
             >
                 <span>🧾</span>
-                <span>{{ $isEn ? 'Tax Invoices & Receipts' : 'Faktur Pajak & Kwitansi' }}</span>
+                <span>{{ $isEn ? 'Invoices & Receipts' : 'Invoice & Kwitansi' }}</span>
                 <span class="px-1.5 py-0.2 bg-zinc-200/50 dark:bg-zinc-800 text-[10px] font-bold">
                     {{ $transactions->count() }}
                 </span>
@@ -723,7 +723,7 @@
                     <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans mt-1 max-w-2xl leading-relaxed">
                         {{ $isEn 
                             ? 'Your modular engineering portal. Monitor active sprint timelines, access lifetime downloads, and print corporate reimbursement tax receipts without page bloat.'
-                            : 'Portal rekayasa perangkat lunak terpadu Anda. Pantau timeline pengerjaan sprint, akses pusat unduhan seumur hidup, dan cetak faktur pajak resmi.' }}
+                            : 'Portal rekayasa perangkat lunak terpadu Anda. Pantau timeline pengerjaan sprint, akses pusat unduhan seumur hidup, dan cetak invoice resmi.' }}
                     </p>
                 </div>
 
@@ -841,7 +841,7 @@
                         Rp {{ number_format($metrics['total_spend_idr'], 0, ',', '.') }}
                     </span>
                     <span class="text-[10px] text-zinc-500 font-sans mt-0.5 block">
-                        {{ $transactions->whereIn('status', ['settlement', 'capture', 'success'])->count() }} {{ $isEn ? 'official invoices →' : 'faktur resmi terbit →' }}
+                        {{ $transactions->whereIn('status', ['settlement', 'capture', 'success'])->count() }} {{ $isEn ? 'official invoices →' : 'invoice resmi terbit →' }}
                     </span>
                 </div>
             </div>
@@ -899,8 +899,8 @@
                         <p class="text-xs font-sans text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
                             @if($isLtSettled)
                                 {{ $isEn 
-                                    ? 'Payment was verified settled by Midtrans Escrow. All digital specifications, PostgreSQL Strict ULID DDL, and codebase scaffolds are permanently active in your account.' 
-                                    : 'Pembayaran telah sukses diverifikasi oleh Midtrans Escrow. Seluruh berkas spesifikasi PRD 26 parameter, skema database SQL PostgreSQL Strict ULID, dan scaffold codebase sudah aktif dan dapat diunduh seumur hidup.' }}
+                                    ? 'Payment was verified settled by Midtrans Gateway. All digital specifications, PostgreSQL Strict ULID DDL, and codebase scaffolds are permanently active in your account.' 
+                                    : 'Pembayaran telah sukses diverifikasi oleh Midtrans Gateway. Seluruh berkas spesifikasi PRD 26 parameter, skema database SQL PostgreSQL Strict ULID, dan scaffold codebase sudah aktif dan dapat diunduh seumur hidup.' }}
                             @elseif($isLtPending)
                                 {{ $isEn 
                                     ? 'This order is awaiting payment via Midtrans Gateway. Complete payment via QRIS / Virtual Account, or click sync if you already transferred.' 
@@ -1616,7 +1616,7 @@
                 <div>
                     <h2 class="text-lg font-black uppercase text-zinc-900 dark:text-white font-mono flex items-center gap-2">
                         <span class="w-2.5 h-2.5 bg-amber-500 rounded-none"></span>
-                        <span>{{ $isEn ? 'Official Tax Invoices & Corporate Receipts' : 'Faktur Pajak Resmi & Kwitansi Reimbursement Kantor' }}</span>
+                        <span>{{ $isEn ? 'Official Commercial Invoices & Corporate Receipts' : 'Official Commercial Invoice & Kwitansi Reimbursement Kantor' }}</span>
                     </h2>
                     <p class="text-xs text-zinc-500 font-sans mt-0.5">
                         {{ $isEn ? 'Instantly issued for corporate finance reimbursement and tax compliance.' : 'Diterbitkan instan untuk keperluan pembukuan keuangan dan klaim reimbursement kantor.' }}
@@ -1731,9 +1731,9 @@
                                                 href="{{ route('customer.transaction.invoice', $tx->id) }}" 
                                                 target="_blank"
                                                 class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 text-[10px] font-bold transition rounded-none inline-flex items-center gap-1"
-                                                title="Buka Faktur Pajak Resmi & Kwitansi Reimbursement"
+                                                title="Buka Official Commercial Invoice & Kwitansi Reimbursement"
                                             >
-                                                🖨️ {{ $isEn ? 'PRINT INVOICE' : 'CETAK FAKTUR' }}
+                                                🖨️ {{ $isEn ? 'PRINT INVOICE' : 'CETAK INVOICE' }}
                                             </a>
                                         </div>
                                     </td>
@@ -1813,15 +1813,15 @@
                             {{ $isEn ? 'ACCOUNT SETTINGS' : 'PENGATURAN AKUN' }}
                         </span>
                         <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-mono text-[10px] font-bold uppercase tracking-wider rounded-none border border-zinc-200 dark:border-zinc-700">
-                            {{ $isEn ? 'TAX & BILLING' : 'FAKTUR & PENAGIHAN' }}
+                            {{ $isEn ? 'INVOICE & BILLING' : 'INVOICE & PENAGIHAN' }}
                         </span>
                     </div>
                     <h2 class="text-lg font-black uppercase text-zinc-900 dark:text-white font-mono flex items-center gap-2">
                         <span class="w-2.5 h-2.5 bg-emerald-500 rounded-none"></span>
-                        <span>{{ $isEn ? 'Customer Profile & Tax Invoicing Preferences' : 'Profil Akun, Identitas Bisnis & Data Penagihan' }}</span>
+                        <span>{{ $isEn ? 'Customer Profile & Billing Preferences' : 'Profil Akun, Identitas Bisnis & Data Penagihan' }}</span>
                     </h2>
                     <p class="text-xs text-zinc-500 font-sans mt-0.5">
-                        {{ $isEn ? 'Manage contact details, registered company name for contracts & tax invoices, E.164 WhatsApp alerts, and sprint notification preferences.' : 'Sesuaikan data identitas kontak, nama resmi perusahaan untuk kontrak kerja sama & faktur pajak, WhatsApp E.164, dan preferensi notifikasi sprint.' }}
+                        {{ $isEn ? 'Manage contact details, registered company name for contracts & commercial invoices, E.164 WhatsApp alerts, and sprint notification preferences.' : 'Sesuaikan data identitas kontak, nama resmi perusahaan untuk kontrak kerja sama & commercial invoice, WhatsApp E.164, dan preferensi notifikasi sprint.' }}
                     </p>
                 </div>
             </div>
@@ -1975,15 +1975,15 @@
                         </div>
                     </div>
 
-                    <!-- COLUMN 2: DATA FAKTUR PAJAK & ALAMAT PENAGIHAN -->
+                    <!-- COLUMN 2: DATA INVOICE & ALAMAT PENAGIHAN -->
                     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none space-y-4 shadow-xs">
                         <div class="border-b border-zinc-100 dark:border-zinc-800 pb-2">
                             <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-white flex items-center gap-2">
                                 <span class="w-2 h-2 bg-indigo-500"></span>
-                                <span>{{ $isEn ? '2. Tax Invoicing & Billing Address' : '2. Data Faktur Pajak & Penagihan' }}</span>
+                                <span>{{ $isEn ? '2. Commercial Invoicing & Billing Address' : '2. Data Penagihan & Invoice Resmi' }}</span>
                             </h3>
                             <p class="text-[11px] text-zinc-500 font-sans mt-0.5">
-                                {{ $isEn ? 'Used for official corporate invoices, tax declarations, and receipts.' : 'Diperlukan untuk penerbitan faktur pajak resmi, kwitansi, dan penagihan corporate.' }}
+                                {{ $isEn ? 'Used for official corporate invoices and payment receipts.' : 'Diperlukan untuk penerbitan invoice resmi, kwitansi, dan penagihan corporate.' }}
                             </p>
                         </div>
 
@@ -1999,7 +1999,7 @@
                                 class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono text-xs focus:border-emerald-500 focus:outline-hidden rounded-none transition"
                             >
                             <p class="text-[10px] text-zinc-500 font-sans">
-                                {{ $isEn ? 'Optional. Required if your company requires standard e-Faktur tax documents.' : 'Opsional. Lengkapi jika perusahaan Anda membutuhkan Faktur Pajak resmi (e-Faktur).' }}
+                                {{ $isEn ? 'Optional. Tax identification number if required by your accounting department.' : 'Opsional. Nomor Pokok Wajib Pajak untuk pencatatan pembukuan perusahaan Anda.' }}
                             </p>
                         </div>
 
@@ -2090,7 +2090,7 @@
                                         {{ $isEn ? 'WhatsApp Billing & Payment Receipts' : 'Bukti Pembayaran & Alert Pelunasan (WhatsApp)' }}
                                     </span>
                                     <span class="block text-[11px] text-zinc-500 font-sans mt-0.5">
-                                        {{ $isEn ? 'Direct alerts for Midtrans escrow verification and settlement confirmations.' : 'Menerima alert instan via WhatsApp saat pembayaran Midtrans terverifikasi dan faktur resmi terbit.' }}
+                                        {{ $isEn ? 'Direct alerts for Midtrans payment verification and settlement confirmations.' : 'Menerima alert instan via WhatsApp saat pembayaran Midtrans terverifikasi dan invoice resmi terbit.' }}
                                     </span>
                                 </div>
                             </label>
@@ -2151,7 +2151,7 @@
                     <div class="flex items-center gap-2">
                         <span class="w-3 h-3 bg-emerald-500 rounded-none"></span>
                         <span class="text-xs font-mono font-bold uppercase text-zinc-800 dark:text-zinc-200">
-                            {{ $isEn ? 'All profile updates are immediately synchronized with your active contracts.' : 'Perubahan profil langsung disinkronkan ke seluruh dokumen kontrak dan faktur pajak aktif Anda.' }}
+                            {{ $isEn ? 'All profile updates are immediately synchronized with your active contracts.' : 'Perubahan profil langsung disinkronkan ke seluruh dokumen kontrak dan invoice aktif Anda.' }}
                         </span>
                     </div>
 
@@ -2450,7 +2450,7 @@
                 >
                     <span class="flex items-center gap-2">
                         <span>⚙️</span>
-                        <span>{{ $isEn ? 'Account Profile & Tax Data' : 'Profil Akun & Data Faktur' }}</span>
+                        <span>{{ $isEn ? 'Account Profile & Billing Data' : 'Profil Akun & Data Penagihan' }}</span>
                     </span>
                     <span class="text-zinc-400 text-[10px]">➔</span>
                 </button>
@@ -2472,7 +2472,7 @@
                 >
                     <span class="flex items-center gap-2">
                         <span>🧾</span>
-                        <span>{{ $isEn ? 'Invoices & Receipts' : 'Faktur Pajak & Kwitansi' }}</span>
+                        <span>{{ $isEn ? 'Invoices & Receipts' : 'Invoice & Kwitansi' }}</span>
                     </span>
                     <span class="text-zinc-400 text-[10px]">➔</span>
                 </button>

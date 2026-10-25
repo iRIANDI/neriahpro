@@ -57,13 +57,13 @@
         <div class="mb-8 border-b border-zinc-200 dark:border-zinc-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
                 <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black rounded-none">
-                    ORDER CART & ESCROW
+                    ORDER CART & MILESTONE PAYMENT
                 </span>
                 <h1 class="text-2xl sm:text-3xl font-black uppercase text-zinc-900 dark:text-zinc-100 mt-2">
                     Cart Pembayaran & Kunci Kontrak
                 </h1>
                 <p class="text-zinc-500 dark:text-zinc-400 text-xs font-mono mt-1">
-                    Daftar spesifikasi proyek yang siap dikunci scope dan dibayarkan termin DP (50%) via Midtrans Escrow.
+                    Daftar spesifikasi proyek yang siap dikunci scope dan dibayarkan termin DP (50%) via Midtrans Snap Payment.
                 </p>
             </div>
             @if(count($items) > 0)
@@ -282,7 +282,7 @@
                         RINGKASAN PEMBAYARAN
                     </span>
                     <h3 class="text-xl font-black uppercase text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
-                        Midtrans Escrow
+                        Midtrans Snap Payment
                     </h3>
 
                     <div class="space-y-3 text-xs font-mono mb-4">
@@ -412,7 +412,7 @@
                                 <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4 shrink-0">
                                     <div>
                                         <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
-                                            <span>KEPATUHAN LAYANAN &amp; MIDTRANS ESCROW</span>
+                                            <span>KEPATUHAN LAYANAN &amp; MIDTRANS SNAP PAYMENT</span>
                                         </h3>
                                         <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
                                             Transparansi Konsumen, Garansi SLA 30 Hari, &amp; Penanganan Idempotency Transaksi
@@ -524,7 +524,7 @@
                                 </div>
 
                                 <div class="border-t border-zinc-200 dark:border-zinc-800 pt-3 mt-4 flex items-center justify-between shrink-0">
-                                    <span class="text-[10px] text-zinc-500 font-mono">NERIAH PRO &bull; MIDTRANS ESCROW</span>
+                                    <span class="text-[10px] text-zinc-500 font-mono">NERIAH PRO &bull; MIDTRANS SNAP PAYMENT</span>
                                     <button 
                                         type="button" 
                                         @click="showLegalModal = false; const c = document.getElementById('cart-terms-agree'); if(c) c.checked = true;" 
@@ -561,7 +561,7 @@
                                 {{ $voucher ? 'Bayar DP Sekarang (Rp ' . number_format($finalTotalDp, 0, ',', '.') . ') &rarr;' : 'Bayar DP Sekarang (Midtrans Snap) &rarr;' }}
                             </button>
                             <p class="text-[10px] text-zinc-400 text-center font-mono">
-                                Escrow diamankan &amp; diverifikasi otomatis oleh Midtrans webhook.
+                                Pembayaran diamankan &amp; diverifikasi otomatis oleh Midtrans webhook.
                             </p>
                         @endif
                     </div>
@@ -574,7 +574,7 @@
     <footer class="bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 py-6 px-4 text-center text-xs border-t border-zinc-200 dark:border-zinc-800 font-mono mt-12">
         <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
             <p>&copy; {{ date('Y') }} NERIAH PRO HUB &bull; ULTIMATE PRD & ARCHITECTURE BLUEPRINT</p>
-            <p class="text-zinc-400 dark:text-zinc-500">MIDTRANS STRICT ESCROW PROTOCOL</p>
+            <p class="text-zinc-400 dark:text-zinc-500">MIDTRANS STRICT PAYMENT PROTOCOL</p>
         </div>
     </footer>
 
@@ -683,7 +683,7 @@
                                 window.showToast({
                                     type: 'success',
                                     title: 'PEMBAYARAN DP DIKONFIRMASI',
-                                    message: 'Transaksi berhasil diverifikasi oleh Midtrans Escrow! Memperbarui status...',
+                                    message: 'Transaksi berhasil diverifikasi oleh Midtrans Gateway! Memperbarui status...',
                                     duration: 3500
                                 });
                             }
@@ -771,7 +771,7 @@
                             window.showToast({
                                 type: 'success',
                                 title: 'PEMBAYARAN DP DIKONFIRMASI',
-                                message: 'Transaksi berhasil diverifikasi oleh Midtrans Escrow! Memperbarui status...',
+                                message: 'Transaksi berhasil diverifikasi oleh Midtrans Gateway! Memperbarui status...',
                                 duration: 3500
                             });
                         }

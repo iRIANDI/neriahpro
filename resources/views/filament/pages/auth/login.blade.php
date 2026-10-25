@@ -109,12 +109,12 @@
                             </div>
                             <div>
                                 <div style="font-size: 0.8125rem; font-weight: 700; color: #f4f4f5; font-family: monospace;">
-                                    {{ $isEn ? '2. Scope Lock OS & Digital Escrow' : '2. Scope Lock OS & Escrow Digital' }}
+                                    {{ $isEn ? '2. Scope Lock OS & Milestone Payment' : '2. Scope Lock OS & Termin Bertahap' }}
                                 </div>
                                 <div style="font-size: 0.75rem; color: #a1a1aa; line-height: 1.4; margin-top: 0.125rem;">
                                     {{ $isEn 
-                                        ? 'Zero scope creep via legally binding digital contracts, Midtrans DP escrow milestones, and SHA-256 integrity audits.' 
-                                        : 'Pencegahan penambahan lingkup tak terkendali lewat kontrak berpayung hukum, milestone escrow DP Midtrans, dan audit hash SHA-256.' }}
+                                        ? 'Zero scope creep via legally binding digital contracts, Midtrans DP payment milestones, and SHA-256 integrity audits.' 
+                                        : 'Pencegahan penambahan lingkup tak terkendali lewat kontrak berpayung hukum, termin pembayaran DP Midtrans, dan audit hash SHA-256.' }}
                                 </div>
                             </div>
                         </div>

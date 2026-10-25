@@ -98,7 +98,7 @@ class CmsSeeder extends Seeder
 
         CmsGlobalSetting::updateOrCreate(
             ['key' => 'pricing_mvp_price'],
-            ['value' => '50.000.000']
+            ['value' => 'Custom Quotation']
         );
 
         CmsGlobalSetting::updateOrCreate(

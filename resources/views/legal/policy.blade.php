@@ -151,6 +151,7 @@
         'featureFlags' => $featureFlags,
         'whatsappNumber' => $getSettingVal('company_whatsapp', '6281260840428'),
         'supportEmail' => $supportEmail,
+        'companyAddress' => $getSettingVal('company_address', 'Jl. Jenderal Sudirman Kav. 52-53, SCBD, Jakarta Selatan 12190, Indonesia'),
         'currentLocale' => $currentLang,
     ])
 

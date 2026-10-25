@@ -535,8 +535,8 @@ const ensureSnapReady = (snapUrl, clientKey) => {
     {
       q: isEn ? 'How does the 50% Down Payment (DP) work for Full MVP Development?' : 'Bagaimana skema pembayaran Uang Muka (DP) 50% untuk Full MVP?',
       a: isEn 
-        ? 'We enforce Scope Locking and Digital Legal Contracts. To kickstart the 5 sprints development, clients settle a 50% DP (Rp 25,000,000) securely via Midtrans or Bank Escrow. The remaining 50% is paid upon User Acceptance Testing (UAT) and successful deployment to production VPS.'
-        : 'Kami menerapkan transparansi penuh dengan Kontrak Hukum Digital dan Scope Locking. Untuk memulai pengerjaan 5 sprint, klien membayarkan DP 50% (Rp 25.000.000) via Midtrans atau Escrow Bank resmi. Sisa 50% dilunasi setelah User Acceptance Testing (UAT) tuntas dan sistem live di server produksi.'
+        ? 'We enforce Scope Locking and Digital Legal Contracts. To kickstart the 5 sprints development, clients settle a 50% DP securely via Midtrans Snap or official Bank Transfer (Termin Pembayaran Bertahap). The remaining 50% is paid upon User Acceptance Testing (UAT) and successful deployment to production VPS.'
+        : 'Kami menerapkan transparansi penuh dengan Kontrak Hukum Digital dan Scope Locking. Untuk memulai pengerjaan 5 sprint, klien membayarkan DP 50% via Midtrans Snap atau Transfer Bank resmi dengan skema termin pembayaran bertahap. Sisa 50% dilunasi setelah User Acceptance Testing (UAT) tuntas dan sistem live di server produksi.'
     },
     {
       q: isEn ? 'Who owns the intellectual property and source code in Neriah Pro Studio contracts?' : 'Siapakah pemilik hak cipta dan source code aplikasi pada pengerjaan Neriah Pro Studio?',
@@ -1281,17 +1281,17 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                 {/* Compact Price & Milestone Box */}
                 <div className="mb-5 p-3.5 bg-emerald-500/5 border border-emerald-500/30 space-y-2">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-2xl sm:text-3xl font-black font-mono text-zinc-900 dark:text-white">
-                      Rp {pricingSettings.mvp_price || '50.000.000'}
+                    <span className="text-xl sm:text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                      Custom Quotation
                     </span>
-                    <span className="text-[10px] font-mono text-zinc-500">{isEn ? 'Total Contract' : 'Nilai Kontrak'}</span>
+                    <span className="text-[10px] font-mono text-zinc-500">{isEn ? 'Enterprise Scope' : 'Scope Enterprise'}</span>
                   </div>
                   <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between text-xs font-mono">
                     <span className="text-emerald-700 dark:text-emerald-300 font-bold">
-                      {isEn ? 'Down Payment (50% DP):' : 'Uang Muka (DP 50%):'}
+                      {isEn ? 'Staged Milestones:' : 'Termin Pembayaran:'}
                     </span>
                     <span className="font-black text-emerald-800 dark:text-emerald-400">
-                      Rp 25.000.000
+                      {isEn ? 'DP 50% & UAT Sign-off' : 'DP 50% & Pelunasan Pasca-UAT'}
                     </span>
                   </div>
                   <div className="text-[10px] font-mono text-zinc-500">
@@ -1429,7 +1429,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     'Pembayaran Otomatis Instan QRIS & Virtual Account Bank (Integrasi Midtrans Snap)',
                     'Dashboard Admin Filament v5 Bahasa Indonesia (Kelola Pesanan, Stok, & Laporan Penjualan)',
                     'Ekspor Laporan Keuangan & Penjualan Otomatis (Format Excel & Dokumen PDF)',
-                    'Notifikasi Konfirmasi Pesanan & Faktur Otomatis via WhatsApp Standar E.164 ke Pelanggan',
+                    'Notifikasi Konfirmasi Pesanan & Invoice Otomatis via WhatsApp Standar E.164 ke Pelanggan',
                     'Setup Cloud SSD VPS Cepat + Domain Bisnis (.id / .com) dengan Enkripsi HTTPS SSL',
                     '100% Dikerjakan sampai Siap Pakai oleh Neriah Pro + Garansi Bug 1 Bulan & Panduan Video',
                   ]).map((feat, idx) => (
@@ -1530,7 +1530,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   </th>
                   <th className="py-3 px-3 font-bold text-emerald-800 dark:text-emerald-400">
                     <div>Full MVP Monolith</div>
-                    <div className="text-[9px] font-normal text-zinc-500">Rp 50.000.000 ({isEn ? '50% DP' : 'DP 50%'})</div>
+                    <div className="text-[9px] font-normal text-zinc-500">Custom Quotation (Enterprise)</div>
                   </th>
                   <th className="py-3 px-3 font-bold text-amber-800 dark:text-amber-400">
                     <div>UMKM Starter</div>
@@ -2342,7 +2342,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     {paymentStatus === 'success'
                       ? (isEn 
                           ? 'Your payment was successfully verified! Blueprint specification files, SQL schemas, and official invoices are available in your Customer Dashboard.' 
-                          : 'Pembayaran Anda telah sukses diverifikasi! Dokumen spesifikasi PRD, skema SQL DDL, dan faktur resmi telah aktif di Dashboard Pelanggan Anda.')
+                          : 'Pembayaran Anda telah sukses diverifikasi! Dokumen spesifikasi PRD, skema SQL DDL, dan invoice resmi telah aktif di Dashboard Pelanggan Anda.')
                       : lastOrder?.is_paid_package
                         ? (isEn 
                             ? 'Complete your payment securely via Midtrans Snap (QRIS, BCA/Mandiri/BRI Virtual Account, Credit Card). Your digital license will activate immediately upon payment.' 
@@ -2640,7 +2640,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                       </div>
                       <div className="grid grid-cols-3 gap-1.5 text-[10px] text-zinc-600 dark:text-zinc-300">
                         <span className="p-1.5 bg-white/60 dark:bg-zinc-900/60 border border-emerald-500/20 block text-center font-bold">📦 {isEn ? 'Lifetime Access' : 'Akses Selamanya'}</span>
-                        <span className="p-1.5 bg-white/60 dark:bg-zinc-900/60 border border-emerald-500/20 block text-center font-bold">🧾 {isEn ? 'Official Invoice' : 'Faktur Pajak'}</span>
+                        <span className="p-1.5 bg-white/60 dark:bg-zinc-900/60 border border-emerald-500/20 block text-center font-bold">🧾 {isEn ? 'Official Invoice' : 'Bukti Pembayaran Sah'}</span>
                         <span className="p-1.5 bg-white/60 dark:bg-zinc-900/60 border border-emerald-500/20 block text-center font-bold">⚡ {isEn ? 'Instant QRIS / VA' : 'QRIS / VA Instan'}</span>
                       </div>
                     </div>
@@ -2917,7 +2917,7 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     </span>
                     <span className="flex items-center gap-1">
                       <FileText className="w-3 h-3 text-emerald-500" />
-                      {isEn ? 'Official Tax Invoice' : 'Faktur Resmi & Kwitansi'}
+                      {isEn ? 'Official Commercial Invoice' : 'Bukti Pembayaran & Kwitansi Resmi'}
                     </span>
                   </div>
                 </form>

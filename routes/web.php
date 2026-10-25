@@ -95,7 +95,7 @@ Route::match(['get', 'post'], '/api/midtrans/webhook', function (\Illuminate\Htt
     return app(\App\Http\Controllers\MidtransWebhookController::class)->handle($request);
 });
 
-// Cart & Project Escrow Checkout Routes
+// Cart & Project Checkout Routes
 Route::get('/cart', [\App\Http\Controllers\CartController::class, 'index'])->name('cart.index');
 Route::get('/api/cart', [\App\Http\Controllers\CartController::class, 'apiCart'])->name('api.cart');
 Route::post('/cart/add/{slug}', [\App\Http\Controllers\CartController::class, 'add'])->name('cart.add');

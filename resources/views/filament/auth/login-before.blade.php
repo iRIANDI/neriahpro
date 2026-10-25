@@ -43,8 +43,8 @@
             </div>
             <p style="font-size: 10px; color: #52525b; line-height: 1.35; margin: 0;" class="dark:text-zinc-400">
                 {{ $isEn 
-                    ? 'Anti-scope-creep contracts, milestone escrow, and deliverable certainty.' 
-                    : 'Kontrak anti-scope-creep, milestone escrow, dan kepastian deliverable.' }}
+                    ? 'Anti-scope-creep contracts, milestone payments, and deliverable certainty.' 
+                    : 'Kontrak anti-scope-creep, termin bertahap, dan kepastian deliverable.' }}
             </p>
         </div>
 

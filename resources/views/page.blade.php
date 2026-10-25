@@ -210,7 +210,7 @@
                         ] : null,
                         'pricingSettings' => [
                             'advisory_price' => $getSettingVal('pricing_advisory_price', '2.500.000'),
-                            'mvp_price' => $getSettingVal('pricing_mvp_price', '50.000.000'),
+                            'mvp_price' => $getSettingVal('pricing_mvp_price', 'Custom Quotation'),
                             'umkm_price' => $getSettingVal('pricing_umkm_price', '7.500.000'),
                             'retail_spark_price' => $getSettingVal('pricing_retail_spark_price', '0'),
                             'retail_lite_price' => $getSettingVal('pricing_retail_lite_price', '99.000'),
@@ -236,7 +236,7 @@
                 'currentLocale' => app()->getLocale(),
                 'pricingSettings' => [
                     'advisory_price' => $getSettingVal('pricing_advisory_price', '2.500.000'),
-                    'mvp_price' => $getSettingVal('pricing_mvp_price', '50.000.000'),
+                    'mvp_price' => $getSettingVal('pricing_mvp_price', 'Custom Quotation'),
                     'umkm_price' => $getSettingVal('pricing_umkm_price', '7.500.000'),
                     'retail_spark_price' => $getSettingVal('pricing_retail_spark_price', '0'),
                     'retail_lite_price' => $getSettingVal('pricing_retail_lite_price', '99.000'),
@@ -260,6 +260,7 @@
         'featureFlags' => $featureFlags,
         'whatsappNumber' => $getSettingVal('company_whatsapp', '6281260840428'),
         'supportEmail' => $getSettingVal('developer_support_email', 'support@neriahpro.com'),
+        'companyAddress' => $getSettingVal('company_address', 'Jl. Jenderal Sudirman Kav. 52-53, SCBD, Jakarta Selatan 12190, Indonesia'),
         'currentLocale' => app()->getLocale(),
     ])
 

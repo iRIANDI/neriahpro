@@ -43,7 +43,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $invoiceNumber }} - Faktur Pajak Resmi & Kwitansi Reimbursement | Neriah Pro</title>
+    <title>{{ $invoiceNumber }} - Bukti Pembayaran Sah & Official Commercial Invoice | Neriah Pro</title>
 
     <!-- Local Fonts -->
     <link rel="stylesheet" href="{{ asset('fonts/instrument-sans/instrument-sans.css') }}">
@@ -123,9 +123,9 @@
 
             <div class="sm:text-right">
                 <div class="inline-block px-3 py-1 text-xs font-mono font-black uppercase tracking-wider mb-2 border {{ $isSettled ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950 dark:text-amber-200' }}">
-                    {{ $isSettled ? '✓ LUNAS // OFFICIAL TAX RECEIPT' : 'MENUNGGU PEMBAYARAN' }}
+                    {{ $isSettled ? '✓ LUNAS // OFFICIAL COMMERCIAL INVOICE' : 'MENUNGGU PEMBAYARAN' }}
                 </div>
-                <div class="text-xs font-mono text-zinc-500 font-bold uppercase">NOMOR FAKTUR / INVOICE:</div>
+                <div class="text-xs font-mono text-zinc-500 font-bold uppercase">NOMOR INVOICE / BUKTI BAYAR:</div>
                 <div class="text-sm sm:text-base font-mono font-black text-zinc-900 dark:text-white">{{ $invoiceNumber }}</div>
                 <div class="text-xs font-mono text-zinc-500 mt-1">
                     Tanggal: <strong>{{ $transaction->created_at ? $transaction->created_at->format('d M Y, H:i') : date('d M Y') }} WIB</strong>
@@ -160,7 +160,7 @@
                     <div>Gateway: <strong>Midtrans Payment Gateway (Snap API)</strong></div>
                     <div>ID Transaksi: <strong>{{ $transaction->midtrans_transaction_id ?: 'Verifikasi Gateway Otomatis' }}</strong></div>
                     <div>Status: <span class="font-bold {{ $isSettled ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600' }}">{{ strtoupper($transaction->status) }}</span></div>
-                    <div>Jenis Dokumen: <strong>Kwitansi Pembayaran & Faktur Pajak Jasa Digital</strong></div>
+                    <div>Jenis Dokumen: <strong>Official Commercial Invoice & Kwitansi Pembayaran</strong></div>
                 </div>
             </div>
         </div>
@@ -232,7 +232,7 @@
             <div class="p-3 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 text-[10px] font-mono text-zinc-500 leading-normal space-y-1">
                 <div class="font-bold text-zinc-800 dark:text-zinc-200 uppercase">KEABSAHAN DOKUMEN ELEKTRONIK:</div>
                 <p>
-                    Dokumen ini merupakan Faktur Pajak Resmi dan Bukti Pembayaran Digital yang diterbitkan secara otomatis oleh sistem akuntansi <strong>Neriah Pro</strong> terintegrasi dengan Payment Gateway Midtrans.
+                    Dokumen ini merupakan Bukti Pembayaran Sah dan Official Commercial Invoice yang diterbitkan secara otomatis oleh sistem akuntansi <strong>Neriah Pro</strong> terintegrasi dengan Payment Gateway Midtrans.
                 </p>
                 <div class="text-zinc-400 truncate">
                     SHA-256 CHECK: {{ hash('sha256', $invoiceNumber . $totalAmount . $orderRef) }}

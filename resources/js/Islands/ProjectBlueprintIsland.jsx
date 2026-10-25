@@ -95,7 +95,7 @@ const TRANSLATIONS = {
     sampleTemplates: "Contoh Templat Ide Cepat:",
     tplLogistics: "🚚 Manajemen Armada Truk & Pelacakan Resi Logistik",
     tplClinic: "🏥 Sistem Informasi Klinik & Rekam Medis Pasien Terpadu",
-    tplRental: "🏢 Marketplace Rental Alat Berat B2B & Escrow Tagihan Tempo",
+    tplRental: "🏢 Marketplace Rental Alat Berat B2B & Tagihan Bertahap",
     tplHr: "💼 HR Portal, Presensi GPS, Evaluasi KPI & Penggajian Terpadu",
 
     dropzoneTitle: "Lampirkan Dokumen Spesifikasi atau Sketsa Wireframe",
@@ -216,7 +216,7 @@ const TRANSLATIONS = {
     sampleTemplates: "Quick Idea Templates:",
     tplLogistics: "🚚 Freight Logistics & Waybill Tracking Platform",
     tplClinic: "🏥 Integrated Medical Clinic & Electronic Health Records",
-    tplRental: "🏢 B2B Heavy Machinery Rental & Invoiced Escrow",
+    tplRental: "🏢 B2B Heavy Machinery Rental & Milestone Invoicing",
     tplHr: "💼 HR Portal, GPS Attendance, KPI Review & Payroll",
 
     dropzoneTitle: "Attach Specification Documents or Wireframe Sketches",
@@ -3226,8 +3226,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 : 'Dikerjakan 100% turnkey oleh Senior Architect Neriah Pro. Managed sprint batch & garansi bug SLA.'}
             </p>
             <div className="font-mono text-[10px] text-blue-600 dark:text-blue-400 font-bold border-t border-zinc-200 dark:border-zinc-800/80 pt-2 flex items-center justify-between">
-              <span>Rp 3.750.000 s/d Rp 50.000.000</span>
-              <span className="text-zinc-500 font-normal">Escrow DP 50%</span>
+              <span>Rp 3.750.000 (UMKM) / Custom Quotation</span>
+              <span className="text-zinc-500 font-normal">Termin DP 50%</span>
             </div>
           </button>
         </div>
@@ -3280,7 +3280,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 ⏱️ MANAGED SPRINT BATCH (ANTI-COLLISION)
               </span>
               <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold border border-zinc-300 dark:border-zinc-700">
-                💳 MIDTRANS SNAP ESCROW (DP 50%)
+                💳 MIDTRANS SNAP PAYMENT (DP 50%)
               </span>
             </div>
           )}
@@ -3389,8 +3389,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   type="button"
                   onClick={() => applyTemplate(
                     lang === 'en'
-                      ? "B2B heavy machinery rental marketplace. Equipment owners list excavators and bulldozers with hourly pricing. Construction contractors rent with automated escrow and milestone payment schedule."
-                      : "Marketplace rental alat berat B2B (excavator, crane, bulldozer). Pemilik alat listing spesifikasi & tarif sewa. Kontraktor menyewa dengan sistem escrow deposit dan jadwal penagihan tempo."
+                      ? "B2B heavy machinery rental marketplace. Equipment owners list excavators and bulldozers with hourly pricing. Construction contractors rent with automated milestone payment schedule."
+                      : "Marketplace rental alat berat B2B (excavator, crane, bulldozer). Pemilik alat listing spesifikasi & tarif sewa. Kontraktor menyewa dengan sistem pembayaran termin bertahap dan jadwal penagihan tempo."
                   )}
                   className="px-2.5 py-1 text-xs font-mono bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 rounded-none transition text-left"
                 >
@@ -4605,7 +4605,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   lang === 'en' ? 'Advisory Tier: Rp 2,500,000 (PRD 26 Parameters, Strict DDL & Gantt WBS)' : 'Advisory Tier: Rp 2.500.000 (PRD 26 Parameter, Strict DDL & Gantt WBS)',
                   lang === 'en' ? 'UMKM Digital Starter: Rp 3,750,000 (Cashier Web Engine & Admin Dashboard)' : 'UMKM Digital Starter: Rp 3.750.000 (Engine Transaksi Web Kasir & Admin Dashboard)',
                   lang === 'en' ? '$1,000 - $3,000 USD (Growth / Custom Business Portal - Multi-Role & Gateway)' : 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
-                  lang === 'en' ? 'Enterprise Monolith: Rp 50,000,000 (Dedicated Senior Architect Squad - Full Turnkey)' : 'Enterprise Monolith: Rp 50.000.000 (Dedicated Senior Architect Squad - Full Turnkey)',
+                  lang === 'en' ? 'Enterprise Monolith: Custom Quotation (Dedicated Senior Architect Squad - Full Turnkey)' : 'Enterprise Monolith: Custom Quotation (Dedicated Senior Architect Squad - Full Turnkey)',
                 ]).map((tierOpt, idx) => (
                   <button
                     key={idx}
@@ -4700,13 +4700,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 }`}>
                   {currentTrack === 'retail'
                     ? (lang === 'en' ? 'Instant Access (No 50/50 DP)' : 'Akses Instan (Tanpa Termin DP 50/50)')
-                    : (lang === 'en' ? 'Escrow DP 50% Contract' : 'Kontrak Escrow Termin DP 50%')}
+                    : (lang === 'en' ? 'Milestone DP 50% Contract' : 'Kontrak Termin Bertahap DP 50%')}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2 font-sans">
                 {currentTrack === 'retail'
                   ? (lang === 'en' ? 'Self-service licenses are instant deliverables. No milestone lock, no agency contractual terms.' : 'Lisensi retail adalah produk digital instan mandiri. Bukan kontrak pengerjaan agensi ber-termin 50/50.')
-                  : (lang === 'en' ? 'Turnkey studio development with milestones protected by Escrow DP 50% & UAT sign-off.' : 'Pengerjaan koding studio dengan termin bertahap yang dilindungi garansi serah terima UAT.')}
+                  : (lang === 'en' ? 'Turnkey studio development with milestones protected by Milestone DP 50% & UAT sign-off.' : 'Pengerjaan koding studio dengan termin bertahap yang dilindungi garansi serah terima UAT.')}
               </p>
               <div className="flex flex-wrap gap-2 mb-2">
                 {(currentTrack === 'retail' ? [
@@ -4906,7 +4906,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               ) : currentTrack === 'studio' ? (
                 <>
                   <Rocket className="w-4 h-4 text-emerald-500" />
-                  <span>{lang === 'en' ? 'LOCK BLUEPRINT & BOOK STUDIO SPRINT SCHEDULE (50% DP ESCROW) →' : 'KUNCI BLUEPRINT & KUNCI JADWAL SPRINT STUDIO (KONTRAK SLA & DP 50%) →'}</span>
+                  <span>{lang === 'en' ? 'LOCK BLUEPRINT & BOOK STUDIO SPRINT SCHEDULE (50% DP MILESTONE) →' : 'KUNCI BLUEPRINT & KUNCI JADWAL SPRINT STUDIO (KONTRAK SLA & DP 50%) →'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               ) : (

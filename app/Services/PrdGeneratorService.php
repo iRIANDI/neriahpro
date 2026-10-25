@@ -49,8 +49,8 @@ class PrdGeneratorService
         // Parse Workflow Stages with granular engineering decomposition
         $workflowStages = self::parseWorkflow($alurKerja, $businessName);
 
-        // Generate tailored ERD Database Schema with strict ULID standards
-        $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems);
+        // Generate tailored ERD Database Schema with strict ULID standards & LLM reasoning
+        $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems, $blueprint, $preferredAiProvider);
 
         // Extract ultimate blueprint context from metadata
         $metadata = $blueprint->user_metadata ?? [];
@@ -673,9 +673,31 @@ class PrdGeneratorService
 
     /**
      * Generate Tailored ERD Database Schema (ULID Primary Keys & PostgreSQL strict standards).
+     * Integrates Full LLM Reasoning (DeepSeek-R1 / Claude 3.7 / Gemini 2.5 / OpenAI) with automatic failover
+     * to synthesize 100% domain-specific relational entities from client document/corpus,
+     * while retaining an instantaneous deterministic heuristic fallback.
      */
-    protected static function generateErdSchema(string $businessName, array $mvpItems, array $actorItems): array
+    protected static function generateErdSchema(
+        string $businessName, 
+        array $mvpItems, 
+        array $actorItems, 
+        ?VisionBlueprint $blueprint = null, 
+        ?string $preferredAiProvider = null
+    ): array
     {
+        // 1. Attempt Dynamic LLM Reasoning if Blueprint is provided
+        if ($blueprint) {
+            try {
+                $llmTables = self::synthesizeErdSchemaWithAi($businessName, $mvpItems, $actorItems, $blueprint, $preferredAiProvider);
+                if (!empty($llmTables) && is_array($llmTables) && count($llmTables) >= 2) {
+                    return $llmTables;
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::info("AI ERD synthesis fallback to deterministic heuristics: " . $e->getMessage());
+            }
+        }
+
+        // 2. Deterministic Heuristic Fallback Engine
         $domainSlug = Str::slug($businessName, '_');
         $domainSlug = preg_replace('/[^a-zA-Z0-9_]/', '_', $domainSlug);
         $domainSlug = trim($domainSlug, '_');
@@ -801,6 +823,225 @@ class PrdGeneratorService
         }
 
         return $baseTables;
+    }
+
+    /**
+     * Synthesize domain-specific relational database entities using Flagship LLM Reasoning
+     * with Strict ULID and Keyset Indexing standards.
+     */
+    protected static function synthesizeErdSchemaWithAi(
+        string $businessName, 
+        array $mvpItems, 
+        array $actorItems, 
+        VisionBlueprint $blueprint, 
+        ?string $preferredAiProvider = null
+    ): array
+    {
+        $masalah = $blueprint->masalah_utama ?: 'Otomatisasi alur kerja operasional.';
+        $tujuan = $blueprint->tujuan_utama ?: 'Efisiensi dan akurasi data.';
+        $slug = $blueprint->slug ?: Str::slug($businessName);
+
+        // Fetch corpus if available from disk
+        $corpusContent = "";
+        try {
+            $corpusFile = storage_path("app/projects/{$slug}/markdown/synthesized_corpus.md");
+            if (file_exists($corpusFile)) {
+                $corpusContent = mb_substr(file_get_contents($corpusFile), 0, 8000);
+            }
+        } catch (\Throwable $e) {}
+
+        if (empty($corpusContent) && !empty($blueprint->user_metadata['raw_corpus'])) {
+            $corpusContent = mb_substr((string) $blueprint->user_metadata['raw_corpus'], 0, 8000);
+        }
+
+        $featuresStr = implode("\n", array_map(function($idx, $item) {
+            return ($idx + 1) . ". " . ($item['title'] ?? '') . ": " . ($item['desc'] ?? '');
+        }, array_keys($mvpItems), $mvpItems));
+
+        $actorsStr = implode("\n", array_map(function($idx, $act) {
+            return ($idx + 1) . ". " . ($act['name'] ?? '') . " (" . ($act['badge'] ?? '') . "): " . ($act['role'] ?? '');
+        }, array_keys($actorItems), $actorItems));
+
+        $prompt = <<<PROMPT
+You are a Principal Enterprise Database Architect specializing in PostgreSQL 16 Strict ULID and high-concurrency systems (O(1) Keyset Cursor Pagination).
+Analyze this system specification:
+Project: "{$businessName}"
+Problem Statement: "{$masalah}"
+Success Metrics: "{$tujuan}"
+MVP Features:
+{$featuresStr}
+System Actors & RBAC:
+{$actorsStr}
+Attached Brief / Corpus Context:
+{$corpusContent}
+
+Task:
+Generate a comprehensive relational database schema comprising 4 to 8 domain-specific business entities that 100% reflect the client's actual business logic and attributes.
+
+MANDATORY ARCHITECTURAL RULES:
+1. Primary Key: Every table MUST have column 'id' of type 'ulid' (VARCHAR 26) with index 'PRIMARY'. NEVER use auto-increment or UUID.
+2. Foreign Keys: Every foreign relation MUST end in '_id' and use type 'foreignUlid' (VARCHAR 26) with index 'INDEX'.
+3. Keyset Cursor Pagination: Every table MUST have timestamp 'created_at' with index 'INDEX' for sub-millisecond O(1) cursor pagination.
+4. Business Column Integrity: Include realistic, concrete columns for this specific domain (e.g. monetary decimals, quantities, codes, localized names, phone_e164, status enums, flags, audit timestamps). DO NOT just return lazy generic 'data_payload jsonb' for everything.
+5. Naming: Tables must be lowercase snake_case plural (e.g., 'orders', 'order_items', 'vehicles', 'inspections', 'work_orders', 'invoices').
+6. Output JSON Array ONLY with schema:
+[
+  {
+    "name": "table_name_plural",
+    "description": "Clear explanation of table business purpose",
+    "primary_key": "id (ULID - VARCHAR 26)",
+    "columns": [
+      {
+        "name": "column_name",
+        "type": "ulid|foreignUlid|string(255)|integer|decimal(15,2)|jsonb|boolean|timestamp|text",
+        "index": "PRIMARY|INDEX|UNIQUE|NONE",
+        "nullable": false,
+        "notes": "Clear purpose of this field",
+        "label": {"id": "Nama Kolom Indonesia", "en": "English Column Name"}
+      }
+    ]
+  }
+]
+PROMPT;
+
+        $systemInstruction = "You are the world's leading PostgreSQL Database Architect and Laravel 13 Specialist. You output valid JSON array ONLY, zero markdown fences, zero conversational preamble.";
+
+        $aiRes = \App\Services\Ai\MultiAiModelManager::executeWithFailover($prompt, $systemInstruction, 'discovery', $preferredAiProvider);
+
+        if (empty($aiRes['text'])) {
+            return [];
+        }
+
+        $jsonText = trim($aiRes['text']);
+        if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/', $jsonText, $m)) {
+            $jsonText = trim($m[1]);
+        }
+
+        $decoded = json_decode($jsonText, true);
+        if (!is_array($decoded) || empty($decoded)) {
+            return [];
+        }
+
+        $normalizedTables = [];
+        $hasUsers = false;
+        $hasLogs = false;
+
+        foreach ($decoded as $t) {
+            if (!is_array($t) || empty($t['name'])) continue;
+
+            $tName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', trim($t['name'])));
+            if ($tName === 'users') $hasUsers = true;
+            if ($tName === 'activity_logs' || $tName === 'audit_logs') $hasLogs = true;
+
+            $cols = [];
+            $hasId = false;
+            $hasCreatedAt = false;
+
+            if (!empty($t['columns']) && is_array($t['columns'])) {
+                foreach ($t['columns'] as $c) {
+                    if (!is_array($c) || empty($c['name'])) continue;
+                    $cName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', trim($c['name'])));
+                    $cType = $c['type'] ?? 'string(255)';
+                    $cIndex = strtoupper($c['index'] ?? 'NONE');
+                    $cNullable = (bool)($c['nullable'] ?? false);
+                    $cNotes = $c['notes'] ?? '';
+                    $cLabel = $c['label'] ?? ['id' => Str::headline($cName), 'en' => Str::headline($cName)];
+
+                    if ($cName === 'id') {
+                        $hasId = true;
+                        $cType = 'ulid';
+                        $cIndex = 'PRIMARY';
+                        $cNullable = false;
+                    }
+
+                    if ($cName === 'created_at') {
+                        $hasCreatedAt = true;
+                        $cType = 'timestamp';
+                        $cIndex = 'INDEX';
+                    }
+
+                    if (str_ends_with($cName, '_id') && $cName !== 'id') {
+                        $cType = 'foreignUlid';
+                        $cIndex = 'INDEX';
+                    }
+
+                    $cols[] = [
+                        'name' => $cName,
+                        'type' => $cType,
+                        'index' => $cIndex,
+                        'nullable' => $cNullable,
+                        'notes' => $cNotes,
+                        'label' => is_array($cLabel) ? $cLabel : ['id' => $cLabel, 'en' => $cLabel],
+                    ];
+                }
+            }
+
+            if (!$hasId) {
+                array_unshift($cols, [
+                    'name' => 'id',
+                    'type' => 'ulid',
+                    'index' => 'PRIMARY',
+                    'nullable' => false,
+                    'notes' => 'ULID primary key (26-char string)',
+                    'label' => ['id' => 'ID (ULID)', 'en' => 'ID (ULID)'],
+                ]);
+            }
+
+            if (!$hasCreatedAt) {
+                $cols[] = [
+                    'name' => 'created_at',
+                    'type' => 'timestamp',
+                    'index' => 'INDEX',
+                    'nullable' => true,
+                    'notes' => 'Keyset cursor pointer O(1)',
+                    'label' => ['id' => 'Waktu Dibuat', 'en' => 'Created At'],
+                ];
+            }
+
+            $normalizedTables[] = [
+                'name' => $tName,
+                'description' => $t['description'] ?? 'Tabel domain bisnis spesifik.',
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => $cols,
+            ];
+        }
+
+        // Always ensure users table is present
+        if (!$hasUsers) {
+            array_unshift($normalizedTables, [
+                'name' => 'users',
+                'description' => 'Menyimpan kredensial otentikasi semua aktor sistem (Admin, Staff, Klien).',
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => [
+                    ['name' => 'id', 'type' => 'ulid', 'index' => 'PRIMARY', 'nullable' => false, 'notes' => 'Unique Lexicographically Sortable ID', 'label' => ['id' => 'ID Pengguna (ULID)', 'en' => 'User ID (ULID)']],
+                    ['name' => 'name', 'type' => 'string(255)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Nama lengkap pengguna', 'label' => ['id' => 'Nama Lengkap', 'en' => 'Full Name']],
+                    ['name' => 'email', 'type' => 'string(255)', 'index' => 'UNIQUE', 'nullable' => false, 'notes' => 'Email unik untuk login', 'label' => ['id' => 'Alamat Email', 'en' => 'Email Address']],
+                    ['name' => 'password', 'type' => 'string(255)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Hashed Argon2id / Bcrypt', 'label' => ['id' => 'Kata Sandi Enkripsi', 'en' => 'Hashed Password']],
+                    ['name' => 'role', 'type' => 'string(50)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'superadmin | staff | client', 'label' => ['id' => 'Peran Hak Akses', 'en' => 'Access Role']],
+                    ['name' => 'is_active', 'type' => 'boolean', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Status aktif akun', 'label' => ['id' => 'Status Aktif', 'en' => 'Active Status']],
+                    ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Waktu pembuatan akun', 'label' => ['id' => 'Waktu Dibuat', 'en' => 'Created At']],
+                ],
+            ]);
+        }
+
+        // Always ensure activity logs table is present
+        if (!$hasLogs) {
+            $normalizedTables[] = [
+                'name' => 'activity_logs',
+                'description' => 'Pencatatan riwayat audit (audit trail) untuk keamanan dan akuntabilitas sistem.',
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => [
+                    ['name' => 'id', 'type' => 'ulid', 'index' => 'PRIMARY', 'nullable' => false, 'notes' => 'ULID audit record', 'label' => ['id' => 'ID Audit (ULID)', 'en' => 'Audit ID (ULID)']],
+                    ['name' => 'user_id', 'type' => 'foreignUlid', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Aktor yang melakukan aksi', 'label' => ['id' => 'Aktor Pengguna', 'en' => 'Actor User ID']],
+                    ['name' => 'action', 'type' => 'string(100)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'create | update | delete | approve', 'label' => ['id' => 'Jenis Aksi Sistem', 'en' => 'System Action']],
+                    ['name' => 'target_table', 'type' => 'string(100)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Nama tabel sasaran', 'label' => ['id' => 'Tabel Sasaran', 'en' => 'Target Table']],
+                    ['name' => 'changes', 'type' => 'jsonb', 'index' => 'NONE', 'nullable' => true, 'notes' => 'Snapshot diff data sebelum & sesudah', 'label' => ['id' => 'Perubahan Diff (JSONB)', 'en' => 'Changes Diff (JSONB)']],
+                    ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Timestamp kejadian', 'label' => ['id' => 'Waktu Kejadian', 'en' => 'Timestamp']],
+                ],
+            ];
+        }
+
+        return $normalizedTables;
     }
 
     /**

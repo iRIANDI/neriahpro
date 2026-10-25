@@ -759,7 +759,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
         };
 
         window.copyFullPrdMarkdown = function(btnEl) {
-            window.location.href = '{{ route('blueprint.download-md', $blueprint->slug) }}';
+            window.dispatchEvent(new CustomEvent('open-raw-md-warning', { detail: { action: 'copy' } }));
         };
 
         window.copyCockpitStepPrompt = function(btnEl, preId) {
@@ -1461,6 +1461,22 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 },
                 showAiPromptModal: false,
                 showLegalTermsModal: false,
+                showRawMdWarningModal: false,
+                rawMdActionType: 'download',
+                openRawMdWarning(action) {
+                    this.rawMdActionType = action || 'download';
+                    this.showRawMdWarningModal = true;
+                },
+                proceedWithRawMd() {
+                    this.showRawMdWarningModal = false;
+                    if (this.rawMdActionType === 'download') {
+                        window.location.href = "{{ route('blueprint.download-md', $blueprint->slug) }}";
+                    } else if (this.rawMdActionType === 'copy') {
+                        if (window.executeCopyFullPrdMarkdown) {
+                            window.executeCopyFullPrdMarkdown();
+                        }
+                    }
+                },
                 legalTermsTab: 'id',
                 selectedPromptAgent: 'antigravity',
                 selectedPromptSprint: 'all',
@@ -1703,7 +1719,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
         }
     </script>
 </head>
-<body x-data="blueprintApp()" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
+<body x-data="blueprintApp()" @open-raw-md-warning.window="openRawMdWarning($event.detail?.action)" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- 1. TOP UTILITY HEADER (FULL SITE NAVIGATION + DUAL TIER LANGUAGE + THEME TOGGLE) -->
     <x-global-navigation :global-settings="$globalSettings ?? []" />
@@ -1747,9 +1763,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     <a href="{{ route('blueprint.download-pdf', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Dokumen PDF Resmi">
                         <span>PDF</span>
                     </a>
-                    <a href="{{ route('blueprint.download-md', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Markdown Asli (.MD)">
+                    <button type="button" @click.prevent="$dispatch('open-raw-md-warning', { action: 'download' })" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Unduh Markdown Asli (.MD) - Disarankan Per-Fitur di Cockpit">
                         <span class="hidden sm:inline">MD</span>
-                    </a>
+                    </button>
                     <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition flex items-center gap-1" title="Unduh .cursorrules / CLAUDE.md untuk AI IDE">
                         <span class="hidden xl:inline">.CURSORRULES</span>
                         <span class="xl:hidden">RULES</span>
@@ -4025,6 +4041,53 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted('step_foundation') ? 'bg-black' : 'bg-zinc-400 dark:bg-zinc-500'"></span>
                                     <span x-text="isStepCompleted('step_foundation') ? '✓ TAHAP 1 TERVERIFIKASI &amp; COMMITTED' : 'TANDAI TAHAP 1 SELESAI'"></span>
                                 </button>
+                            </div>
+                        </div>
+
+                        <!-- One-Click Scaffold Archive Download (Pilar 3 & 10 Pillars Turnkey Foundation) -->
+                        <div class="p-4 bg-emerald-500/10 dark:bg-emerald-950/40 border-2 border-emerald-500 text-xs font-mono space-y-3">
+                            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 bg-emerald-500 animate-pulse"></span>
+                                        <span class="font-black text-xs sm:text-sm uppercase text-zinc-900 dark:text-zinc-100 tracking-wide">1. UNDUH INITIAL REPO SCAFFOLD (.ZIP 10 PILAR)</span>
+                                    </div>
+                                    <p class="font-sans text-[11px] text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
+                                        Unduh bundel repositori turnkey berisikan seluruh 10 Pilar Software Factory OS: <code>docker-compose.yml</code>, <code>schema_complete.sql</code>, <code>SyntheticDataSeeder.php</code>, <code>ApiContractTest.php</code>, <code>deploy.sh</code>, dan aturan AI agent (<code>.cursorrules</code>, <code>AGENTS.md</code>).
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button 
+                                        type="button" 
+                                        @click="openScaffoldModal()" 
+                                        class="px-3 py-2 bg-white dark:bg-zinc-900 border border-emerald-500/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition cursor-pointer"
+                                        title="Buka Pratinjau File Scaffold Sebelum Unduh"
+                                    >
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        <span>PREVIEW SCAFFOLD</span>
+                                    </button>
+                                    <a 
+                                        href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" 
+                                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer shadow-none"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        <span>UNDUH REPO SCAFFOLD (.ZIP)</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-emerald-500/30 text-[11px] font-sans">
+                                <div class="p-2.5 bg-white dark:bg-zinc-900 border border-emerald-500/30">
+                                    <strong class="text-emerald-700 dark:text-emerald-400 block font-mono text-xs">LANGKAH A: EKSTRAK</strong>
+                                    <span class="text-zinc-600 dark:text-zinc-400 text-[11px] leading-relaxed">Ekstrak berkas <code>.zip</code> ini ke folder proyek baru di komputer lokal atau VPS Anda.</span>
+                                </div>
+                                <div class="p-2.5 bg-white dark:bg-zinc-900 border border-emerald-500/30">
+                                    <strong class="text-emerald-700 dark:text-emerald-400 block font-mono text-xs">LANGKAH B: RUN CONTAINER</strong>
+                                    <span class="text-zinc-600 dark:text-zinc-400 text-[11px] leading-relaxed">Buka terminal, jalankan <code>docker compose up -d</code> untuk menyalakan engine PostgreSQL 16 &amp; Redis 7.</span>
+                                </div>
+                                <div class="p-2.5 bg-white dark:bg-zinc-900 border border-emerald-500/30">
+                                    <strong class="text-emerald-700 dark:text-emerald-400 block font-mono text-xs">LANGKAH C: JALANKAN PROMPT</strong>
+                                    <span class="text-zinc-600 dark:text-zinc-400 text-[11px] leading-relaxed">Salin prompt Fondasi Global di bawah ke IDE Agent (Antigravity/Cursor/Claude Code) untuk build migrasi database.</span>
+                                </div>
                             </div>
                         </div>
 
@@ -7301,14 +7364,15 @@ class ProcessSecureDataset implements ShouldQueue
                                 </div>
                                 
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-emerald-500/20 no-print">
-                                    <a 
-                                        href="{{ route('blueprint.download-md', $blueprint->slug) }}"
-                                        class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                    <button 
+                                        type="button"
+                                        @click.prevent="$dispatch('open-raw-md-warning', { action: 'download' })"
+                                        class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                                         title="Unduh File Asli Markdown (.MD) untuk AI Coding Agent"
                                     >
                                         <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                         <span>Unduh PRD (.MD)</span>
-                                    </a>
+                                    </button>
 
                                     <a 
                                         href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}"
@@ -7636,14 +7700,15 @@ class ProcessSecureDataset implements ShouldQueue
                                 </a>
                             @endif
 
-                            <a 
-                                href="{{ route('blueprint.download-md', $blueprint->slug) }}"
-                                class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                            <button 
+                                type="button"
+                                @click.prevent="$dispatch('open-raw-md-warning', { action: 'download' })"
+                                class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                                 title="Unduh File Asli Markdown (.MD) untuk AI Coding Agent"
                             >
                                 <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 <span>Unduh PRD (.MD)</span>
-                            </a>
+                            </button>
 
                             <a 
                                 href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}"
@@ -9075,6 +9140,65 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
             </div>
         </div>
+    <!-- CONTEXT-ROT PREVENTION & RAW MD EDUCATIONAL WARNING MODAL -->
+    <div 
+        x-show="showRawMdWarningModal" 
+        x-cloak 
+        @keydown.escape.window="showRawMdWarningModal = false"
+        class="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 no-print font-sans"
+    >
+        <div 
+            @click.outside="showRawMdWarningModal = false" 
+            class="bg-white dark:bg-zinc-950 border-2 border-amber-500 max-w-xl w-full my-auto flex flex-col p-6 rounded-none text-zinc-900 dark:text-zinc-100 shadow-2xl relative"
+        >
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 bg-amber-500 rounded-none inline-block animate-pulse"></span>
+                    <h3 class="text-sm sm:text-base font-mono font-black uppercase text-zinc-900 dark:text-white tracking-wide">
+                        PERINGATAN ARSITEKTUR: RISIKO CONTEXT-ROT
+                    </h3>
+                </div>
+                <button type="button" @click="showRawMdWarningModal = false" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 font-mono text-sm cursor-pointer">&times;</button>
+            </div>
+
+            <!-- Body -->
+            <div class="space-y-4 text-xs">
+                <div class="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-400 dark:border-amber-700 text-amber-950 dark:text-amber-200 leading-relaxed font-sans">
+                    <strong class="font-mono uppercase block mb-1 text-amber-950 dark:text-amber-300 font-black">⚠️ Perhatian Pengembang &amp; Pengguna AI Coding Agent:</strong>
+                    Menyalin atau memasukkan seluruh dokumen Master PRD (ribuan baris teks) sekaligus ke dalam context window AI Agent (Cursor Composer, Claude Code, Windsurf, Antigravity IDE) akan memicu <strong>Context Amnesia, Halusinasi Relasional, dan Pemotongan Kode Parsial (Truncation)</strong>.
+                </div>
+
+                <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                    <span class="font-mono font-black uppercase text-zinc-900 dark:text-white block text-[11px]">
+                        Rekomendasi Alur Rekayasa Perangkat Lunak Otonom (10/10 Enterprise Flow):
+                    </span>
+                    <ol class="list-decimal list-inside space-y-1.5 text-zinc-700 dark:text-zinc-300 font-sans leading-normal">
+                        <li>Buka <strong>Cockpit Pelaksanaan Sprint (Bab 3.5)</strong> untuk mengeksekusi fitur per vertikal slice secara terisolasi.</li>
+                        <li>Unduh <strong>Initial Repo Scaffold (.ZIP 10 Pilar)</strong> di Langkah 1 Cockpit untuk fondasi Docker, SQL DDL, Seeder, dan Rules.</li>
+                        <li>Gunakan Master PRD (.MD) ini hanya untuk arsip dokumen, audit kontrak, atau knowledge-base offline.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Footer Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-end gap-2.5 pt-4 mt-4 border-t border-zinc-200 dark:border-zinc-800">
+                <button 
+                    type="button" 
+                    @click="showRawMdWarningModal = false; jumpTo('section-3-5')" 
+                    class="w-full sm:w-auto px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase rounded-none transition cursor-pointer flex items-center justify-center gap-1.5 shadow-none"
+                >
+                    <span>&larr; BUKA COCKPIT SPRINT (DISARANKAN)</span>
+                </button>
+                <button 
+                    type="button" 
+                    @click="proceedWithRawMd()" 
+                    class="w-full sm:w-auto px-4 py-2.5 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-xs uppercase font-bold rounded-none transition cursor-pointer"
+                >
+                    <span x-text="rawMdActionType === 'download' ? 'TETAP UNDUH RAW .MD' : 'TETAP SALIN RAW .MD'">TETAP LANJUTKAN</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Global Footer -->
@@ -9101,7 +9225,7 @@ class ProcessSecureDataset implements ShouldQueue
     </footer>
 
     <script>
-        window.copyFullPrdMarkdown = async function(btnEl) {
+        window.executeCopyFullPrdMarkdown = async function(btnEl) {
             const orig = btnEl ? btnEl.innerHTML : '';
             if (btnEl) btnEl.innerHTML = '<span class="text-emerald-400 font-bold animate-pulse">Mengambil MD...</span>';
             try {
@@ -9130,6 +9254,10 @@ class ProcessSecureDataset implements ShouldQueue
                 }
                 if (btnEl) btnEl.innerHTML = orig;
             }
+        };
+
+        window.copyFullPrdMarkdown = function(btnEl) {
+            window.dispatchEvent(new CustomEvent('open-raw-md-warning', { detail: { action: 'copy' } }));
         };
 
         window.submitChangeRequest = async function(slug, formEl) {

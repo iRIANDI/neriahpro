@@ -246,6 +246,13 @@
                 {{-- Window Controls --}}
                 <div class="flex items-center gap-1 shrink-0">
                     <button type="button"
+                            wire:click="exportSessionMarkdown"
+                            wire:loading.attr="disabled"
+                            title="Unduh Seluruh Percakapan Sesi Ini (.MD)"
+                            class="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xs transition-colors cursor-pointer">
+                        <svg width="14" height="14" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    </button>
+                    <button type="button"
                             @click="isDrawerOpen = false"
                             wire:click="createNewChat(true)"
                             title="Buat Sesi Percakapan Baru"
@@ -350,6 +357,12 @@
 
                                             <div class="flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity shrink-0">
                                                 <button type="button"
+                                                        wire:click.stop="exportSessionMarkdown('{{ $sess['id'] }}')"
+                                                        title="Unduh sesi ini sebagai file .MD"
+                                                        class="p-1 text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xs cursor-pointer">
+                                                    <svg width="12" height="12" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                                </button>
+                                                <button type="button"
                                                         wire:click.stop="startRenameSession('{{ $sess['id'] }}')"
                                                         title="Ganti Judul"
                                                         class="p-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 rounded-xs cursor-pointer">
@@ -443,7 +456,17 @@
                             </button>
                         </div>
 
-                        <div class="flex items-center gap-2 py-1">
+                        <div class="flex items-center gap-1.5 py-1">
+                            {{-- Unduh Seluruh Sesi (.MD) --}}
+                            <button type="button"
+                                    wire:click="exportSessionMarkdown"
+                                    wire:loading.attr="disabled"
+                                    title="Ekspor seluruh percakapan sesi ini ke berkas Markdown (.md)"
+                                    class="inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 transition-all cursor-pointer">
+                                <svg width="11" height="11" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                <span>Unduh Sesi (.MD)</span>
+                            </button>
+
                             {{-- Turn Message Count --}}
                             <span class="text-[10px] font-mono px-2 py-0.5 rounded-xs border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400">
                                 {{ $sessionMessageCount }}/{{ $maxSessionMessages }} Pesan
@@ -545,6 +568,42 @@
                                                 @endforeach
                                             </div>
                                         @endif
+
+                                        {{-- Message Bubble Action Bar (Salin Pesan & Unduh .MD) --}}
+                                        <div class="mt-2.5 pt-2 flex items-center justify-between border-t {{ $msg['role'] === 'user' ? 'border-zinc-800 dark:border-zinc-300/30 text-zinc-300 dark:text-zinc-600' : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400' }} text-[10px] font-mono"
+                                             x-data="{ copied: false }">
+                                            <div class="flex items-center gap-1.5 opacity-80">
+                                                <span>{{ $msg['created_at'] ?? '' }}</span>
+                                                @if(!empty($msg['provider']) && $msg['provider'] !== 'system')
+                                                    <span>• {{ ucfirst($msg['provider']) }}</span>
+                                                @endif
+                                            </div>
+
+                                            <div class="flex items-center gap-2">
+                                                {{-- Tombol Salin Pesan --}}
+                                                <button type="button"
+                                                        @click="navigator.clipboard.writeText(@js($msg['content'])); copied = true; setTimeout(() => copied = false, 2000)"
+                                                        class="inline-flex items-center gap-1 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                                                        title="Salin isi pesan ke clipboard">
+                                                    <svg x-show="!copied" width="12" height="12" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                                                    <svg x-show="copied" x-cloak width="12" height="12" class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                    <span x-show="!copied">Salin</span>
+                                                    <span x-show="copied" x-cloak class="text-emerald-500 font-bold">Tersalin!</span>
+                                                </button>
+
+                                                <span>•</span>
+
+                                                {{-- Tombol Unduh Pesan Tunggal (.MD) --}}
+                                                <button type="button"
+                                                        wire:click="exportMessageMarkdown('{{ $msg['id'] ?? '' }}')"
+                                                        wire:loading.attr="disabled"
+                                                        class="inline-flex items-center gap-1 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                                                        title="Unduh pesan ini sebagai berkas Markdown (.md)">
+                                                    <svg width="12" height="12" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                                    <span>Unduh .MD</span>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach

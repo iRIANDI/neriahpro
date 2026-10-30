@@ -54,7 +54,7 @@ class AgenticActionExecutionEngine
                 'query_knowledge_base' => $this->queryKnowledgeBase($args),
                 'sync_knowledge_base' => $this->syncKnowledgeBase($args),
                 'get_audit_logs' => $this->getAuditLogs($args),
-                'get_system_stats' => $this->getSystemStats(),
+                'get_system_stats' => $this->getSystemStats($args),
                 'search_leads' => $this->searchLeads($args),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
@@ -446,15 +446,25 @@ class AgenticActionExecutionEngine
     /**
      * 11. Get System Stats
      */
-    protected function getSystemStats(): array
+    protected function getSystemStats(array $args = []): array
     {
+        $activeSprints = VisionBlueprint::where('project_status', 'Active Sprint')->count();
+        $totalBlueprints = VisionBlueprint::count();
+        $scopeLocked = VisionBlueprint::where('scope_locked', true)->count();
+        $revenue = (float) Transaction::where('status', 'settlement')->sum('amount');
+        $expiringAssets = DomainHostingAsset::where('expiry_date', '<=', now()->addDays(30))->count();
+        $totalKnowledge = DB::table('ai_knowledge_vectors')->count();
+
         return [
-            'total_blueprints' => VisionBlueprint::count(),
-            'active_sprints' => VisionBlueprint::where('project_status', 'Active Sprint')->count(),
-            'scope_locked_projects' => VisionBlueprint::where('scope_locked', true)->count(),
-            'total_revenue_settled' => (float) Transaction::where('status', 'settlement')->sum('amount'),
-            'expiring_assets_30_days' => DomainHostingAsset::where('expiry_date', '<=', now()->addDays(30))->count(),
-            'total_knowledge_chunks' => DB::table('ai_knowledge_vectors')->count(),
+            'scope' => $args['scope'] ?? 'all',
+            'total_blueprints' => $totalBlueprints,
+            'active_sprints' => $activeSprints,
+            'max_parallel_sprints' => 3,
+            'available_sprint_slots' => max(0, 3 - $activeSprints),
+            'scope_locked_projects' => $scopeLocked,
+            'total_revenue_settled' => $revenue,
+            'expiring_assets_30_days' => $expiringAssets,
+            'total_knowledge_chunks' => $totalKnowledge,
         ];
     }
 

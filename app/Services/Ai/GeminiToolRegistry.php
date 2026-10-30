@@ -15,7 +15,7 @@ class GeminiToolRegistry
      */
     public static function getDeclarations(): array
     {
-        return [
+        $declarations = [
             // =========================================================================
             // 1. MODUL PROJECT OS BLUEPRINTS & PRD
             // =========================================================================
@@ -172,7 +172,12 @@ class GeminiToolRegistry
                 'description' => 'Mengambil statistik langsung kesehatan eksekutif sistem: jumlah blueprint aktif, transaksi, status kapasitas sprint, dan aset domain/hosting.',
                 'parameters' => [
                     'type' => 'OBJECT',
-                    'properties' => [],
+                    'properties' => [
+                        'scope' => [
+                            'type' => 'STRING',
+                            'description' => 'Filter cakupan data statistik: "all", "sprint", "blueprints", "assets", "revenue". Default: "all".',
+                        ],
+                    ],
                 ],
             ],
             [
@@ -186,6 +191,17 @@ class GeminiToolRegistry
                 ],
             ],
         ];
+
+        // Format sanitasi resmi Google Gemini Protobuf Map Schema
+        // Mencegah konversi empty array [] menjadi JSON list yang memicu HTTP 400
+        return array_map(function ($tool) {
+            if (isset($tool['parameters'])) {
+                if (!isset($tool['parameters']['properties']) || empty($tool['parameters']['properties'])) {
+                    $tool['parameters']['properties'] = (object)[];
+                }
+            }
+            return $tool;
+        }, $declarations);
     }
 
     /**
@@ -231,6 +247,10 @@ class GeminiToolRegistry
 
         if (!isset($normalized['type'])) {
             $normalized['type'] = 'object';
+        }
+
+        if (isset($normalized['properties']) && empty($normalized['properties'])) {
+            $normalized['properties'] = (object)[];
         }
 
         return $normalized;

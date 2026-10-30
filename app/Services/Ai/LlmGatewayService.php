@@ -615,7 +615,9 @@ class LlmGatewayService
                     'parts' => [[
                         'functionResponse' => [
                             'name' => $fName,
-                            'response' => $toolResult,
+                            'response' => (is_array($toolResult) && !empty($toolResult) && array_keys($toolResult) !== range(0, count($toolResult) - 1))
+                                ? $toolResult
+                                : ['result' => $toolResult],
                         ]
                     ]]
                 ];

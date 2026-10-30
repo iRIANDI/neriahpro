@@ -189,4 +189,51 @@ class AiAgentModuleTest extends TestCase
 
         $this->assertEquals('chat', $component->get('activeTab'));
     }
+
+    public function test_gemini_tool_declarations_have_object_properties_never_empty_list(): void
+    {
+        $declarations = GeminiToolRegistry::getDeclarations();
+        $json = json_encode($declarations, JSON_THROW_ON_ERROR);
+
+        // Pastikan tidak ada "properties":[] yang memicu HTTP 400 di Google Gemini Protobuf parser
+        $this->assertStringNotContainsString('"properties":[]', $json);
+
+        // Periksa spesifik tool get_system_stats
+        $statsTool = collect($declarations)->firstWhere('name', 'get_system_stats');
+        $this->assertNotNull($statsTool);
+        $this->assertIsArray($statsTool['parameters']['properties']);
+        $this->assertArrayHasKey('scope', $statsTool['parameters']['properties']);
+    }
+
+    public function test_floating_agentic_ai_exports_session_and_message_as_markdown(): void
+    {
+        $user = User::factory()->create();
+
+        $session = \App\Models\AiChatSession::create([
+            'user_id' => $user->id,
+            'title' => 'Sesi Konsultasi Export Test',
+            'provider' => 'gemini',
+            'status' => 'active',
+        ]);
+
+        $msg = \App\Models\AiChatMessage::create([
+            'session_id' => $session->id,
+            'user_id' => $user->id,
+            'role' => 'user',
+            'content' => 'Berapa kapasitas sprint aktif dan statistik proyek saat ini?',
+            'provider' => 'gemini',
+        ]);
+
+        $component = \Livewire\Livewire::actingAs($user)
+            ->test(\App\Livewire\Admin\FloatingAgenticAi::class)
+            ->call('switchSession', $session->id);
+
+        // Ekspor pesan tunggal sebagai .md
+        $msgResponse = $component->call('exportMessageMarkdown', $msg->id);
+        $this->assertNotNull($msgResponse);
+
+        // Ekspor seluruh sesi sebagai .md
+        $sessionResponse = $component->call('exportSessionMarkdown', $session->id);
+        $this->assertNotNull($sessionResponse);
+    }
 }

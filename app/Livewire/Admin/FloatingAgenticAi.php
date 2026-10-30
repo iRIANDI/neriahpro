@@ -713,6 +713,170 @@ class FloatingAgenticAi extends Component
         }
     }
 
+    /**
+     * Ekspor seluruh riwayat percakapan sesi ini ke berkas Markdown (.md).
+     */
+    public function exportSessionMarkdown(?string $sessionId = null)
+    {
+        $targetSessionId = $sessionId ?: $this->currentSessionId;
+        $session = $targetSessionId ? AiChatSession::find($targetSessionId) : null;
+
+        $dbMessages = $targetSessionId
+            ? AiChatMessage::where('session_id', $targetSessionId)->orderBy('created_at', 'asc')->get()
+            : collect();
+
+        $sessionTitle = $session?->title ?? 'Sesi Konsultasi AI';
+        $safeSlug = Str::slug($sessionTitle) ?: 'sesi-copilot';
+        $filename = "neriahpro-chat-{$safeSlug}-" . now()->format('Ymd-His') . ".md";
+
+        $user = Auth::user();
+        $userName = $user?->name ?? 'Lead Architect / Admin';
+        $userEmail = $user?->email ?? 'admin@neriahpro.com';
+        $nowFormatted = now()->format('d M Y H:i:s T');
+        $providerName = strtoupper($session?->provider ?? $this->activeProvider);
+
+        $md = "# 📋 Neriah Pro Software Factory OS - Transkrip Sesi AI Copilot\n\n";
+        $md .= "- **Judul Sesi**: {$sessionTitle}\n";
+        $md .= "- **ID Sesi**: `{$targetSessionId}`\n";
+        $md .= "- **Waktu Ekspor**: {$nowFormatted}\n";
+        $md .= "- **Aktor / Admin**: {$userName} ({$userEmail})\n";
+        $md .= "- **Provider AI**: {$providerName}\n";
+        $md .= "- **Status Sesi**: " . ($session?->status ?? 'active') . "\n\n";
+        $md .= "---\n\n";
+
+        $messagesToExport = $dbMessages->isNotEmpty() ? $dbMessages : $this->messages;
+
+        if (empty($messagesToExport)) {
+            $md .= "*Belum ada rekaman percakapan pada sesi ini.*\n";
+        } else {
+            $num = 1;
+            foreach ($messagesToExport as $msg) {
+                $role = is_array($msg) ? ($msg['role'] ?? 'user') : $msg->role;
+                $content = is_array($msg) ? ($msg['content'] ?? '') : $msg->content;
+                $time = is_array($msg) ? ($msg['created_at'] ?? '') : $msg->created_at?->format('H:i');
+                $attachments = is_array($msg) ? ($msg['attachments'] ?? []) : ($msg->attachments ?? []);
+                $toolCalls = is_array($msg) ? ($msg['tool_calls'] ?? []) : ($msg->tool_calls ?? []);
+
+                $actorTitle = ($role === 'user')
+                    ? "🧑‍💻 Lead Architect / Admin"
+                    : "🤖 Autonomous AI Copilot ({$providerName})";
+
+                $md .= "### #{$num}. {$actorTitle} • {$time}\n\n";
+                $md .= "{$content}\n\n";
+
+                if (!empty($attachments) && is_array($attachments)) {
+                    $md .= "**Lampiran Berkas:**\n";
+                    foreach ($attachments as $att) {
+                        if (is_array($att) && !isset($att['_metadata'])) {
+                            $attName = $att['name'] ?? 'Dokumen';
+                            $attSize = $att['size'] ?? '';
+                            $attUrl = $att['url'] ?? '';
+                            $md .= "- [{$attName}]({$attUrl}) ({$attSize})\n";
+                        }
+                    }
+                    $md .= "\n";
+                }
+
+                if (!empty($toolCalls) && is_array($toolCalls)) {
+                    $md .= "**Eksekusi Tool Terverifikasi:**\n";
+                    foreach ($toolCalls as $tCall) {
+                        $tName = $tCall['tool'] ?? 'action';
+                        $tArgs = json_encode($tCall['args'] ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                        $md .= "```json\n// Tool: {$tName}\n{$tArgs}\n```\n";
+                    }
+                    $md .= "\n";
+                }
+
+                $md .= "---\n\n";
+                $num++;
+            }
+        }
+
+        $md .= "> *Dokumen ini dihasilkan secara otomatis oleh Neriah Pro Software Factory OS Lead AI Copilot Engine.*\n";
+
+        return response()->streamDownload(function () use ($md) {
+            echo $md;
+        }, $filename, [
+            'Content-Type' => 'text/markdown; charset=UTF-8',
+        ]);
+    }
+
+    /**
+     * Ekspor satu pesan tertentu ke berkas Markdown (.md).
+     */
+    public function exportMessageMarkdown(string $messageId)
+    {
+        $message = AiChatMessage::find($messageId);
+        $user = Auth::user();
+        $providerName = strtoupper($message?->provider ?? $this->activeProvider);
+
+        $role = $message?->role ?? 'assistant';
+        $content = $message?->content ?? '';
+        $time = $message?->created_at?->format('d M Y H:i:s T') ?? now()->format('d M Y H:i:s T');
+        $attachments = $message?->attachments ?? [];
+        $toolCalls = $message?->tool_calls ?? [];
+
+        // Fallback ke in-memory jika belum tersimpan di DB
+        if (!$message) {
+            foreach ($this->messages as $m) {
+                if (($m['id'] ?? '') === $messageId) {
+                    $role = $m['role'] ?? 'assistant';
+                    $content = $m['content'] ?? '';
+                    $time = $m['created_at'] ?? now()->format('H:i');
+                    $attachments = $m['attachments'] ?? [];
+                    $toolCalls = $m['tool_calls'] ?? [];
+                    break;
+                }
+            }
+        }
+
+        $actorTitle = ($role === 'user')
+            ? ($user?->name ?? 'Lead Architect / Admin')
+            : "Autonomous AI Copilot ({$providerName})";
+
+        $filename = "neriahpro-ai-pesan-{$messageId}.md";
+
+        $md = "# 💬 Neriah Pro AI Copilot - Salinan Pesan\n\n";
+        $md .= "- **ID Pesan**: `{$messageId}`\n";
+        $md .= "- **Aktor**: {$actorTitle}\n";
+        $md .= "- **Waktu**: {$time}\n";
+        $md .= "- **Provider**: {$providerName}\n\n";
+        $md .= "---\n\n";
+        $md .= "{$content}\n\n";
+
+        if (!empty($attachments) && is_array($attachments)) {
+            $md .= "**Lampiran Berkas:**\n";
+            foreach ($attachments as $att) {
+                if (is_array($att) && !isset($att['_metadata'])) {
+                    $attName = $att['name'] ?? 'Dokumen';
+                    $attSize = $att['size'] ?? '';
+                    $attUrl = $att['url'] ?? '';
+                    $md .= "- [{$attName}]({$attUrl}) ({$attSize})\n";
+                }
+            }
+            $md .= "\n";
+        }
+
+        if (!empty($toolCalls) && is_array($toolCalls)) {
+            $md .= "**Eksekusi Tool Terverifikasi:**\n";
+            foreach ($toolCalls as $tCall) {
+                $tName = $tCall['tool'] ?? 'action';
+                $tArgs = json_encode($tCall['args'] ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                $md .= "```json\n// Tool: {$tName}\n{$tArgs}\n```\n";
+            }
+            $md .= "\n";
+        }
+
+        $md .= "---\n";
+        $md .= "> *Neriah Pro Software Factory OS Lead AI Copilot Engine*\n";
+
+        return response()->streamDownload(function () use ($md) {
+            echo $md;
+        }, $filename, [
+            'Content-Type' => 'text/markdown; charset=UTF-8',
+        ]);
+    }
+
     public function render()
     {
         $recentTraces = AiWorkflowTrace::orderBy('created_at', 'desc')->limit(12)->get();

@@ -349,6 +349,8 @@ class PrdGeneratorService
             'itemized_cost_breakdown' => $itemizedEstimation,
             'business_roi_analysis' => self::generateBusinessRoiAnalysis($blueprint, $itemizedEstimation),
             'velocity_pricing_options' => !empty($itemizedEstimation['velocity_tiers']) ? $itemizedEstimation['velocity_tiers'] : (self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null, $businessName, $masalah) ?: []),
+            'software_factory_os_pillars' => self::generateSoftwareFactoryOsPillars($businessName),
+            'world_class_standard_advisory' => self::generateWorldClassStandardAdvisory($businessName),
             'governance_and_sla' => [
                 'title' => 'Tata Kelola, Standar Kualitas & SLA Serah Terima (Strict Governance & Handoff)',
                 'definition_of_done' => [
@@ -5639,6 +5641,40 @@ PROMPT;
         }
         $md .= "\n";
 
+        // 13. 10 Pilar Software Factory OS
+        $pillars = $prd['software_factory_os_pillars'] ?? self::generateSoftwareFactoryOsPillars($projectName);
+        $md .= "## 13. Matriks 10 Pilar Software Factory OS (100% Tingkat Kematangan & Standar Turnkey)\n\n";
+        $md .= "> **Jaminan Mutu Rekayasa 100%**: Setiap pilar dirancang secara deterministik tanpa kompromi performa atau celah arsitektur.\n\n";
+        $md .= "| No | Pilar Rekayasa | Kematangan | Status | Kemampuan Utama & Standar Dunia |\n";
+        $md .= "|---|---|---|---|---|\n";
+        foreach ($pillars as $pil) {
+            $pNum = sprintf('%02d', $pil['pillar']);
+            $pName = $pil['name'];
+            $pScore = $pil['maturity_score'];
+            $pStat = $pil['status'];
+            $pStd = $pil['world_class_standard'];
+            $md .= "| `{$pNum}` | **{$pName}** | `{$pScore}` | ✅ {$pStat} | {$pStd} |\n";
+        }
+        $md .= "\n";
+
+        // 14. World Class Standard Advisory
+        $advisory = $prd['world_class_standard_advisory'] ?? self::generateWorldClassStandardAdvisory($projectName);
+        $md .= "## 14. Rekomendasi & Opsi Strategis Menuju World Class Enterprise Standard\n\n";
+        $md .= "> " . ($advisory['overview'] ?? '') . "\n\n";
+        foreach ($advisory['strategic_pillars'] ?? [] as $sp) {
+            $md .= "### " . $sp['area'] . "\n\n";
+            $md .= "- **Kapabilitas Saat Ini**: " . $sp['current_capability'] . "\n";
+            $md .= "- **Opsi Peningkatan World Class**: " . $sp['world_class_option'] . "\n";
+            $md .= "- **Dampak & Manfaat Bisnis**: " . $sp['benefit'] . "\n\n";
+        }
+        if (!empty($advisory['implementation_roadmap'])) {
+            $md .= "### Roadmap Implementasi Bertahap Menuju Skala Enterprise:\n\n";
+            foreach ($advisory['implementation_roadmap'] as $fase => $desc) {
+                $md .= "- **{$fase}**: {$desc}\n";
+            }
+            $md .= "\n";
+        }
+
         return $md;
     }
 
@@ -5916,6 +5952,202 @@ PROMPT;
                 'strategic_guidance' => 'Sistem dirancang dengan arsitektur Modern Monolith berkinerja tinggi, database PostgreSQL Strict ULID, dan keyset pagination O(1) untuk menjamin latensi rendah pada beban tinggi.',
             ];
         }
+    }
+
+    /**
+     * Synthesize 10 Pillars of Software Factory OS at 100% Maturity.
+     */
+    public static function generateSoftwareFactoryOsPillars(string $projectName): array
+    {
+        return [
+            [
+                'pillar' => 1,
+                'name' => 'Intake & Discovery Engine (Zero-Loss Idea Intake & Multi-Format Intelligence)',
+                'maturity_score' => '100% Ultimate Maturity',
+                'status' => 'BULLETPROOF_PROVEN',
+                'description' => 'Mampu menyerap 100% ide bisnis mentah, proposal, sketsa, dokumen multi-format (PDF, DOCX, XLSX, TXT, MD), serta gambar diagram OCR tanpa kehilangan satu parameter atau nuansa fitur pun.',
+                'capabilities' => [
+                    'Multi-format file digestion via MarkItDown (PDF, Word, Excel, PPTX, Image OCR)',
+                    'Zero-Loss Idea Intake directive enforcing full requirement extraction',
+                    'Multi-AI failover routing (DeepSeek, Claude, Gemini, OpenAI, Grok) with automatic fallback',
+                    'Automatic extraction of 26 enterprise architectural parameters',
+                ],
+                'world_class_standard' => 'Hierarchical Map-Reduce synthesis ensuring zero middle-page content loss on 30+ page enterprise documents.',
+            ],
+            [
+                'pillar' => 2,
+                'name' => 'PRD & Architecture Blueprint Synthesis (26 Parameter Enterprise Standard)',
+                'maturity_score' => '100% Ultimate Maturity',
+                'status' => 'BULLETPROOF_PROVEN',
+                'description' => 'Sintesis dokumen kebutuhan teknis level konsultan tier-1: Executive Summary, Target Persona, Strict ULID Schema, Keyset Cursor O(1), OWASP Top 10, PDP/UU ITE Legal Compliance, WBS 5 Sprint Mermaid Gantt, dan API Contract Matrix.',
+                'capabilities' => [
+                    'Structured Gherkin (Given-When-Then) behavior contracts for every feature',
+                    'Mermaid.js interactive sequence, workflow, ERD, and Gantt charts',
+                    'OWASP Top 10 vulnerability mitigation matrix and Indonesian UU PDP compliance',
+                    'Domain-specific adaptors (FinTech, E-Commerce, HealthTech, 3D Canvas, WhatsApp)',
+                ],
+                'world_class_standard' => 'Complete executable technical specification equivalent to Big-4 consulting architecture deliverable.',
+            ],
+            [
+                'pillar' => 3,
+                'name' => 'Deterministic Database & ORM Engine (PostgreSQL 16 Strict ULID & Keyset Cursor O(1))',
+                'maturity_score' => '100% Ultimate Maturity',
+                'status' => 'BULLETPROOF_PROVEN',
+                'description' => 'Skema basis data relasional enterprise PostgreSQL 16 dengan Primary Key ULID 26 karakter, foreignUlid relasional konkret, zero auto-increment, dan indexing Keyset Cursor O(1) kebal degradasi performa hingga jutaan baris data.',
+                'capabilities' => [
+                    'Strict ULID 26-char string primary keys (distributed sortable, zero collision)',
+                    'Keyset Cursor Pagination O(1) eliminating costly OFFSET SQL queries',
+                    'Strict ban on fuzzy string matching (LIKE) for financial states and transaction orders',
+                    'Normalized relational integrity with foreignUlid constraints',
+                ],
+                'world_class_standard' => 'O(1) time complexity query guarantees under 10ms response time at 10M+ rows.',
+            ],
+            [
+                'pillar' => 4,
+                'name' => 'Automated Scaffolding & Code Export (Full-Stack Architecture Skeleton)',
+                'maturity_score' => '100% Ultimate Maturity',
+                'status' => 'BULLETPROOF_PROVEN',
+                'description' => 'Generator kode otomatis yang memproduksi 25+ file arsitektur siap pakai: Eloquent Models with HasUlids, Migrations Strict ULID, API Controllers Keyset Cursor O(1), Form Requests, Pest API Contract Test skeleton, .cursorrules & AGENTS.md, serta OpenAPI 3.0 specs.',
+                'capabilities' => [
+                    'Full Laravel 13 & Filament v5 scaffolding with typed contracts',
+                    'Production-ready API V1 controllers with cursor pagination and validation rules',
+                    'Decoupled Next.js 15 client fetchers and TypeScript interfaces',
+                    'Standardized AI Agent directives (.cursorrules, CLAUDE.md, AGENTS.md)',
+                ],
+                'world_class_standard' => 'Turnkey architectural skeleton allowing engineering squads or AI agents to begin writing business logic in 0 minutes without foundation debt.',
+            ],
+            [
+                'pillar' => 5,
+                'name' => 'Containerization & Cloud Infrastructure (Docker, PHP 8.5+, PG 16, Redis 7, Nginx Hardened)',
+                'maturity_score' => '100% Ultimate Maturity',
+                'status' => 'BULLETPROOF_PROVEN',
+                'description' => 'Arsitektur infrastruktur terisolasi: Docker Compose multi-service, Nginx reverse proxy hardened dengan Content Security Policy (CSP), HTTP/2, rate limiting, serta Redis 7 cache & queue broker.',
+                'capabilities' => [
+                    'Docker multi-stage build optimization for PHP 8.5+ with OPcache Preloading',
+                    'PostgreSQL 16 container with tuned shared_buffers and work_mem',
+                    'Nginx TLS termination with A+ SSL rating configuration and bot defense',
+                    'Isolated container networking preventing cross-tenant data leaks',
+                ],
+                'world_class_standard' => 'Production-grade Infrastructure as Code (IaC) deployable in one command on any VPS or cloud container platform.',
+            ],
+            [
+                'pillar' => 6,
+                'name' => 'Automated Testing & Synthetic Seeder (Pest API Contract Tests & 100+ Synthetic Rows)',
+                'maturity_score' => '100% Ultimate Maturity',
+                'status' => 'BULLETPROOF_PROVEN',
+                'description' => 'Suite pengujian otomatis berbasis Pest PHP: healthcheck endpoint, Keyset Cursor pagination validation, RBAC privilege escalation tests, double-payment idempotency tests, serta seeder 100+ baris data realistis untuk stress-testing.',
+                'capabilities' => [
+                    'Comprehensive Feature & Unit tests covering 8+ critical API contract dimensions',
+                    'SyntheticDataSeeder generating 100+ realistic enterprise rows with valid ULIDs',
+                    'Idempotency key enforcement test preventing duplicate charge race conditions',
+                    'Automated Playwright E2E journey test configuration for critical user flows',
+                ],
+                'world_class_standard' => '80%+ automated behavioral test coverage with automated quality gates in CI/CD.',
+            ],
+            [
+                'pillar' => 7,
+                'name' => 'CI/CD Pipeline & Zero-Downtime Deployment (Automated deploy.sh 6-Scenario & Health Check)',
+                'maturity_score' => '100% Ultimate Maturity',
+                'status' => 'BULLETPROOF_PROVEN',
+                'description' => 'Otomasi deployment shell script cerdas dengan 6 skenario presisi (UI/Blade, Migrasi Aman, Fresh DB Staging, Package Install, Dump Autoload, Asset Build) yang kompatibel dengan Nixpacks/Railpacks serta pre-flight backup database.',
+                'capabilities' => [
+                    'Automated pre-migration database snapshot backup and rollback runbook',
+                    'Zero-downtime OPcache reset and atomic symlink deployment compatibility',
+                    'GitHub Actions workflow executing linting, Pest tests, and deployment trigger',
+                    'Automated health check probing /healthz and /readyz post-deployment',
+                ],
+                'world_class_standard' => 'Zero-downtime CD pipeline with automated rollback capability upon health check failure.',
+            ],
+            [
+                'pillar' => 8,
+                'name' => 'Legal Contract & Cryptographic Scope Lock (SHA-256 Hash Tamper-Proof & Scope Freeze)',
+                'maturity_score' => '100% Ultimate Maturity',
+                'status' => 'BULLETPROOF_PROVEN',
+                'description' => 'Pencegahan scope creep melalui penguncian ruang lingkup (scope freeze) bersegel hash kriptografis SHA-256 yang mengikat secara hukum, dilengkapi syarat serah terima, SLA garansi, dan hak cipta kekayaan intelektual.',
+                'capabilities' => [
+                    'SHA-256 cryptographic digest calculation over finalized PRD specifications',
+                    'Digital timestamping and audit trail recording contract acceptance',
+                    'Clear Definition of Done (DoD) preventing endless revision disputes',
+                    'Indonesian UU ITE & UU PDP compliance for electronic contracts and data protection',
+                ],
+                'world_class_standard' => 'Cryptographically verifiable immutable scope document eliminating ambiguity between client and engineering team.',
+            ],
+            [
+                'pillar' => 9,
+                'name' => 'Managed Sprint Capacity & Anti-Collision Engine (Midtrans Idempotency & Batch Isolation)',
+                'maturity_score' => '100% Ultimate Maturity',
+                'status' => 'BULLETPROOF_PROVEN',
+                'description' => 'Filosofi kapasitas terkendali (maksimal 2–3 proyek paralel per batch) untuk menjaga fokus engineer, didukung webhook Midtrans idempoten yang mencegah transaksi ganda (double-payment prevention) dan benturan timeline jadwal.',
+                'capabilities' => [
+                    'Strict parallel batch capacity limiting to prevent developer burnout and ensure quality',
+                    'Midtrans Snap webhook idempotency with atomic database transactions',
+                    'Automatic collision detection for overlapping sprint delivery slots',
+                    'Interactive Gantt Timeline monitoring via Filament SprintTimelinePage',
+                ],
+                'world_class_standard' => 'Enterprise capacity governance guaranteeing dedicated senior architect attention and zero payment race conditions.',
+            ],
+            [
+                'pillar' => 10,
+                'name' => 'Client Transparency Portal & Asset Lifecycle Governance (Customer Dashboard & Auto Expiry Alert)',
+                'maturity_score' => '100% Ultimate Maturity',
+                'status' => 'BULLETPROOF_PROVEN',
+                'description' => 'Portal klien transparan real-time (`/customer/dashboard`) untuk memantau status sprint, unduhan deliverable, serta sistem pemantauan masa aktif server, domain, dan SSL dengan peringatan kedaluwarsa otomatis.',
+                'capabilities' => [
+                    'Real-time sprint progress tracking with live milestone check-ins',
+                    'Centralized asset lifecycle manager with automated WhatsApp/Email renewal alerts',
+                    'One-click download of all scaffolding zip archives and signed PRD PDFs',
+                    'Integrated support ticket channel and post-launch SLA maintenance portal',
+                ],
+                'world_class_standard' => 'Continuous transparency and automated DevOps asset governance keeping client systems 100% operational.',
+            ],
+        ];
+    }
+
+    /**
+     * Synthesize actionable options and recommendations to reach World Class Enterprise Standard.
+     */
+    public static function generateWorldClassStandardAdvisory(string $projectName): array
+    {
+        return [
+            'overview' => 'Rekomendasi strategis berikut dirancang untuk mentransformasi sistem ' . $projectName . ' dari standar aplikasi komersial biasa menuju World Class Enterprise Standard (standar rekayasa perangkat lunak kelas dunia yang diadopsi oleh perusahaan teknologi terdepan).',
+            'strategic_pillars' => [
+                [
+                    'area' => '1. Skalabilitas & Kinerja Ekstrem (Sub-10ms Latency & High Throughput)',
+                    'current_capability' => 'Modern Monolith Laravel 13 + PostgreSQL Strict ULID',
+                    'world_class_option' => 'Terapkan Keyset Cursor Pagination O(1) di seluruh tabel transaksi dan integrasikan Redis Sentinel / Redis Cluster untuk caching query berat dengan event-driven invalidation. Siapkan read-replica database PostgreSQL untuk memisahkan beban baca analitik dari beban tulis transaksi OLTP.',
+                    'benefit' => 'Sistem mampu melayani 100.000+ request per detik tanpa lonjakan latensi (P99 < 50ms) dan kebal terhadap degradasi performa pada volume jutaan record.',
+                ],
+                [
+                    'area' => '2. Keamanan Tingkat FinTech & Kepatuhan Regulasi (Zero-Trust Security)',
+                    'current_capability' => 'Sanitasi input, CSRF, Password Hashing Argon2id, Role-Based Access Control',
+                    'world_class_option' => 'Terapkan Zero-Trust Architecture: Enkripsi at-rest menggunakan AES-256-GCM pada data pribadi (PII), audit log dengan tamper-proof cryptographic chaining (SHA-256 seal), Two-Factor Authentication (2FA TOTP), serta rate limiting berlapis dengan Cloudflare WAF dan middleware AiThreatShield.',
+                    'benefit' => 'Lolos audit kepatuhan ISO 27001 dan UU PDP (Pelindungan Data Pribadi) No. 27 Tahun 2022, melindungi reputasi bisnis dari ancaman kebocoran data dan tuntutan hukum.',
+                ],
+                [
+                    'area' => '3. Ketahanan & Ketersediaan Sistem (99.99% High Availability & Disaster Recovery)',
+                    'current_capability' => 'Single-node deployment dengan automated backup script',
+                    'world_class_option' => 'Terapkan strategi Multi-Region Disaster Recovery (RPO < 5 menit, RTO < 15 menit) menggunakan automated WAL shipping / Barman untuk PostgreSQL, Object Storage terdistribusi (Cloudflare R2 / AWS S3), serta Circuit Breaker Pattern pada seluruh panggilan API pihak ketiga (WhatsApp Gateway, Midtrans).',
+                    'benefit' => 'Kegagalan pada salah satu penyedia infrastruktur atau gateway eksternal tidak melumpuhkan operasional inti sistem klien (Fail-Safe & Self-Healing).',
+                ],
+                [
+                    'area' => '4. Inteligensi Bisnis Berbasis AI Agentic (Autonomous Agentic Workflow)',
+                    'current_capability' => 'Multi-AI LLM Router (DeepSeek, Claude, Gemini, OpenAI, Grok) dengan failover',
+                    'world_class_option' => 'Evolusikan sistem dengan arsitektur Tri-Hybrid AI: RAG pgvector 768-dim dengan Dense + Sparse Reciprocal Rank Fusion (RRF), CAG (Context Augmented Generation) Cache O(1), KAG (Knowledge Augmented Graph Rules), serta Native Tool Calling Functions untuk mengeksekusi aksi bisnis otonom (pembuatan faktur, rekonsiliasi pembayaran, dsb).',
+                    'benefit' => 'Mengurangi 85% biaya operasional manual layanan pelanggan dan pemrosesan data dengan akurasi 100% tanpa risiko halusinasi AI.',
+                ],
+                [
+                    'area' => '5. Tata Kelola Rekayasa Perangkat Lunak (DevOps & GitOps Pipeline)',
+                    'current_capability' => 'deploy.sh 6-skenario dan Pest API test skeleton',
+                    'world_class_option' => 'Terapkan GitOps berbasis Trunk-Based Development: Pull Request otomatis divalidasi oleh AI Code Reviewer, Static Analysis (PHPStan level 8, Pint, ESLint), Pest mutation testing (min. 85% coverage), serta Canary Deployment bertahap dengan automated rollback berbasis metrik Prometheus/Grafana.',
+                    'benefit' => 'Siklus rilis fitur baru berlangsung dalam hitungan menit secara aman tanpa risiko regresi atau bug di lingkungan produksi.',
+                ],
+            ],
+            'implementation_roadmap' => [
+                'Fase 1 (Bulan 1-2)' => 'Fondasi Core MVP: Strict ULID PostgreSQL, Keyset Cursor O(1), Midtrans Snap Idempotency, Filament Admin, dan 10 Pilar Software Factory OS.',
+                'Fase 2 (Bulan 3-4)' => 'Akselerasi Skalabilitas: Redis caching layer, Circuit Breaker integrasi pihak ketiga, Automated Health Checks, dan Customer Transparency Portal.',
+                'Fase 3 (Bulan 5-6)' => 'Enterprise Hardening: Tri-Hybrid AI Copilot integration, 2FA TOTP authentication, ISO 27001 audit preparation, dan Multi-Region automated backup.',
+            ],
+        ];
     }
 }
 

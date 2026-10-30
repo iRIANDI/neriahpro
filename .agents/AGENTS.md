@@ -168,10 +168,21 @@ After completing any task, you MUST always suggest which deployment script numbe
   - Dilarang keras memuat script atau stylesheet dari CDN pihak ketiga (cdnjs, unpkg, jsdelivr) untuk mencegah latensi jaringan, blocking ISP, atau layout rusak saat offline.
 - 📊 **FILAMENT SPRINT TIMELINE & GANTT DASHBOARD**:
   - Seluruh alokasi batch, kapasitas slot terisi/sisa, dan diagram Gantt multi-proyek wajib dapat dikelola serta dimonitor melalui Filament Admin Page `SprintTimelinePage` (`/admin/sprint-timeline`) dan widget `SprintCapacityGanttWidget`.
-- 🏛️ **FULL CUSTOM ENGINEERING STUDIO STANDARDS (7 PILARS TURNKEY)**:
+- 🏛️ **FULL CUSTOM ENGINEERING STUDIO STANDARDS (10 PILARS SOFTWARE FACTORY OS - 100% MATURITY TURNKEY)**:
   - Layanan Pengembangan Penuh & Pengerjaan Kode oleh Tim Neriah Pro (`ArchitecturePricingIsland.jsx` Studio Contracts) wajib patuh pada standar Project OS:
-    1. *Advisory Tier (Rp 2.5 Jt)*: Dokumen PRD 26 parameter, PostgreSQL 16 Strict ULID DDL, WBS 5 Sprint Mermaid Gantt, dan jaminan potongan 100% biaya advisory terhadap DP 50% jika berlanjut ke Full MVP.
-    2. *Full Monolith MVP Tier (Rp 50 Jt, DP 50%)*: 100% turnkey dikerjakan langsung oleh Senior Architect mencakup seluruh 7 Pilar Software Factory OS (PRD, Strict ULID Keyset O(1), Docker PHP 8.5+/PG 16/Redis 7/Nginx, Synthetic Seeder 100+ baris, AI Agent Rules .cursorrules/AGENTS.md, ApiContractTest Pest, CI/CD deploy.sh), Master Gantt Timeline real-time di Customer Portal (`/customer/dashboard`), Midtrans Snap payment idempotency, Dedicated VPS hardening, dan garansi SLA 3 bulan penuh.
+    1. *Advisory Tier (Rp 2.5 Jt)*: Dokumen PRD 26 parameter, PostgreSQL 16 Strict ULID DDL, WBS 5 Sprint Mermaid Gantt, Matriks 10 Pilar Software Factory OS, Rekomendasi World Class Standard, dan jaminan potongan 100% biaya advisory terhadap DP 50% jika berlanjut ke Full MVP.
+    2. *Full Monolith MVP Tier (Rp 50 Jt, DP 50%)*: 100% turnkey dikerjakan langsung oleh Senior Architect mencakup seluruh 10 Pilar Software Factory OS dengan 100% tingkat kematangan:
+       - Pilar 1: Zero-Loss Intake & Discovery Engine (MarkItDown OCR & Multi-Format Ingestion)
+       - Pilar 2: PRD 26 Parameter & Mermaid Gantt WBS (OWASP & UU PDP Compliance)
+       - Pilar 3: PostgreSQL 16 Strict ULID & Keyset Cursor O(1) Kecepatan Sub-10ms
+       - Pilar 4: Automated Scaffolding & Code Export (25+ File Model, API V1 Controller, Form Request, OpenAPI 3.0)
+       - Pilar 5: Containerization Docker PHP 8.5+, PG 16, Redis 7, Nginx Hardened
+       - Pilar 6: Automated Testing Pest API Contract Suite (8+ Dimensi) & 100+ Synthetic Data Rows
+       - Pilar 7: CI/CD Pipeline & Automated deploy.sh 6-Scenario dengan Health Check Probes
+       - Pilar 8: Legal Contract & Tamper-Proof SHA-256 Scope Lock
+       - Pilar 9: Managed Sprint Capacity (Anti-Collision 2-3 Batch) & Midtrans Idempotency
+       - Pilar 10: Client Transparency Portal (/customer/dashboard) & Asset Lifecycle Expiry Alert
+       Dilengkapi Master Gantt Timeline real-time, Dedicated VPS hardening, dan garansi SLA 3 bulan penuh.
     3. *UMKM Digital Starter Tier (Rp 3.75 Jt)*: Engine transaksi web, kasir, database PostgreSQL Strict ULID terpusat, Filament v5 admin dashboard Bahasa Indonesia, pembayaran QRIS/VA otomatis, notifikasi WhatsApp E.164, dan domain cloud hosting bergaransi 1 bulan.
 
 # Mandatory Rule: Curator Picker & Shallow Storage Hierarchy (Server Inodes & RAM Optimization)

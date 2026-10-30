@@ -2012,6 +2012,9 @@ class BlueprintDiscoveryService
 
         $prompt = <<<PROMPT
 You are a Principal Software Solutions Architect synthesizing a client's project vision.
+MANDATORY ZERO-LOSS IDEA INTAKE DIRECTIVE:
+You MUST capture and preserve 100% of all user requirements, features, roles, and business rules from the user idea text and uploaded documents. DO NOT omit, summarize away, or arbitrarily cap the number of features. Retain every unique business capability requested by the client.
+
 Analyze the following idea text and attached document contents:
 {$promptCorpus}
 {$briefGuidance}
@@ -2022,12 +2025,13 @@ Provide an architectural synthesis in valid JSON format with keys:
 - "tujuanUtama": Clear measurable success metrics and target outcomes (KPIs, automation goals).
 - "targetAudiens": Key target audience demographics and user segments.
 - "aktorSistem": Numbered list of system actors and roles with RBAC responsibilities (e.g., 1. Superadmin, 2. Operator, 3. Customer).
-- "fiturWajib": Numbered list (1 to 6) of mission-critical Phase 1 MVP features.
-- "fiturTambahan": Numbered list (1 to 4) of Phase 2 roadmap features.
+- "fiturWajib": Numbered list of all mission-critical Phase 1 MVP features preserving 100% of client requirements (1 to N without omitting any requested module).
+- "fiturTambahan": Numbered list of Phase 2 roadmap features.
 - "alurKerja": Numbered step-by-step user and transaction workflow.
 - "kebutuhanIntegrasi": Comma-separated list of required third-party services and integrations (e.g. WhatsApp Click-to-Chat API, Google Maps Embed, Cloudflare R2).
 - "outOfScope": Clear boundaries of what is explicitly excluded in Phase 1 to prevent scope creep.
 - "strategicInsight": 1-2 sentence executive architectural verdict or technical competitive advantage.
+- "saranStandarDunia": Concrete, actionable recommendations to elevate this project to World Class Enterprise Standard (such as Keyset Cursor Pagination O(1) for sub-10ms queries, Strict ULID distributed keys, Idempotency keys on state-mutating transactions, Zero-Trust Cryptographic Scope Lock with SHA-256 signatures, Event-driven architecture with queue workers, and Multi-Model AI Routing with automated fallback).
 
 Language: Strictly write values in {$langName}.
 Output JSON ONLY, no markdown fences or conversational text.
@@ -2048,15 +2052,15 @@ PROMPT;
                 if (is_array($parsed)) {
                     $isAdventist = ($result['domain'] ?? '') === 'education_adventist' || stripos($corpus, 'sekolah advent') !== false;
 
-                    foreach (['namaBisnis', 'masalahUtama', 'tujuanUtama', 'targetAudiens', 'kebutuhanIntegrasi', 'outOfScope'] as $field) {
+                    foreach (['namaBisnis', 'masalahUtama', 'tujuanUtama', 'targetAudiens', 'kebutuhanIntegrasi', 'outOfScope', 'saranStandarDunia'] as $field) {
                         if (!empty($parsed[$field]) && is_string($parsed[$field])) {
                             // If user provided explicit brief for this field, do not overwrite if AI diverged drastically
                             if (!empty($brief[$field]) && in_array($field, ['namaBisnis'])) {
                                 $result[$field] = $brief[$field];
                             } else {
                                 $val = trim($parsed[$field]);
-                                if (mb_strlen($val) > 2500) {
-                                    $val = mb_substr($val, 0, 2500);
+                                if (mb_strlen($val) > 8000) {
+                                    $val = mb_substr($val, 0, 8000);
                                 }
                                 $result[$field] = $val;
                             }
@@ -2082,8 +2086,8 @@ PROMPT;
                             }
 
                             if ($val !== null) {
-                                if (mb_strlen($val) > 2500) {
-                                    $val = mb_substr($val, 0, 2500);
+                                if (mb_strlen($val) > 8000) {
+                                    $val = mb_substr($val, 0, 8000);
                                 }
                                 $result[$listField] = $val;
                             }
@@ -2127,6 +2131,7 @@ PROMPT;
                         'failed_attempts' => $aiRes['failed_attempts'],
                         'notification' => $aiRes['notification'],
                         'strategic_insight' => $parsed['strategicInsight'] ?? null,
+                        'world_class_advisory' => $parsed['saranStandarDunia'] ?? null,
                     ];
 
                     return $result;
@@ -2141,6 +2146,7 @@ PROMPT;
                 'failed_attempts' => $aiRes['failed_attempts'] ?? [],
                 'notification' => null,
                 'strategic_insight' => null,
+                'world_class_advisory' => 'Arsitektur Strict ULID, keyset cursor pagination O(1), segel kriptografis SHA-256, dan state machine transaksi idempoten.',
             ];
         } catch (\Throwable $e) {
             Log::warning('MultiAi enhancement notice: ' . $e->getMessage());

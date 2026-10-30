@@ -72,6 +72,7 @@ class FloatingAgenticAi extends Component
 
         $this->windowState = session('ai_copilot_window_state', 'closed');
         $this->activeTab = session('ai_copilot_active_tab', 'chat');
+        $this->isDrawerOpen = false;
 
         $this->loadSessions();
 
@@ -89,6 +90,7 @@ class FloatingAgenticAi extends Component
     public function closeDrawer(): void
     {
         $this->isDrawerOpen = false;
+        $this->dispatch('close-ai-drawer');
     }
 
     public function loadSessions(): void
@@ -142,6 +144,7 @@ class FloatingAgenticAi extends Component
             session(['ai_copilot_session_id_' . $user->id => $sessionId]);
         }
 
+        $this->dispatch('close-ai-drawer');
         $this->dispatch('scroll-ai-to-bottom');
     }
 
@@ -195,6 +198,7 @@ class FloatingAgenticAi extends Component
 
         if ($closeDrawer) {
             $this->isDrawerOpen = false;
+            $this->dispatch('close-ai-drawer');
         }
 
         $this->dispatch('scroll-ai-to-bottom');
@@ -318,6 +322,7 @@ class FloatingAgenticAi extends Component
     public function toggleWindow(): void
     {
         $this->windowState = ($this->windowState === 'closed') ? 'open' : 'closed';
+        $this->isDrawerOpen = false;
         session(['ai_copilot_window_state' => $this->windowState]);
     }
 
@@ -326,6 +331,7 @@ class FloatingAgenticAi extends Component
     {
         $this->windowState = 'open';
         $this->activeTab = 'chat';
+        $this->isDrawerOpen = false;
         session(['ai_copilot_window_state' => 'open']);
         session(['ai_copilot_active_tab' => 'chat']);
 

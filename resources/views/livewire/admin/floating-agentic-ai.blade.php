@@ -1,7 +1,7 @@
 <div class="font-sans"
      x-data="{
          isDragging: false,
-         isDrawerOpen: @entangle('isDrawerOpen'),
+         isDrawerOpen: false,
          startX: 0,
          startY: 0,
          offsetX: 0,
@@ -37,13 +37,35 @@
              this.offsetY = 0;
          }
      }"
-     @keydown.escape.window="if (isDrawerOpen) { isDrawerOpen = false; $wire.closeDrawer(); }"
-     x-on:toggle-ai-copilot.window="resetPos(); scrollToBottom()"
-     x-on:open-ai-copilot.window="resetPos(); scrollToBottom()"
+     @keydown.escape.window="isDrawerOpen = false"
+     x-on:close-ai-drawer.window="isDrawerOpen = false"
+     x-on:toggle-ai-copilot.window="resetPos(); isDrawerOpen = false; scrollToBottom()"
+     x-on:open-ai-copilot.window="resetPos(); isDrawerOpen = false; scrollToBottom()"
      x-on:scroll-ai-to-bottom.window="scrollToBottom()"
      x-init="$watch('$wire.messages', () => scrollToBottom())">
 
     <style>
+        #ai-drawer-panel {
+            position: absolute !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            z-index: 50 !important;
+            width: 288px !important;
+            max-width: 85% !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        #ai-drawer-backdrop {
+            position: absolute !important;
+            inset: 0 !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            z-index: 45 !important;
+            backdrop-filter: blur(2px) !important;
+            -webkit-backdrop-filter: blur(2px) !important;
+            cursor: pointer !important;
+        }
+
         #neriahpro-floating-ai-window {
             position: fixed !important;
             z-index: 99999 !important;
@@ -195,7 +217,6 @@
                     {{-- Hamburger Drawer Button --}}
                     <button type="button"
                             @click="isDrawerOpen = !isDrawerOpen"
-                            wire:click="toggleDrawer"
                             title="Menu Riwayat Sesi & Model AI"
                             class="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xs transition-colors cursor-pointer shrink-0">
                         <svg width="14" height="14" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -258,9 +279,12 @@
                     {{-- ============================================================= --}}
                     {{-- SIDE DRAWER (Menu Riwayat Sesi, Buat Baru, Hapus & Model AI)  --}}
                     {{-- ============================================================= --}}
-                    <div class="absolute inset-y-0 left-0 z-30 w-72 bg-zinc-100 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col transition-transform duration-200 ease-in-out shadow-2xl"
-                         :class="isDrawerOpen ? 'translate-x-0' : '-translate-x-full'"
-                         x-cloak>
+                    <div id="ai-drawer-panel"
+                         x-show="isDrawerOpen"
+                         x-cloak
+                         style="display: none;"
+                         :style="isDrawerOpen ? 'display: flex;' : 'display: none;'"
+                         class="bg-zinc-100 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex-col shadow-2xl">
                         
                         {{-- Drawer Header --}}
                         <div class="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950/60">
@@ -278,10 +302,9 @@
                                 </button>
                             </div>
                             <button type="button"
-                                    @click="isDrawerOpen = false; $wire.closeDrawer()"
-                                    wire:click="closeDrawer"
+                                    @click="isDrawerOpen = false"
                                     title="Tutup Menu Riwayat"
-                                    class="flex items-center gap-1 px-2 py-1 text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 rounded-xs transition-colors cursor-pointer">
+                                    class="flex items-center gap-1 px-2.5 py-1 text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 rounded-xs transition-colors cursor-pointer">
                                 <svg width="12" height="12" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                 <span>Tutup</span>
                             </button>
@@ -390,16 +413,11 @@
                     </div>
 
                     {{-- Drawer Backdrop --}}
-                    <div x-show="isDrawerOpen"
+                    <div id="ai-drawer-backdrop"
+                         x-show="isDrawerOpen"
                          x-cloak
-                         x-transition:enter="transition-opacity ease-out duration-150"
-                         x-transition:enter-start="opacity-0"
-                         x-transition:enter-end="opacity-100"
-                         x-transition:leave="transition-opacity ease-in duration-100"
-                         x-transition:leave-start="opacity-100"
-                         x-transition:leave-end="opacity-0"
-                         @click="isDrawerOpen = false; $wire.closeDrawer()"
-                         class="absolute inset-0 bg-black/50 z-20 cursor-pointer backdrop-blur-[1px]"></div>
+                         style="display: none;"
+                         @click="isDrawerOpen = false"></div>
 
                     {{-- Navigation Sub-Tabs & Sesi Control --}}
                     <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 px-3 text-xs font-mono shrink-0">

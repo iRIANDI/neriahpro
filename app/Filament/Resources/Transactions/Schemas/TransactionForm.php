@@ -47,15 +47,15 @@ class TransactionForm
                         TextInput::make('total_idr')
                             ->required()
                             ->prefix('Rp')
-                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
-                            ->stripCharacters('.')
+                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                            ->stripCharacters([',', '.'])
                             ->numeric(),
                         TextInput::make('original_currency')
                             ->default('IDR')
                             ->maxLength(255),
                         TextInput::make('original_amount')
-                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
-                            ->stripCharacters('.')
+                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                            ->stripCharacters([',', '.'])
                             ->numeric(),
                         TextInput::make('exchange_rate')
                             ->numeric(),

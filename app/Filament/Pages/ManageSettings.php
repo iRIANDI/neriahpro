@@ -1070,7 +1070,8 @@ class ManageSettings extends Page implements HasForms
                                             ->label('Tarif Jasa Advisory & Blueprint (Rp)')
                                             ->helperText('Biaya one-time perancangan PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan WBS 5 sprint.')
                                             ->prefix('Rp')
-                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                            ->stripCharacters([',', '.'])
                                             ->default('2.500.000')
                                             ->required(),
                                         TextInput::make('pricing_mvp_price')
@@ -1082,7 +1083,8 @@ class ManageSettings extends Page implements HasForms
                                             ->label('Tarif Paket UMKM Digital Starter (Rp)')
                                             ->helperText('Biaya dasar paket digitalisasi UMKM sebelum dipotong kuota voucher subsidi.')
                                             ->prefix('Rp')
-                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                            ->stripCharacters([',', '.'])
                                             ->default('7.500.000')
                                             ->required(),
                                         TextInput::make('pricing_active_promo_banner')
@@ -1099,28 +1101,32 @@ class ManageSettings extends Page implements HasForms
                                             ->label('Tarif Spark / Free (Rp)')
                                             ->helperText('Akses audit ide cepat & lean PRD ringkas.')
                                             ->prefix('Rp')
-                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                            ->stripCharacters([',', '.'])
                                             ->default('0')
                                             ->required(),
                                         TextInput::make('pricing_retail_lite_price')
                                             ->label('Tarif Lite PRD (Rp)')
                                             ->helperText('PRD 26 parameter esensial + skema DDL.')
                                             ->prefix('Rp')
-                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                            ->stripCharacters([',', '.'])
                                             ->default('99.000')
                                             ->required(),
                                         TextInput::make('pricing_retail_pro_price')
                                             ->label('Tarif Pro Full PRD & WBS (Rp)')
                                             ->helperText('PRD komprehensif, Mermaid diagrams, WBS 5 sprint.')
                                             ->prefix('Rp')
-                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                            ->stripCharacters([',', '.'])
                                             ->default('399.000')
                                             ->required(),
                                         TextInput::make('pricing_retail_ultimate_price')
                                             ->label('Tarif Ultimate Advisory (Rp)')
                                             ->helperText('PRD Ultimate + AI Failover + 1-on-1 Call 60 menit.')
                                             ->prefix('Rp')
-                                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
+                                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                            ->stripCharacters([',', '.'])
                                             ->default('1.490.000')
                                             ->required(),
 
@@ -1263,9 +1269,7 @@ class ManageSettings extends Page implements HasForms
         if (!empty($data['company_whatsapp_number']) || !empty($data['company_whatsapp_country'])) {
             $country = $data['company_whatsapp_country'] ?? 'ID';
             $number = $data['company_whatsapp_number'] ?? '';
-            $parsed = CountryZoneHelper::splitPhone($number, $country);
-            $country = $parsed['iso'] ?: $country;
-            $cleanNumber = $parsed['local_number'];
+            $cleanNumber = CountryZoneHelper::cleanLocalNumber($number);
             $dial = CountryZoneHelper::getDialCode($country);
             $cleanDial = preg_replace('/\D/', '', $dial);
             $data['company_whatsapp_country'] = $country;
@@ -1281,9 +1285,7 @@ class ManageSettings extends Page implements HasForms
         if (!empty($data['developer_phone_number']) || !empty($data['developer_phone_country'])) {
             $country = $data['developer_phone_country'] ?? 'ID';
             $number = $data['developer_phone_number'] ?? '';
-            $parsed = CountryZoneHelper::splitPhone($number, $country);
-            $country = $parsed['iso'] ?: $country;
-            $cleanNumber = $parsed['local_number'];
+            $cleanNumber = CountryZoneHelper::cleanLocalNumber($number);
             $dial = CountryZoneHelper::getDialCode($country);
             $data['developer_phone_country'] = $country;
             $data['developer_phone_number'] = $cleanNumber;

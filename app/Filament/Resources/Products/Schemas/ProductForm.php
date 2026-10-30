@@ -78,8 +78,8 @@ class ProductForm
                             ->label('Harga (IDR)')
                             ->required()
                             ->prefix('Rp')
-                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
-                            ->stripCharacters('.')
+                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                            ->stripCharacters([',', '.'])
                             ->numeric()
                             ->default(0),
                         TextInput::make('price_usd')

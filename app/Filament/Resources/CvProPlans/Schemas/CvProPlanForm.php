@@ -67,8 +67,8 @@ class CvProPlanForm
                         TextInput::make('price_idr')
                             ->label('Harga (IDR)')
                             ->prefix('Rp')
-                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
-                            ->stripCharacters('.')
+                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                            ->stripCharacters([',', '.'])
                             ->numeric()
                             ->required()
                             ->default(0),

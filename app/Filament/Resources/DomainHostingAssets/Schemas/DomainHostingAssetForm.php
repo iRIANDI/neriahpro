@@ -130,8 +130,8 @@ class DomainHostingAssetForm
                         TextInput::make('cost_price')
                             ->label('Biaya Beli / Modal Sewa (HPP)')
                             ->prefix('Rp')
-                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
-                            ->stripCharacters('.')
+                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                            ->stripCharacters([',', '.'])
                             ->numeric()
                             ->default(0)
                             ->helperText('Biaya riil yang dibayar ke provider.'),
@@ -139,8 +139,8 @@ class DomainHostingAssetForm
                         TextInput::make('client_price')
                             ->label('Harga Tagihan ke Klien')
                             ->prefix('Rp')
-                            ->mask(RawJs::make('$money($input, \'.\', \',\', 0)'))
-                            ->stripCharacters('.')
+                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                            ->stripCharacters([',', '.'])
                             ->numeric()
                             ->nullable()
                             ->helperText('Harga perpanjangan yang ditagihkan ke klien (jika dikelola agency).'),

@@ -50,7 +50,7 @@ class LlmGatewayService
     {
         $all = [
             'deepseek' => 'DeepSeek AI (DeepSeek-V4.1-Flash Vision & DeepSeek-V4-Pro 1M)',
-            'gemini' => 'Google Gemini (Gemini 2.5 Pro & Flash Multimodal)',
+            'gemini' => 'Google Gemini (Gemini 3.6 Flash & Gemini 3.5 Flash Multimodal)',
             'openai' => 'OpenAI GPT-4o / o3-mini',
             'claude' => 'Anthropic Claude 3.7 Sonnet',
             'grok' => 'xAI Grok 2',
@@ -67,10 +67,9 @@ class LlmGatewayService
             }
         }
 
-        // Always allow deepseek and gemini even if key isn't saved yet in DB
+        // Fallback to deepseek if no keys configured
         if (empty($filtered)) {
             $filtered['deepseek'] = $all['deepseek'];
-            $filtered['gemini'] = $all['gemini'];
         }
 
         return $filtered;
@@ -282,6 +281,16 @@ class LlmGatewayService
                 }
                 if (!empty($msg['images']) && is_array($msg['images'])) {
                     $imageItems = array_merge($imageItems, $msg['images']);
+                }
+                if (!empty($msg['attachments']) && is_array($msg['attachments'])) {
+                    foreach ($msg['attachments'] as $att) {
+                        if (($att['type'] ?? '') === 'image' && !empty($att['path'])) {
+                            $physPath = storage_path('app/public/' . $att['path']);
+                            if (file_exists($physPath)) {
+                                $imageItems[] = $physPath;
+                            }
+                        }
+                    }
                 }
                 if (!empty($options['images']) && is_array($options['images'])) {
                     $imageItems = array_merge($imageItems, $options['images']);
@@ -502,6 +511,16 @@ class LlmGatewayService
             }
             if (!empty($msg['images']) && is_array($msg['images'])) {
                 $imageItems = array_merge($imageItems, $msg['images']);
+            }
+            if (!empty($msg['attachments']) && is_array($msg['attachments'])) {
+                foreach ($msg['attachments'] as $att) {
+                    if (($att['type'] ?? '') === 'image' && !empty($att['path'])) {
+                        $physPath = storage_path('app/public/' . $att['path']);
+                        if (file_exists($physPath)) {
+                            $imageItems[] = $physPath;
+                        }
+                    }
+                }
             }
             if (!empty($options['images']) && is_array($options['images'])) {
                 $imageItems = array_merge($imageItems, $options['images']);

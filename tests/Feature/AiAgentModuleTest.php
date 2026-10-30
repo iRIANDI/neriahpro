@@ -136,4 +136,36 @@ class AiAgentModuleTest extends TestCase
             ->dispatch('close-ai-copilot')
             ->assertSet('windowState', 'closed');
     }
+
+    public function test_floating_agentic_ai_manages_sessions_and_deletes(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $component = \Livewire\Livewire::test(\App\Livewire\Admin\FloatingAgenticAi::class)
+            ->call('openWindow');
+
+        $initialSessionId = $component->get('currentSessionId');
+        $this->assertNotEmpty($initialSessionId);
+
+        // Test creating new chat
+        $component->call('createNewChat', false);
+        $newSessionId = $component->get('currentSessionId');
+        $this->assertNotEmpty($newSessionId);
+        $this->assertNotEquals($initialSessionId, $newSessionId);
+
+        // Test deleting session
+        $component->call('deleteSession', $initialSessionId);
+        $this->assertDatabaseMissing('ai_chat_sessions', ['id' => $initialSessionId]);
+    }
+
+    public function test_floating_agentic_ai_only_shows_providers_with_api_keys(): void
+    {
+        $gateway = app(\App\Services\Ai\LlmGatewayService::class);
+        $providersWithKeys = $gateway->getAvailableProviders(true);
+
+        foreach ($providersWithKeys as $key => $label) {
+            $this->assertNotEmpty($gateway->getApiKey($key));
+        }
+    }
 }

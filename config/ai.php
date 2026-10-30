@@ -13,9 +13,10 @@ return [
             'name' => 'Google Gemini',
             'api_key' => env('GEMINI_API_KEY'),
             'models' => [
-                'discovery' => env('GEMINI_DISCOVERY_MODEL', 'gemini-2.0-flash'),
-                'prd' => env('GEMINI_PRD_MODEL', 'gemini-1.5-pro'),
-                'fallback' => 'gemini-1.5-flash',
+                'discovery' => env('GEMINI_DISCOVERY_MODEL', 'gemini-2.5-flash'),
+                'prd' => env('GEMINI_PRD_MODEL', 'gemini-2.5-pro'),
+                'fallback' => 'gemini-2.5-flash-lite',
+                'vision' => 'gemini-2.5-flash',
             ],
             'is_free_tier' => true,
         ],
@@ -24,11 +25,13 @@ return [
             'api_key' => env('DEEPSEEK_API_KEY'),
             'base_url' => 'https://api.deepseek.com',
             'models' => [
-                'discovery' => 'deepseek-chat',
-                'prd' => 'deepseek-reasoner', // DeepSeek-R1 SOTA Reasoning
+                'discovery' => env('DEEPSEEK_DISCOVERY_MODEL', 'deepseek-flash'), // DeepSeek-V4.1-Flash (Vision & Fast)
+                'prd' => env('DEEPSEEK_PRD_MODEL', 'deepseek-v4-pro'), // DeepSeek-V4-Pro (1M Konteks Reasoning)
+                'vision' => 'deepseek-flash', // Multimodal vision image support
+                'reasoning' => 'deepseek-v4-pro',
                 'fallback' => 'deepseek-chat',
             ],
-            'is_free_tier' => true, // Extremely economical / Free credits
+            'is_free_tier' => true, // Extremely economical
         ],
         'anthropic' => [
             'name' => 'Anthropic Claude',

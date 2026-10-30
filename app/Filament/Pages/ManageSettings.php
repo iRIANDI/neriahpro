@@ -545,8 +545,8 @@ class ManageSettings extends Page implements HasForms
                                             ->label('AI Provider Utama (Default)')
                                             ->options(function () {
                                                 $providers = [
-                                                    'deepseek' => 'DeepSeek AI (DeepSeek-R1 SOTA Reasoning)',
-                                                    'gemini' => 'Google Gemini (Gemini 2.5 Pro / Flash)',
+                                                    'deepseek' => 'DeepSeek AI (DeepSeek-V4.1-Flash Vision / DeepSeek-V4-Pro / R1)',
+                                                    'gemini' => 'Google Gemini (Gemini 2.5 Pro & Flash Multimodal)',
                                                     'anthropic' => 'Anthropic Claude (Claude 3.7 Sonnet)',
                                                     'openai' => 'OpenAI ChatGPT (GPT-4o / o3-mini)',
                                                     'xai' => 'xAI Grok (Grok-2)',

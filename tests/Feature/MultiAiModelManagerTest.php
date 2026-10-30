@@ -89,6 +89,8 @@ class MultiAiModelManagerTest extends TestCase
     {
         // Clear all keys from config
         config([
+            'ai.providers.deepseek.api_key' => null,
+            'ai.providers.gemini.api_key' => null,
             'ai.providers.anthropic.api_key' => null,
             'ai.providers.openai.api_key' => null,
             'ai.providers.groq.api_key' => null,

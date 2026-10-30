@@ -655,6 +655,7 @@ class MultiAiModelManager
         $isDeepReasoning = preg_match('/(^|[-_\/.])(reasoner|reasoning|r1|o1|o3|qwq|thinking)($|[-_\/.])/i', $lower)
             || str_contains($lower, 'deepseek-reasoner')
             || str_contains($lower, 'deepseek-r1')
+            || str_contains($lower, 'deepseek-v4-pro')
             || str_contains($lower, 'o1-')
             || str_contains($lower, 'o3-');
 
@@ -669,15 +670,17 @@ class MultiAiModelManager
             || str_ends_with($lower, '-flash')
             || str_ends_with($lower, '-lite')
             || str_ends_with($lower, '-haiku')
+            || str_contains($lower, 'deepseek-flash')
         ) {
             return 'discovery';
         }
 
         // 3. Flagship / Heavy Architecture (PRD)
         $prdKeywords = [
+            'deepseek-v4-pro', 'deepseek-pro',
             'claude-3-7', 'claude-sonnet-4', 'claude-3-5-sonnet', 'claude-3-opus', 'opus',
             'gpt-4o', 'gpt-4.5', 'gpt-4-turbo', 'gpt-4',
-            'gemini-2.5-pro', 'gemini-2.0-pro', 'gemini-1.5-pro', 'gemini-pro',
+            'gemini-2.5-pro', 'gemini-pro-latest',
             'grok-2', 'grok-3',
             'qwen-2.5-72b', 'qwen-max', 'qwen-plus',
             'llama-3.1-405b', 'llama-3.3-70b', 'llama-3.1-70b', 'llama-3-70b', '70b', '72b', '405b',
@@ -697,7 +700,7 @@ class MultiAiModelManager
 
         // 5. Common fast chat models
         $discoveryKeywords = [
-            'deepseek-chat', 'deepseek-v3', 'chatgpt-4o-latest', 'gpt-3.5'
+            'deepseek-flash', 'deepseek-chat', 'deepseek-v3', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'chatgpt-4o-latest', 'gpt-3.5'
         ];
 
         foreach ($discoveryKeywords as $discKw) {
@@ -762,26 +765,27 @@ class MultiAiModelManager
     {
         if ($tier === 'discovery') {
             return [
-                'gpt-4o-mini' => 'gpt-4o-mini — OpenAI (Super Cepat, Standar Emas Audit Ide)',
+                'deepseek-flash' => 'deepseek-flash — DeepSeek (V4.1-Flash Multimodal Vision, 1M Konteks & Inferensi Kilat)',
+                'gemini-2.5-flash' => 'gemini-2.5-flash — Google (Multimodal Generasi Terbaru, 1M Konteks)',
+                'gemini-2.5-flash-lite' => 'gemini-2.5-flash-lite — Google (Ultra Ringan & Hemat Latensi)',
                 'deepseek-chat' => 'deepseek-chat / V3 — DeepSeek (Ekstra Cepat & Super Hemat Biaya)',
-                'gemini-2.0-flash' => 'gemini-2.0-flash — Google (Inference Kilat & Multimodal)',
-                'gemini-2.0-flash-lite' => 'gemini-2.0-flash-lite — Google (Ultra Ringan & Hemat Latensi)',
+                'gpt-4o-mini' => 'gpt-4o-mini — OpenAI (Super Cepat, Standar Emas Audit Ide)',
                 'claude-3-5-haiku' => 'claude-3-5-haiku — Anthropic (Kecepatan Tinggi & Logika Tajam)',
                 'llama-3.3-70b-versatile' => 'llama-3.3-70b-versatile — Meta / Groq (High-Throughput Open Intelligence)',
-                'qwen-2.5-coder-7b' => 'qwen-2.5-coder-7b — Alibaba (Ringan & Cepat)',
                 'mistral-small' => 'mistral-small — Mistral AI (Efisien & Responsif)',
             ];
         }
 
         return [
+            'deepseek-v4-pro' => 'deepseek-v4-pro — DeepSeek (V4-Pro 1M Konteks & SOTA Enterprise Reasoning)',
+            'deepseek-reasoner' => 'deepseek-reasoner / R1 — DeepSeek (SOTA Chain-of-Thought Reasoning & Ekstra Hemat)',
+            'gemini-2.5-pro' => 'gemini-2.5-pro — Google (Konteks Raksasa 1M Tokens & Sintesis Arsitektur Enterprise)',
             'claude-3-7-sonnet-20250219' => 'claude-3-7-sonnet-20250219 — Anthropic (Standar Tertinggi Hybrid Reasoning & PRD Enterprise)',
             'claude-sonnet-4-5-20250929' => 'claude-sonnet-4-5-20250929 — Anthropic (Generasi Flagship Teranyar)',
             'claude-3-5-sonnet-20241022' => 'claude-3-5-sonnet-20241022 — Anthropic (SOTA Coding & System Architecture)',
-            'deepseek-reasoner' => 'deepseek-reasoner / R1 — DeepSeek (SOTA Chain-of-Thought Reasoning & Ekstra Hemat)',
             'gpt-4o' => 'gpt-4o — OpenAI (Frontier Multimodal & Rekayasa Arsitektur)',
             'o3-mini' => 'o3-mini — OpenAI (Penalaran Matematika, Logika & Kode Tingkat Lanjut)',
             'o1' => 'o1 — OpenAI (Penalaran Mendalam Masalah Kompleks)',
-            'gemini-2.5-pro' => 'gemini-2.5-pro — Google (Konteks Raksasa & Sintesis Arsitektur Skala Besar)',
             'qwen-2.5-72b-instruct' => 'qwen-2.5-72b-instruct — Alibaba (72B SOTA Open-Weights)',
             'grok-2-1212' => 'grok-2-1212 — xAI (Penalaran Cepat & Berwawasan Luas)',
         ];
@@ -879,21 +883,32 @@ class MultiAiModelManager
     {
         return match ($provider) {
             'relayrouter' => [
+                'deepseek-flash',
+                'deepseek-v4-pro',
                 'deepseek-chat',
-                'deepseek-v3',
                 'deepseek-reasoner',
-                'gpt-4o-mini',
-                'gpt-4o',
-                'claude-3-5-haiku',
-                'claude-3-7-sonnet-20250219',
-                'claude-sonnet-4-5-20250929',
-                'gemini-2.0-flash-lite',
                 'gemini-2.5-flash',
                 'gemini-2.5-pro',
+                'gemini-2.5-flash-lite',
+                'gpt-4o-mini',
+                'gpt-4o',
+                'claude-3-7-sonnet-20250219',
+                'claude-3-5-haiku',
                 'qwen-2.5-72b',
             ],
-            'deepseek' => ['deepseek-chat', 'deepseek-reasoner'],
-            'gemini' => ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'],
+            'deepseek' => [
+                'deepseek-flash',
+                'deepseek-v4-pro',
+                'deepseek-chat',
+                'deepseek-reasoner',
+            ],
+            'gemini' => [
+                'gemini-2.5-flash',
+                'gemini-2.5-pro',
+                'gemini-2.5-flash-lite',
+                'gemini-flash-latest',
+                'gemini-pro-latest',
+            ],
             'anthropic' => ['claude-3-7-sonnet-20250219', 'claude-sonnet-4-5-20250929', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022'],
             'openai' => ['gpt-4o-mini', 'gpt-4o', 'o3-mini', 'o1'],
             'groq' => ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'],

@@ -93,4 +93,32 @@ class AiAgentModuleTest extends TestCase
         $titles = collect($retrieved)->pluck('title')->implode(' ');
         $this->assertStringContainsString('Pilar', $titles);
     }
+
+    public function test_gemini_tool_registry_returns_valid_openai_tools(): void
+    {
+        $openAiTools = GeminiToolRegistry::getOpenAiTools();
+        $this->assertNotEmpty($openAiTools);
+
+        foreach ($openAiTools as $tool) {
+            $this->assertEquals('function', $tool['type']);
+            $this->assertArrayHasKey('name', $tool['function']);
+            $this->assertArrayHasKey('parameters', $tool['function']);
+            $this->assertEquals('object', $tool['function']['parameters']['type']);
+        }
+    }
+
+    public function test_llm_gateway_lists_deepseek_and_gemini_models(): void
+    {
+        $gateway = app(\App\Services\Ai\LlmGatewayService::class);
+
+        $deepseekModels = $gateway->fetchDynamicModels('deepseek');
+        $modelIds = collect($deepseekModels)->pluck('id')->toArray();
+        $this->assertContains('deepseek-flash', $modelIds);
+        $this->assertContains('deepseek-v4-pro', $modelIds);
+
+        $geminiModels = $gateway->fetchDynamicModels('gemini');
+        $geminiIds = collect($geminiModels)->pluck('id')->toArray();
+        $this->assertContains('gemini-2.5-flash', $geminiIds);
+        $this->assertContains('gemini-2.5-pro', $geminiIds);
+    }
 }

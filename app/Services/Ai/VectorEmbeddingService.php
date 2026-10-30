@@ -57,7 +57,7 @@ class VectorEmbeddingService
             return $this->generateDeterministicEmbedding($safeText);
         }
 
-        $availableModels = ['text-embedding-004', 'gemini-embedding-001'];
+        $availableModels = ['gemini-embedding-2', 'text-embedding-004', 'gemini-embedding-001'];
         $modelsToTry = self::$workingEmbeddingModel && in_array(self::$workingEmbeddingModel, $availableModels)
             ? array_unique(array_merge([self::$workingEmbeddingModel], $availableModels))
             : $availableModels;

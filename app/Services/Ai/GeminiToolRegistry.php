@@ -187,5 +187,53 @@ class GeminiToolRegistry
             ],
         ];
     }
+
+    /**
+     * Dapatkan deklarasi tools dalam format OpenAI / DeepSeek compatible (`type: "function"`).
+     *
+     * @return array[]
+     */
+    public static function getOpenAiTools(): array
+    {
+        $declarations = self::getDeclarations();
+        $tools = [];
+
+        foreach ($declarations as $decl) {
+            $tools[] = [
+                'type' => 'function',
+                'function' => [
+                    'name' => $decl['name'],
+                    'description' => $decl['description'] ?? '',
+                    'parameters' => self::normalizeOpenAiParameters($decl['parameters'] ?? []),
+                ],
+            ];
+        }
+
+        return $tools;
+    }
+
+    /**
+     * Normalisasi tipe parameter huruf besar Gemini ('OBJECT', 'STRING') ke schema OpenAI ('object', 'string').
+     */
+    protected static function normalizeOpenAiParameters(array $params): array
+    {
+        $normalized = [];
+
+        foreach ($params as $k => $v) {
+            if ($k === 'type' && is_string($v)) {
+                $normalized[$k] = strtolower($v);
+            } elseif (is_array($v)) {
+                $normalized[$k] = self::normalizeOpenAiParameters($v);
+            } else {
+                $normalized[$k] = $v;
+            }
+        }
+
+        if (!isset($normalized['type'])) {
+            $normalized['type'] = 'object';
+        }
+
+        return $normalized;
+    }
 }
 

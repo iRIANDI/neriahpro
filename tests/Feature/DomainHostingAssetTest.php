@@ -69,10 +69,28 @@ class DomainHostingAssetTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
+        \Livewire\Livewire::actingAs($superadmin)
+            ->test(CreateDomainHostingAsset::class)
+            ->fillForm([
+                'asset_type' => 'vps',
+                'name' => 'VPS Server Decimal Test',
+                'domain_name' => 'decimal.neriahpro.com',
+                'provider' => 'DigitalOcean',
+                'purchase_date' => '2026-10-30',
+                'expires_at' => '2027-10-30',
+                'billing_cycle' => 'monthly',
+                'cost_price' => '150.000,50',
+                'client_price' => '250.000,75',
+                'currency' => 'IDR',
+                'status' => 'active',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
         $this->assertDatabaseHas('domain_hosting_assets', [
-            'domain_name' => 'hetzner.neriahpro.com',
-            'cost_price' => 1500000,
-            'client_price' => 2500000,
+            'domain_name' => 'decimal.neriahpro.com',
+            'cost_price' => 150000.50,
+            'client_price' => 250000.75,
         ]);
     }
 }

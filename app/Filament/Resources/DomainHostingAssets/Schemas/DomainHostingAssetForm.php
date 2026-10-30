@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\DomainHostingAssets\Schemas;
 
+use App\Support\CurrencyHelper;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -130,20 +131,22 @@ class DomainHostingAssetForm
                         TextInput::make('cost_price')
                             ->label('Biaya Beli / Modal Sewa (HPP)')
                             ->prefix('Rp')
-                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
-                            ->stripCharacters([',', '.'])
-                            ->numeric()
-                            ->default(0)
-                            ->helperText('Biaya riil yang dibayar ke provider.'),
+                            ->mask(RawJs::make('$money($input, \',\', \'.\', 2)'))
+                            ->mutateStateForValidationUsing(fn ($state) => CurrencyHelper::parseDecimal($state, 0.00))
+                            ->dehydrateStateUsing(fn ($state) => CurrencyHelper::parseDecimal($state, 0.00))
+                            ->rule('numeric')
+                            ->default(0.00)
+                            ->helperText('Biaya riil yang dibayar ke provider (mendukung 2 digit desimal).'),
 
                         TextInput::make('client_price')
                             ->label('Harga Tagihan ke Klien')
                             ->prefix('Rp')
-                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
-                            ->stripCharacters([',', '.'])
-                            ->numeric()
+                            ->mask(RawJs::make('$money($input, \',\', \'.\', 2)'))
+                            ->mutateStateForValidationUsing(fn ($state) => CurrencyHelper::parseDecimal($state, null))
+                            ->dehydrateStateUsing(fn ($state) => CurrencyHelper::parseDecimal($state, null))
+                            ->rule('numeric')
                             ->nullable()
-                            ->helperText('Harga perpanjangan yang ditagihkan ke klien (jika dikelola agency).'),
+                            ->helperText('Harga perpanjangan yang ditagihkan ke klien (mendukung 2 digit desimal).'),
 
                         Select::make('currency')
                             ->label('Mata Uang')

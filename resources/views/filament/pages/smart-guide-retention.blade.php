@@ -300,6 +300,9 @@
             <a href="#sec-playbook" @click.prevent="scrollTo('sec-playbook')" :class="activeSection === 'sec-playbook' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 06. <span x-text="t[lang].nav_playbook"></span>
             </a>
+            <a href="#sec-factory-pillars" @click.prevent="scrollTo('sec-factory-pillars')" :class="activeSection === 'sec-factory-pillars' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                07. <span x-text="t[lang].nav_factory_pillars"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -902,6 +905,101 @@
         </div>
     </div>
 
+    <!-- 07. Section 10 Pilar Software Factory OS & AI Governance -->
+    <div id="sec-factory-pillars" class="sg-card" x-show="matchesSearch('10 pilar software factory os postgresql strict ulid ai copilot rag cag kag 2fa audit log rbac')">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px;">
+            <div>
+                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #10b981; text-transform: uppercase; font-weight: 700;">
+                    07 // FACTORY OS & AI GOVERNANCE
+                </span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;">
+                    Arsitektur 10 Pilar Software Factory OS, AI Copilot &amp; Keamanan Zero-Trust
+                </h3>
+            </div>
+            <span style="font-family: ui-monospace, monospace; font-size: 12px; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 2px;">
+                100% PRODUCTION READY
+            </span>
+        </div>
+
+        <p style="font-size: 13px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;">
+            Neriah Pro beroperasi dengan standar rekayasa software factory enterprise. Seluruh pengerjaan kode, arsitektur database, dan tata kelola AI tunduk pada 10 Pilar Software Factory OS:
+        </p>
+
+        <!-- 10 Pillars Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 20px;">
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #6366f1;">PILAR 01: PRD 26 PARAMETER</div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Executive Summary, Target Persona, Problem-Solution Fit, RBAC Matrix, Kepatuhan UU PDP No. 27/2022, OWASP Threat Modeling, DDL PostgreSQL, dan WBS Mermaid Gantt.</div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #10b981;">PILAR 02: STRICT ULID &amp; O(1) CURSOR</div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Primary Key bisnis wajib ULID 26 karakter (->ulid('id')->primary()) untuk kompatibilitas PostgreSQL 16. Keyset Cursor Pagination O(1) (cursorPaginate()) tanpa degradasi performa jutaan baris.</div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #0284c7;">PILAR 03: CONTAINERIZED DOCKER</div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Environment production terisolasi: PHP 8.5+ FPM (OPcache/APCu), PostgreSQL 16 dengan pgvector, Redis 7 (Cache::rememberForever), dan Nginx TLS reverse proxy.</div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #d97706;">PILAR 04: SYNTHETIC SEEDER 100+</div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Seeder sintetis menghasilkan minimal 100+ baris data realistis untuk validasi cursor pagination, stres-testing database, dan pengujian edge-case sebelum rilis staging.</div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #ec4899;">PILAR 05: AI AGENT RULES GOVERNANCE</div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Zero Tolerance Dosa Hardcode, pelarangan dialog window.alert/confirm bawaan browser, sudut sudut subtle (rounded-none s/d rounded-md), dan tema sleek sharp brutalism monochrome.</div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #8b5cf6;">PILAR 06: PEST APICONTRACTTEST</div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Suite pengujian otomatis berbasis Pest PHP menguji endpoint API, otentikasi role RBAC, proteksi CSRF/Honeypot, dan verifikasi idempoten webhook Midtrans Snap (DLQ).</div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #14b8a6;">PILAR 07: CI/CD SCRIPT deploy.sh</div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Deployment script zero-downtime 6 skenario: 1 (UI/Blade/PHP), 2 (Migrasi Aman), 3 (Hancur &amp; Bangun DB Staging), 4 (Composer/Filament), 5 (Dump Autoload), 6 (Build Frontend Vite).</div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #f59e0b;">PILAR 08: SHA-256 SCOPE LOCK &amp; ESCROW</div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Pencegahan scope creep melalui Scope Lock digital berstempel SHA-256 dan Canvas Signature Pad. Sistem pembayaran termin Midtrans Snap (DP 50% &amp; Pelunasan 50%).</div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #64748b;">PILAR 09: MANAGED SPRINT CAPACITY</div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Filosofi managed capacity: Membatasi pengerjaan maksimal 2-3 proyek paralel per batch demi menjaga standar rekayasa enterprise anti-burnout dan anti-AI-slop.</div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #10b981;">PILAR 10: CUSTOMER PORTAL &amp; ASSETS</div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Portal klien real-time (/customer/dashboard) menampilkan timeline Gantt, dokumen PRD terkunci, dan monitoring siklus hidup domain &amp; hosting dengan peringatan H-30/H-7.</div>
+            </div>
+        </div>
+
+        <!-- AI Agent, 2FA & Audit Log Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+            <div class="sg-subcard" style="border-left: 3px solid #10b981;">
+                <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 6px;">
+                    🤖 Tri-Hybrid AI Copilot &amp; Native Tool Calling
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5;">
+                    Sinergi memori <strong>RAG</strong> (Dense 768-dim pgvector + Sparse Lexical RRF), <strong>CAG</strong> (Cache-Augmented O(1)), dan <strong>KAG</strong> (Graph Rule Enforcement). Dilengkapi 12 Native Tools untuk pencarian blueprint, konversi kontrak legal, transaksi Midtrans, dan pemantauan infrastruktur.
+                </div>
+            </div>
+
+            <div class="sg-subcard" style="border-left: 3px solid #6366f1;">
+                <div style="font-size: 12px; font-weight: 700; color: #6366f1; margin-bottom: 6px;">
+                    🔐 Otentikasi 2FA Password (TOTP RFC 6238)
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5;">
+                    Keamanan akun admin lapis dua berstandar industri RFC 6238 dengan Time-based One-Time Password (TOTP). Mendukung scan QR Code Google Authenticator, Bitwarden, 1Password, kunci manual, serta 8 kode pemulihan darurat sekali pakai.
+                </div>
+            </div>
+
+            <div class="sg-subcard" style="border-left: 3px solid #f59e0b;">
+                <div style="font-size: 12px; font-weight: 700; color: #f59e0b; margin-bottom: 6px;">
+                    📋 Audit Trail &amp; CCTV Workflow Tracing
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5;">
+                    Mencatat seluruh perubahan data via trait <code>Auditable</code> dengan JSON diff sebelum/sesudah, identitas aktor, alamat IP, dan User-Agent. Setiap eksekusi AI terekam di tabel <code>ai_workflow_traces</code> dengan durasi milidetik untuk transparansi audit.
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1125,7 +1223,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

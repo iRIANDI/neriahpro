@@ -49,7 +49,7 @@
                 activeTab: 'overview',
                 init() {
                     const hash = window.location.hash.replace('#', '');
-                    const validTabs = ['overview', 'retail', 'studio', 'sla'];
+                    const validTabs = ['overview', 'retail', 'studio', 'sla', 'factory'];
                     if (validTabs.includes(hash)) {
                         this.activeTab = hash;
                     }
@@ -158,6 +158,14 @@
                 class="px-4 py-2 font-mono text-xs font-bold border transition rounded-none cursor-pointer"
             >
                 {{ $isEn ? '4. SLA & Midtrans Safety' : '4. Keamanan SLA & Midtrans' }}
+            </button>
+            <button 
+                type="button"
+                @click="setTab('factory')" 
+                :class="activeTab === 'factory' ? 'bg-zinc-900 text-white dark:bg-white dark:text-black border-zinc-900 dark:border-white shadow-xs' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'"
+                class="px-4 py-2 font-mono text-xs font-bold border transition rounded-none cursor-pointer"
+            >
+                {{ $isEn ? '5. 10 Pillars Factory OS' : '5. Arsitektur 10 Pilar Factory OS' }}
             </button>
         </div>
 
@@ -390,6 +398,165 @@
                                 Apabila terdapat kegagalan penerbitan berkas digital atau ketidaksesuaian kritis yang tidak dapat diperbaiki dalam kurun waktu 48 jam, Klien berhak mengajukan pengembalian dana melalui tombol tiket bantuan di portal pelanggan atau email resmi ke <a href="mailto:{{ $supportEmail }}" class="text-emerald-500 underline font-bold">{{ $supportEmail }}</a>.
                             @endif
                         </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- TAB 5: 10 PILLARS OF SOFTWARE FACTORY OS & AI GOVERNANCE          -->
+        <!-- ================================================================= -->
+        <div x-show="activeTab === 'factory'" x-cloak class="space-y-6">
+            <div class="border border-zinc-300 dark:border-zinc-800 p-6 bg-white dark:bg-zinc-900 shadow-sm">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="inline-block w-2.5 h-2.5 bg-emerald-500 rounded-none"></span>
+                    <span class="font-mono text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                        {{ $isEn ? 'Enterprise Standard Architecture' : 'Standar Arsitektur Rekayasa Perangkat Lunak' }}
+                    </span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-black font-mono tracking-tight text-zinc-950 dark:text-white uppercase mb-4">
+                    {{ $isEn ? 'The 10 Pillars of Software Factory OS & Autonomous AI Engine' : '10 Pilar Software Factory OS & Orkestrasi AI Terdesentralisasi' }}
+                </h2>
+                <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-3xl">
+                    @if($isEn)
+                        Neriah Pro operates under the Software Factory OS framework, ensuring enterprise-grade stability, zero-downtime deployment, mathematical O(1) database scalability, and strict cryptographic scope locking.
+                    @else
+                        Neriah Pro menerapkan standar Software Factory OS terstruktur untuk menjamin kestabilan produksi, skalabilitas database O(1) berbasis PostgreSQL 16 Strict ULID, segel digital SHA-256 anti-scope creep, dan orkestrasi AI mandiri.
+                    @endif
+                </p>
+            </div>
+
+            <!-- 10 Pillars Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans">
+                <!-- Pilar 1 -->
+                <div class="border border-zinc-300 dark:border-zinc-800 p-4 bg-zinc-50 dark:bg-zinc-900/60 space-y-2">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">Pilar 1: PRD 26 Parameter</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 font-bold">Discovery</span>
+                    </div>
+                    <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        Dokumen PRD mencakup Executive Summary, Problem-Solution Fit, RBAC Matrix, Kepatuhan UU PDP No. 27/2022 &amp; ITE, Threat Modeling OWASP Top 10, DDL PostgreSQL, dan WBS Mermaid Gantt 5 Sprint.
+                    </p>
+                </div>
+
+                <!-- Pilar 2 -->
+                <div class="border border-zinc-300 dark:border-zinc-800 p-4 bg-zinc-50 dark:bg-zinc-900/60 space-y-2">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">Pilar 2: Strict ULID &amp; Keyset O(1)</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-950 dark:text-emerald-200 font-bold">Database</span>
+                    </div>
+                    <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        Primary Key bisnis wajib ULID 26 karakter (->ulid('id')->primary()) untuk kompatibilitas PostgreSQL 16 terdistribusi. Keyset Cursor Pagination O(1) (cursorPaginate()) tanpa OFFSET degrade.
+                    </p>
+                </div>
+
+                <!-- Pilar 3 -->
+                <div class="border border-zinc-300 dark:border-zinc-800 p-4 bg-zinc-50 dark:bg-zinc-900/60 space-y-2">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">Pilar 3: Production Docker</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 font-bold">DevOps</span>
+                    </div>
+                    <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        Environment multi-container terisolasi: PHP 8.5+ FPM (OPcache/APCu), PostgreSQL 16 dengan pgvector, Redis 7 (Cache::rememberForever), dan Nginx TLS reverse proxy.
+                    </p>
+                </div>
+
+                <!-- Pilar 4 -->
+                <div class="border border-zinc-300 dark:border-zinc-800 p-4 bg-zinc-50 dark:bg-zinc-900/60 space-y-2">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">Pilar 4: Synthetic Seeder 100+</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 font-bold">Resilience</span>
+                    </div>
+                    <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        Seeder sintetis menghasilkan 100+ data realistis untuk stress-testing performa, validasi Keyset Cursor Pagination, dan pengujian edge-case sebelum rilis staging.
+                    </p>
+                </div>
+
+                <!-- Pilar 5 -->
+                <div class="border border-zinc-300 dark:border-zinc-800 p-4 bg-zinc-50 dark:bg-zinc-900/60 space-y-2">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">Pilar 5: AI Agent Rules Governance</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 font-bold">AI Rules</span>
+                    </div>
+                    <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        Zero Tolerance Dosa Hardcode, pelarangan dialog JavaScript bawaan (ban alert/confirm), penegakan sudut subtle (rounded-none s/d rounded-md), dan tema sharp brutalism monochrome.
+                    </p>
+                </div>
+
+                <!-- Pilar 6 -->
+                <div class="border border-zinc-300 dark:border-zinc-800 p-4 bg-zinc-50 dark:bg-zinc-900/60 space-y-2">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">Pilar 6: Pest ApiContractTest</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 font-bold">Testing</span>
+                    </div>
+                    <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        Suite pengujian otomatis berbasis Pest PHP menguji endpoint API, otentikasi role RBAC, proteksi CSRF/Honeypot, dan verifikasi idempoten webhook Midtrans Snap.
+                    </p>
+                </div>
+
+                <!-- Pilar 7 -->
+                <div class="border border-zinc-300 dark:border-zinc-800 p-4 bg-zinc-50 dark:bg-zinc-900/60 space-y-2">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">Pilar 7: CI/CD deploy.sh 6 Skenario</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 font-bold">Automation</span>
+                    </div>
+                    <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        Deployment script zero-downtime: 1 (UI/Blade/PHP), 2 (Migrasi Aman), 3 (Hancur &amp; Bangun DB Staging), 4 (Composer/Filament), 5 (Dump Autoload), 6 (Build Frontend Vite).
+                    </p>
+                </div>
+
+                <!-- Pilar 8 -->
+                <div class="border border-zinc-300 dark:border-zinc-800 p-4 bg-zinc-50 dark:bg-zinc-900/60 space-y-2">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">Pilar 8: SHA-256 Scope Lock &amp; Escrow</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-950 text-amber-950 dark:text-amber-200 font-bold">Legal &amp; Escrow</span>
+                    </div>
+                    <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        Pencegahan scope creep melalui Scope Lock digital berstempel SHA-256 dan tanda tangan Canvas Signature Pad. Pembayaran escrow termin Midtrans Snap (DP 50% &amp; Pelunasan 50%).
+                    </p>
+                </div>
+
+                <!-- Pilar 9 -->
+                <div class="border border-zinc-300 dark:border-zinc-800 p-4 bg-zinc-50 dark:bg-zinc-900/60 space-y-2">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">Pilar 9: Managed Sprint Capacity</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 font-bold">Governance</span>
+                    </div>
+                    <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        Filosofi managed capacity: Membatasi pengerjaan maksimal 2-3 proyek paralel per batch demi menjaga standar rekayasa enterprise anti-burnout dan anti-AI-slop.
+                    </p>
+                </div>
+
+                <!-- Pilar 10 -->
+                <div class="border border-zinc-300 dark:border-zinc-800 p-4 bg-zinc-50 dark:bg-zinc-900/60 space-y-2">
+                    <div class="flex items-center justify-between font-mono">
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">Pilar 10: Customer Portal &amp; Asset Lifecycle</span>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 font-bold">Client Hub</span>
+                    </div>
+                    <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        Portal klien real-time (/customer/dashboard) menampilkan timeline Gantt, dokumen PRD terkunci, dan notifikasi otomatis kedaluwarsa aset domain &amp; hosting (H-30/H-7).
+                    </p>
+                </div>
+            </div>
+
+            <!-- AI Tri-Hybrid & Security Governance Box -->
+            <div class="border border-zinc-300 dark:border-zinc-800 p-6 bg-zinc-100 dark:bg-zinc-950 space-y-4">
+                <h3 class="font-mono text-sm font-black uppercase text-zinc-950 dark:text-white flex items-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <span>Autonomous AI Copilot, 2FA Security, &amp; Audit Trail Trailblazer</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-sans text-zinc-600 dark:text-zinc-400">
+                    <div class="space-y-1">
+                        <strong class="text-zinc-950 dark:text-white font-mono uppercase block">Tri-Hybrid AI Engine</strong>
+                        <p>Mengintegrasikan RAG (Dense 768-dim pgvector + Sparse Lexical RRF), CAG (Cache-Augmented O(1)), dan KAG (Graph Rule Enforcement) dengan 12 Native Function Calling tools.</p>
+                    </div>
+                    <div class="space-y-1">
+                        <strong class="text-zinc-950 dark:text-white font-mono uppercase block">Two-Factor Auth (2FA)</strong>
+                        <p>Proteksi otentikasi lapis dua berbasis TOTP RFC 6238 kompatibel dengan Google Authenticator, Bitwarden, dan 1Password lengkap dengan kode pemulihan darurat.</p>
+                    </div>
+                    <div class="space-y-1">
+                        <strong class="text-zinc-950 dark:text-white font-mono uppercase block">Audit Trail &amp; CCTV</strong>
+                        <p>Pelacakan jejak perubahan model database (Eloquent Auditable trait) dengan rekaman JSON diff sebelum/sesudah, metadata aktor, alamat IP, dan AiWorkflowTracer.</p>
                     </div>
                 </div>
             </div>

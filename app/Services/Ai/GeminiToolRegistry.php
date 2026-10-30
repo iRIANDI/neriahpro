@@ -1,0 +1,191 @@
+<?php
+
+namespace App\Services\Ai;
+
+/**
+ * GeminiToolRegistry: Registri 100% Native Tool Calling Google Gemini & Multi-LLM Gateway.
+ * Mendaftarkan operasi modul sistem Neriah Pro Software Factory OS ke format resmi Google Gemini Function Declarations.
+ */
+class GeminiToolRegistry
+{
+    /**
+     * Dapatkan seluruh deklarasi fungsi resmi untuk parameter tools di Google Gemini API.
+     *
+     * @return array[]
+     */
+    public static function getDeclarations(): array
+    {
+        return [
+            // =========================================================================
+            // 1. MODUL PROJECT OS BLUEPRINTS & PRD
+            // =========================================================================
+            [
+                'name' => 'search_blueprints',
+                'description' => 'Mencari daftar Project OS Blueprints / PRD berdasarkan kata kunci judul, nama klien, status pengerjaan, atau tier lisensi.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'query' => ['type' => 'STRING', 'description' => 'Kata kunci pencarian (judul proyek, nama klien, atau slug).'],
+                        'status' => ['type' => 'STRING', 'description' => 'Filter status proyek: "Draft", "Review", "Scope Locked", "Active Sprint", "Completed".'],
+                        'tier' => ['type' => 'STRING', 'description' => 'Filter tier: "retail_spark", "retail_lite", "retail_pro", "retail_ultimate", "studio_advisory", "studio_mvp", "studio_umkm".'],
+                        'limit' => ['type' => 'INTEGER', 'description' => 'Jumlah hasil maksimal yang diambil (default: 5).'],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'get_blueprint_details',
+                'description' => 'Mengambil rincian utuh satu blueprint: dokumen PRD 26 parameter, skema DDL PostgreSQL Strict ULID, atau diagram WBS Gantt Mermaid.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => ['type' => 'STRING', 'description' => 'ULID ID atau slug unik dari blueprint yang ingin diperiksa.'],
+                    ],
+                    'required' => ['blueprint_id'],
+                ],
+            ],
+            [
+                'name' => 'create_blueprint',
+                'description' => 'Membuat blueprint arsitektur proyek baru ke dalam database Project OS.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'title' => ['type' => 'STRING', 'description' => 'Judul atau nama proyek software yang dirancang.'],
+                        'client_name' => ['type' => 'STRING', 'description' => 'Nama pemilik proyek atau entitas klien.'],
+                        'client_email' => ['type' => 'STRING', 'description' => 'Email klien untuk verifikasi dan pengiriman notifikasi.'],
+                        'client_whatsapp' => ['type' => 'STRING', 'description' => 'Nomor WhatsApp klien berformat E.164 (misal: +6281234567890).'],
+                        'service_tier' => ['type' => 'STRING', 'description' => 'Tier layanan: "retail_spark", "retail_lite", "retail_pro", "retail_ultimate", "studio_advisory", "studio_mvp", "studio_umkm". Default: "studio_mvp".'],
+                        'idea_summary' => ['type' => 'STRING', 'description' => 'Ringkasan ide bisnis, masalah yang diselesaikan, dan modul utama aplikasi.'],
+                    ],
+                    'required' => ['title', 'client_name'],
+                ],
+            ],
+            [
+                'name' => 'update_blueprint_status',
+                'description' => 'Memperbarui status pengerjaan atau tahapan siklus hidup blueprint.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => ['type' => 'STRING', 'description' => 'ULID ID dari blueprint yang ingin diubah.'],
+                        'status' => ['type' => 'STRING', 'description' => 'Status baru: "Draft", "Review", "Scope Locked", "Active Sprint", "Completed".'],
+                        'notes' => ['type' => 'STRING', 'description' => 'Catatan arsitek / alasan perubahan status.'],
+                    ],
+                    'required' => ['blueprint_id', 'status'],
+                ],
+            ],
+            [
+                'name' => 'convert_to_contract',
+                'description' => 'Mengonversi blueprint PRD menjadi dokumen kontrak legal berstempel SHA-256 (Scope Lock) dan siap ditandatangani.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => ['type' => 'STRING', 'description' => 'ULID ID blueprint yang ingin dikunci ke dalam kontrak legal.'],
+                        'contract_title' => ['type' => 'STRING', 'description' => 'Judul dokumen kontrak (opsional).'],
+                    ],
+                    'required' => ['blueprint_id'],
+                ],
+            ],
+
+            // =========================================================================
+            // 2. MODUL TRANSAKSI, BILLING & MIDTRANS
+            // =========================================================================
+            [
+                'name' => 'search_transactions',
+                'description' => 'Mencari data transaksi invoice pembayaran klien (DP 50%, Pelunasan 50%, Lisensi Retail).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'query' => ['type' => 'STRING', 'description' => 'Nomor invoice, order ID Midtrans, atau nama pembayar.'],
+                        'status' => ['type' => 'STRING', 'description' => 'Status transaksi: "pending", "settlement", "expire", "cancel".'],
+                        'limit' => ['type' => 'INTEGER', 'description' => 'Jumlah baris maksimal (default: 5).'],
+                    ],
+                ],
+            ],
+
+            // =========================================================================
+            // 3. MODUL DOMAIN, HOSTING & SERVER ASSETS
+            // =========================================================================
+            [
+                'name' => 'manage_domain_hosting',
+                'description' => 'Mengelola aset infrastruktur klien (domain, hosting, VPS, dedicated server), memantau tanggal kedaluwarsa, atau mendaftarkan aset baru.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => ['type' => 'STRING', 'description' => 'Tindakan: "list_expiring" (aset yang mendekati jatuh tempo), "search" (cari aset), "create" (catat aset baru).'],
+                        'search' => ['type' => 'STRING', 'description' => 'Nama domain, host, atau nama aset yang dicari.'],
+                        'domain_name' => ['type' => 'STRING', 'description' => 'Nama domain/hostname jika membuat aset baru (misal: "klienapp.com").'],
+                        'service_name' => ['type' => 'STRING', 'description' => 'Nama layanan (misal: "Domain Utama Klien").'],
+                        'asset_type' => ['type' => 'STRING', 'description' => 'Tipe aset: "domain", "hosting", "vps", "ssl".'],
+                        'cost_price' => ['type' => 'NUMBER', 'description' => 'Biaya Modal Beli / Sewa (HPP).'],
+                        'client_price' => ['type' => 'NUMBER', 'description' => 'Harga tagihan ke klien.'],
+                        'expires_at' => ['type' => 'STRING', 'description' => 'Tanggal jatuh tempo (format: YYYY-MM-DD).'],
+                    ],
+                    'required' => ['action'],
+                ],
+            ],
+
+            // =========================================================================
+            // 4. MODUL KNOWLEDGE BASE (HYBRID RAG • CAG • KAG)
+            // =========================================================================
+            [
+                'name' => 'query_knowledge_base',
+                'description' => 'Melakukan pencarian semantik cerdas (Hybrid RAG RRF) ke repositori vektor pgvector: mencakup 10 Pilar Software Factory OS, Buku Panduan Smart Guide, SOP hukum PDP/ITE, dan Unit Economics.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'query' => ['type' => 'STRING', 'description' => 'Pertanyaan atau konsep arsitektur yang ingin dicari (misal: "Aturan PostgreSQL Strict ULID" atau "Skema garansi SLA Studio MVP").'],
+                        'limit' => ['type' => 'INTEGER', 'description' => 'Jumlah kutipan teratas yang diambil (default: 4).'],
+                    ],
+                    'required' => ['query'],
+                ],
+            ],
+            [
+                'name' => 'sync_knowledge_base',
+                'description' => 'Menyinkronkan ulang seluruh 10 Pilar Software Factory OS dan Buku Panduan ke basis data vektor (pgvector).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'force_refresh' => ['type' => 'BOOLEAN', 'description' => 'Apakah menghapus data vektor lama dan membuat ulang secara total (default: true).'],
+                    ],
+                ],
+            ],
+
+            // =========================================================================
+            // 5. MODUL AUDIT LOG & CCTV TRACE
+            // =========================================================================
+            [
+                'name' => 'get_audit_logs',
+                'description' => 'Mengambil jejak audit trail keamanan (Audit Log) terbaru yang mencatat tindakan aktor/admin, IP address, dan diff perubahan data.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => ['type' => 'STRING', 'description' => 'Filter tipe aksi: "create", "update", "delete", "login", "security".'],
+                        'limit' => ['type' => 'INTEGER', 'description' => 'Jumlah baris audit log yang diambil (default: 5).'],
+                    ],
+                ],
+            ],
+
+            // =========================================================================
+            // 6. MODUL EKSEKUTIF & LEADS
+            // =========================================================================
+            [
+                'name' => 'get_system_stats',
+                'description' => 'Mengambil statistik langsung kesehatan eksekutif sistem: jumlah blueprint aktif, transaksi, status kapasitas sprint, dan aset domain/hosting.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [],
+                ],
+            ],
+            [
+                'name' => 'search_leads',
+                'description' => 'Melihat daftar calon klien / leads yang masuk dari formulir konsultasi onboarding website publik.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'limit' => ['type' => 'INTEGER', 'description' => 'Jumlah leads maksimal yang diambil (default: 5).'],
+                    ],
+                ],
+            ],
+        ];
+    }
+}
+

@@ -1,0 +1,504 @@
+<?php
+
+namespace App\Services\Ai;
+
+use App\Models\AiKnowledgeVector;
+use App\Models\CmsGlobalSetting;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+
+class VectorEmbeddingService
+{
+    protected string $model = 'text-embedding-004';
+
+    protected static bool $rateLimitExceeded = false;
+    protected static ?int $rateLimitResetTime = null;
+    protected static bool $rateLimitWarned = false;
+    protected static ?string $workingEmbeddingModel = null;
+
+    /**
+     * Dapatkan API Key Gemini dari Pengaturan Global sistem atau environment.
+     */
+    public function getApiKey(): ?string
+    {
+        return MultiAiModelManager::getApiKey('gemini') ?: env('GEMINI_API_KEY');
+    }
+
+    /**
+     * Hasilkan vector embedding 768 dimensi menggunakan Google Gemini API.
+     * Menggunakan model generasi terbaru dengan MRL (outputDimensionality: 768).
+     * Jika terjadi HTTP 429 atau API key tidak disetel, otomatis mengaktifkan sirkuit pengaman
+     * fallback deterministik 768 dimensi berbasis hash.
+     *
+     * @param string $text
+     * @return float[]
+     */
+    public function generateEmbedding(string $text): array
+    {
+        $text = trim($text);
+        if (empty($text)) {
+            return $this->generateDeterministicEmbedding('empty_fallback');
+        }
+
+        $safeText = mb_substr($text, 0, 2048);
+
+        if (self::$rateLimitExceeded) {
+            if (time() < (self::$rateLimitResetTime ?? 0)) {
+                return $this->generateDeterministicEmbedding($safeText);
+            }
+            self::$rateLimitExceeded = false;
+            self::$rateLimitWarned = false;
+        }
+
+        $apiKey = $this->getApiKey();
+        if (empty($apiKey)) {
+            return $this->generateDeterministicEmbedding($safeText);
+        }
+
+        $availableModels = ['text-embedding-004', 'gemini-embedding-001'];
+        $modelsToTry = self::$workingEmbeddingModel && in_array(self::$workingEmbeddingModel, $availableModels)
+            ? array_unique(array_merge([self::$workingEmbeddingModel], $availableModels))
+            : $availableModels;
+
+        foreach ($modelsToTry as $candidateModel) {
+            try {
+                $url = "https://generativelanguage.googleapis.com/v1beta/models/{$candidateModel}:embedContent?key={$apiKey}";
+
+                $payload = [
+                    'model' => "models/{$candidateModel}",
+                    'content' => [
+                        'parts' => [
+                            ['text' => $safeText]
+                        ]
+                    ]
+                ];
+
+                if (str_contains($candidateModel, 'gemini-embedding') || str_contains($candidateModel, 'text-embedding-005')) {
+                    $payload['outputDimensionality'] = 768;
+                }
+
+                $response = Http::connectTimeout(3)->timeout(5)->post($url, $payload);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $values = $data['embedding']['values'] ?? null;
+                    if (is_array($values) && count($values) === 768) {
+                        self::$workingEmbeddingModel = $candidateModel;
+                        return $values;
+                    }
+                }
+
+                $status = $response->status();
+
+                if (in_array($status, [401, 403])) {
+                    self::$rateLimitExceeded = true;
+                    self::$rateLimitResetTime = time() + 300;
+                    if (!self::$rateLimitWarned) {
+                        Log::warning("VectorEmbeddingService: Gemini API Key tidak valid/ditolak (HTTP {$status}). Mengaktifkan fallback deterministik.");
+                        self::$rateLimitWarned = true;
+                    }
+                    break;
+                }
+
+                if ($status === 429) {
+                    self::$rateLimitExceeded = true;
+                    $retryAfter = 60;
+                    self::$rateLimitResetTime = time() + $retryAfter;
+                    if (!self::$rateLimitWarned) {
+                        Log::warning("VectorEmbeddingService: Kuota Gemini API tercapai (Rate Limit 429). Mengaktifkan fallback deterministik 768 dimensi.");
+                        self::$rateLimitWarned = true;
+                    }
+                    break;
+                }
+
+                if ($status === 404) {
+                    continue;
+                }
+            } catch (\Throwable $e) {
+                Log::warning("VectorEmbeddingService Exception ({$candidateModel}): " . $e->getMessage());
+            }
+        }
+
+        return $this->generateDeterministicEmbedding($safeText);
+    }
+
+    /**
+     * Menghasilkan array 768 dimensi float deterministik berbasis hash konten.
+     */
+    public function generateDeterministicEmbedding(string $text): array
+    {
+        $hash = hash('sha512', $text . 'neriahpro_salt_vector_seed_2026');
+        $vector = [];
+        for ($i = 0; $i < 768; $i++) {
+            $charIndex = ($i * 7) % strlen($hash);
+            $val = (ord($hash[$charIndex]) - 48) / 80.0;
+            $vector[] = round(sin($val * ($i + 1)) * 0.1, 6);
+        }
+        return $vector;
+    }
+
+    /**
+     * Pemecah teks cerdas (Smart Chunking) berbasis paragraf dan kalimat dengan sliding window overlap.
+     *
+     * @param string $text
+     * @param int $chunkSize
+     * @param int $overlap
+     * @return string[]
+     */
+    public function chunkText(string $text, int $chunkSize = 1000, int $overlap = 150): array
+    {
+        $text = trim(preg_replace('/\r\n|\r/', "\n", $text));
+        if (empty($text)) {
+            return [];
+        }
+
+        if (mb_strlen($text) <= $chunkSize) {
+            return [$text];
+        }
+
+        $paragraphs = explode("\n\n", $text);
+        $chunks = [];
+        $currentChunk = '';
+
+        foreach ($paragraphs as $para) {
+            $para = trim($para);
+            if (empty($para)) continue;
+
+            if (mb_strlen($currentChunk) + mb_strlen($para) + 2 <= $chunkSize) {
+                $currentChunk .= ($currentChunk !== '' ? "\n\n" : '') . $para;
+            } else {
+                if ($currentChunk !== '') {
+                    $chunks[] = $currentChunk;
+                    $tail = mb_substr($currentChunk, max(0, mb_strlen($currentChunk) - $overlap));
+                    $currentChunk = $tail . "\n\n" . $para;
+                } else {
+                    $sentences = preg_split('/(?<=[.?!])\s+/', $para);
+                    $subChunk = '';
+                    foreach ($sentences as $sentence) {
+                        if (mb_strlen($subChunk) + mb_strlen($sentence) + 1 <= $chunkSize) {
+                            $subChunk .= ($subChunk !== '' ? ' ' : '') . $sentence;
+                        } else {
+                            if ($subChunk !== '') $chunks[] = $subChunk;
+                            $subChunk = $sentence;
+                        }
+                    }
+                    if ($subChunk !== '') {
+                        $chunks[] = $subChunk;
+                    }
+                }
+            }
+        }
+
+        if ($currentChunk !== '') {
+            $chunks[] = $currentChunk;
+        }
+
+        return $chunks;
+    }
+
+    /**
+     * Memecah dokumen lengkap, mengenerate vektor 768 dimensi, dan menyimpan ke PostgreSQL / database.
+     */
+    public function indexDocument(string $title, string $fullText, string $sourceType = 'system_guide', ?string $sourceId = null, array $metadata = [], int $maxChunks = 20): int
+    {
+        $chunks = $this->chunkText($fullText, 950, 120);
+        if (empty($chunks)) {
+            return 0;
+        }
+
+        $totalChunks = count($chunks);
+
+        if ($maxChunks > 0 && $totalChunks > $maxChunks) {
+            $headCount = (int) ceil($maxChunks * 0.7);
+            $tailCount = $maxChunks - $headCount;
+            $headChunks = array_slice($chunks, 0, $headCount, true);
+            $tailChunks = array_slice($chunks, -$tailCount, $tailCount, true);
+            $selectedChunks = $headChunks + $tailChunks;
+        } else {
+            $selectedChunks = $chunks;
+        }
+
+        $indexedCount = 0;
+
+        foreach ($selectedChunks as $index => $chunk) {
+            $embedding = $this->generateEmbedding($chunk);
+
+            $chunkMetadata = array_merge($metadata, [
+                'chunk_index' => $index + 1,
+                'total_chunks' => $totalChunks,
+                'chunk_size' => mb_strlen($chunk),
+                'indexed_at' => now()->toIso8601String(),
+            ]);
+
+            AiKnowledgeVector::create([
+                'title' => $title . ($totalChunks > 1 ? " (Bagian " . ($index + 1) . "/{$totalChunks})" : ''),
+                'source_type' => $sourceType,
+                'source_id' => $sourceId ?: Str::slug($title),
+                'content' => $chunk,
+                'embedding' => $embedding,
+                'metadata' => $chunkMetadata,
+            ]);
+
+            $indexedCount++;
+        }
+
+        return $indexedCount;
+    }
+
+    /**
+     * Ambil konteks potongan dokumen paling relevan menggunakan Arsitektur Hybrid RAG mutakhir
+     * (Dense Vector Similarity via pgvector + Sparse Lexical Token Search dengan Reciprocal Rank Fusion / RRF).
+     *
+     * @param string $query Pertanyaan atau konteks yang dicari
+     * @param int $limit Jumlah dokumen teratas
+     * @return array
+     */
+    public function retrieveRelevantContext(string $query, int $limit = 4): array
+    {
+        $cleanQuery = trim($query);
+        if (empty($cleanQuery)) {
+            return [];
+        }
+
+        $denseResults = collect();
+        $sparseResults = collect();
+
+        // 1. DENSE VECTOR RETRIEVAL (Pencarian Semantik Makna via Cosine Distance)
+        $queryVector = $this->generateEmbedding($cleanQuery);
+        if (!empty($queryVector)) {
+            try {
+                $denseResults = AiKnowledgeVector::searchSimilar($queryVector, $limit * 2)->get();
+            } catch (\Throwable $e) {
+                Log::warning("Vector similarity search failed: " . $e->getMessage());
+            }
+        }
+
+        // 2. SPARSE LEXICAL RETRIEVAL (Pencarian Eksak Kata Kunci)
+        $words = array_filter(
+            explode(' ', strtolower(preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $cleanQuery))),
+            fn($w) => mb_strlen($w) >= 3
+        );
+        if (!empty($words)) {
+            try {
+                $likeOp = DB::getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
+                $queryBuilder = AiKnowledgeVector::query();
+                $queryBuilder->where(function ($sub) use ($words, $likeOp) {
+                    foreach (array_slice($words, 0, 8) as $word) {
+                        $sub->orWhere('title', $likeOp, "%{$word}%")
+                            ->orWhere('content', $likeOp, "%{$word}%");
+                    }
+                });
+                $sparseResults = $queryBuilder->limit($limit * 2)->get();
+            } catch (\Throwable $e) {
+                Log::warning("Sparse lexical search failed: " . $e->getMessage());
+            }
+        }
+
+        // 3. RECIPROCAL RANK FUSION (RRF)
+        $rrfScores = [];
+        $itemsById = [];
+
+        foreach ($denseResults as $rank => $item) {
+            $id = (string) $item->id;
+            $itemsById[$id] = $item;
+            $sim = isset($item->similarity_score) ? (float) $item->similarity_score : 0.85;
+            $rrfScores[$id] = ($rrfScores[$id] ?? 0.0) + (1.0 / (60 + $rank + 1)) + ($sim * 0.02);
+        }
+
+        foreach ($sparseResults as $rank => $item) {
+            $id = (string) $item->id;
+            $itemsById[$id] = $item;
+            $rrfScores[$id] = ($rrfScores[$id] ?? 0.0) + (1.0 / (60 + $rank + 1));
+        }
+
+        arsort($rrfScores);
+        $topIds = array_slice(array_keys($rrfScores), 0, $limit);
+
+        $finalItems = collect($topIds)->map(fn($id) => $itemsById[$id])->filter();
+
+        return $finalItems->map(function ($item) {
+            $sim = isset($item->similarity_score) ? (float) $item->similarity_score : 0.90;
+            $scoreVal = $sim > 1 ? $sim / 100 : $sim;
+            $snippet = Str::limit(trim(strip_tags((string) $item->content)), 220);
+
+            return [
+                'id' => $item->id,
+                'title' => $item->title,
+                'source' => $item->source_type ?? 'Dokumentasi Arsitektur Neriah Pro',
+                'source_type' => $item->source_type ?? 'system_guide',
+                'source_id' => $item->source_id,
+                'score' => $scoreVal,
+                'similarity_score' => round($scoreVal * 100, 1),
+                'content' => $item->content,
+                'content_snippet' => $snippet,
+                'tags' => array_values(array_filter([
+                    $item->source_type ?? null,
+                    $item->metadata['category'] ?? null,
+                    'Hybrid RAG (Dense+Sparse RRF)',
+                ])),
+                'metadata' => $item->metadata ?? [],
+            ];
+        })->values()->toArray();
+    }
+
+    /**
+     * Format konteks RAG menjadi blok Markdown untuk prompt LLM.
+     */
+    public function formatContextForPrompt(array $relevantChunks): string
+    {
+        if (empty($relevantChunks)) {
+            return '';
+        }
+
+        $out = "\n\n### 📚 BASIS PENGETAHUAN TERVERIFIKASI (RAG POSTGRESQL STRICT ULID)\n";
+        $out .= "Informasi di bawah ini diambil langsung dari database arsitektur dan buku panduan resmi Neriah Pro dengan kemiripan semantik tertinggi. Gunakan angka, nama parameter, nominal tarif, dan regulasi ini sebagai referensi valid:\n\n";
+
+        foreach ($relevantChunks as $idx => $chunk) {
+            $num = $idx + 1;
+            $out .= "--- [Kutipan #{$num}: {$chunk['title']} (Sumber: {$chunk['source_type']} | Relevansi: {$chunk['similarity_score']}%) ] ---\n";
+            $out .= trim($chunk['content']) . "\n\n";
+        }
+
+        $out .= "--- AKHIR BASIS PENGETAHUAN TERVERIFIKASI ---\n";
+
+        return $out;
+    }
+
+    /**
+     * Sinkronisasi seluruh Buku Panduan Strategis Sistem Informasi (Smart Guide) dan 10 Pilar Arsitektur ke dalam RAG pgvector.
+     */
+    public function syncSystemKnowledgeBase(bool $forceRefresh = false): array
+    {
+        if ($forceRefresh) {
+            AiKnowledgeVector::where('source_id', 'LIKE', 'smartguide-%')
+                ->orWhere('source_id', 'LIKE', 'pilar-%')
+                ->delete();
+        }
+
+        $syncedSections = 0;
+        $totalChunks = 0;
+
+        // 1. Indeks 10 Pilar Software Factory OS & Enterprise Governance
+        $pillars = [
+            [
+                'id' => 'pilar-1-prd-26',
+                'title' => 'Pilar 1: Dokumen PRD 26 Parameter & Problem-Solution Fit',
+                'content' => "Dokumen PRD 26 Parameter Neriah Pro Software Factory OS mencakup analisis komprehensif: Executive Summary, Target Persona, Problem-Solution Fit, RBAC Matrix, Kepatuhan Regulasi UU PDP No. 27/2022 & UU ITE, Threat Modeling OWASP Top 10, Skema PostgreSQL 16 DDL Strict ULID, Diagram WBS 5 Sprint Mermaid Gantt, Kontrak API RESTful/JSON, dan SLA Maintenance 3 Bulan.",
+                'category' => '10 Pilar Software Factory OS',
+            ],
+            [
+                'id' => 'pilar-2-strict-ulid',
+                'title' => 'Pilar 2: Database PostgreSQL 16 Strict ULID & Keyset Cursor O(1)',
+                'content' => "Seluruh tabel domain bisnis wajib menggunakan ULID 26 karakter (->ulid('id')->primary()) untuk skalabilitas terdistribusi dan kompatibilitas PostgreSQL 16. Dilarang keras menggunakan AUTO_INCREMENT atau ->id(). Pagination wajib menggunakan Keyset Cursor Pagination O(1) (cursorPaginate()) dengan pointer orderBy('id', 'asc') untuk menjamin O(1) time complexity tanpa degradasi jutaan baris.",
+                'category' => '10 Pilar Software Factory OS',
+            ],
+            [
+                'id' => 'pilar-3-docker-env',
+                'title' => 'Pilar 3: Containerized Docker Environment (PHP 8.5+, PG 16, Redis 7)',
+                'content' => "Lingkungan deployment production terisolasi menggunakan Docker Compose multi-container: PHP 8.5+ FPM dengan ekstensi OPcache/APCu, PostgreSQL 16 dengan pgvector extension, Redis 7 untuk event-driven caching (Cache::rememberForever) dan high-throughput queue, serta Nginx reverse proxy dengan TLS/SSL dan Brotli compression.",
+                'category' => '10 Pilar Software Factory OS',
+            ],
+            [
+                'id' => 'pilar-4-synthetic-seeder',
+                'title' => 'Pilar 4: Synthetic Seeder 100+ Baris & Factory Resilience',
+                'content' => "Database seeder sintetis menghasilkan minimal 100+ baris data realistis untuk stress-testing performa, validasi Keyset Cursor Pagination O(1), verifikasi pencarian berindeks, dan pengujian boundary edge-case sebelum aplikasi dilepas ke staging.",
+                'category' => '10 Pilar Software Factory OS',
+            ],
+            [
+                'id' => 'pilar-5-agent-rules',
+                'title' => 'Pilar 5: AI Agent Rules & Engineering Governance (.cursorrules & AGENTS.md)',
+                'content' => "Standar kepatuhan AI Agent mutlak (.cursorrules, AGENTS.md, Graphify Knowledge Graph): Penolakan keras terhadap hardcoded magic strings (Zero Tolerance Dosa Hardcode), pelarangan dialog JavaScript bawaan (Strict Ban window.alert/confirm), border radius subtle (rounded-none s/d rounded-md, ban rounded-full capsule), dan tema sharp brutalism monochrome.",
+                'category' => '10 Pilar Software Factory OS',
+            ],
+            [
+                'id' => 'pilar-6-pest-tests',
+                'title' => 'Pilar 6: Pest ApiContractTest & Security Defense Suite',
+                'content' => "Suite pengujian otomatis berbasis Pest PHP menguji seluruh endpoint API, validasi contract JSON, otentikasi role RBAC, proteksi CSRF/Honeypot, dan simulasi skenario kegagalan webhook Midtrans dengan Dead Letter Queue (DLQ).",
+                'category' => '10 Pilar Software Factory OS',
+            ],
+            [
+                'id' => 'pilar-7-cicd-deploy',
+                'title' => 'Pilar 7: CI/CD Pipeline & 6 Skenario Script deploy.sh',
+                'content' => "Automasi deployment zero-downtime berbasis 6 skenario: 1 (Skenario Ringan Blade/PHP), 2 (Migrasi Aman kolom/tabel baru), 3 (Hancur & Bangun DB Staging Only), 4 (Install Plugin/Package Composer/Filament), 5 (Dump Autoload restrukturisasi class), dan 6 (Build Assets Frontend Vite/Tailwind).",
+                'category' => '10 Pilar Software Factory OS',
+            ],
+            [
+                'id' => 'pilar-8-commercialization-scopelock',
+                'title' => 'Pilar 8: Commercialization, Escrow Termin (DP 50%) & SHA-256 Scope Lock',
+                'content' => "Pencegahan scope creep melalui Scope Lock digital berstempel SHA-256 dan tanda tangan Canvas Signature Pad. Sistem pembayaran escrow termin Midtrans Snap (DP 50% untuk memulai sprint, Pelunasan 50% setelah lolos UAT) terhubung ke webhook idempoten.",
+                'category' => '10 Pilar Software Factory OS',
+            ],
+            [
+                'id' => 'pilar-9-sprint-capacity',
+                'title' => 'Pilar 9: Managed Sprint Capacity & Anti-Collision Engine',
+                'content' => "Filosofi managed capacity: Membatasi pengerjaan maksimal 2-3 proyek paralel per batch demi menjaga standar rekayasa enterprise anti-burnout dan anti-AI-slop. Jadwal sprint terkunci di Sprint Timeline Page dan widget Gantt real-time.",
+                'category' => '10 Pilar Software Factory OS',
+            ],
+            [
+                'id' => 'pilar-10-asset-governance',
+                'title' => 'Pilar 10: Customer Portal Transparency & Asset Lifecycle Governance',
+                'content' => "Portal klien real-time (/customer/dashboard) menampilkan timeline Gantt pengerjaan, dokumen PRD terkunci, dan URL staging preview. Manajemen siklus hidup domain, hosting, dan server dengan notifikasi otomatis H-30/H-7 menjelang jatuh tempo.",
+                'category' => '10 Pilar Software Factory OS',
+            ],
+        ];
+
+        foreach ($pillars as $pilar) {
+            $sourceId = "pilar-{$pilar['id']}";
+            if (!$forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+                continue;
+            }
+
+            $embedding = $this->generateEmbedding($pilar['title'] . "\n\n" . $pilar['content']);
+            AiKnowledgeVector::create([
+                'title' => $pilar['title'],
+                'source_type' => 'architecture_pillar',
+                'source_id' => $sourceId,
+                'content' => "### {$pilar['title']}\nKategori: {$pilar['category']}\n\n{$pilar['content']}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => $pilar['category'],
+                    'pillar_key' => $pilar['id'],
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        // 2. Indeks Pricing & Unit Economics
+        $pricingOverview = "Unit Economics Neriah Pro:
+- Lisensi Retail Spark: Rp 0 (2x AI PRD Audit per bulan, public access).
+- Lisensi Retail Lite: Rp 99.000 (1 Proyek PRD lengkap, 30 hari jendela revisi).
+- Lisensi Retail Pro: Rp 399.000 (1 Proyek, 6 bulan unlimited AI re-prompt, export scaffold).
+- Lisensi Retail Ultimate: Rp 1.490.000 (1 Proyek enterprise, 1 tahun prioritas update, PostgreSQL DDL).
+- Studio Turnkey Advisory Tier: Rp 2.500.000 (Dokumen PRD 26 parameter, PostgreSQL DDL, WBS Mermaid Gantt, 100% potongan biaya jika lanjut ke Full MVP).
+- Studio Full Monolith MVP: Rp 50.000.000 (DP 50% Rp 25.000.000, 100% turnkey dikerjakan langsung oleh Senior Architect mencakup seluruh 7 pilar factory OS, staging VPS hardened, garansi SLA 3 bulan).
+- UMKM Digital Starter Tier: Rp 3.750.000 (Mesin transaksi web, kasir, database PostgreSQL terpusat, admin Filament v5, pembayaran QRIS otomatis, domain cloud 1 bulan).";
+
+        $sourceId = 'smartguide-unit-economics';
+        if ($forceRefresh || !AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+            $embedding = $this->generateEmbedding($pricingOverview);
+            AiKnowledgeVector::create([
+                'title' => 'Unit Economics, Pricing Tier & Studio Turnkey Contracts',
+                'source_type' => 'unit_economics',
+                'source_id' => $sourceId,
+                'content' => "### Unit Economics, Pricing Tier & Studio Contracts\n\n{$pricingOverview}",
+                'embedding' => $embedding,
+                'metadata' => ['category' => 'Unit Economics'],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
+
+        return [
+            'status' => 'success',
+            'synced_sections' => $syncedSections,
+            'total_chunks' => $totalChunks,
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian panduan & 10 pilar arsitektur ke basis pengetahuan RAG pgvector.",
+        ];
+    }
+}
+

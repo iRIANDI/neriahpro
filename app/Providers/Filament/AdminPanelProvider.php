@@ -53,6 +53,10 @@ class AdminPanelProvider extends PanelProvider
                 \Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
                 fn () => view('filament.auth.login-after')
             )
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::BODY_END,
+                fn () => view('filament.components.floating-copilot-hook')
+            )
             ->colors([
                 'primary' => Color::Amber,
             ])

@@ -27,6 +27,22 @@ class SuperAdminSeeder extends Seeder
         $executiveGuidePerm = Permission::firstOrCreate(['name' => 'view_executive_smart_guide', 'guard_name' => 'web']);
         $manageSettingsPerm = Permission::firstOrCreate(['name' => 'manage_settings', 'guard_name' => 'web']);
         $manageVouchersPerm = Permission::firstOrCreate(['name' => 'manage_vouchers', 'guard_name' => 'web']);
+        $auditLogPerm = Permission::firstOrCreate(['name' => 'view_audit_logs', 'guard_name' => 'web']);
+        $aiCopilotPerm = Permission::firstOrCreate(['name' => 'view_ai_copilot', 'guard_name' => 'web']);
+        $twoFactorPerm = Permission::firstOrCreate(['name' => 'manage_two_factor', 'guard_name' => 'web']);
+
+        $superAdminRole->syncPermissions([
+            $executiveGuidePerm,
+            $manageSettingsPerm,
+            $manageVouchersPerm,
+            $auditLogPerm,
+            $aiCopilotPerm,
+            $twoFactorPerm,
+        ]);
+
+        if (!$developerRole->hasPermissionTo($aiCopilotPerm)) {
+            $developerRole->givePermissionTo([$aiCopilotPerm, $twoFactorPerm]);
+        }
 
         // Grant Due Diligence permissions to Investor & Superadmin
         if (!$investorRole->hasPermissionTo($executiveGuidePerm)) {

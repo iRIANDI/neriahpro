@@ -118,7 +118,22 @@ class AiAgentModuleTest extends TestCase
 
         $geminiModels = $gateway->fetchDynamicModels('gemini');
         $geminiIds = collect($geminiModels)->pluck('id')->toArray();
-        $this->assertContains('gemini-2.5-flash', $geminiIds);
-        $this->assertContains('gemini-2.5-pro', $geminiIds);
+        $this->assertContains('gemini-3.6-flash', $geminiIds);
+        $this->assertContains('gemini-3.5-flash', $geminiIds);
+    }
+
+    public function test_floating_agentic_ai_livewire_component_renders_and_toggles(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        \Livewire\Livewire::test(\App\Livewire\Admin\FloatingAgenticAi::class)
+            ->assertSee('AI Copilot')
+            ->assertSet('windowState', 'closed')
+            ->dispatch('open-ai-copilot')
+            ->assertSet('windowState', 'open')
+            ->assertSee('Neriah Pro AI Copilot')
+            ->dispatch('close-ai-copilot')
+            ->assertSet('windowState', 'closed');
     }
 }

@@ -29,8 +29,10 @@ class FloatingAgenticAi extends Component
     public array $sessions = [];
 
     // Provider & Models
-    public string $activeProvider = 'gemini';
+    public string $activeProvider = 'deepseek';
+    public string $activeSubModel = 'deepseek-flash';
     public array $availableProviders = [];
+    public array $dynamicModels = [];
 
     // Quick Stats
     public int $totalKnowledgeChunks = 0;
@@ -38,9 +40,12 @@ class FloatingAgenticAi extends Component
 
     public function mount(LlmGatewayService $gateway, VectorEmbeddingService $vectorService)
     {
-        $this->activeProvider = $gateway->getActiveProvider();
+        $this->activeProvider = session('ai_copilot_selected_provider', $gateway->getActiveProvider());
         $this->availableProviders = $gateway->getAvailableProviders();
-        $this->windowState = session('ai_floating_window_state', 'closed');
+        $this->activeSubModel = session('ai_copilot_selected_submodel_' . $this->activeProvider, $gateway->getActiveModel($this->activeProvider));
+        $this->dynamicModels = $gateway->fetchDynamicModels($this->activeProvider);
+        $this->windowState = session('ai_copilot_window_state', 'closed');
+        $this->activeTab = session('ai_copilot_active_tab', 'chat');
         $this->loadSessions();
 
         try {
@@ -116,23 +121,86 @@ class FloatingAgenticAi extends Component
         $this->loadSessions();
     }
 
+    #[On('toggle-ai-copilot')]
     public function toggleWindow(): void
     {
         $this->windowState = ($this->windowState === 'closed') ? 'open' : 'closed';
-        session(['ai_floating_window_state' => $this->windowState]);
+        session(['ai_copilot_window_state' => $this->windowState]);
     }
 
     #[On('open-ai-copilot')]
-    public function openWindow(): void
+    public function openWindow($prompt = null): void
     {
         $this->windowState = 'open';
-        session(['ai_floating_window_state' => 'open']);
+        $this->activeTab = 'chat';
+        session(['ai_copilot_window_state' => 'open']);
+        session(['ai_copilot_active_tab' => 'chat']);
+
+        if (!empty($prompt)) {
+            $this->inputMessage = trim($prompt);
+        }
     }
 
+    #[On('close-ai-copilot')]
     public function closeWindow(): void
     {
         $this->windowState = 'closed';
-        session(['ai_floating_window_state' => 'closed']);
+        session(['ai_copilot_window_state' => 'closed']);
+    }
+
+    public function minimizeWindow(): void
+    {
+        $this->windowState = ($this->windowState === 'minimized') ? 'open' : 'minimized';
+        session(['ai_copilot_window_state' => $this->windowState]);
+    }
+
+    public function maximizeWindow(): void
+    {
+        $this->windowState = ($this->windowState === 'maximized') ? 'open' : 'maximized';
+        session(['ai_copilot_window_state' => $this->windowState]);
+    }
+
+    public function setTab(string $tab): void
+    {
+        $this->activeTab = in_array($tab, ['chat', 'knowledge', 'cctv']) ? $tab : 'chat';
+        session(['ai_copilot_active_tab' => $this->activeTab]);
+    }
+
+    public function switchProvider(string $provider): void
+    {
+        $gateway = app(LlmGatewayService::class);
+        $this->activeProvider = $provider;
+        session(['ai_copilot_selected_provider' => $provider]);
+
+        $this->activeSubModel = session('ai_copilot_selected_submodel_' . $provider, $gateway->getActiveModel($provider));
+        $this->dynamicModels = $gateway->fetchDynamicModels($provider);
+        $this->dispatch('show-toast', [
+            'type' => 'success',
+            'title' => 'Provider Dialihkan',
+            'message' => 'Provider AI aktif beralih ke: ' . strtoupper($provider),
+        ]);
+    }
+
+    public function switchSubModel(string $model): void
+    {
+        $gateway = app(LlmGatewayService::class);
+        $this->activeSubModel = trim($model);
+        session(['ai_copilot_selected_submodel_' . $this->activeProvider => $this->activeSubModel]);
+        try {
+            $gateway->setActiveModel($this->activeProvider, $this->activeSubModel);
+        } catch (\Throwable) {}
+
+        $this->dispatch('show-toast', [
+            'type' => 'success',
+            'title' => 'Model Berubah',
+            'message' => "Model aktif diubah ke: {$this->activeSubModel}",
+        ]);
+    }
+
+    public function sendSuggestedPrompt(string $prompt): void
+    {
+        $this->inputMessage = $prompt;
+        $this->sendMessage(app(LlmGatewayService::class));
     }
 
     public function sendMessage(LlmGatewayService $gateway): void
@@ -228,4 +296,3 @@ class FloatingAgenticAi extends Component
         ]);
     }
 }
-

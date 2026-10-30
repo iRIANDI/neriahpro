@@ -107,11 +107,13 @@ class LlmGatewayService
                 ['id' => 'deepseek-reasoner', 'name' => 'DeepSeek R1 (Deep Mathematical & Logic Reasoning)', 'group' => 'DeepSeek'],
             ],
             'gemini' => [
-                ['id' => 'gemini-2.5-flash', 'name' => 'Gemini 2.5 Flash (Super Cepat, Multimodal & Efisien)', 'group' => 'Google Gemini'],
-                ['id' => 'gemini-2.5-pro', 'name' => 'Gemini 2.5 Pro (Deep Reasoning Arsitektur Enterprise)', 'group' => 'Google Gemini'],
-                ['id' => 'gemini-2.5-flash-lite', 'name' => 'Gemini 2.5 Flash Lite (Ultra Ringan & Hemat)', 'group' => 'Google Gemini'],
-                ['id' => 'gemini-flash-latest', 'name' => 'Gemini Flash Latest', 'group' => 'Google Gemini'],
-                ['id' => 'gemini-pro-latest', 'name' => 'Gemini Pro Latest', 'group' => 'Google Gemini'],
+                ['id' => 'gemini-3.6-flash', 'name' => 'Gemini 3.6 Flash (Paling Stabil, Responsif & Rekomendasi Utama)', 'group' => '⭐ Google Gemini Flagship'],
+                ['id' => 'gemini-3.5-flash', 'name' => 'Gemini 3.5 Flash (Stabil, Tangguh & Bebas 503)', 'group' => '⭐ Google Gemini Flagship'],
+                ['id' => 'gemini-3.5-flash-lite', 'name' => 'Gemini 3.5 Flash Lite (Kapasitas Ekstra Tinggi & Cepat)', 'group' => '⚡ Model Ringan & Cepat (Lite)'],
+                ['id' => 'gemini-3.1-flash-lite', 'name' => 'Gemini 3.1 Flash Lite (Sangat Cepat & Hemat Kuota)', 'group' => '⚡ Model Ringan & Cepat (Lite)'],
+                ['id' => 'gemini-flash-lite-latest', 'name' => 'Gemini Flash-Lite Latest (Versi Cepat Otomatis)', 'group' => '⚡ Model Ringan & Cepat (Lite)'],
+                ['id' => 'gemini-flash-latest', 'name' => 'Gemini Flash Latest (Otomatis Versi Terbaru Google GenAI)', 'group' => '⭐ Google Gemini Flagship'],
+                ['id' => 'gemini-3.8-flash', 'name' => 'Gemini 3.8 Flash (Pratinjau Frontier Terkini)', 'group' => '🔬 Pratinjau Terbatas (Preview)'],
             ],
             'openai' => [
                 ['id' => 'gpt-4o', 'name' => 'GPT-4o Omnimodal Flagship', 'group' => 'OpenAI'],
@@ -476,8 +478,13 @@ class LlmGatewayService
     ): array {
         $activeModel = $this->getActiveModel('gemini');
         $modelName = ($activeModel === 'auto-adaptive' || empty($activeModel))
-            ? 'gemini-2.5-flash'
+            ? 'gemini-3.6-flash'
             : $activeModel;
+
+        // Auto-heal Gemini models jika masih tersimpan versi usang (1.0, 1.5, 2.0, 2.5) atau Pro limit 0
+        if (str_contains($modelName, '2.5') || str_contains($modelName, '2.0') || str_contains($modelName, '1.5') || str_contains($modelName, '1.0')) {
+            $modelName = 'gemini-3.6-flash';
+        }
 
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$modelName}:generateContent?key={$apiKey}";
         $executedTools = [];

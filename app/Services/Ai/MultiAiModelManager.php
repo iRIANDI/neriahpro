@@ -680,7 +680,7 @@ class MultiAiModelManager
             'deepseek-v4-pro', 'deepseek-pro',
             'claude-3-7', 'claude-sonnet-4', 'claude-3-5-sonnet', 'claude-3-opus', 'opus',
             'gpt-4o', 'gpt-4.5', 'gpt-4-turbo', 'gpt-4',
-            'gemini-2.5-pro', 'gemini-pro-latest',
+            'gemini-3.8-flash', 'gemini-pro-latest',
             'grok-2', 'grok-3',
             'qwen-2.5-72b', 'qwen-max', 'qwen-plus',
             'llama-3.1-405b', 'llama-3.3-70b', 'llama-3.1-70b', 'llama-3-70b', '70b', '72b', '405b',
@@ -700,7 +700,7 @@ class MultiAiModelManager
 
         // 5. Common fast chat models
         $discoveryKeywords = [
-            'deepseek-flash', 'deepseek-chat', 'deepseek-v3', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'chatgpt-4o-latest', 'gpt-3.5'
+            'deepseek-flash', 'deepseek-chat', 'deepseek-v3', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-latest', 'chatgpt-4o-latest', 'gpt-3.5'
         ];
 
         foreach ($discoveryKeywords as $discKw) {
@@ -766,8 +766,10 @@ class MultiAiModelManager
         if ($tier === 'discovery') {
             return [
                 'deepseek-flash' => 'deepseek-flash — DeepSeek (V4.1-Flash Multimodal Vision, 1M Konteks & Inferensi Kilat)',
-                'gemini-2.5-flash' => 'gemini-2.5-flash — Google (Multimodal Generasi Terbaru, 1M Konteks)',
-                'gemini-2.5-flash-lite' => 'gemini-2.5-flash-lite — Google (Ultra Ringan & Hemat Latensi)',
+                'gemini-3.6-flash' => 'gemini-3.6-flash — Google (Generasi Terbaru Sangat Stabil, Bebas 503)',
+                'gemini-3.5-flash' => 'gemini-3.5-flash — Google (Multimodal Cepat & Responsif)',
+                'gemini-3.5-flash-lite' => 'gemini-3.5-flash-lite — Google (Ultra Ringan & Hemat Latensi)',
+                'gemini-flash-latest' => 'gemini-flash-latest — Google (Otomatis Versi Terbaru Google GenAI)',
                 'deepseek-chat' => 'deepseek-chat / V3 — DeepSeek (Ekstra Cepat & Super Hemat Biaya)',
                 'gpt-4o-mini' => 'gpt-4o-mini — OpenAI (Super Cepat, Standar Emas Audit Ide)',
                 'claude-3-5-haiku' => 'claude-3-5-haiku — Anthropic (Kecepatan Tinggi & Logika Tajam)',
@@ -779,7 +781,8 @@ class MultiAiModelManager
         return [
             'deepseek-v4-pro' => 'deepseek-v4-pro — DeepSeek (V4-Pro 1M Konteks & SOTA Enterprise Reasoning)',
             'deepseek-reasoner' => 'deepseek-reasoner / R1 — DeepSeek (SOTA Chain-of-Thought Reasoning & Ekstra Hemat)',
-            'gemini-2.5-pro' => 'gemini-2.5-pro — Google (Konteks Raksasa 1M Tokens & Sintesis Arsitektur Enterprise)',
+            'gemini-3.8-flash' => 'gemini-3.8-flash — Google (Frontier Reasoning & Konteks Raksasa)',
+            'gemini-3.6-flash' => 'gemini-3.6-flash — Google (Generasi Produksi Tangguh & Andal)',
             'claude-3-7-sonnet-20250219' => 'claude-3-7-sonnet-20250219 — Anthropic (Standar Tertinggi Hybrid Reasoning & PRD Enterprise)',
             'claude-sonnet-4-5-20250929' => 'claude-sonnet-4-5-20250929 — Anthropic (Generasi Flagship Teranyar)',
             'claude-3-5-sonnet-20241022' => 'claude-3-5-sonnet-20241022 — Anthropic (SOTA Coding & System Architecture)',
@@ -887,9 +890,10 @@ class MultiAiModelManager
                 'deepseek-v4-pro',
                 'deepseek-chat',
                 'deepseek-reasoner',
-                'gemini-2.5-flash',
-                'gemini-2.5-pro',
-                'gemini-2.5-flash-lite',
+                'gemini-3.6-flash',
+                'gemini-3.5-flash',
+                'gemini-3.5-flash-lite',
+                'gemini-flash-latest',
                 'gpt-4o-mini',
                 'gpt-4o',
                 'claude-3-7-sonnet-20250219',
@@ -903,11 +907,13 @@ class MultiAiModelManager
                 'deepseek-reasoner',
             ],
             'gemini' => [
-                'gemini-2.5-flash',
-                'gemini-2.5-pro',
-                'gemini-2.5-flash-lite',
+                'gemini-3.6-flash',
+                'gemini-3.5-flash',
+                'gemini-3.5-flash-lite',
+                'gemini-3.1-flash-lite',
+                'gemini-flash-lite-latest',
                 'gemini-flash-latest',
-                'gemini-pro-latest',
+                'gemini-3.8-flash',
             ],
             'anthropic' => ['claude-3-7-sonnet-20250219', 'claude-sonnet-4-5-20250929', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022'],
             'openai' => ['gpt-4o-mini', 'gpt-4o', 'o3-mini', 'o1'],

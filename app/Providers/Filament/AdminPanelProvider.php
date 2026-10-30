@@ -11,6 +11,8 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Navigation\MenuItem;
+use Filament\View\PanelsRenderHook;
 use App\Filament\Widgets\ProjectOsComplianceWidget;
 use App\Filament\Widgets\FrontpageQuickLaunchWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -19,6 +21,8 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -35,8 +39,8 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogoHeight('2.25rem')
             ->login(\App\Filament\Pages\Auth\Login::class)
             ->renderHook(
-                \Filament\View\PanelsRenderHook::HEAD_START,
-                fn () => new \Illuminate\Support\HtmlString(
+                PanelsRenderHook::HEAD_START,
+                fn () => new HtmlString(
                     '<meta name="google" content="notranslate">' . PHP_EOL .
                     '<script>' . PHP_EOL .
                     'window.addEventListener("unhandledrejection", function(event) {' . PHP_EOL .
@@ -50,13 +54,27 @@ class AdminPanelProvider extends PanelProvider
                 )
             )
             ->renderHook(
-                \Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn (): string => Blade::render('
+                    <div class="flex items-center gap-1.5 sm:gap-2 my-auto mx-1 sm:mx-2 shrink-0">
+                        @include("filament.components.topbar-ai-widget")
+                    </div>
+                ')
+            )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
                 fn () => view('filament.auth.login-after')
             )
             ->renderHook(
-                \Filament\View\PanelsRenderHook::BODY_END,
+                PanelsRenderHook::BODY_END,
                 fn () => view('filament.components.floating-copilot-hook')
             )
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label(fn () => __('Neriah Pro AI Copilot'))
+                    ->url('javascript:if(window.Livewire){window.Livewire.dispatch(\'toggle-ai-copilot\');}else{window.dispatchEvent(new CustomEvent(\'toggle-ai-copilot\'));}')
+                    ->icon('heroicon-o-cpu-chip'),
+            ])
             ->colors([
                 'primary' => Color::Amber,
             ])

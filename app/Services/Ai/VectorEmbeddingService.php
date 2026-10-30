@@ -57,7 +57,7 @@ class VectorEmbeddingService
             return $this->generateDeterministicEmbedding($safeText);
         }
 
-        $availableModels = ['gemini-embedding-2', 'text-embedding-004', 'gemini-embedding-001'];
+        $availableModels = ['text-embedding-004', 'embedding-001'];
         $modelsToTry = self::$workingEmbeddingModel && in_array(self::$workingEmbeddingModel, $availableModels)
             ? array_unique(array_merge([self::$workingEmbeddingModel], $availableModels))
             : $availableModels;
@@ -79,7 +79,7 @@ class VectorEmbeddingService
                     $payload['outputDimensionality'] = 768;
                 }
 
-                $response = Http::connectTimeout(3)->timeout(5)->post($url, $payload);
+                $response = Http::connectTimeout(2)->timeout(3)->post($url, $payload);
 
                 if ($response->successful()) {
                     $data = $response->json();
@@ -92,32 +92,20 @@ class VectorEmbeddingService
 
                 $status = $response->status();
 
-                if (in_array($status, [401, 403])) {
+                if (in_array($status, [400, 401, 403, 404, 429])) {
                     self::$rateLimitExceeded = true;
                     self::$rateLimitResetTime = time() + 300;
                     if (!self::$rateLimitWarned) {
-                        Log::warning("VectorEmbeddingService: Gemini API Key tidak valid/ditolak (HTTP {$status}). Mengaktifkan fallback deterministik.");
+                        Log::warning("VectorEmbeddingService: Gemini API embedding gagal/ditolak (HTTP {$status}). Mengaktifkan fallback deterministik 768 dimensi.");
                         self::$rateLimitWarned = true;
                     }
                     break;
-                }
-
-                if ($status === 429) {
-                    self::$rateLimitExceeded = true;
-                    $retryAfter = 60;
-                    self::$rateLimitResetTime = time() + $retryAfter;
-                    if (!self::$rateLimitWarned) {
-                        Log::warning("VectorEmbeddingService: Kuota Gemini API tercapai (Rate Limit 429). Mengaktifkan fallback deterministik 768 dimensi.");
-                        self::$rateLimitWarned = true;
-                    }
-                    break;
-                }
-
-                if ($status === 404) {
-                    continue;
                 }
             } catch (\Throwable $e) {
                 Log::warning("VectorEmbeddingService Exception ({$candidateModel}): " . $e->getMessage());
+                self::$rateLimitExceeded = true;
+                self::$rateLimitResetTime = time() + 300;
+                break;
             }
         }
 

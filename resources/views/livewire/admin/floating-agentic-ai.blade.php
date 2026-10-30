@@ -2,6 +2,7 @@
      x-data="{
          isDragging: false,
          isDrawerOpen: false,
+         activeTab: '{{ $activeTab }}',
          startX: 0,
          startY: 0,
          offsetX: 0,
@@ -42,7 +43,7 @@
      x-on:toggle-ai-copilot.window="resetPos(); isDrawerOpen = false; scrollToBottom()"
      x-on:open-ai-copilot.window="resetPos(); isDrawerOpen = false; scrollToBottom()"
      x-on:scroll-ai-to-bottom.window="scrollToBottom()"
-     x-init="$watch('$wire.messages', () => scrollToBottom())">
+     x-init="$watch('$wire.messages', () => scrollToBottom()); $watch('$wire.activeTab', val => { if (val) activeTab = val; })">
 
     <style>
         #ai-drawer-panel {
@@ -423,18 +424,21 @@
                     <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 px-3 text-xs font-mono shrink-0">
                         <div class="flex items-center">
                             <button type="button"
-                                    wire:click="setTab('chat')"
-                                    class="py-2 px-3 border-b-2 font-bold transition-colors cursor-pointer {{ $activeTab === 'chat' ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
+                                    @click="activeTab = 'chat'; $wire.setTab('chat'); scrollToBottom()"
+                                    :class="activeTab === 'chat' ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950 font-bold' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'"
+                                    class="py-2 px-3 border-b-2 font-mono text-xs transition-colors cursor-pointer">
                                 💬 Chat
                             </button>
                             <button type="button"
-                                    wire:click="setTab('knowledge')"
-                                    class="py-2 px-3 border-b-2 font-bold transition-colors cursor-pointer {{ $activeTab === 'knowledge' ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
+                                    @click="activeTab = 'knowledge'; $wire.setTab('knowledge')"
+                                    :class="activeTab === 'knowledge' ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950 font-bold' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'"
+                                    class="py-2 px-3 border-b-2 font-mono text-xs transition-colors cursor-pointer">
                                 📚 Knowledge ({{ $totalKnowledgeChunks }})
                             </button>
                             <button type="button"
-                                    wire:click="setTab('cctv')"
-                                    class="py-2 px-3 border-b-2 font-bold transition-colors cursor-pointer {{ $activeTab === 'cctv' ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
+                                    @click="activeTab = 'cctv'; $wire.setTab('cctv')"
+                                    :class="activeTab === 'cctv' ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950 font-bold' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'"
+                                    class="py-2 px-3 border-b-2 font-mono text-xs transition-colors cursor-pointer">
                                 📡 CCTV Audit
                             </button>
                         </div>
@@ -448,7 +452,7 @@
                     </div>
 
                     {{-- TAB 1: CHAT INTERACTION --}}
-                    @if ($activeTab === 'chat')
+                    <div x-show="activeTab === 'chat'" class="flex-1 flex flex-col overflow-hidden">
                         {{-- Message History Stream --}}
                         <div id="ai-chat-messages-box"
                              class="flex-1 p-4 overflow-y-auto space-y-4 text-xs font-sans bg-white dark:bg-zinc-950">
@@ -633,72 +637,82 @@
                                 </div>
                             </form>
                         </div>
+                    </div>
 
                     {{-- TAB 2: KNOWLEDGE BASE --}}
-                    @elseif ($activeTab === 'knowledge')
-                        <div class="flex-1 p-4 overflow-y-auto space-y-4 text-xs font-mono bg-white dark:bg-zinc-950">
-                            <div class="p-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs flex items-center justify-between">
-                                <div>
-                                    <h4 class="font-bold text-zinc-900 dark:text-zinc-100">Repositori Vektor 768 Dimensi</h4>
-                                    <p class="text-[10px] text-zinc-500">Tersinkronisasi ke 10 Pilar Software Factory OS</p>
-                                </div>
-                                <button type="button"
-                                        wire:click="syncKnowledge"
-                                        class="px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-bold rounded-xs hover:bg-black transition-colors cursor-pointer">
-                                    🔄 Sinkronisasi
-                                </button>
+                    <div x-show="activeTab === 'knowledge'"
+                         x-cloak
+                         style="display: none;"
+                         class="flex-1 p-4 overflow-y-auto space-y-4 text-xs font-mono bg-white dark:bg-zinc-950">
+                        <div class="p-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs flex items-center justify-between">
+                            <div>
+                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100">Repositori Vektor 768 Dimensi</h4>
+                                <p class="text-[10px] text-zinc-500">Tersinkronisasi ke 10 Pilar Software Factory OS</p>
                             </div>
-
-                            <div class="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-2">
-                                <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Total Chunks Terindeks: {{ $totalKnowledgeChunks }}</span>
-                                <ul class="text-[10px] text-zinc-600 dark:text-zinc-400 space-y-1 list-disc pl-4">
-                                    <li>Pilar 1: PRD Komprehensif 26 Parameter</li>
-                                    <li>Pilar 2: PostgreSQL 16 Strict ULID & Keyset Cursor O(1)</li>
-                                    <li>Pilar 3: Dockerized Environment Terstandarisasi</li>
-                                    <li>Pilar 4: Synthetic Seeder & Anti-Zero Testing</li>
-                                    <li>Pilar 5: AI Coding Rules (.cursorrules & AGENTS.md)</li>
-                                    <li>Pilar 6: ApiContractTest Skeletal Suite (Pest)</li>
-                                    <li>Pilar 7: CI/CD Pipeline & Zero-Downtime Deployment</li>
-                                    <li>Pilar 8: Production Telemetry & Log Monitoring</li>
-                                    <li>Pilar 9: Estafet Sprint Task Anti-Context-Rot</li>
-                                    <li>Pilar 10: Managed Sprint Capacity & Anti-Collision Engine</li>
-                                </ul>
-                            </div>
+                            <button type="button"
+                                    wire:click="syncKnowledge"
+                                    wire:loading.attr="disabled"
+                                    wire:target="syncKnowledge"
+                                    class="px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 text-[10px] font-bold rounded-xs hover:bg-black dark:hover:bg-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0">
+                                <span wire:loading.remove wire:target="syncKnowledge">🔄 Sinkronisasi</span>
+                                <span wire:loading wire:target="syncKnowledge" class="inline-flex items-center gap-1">
+                                    <svg class="animate-spin w-3 h-3 text-white dark:text-zinc-950" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    <span>Menyinkronkan...</span>
+                                </span>
+                            </button>
                         </div>
+
+                        <div class="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-2">
+                            <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Total Chunks Terindeks: {{ $totalKnowledgeChunks }}</span>
+                            <ul class="text-[10px] text-zinc-600 dark:text-zinc-400 space-y-1 list-disc pl-4">
+                                <li>Pilar 1: PRD Komprehensif 26 Parameter</li>
+                                <li>Pilar 2: PostgreSQL 16 Strict ULID & Keyset Cursor O(1)</li>
+                                <li>Pilar 3: Dockerized Environment Terstandarisasi</li>
+                                <li>Pilar 4: Synthetic Seeder & Anti-Zero Testing</li>
+                                <li>Pilar 5: AI Coding Rules (.cursorrules & AGENTS.md)</li>
+                                <li>Pilar 6: ApiContractTest Skeletal Suite (Pest)</li>
+                                <li>Pilar 7: CI/CD Pipeline & Zero-Downtime Deployment</li>
+                                <li>Pilar 8: Production Telemetry & Log Monitoring</li>
+                                <li>Pilar 9: Estafet Sprint Task Anti-Context-Rot</li>
+                                <li>Pilar 10: Managed Sprint Capacity & Anti-Collision Engine</li>
+                            </ul>
+                        </div>
+                    </div>
 
                     {{-- TAB 3: CCTV AUDIT TRACES --}}
-                    @elseif ($activeTab === 'cctv')
-                        <div class="flex-1 p-4 overflow-y-auto space-y-3 text-xs font-mono bg-white dark:bg-zinc-950">
-                            <div class="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-                                <span class="font-bold text-zinc-900 dark:text-zinc-100 text-[11px]">CCTV Telemetry Audit (12 Terakhir)</span>
-                                <button type="button"
-                                        wire:click="clearCctvTraces"
-                                        class="text-[10px] text-rose-600 dark:text-rose-400 hover:underline cursor-pointer">
-                                    Hapus Jejak
-                                </button>
-                            </div>
-
-                            @forelse ($recentTraces as $trace)
-                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-1 text-[10px]">
-                                    <div class="flex items-center justify-between font-bold">
-                                        <span class="text-zinc-900 dark:text-zinc-100">{{ $trace->stage ?? 'action' }}</span>
-                                        <span class="px-1.5 py-0.2 rounded-xs {{ $trace->status === 'success' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300' }}">
-                                            {{ $trace->status }}
-                                        </span>
-                                    </div>
-                                    <div class="text-zinc-500 truncate">
-                                        {{ $trace->summary ?? $trace->notes ?? 'Aksi selesai diproses.' }}
-                                    </div>
-                                    <div class="text-[9px] text-zinc-400 flex justify-between">
-                                        <span>{{ $trace->created_at?->diffForHumans() }}</span>
-                                        <span>{{ $trace->execution_time_ms ? $trace->execution_time_ms . 'ms' : '' }}</span>
-                                    </div>
-                                </div>
-                            @empty
-                                <p class="text-zinc-500 text-center py-6 text-[11px]">Belum ada jejak telemetri CCTV.</p>
-                            @endforelse
+                    <div x-show="activeTab === 'cctv'"
+                         x-cloak
+                         style="display: none;"
+                         class="flex-1 p-4 overflow-y-auto space-y-3 text-xs font-mono bg-white dark:bg-zinc-950">
+                        <div class="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100 text-[11px]">CCTV Telemetry Audit (12 Terakhir)</span>
+                            <button type="button"
+                                    wire:click="clearCctvTraces"
+                                    class="text-[10px] text-rose-600 dark:text-rose-400 hover:underline cursor-pointer">
+                                Hapus Jejak
+                            </button>
                         </div>
-                    @endif
+
+                        @forelse ($recentTraces as $trace)
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-1 text-[10px]">
+                                <div class="flex items-center justify-between font-bold">
+                                    <span class="text-zinc-900 dark:text-zinc-100">{{ $trace->stage ?? 'action' }}</span>
+                                    <span class="px-1.5 py-0.2 rounded-xs {{ $trace->status === 'success' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300' }}">
+                                        {{ $trace->status }}
+                                    </span>
+                                </div>
+                                <div class="text-zinc-500 truncate">
+                                    {{ $trace->summary ?? $trace->notes ?? 'Aksi selesai diproses.' }}
+                                </div>
+                                <div class="text-[9px] text-zinc-400 flex justify-between">
+                                    <span>{{ $trace->created_at?->diffForHumans() }}</span>
+                                    <span>{{ $trace->execution_time_ms ? $trace->execution_time_ms . 'ms' : '' }}</span>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-zinc-500 text-center py-6 text-[11px]">Belum ada jejak telemetri CCTV.</p>
+                        @endforelse
+                    </div>
                 </div>
             @endif
         </div>

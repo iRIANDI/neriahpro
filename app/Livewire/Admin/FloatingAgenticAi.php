@@ -677,31 +677,45 @@ class FloatingAgenticAi extends Component
 
     public function syncKnowledge(VectorEmbeddingService $vectorService): void
     {
-        $res = $vectorService->syncSystemKnowledgeBase(true);
-        $this->totalKnowledgeChunks = \Illuminate\Support\Facades\DB::table('ai_knowledge_vectors')->count();
-        $this->dispatch('show-toast', [
-            'type' => 'success',
-            'title' => 'Knowledge Base Terupdate',
-            'message' => $res['message'] ?? 'Sinkronisasi berhasil.',
-        ]);
+        try {
+            $res = $vectorService->syncSystemKnowledgeBase(true);
+            $this->totalKnowledgeChunks = \Illuminate\Support\Facades\DB::table('ai_knowledge_vectors')->count();
+            $this->dispatch('show-toast', [
+                'type' => 'success',
+                'title' => 'Knowledge Base Terupdate',
+                'message' => $res['message'] ?? 'Sinkronisasi berhasil.',
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('syncKnowledge error: ' . $e->getMessage());
+            $this->dispatch('show-toast', [
+                'type' => 'error',
+                'title' => 'Gagal Sinkronisasi',
+                'message' => 'Terjadi kesalahan sinkronisasi: ' . $e->getMessage(),
+            ]);
+        }
     }
 
     public function clearCctvTraces(): void
     {
-        AiWorkflowTrace::where('session_id', $this->currentSessionId)->delete();
-        $this->dispatch('show-toast', [
-            'type' => 'success',
-            'title' => 'CCTV Dibersihkan',
-            'message' => 'Rekaman jejak telemetri sesi ini berhasil dihapus.',
-        ]);
+        try {
+            AiWorkflowTrace::where('session_id', $this->currentSessionId)->delete();
+            $this->dispatch('show-toast', [
+                'type' => 'success',
+                'title' => 'CCTV Dibersihkan',
+                'message' => 'Rekaman jejak telemetri sesi ini berhasil dihapus.',
+            ]);
+        } catch (\Throwable $e) {
+            $this->dispatch('show-toast', [
+                'type' => 'error',
+                'title' => 'Gagal Hapus Jejak',
+                'message' => 'Terjadi kendala: ' . $e->getMessage(),
+            ]);
+        }
     }
 
     public function render()
     {
-        $recentTraces = [];
-        if ($this->activeTab === 'cctv') {
-            $recentTraces = AiWorkflowTrace::orderBy('created_at', 'desc')->limit(12)->get();
-        }
+        $recentTraces = AiWorkflowTrace::orderBy('created_at', 'desc')->limit(12)->get();
 
         return view('livewire.admin.floating-agentic-ai', [
             'recentTraces' => $recentTraces,

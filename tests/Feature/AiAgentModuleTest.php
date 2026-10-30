@@ -168,4 +168,25 @@ class AiAgentModuleTest extends TestCase
             $this->assertNotEmpty($gateway->getApiKey($key));
         }
     }
+
+    public function test_floating_agentic_ai_switches_tabs_and_syncs_knowledge_resiliently(): void
+    {
+        $user = User::factory()->create();
+
+        $component = \Livewire\Livewire::actingAs($user)
+            ->test(\App\Livewire\Admin\FloatingAgenticAi::class)
+            ->call('openWindow')
+            ->call('setTab', 'knowledge')
+            ->assertSet('activeTab', 'knowledge')
+            ->assertSee('Repositori Vektor 768 Dimensi')
+            ->assertSee('Sinkronisasi')
+            ->call('syncKnowledge')
+            ->assertDispatched('show-toast')
+            ->call('setTab', 'cctv')
+            ->assertSet('activeTab', 'cctv')
+            ->call('setTab', 'chat')
+            ->assertSet('activeTab', 'chat');
+
+        $this->assertEquals('chat', $component->get('activeTab'));
+    }
 }

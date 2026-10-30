@@ -54,6 +54,10 @@ class AdminPanelProvider extends PanelProvider
                 )
             )
             ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => Blade::render('@vite([\'resources/css/app.css\'])')
+            )
+            ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
                 fn (): string => Blade::render('
                     <div class="flex items-center gap-1.5 sm:gap-2 my-auto mx-1 sm:mx-2 shrink-0">

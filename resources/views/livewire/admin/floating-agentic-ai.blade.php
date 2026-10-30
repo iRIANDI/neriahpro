@@ -46,8 +46,24 @@
             z-index: 99999 !important;
             bottom: 24px !important;
             right: 24px !important;
-            box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8), 0 0 0 1px rgba(63, 63, 70, 0.8) !important;
+            background-color: #ffffff !important;
+            color: #09090b !important;
+            display: flex !important;
+            flex-direction: column !important;
+            border: 1px solid #d4d4d8 !important;
+            border-radius: 4px !important;
+            overflow: hidden !important;
+            box-shadow: 0 25px 60px -15px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.08) !important;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
             pointer-events: auto !important;
+        }
+
+        .dark #neriahpro-floating-ai-window,
+        [data-theme="dark"] #neriahpro-floating-ai-window {
+            background-color: #09090b !important;
+            color: #f4f4f5 !important;
+            border-color: #27272a !important;
+            box-shadow: 0 25px 60px -15px rgba(0,0,0,0.95), 0 0 0 1px rgba(63, 63, 70, 0.8) !important;
         }
 
         #neriahpro-floating-ai-window.is-normal {
@@ -69,7 +85,7 @@
         }
 
         #neriahpro-floating-ai-window.is-minimized {
-            width: 320px !important;
+            width: 340px !important;
             height: auto !important;
         }
 
@@ -84,6 +100,210 @@
                 max-width: none !important;
                 max-height: none !important;
             }
+        }
+
+        /* Scoped Internal Modal Classes to guarantee perfect styling even without external Tailwind */
+        .ai-header-drag {
+            padding: 12px 16px !important;
+            background: #f4f4f5 !important;
+            border-bottom: 1px solid #e4e4e7 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-shrink: 0 !important;
+            user-select: none !important;
+            cursor: move !important;
+        }
+        .dark .ai-header-drag {
+            background: #18181b !important;
+            border-color: #27272a !important;
+        }
+
+        .ai-win-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 28px !important;
+            height: 28px !important;
+            padding: 4px !important;
+            border-radius: 2px !important;
+            border: 1px solid transparent !important;
+            background: transparent !important;
+            color: #71717a !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+        }
+        .ai-win-btn:hover {
+            background: #e4e4e7 !important;
+            color: #09090b !important;
+            border-color: #d4d4d8 !important;
+        }
+        .dark .ai-win-btn:hover {
+            background: #27272a !important;
+            color: #ffffff !important;
+            border-color: #3f3f46 !important;
+        }
+
+        .ai-selector-strip {
+            padding: 8px 12px !important;
+            background: #fafafa !important;
+            border-bottom: 1px solid #e4e4e7 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 8px !important;
+            font-family: ui-monospace, monospace !important;
+            font-size: 11px !important;
+            flex-shrink: 0 !important;
+        }
+        .dark .ai-selector-strip {
+            background: #121215 !important;
+            border-color: #27272a !important;
+        }
+        .ai-select-input {
+            font-family: ui-monospace, monospace !important;
+            font-size: 11px !important;
+            padding: 3px 8px !important;
+            background: #ffffff !important;
+            color: #09090b !important;
+            border: 1px solid #d4d4d8 !important;
+            border-radius: 2px !important;
+            outline: none !important;
+        }
+        .dark .ai-select-input {
+            background: #09090b !important;
+            color: #f4f4f5 !important;
+            border-color: #3f3f46 !important;
+        }
+
+        .ai-tabs-strip {
+            display: flex !important;
+            border-bottom: 1px solid #e4e4e7 !important;
+            background: #f4f4f5 !important;
+            font-family: ui-monospace, monospace !important;
+            font-size: 11px !important;
+            flex-shrink: 0 !important;
+        }
+        .dark .ai-tabs-strip {
+            background: #18181b !important;
+            border-color: #27272a !important;
+        }
+        .ai-tab-action {
+            flex: 1 !important;
+            padding: 8px 12px !important;
+            text-align: center !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+            color: #71717a !important;
+            border-bottom: 2px solid transparent !important;
+            background: transparent !important;
+            transition: all 0.15s ease !important;
+        }
+        .ai-tab-action.is-active {
+            border-bottom-color: #09090b !important;
+            color: #09090b !important;
+            background: #ffffff !important;
+        }
+        .dark .ai-tab-action.is-active {
+            border-bottom-color: #10b981 !important;
+            color: #ffffff !important;
+            background: #09090b !important;
+        }
+
+        .ai-messages-scroll {
+            flex: 1 1 0% !important;
+            padding: 16px !important;
+            overflow-y: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 16px !important;
+            background: #ffffff !important;
+        }
+        .dark .ai-messages-scroll {
+            background: #09090b !important;
+        }
+        .ai-bubble-box {
+            max-width: 88% !important;
+            padding: 12px 14px !important;
+            border-radius: 4px !important;
+            font-size: 12px !important;
+            line-height: 1.6 !important;
+            word-break: break-word !important;
+            white-space: pre-wrap !important;
+        }
+        .ai-bubble-box.user {
+            background: #09090b !important;
+            color: #ffffff !important;
+            border: 1px solid #27272a !important;
+            align-self: flex-end !important;
+        }
+        .dark .ai-bubble-box.user {
+            background: #f4f4f5 !important;
+            color: #09090b !important;
+            border: 1px solid #e4e4e7 !important;
+        }
+        .ai-bubble-box.ai {
+            background: #f4f4f5 !important;
+            color: #09090b !important;
+            border: 1px solid #e4e4e7 !important;
+            align-self: flex-start !important;
+        }
+        .dark .ai-bubble-box.ai {
+            background: #18181b !important;
+            color: #f4f4f5 !important;
+            border: 1px solid #27272a !important;
+        }
+        .ai-input-dock {
+            padding: 12px 16px !important;
+            background: #fafafa !important;
+            border-top: 1px solid #e4e4e7 !important;
+            flex-shrink: 0 !important;
+        }
+        .dark .ai-input-dock {
+            background: #121215 !important;
+            border-color: #27272a !important;
+        }
+        .ai-textarea {
+            width: 100% !important;
+            padding: 8px 12px !important;
+            background: #ffffff !important;
+            color: #09090b !important;
+            border: 1px solid #d4d4d8 !important;
+            border-radius: 4px !important;
+            font-size: 12px !important;
+            resize: none !important;
+            outline: none !important;
+        }
+        .dark .ai-textarea {
+            background: #09090b !important;
+            color: #f4f4f5 !important;
+            border-color: #27272a !important;
+        }
+        .ai-send-btn {
+            padding: 8px 18px !important;
+            background: #09090b !important;
+            color: #ffffff !important;
+            font-family: ui-monospace, monospace !important;
+            font-size: 12px !important;
+            font-weight: 800 !important;
+            border-radius: 4px !important;
+            border: 1px solid #27272a !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.15s ease !important;
+        }
+        .ai-send-btn:hover {
+            background: #27272a !important;
+        }
+        .dark .ai-send-btn {
+            background: #f4f4f5 !important;
+            color: #09090b !important;
+            border-color: #e4e4e7 !important;
+        }
+        .dark .ai-send-btn:hover {
+            background: #e4e4e7 !important;
         }
     </style>
 
@@ -116,7 +336,7 @@
 
             {{-- Window Header (Draggable) --}}
             <div @mousedown="initDrag($event)"
-                 class="px-4 py-3 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between shrink-0 select-none cursor-move">
+                 class="ai-header-drag px-4 py-3 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between shrink-0 select-none cursor-move">
                 
                 <div class="flex items-center gap-2.5">
                     <span class="w-2.5 h-2.5 bg-emerald-500 rounded-xs animate-pulse"></span>
@@ -140,25 +360,25 @@
                     <button type="button"
                             wire:click="createNewChat"
                             title="Buat Sesi Baru"
-                            class="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xs transition-colors cursor-pointer">
+                            class="ai-win-btn p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xs transition-colors cursor-pointer">
                         <svg width="14" height="14" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; max-width: 14px; max-height: 14px; display: inline-block; flex-shrink: 0;" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     </button>
                     <button type="button"
                             wire:click="minimizeWindow"
                             title="{{ $windowState === 'minimized' ? 'Buka Penuh' : 'Minimize' }}"
-                            class="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xs transition-colors cursor-pointer">
+                            class="ai-win-btn p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xs transition-colors cursor-pointer">
                         <svg width="14" height="14" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; max-width: 14px; max-height: 14px; display: inline-block; flex-shrink: 0;" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
                     </button>
                     <button type="button"
                             wire:click="maximizeWindow"
                             title="{{ $windowState === 'maximized' ? 'Restore Ukuran' : 'Maximize Layar Penuh' }}"
-                            class="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xs transition-colors cursor-pointer hidden sm:inline-block">
+                            class="ai-win-btn p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xs transition-colors cursor-pointer hidden sm:inline-block">
                         <svg width="14" height="14" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; max-width: 14px; max-height: 14px; display: inline-block; flex-shrink: 0;" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
                     </button>
                     <button type="button"
                             wire:click="closeWindow"
                             title="Tutup Window"
-                            class="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xs transition-colors cursor-pointer">
+                            class="ai-win-btn p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xs transition-colors cursor-pointer">
                         <svg width="14" height="14" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; max-width: 14px; max-height: 14px; display: inline-block; flex-shrink: 0;" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -166,11 +386,11 @@
 
             @if($windowState !== 'minimized')
                 {{-- Quick Provider & Sub-Model Selector Bar --}}
-                <div class="px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900/70 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2 text-xs font-mono shrink-0">
+                <div class="ai-selector-strip px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900/70 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2 text-xs font-mono shrink-0">
                     <div class="flex items-center gap-1.5">
                         <span class="text-[10px] text-zinc-500 font-bold uppercase">Provider:</span>
                         <select wire:change="switchProvider($event.target.value)"
-                                class="text-[11px] font-mono font-bold bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 px-2 py-0.5 rounded-xs focus:ring-1 focus:ring-emerald-500">
+                                class="ai-select-input text-[11px] font-mono font-bold bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 px-2 py-0.5 rounded-xs focus:ring-1 focus:ring-emerald-500">
                             @foreach ($availableProviders as $pKey => $pLabel)
                                 <option value="{{ $pKey }}" @selected($activeProvider === $pKey)>
                                     {{ strtoupper($pKey) }}
@@ -181,7 +401,7 @@
 
                     <div class="flex items-center gap-1.5 max-w-[50%]">
                         <select wire:change="switchSubModel($event.target.value)"
-                                class="text-[10px] font-mono bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 px-1.5 py-0.5 rounded-xs truncate focus:ring-1 focus:ring-emerald-500">
+                                class="ai-select-input text-[10px] font-mono bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 px-1.5 py-0.5 rounded-xs truncate focus:ring-1 focus:ring-emerald-500">
                             @foreach ($dynamicModels as $dModel)
                                 <option value="{{ $dModel['id'] }}" @selected($activeSubModel === $dModel['id'])>
                                     {{ $dModel['id'] }}
@@ -192,20 +412,20 @@
                 </div>
 
                 {{-- Navigation Sub-Tabs --}}
-                <div class="flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/30 text-xs font-mono shrink-0">
+                <div class="ai-tabs-strip flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/30 text-xs font-mono shrink-0">
                     <button type="button"
                             wire:click="setTab('chat')"
-                            class="flex-1 py-2 text-center border-b-2 font-bold transition-colors cursor-pointer {{ $activeTab === 'chat' ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
+                            class="ai-tab-action flex-1 py-2 text-center border-b-2 font-bold transition-colors cursor-pointer {{ $activeTab === 'chat' ? 'is-active border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
                         💬 Chat Copilot
                     </button>
                     <button type="button"
                             wire:click="setTab('knowledge')"
-                            class="flex-1 py-2 text-center border-b-2 font-bold transition-colors cursor-pointer {{ $activeTab === 'knowledge' ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
+                            class="ai-tab-action flex-1 py-2 text-center border-b-2 font-bold transition-colors cursor-pointer {{ $activeTab === 'knowledge' ? 'is-active border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
                         📚 Knowledge ({{ $totalKnowledgeChunks }})
                     </button>
                     <button type="button"
                             wire:click="setTab('cctv')"
-                            class="flex-1 py-2 text-center border-b-2 font-bold transition-colors cursor-pointer {{ $activeTab === 'cctv' ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
+                            class="ai-tab-action flex-1 py-2 text-center border-b-2 font-bold transition-colors cursor-pointer {{ $activeTab === 'cctv' ? 'is-active border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-white bg-white dark:bg-zinc-950' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
                         📡 CCTV Audit
                     </button>
                 </div>
@@ -214,7 +434,7 @@
                 @if ($activeTab === 'chat')
                     {{-- Message History Stream --}}
                     <div id="ai-chat-messages-box"
-                         class="flex-1 p-4 overflow-y-auto space-y-4 text-xs font-sans">
+                         class="ai-messages-scroll flex-1 p-4 overflow-y-auto space-y-4 text-xs font-sans">
                         
                         {{-- Quick Suggested Prompts --}}
                         @if(count($messages) <= 2)
@@ -250,7 +470,7 @@
                                     <span>{{ $msg['created_at'] ?? '' }}</span>
                                 </div>
 
-                                <div class="max-w-[90%] p-3 rounded-xs border text-xs leading-relaxed {{ $msg['role'] === 'user' ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border-zinc-800 dark:border-zinc-200' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-800' }}">
+                                <div class="ai-bubble-box {{ $msg['role'] === 'user' ? 'user' : 'ai' }} max-w-[90%] p-3 rounded-xs border text-xs leading-relaxed {{ $msg['role'] === 'user' ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border-zinc-800 dark:border-zinc-200' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-800' }}">
                                     <div class="prose prose-xs dark:prose-invert max-w-none break-words whitespace-pre-wrap font-sans">{{ $msg['content'] }}</div>
 
                                     {{-- Tool Calls Execution Audit --}}
@@ -284,18 +504,18 @@
                     </div>
 
                     {{-- Chat Input Bar --}}
-                    <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
+                    <div class="ai-input-dock p-3 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
                         <form wire:submit.prevent="sendMessage" class="space-y-2">
                             <div class="flex gap-2">
                                 <textarea wire:model="inputMessage"
                                           wire:keydown.enter.exact.prevent="sendMessage"
                                           rows="2"
                                           placeholder="Ketik instruksi... (Enter untuk kirim, Shift+Enter untuk baris baru)"
-                                          class="flex-1 p-2 text-xs bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-zinc-900 dark:text-zinc-100 resize-none"></textarea>
+                                          class="ai-textarea flex-1 p-2 text-xs bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-zinc-900 dark:text-zinc-100 resize-none"></textarea>
 
                                 <button type="submit"
                                         wire:loading.attr="disabled"
-                                        class="px-4 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-mono text-xs font-bold rounded-xs hover:bg-black dark:hover:bg-white transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50">
+                                        class="ai-send-btn px-4 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-mono text-xs font-bold rounded-xs hover:bg-black dark:hover:bg-white transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50">
                                     <span wire:loading.remove wire:target="sendMessage">Kirim</span>
                                     <span wire:loading wire:target="sendMessage">...</span>
                                 </button>

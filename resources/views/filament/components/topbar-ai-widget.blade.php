@@ -13,7 +13,7 @@
             class="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-xs border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 transition-all cursor-pointer select-none focus:outline-none"
             title="{{ __('Buka Neriah Pro AI Copilot (:provider • Pintasan: Ctrl+Shift+A)', ['provider' => $activeProvider]) }}">
         
-        <svg class="w-4 h-4 text-emerald-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg width="16" height="16" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; max-width: 16px; max-height: 16px; display: inline-block; flex-shrink: 0;" class="w-4 h-4 shrink-0 text-emerald-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
 
@@ -26,3 +26,4 @@
         </span>
     </button>
 </div>
+

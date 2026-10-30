@@ -77,6 +77,7 @@ case $1 in
         composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader
         php artisan migrate --force
         php artisan db:seed --class=SuperAdminSeeder --force
+        php artisan db:seed --class=ProjectOsMatrixSeeder --force
         php artisan db:seed --class=CmsSeeder --force
         php artisan db:seed --class=LandingPageSeeder --force
         php artisan db:seed --class=WorkflowEndToEndSeeder --force

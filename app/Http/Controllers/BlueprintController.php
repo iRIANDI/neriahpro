@@ -118,6 +118,8 @@ class BlueprintController extends Controller
                     'preferensiHosting' => $existingBp->user_metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup)',
                     'garansiSla' => $existingBp->user_metadata['garansi_sla'] ?? '30 Hari Garansi Bug Pascameluncur + Penyerahan Akses Penuh Private Repo GitHub',
                     'terminPembayaran' => $existingBp->user_metadata['termin_pembayaran'] ?? 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+                    'primarySector' => $existingBp->user_metadata['primary_sector'] ?? ($existingBp->prd_content['composable_matrix']['primary_sector'] ?? ''),
+                    'selectedPrimitives' => $existingBp->user_metadata['selected_primitives'] ?? ($existingBp->prd_content['composable_matrix']['injected_primitives'] ?? []),
                     '_meta' => [
                         'is_editing_slug' => $slug,
                         'raw_idea_text' => $existingBp->masalah_utama,
@@ -223,6 +225,8 @@ class BlueprintController extends Controller
             'locale' => 'nullable|string|in:id,en',
             'ai_model' => 'nullable|string|max:50',
             'ai_provider' => 'nullable|string|max:50',
+            'primary_sector' => 'nullable|string|max:80',
+            'selected_primitives' => 'nullable',
         ]);
 
         $rawIdeaText = $request->input('idea_text', '') ?: '';
@@ -233,6 +237,14 @@ class BlueprintController extends Controller
         $locale = $request->input('locale', app()->getLocale() ?: 'id');
         $projectName = $request->input('nama_bisnis') ?: $request->input('namaBisnis') ?: $request->input('project_name');
         $aiModel = $request->input('ai_model') ?: $request->input('ai_provider');
+        $explicitSector = $request->input('primary_sector') ?: $request->input('primarySector');
+        $rawPrimitives = $request->input('selected_primitives') ?? $request->input('selectedPrimitives') ?? [];
+        if (is_string($rawPrimitives)) {
+            $decodedPrims = json_decode($rawPrimitives, true);
+            $explicitPrimitives = is_array($decodedPrims) ? $decodedPrims : array_filter(array_map('trim', explode(',', $rawPrimitives)));
+        } else {
+            $explicitPrimitives = is_array($rawPrimitives) ? $rawPrimitives : [];
+        }
 
         // 3. Spark Free Tier Quota Enforcement (2x per month per IP/Guest, auto-reset 1st of month)
         $user = auth()->user();
@@ -261,7 +273,15 @@ class BlueprintController extends Controller
         }
 
         try {
-            $synthesized = $discoveryService->synthesize($rawIdeaText, $files, $locale, $projectName, $aiModel);
+            $synthesized = $discoveryService->synthesize(
+                $rawIdeaText,
+                $files,
+                $locale,
+                $projectName,
+                $aiModel,
+                $explicitSector ?: null,
+                $explicitPrimitives
+            );
 
             // Increment Spark quota usage upon successful synthesis
             if (! $isExempt) {
@@ -1084,7 +1104,40 @@ class BlueprintController extends Controller
     }
 
     /**
-     * Download AI IDE Rules (.cursorrules / CLAUDE.md / AGENTS.md)
+     * Return O(1) cached 12-Sector + 12-Primitive + Rule Pack Composable Matrix catalog.
+     */
+    public function matrixCatalog(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'schema_uri' => \App\Services\ProjectOsBlueprintCompilerService::SCHEMA_URI,
+            'catalog' => \App\Services\ProjectOsBlueprintCompilerService::getCachedCatalog(),
+        ]);
+    }
+
+    /**
+     * Download compiled Universal Blueprint Schema v1.0 JSON (.agents/BLUEPRINT_SCHEMA.json).
+     */
+    public function downloadSchemaJson(string $slug)
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+        $prd = $blueprint->prd_content ?? [];
+        $schema = $prd['universal_blueprint_schema']
+            ?? \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+
+        return response(
+            json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            200,
+            [
+                'Content-Type' => 'application/json; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="BLUEPRINT_SCHEMA.json"',
+            ]
+        );
+    }
+
+    /**
+     * Download AI IDE Rules (.cursorrules / CLAUDE.md / AGENTS.md / PROJECT_OS_EXECUTION_BLUEPRINT.md)
      */
     public function downloadCursorrules(Request $request, string $slug)
     {
@@ -1095,13 +1148,39 @@ class BlueprintController extends Controller
             $prd = \App\Services\PrdGeneratorService::generate($blueprint);
         }
 
-        $content = \App\Services\PrdGeneratorService::toCursorrules($blueprint, $prd);
-
         $format = strtolower((string)$request->query('format', 'cursorrules'));
-        $filename = match ($format) {
-            'claude' => 'CLAUDE.md',
-            'agents' => 'AGENTS.md',
-            default => '.cursorrules',
+        $univSchema = $prd['universal_blueprint_schema']
+            ?? \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+
+        [$content, $filename] = match ($format) {
+            'execution-blueprint' => [
+                \App\Services\ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($univSchema),
+                'PROJECT_OS_EXECUTION_BLUEPRINT.md',
+            ],
+            'ui-ux-contract' => [
+                \App\Services\ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
+                'UI_UX_CONTRACT.md',
+            ],
+            'engineering-rules' => [
+                \App\Services\ProjectOsBlueprintCompilerService::renderEngineeringRulesMarkdown(),
+                'ENGINEERING_RULES.md',
+            ],
+            'ecc-harness' => [
+                \App\Services\ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
+                'AGENT_HARNESS_ECC.md',
+            ],
+            'claude' => [
+                \App\Services\PrdGeneratorService::toCursorrules($blueprint, $prd),
+                'CLAUDE.md',
+            ],
+            'agents' => [
+                \App\Services\ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($univSchema),
+                'AGENTS.md',
+            ],
+            default => [
+                \App\Services\PrdGeneratorService::toCursorrules($blueprint, $prd),
+                '.cursorrules',
+            ],
         };
 
         return response($content, 200, [

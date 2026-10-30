@@ -32,7 +32,9 @@ class BlueprintDiscoveryService
         array $uploadedFiles = [], 
         string $locale = 'id', 
         ?string $projectName = null,
-        ?string $preferredAiProvider = null
+        ?string $preferredAiProvider = null,
+        ?string $explicitSectorCode = null,
+        array $explicitPrimitiveCodes = []
     ): array
     {
         $isEn = ($locale === 'en');
@@ -83,8 +85,8 @@ class BlueprintDiscoveryService
                     // Store original physical file in project's documents folder
                     $file->move($docsDir, $safeFilename);
 
-                    // Convert from stored file using MarkItDown
-                    $conversion = $this->markItDownService->convert($storedDocPath);
+                    // Convert from stored file using Local Zero-Token MarkItDown + 3-Tier Image OCR
+                    $conversion = $this->markItDownService->convert($storedDocPath, ['allow_vision_ocr' => true]);
                     $fileSizeKb = file_exists($storedDocPath) ? round(filesize($storedDocPath) / 1024, 1) : 0;
                     $convertedMarkdown = $conversion['markdown'] ?? '';
 
@@ -157,9 +159,31 @@ class BlueprintDiscoveryService
             file_put_contents("{$absProjectDir}/manifest.json", json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
         }
 
+        // 4. Resolve 12-Sector Composable Matrix & Cross-Sector Core Primitives (Zero-Assumption Architecture)
+        $matrixResolution = ProjectOsBlueprintCompilerService::resolveSectorAndPrimitives(
+            $corpusText,
+            $explicitSectorCode,
+            $explicitPrimitiveCodes
+        );
+        $resolvedSector = $matrixResolution['sector'] ?? null;
+        $resolvedPrimitives = $matrixResolution['primitives'] ?? collect();
+
+        $result['primarySector'] = $resolvedSector?->code ?? 'SECTOR_08_PROFESSIONAL_PSA';
+        $result['selectedPrimitives'] = $resolvedPrimitives->pluck('code')->values()->all();
+        $result['composableMatrix'] = [
+            'primary_sector_code' => $result['primarySector'],
+            'primary_sector_name' => $resolvedSector?->name ?? [],
+            'architecture_archetype' => $matrixResolution['architecture_archetype'] ?? 'COMPOSITE',
+            'injected_primitives' => $result['selectedPrimitives'],
+            'blueprint_invariants' => $resolvedSector?->blueprint_invariants ?? [],
+            'compliance_standards' => $resolvedSector?->default_compliance_standards ?? [],
+            'domain_terminology' => $resolvedSector?->domain_terminology ?? [],
+        ];
+
         $result['_meta']['project_directory'] = $projectFolder;
         $result['_meta']['project_slug'] = basename($projectFolder);
         $result['_meta']['stored_files'] = $fileSummaries;
+        $result['_meta']['composable_matrix'] = $result['composableMatrix'];
 
         return $result;
     }
@@ -908,13 +932,17 @@ class BlueprintDiscoveryService
             'education_adventist' => ['sekolah advent', 'adventist', 'gmahk', 'konferens', 'uni indonesia', 'uikb', 'uikt', 'ssd', 'sunplus', 'sabat', 'shabbat', 'dean of men', 'dean of women', 'work-study', 'kerja tangan', 'pendeta sekolah', 'kurikulum alkitab', 'encounter', 'buku induk advent', 'gcas', 'pendidikan advent', 'day school', 'boarding school', 'sekolah asrama', 'majelis sekolah', 'school board', 'exeat', 'segitiga emas pendidikan advent', 'ifl', 'integrasi iman', 'newstart', 'pathfinder'],
             'fnb_culinary' => ['katering', 'catering', 'makanan', 'kuliner', 'dapur', 'resto', 'restoran', 'cafe', 'kafe', 'kopi', 'bakery', 'roti', 'kue', 'menu mingguan', 'paket diet', 'nasi kotak', 'makan siang', 'resep', 'chef', 'dine in', 'takeaway', 'food'],
             'services_workshop' => ['bengkel', 'servis mobil', 'servis motor', 'montir', 'sparepart', 'onderdil', 'salon', 'barbershop', 'spa', 'laundry', 'cuci sepatu', 'cuci mobil', 'perbaikan', 'reparasi', 'mekanik', 'jasa cuci'],
-            'property' => ['villa', 'resort', 'homestay', 'properti', 'perumahan', 'apartemen', 'booking villa', 'kavling', 'tanah', 'kost', 'kontrakan', 'real estate', 'agen properti', 'katalog properti', 'listing villa', 'listing properti', 'sewa villa', 'jual villa'],
+            'property' => ['villa', 'resort', 'hotel', 'homestay', 'properti', 'perumahan', 'apartemen', 'booking villa', 'kavling', 'tanah', 'kost', 'kontrakan', 'real estate', 'agen properti', 'katalog properti', 'listing villa', 'listing properti', 'sewa villa', 'jual villa', 'sewa lapangan', 'badminton', 'padel', 'futsal', 'coworking'],
             'clinic' => ['klinik', 'pasien', 'dokter', 'rekam medis', 'obat', 'apotek', 'rumah sakit', 'antrean poli', 'kesehatan', 'diagnosis', 'medical', 'dental', 'gigi', 'fisioterapi'],
-            'finance' => ['keuangan', 'invoice', 'faktur', 'tagihan', 'pembayaran', 'akuntansi', 'kasir', 'pos', 'pembukuan', 'laporan keuangan', 'escrow', 'pajak'],
-            'hr' => ['hrd', 'karyawan', 'rekrutmen', 'pelamar', 'lowongan', 'gaji', 'payroll', 'absensi', 'cuti', 'kinerja', 'talent'],
+            'finance' => ['keuangan', 'invoice', 'faktur', 'tagihan', 'pembayaran', 'akuntansi', 'kasir', 'pos', 'pembukuan', 'laporan keuangan', 'escrow', 'pajak', 'koperasi', 'buku besar'],
+            'industrial_mrp' => ['manufaktur', 'pabrik', 'bill of material', 'work order', 'mrp', 'konstruksi', 'kontraktor', 'epc', 'perkebunan', 'agribisnis', 'bahan baku', 'barang jadi'],
+            'hr' => ['hrd', 'hris', 'karyawan', 'rekrutmen', 'pelamar', 'lowongan', 'gaji', 'payroll', 'absensi', 'cuti', 'kinerja', 'talent', 'pph 21'],
             'education' => ['sekolah', 'kursus', 'siswa', 'murid', 'guru', 'kelas', 'ujian', 'materi ajar', 'bimbel', 'lms', 'akademik', 'pembelajaran', 'les privat', 'kampus', 'pendidikan', 'paud', 'raport', 'kurikulum'],
-            'logistics' => ['logistik', 'ekspedisi', 'armada truk', 'truk kontainer', 'kontainer', 'pengiriman kargo', 'gudang kargo', 'cargo', 'surat jalan', 'resi ekspedisi', 'freight'],
-            'marketplace' => ['marketplace', 'jual beli online', 'toko online', 'ecommerce', 'e-commerce', 'multi vendor', 'keranjang belanja', 'checkout online'],
+            'professional_psa' => ['firma hukum', 'law firm', 'konsultan', 'agensi kreatif', 'software house', 'biro arsitek', 'timesheet', 'retainer kontrak', 'jasa profesional'],
+            'logistics' => ['logistik', 'ekspedisi', 'armada truk', 'truk kontainer', 'kontainer', 'pengiriman kargo', 'gudang kargo', 'cargo', 'surat jalan', 'resi ekspedisi', 'freight', 'waybill'],
+            'media_ticketing' => ['tiket konser', 'event organizer', 'ticketing', 'seat locking', 'royalti kreator', 'portal berita', 'platform streaming'],
+            'govtech_nonprofit' => ['yayasan', 'nirlaba', 'non-profit', 'filantropi', 'zakat', 'infak', 'wakaf', 'penyaluran donasi', 'isak 35', 'relawan'],
+            'marketplace' => ['marketplace', 'jual beli online', 'toko online', 'ecommerce', 'e-commerce', 'multi vendor', 'keranjang belanja', 'checkout online', 'grosir', 'omnichannel'],
         ];
 
         // Enrich patterns dynamically from Universal Domain Lexicon knowledge base

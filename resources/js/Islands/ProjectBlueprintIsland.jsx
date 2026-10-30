@@ -925,7 +925,54 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     clientName: initialData.clientName || '',
     email: initialData.email || '',
     phone: initialData.phone || '',
+    primarySector: initialData.primarySector || '',
+    selectedPrimitives: Array.isArray(initialData.selectedPrimitives) ? initialData.selectedPrimitives : [],
   });
+
+  // 12-Sector & Composable Core Primitives Matrix Catalog
+  const [matrixCatalog, setMatrixCatalog] = useState({ sectors: [], primitives: [], rule_packs: [] });
+  useEffect(() => {
+    let active = true;
+    fetch('/api/blueprint/matrix-catalog', { headers: { Accept: 'application/json' } })
+      .then((res) => res.ok ? res.json() : null)
+      .then((json) => {
+        if (active && json?.success && json.catalog) {
+          setMatrixCatalog(json.catalog);
+        }
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const activeMatrixSectorObj = useMemo(() => {
+    return matrixCatalog.sectors.find((s) => s.code === formData.primarySector) || null;
+  }, [matrixCatalog.sectors, formData.primarySector]);
+
+  const selectMatrixSector = useCallback((sectorCode) => {
+    const sec = matrixCatalog.sectors.find((s) => s.code === sectorCode);
+    const mandatory = sec?.mandatory_primitives || [];
+    setFormData((prev) => {
+      const existing = Array.isArray(prev.selectedPrimitives) ? prev.selectedPrimitives : [];
+      const mergedPrims = Array.from(new Set([...mandatory, ...existing]));
+      const next = { ...prev, primarySector: sectorCode, selectedPrimitives: mergedPrims };
+      triggerAutoSave(next);
+      return next;
+    });
+  }, [matrixCatalog.sectors]);
+
+  const toggleMatrixPrimitive = useCallback((primCode) => {
+    const mandatory = activeMatrixSectorObj?.mandatory_primitives || [];
+    if (mandatory.includes(primCode)) return; // Mandatory primitives of primary sector remain locked
+    setFormData((prev) => {
+      const existing = Array.isArray(prev.selectedPrimitives) ? prev.selectedPrimitives : [];
+      const nextPrims = existing.includes(primCode)
+        ? existing.filter((c) => c !== primCode)
+        : [...existing, primCode];
+      const next = { ...prev, selectedPrimitives: nextPrims };
+      triggerAutoSave(next);
+      return next;
+    });
+  }, [activeMatrixSectorObj]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -1800,6 +1847,12 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       if (formData.namaBisnis && formData.namaBisnis.trim()) {
         formDataUpload.append('nama_bisnis', formData.namaBisnis.trim());
       }
+      if (formData.primarySector) {
+        formDataUpload.append('primary_sector', formData.primarySector);
+      }
+      if (Array.isArray(formData.selectedPrimitives) && formData.selectedPrimitives.length > 0) {
+        formDataUpload.append('selected_primitives', JSON.stringify(formData.selectedPrimitives));
+      }
 
       attachedFiles.forEach(file => {
         formDataUpload.append('files[]', file);
@@ -1914,6 +1967,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       clientName: '',
       email: '',
       phone: '',
+      primarySector: '',
+      selectedPrimitives: [],
     };
 
     setFormData(blankForm);
@@ -3797,6 +3852,135 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           SECTION 3: THE COMPLETE 25-FIELD BLUEPRINT FORM (6 ARCHITECTURAL BLOCKS)
           ========================================================================= */}
       <form onSubmit={handleFinalSubmit} className="space-y-8">
+
+        {/* ---------------------------------------------------------------------
+            COMPOSABLE 12-SECTOR ARCHETYPE MATRIX & CORE PRIMITIVES ENGINE
+            --------------------------------------------------------------------- */}
+        {matrixCatalog.sectors.length > 0 && (
+          <section id="section-composable-matrix" className={panelClass}>
+            <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold block mb-1">
+                  ZERO-ASSUMPTION ENGINE // 12 SEKTOR FUNGSIONAL + CORE PRIMITIVES
+                </span>
+                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-950 dark:text-zinc-100">
+                  {lang === 'en'
+                    ? 'Composable Sector Archetype & Technical Contracts'
+                    : 'Matriks 12 Sektor Bisnis & Modul Inti Lintas Sektor'}
+                </h3>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 font-sans">
+                  {lang === 'en'
+                    ? 'AI automatically selects your functional sector & cross-sector primitives (or customize manually below) to enforce exact ULID schemas, deterministic State Machines, Pessimistic Locks, and Edge-Case Playbooks.'
+                    : 'AI otomatis mendeteksi sektor fungsional & merakit modul lintas sektor (atau pilih manual di bawah) untuk mengunci Skema ULID, State Machine deterministik, Pessimistic Lock, dan Edge-Case Playbook tanpa asumsi.'}
+                </p>
+              </div>
+              <div className="shrink-0 flex flex-wrap items-center gap-1.5">
+                <span className="px-2.5 py-1 rounded-xs bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
+                  Anti-Slop Shield Active
+                </span>
+                <span className="px-2.5 py-1 rounded-xs bg-zinc-100 text-zinc-900 border border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono text-[10px] font-bold">
+                  Laravel 13 • Filament v5 • PG16 ULID • Railpack
+                </span>
+              </div>
+            </div>
+
+            {/* Step 1A: 12 Functional Sectors Grid */}
+            <div className="mb-5">
+              <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2.5">
+                {lang === 'en' ? '1. Primary Functional Sector (12 Domain-Driven Taxonomies)' : '1. Pilih Sektor Fungsional Utama (12 Domain-Driven Taxonomies)'}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {matrixCatalog.sectors.map((sec) => {
+                  const isSelected = formData.primarySector === sec.code;
+                  const title = (sec.name && (sec.name[lang] || sec.name.id || sec.name.en)) || sec.code;
+                  const desc = (sec.description && (sec.description[lang] || sec.description.id || sec.description.en)) || '';
+                  return (
+                    <button
+                      key={sec.code}
+                      type="button"
+                      onClick={() => selectMatrixSector(sec.code)}
+                      className={`text-left p-3 rounded-sm border transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-emerald-950/70 dark:text-zinc-50 dark:border-emerald-500'
+                          : 'bg-zinc-50 hover:bg-zinc-100/90 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-600'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-xs font-bold leading-snug">{title}</span>
+                        {isSelected && (
+                          <span className="px-1.5 py-0.5 rounded-xs bg-emerald-500 text-zinc-950 font-mono text-[9px] font-black shrink-0">
+                            AKTIF
+                          </span>
+                        )}
+                      </div>
+                      <p className={`mt-1 text-[11px] leading-relaxed line-clamp-2 ${isSelected ? 'text-zinc-300 dark:text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                        {desc}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Step 1B: Composable Cross-Sector Core Primitives */}
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                  {lang === 'en'
+                    ? '2. Injected Cross-Sector Core Primitives (Combine freely for Composite Business)'
+                    : '2. Rakit Modul Primitif Lintas Sektor (Gabungkan Bebas untuk Bisnis Komposit)'}
+                </span>
+                <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-400 tabular-nums">
+                  {(formData.selectedPrimitives || []).length} Modul Aktif
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {matrixCatalog.primitives.map((prim) => {
+                  const mandatoryList = activeMatrixSectorObj?.mandatory_primitives || [];
+                  const isMandatory = mandatoryList.includes(prim.code);
+                  const isChecked = isMandatory || (formData.selectedPrimitives || []).includes(prim.code);
+                  const pTitle = (prim.name && (prim.name[lang] || prim.name.id || prim.name.en)) || prim.code;
+                  const tables = (prim.table_names || []).join(', ');
+                  return (
+                    <button
+                      key={prim.code}
+                      type="button"
+                      onClick={() => toggleMatrixPrimitive(prim.code)}
+                      className={`text-left p-2.5 rounded-sm border transition-colors flex items-start gap-2.5 cursor-pointer ${
+                        isChecked
+                          ? 'bg-emerald-50/90 border-emerald-500 text-zinc-950 dark:bg-emerald-950/40 dark:border-emerald-600 dark:text-zinc-100'
+                          : 'bg-white hover:bg-zinc-50 border-zinc-200 hover:border-zinc-400 text-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300'
+                      }`}
+                    >
+                      <span className={`mt-0.5 w-4 h-4 rounded-xs border flex items-center justify-center shrink-0 font-mono text-[10px] font-black ${
+                        isChecked
+                          ? 'bg-emerald-600 border-emerald-600 text-white dark:bg-emerald-500 dark:border-emerald-500 dark:text-zinc-950'
+                          : 'bg-white dark:bg-zinc-900 border-zinc-400 dark:border-zinc-600 text-transparent'
+                      }`}>
+                        ✓
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <span className="text-[11px] font-bold leading-tight truncate">{pTitle}</span>
+                          {isMandatory && (
+                            <span className="px-1 py-0.5 rounded-xs bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[8px] font-black shrink-0">
+                              WAJIB
+                            </span>
+                          )}
+                        </div>
+                        {tables && (
+                          <div className="mt-1 text-[10px] font-mono text-zinc-600 dark:text-zinc-400 truncate">
+                            DDL: {tables}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ---------------------------------------------------------------------
             BLOK A: IDENTITAS PROYEK & TUJUAN BISNIS (FIELDS 1 - 3)

@@ -34,6 +34,7 @@ Route::get('/api/ai/models', function () {
 })->name('api.ai.models');
 
 // Project OS: Tech Proposal & Ultimate PRD Routes
+Route::get('/api/blueprint/matrix-catalog', [BlueprintController::class, 'matrixCatalog'])->name('api.blueprint.matrix-catalog');
 Route::post('/api/blueprint/analyze-idea', [BlueprintController::class, 'analyzeIdea'])->name('api.blueprint.analyze-idea')->middleware('throttle:15,1');
 Route::post('/api/blueprint/supplement-idea', [BlueprintController::class, 'supplementIdea'])->name('api.blueprint.supplement-idea')->middleware('throttle:30,1');
 Route::post('/api/blueprint/autosave', [BlueprintController::class, 'autoSave'])->name('api.blueprint.autosave')->middleware('throttle:60,1');
@@ -50,6 +51,7 @@ Route::post('/blueprint/{slug}/voucher/claim', [BlueprintController::class, 'cla
 Route::get('/blueprint/{slug}/download/pdf', [BlueprintController::class, 'downloadPdf'])->name('blueprint.download-pdf');
 Route::get('/blueprint/{slug}/download/md', [BlueprintController::class, 'downloadMd'])->name('blueprint.download-md');
 Route::get('/blueprint/{slug}/download/cursorrules', [BlueprintController::class, 'downloadCursorrules'])->name('blueprint.download-cursorrules');
+Route::get('/blueprint/{slug}/download/schema-json', [BlueprintController::class, 'downloadSchemaJson'])->name('blueprint.download-schema-json');
 Route::get('/blueprint/{slug}/raw-md', [BlueprintController::class, 'rawMd'])->name('blueprint.raw-md');
 Route::get('/blueprint/{slug}/export/scaffold', [BlueprintController::class, 'exportScaffold'])->name('blueprint.export-scaffold');
 Route::get('/blueprint/{slug}/scaffold/preview', [BlueprintController::class, 'previewScaffold'])->name('blueprint.scaffold.preview');

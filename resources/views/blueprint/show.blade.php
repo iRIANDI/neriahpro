@@ -1766,9 +1766,17 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     <button type="button" @click.prevent="$dispatch('open-raw-md-warning', { action: 'download' })" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Unduh Markdown Asli (.MD) - Disarankan Per-Fitur di Cockpit">
                         <span class="hidden sm:inline">MD</span>
                     </button>
-                    <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition flex items-center gap-1" title="Unduh .cursorrules / CLAUDE.md untuk AI IDE">
+                    <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1" title="Unduh .cursorrules / CLAUDE.md untuk AI IDE">
                         <span class="hidden xl:inline">.CURSORRULES</span>
                         <span class="xl:hidden">RULES</span>
+                    </a>
+                    <a href="{{ route('blueprint.download-schema-json', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" title="Unduh Universal Blueprint Schema v1.0 (BLUEPRINT_SCHEMA.json)">
+                        <span class="hidden xl:inline">SCHEMA.JSON</span>
+                        <span class="xl:hidden">JSON</span>
+                    </a>
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint']) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" title="Unduh Kontrak Eksekusi Zero-Assumption (PROJECT_OS_EXECUTION_BLUEPRINT.md)">
+                        <span class="hidden xl:inline">EXECUTION.MD</span>
+                        <span class="xl:hidden">EXEC</span>
                     </a>
                 </div>
 
@@ -6635,21 +6643,141 @@ class ProcessSecureDataset implements ShouldQueue
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 <span>{{ $isEn ? 'PREVIEW CODE (10 PILLARS)' : 'PREVIEW KODE (10 PILAR)' }}</span>
                             </button>
-                            <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-5 py-3 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm" title="{{ $isEn ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE' }}">
+                            <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-4 py-3 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer" title="{{ $isEn ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE' }}">
                                 <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                                <span>{{ $isEn ? 'DOWNLOAD .CURSORRULES' : 'UNDUH .CURSORRULES' }}</span>
+                                <span>.CURSORRULES</span>
                             </a>
-                            <button type="button" @click="openTweakModal('custom_ai_agent_rules', 'AI Coding Agent Directives (Custom Rules)', {{ json_encode($blueprint->prd_content['custom_ai_agent_rules'] ?? '') }})" class="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase transition flex items-center justify-center gap-2 shadow-sm">
+                            <a href="{{ route('blueprint.download-schema-json', $blueprint->slug) }}" class="w-full sm:w-auto px-4 py-3 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer" title="Download Universal Blueprint Schema v1.0 JSON">
+                                <svg class="w-4 h-4 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"></path></svg>
+                                <span>SCHEMA.JSON</span>
+                            </a>
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint']) }}" class="w-full sm:w-auto px-4 py-3 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer" title="Download PROJECT_OS_EXECUTION_BLUEPRINT.md">
+                                <svg class="w-4 h-4 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <span>EXECUTION.MD</span>
+                            </a>
+                            <button type="button" @click="openTweakModal('custom_ai_agent_rules', 'AI Coding Agent Directives (Custom Rules)', {{ json_encode($blueprint->prd_content['custom_ai_agent_rules'] ?? '') }})" class="w-full sm:w-auto px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase transition flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                <span>TWEAK / REGENERATE</span>
+                                <span>TWEAK</span>
                             </button>
-                            <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-xl">
+                            <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="w-full sm:w-auto px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase transition flex items-center justify-center gap-2 cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 <span>{{ $isEn ? 'DOWNLOAD ZIP (.ZIP)' : 'UNDUH BERKAS (.ZIP)' }}</span>
                             </a>
                         </div>
                     </div>
                 </div>
+
+                <!-- 13.5 Composable 12-Sector Matrix & Zero-Assumption Deterministic Contract -->
+                @php
+                    $posUniversalSchema = $blueprint->prd_content['universal_blueprint_schema'] ?? null;
+                    if (!is_array($posUniversalSchema) || empty($posUniversalSchema['project_metadata'])) {
+                        try {
+                            $posUniversalSchema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+                        } catch (\Throwable $e) {
+                            $posUniversalSchema = [];
+                        }
+                    }
+                    $posMeta = $posUniversalSchema['project_metadata'] ?? [];
+                    $posSectorLabel = is_array($posMeta['primary_sector_name'] ?? null)
+                        ? ($posMeta['primary_sector_name'][$isEn ? 'en' : 'id'] ?? ($posMeta['primary_sector_name']['id'] ?? ($posMeta['primary_sector'] ?? '-')))
+                        : ($posMeta['primary_sector'] ?? '-');
+                    $posPrimitives = $posMeta['injected_primitives'] ?? [];
+                    $posStateMachines = $posUniversalSchema['state_machines'] ?? [];
+                    $posLocks = $posUniversalSchema['domain_invariants']['concurrency_locks'] ?? [];
+                    $posPlaybooks = $posUniversalSchema['edge_case_playbooks'] ?? [];
+                @endphp
+                @if(!empty($posMeta))
+                <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 bg-emerald-600 inline-block"></span>
+                            <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-950 dark:text-zinc-100">
+                                {{ $isEn ? '13.5 Composable 12-Sector Blueprint & Deterministic State Machine Contract' : '13.5 Matriks Composable 12-Sektor & Kontrak State Machine Deterministik (Zero-Assumption)' }}
+                            </h3>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono font-black text-[11px] rounded-xs">
+                                {{ $posMeta['architecture_archetype'] ?? 'COMPOSITE' }}
+                            </span>
+                            <span class="px-2.5 py-1 bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono font-bold text-[11px] rounded-xs tabular-nums">
+                                {{ count($posPrimitives) }} PRIMITIVES • {{ count($posStateMachines) }} STATE MACHINES • {{ count($posLocks) }} LOCKS
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        <!-- Primary Sector & Injected Primitives -->
+                        <div class="lg:col-span-5 p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm">
+                            <div class="text-[11px] font-mono font-black uppercase text-zinc-700 dark:text-zinc-400 mb-1">
+                                {{ $isEn ? 'PRIMARY FUNCTIONAL SECTOR' : 'SEKTOR FUNGSIONAL UTAMA' }}
+                            </div>
+                            <div class="text-sm font-bold text-zinc-950 dark:text-zinc-100 mb-1">{{ $posSectorLabel }}</div>
+                            <div class="text-[11px] font-mono text-emerald-900 dark:text-emerald-300 mb-3">{{ $posMeta['primary_sector'] ?? '' }}</div>
+
+                            <div class="text-[11px] font-mono font-black uppercase text-zinc-700 dark:text-zinc-400 mb-2">
+                                {{ $isEn ? 'INJECTED CORE PRIMITIVES (COMPOSABLE MATRIX)' : 'CORE PRIMITIVES TERPASANG (LINTAS SEKTOR)' }}
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 mb-3">
+                                @foreach($posPrimitives as $primCode)
+                                    <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs">
+                                        {{ $primCode }}
+                                    </span>
+                                @endforeach
+                            </div>
+
+                            @if(!empty($posMeta['compliance_standards']))
+                                <div class="text-[11px] font-mono font-black uppercase text-zinc-700 dark:text-zinc-400 mb-1.5">
+                                    {{ $isEn ? 'COMPLIANCE & AUDIT STANDARDS' : 'STANDAR KEPATUHAN & REGULASI' }}
+                                </div>
+                                <div class="flex flex-wrap gap-1.5">
+                                    @foreach($posMeta['compliance_standards'] as $std)
+                                        <span class="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black rounded-xs">
+                                            {{ $std }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Deterministic State Machines & Concurrency Locks -->
+                        <div class="lg:col-span-7 p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm">
+                            <div class="text-[11px] font-mono font-black uppercase text-zinc-700 dark:text-zinc-400 mb-2">
+                                {{ $isEn ? 'DETERMINISTIC STATE MACHINES & PESSIMISTIC CONCURRENCY LOCKS' : 'STATE MACHINE DETERMINISTIK & KUNCI KONKURENSI PESSIMISTIC (SELECT FOR UPDATE)' }}
+                            </div>
+                            <div class="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                                @foreach($posStateMachines as $sm)
+                                    <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                                        <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                                            <span class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $sm['entity'] ?? 'Entity' }}</span>
+                                            <span class="font-mono text-[10px] font-bold text-emerald-900 dark:text-emerald-300">{{ $sm['enum_class'] ?? '' }}</span>
+                                        </div>
+                                        <div class="text-[11px] font-mono text-zinc-800 dark:text-zinc-300">
+                                            States: {{ implode(' → ', $sm['states'] ?? []) }}
+                                        </div>
+                                    </div>
+                                @endforeach
+                                @foreach($posLocks as $lock)
+                                    <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                                        <div class="flex flex-wrap items-center justify-between gap-2">
+                                            <span class="font-mono text-[11px] font-black text-zinc-950 dark:text-zinc-100">LOCK: {{ $lock['resource'] ?? '' }}</span>
+                                            <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">{{ $lock['strategy'] ?? 'PESSIMISTIC_LOCK' }}</span>
+                                        </div>
+                                        @if(!empty($lock['rationale']))
+                                            <div class="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">{{ $lock['rationale'] }}</div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                                @foreach(array_slice($posPlaybooks, 0, 4) as $pb)
+                                    <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                                        <div class="font-mono text-[11px] font-black text-amber-950 dark:text-amber-300">EDGE CASE: {{ $pb['scenario'] ?? '' }}</div>
+                                        <div class="text-[11px] text-zinc-800 dark:text-zinc-300 mt-0.5">{{ $pb['deterministic_resolution'] ?? '' }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
 
                 <!-- 14. Architecture & Security Compliance Health Auditor (10 Golden Directives: 100/100) -->
                 <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">

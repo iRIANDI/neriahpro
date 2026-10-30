@@ -27,6 +27,9 @@ class ScaffoldGeneratorService
         $mvpEngineeringSpecs = $prd['engineering_specs']['mvp_specs'] 
             ?? ($prd['features']['mvp_phase1'] ?? []);
 
+        $universalSchema = $prd['universal_blueprint_schema']
+            ?? ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+
         $discoveryData = is_array($blueprint->discovery_data) ? $blueprint->discovery_data : (json_decode($blueprint->discovery_data ?? '[]', true) ?: []);
         $domainDetected = $discoveryData['meta']['detected_domain'] ?? '';
         $corpusText = strtolower(
@@ -87,11 +90,17 @@ class ScaffoldGeneratorService
             'database/seeders/DatabaseSeeder.php' => self::generateDatabaseSeeder($blueprint),
             'database/seeders/SyntheticDataSeeder.php' => self::generateSyntheticDataSeeder($blueprint, $erdTables),
 
-            // Pillar 5: AI Coding Agent Rules & ECC Universal Governance
+            // Pillar 5: AI Coding Agent Rules, Zero-Assumption Schema v1.0 & ECC Universal Governance
+            'PROJECT_OS_EXECUTION_BLUEPRINT.md' => ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($universalSchema),
+            '.agents/BLUEPRINT_SCHEMA.json' => (string) json_encode($universalSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            '.agents/UI_UX_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
+            '.agents/ENGINEERING_RULES.md' => ProjectOsBlueprintCompilerService::renderEngineeringRulesMarkdown(),
+            '.agents/AGENT_HARNESS_ECC.md' => ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
+            '.agents/graphify/graph.json' => ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($universalSchema),
             '.cursorrules' => PrdGeneratorService::toCursorrules($blueprint, $prd),
             'CLAUDE.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
             'AGENTS.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
-            '.agents/AGENTS.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),
+            '.agents/AGENTS.md' => ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($universalSchema),
             '.agents/rules/translatable-tabs-standard.md' => self::generateTranslatableTabsRule(),
             '.agents/rules/ecc-multi-agent-standard.md' => self::generateEccStandardRule(),
             '.agents/rules/living-docs-governance.md' => self::generateLivingDocsRule(),
@@ -99,12 +108,15 @@ class ScaffoldGeneratorService
 
             // Pillar 6: Contract-First Testing Suite & E2E Browser Automation
             'tests/Feature/ApiContractTest.php' => self::generateContractTest($blueprint, $erdTables),
+            'tests/Feature/DeterministicStateMachineContractTest.php' => self::generateStateMachinePestContractTest($universalSchema),
             'tests/Feature/HealthProbeTest.php' => self::generateHealthProbeTest(),
             'tests/e2e/playwright.config.ts' => self::generatePlaywrightConfig($slug),
             'tests/e2e/critical-flows.spec.ts' => self::generatePlaywrightE2ETest($blueprint, $mvpEngineeringSpecs),
 
-            // Pillar 7: One-Click Cloud CI/CD & Deploy Pipeline
+            // Pillar 7: One-Click Cloud CI/CD, Railpack FrankenPHP & Deploy Pipeline
             '.github/workflows/deploy.yml' => self::generateCiCdWorkflow($blueprint, $slug),
+            'railpack.json' => self::generateRailpackConfig($slug),
+            'Caddyfile' => self::generateFrankenPhpCaddyfile($slug),
             'deploy.sh' => self::generateDeployScript($blueprint, $slug),
             'docker/systemd/queue-worker.service' => self::generateQueueWorkerService($slug),
 
@@ -144,6 +156,13 @@ class ScaffoldGeneratorService
 
         $modelFiles = self::generateEloquentModels($erdTables);
         $files = array_merge($files, $modelFiles);
+
+        // Deterministic State Machine Backed Enums & Atomic Domain Actions (DB::transaction + lockForUpdate)
+        $enumFiles = self::generateStateMachineEnums($universalSchema['state_machines'] ?? []);
+        $files = array_merge($files, $enumFiles);
+
+        $actionFiles = self::generateStateMachineActions($universalSchema['state_machines'] ?? []);
+        $files = array_merge($files, $actionFiles);
 
         // Multi-Platform & Decoupled Scaffolding
         if ($isApiGateway) {
@@ -4019,5 +4038,239 @@ HTML : '';
 </body>
 </html>
 HTML;
+    }
+
+    /**
+     * Generate Railpack production configuration (railpack.json) for FrankenPHP + Laravel 13 + PostgreSQL 16.
+     */
+    public static function generateRailpackConfig(string $slug): string
+    {
+        return (string) json_encode([
+            '$schema' => 'https://schema.railpack.com',
+            'provider' => 'php',
+            'packages' => [
+                'php' => '8.5',
+                'node' => '22',
+            ],
+            'buildAptPackages' => ['tesseract-ocr', 'tesseract-ocr-ind', 'poppler-utils'],
+            'steps' => [
+                'build' => [
+                    'commands' => [
+                        'composer install --no-dev --optimize-autoloader --no-interaction',
+                        'npm ci',
+                        'npm run build',
+                    ],
+                ],
+            ],
+            'deploy' => [
+                'startCommand' => 'frankenphp run --config /app/Caddyfile',
+                'variables' => [
+                    'APP_NAME' => $slug,
+                    'OCTANE_SERVER' => 'frankenphp',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Generate FrankenPHP Caddyfile with strict security headers and zero-downtime compression.
+     */
+    public static function generateFrankenPhpCaddyfile(string $slug): string
+    {
+        return <<<CADDY
+{
+    frankenphp
+    order php_server before file_server
+}
+
+:8080 {
+    root * /app/public
+    encode zstd br gzip
+
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    @health path /up /api/health
+    php_server
+}
+CADDY;
+    }
+
+    /**
+     * Generate PHP 8.5 Backed Enums for every State Machine in Universal Blueprint Schema v1.0.
+     */
+    public static function generateStateMachineEnums(array $stateMachines): array
+    {
+        $files = [];
+        foreach ($stateMachines as $sm) {
+            $fqcn = (string) ($sm['enum_class'] ?? ('App\\Enums\\' . ($sm['entity'] ?? 'Domain') . 'Status'));
+            $shortClass = class_basename(str_replace('\\\\', '\\', $fqcn));
+            $states = $sm['states'] ?? ['DRAFT', 'ACTIVE'];
+            $transitions = $sm['transitions'] ?? [];
+
+            $casesCode = '';
+            foreach ($states as $st) {
+                $constName = strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', (string) $st));
+                $casesCode .= "    case {$constName} = '{$st}';\n";
+            }
+
+            $mapLines = [];
+            $grouped = [];
+            foreach ($transitions as $tr) {
+                $to = (string) ($tr['to'] ?? '');
+                foreach (($tr['from'] ?? []) as $from) {
+                    $grouped[$from][] = $to;
+                }
+            }
+            foreach ($grouped as $fromState => $targets) {
+                $targetsUnique = array_values(array_unique($targets));
+                $targetExpr = implode(', ', array_map(fn ($t) => "self::" . strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', $t)), $targetsUnique));
+                $fromConst = strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', (string) $fromState));
+                $mapLines[] = "            self::{$fromConst} => in_array(\$target, [{$targetExpr}], true),";
+            }
+            $matchBody = implode("\n", $mapLines);
+            if ($matchBody !== '') {
+                $matchBody .= "\n";
+            }
+
+            $files["app/Enums/{$shortClass}.php"] = <<<PHP
+<?php
+
+declare(strict_types=1);
+
+namespace App\Enums;
+
+enum {$shortClass}: string
+{
+{$casesCode}
+    /**
+     * Deterministic Zero-Assumption State Transition Guard.
+     */
+    public function canTransitionTo(self \$target): bool
+    {
+        return match (\$this) {
+{$matchBody}            default => false,
+        };
+    }
+}
+PHP;
+        }
+
+        return $files;
+    }
+
+    /**
+     * Generate Invokable Domain Action classes enforcing DB::transaction(), lockForUpdate(), and Enum Guards.
+     */
+    public static function generateStateMachineActions(array $stateMachines): array
+    {
+        $files = [];
+        foreach ($stateMachines as $sm) {
+            $fqcn = (string) ($sm['enum_class'] ?? ('App\\Enums\\' . ($sm['entity'] ?? 'Domain') . 'Status'));
+            $enumClass = class_basename(str_replace('\\\\', '\\', $fqcn));
+
+            foreach (($sm['transitions'] ?? []) as $tr) {
+                $rawAction = trim(explode('(', (string) ($tr['action'] ?? ''))[0]);
+                $actionClass = preg_replace('/[^A-Za-z0-9_]/', '', $rawAction);
+                if ($actionClass === '') {
+                    continue;
+                }
+
+                $toConst = strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', (string) ($tr['to'] ?? 'ACTIVE')));
+                $guardsDoc = implode(', ', $tr['guards'] ?? []);
+                $effectsDoc = implode(', ', $tr['side_effects'] ?? []);
+
+                $files["app/Actions/{$actionClass}.php"] = <<<PHP
+<?php
+
+declare(strict_types=1);
+
+namespace App\Actions;
+
+use App\Enums\\{$enumClass};
+use DomainException;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Deterministic Project OS Domain Action
+ * Target Transition: -> {$tr['to']}
+ * Mandatory Guards: {$guardsDoc}
+ * Atomic Side Effects: {$effectsDoc}
+ */
+final class {$actionClass}
+{
+    public function __invoke(Model \$aggregate, array \$payload = []): Model
+    {
+        return DB::transaction(function () use (\$aggregate, \$payload): Model {
+            /** @var Model \$locked */
+            \$locked = \$aggregate->newQuery()
+                ->whereKey(\$aggregate->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            \$rawStatus = \$locked->getAttribute('status');
+            \$current = \$rawStatus instanceof {$enumClass}
+                ? \$rawStatus
+                : {$enumClass}::from((string) \$rawStatus);
+
+            \$target = {$enumClass}::{$toConst};
+
+            if (! \$current->canTransitionTo(\$target)) {
+                throw new DomainException(sprintf(
+                    'Illegal state transition on %s from [%s] to [%s].',
+                    class_basename(\$locked),
+                    \$current->value,
+                    \$target->value
+                ));
+            }
+
+            \$locked->setAttribute('status', \$target->value);
+            \$locked->save();
+
+            return \$locked;
+        });
+    }
+}
+PHP;
+            }
+        }
+
+        return $files;
+    }
+
+    /**
+     * Generate Pest Contract Test proving deterministic state machine transitions and illegal transition rejection.
+     */
+    public static function generateStateMachinePestContractTest(array $universalSchema): string
+    {
+        $firstSm = $universalSchema['state_machines'][0] ?? null;
+        if (! $firstSm) {
+            return "<?php\n\ntest('universal blueprint schema v1.0 contract is loaded', function () {\n    expect(file_exists(base_path('.agents/BLUEPRINT_SCHEMA.json')))->toBeTrue();\n});\n";
+        }
+
+        $enumClass = class_basename(str_replace('\\\\', '\\', (string) ($firstSm['enum_class'] ?? 'BookingStatus')));
+        $initConst = strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', (string) ($firstSm['initial_state'] ?? 'DRAFT')));
+        $firstTransitionTo = strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', (string) ($firstSm['transitions'][0]['to'] ?? $initConst)));
+
+        return <<<PHP
+<?php
+
+declare(strict_types=1);
+
+use App\Enums\\{$enumClass};
+
+test('deterministic state machine enum {$enumClass} permits declared transition and rejects self/illegal jumps', function () {
+    \$initial = {$enumClass}::{$initConst};
+    \$next = {$enumClass}::{$firstTransitionTo};
+
+    expect(\$initial->canTransitionTo(\$next))->toBeTrue();
+    expect(\$initial->canTransitionTo(\$initial))->toBeFalse();
+});
+PHP;
     }
 }

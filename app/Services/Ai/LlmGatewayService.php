@@ -284,7 +284,8 @@ class LlmGatewayService
                 }
                 if (!empty($msg['attachments']) && is_array($msg['attachments'])) {
                     foreach ($msg['attachments'] as $att) {
-                        if (($att['type'] ?? '') === 'image' && !empty($att['path'])) {
+                        $alreadyTranscribed = !empty($att['md_path']) && (($att['engine'] ?? '') !== 'image-metadata-fallback');
+                        if (($att['type'] ?? '') === 'image' && !empty($att['path']) && !$alreadyTranscribed) {
                             $physPath = storage_path('app/public/' . $att['path']);
                             if (file_exists($physPath)) {
                                 $imageItems[] = $physPath;
@@ -514,7 +515,8 @@ class LlmGatewayService
             }
             if (!empty($msg['attachments']) && is_array($msg['attachments'])) {
                 foreach ($msg['attachments'] as $att) {
-                    if (($att['type'] ?? '') === 'image' && !empty($att['path'])) {
+                    $alreadyTranscribed = !empty($att['md_path']) && (($att['engine'] ?? '') !== 'image-metadata-fallback');
+                    if (($att['type'] ?? '') === 'image' && !empty($att['path']) && !$alreadyTranscribed) {
                         $physPath = storage_path('app/public/' . $att['path']);
                         if (file_exists($physPath)) {
                             $imageItems[] = $physPath;

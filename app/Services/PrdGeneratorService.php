@@ -42,8 +42,11 @@ class PrdGeneratorService
         // Parse Phase 2 Features
         $phase2Items = self::parseItems($fiturTambahan);
 
-        // Generate tailored ERD Database Schema with strict ULID standards & LLM reasoning
-        $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems, $blueprint, $preferredAiProvider);
+        // Compile 12-Sector Composable Matrix & Universal Blueprint Schema v1.0 (Zero-Assumption Engine)
+        $universalSchema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+
+        // Generate tailored ERD Database Schema with strict ULID standards, Composable Primitives & LLM reasoning
+        $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems, $blueprint, $preferredAiProvider, $universalSchema);
 
         // Generate Deep Granular Engineering Specs for MVP & Phase 2 (with dynamic AI reasoning and ERD column injection)
         $detailedMvpSpecs = self::generateDetailedFeatureSpecs($mvpItems, $businessName, $actorItems, 'mvp', $blueprint, $erdTables, $preferredAiProvider);
@@ -351,6 +354,8 @@ class PrdGeneratorService
             'velocity_pricing_options' => !empty($itemizedEstimation['velocity_tiers']) ? $itemizedEstimation['velocity_tiers'] : (self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null, $businessName, $masalah) ?: []),
             'software_factory_os_pillars' => self::generateSoftwareFactoryOsPillars($businessName),
             'world_class_standard_advisory' => self::generateWorldClassStandardAdvisory($businessName),
+            'composable_matrix' => $universalSchema['project_metadata'] ?? [],
+            'universal_blueprint_schema' => $universalSchema,
             'governance_and_sla' => [
                 'title' => 'Tata Kelola, Standar Kualitas & SLA Serah Terima (Strict Governance & Handoff)',
                 'definition_of_done' => [
@@ -376,7 +381,7 @@ class PrdGeneratorService
                 'recurring_cost_transparency' => [
                     'domain' => 'Rp 150.000 - Rp 250.000 / tahun (Dibayarkan langsung ke registrar domain resmi)',
                     'hosting_starter' => 'Rp 50.000 - Rp 150.000 / bulan (Untuk paket non-profit/komunitas pada cloud server efisien)',
-                    'hosting_enterprise' => 'Rp 350.000 - Rp 1.500.000 / bulan (Dedicated VPS Nixpacks & Docker untuk high-traffic scale)',
+                    'hosting_enterprise' => 'Rp 350.000 - Rp 1.500.000 / bulan (Dedicated VPS Railpack FrankenPHP & Docker untuk high-traffic scale)',
                 ],
             ],
             'action_plan' => [
@@ -787,15 +792,18 @@ class PrdGeneratorService
         array $mvpItems, 
         array $actorItems, 
         ?VisionBlueprint $blueprint = null, 
-        ?string $preferredAiProvider = null
+        ?string $preferredAiProvider = null,
+        array $universalSchema = []
     ): array
     {
-        // 1. Attempt Dynamic LLM Reasoning if Blueprint is provided
+        $primitiveErdTables = self::convertUniversalDictionaryToErdTables($universalSchema['data_dictionary'] ?? []);
+
+        // 1. Attempt Dynamic LLM Reasoning if Blueprint is provided, merged with Mandatory Composable Primitive Tables
         if ($blueprint) {
             try {
                 $llmTables = self::synthesizeErdSchemaWithAi($businessName, $mvpItems, $actorItems, $blueprint, $preferredAiProvider);
                 if (!empty($llmTables) && is_array($llmTables) && count($llmTables) >= 2) {
-                    return $llmTables;
+                    return self::mergeErdTablesUnique($llmTables, $primitiveErdTables);
                 }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::info("AI ERD synthesis fallback to deterministic heuristics: " . $e->getMessage());
@@ -927,7 +935,104 @@ class PrdGeneratorService
             ];
         }
 
-        return $baseTables;
+        return self::mergeErdTablesUnique($baseTables, $primitiveErdTables);
+    }
+
+    /**
+     * Convert Universal Blueprint Schema v1.0 data_dictionary entries into PRD erd_schema table structures.
+     */
+    protected static function convertUniversalDictionaryToErdTables(array $dataDictionary): array
+    {
+        $converted = [];
+        foreach ($dataDictionary as $tbl) {
+            $tableName = $tbl['table'] ?? '';
+            if ($tableName === '') {
+                continue;
+            }
+            $cols = [];
+            foreach (($tbl['columns'] ?? []) as $col) {
+                $rawType = strtoupper((string) ($col['type'] ?? 'VARCHAR(120)'));
+                $erdType = match (true) {
+                    $rawType === 'ULID' && ! empty($col['foreign']) => 'foreignUlid',
+                    $rawType === 'ULID' => 'ulid',
+                    str_starts_with($rawType, 'DECIMAL') => strtolower($rawType),
+                    $rawType === 'JSONB' => 'jsonb',
+                    $rawType === 'BOOLEAN' => 'boolean',
+                    $rawType === 'TIMESTAMP' => 'timestamp',
+                    $rawType === 'DATE' => 'date',
+                    $rawType === 'TIME' => 'time',
+                    $rawType === 'TEXT' => 'text',
+                    str_starts_with($rawType, 'INT') || $rawType === 'SMALLINT' => 'integer',
+                    default => strtolower(str_replace('VARCHAR', 'string', $rawType)),
+                };
+                $indexTag = ! empty($col['primary'])
+                    ? 'PRIMARY'
+                    : ((! empty($col['index']) || ! empty($col['foreign'])) ? 'INDEX' : 'NONE');
+                $noteParts = [];
+                if (! empty($col['foreign'])) {
+                    $noteParts[] = 'FK -> ' . $col['foreign'];
+                }
+                if (! empty($col['enum_ref'])) {
+                    $noteParts[] = 'Enum ' . $col['enum_ref'];
+                }
+                if (empty($noteParts)) {
+                    $noteParts[] = 'Composable Primitive Field (' . ($tbl['source_module'] ?? 'CORE') . ')';
+                }
+
+                $cols[] = [
+                    'name' => $col['name'],
+                    'type' => $erdType,
+                    'index' => $indexTag,
+                    'nullable' => (bool) ($col['nullable'] ?? false),
+                    'notes' => implode(' | ', $noteParts),
+                    'label' => [
+                        'id' => Str::headline($col['name']),
+                        'en' => Str::headline($col['name']),
+                    ],
+                ];
+            }
+            $cols[] = [
+                'name' => 'created_at',
+                'type' => 'timestamp',
+                'index' => 'INDEX',
+                'nullable' => true,
+                'notes' => 'Keyset cursor pointer O(1)',
+                'label' => ['id' => 'Waktu Dibuat', 'en' => 'Created At'],
+            ];
+
+            $constraintsNote = '';
+            if (! empty($tbl['unique_constraints'])) {
+                $constraintsNote = ' Constraints: ' . implode('; ', array_map(fn ($u) => $u['rule'] ?? '', $tbl['unique_constraints']));
+            }
+
+            $converted[] = [
+                'name' => $tableName,
+                'description' => 'Tabel Kontrak Deterministik Modul ' . ($tbl['source_module'] ?? 'PROJECT_OS') . '.' . $constraintsNote,
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => $cols,
+            ];
+        }
+
+        return $converted;
+    }
+
+    /**
+     * Merge two ERD table arrays without duplicate table names.
+     */
+    protected static function mergeErdTablesUnique(array $primary, array $secondary): array
+    {
+        $seen = [];
+        $merged = [];
+        foreach (array_merge($primary, $secondary) as $tbl) {
+            $name = strtolower((string) ($tbl['name'] ?? ''));
+            if ($name === '' || isset($seen[$name])) {
+                continue;
+            }
+            $seen[$name] = true;
+            $merged[] = $tbl;
+        }
+
+        return $merged;
     }
 
     /**
@@ -5675,6 +5780,50 @@ PROMPT;
             $md .= "\n";
         }
 
+        // 15. Composable 12-Sector Blueprint Contract & 4 Pillars of AI Assumption Rejection
+        $univSchema = $prd['universal_blueprint_schema'] ?? ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+        if (!empty($univSchema)) {
+            $uMeta = $univSchema['project_metadata'] ?? [];
+            $md .= "## 15. Kontrak Arsitektur Composable 12-Sektor, State Machine & Edge-Case Playbook (Zero-Assumption Schema v1.0)\n\n";
+            $md .= "- **Sektor Fungsional Utama**: `" . ($uMeta['primary_sector'] ?? '-') . "` — " . ($uMeta['primary_sector_name']['id'] ?? '') . "\n";
+            $md .= "- **Archetype Arsitektur**: `" . ($uMeta['architecture_archetype'] ?? 'COMPOSITE') . "`\n";
+            $md .= "- **Core Primitives Aktif**: `" . implode('`, `', $uMeta['injected_primitives'] ?? []) . "`\n";
+            $md .= "- **Standar Kepatuhan Sektor**: " . implode(' | ', $uMeta['compliance_standards'] ?? []) . "\n\n";
+
+            if (!empty($univSchema['state_machines'])) {
+                $md .= "### A. Deterministic State Machines & Transisi Atomik\n\n";
+                foreach ($univSchema['state_machines'] as $sm) {
+                    $md .= "#### Entity: `{$sm['entity']}` (`{$sm['enum_class']}` | Initial: `{$sm['initial_state']}`)\n\n";
+                    $md .= "| From | To | Action Class (`DB::transaction`) | Guard Conditions | Side Effects |\n";
+                    $md .= "|---|---|---|---|---|\n";
+                    foreach (($sm['transitions'] ?? []) as $tr) {
+                        $md .= "| `" . implode(', ', $tr['from'] ?? []) . "` | `{$tr['to']}` | `{$tr['action']}` | " . implode(', ', $tr['guards'] ?? []) . " | " . implode(', ', $tr['side_effects'] ?? []) . " |\n";
+                    }
+                    $md .= "\n";
+                }
+            }
+
+            if (!empty($univSchema['domain_invariants']['concurrency_locks'])) {
+                $md .= "### B. Kontrak Concurrency & Pessimistic Locking (`SELECT ... FOR UPDATE`)\n\n";
+                $md .= "| Operasi Kritikal | Mekanisme Penguncian | Timeout | Fallback Deterministik |\n";
+                $md .= "|---|---|---|---|\n";
+                foreach ($univSchema['domain_invariants']['concurrency_locks'] as $lk) {
+                    $md .= "| {$lk['operation']} | `{$lk['mechanism']}` | {$lk['timeout_seconds']}s | {$lk['fallback_action']} |\n";
+                }
+                $md .= "\n";
+            }
+
+            if (!empty($univSchema['edge_case_playbooks'])) {
+                $md .= "### C. Edge-Case & Conflict Resolution Playbook\n\n";
+                foreach ($univSchema['edge_case_playbooks'] as $idx => $play) {
+                    $n = $idx + 1;
+                    $md .= "{$n}. **Skenario (`{$play['source_module']}`):** {$play['scenario']}\n";
+                    $md .= "   - **Aturan Resolusi Mutlak:** {$play['resolution_rule']}\n";
+                }
+                $md .= "\n";
+            }
+        }
+
         return $md;
     }
 
@@ -5694,23 +5843,35 @@ PROMPT;
         $actors = $prd['system_actors'] ?? [];
         $erd = $prd['erd_schema']['tables'] ?? [];
         $mvpFeatures = $prd['features']['mvp_phase1'] ?? [];
+        $univSchema = $prd['universal_blueprint_schema'] ?? ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+        $uMeta = $univSchema['project_metadata'] ?? [];
 
         $rules = "# .cursorrules / CLAUDE.md — AI AGENT SYSTEM INSTRUCTIONS\n";
         $rules .= "# Project: {$projectName}\n";
         $rules .= "# Blueprint Spec ID: {$specId}\n";
         $rules .= "# Engine: Neriah Pro AI Project OS (Generated: " . ($blueprint->created_at?->format('Y-m-d') ?: date('Y-m-d')) . ")\n\n";
+        $rules .= "<ZERO_ASSUMPTION_DIRECTIVES>\n";
+        $rules .= "1. STRICT COMPLIANCE: You are an execution engine. Do NOT invent columns, states, roles, or workflows outside `.agents/BLUEPRINT_SCHEMA.json` and `PROJECT_OS_EXECUTION_BLUEPRINT.md`.\n";
+        $rules .= "2. MISSING REQUIREMENT PROTOCOL: If an edge case or relation is not explicitly defined in the Data Dictionary or State Machine, STOP and ask the developer before generating code.\n";
+        $rules .= "3. ATOMICITY: Every state transition MUST be implemented as a dedicated invokable Action class wrapped in `DB::transaction()`.\n";
+        $rules .= "4. LOCKING: Every query modifying `inventory_batches`, `inventory_movements`, `allocatable_resources`, `bookings`, `accounts`, `journal_entries`, `event_seats`, or `fund_programs` MUST acquire `lockForUpdate()` first.\n";
+        $rules .= "</ZERO_ASSUMPTION_DIRECTIVES>\n\n";
         $rules .= "You are pair programming on \"{$projectName}\", a mission-critical enterprise digital system.\n";
-        $rules .= "Always adhere strictly to the architectural constraints, database schemas, and engineering directives defined below.\n\n";
+        $rules .= "Always adhere strictly to the architectural constraints, database schemas, and 6-Stage ECC Harness (`PLAN -> TEST -> IMPLEMENT -> REVIEW -> VERIFY -> REMEMBER & DEPLOY`) defined below.\n\n";
         $rules .= "---\n\n";
 
         // 1. Context
-        $rules .= "## 1. PROJECT SPECIFICATION & CONTEXT\n";
+        $rules .= "## 1. PROJECT SPECIFICATION & COMPOSABLE SECTOR CONTEXT\n";
         $rules .= "- **Project Name**: {$projectName}\n";
+        $rules .= "- **Primary Functional Sector**: `" . ($uMeta['primary_sector'] ?? 'SECTOR_08_PROFESSIONAL_PSA') . "` (" . ($uMeta['primary_sector_name']['en'] ?? 'Enterprise Sector') . ")\n";
+        $rules .= "- **Architecture Archetype**: `" . ($uMeta['architecture_archetype'] ?? 'COMPOSITE') . "`\n";
+        $rules .= "- **Injected Core Primitives**: `" . implode('`, `', $uMeta['injected_primitives'] ?? []) . "`\n";
+        $rules .= "- **Compliance Standards**: " . implode(' | ', $uMeta['compliance_standards'] ?? []) . "\n";
         $rules .= "- **Primary Problem**: " . ($blueprint->masalah_utama ?: 'Enterprise operational digitization and centralized workflows.') . "\n";
         $rules .= "- **Core Objective / Success Metrics**: " . ($blueprint->tujuan_utama ?: 'High efficiency, automated audit trails, and zero downtime.') . "\n";
         $rules .= "- **Target Audience**: " . ($blueprint->target_audiens ?: 'Internal operators and external customers.') . "\n";
         $rules .= "- **Target Platform**: " . ($blueprint->user_metadata['target_platform'] ?? 'Modern Web Application Responsive & PWA') . "\n";
-        $rules .= "- **Tech Stack**: Laravel 13, Filament v5, Livewire 4, Alpine.js, Tailwind CSS, PostgreSQL 16, Redis 7.\n\n";
+        $rules .= "- **Tech Stack**: Laravel 13, Filament v5, Livewire 4, Flux UI, Alpine.js, Tailwind CSS, PostgreSQL 16 (Strict ULID + pgvector 768-dim), Redis 7, Railpack FrankenPHP.\n\n";
         $rules .= "---\n\n";
 
         // 2. Protocols

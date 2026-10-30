@@ -17,12 +17,39 @@ class VisionBlueprintController extends Controller
     {
         // 1. Honeypot Anti-Spam Check
         // Bots usually fill all fields, including hidden ones.
-        if ($request->filled('_website')) {
+        if ($request->filled('_website') || $request->filled('_hp_check')) {
             // Silently accept but do nothing (to fool the bot)
             return response()->json([
                 'success' => true,
                 'message' => 'Vision blueprint submitted successfully.',
             ], 200);
+        }
+
+        // 1.5 Normalize React Island camelCase fields into canonical snake_case columns
+        $camelToSnakeMap = [
+            'client_name' => 'clientName',
+            'email' => 'client_email',
+            'phone' => 'client_whatsapp',
+            'nama_bisnis' => 'namaBisnis',
+            'masalah_utama' => 'masalahUtama',
+            'tujuan_utama' => 'tujuanUtama',
+            'target_audiens' => 'targetAudiens',
+            'aktor_sistem' => 'aktorSistem',
+            'fitur_wajib' => 'fiturWajib',
+            'fitur_tambahan' => 'fiturTambahan',
+            'alur_kerja' => 'alurKerja',
+            'kebutuhan_integrasi' => 'kebutuhanIntegrasi',
+            'referensi_desain' => 'referensiDesain',
+            'kesiapan_aset' => 'kesiapanAset',
+            'target_waktu' => 'targetWaktu',
+            'primary_sector' => 'primarySector',
+            'selected_primitives' => 'selectedPrimitives',
+            'stack_preset' => 'stackPreset',
+        ];
+        foreach ($camelToSnakeMap as $snakeKey => $camelKey) {
+            if (! $request->filled($snakeKey) && $request->has($camelKey)) {
+                $request->merge([$snakeKey => $request->input($camelKey)]);
+            }
         }
 
         // 2. Validation
@@ -58,6 +85,12 @@ class VisionBlueprintController extends Controller
             'garansiSla' => 'nullable|string|max:500',
             'termin_pembayaran' => 'nullable|string|max:500',
             'terminPembayaran' => 'nullable|string|max:500',
+            'primary_sector' => 'nullable|string|max:80',
+            'primarySector' => 'nullable|string|max:80',
+            'selected_primitives' => 'nullable|array',
+            'selectedPrimitives' => 'nullable|array',
+            'stack_preset' => 'nullable|string|max:120',
+            'stackPreset' => 'nullable|string|max:120',
         ]);
 
         if ($validator->fails()) {
@@ -83,6 +116,12 @@ class VisionBlueprintController extends Controller
             'preferensi_hosting' => $request->input('preferensi_hosting') ?: $request->input('preferensiHosting', 'Managed Dedicated Cloud VPS Neriah Pro'),
             'garansi_sla' => $request->input('garansi_sla') ?: $request->input('garansiSla', '30 Hari Garansi Bug + Handover Private Repo GitHub'),
             'termin_pembayaran' => $request->input('termin_pembayaran') ?: $request->input('terminPembayaran', 'Termin Standar 50/50 (DP 50% & Pelunasan 50%)'),
+            'user_id' => auth()->id(),
+            'track' => $request->input('track') ?: $request->input('selected_track'),
+            'package_tier' => $request->input('package_tier') ?: $request->input('tier') ?: $request->input('selected_tier'),
+            'primary_sector' => $request->input('primary_sector') ?: $request->input('primarySector'),
+            'selected_primitives' => $request->input('selected_primitives') ?: $request->input('selectedPrimitives', []),
+            'stack_preset' => $request->input('stack_preset') ?: $request->input('stackPreset', 'LARAVEL13_FILAMENT5_LIVEWIRE4_FLUX_PGSQL16_RAILPACK'),
         ];
 
         // 4. Normalize phone number (Anti-0 and Country Code Protocol)

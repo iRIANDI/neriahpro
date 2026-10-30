@@ -97,6 +97,14 @@ class VisionBlueprint extends Model
     }
 
     /**
+     * Composable 12-Sector Project OS Matrix assembly linked to this blueprint.
+     */
+    public function posProject(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(PosProject::class, 'vision_blueprint_id');
+    }
+
+    /**
      * Generate or regenerate the Ultimate PRD for this blueprint.
      */
     public function generateAndSavePrd(?string $preferredAiProvider = null): array
@@ -104,7 +112,7 @@ class VisionBlueprint extends Model
         $content = \App\Services\PrdGeneratorService::generate($this, $preferredAiProvider);
         $this->update(['prd_content' => $content]);
 
-        // Partitioned Project Storage: Save official PRD Markdown into dedicated project folder
+        // Partitioned Project Storage: Save official PRD Markdown + Universal Blueprint Schema v1.0 into dedicated project folder
         try {
             $slug = $this->slug ?: \Illuminate\Support\Str::slug($this->nama_bisnis);
             if ($slug) {
@@ -115,6 +123,17 @@ class VisionBlueprint extends Model
                 $md = \App\Services\PrdGeneratorService::toMarkdown($this, $content);
                 @file_put_contents("{$projectDir}/prd.md", $md);
                 @file_put_contents("{$projectDir}/blueprint.json", json_encode($this->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
+                if (!empty($content['universal_blueprint_schema']) && is_array($content['universal_blueprint_schema'])) {
+                    @file_put_contents(
+                        "{$projectDir}/BLUEPRINT_SCHEMA.json",
+                        json_encode($content['universal_blueprint_schema'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    );
+                    @file_put_contents(
+                        "{$projectDir}/PROJECT_OS_EXECUTION_BLUEPRINT.md",
+                        \App\Services\ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($content['universal_blueprint_schema'])
+                    );
+                }
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning("Failed to save PRD markdown in project folder: " . $e->getMessage());

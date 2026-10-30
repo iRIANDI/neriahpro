@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             CvProDemoDataSeeder::class,
             BlueprintVoucherSeeder::class,
             EmailTemplateSeeder::class,
+            ProjectOsMatrixSeeder::class,
         ]);
     }
 }

@@ -181,6 +181,126 @@
             font-size: 11px !important;
             margin: 0.5rem 0 !important;
         }
+
+        /* World-Class Unified Composer Box (Linear / Vercel / Cursor Precision) */
+        .np-ai-composer {
+            background-color: #ffffff !important;
+            border: 1px solid #d4d4d8 !important;
+            border-radius: 6px !important;
+            overflow: hidden !important;
+            transition: border-color 150ms ease, box-shadow 150ms ease !important;
+        }
+        .np-ai-composer:focus-within {
+            border-color: #18181b !important;
+            box-shadow: 0 0 0 1px rgba(24, 24, 27, 0.12) !important;
+        }
+        .dark .np-ai-composer,
+        [data-theme="dark"] .np-ai-composer {
+            background-color: #09090b !important;
+            border-color: #3f3f46 !important;
+        }
+        .dark .np-ai-composer:focus-within,
+        [data-theme="dark"] .np-ai-composer:focus-within {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.28) !important;
+        }
+        .np-ai-composer textarea.np-ai-textarea {
+            border: 0 !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            resize: none !important;
+            font-size: 12.5px !important;
+            line-height: 1.55 !important;
+            color: #18181b !important;
+        }
+        .dark .np-ai-composer textarea.np-ai-textarea,
+        [data-theme="dark"] .np-ai-composer textarea.np-ai-textarea {
+            color: #f4f4f5 !important;
+        }
+        .np-ai-toolbar {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 8px !important;
+            padding: 6px 10px !important;
+            background-color: #fafafa !important;
+            border-top: 1px solid #e4e4e7 !important;
+        }
+        .dark .np-ai-toolbar,
+        [data-theme="dark"] .np-ai-toolbar {
+            background-color: #121215 !important;
+            border-top-color: #27272a !important;
+        }
+        .np-ai-attach-btn {
+            height: 32px !important;
+            padding: 0 10px !important;
+            border-radius: 5px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            background-color: #ffffff !important;
+            border: 1px solid #d4d4d8 !important;
+            color: #18181b !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: background-color 150ms ease, border-color 150ms ease !important;
+        }
+        .np-ai-attach-btn:hover {
+            background-color: #f4f4f5 !important;
+            border-color: #a1a1aa !important;
+        }
+        .dark .np-ai-attach-btn,
+        [data-theme="dark"] .np-ai-attach-btn {
+            background-color: #18181b !important;
+            border-color: #3f3f46 !important;
+            color: #e4e4e7 !important;
+        }
+        .dark .np-ai-attach-btn:hover,
+        [data-theme="dark"] .np-ai-attach-btn:hover {
+            background-color: #27272a !important;
+            border-color: #52525b !important;
+        }
+        .np-ai-send-btn {
+            height: 32px !important;
+            padding: 0 14px !important;
+            border-radius: 5px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            background-color: #09090b !important;
+            border: 1px solid #09090b !important;
+            color: #ffffff !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: background-color 150ms ease, border-color 150ms ease !important;
+        }
+        .np-ai-send-btn:hover:not(:disabled) {
+            background-color: #27272a !important;
+            border-color: #27272a !important;
+        }
+        .dark .np-ai-send-btn,
+        [data-theme="dark"] .np-ai-send-btn {
+            background-color: #10b981 !important;
+            border-color: #10b981 !important;
+            color: #09090b !important;
+            font-weight: 700 !important;
+        }
+        .dark .np-ai-send-btn:hover:not(:disabled),
+        [data-theme="dark"] .np-ai-send-btn:hover:not(:disabled) {
+            background-color: #34d399 !important;
+            border-color: #34d399 !important;
+        }
+        .np-ai-send-btn:disabled {
+            opacity: 0.45 !important;
+            cursor: not-allowed !important;
+        }
     </style>
 
     {{-- ========================================================================= --}}
@@ -527,24 +647,44 @@
                                         {{-- Attachments Display in Message Bubble --}}
                                         @if(!empty($msg['attachments']))
                                             <div class="mt-3 pt-2 border-t {{ $msg['role'] === 'user' ? 'border-zinc-700 dark:border-zinc-300' : 'border-zinc-300 dark:border-zinc-800' }} space-y-1.5">
-                                                <div class="font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                                                    📄 Berkas Terlampir (Tersimpan di Sesi Ini):
+                                                <div class="font-mono text-[10px] font-bold text-emerald-500 dark:text-emerald-600 flex items-center justify-between">
+                                                    <span>Berkas Terlampir (Tersimpan &amp; Dikonversi ke .MD):</span>
                                                 </div>
                                                 <div class="flex flex-wrap gap-1.5">
                                                     @foreach($msg['attachments'] as $att)
-                                                        @if(($att['type'] ?? '') === 'image')
-                                                            <div class="rounded-xs overflow-hidden border border-zinc-300 dark:border-zinc-700 max-w-[200px]">
-                                                                <a href="{{ $att['url'] ?? '#' }}" target="_blank" title="Lihat Gambar Penuh">
-                                                                    <img src="{{ $att['url'] ?? '#' }}" alt="{{ $att['name'] ?? 'Image' }}" class="w-full h-auto object-cover max-h-32 hover:scale-105 transition-transform" />
-                                                                </a>
-                                                            </div>
-                                                        @else
-                                                            <a href="{{ $att['url'] ?? '#' }}" target="_blank" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-xs bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-mono text-[11px] text-zinc-800 dark:text-zinc-200 hover:border-emerald-500 transition-colors">
-                                                                <span>📄</span>
-                                                                <span class="truncate max-w-[160px] font-bold">{{ $att['name'] ?? 'Dokumen' }}</span>
-                                                                <span class="text-[9px] opacity-70">({{ $att['size'] ?? '' }})</span>
-                                                                <span class="text-[9px] text-emerald-500 font-bold ml-0.5">MD ✓</span>
-                                                            </a>
+                                                        @if(is_array($att) && !isset($att['_metadata']))
+                                                            @if(($att['type'] ?? '') === 'image')
+                                                                <div class="rounded-sm overflow-hidden border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 max-w-[210px]">
+                                                                    <a href="{{ $att['url'] ?? '#' }}" target="_blank" title="Lihat Gambar Penuh">
+                                                                        <img src="{{ $att['url'] ?? '#' }}" alt="{{ $att['name'] ?? 'Image' }}" class="w-full h-auto object-cover max-h-32 transition-opacity hover:opacity-90" />
+                                                                    </a>
+                                                                    <div class="px-2 py-1 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-1 font-mono text-[9px] text-zinc-700 dark:text-zinc-300">
+                                                                        <span class="truncate max-w-[115px] font-semibold">{{ $att['name'] ?? 'Gambar' }}</span>
+                                                                        @if(!empty($att['md_url']))
+                                                                            <a href="{{ $att['md_url'] }}" target="_blank" class="px-1.5 py-0.5 rounded-xs bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black shrink-0" title="Buka hasil ekstraksi teks OCR (.md)">
+                                                                                OCR .MD ✓
+                                                                            </a>
+                                                                        @else
+                                                                            <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">OCR ✓</span>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            @else
+                                                                <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-sm bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-mono text-[11px] text-zinc-800 dark:text-zinc-200 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors">
+                                                                    <a href="{{ $att['url'] ?? '#' }}" target="_blank" class="inline-flex items-center gap-1.5" title="Buka berkas asli">
+                                                                        <span class="px-1 py-0.5 rounded-xs bg-zinc-100 dark:bg-zinc-800 text-[9px] font-bold uppercase text-zinc-700 dark:text-zinc-300">{{ strtoupper($att['ext'] ?? 'DOC') }}</span>
+                                                                        <span class="truncate max-w-[150px] font-semibold">{{ $att['name'] ?? 'Dokumen' }}</span>
+                                                                        <span class="text-[9px] text-zinc-500">({{ $att['size'] ?? '' }})</span>
+                                                                    </a>
+                                                                    @if(!empty($att['md_url']))
+                                                                        <a href="{{ $att['md_url'] }}" target="_blank" class="px-1.5 py-0.5 rounded-xs bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 text-[9px] font-black ml-0.5" title="Lihat hasil konversi MarkItDown Lokal (.md) — 0 Token AI">
+                                                                            MD LOKAL ✓
+                                                                        </a>
+                                                                    @else
+                                                                        <span class="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold ml-0.5">MD ✓</span>
+                                                                    @endif
+                                                                </div>
+                                                            @endif
                                                         @endif
                                                     @endforeach
                                                 </div>
@@ -617,82 +757,129 @@
                             @endif
                         </div>
 
-                        {{-- Multimodal File Attachment Preview Bar --}}
-                        @if(!empty($uploadedFiles))
-                            <div class="px-3 py-2 bg-zinc-100 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-2 overflow-x-auto shrink-0 font-mono text-xs">
-                                <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase shrink-0">
-                                    Lampiran ({{ count($uploadedFiles) }}/{{ $maxFiles }}):
-                                </span>
-                                @foreach($uploadedFiles as $idx => $f)
-                                    <div class="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xs shrink-0 text-zinc-900 dark:text-zinc-100">
-                                        <span class="text-[10px]">📄</span>
-                                        <span class="max-w-[130px] truncate text-[11px] font-bold">{{ $f->getClientOriginalName() }}</span>
-                                        <button type="button"
-                                                wire:click="removeUploadedFile({{ $idx }})"
-                                                title="Hapus file"
-                                                class="text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 ml-1 cursor-pointer">
-                                            ✕
-                                        </button>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-
                         {{-- Upload Error Alert --}}
                         @if($uploadErrorMessage)
-                            <div class="px-3 py-1.5 bg-rose-100 dark:bg-rose-950 border-t border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 font-mono text-xs flex items-center justify-between shrink-0">
-                                <span>⚠️ {{ $uploadErrorMessage }}</span>
-                                <button type="button" wire:click="$set('uploadErrorMessage', null)" class="text-rose-600 hover:text-rose-900 dark:hover:text-white cursor-pointer">✕</button>
+                            <div class="px-3.5 py-2 bg-rose-50 dark:bg-rose-950/90 border-t border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200 font-mono text-[11px] flex items-center justify-between gap-2 shrink-0">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <svg width="14" height="14" class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                                    <span class="truncate">{{ $uploadErrorMessage }}</span>
+                                </div>
+                                <button type="button" wire:click="$set('uploadErrorMessage', null)" class="p-0.5 text-rose-700 hover:text-rose-950 dark:text-rose-300 dark:hover:text-white cursor-pointer shrink-0">
+                                    <svg width="13" height="13" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
                             </div>
                         @endif
 
-                        {{-- Chat Input Bar --}}
-                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
-                            <form wire:submit.prevent="sendMessage" class="space-y-2">
-                                <div class="flex items-end gap-2">
-                                    {{-- File Upload Picker Button --}}
-                                    <div class="relative shrink-0 mb-0.5">
-                                        <input type="file"
-                                               wire:model="uploadedFiles"
-                                               id="agentic-ai-file-picker"
-                                               multiple
-                                               accept=".txt,.csv,.tsv,.pdf,.docx,.xlsx,.pptx,.json,.md,.html,.jpg,.jpeg,.png,.webp,.gif"
-                                               class="hidden"
-                                               {{ $sessionMessageCount >= $maxSessionMessages ? 'disabled' : '' }} />
+                        {{-- World-Class Unified Composer Box (Linear / Vercel / Cursor Precision) --}}
+                        <div class="p-3 bg-zinc-50/90 dark:bg-zinc-900/90 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
+                            <form wire:submit.prevent="sendMessage" class="space-y-1.5">
+                                <div class="np-ai-composer rounded-md bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700/90 transition-colors overflow-hidden">
 
-                                        <label for="agentic-ai-file-picker"
-                                               title="Lampirkan Dokumen (PDF, DOCX, XLSX, TXT, CSV, Gambar) - Otomatis Dikonversi MarkItDown"
-                                               class="cursor-pointer w-9 h-9 rounded-xs flex items-center justify-center bg-white dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors {{ $sessionMessageCount >= $maxSessionMessages ? 'opacity-50 pointer-events-none' : '' }}">
-                                            <div wire:loading.remove wire:target="uploadedFiles">
-                                                <svg width="15" height="15" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                                            </div>
-                                            <div wire:loading wire:target="uploadedFiles">
-                                                <span class="animate-spin text-xs">⏳</span>
-                                            </div>
-                                        </label>
-                                    </div>
+                                    {{-- Embedded Multimodal Attachment Chips Tray --}}
+                                    @if(!empty($uploadedFiles))
+                                        <div class="px-3 py-2 bg-zinc-50 dark:bg-zinc-900/80 border-b border-zinc-200/80 dark:border-zinc-800 flex items-center gap-1.5 overflow-x-auto">
+                                            <span class="text-[10px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider shrink-0 tabular-nums mr-1">
+                                                Siap Konversi ({{ count($uploadedFiles) }}/{{ $maxFiles }}):
+                                            </span>
+                                            @foreach($uploadedFiles as $idx => $f)
+                                                @php
+                                                    $fName = $f->getClientOriginalName();
+                                                    $fExt = strtolower($f->getClientOriginalExtension());
+                                                    $fIsImg = in_array($fExt, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'], true);
+                                                    $fKb = round(($f->getSize() ?: 0) / 1024, 1);
+                                                @endphp
+                                                <div class="inline-flex items-center gap-1.5 pl-2 pr-1.5 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-sm shrink-0 text-zinc-900 dark:text-zinc-100">
+                                                    <span class="px-1 py-0.5 rounded-xs text-[9px] font-mono font-black uppercase {{ $fIsImg ? 'bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700' : 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700' }}">
+                                                        {{ $fIsImg ? 'OCR' : strtoupper($fExt ?: 'MD') }}
+                                                    </span>
+                                                    <span class="max-w-[135px] truncate text-[11px] font-medium">{{ $fName }}</span>
+                                                    <span class="text-[10px] font-mono text-zinc-500 tabular-nums">{{ $fKb }}KB</span>
+                                                    <button type="button"
+                                                            wire:click="removeUploadedFile({{ $idx }})"
+                                                            title="Hapus lampiran"
+                                                            class="p-0.5 rounded-xs text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                                                        <svg width="12" height="12" style="width:12px;height:12px;" class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    </button>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
 
-                                    {{-- Auto-resizing Textarea --}}
-                                    <div class="flex-1 min-w-0">
+                                    {{-- Seamless Auto-Expanding Textarea --}}
+                                    <div class="px-3 pt-2.5 pb-2">
                                         <textarea wire:model="inputMessage"
                                                   wire:keydown.enter.exact.prevent="sendMessage"
                                                   rows="2"
-                                                  placeholder="Ketik instruksi... (Enter kirim, Shift+Enter baris baru)"
-                                                  class="w-full p-2 text-xs bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-zinc-900 dark:text-zinc-100 resize-none font-sans"></textarea>
+                                                  @input="$el.style.height = 'auto'; $el.style.height = Math.min($el.scrollHeight, 136) + 'px'"
+                                                  placeholder="Ketik instruksi arsitektur, analisis data, atau lampirkan dokumen/gambar..."
+                                                  {{ $sessionMessageCount >= $maxSessionMessages ? 'disabled' : '' }}
+                                                  class="np-ai-textarea w-full bg-transparent border-0 p-0 text-xs leading-relaxed text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-0 resize-none font-sans min-h-[42px] max-h-[136px]"></textarea>
                                     </div>
 
-                                    {{-- Send Button --}}
-                                    <button type="submit"
-                                            wire:loading.attr="disabled"
-                                            class="h-9 px-4 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-mono text-xs font-bold rounded-xs hover:bg-black dark:hover:bg-white transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50 shrink-0">
-                                        <span wire:loading.remove wire:target="sendMessage">Kirim</span>
-                                        <span wire:loading wire:target="sendMessage">...</span>
-                                    </button>
+                                    {{-- Integrated Action Toolbar (Attach + Engine Status + Shortcut + Primary Send) --}}
+                                    <div class="np-ai-toolbar px-2.5 py-1.5 bg-zinc-50/80 dark:bg-zinc-900/60 border-t border-zinc-200/70 dark:border-zinc-800/80 flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            {{-- Hidden Native File Input --}}
+                                            <input type="file"
+                                                   wire:model="uploadedFiles"
+                                                   id="agentic-ai-file-picker"
+                                                   multiple
+                                                   accept=".txt,.csv,.tsv,.pdf,.docx,.xlsx,.pptx,.json,.xml,.md,.html,.jpg,.jpeg,.png,.webp,.gif"
+                                                   class="hidden"
+                                                   style="display:none;"
+                                                   {{ $sessionMessageCount >= $maxSessionMessages ? 'disabled' : '' }} />
+
+                                            {{-- Crisp World-Class Attach Button --}}
+                                            <label for="agentic-ai-file-picker"
+                                                   title="Lampirkan Dokumen (PDF, DOCX, XLSX, PPTX, CSV, JSON) -> 100% MarkItDown Lokal (0 Token AI) | Gambar (PNG, JPG, WEBP) -> 3-Tier OCR"
+                                                   class="np-ai-attach-btn shrink-0 select-none {{ $sessionMessageCount >= $maxSessionMessages ? 'opacity-40 pointer-events-none' : '' }}">
+                                                <span wire:loading.remove wire:target="uploadedFiles" class="inline-flex items-center gap-1.5">
+                                                    <svg width="14" height="14" style="width:14px;height:14px;" class="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                                    <span>Lampirkan</span>
+                                                </span>
+                                                <span wire:loading wire:target="uploadedFiles" class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
+                                                    <svg width="14" height="14" style="width:14px;height:14px;" class="w-3.5 h-3.5 animate-spin shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle><path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z"></path></svg>
+                                                    <span>Memuat...</span>
+                                                </span>
+                                                @if(!empty($uploadedFiles))
+                                                    <span class="px-1.5 py-0.5 rounded-xs bg-zinc-900 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[10px] font-black tabular-nums">
+                                                        {{ count($uploadedFiles) }}
+                                                    </span>
+                                                @endif
+                                            </label>
+
+                                            <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-xs bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-bold truncate" title="Dokumen dikonversi lokal oleh MarkItDown (0 Token AI) &amp; Gambar diekstraksi via OCR">
+                                                Local MarkItDown + OCR
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center gap-2.5 shrink-0">
+                                            <span class="hidden sm:inline-block text-[10px] font-mono text-zinc-500 dark:text-zinc-400 select-none">
+                                                Enter &#8629;
+                                            </span>
+
+                                            {{-- Crisp World-Class Primary Send Button --}}
+                                            <button type="submit"
+                                                    wire:loading.attr="disabled"
+                                                    {{ $sessionMessageCount >= $maxSessionMessages ? 'disabled' : '' }}
+                                                    title="Kirim Instruksi ke Autonomous AI Copilot (Enter)"
+                                                    class="np-ai-send-btn shrink-0">
+                                                <span wire:loading.remove wire:target="sendMessage" class="inline-flex items-center gap-1.5">
+                                                    <span>Kirim</span>
+                                                    <svg width="13" height="13" style="width:13px;height:13px;" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 12h14M13 6l6 6-6 6"/></svg>
+                                                </span>
+                                                <span wire:loading wire:target="sendMessage" class="inline-flex items-center gap-1.5">
+                                                    <svg width="13" height="13" style="width:13px;height:13px;" class="w-3.5 h-3.5 animate-spin shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle><path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z"></path></svg>
+                                                    <span>Memproses</span>
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div class="flex items-center justify-between text-[10px] text-zinc-500 font-mono">
-                                    <span>Model: {{ $activeSubModel }}</span>
-                                    <span>10 Pilar Software Factory OS Ready • MarkItDown Converted</span>
+                                <div class="flex items-center justify-between px-0.5 text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
+                                    <span class="truncate">Model: <strong class="text-zinc-800 dark:text-zinc-200">{{ $activeSubModel }}</strong></span>
+                                    <span class="truncate">12-Sector Project OS • Hemat Token 85%</span>
                                 </div>
                             </form>
                         </div>

@@ -27,7 +27,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-Dt4puE0K.css",
+    "file": "assets/app-DZSIJiK5.css",
     "name": "app",
     "names": [
       "app.css"
@@ -36,7 +36,7 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-bwWW4-RL.js",
+    "file": "assets/app-DbnE75sT.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -46,7 +46,7 @@
     ]
   },
   "resources/js/islands.jsx": {
-    "file": "assets/islands-g1PNEyWb.js",
+    "file": "assets/islands-Bv4WqC0k.js",
     "name": "islands",
     "src": "resources/js/islands.jsx",
     "isEntry": true,

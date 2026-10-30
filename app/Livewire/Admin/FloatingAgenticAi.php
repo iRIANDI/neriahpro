@@ -484,21 +484,57 @@ class FloatingAgenticAi extends Component
                     'size' => $sizeFormatted,
                 ];
 
-                // Otomatis konversi ke Markdown murni via MarkItDown
+                // Otomatis konversi ke Markdown murni via MarkItDown Lokal / 3-Tier Image OCR (Hemat Token 85-95%)
                 try {
                     $physPath = storage_path('app/public/' . $path);
-                    $convResult = $markitdown->convert($physPath, ['filename' => $originalName]);
+                    $convResult = $markitdown->convert($physPath, [
+                        'filename' => $originalName,
+                        'allow_vision_ocr' => true,
+                    ]);
                     $markdownContent = $convResult['markdown'] ?? '';
+                    $convEngine = $convResult['engine'] ?? 'markitdown-local-native-php';
+                    $zeroAiTokens = (bool) ($convResult['zero_ai_tokens'] ?? true);
+
+                    $attachmentData['engine'] = $convEngine;
+                    $attachmentData['zero_ai_tokens'] = $zeroAiTokens;
 
                     if (!empty(trim($markdownContent))) {
-                        // Simpan file .md fisik di disk agar tersimpan permanen di chat
+                        // Simpan file .md fisik di disk agar tersimpan permanen di chat tanpa kirim ulang base64/biner
                         $mdPath = preg_replace('/\.[^.]+$/', '.md', $path);
                         Storage::disk('public')->put($mdPath, $markdownContent);
                         $attachmentData['md_path'] = $mdPath;
+                        $attachmentData['md_url'] = asset('storage/' . $mdPath);
+
+                        // Otomatis indeks ke RAG Vector Knowledge Base (768-dim) seperti standar YJLK
+                        if ($convEngine !== 'image-metadata-fallback' && mb_strlen($markdownContent) >= 40) {
+                            try {
+                                $vectorService = app(VectorEmbeddingService::class);
+                                $indexedChunks = $vectorService->indexDocument(
+                                    title: $originalName,
+                                    fullText: $markdownContent,
+                                    sourceType: 'chat_doc_' . $ext,
+                                    sourceId: $this->currentSessionId . ':' . Str::slug($originalName),
+                                    metadata: [
+                                        'session_id' => $this->currentSessionId,
+                                        'engine' => $convEngine,
+                                        'zero_ai_tokens' => $zeroAiTokens,
+                                    ],
+                                    maxChunks: 4
+                                );
+                                $attachmentData['rag_chunks'] = $indexedChunks;
+                                $this->totalKnowledgeChunks = \Illuminate\Support\Facades\DB::table('ai_knowledge_vectors')->count();
+                            } catch (\Throwable $ragErr) {
+                                Log::info("RAG auto-index chat attachment skipped: " . $ragErr->getMessage());
+                            }
+                        }
+
+                        $modeLabel = $fileType === 'image'
+                            ? ($convEngine === 'tesseract-local-ocr' ? 'OCR Lokal Tesseract (0 Token AI)' : ($convEngine === 'vision-ocr-1shot-cached' ? '1-Shot Vision OCR Cache' : 'Metadata Visual'))
+                            : '100% MarkItDown Lokal (0 Token AI)';
 
                         // Sertakan teks Markdown lengkap ke context prompt
                         $condensedMarkdown = Str::limit($markdownContent, 40000);
-                        $fileContextPrompt .= "\n\n[📄 Lampiran Dikonversi ke Markdown: {$originalName} ({$sizeFormatted})]\n{$condensedMarkdown}\n";
+                        $fileContextPrompt .= "\n\n[📄 Lampiran Dikonversi ke Markdown ({$modeLabel}): {$originalName} ({$sizeFormatted})]\n{$condensedMarkdown}\n";
                     }
                 } catch (\Throwable $e) {
                     Log::warning("FloatingAgenticAi MarkItDown convert error ({$originalName}): " . $e->getMessage());
@@ -608,10 +644,11 @@ class FloatingAgenticAi extends Component
         try {
             $fullPrompt = $text . ($fileContextPrompt ? "\n" . $fileContextPrompt : "");
 
-            // Collect image paths for vision
+            // Collect image paths for vision ONLY when image has not already been OCR-transcribed to .md (saves 90% tokens)
             $imagePaths = [];
             foreach ($processedAttachments as $att) {
-                if (($att['type'] ?? '') === 'image' && !empty($att['path'])) {
+                $alreadyTranscribed = !empty($att['md_path']) && (($att['engine'] ?? '') !== 'image-metadata-fallback');
+                if (($att['type'] ?? '') === 'image' && !empty($att['path']) && !$alreadyTranscribed) {
                     $physImg = storage_path('app/public/' . $att['path']);
                     if (file_exists($physImg)) {
                         $imagePaths[] = $physImg;

@@ -1,6 +1,7 @@
 <div class="font-sans"
      x-data="{
          isDragging: false,
+         isDrawerOpen: @entangle('isDrawerOpen'),
          startX: 0,
          startY: 0,
          offsetX: 0,
@@ -36,6 +37,7 @@
              this.offsetY = 0;
          }
      }"
+     @keydown.escape.window="if (isDrawerOpen) { isDrawerOpen = false; $wire.closeDrawer(); }"
      x-on:toggle-ai-copilot.window="resetPos(); scrollToBottom()"
      x-on:open-ai-copilot.window="resetPos(); scrollToBottom()"
      x-on:scroll-ai-to-bottom.window="scrollToBottom()"
@@ -192,6 +194,7 @@
                 <div class="flex items-center gap-2 truncate">
                     {{-- Hamburger Drawer Button --}}
                     <button type="button"
+                            @click="isDrawerOpen = !isDrawerOpen"
                             wire:click="toggleDrawer"
                             title="Menu Riwayat Sesi & Model AI"
                             class="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xs transition-colors cursor-pointer shrink-0">
@@ -221,7 +224,8 @@
                 {{-- Window Controls --}}
                 <div class="flex items-center gap-1 shrink-0">
                     <button type="button"
-                            wire:click="createNewChat(false)"
+                            @click="isDrawerOpen = false"
+                            wire:click="createNewChat(true)"
                             title="Buat Sesi Percakapan Baru"
                             class="p-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xs transition-colors cursor-pointer">
                         <svg width="14" height="14" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -254,7 +258,9 @@
                     {{-- ============================================================= --}}
                     {{-- SIDE DRAWER (Menu Riwayat Sesi, Buat Baru, Hapus & Model AI)  --}}
                     {{-- ============================================================= --}}
-                    <div class="absolute inset-y-0 left-0 z-30 w-72 bg-zinc-100 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col transition-transform duration-200 ease-in-out shadow-2xl {{ $isDrawerOpen ? 'translate-x-0' : '-translate-x-full' }}">
+                    <div class="absolute inset-y-0 left-0 z-30 w-72 bg-zinc-100 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col transition-transform duration-200 ease-in-out shadow-2xl"
+                         :class="isDrawerOpen ? 'translate-x-0' : '-translate-x-full'"
+                         x-cloak>
                         
                         {{-- Drawer Header --}}
                         <div class="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950/60">
@@ -264,17 +270,20 @@
                                     <span>Riwayat Sesi</span>
                                 </span>
                                 <button type="button"
-                                        wire:click="createNewChat(false)"
+                                        @click="isDrawerOpen = false"
+                                        wire:click="createNewChat(true)"
                                         title="Mulai Percakapan Baru"
                                         class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[10px] font-bold rounded-xs transition-colors cursor-pointer">
                                     + Baru
                                 </button>
                             </div>
                             <button type="button"
-                                    wire:click="toggleDrawer"
-                                    title="Tutup Menu"
-                                    class="p-1 text-zinc-500 hover:text-zinc-950 dark:hover:text-white rounded-xs">
-                                <svg width="14" height="14" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                                    @click="isDrawerOpen = false; $wire.closeDrawer()"
+                                    wire:click="closeDrawer"
+                                    title="Tutup Menu Riwayat"
+                                    class="flex items-center gap-1 px-2 py-1 text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 rounded-xs transition-colors cursor-pointer">
+                                <svg width="12" height="12" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <span>Tutup</span>
                             </button>
                         </div>
 
@@ -308,6 +317,7 @@
                                     @else
                                         <div class="flex-1 min-w-0 flex items-center justify-between gap-1">
                                             <button type="button"
+                                                    @click="isDrawerOpen = false"
                                                     wire:click="switchSession('{{ $sess['id'] }}')"
                                                     class="flex-1 text-left truncate flex items-center gap-1.5 cursor-pointer">
                                                 <span class="text-[10px] text-zinc-400">💬</span>
@@ -380,9 +390,16 @@
                     </div>
 
                     {{-- Drawer Backdrop --}}
-                    @if($isDrawerOpen)
-                        <div wire:click="toggleDrawer" class="absolute inset-0 bg-black/40 z-20 transition-opacity"></div>
-                    @endif
+                    <div x-show="isDrawerOpen"
+                         x-cloak
+                         x-transition:enter="transition-opacity ease-out duration-150"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition-opacity ease-in duration-100"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"
+                         @click="isDrawerOpen = false; $wire.closeDrawer()"
+                         class="absolute inset-0 bg-black/50 z-20 cursor-pointer backdrop-blur-[1px]"></div>
 
                     {{-- Navigation Sub-Tabs & Sesi Control --}}
                     <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 px-3 text-xs font-mono shrink-0">

@@ -86,6 +86,11 @@ class FloatingAgenticAi extends Component
         $this->isDrawerOpen = !$this->isDrawerOpen;
     }
 
+    public function closeDrawer(): void
+    {
+        $this->isDrawerOpen = false;
+    }
+
     public function loadSessions(): void
     {
         $user = Auth::user();

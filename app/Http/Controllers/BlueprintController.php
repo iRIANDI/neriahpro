@@ -165,14 +165,18 @@ class BlueprintController extends Controller
             $initialData['track'] = 'retail';
             if (empty($initialData['kisaranBudget']) || str_contains($initialData['kisaranBudget'], 'Growth') || str_contains($initialData['kisaranBudget'], '15.000.000')) {
                 $tierLower = strtolower((string) $tier);
+                $satuPintu = \App\Support\PricingRegistry::getSatuPintuCatalog();
                 if ($tierLower === 'starter' || $tierLower === 'lite' || $tierLower === 'retail_starter' || $tierLower === 'retail_lite') {
-                    $initialData['kisaranBudget'] = 'Starter: Rp 190.000 (PRD 26 Parameter, Schema DDL & AI Directives)';
+                    $liteLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_LITE]['formatted_price'] ?? 'Rp 99.000';
+                    $initialData['kisaranBudget'] = "Lite: {$liteLabel} (PRD 26 Parameter, Schema DDL & AI Directives)";
                     $initialData['terminPembayaran'] = 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
                 } elseif ($tierLower === 'pro' || $tierLower === 'retail_pro') {
-                    $initialData['kisaranBudget'] = 'Pro: Rp 490.000 (Bundel Lengkap DDL, Docker Compose & Seeder)';
+                    $proLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_PRO]['formatted_price'] ?? 'Rp 399.000';
+                    $initialData['kisaranBudget'] = "Pro: {$proLabel} (Bundel Lengkap DDL, Docker Compose & Seeder)";
                     $initialData['terminPembayaran'] = 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
                 } elseif ($tierLower === 'ultimate' || $tierLower === 'retail_ultimate') {
-                    $initialData['kisaranBudget'] = 'Ultimate: Rp 1.490.000 (Full 7 Pilar Software Factory OS Turnkey Starter Kit)';
+                    $ultLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_ULTIMATE]['formatted_price'] ?? 'Rp 1.490.000';
+                    $initialData['kisaranBudget'] = "Ultimate: {$ultLabel} (Full 10 Pilar Software Factory OS Turnkey Starter Kit)";
                     $initialData['terminPembayaran'] = 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
                 } else {
                     $initialData['kisaranBudget'] = 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)';
@@ -1129,6 +1133,10 @@ class BlueprintController extends Controller
             'success' => true,
             'schema_uri' => \App\Services\ProjectOsBlueprintCompilerService::SCHEMA_URI,
             'catalog' => \App\Services\ProjectOsBlueprintCompilerService::getCachedCatalog(),
+            'satu_pintu_packages' => \App\Support\PricingRegistry::getSatuPintuCatalog(),
+            'commercial_estimator_config' => \App\Support\PricingRegistry::getCommercialEstimatorConfig(),
+            'commercial_bridge_features' => \App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures(),
+            'guided_client_journey' => \App\Services\PosCommercialBridgeService::guidedClientJourneySteps(),
         ]);
     }
 
@@ -2269,5 +2277,223 @@ class BlueprintController extends Controller
             'next_cursor' => $cursorPage->nextCursor()?->encode(),
             'prev_cursor' => $cursorPage->previousCursor()?->encode(),
         ]);
+    }
+
+    /**
+     * Mitra Commercial #1: Satu Pintu Live Scope-to-Quotation & WBS Estimator API.
+     */
+    public function commercialEstimate(Request $request, \App\Services\PosCommercialBridgeService $bridge): JsonResponse
+    {
+        $validated = $request->validate([
+            'sector_code' => 'nullable|string|max:120',
+            'primitive_codes' => 'nullable|array',
+            'primitive_codes.*' => 'string|max:120',
+            'stack_preset' => 'nullable|string|max:120',
+            'termin_scheme' => 'nullable|string|in:30_50_20,50_50',
+        ]);
+
+        $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+            (string) ($validated['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
+        );
+        $stackCode = \App\Support\PosStackPresetCatalog::normalizePresetCode(
+            (string) ($validated['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH')
+        );
+
+        $dummyBp = new VisionBlueprint([
+            'nama_bisnis' => 'Live Commercial Simulation',
+            'slug' => 'live-commercial-simulation',
+            'user_metadata' => [
+                'primary_sector' => $sectorCode,
+                'selected_primitives' => $validated['primitive_codes'] ?? [],
+                'stack_preset' => $stackCode,
+            ],
+        ]);
+
+        $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($dummyBp, [
+            'sector_code' => $sectorCode,
+            'primitive_codes' => $validated['primitive_codes'] ?? [],
+            'stack_preset' => $stackCode,
+            'persist_project' => false,
+        ]);
+
+        $quotation = $bridge->calculateScopeQuotation($schema, [
+            'stack_preset' => $validated['stack_preset'] ?? $stackCode,
+            'termin_scheme' => $validated['termin_scheme'] ?? null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'quotation' => $quotation,
+        ]);
+    }
+
+    /**
+     * Mitra Commercial #2: Cryptographic Scope Freeze (SHA-256) & Official SPK Generator.
+     */
+    public function lockScopeAndGenerateSpk(
+        Request $request,
+        string $slug,
+        \App\Services\PosCommercialBridgeService $bridge
+    ): JsonResponse {
+        $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $validated = $request->validate([
+            'termin_scheme' => 'nullable|string|in:30_50_20,50_50',
+            'contract_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $result = $bridge->lockScopeAndGenerateSpk($blueprint, $posProject, array_filter($validated, fn ($v) => $v !== null));
+
+        return response()->json($result);
+    }
+
+    /**
+     * Mitra Commercial #3: Client Approves Paid Change-Order Addendum & Generates Delta Invoice.
+     */
+    public function approveDeltaAddendum(
+        Request $request,
+        string $slug,
+        string $crId,
+        \App\Services\PosCommercialBridgeService $bridge
+    ): JsonResponse {
+        $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $cr = \App\Models\PosChangeRequest::query()
+            ->where('id', $crId)
+            ->where('vision_blueprint_id', $blueprint->id)
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'signer_name' => 'nullable|string|max:160',
+            'signer_email' => 'nullable|email|max:160',
+        ]);
+
+        $result = $bridge->approveAddendumAndCreateInvoice($cr, $validated);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Mitra Commercial #5a: Toggle Interactive Given-When-Then UAT Scenario.
+     */
+    public function toggleUatScenario(
+        Request $request,
+        string $slug,
+        \App\Services\PosCommercialBridgeService $bridge
+    ): JsonResponse {
+        $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $validated = $request->validate([
+            'scenario_id' => 'required|string|max:80',
+            'passed' => 'nullable|boolean',
+            'actor_name' => 'nullable|string|max:160',
+        ]);
+
+        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        if (! $posProject) {
+            $posProject = app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+        }
+
+        $schema = $posProject && ! empty($posProject->compiled_schema_json)
+            ? (is_array($posProject->compiled_schema_json) ? $posProject->compiled_schema_json : (json_decode((string) $posProject->compiled_schema_json, true) ?: []))
+            : \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
+
+        $uat = $bridge->toggleUatScenario(
+            $posProject,
+            $schema,
+            $validated['scenario_id'],
+            array_key_exists('passed', $validated) ? (bool) $validated['passed'] : null,
+            $validated['actor_name'] ?? null
+        );
+
+        return response()->json([
+            'success' => true,
+            'uat' => $uat,
+        ]);
+    }
+
+    /**
+     * Mitra Commercial #5b: Client Digital UAT Sign-Off & Official BAST Issuance.
+     */
+    public function signOffUatAndIssueBast(
+        Request $request,
+        string $slug,
+        \App\Services\PosCommercialBridgeService $bridge
+    ): JsonResponse {
+        $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $validated = $request->validate([
+            'signer_name' => 'nullable|string|max:160',
+            'signer_email' => 'nullable|email|max:160',
+            'mark_all_passed' => 'nullable|boolean',
+        ]);
+        $validated['signer_ip'] = $request->ip();
+
+        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $result = $bridge->signOffUatAndIssueBast($blueprint, $posProject, $validated);
+
+        return response()->json($result, ($result['success'] ?? false) ? 200 : 422);
+    }
+
+    /**
+     * Render or stream PDF for Official A4 Mitra Commercial Documents (`rab`, `spk-appendix`, `bast`).
+     */
+    public function mitraDocument(
+        Request $request,
+        string $slug,
+        string $docType,
+        \App\Services\PosCommercialBridgeService $bridge
+    ) {
+        $docType = in_array($docType, ['rab', 'spk-appendix', 'bast'], true) ? $docType : 'rab';
+        $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        if (! $posProject) {
+            $posProject = app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+        }
+
+        $schema = $posProject && ! empty($posProject->compiled_schema_json)
+            ? (is_array($posProject->compiled_schema_json) ? $posProject->compiled_schema_json : (json_decode((string) $posProject->compiled_schema_json, true) ?: []))
+            : \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
+
+        $quotation = ! empty($posProject?->commercial_quotation_json) && is_array($posProject->commercial_quotation_json)
+            ? $posProject->commercial_quotation_json
+            : $bridge->calculateScopeQuotation($schema);
+
+        $uat = $bridge->buildUatChecklist(
+            $schema,
+            is_array($posProject?->uat_checklist_json) ? $posProject->uat_checklist_json : []
+        );
+
+        $changeRequests = \Illuminate\Support\Facades\Schema::hasTable('pos_change_requests')
+            ? \App\Models\PosChangeRequest::query()->where('vision_blueprint_id', $blueprint->id)->orderBy('id', 'asc')->limit(20)->get()
+            : collect();
+
+        $viewData = [
+            'docType' => $docType,
+            'blueprint' => $blueprint,
+            'posProject' => $posProject,
+            'projectName' => $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Enterprise Project'),
+            'schema' => $schema,
+            'quotation' => $quotation,
+            'uat' => $uat,
+            'changeRequests' => $changeRequests,
+            'devInfo' => \App\Support\ContractLegalHelper::getDeveloperInfo(),
+            'isPdfStream' => $request->query('download') === 'pdf',
+        ];
+
+        if ($request->query('download') === 'pdf' && class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('prints.mitra-commercial-pack', $viewData);
+
+            return $pdf->stream("{$docType}-{$blueprint->slug}.pdf");
+        }
+
+        return view('prints.mitra-commercial-pack', $viewData);
     }
 }

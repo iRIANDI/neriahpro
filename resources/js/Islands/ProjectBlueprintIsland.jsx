@@ -600,13 +600,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         : 'Paket Spark (Gratis): Rp 0 / Akses Audit Arsitektur & Cetak Biru Gratis 100%';
 
       if (cleanTier === 'starter' || cleanTier === 'lite' || cleanTier === 'retail_starter' || cleanTier === 'retail_lite') {
-        defaultBudget = isEn ? 'Starter: Rp 190,000 (PRD 26 Parameters, Strict ULID DDL & AI Directives)' : 'Starter: Rp 190.000 (PRD 26 Parameter, Schema DDL & AI Directives)';
+        defaultBudget = isEn ? 'Lite: Rp 99,000 (PRD 26 Parameters, Strict ULID DDL & AI Directives)' : 'Lite: Rp 99.000 (PRD 26 Parameter, Schema DDL & AI Directives)';
         defaultTermin = isEn ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
       } else if (cleanTier === 'pro' || cleanTier === 'retail_pro') {
-        defaultBudget = isEn ? 'Pro: Rp 490,000 (Full Architecture Bundle: DDL, Docker Compose & Seeder)' : 'Pro: Rp 490.000 (Bundel Lengkap DDL, Docker Compose & Seeder)';
+        defaultBudget = isEn ? 'Pro: Rp 399,000 (Full Architecture Bundle: DDL, 7-Phase Prompts, Docker & Seeder)' : 'Pro: Rp 399.000 (Bundel Lengkap DDL, 7-Fase Prompt AI, Docker & Seeder)';
         defaultTermin = isEn ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
       } else if (cleanTier === 'ultimate' || cleanTier === 'retail_ultimate') {
-        defaultBudget = isEn ? 'Ultimate: Rp 1,490,000 (Full 10 Pillars Software Factory OS Turnkey Starter Kit)' : 'Ultimate: Rp 1.490.000 (Full 10 Pilar Software Factory OS Turnkey Starter Kit)';
+        defaultBudget = isEn ? 'Ultimate: Rp 1,490,000 (Full 10 Pillars Software Factory OS + Live MCP Kit)' : 'Ultimate: Rp 1.490.000 (Full 10 Pilar Software Factory OS + Live MCP Kit)';
         defaultTermin = isEn ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
       }
 
@@ -633,17 +633,18 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     };
   }, [lang, requestedTier]);
 
-  // Execution Track: 'retail' (Jalur Mandiri) vs 'studio' (Jalur Turnkey Dedicated)
+  // Execution Track: 'retail' (Jalur Mandiri) vs 'studio' (Jalur Turnkey Dedicated / Mitra Proyek)
   const [currentTrack, setCurrentTrack] = useState(() => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const qTrack = urlParams.get('track');
-      if (qTrack === 'studio' || qTrack === 'retail') return qTrack;
+      const qTrack = (urlParams.get('track') || urlParams.get('mode') || '').toLowerCase();
+      if (qTrack === 'studio' || qTrack === 'mitra' || qTrack === 'mitra_turnkey_project') return 'studio';
+      if (qTrack === 'retail' || qTrack === 'retail_self_dev') return 'retail';
       const qTier = urlParams.get('tier') || urlParams.get('package') || urlParams.get('package_tier');
       if (qTier && (qTier.includes('retail') || ['spark', 'starter', 'pro', 'ultimate', 'lite'].includes(qTier.toLowerCase()))) {
         return 'retail';
       }
-      if (qTier && ['advisory', 'starter_umkm', 'mvp', 'full_mvp'].includes(qTier.toLowerCase())) {
+      if (qTier && ['advisory', 'starter_umkm', 'umkm_starter', 'mvp', 'full_mvp', 'blueprint_advisory'].includes(qTier.toLowerCase())) {
         return 'studio';
       }
     } catch (e) {}
@@ -679,7 +680,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           nextTermin = trackDefs.terminPembayaran;
         }
       } else {
-        if (!nextBudget || nextBudget.includes('Spark') || nextBudget.includes('Starter: Rp 190') || nextBudget.includes('Pro: Rp 490') || nextBudget.includes('Ultimate: Rp 1.490')) {
+        if (!nextBudget || nextBudget.includes('Spark') || nextBudget.includes('Lite: Rp 99') || nextBudget.includes('Starter: Rp 190') || nextBudget.includes('Pro: Rp 399') || nextBudget.includes('Pro: Rp 490') || nextBudget.includes('Ultimate: Rp 1.490')) {
           nextBudget = trackDefs.kisaranBudget;
         }
         if (!nextSla || nextSla.includes('Lisensi Mandiri') || nextSla.includes('Akses Seumur Hidup') || nextSla.includes('Dukungan Arsitektur')) {
@@ -925,9 +926,21 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     clientName: initialData.clientName || '',
     email: initialData.email || '',
     phone: initialData.phone || '',
-    primarySector: initialData.primarySector || '',
+    primarySector: initialData.primarySector || (() => {
+      try {
+        return new URLSearchParams(window.location.search).get('sector') || '';
+      } catch {
+        return '';
+      }
+    })(),
     selectedPrimitives: Array.isArray(initialData.selectedPrimitives) ? initialData.selectedPrimitives : [],
-    stackPreset: initialData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH',
+    stackPreset: initialData.stackPreset || (() => {
+      try {
+        return new URLSearchParams(window.location.search).get('stack') || 'STACK_M1_LARAVEL_MONOLITH';
+      } catch {
+        return 'STACK_M1_LARAVEL_MONOLITH';
+      }
+    })(),
   });
 
   // 12-Sector, 12 Core Primitives, 9 Curated Tech Stack Presets & 8 Day-2 Layers Matrix Catalog (v3.0)
@@ -1059,6 +1072,17 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       .then((json) => {
         if (active && json?.success && json.catalog) {
           setMatrixCatalog((prev) => ({ ...prev, ...json.catalog }));
+          // Auto-hydrate mandatory primitives if sector came from Satu Pintu Wizard URL (?sector=...)
+          const sectors = json.catalog.sectors || [];
+          setFormData((prevForm) => {
+            if (!prevForm.primarySector) return prevForm;
+            const foundSec = sectors.find((s) => s.code === prevForm.primarySector);
+            if (!foundSec || !Array.isArray(foundSec.mandatory_primitives)) return prevForm;
+            const existing = Array.isArray(prevForm.selectedPrimitives) ? prevForm.selectedPrimitives : [];
+            const merged = Array.from(new Set([...foundSec.mandatory_primitives, ...existing]));
+            if (merged.length === existing.length) return prevForm;
+            return { ...prevForm, selectedPrimitives: merged };
+          });
         }
       })
       .catch(() => {});
@@ -3472,6 +3496,67 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         </AnimatePresence>
       </div>
       
+      {/* SATU PINTU 5-STEP END-TO-END GUIDED CLIENT WIZARD BAR (RETAIL & MITRA V5.0) */}
+      <div className="mb-5 border-2 border-zinc-900 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-none shadow-xs">
+        <div className="px-3.5 py-2 bg-zinc-950 text-white flex flex-wrap items-center justify-between gap-2 font-mono text-[11px]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black uppercase">SATU PINTU V5.0</span>
+            <span className="font-bold uppercase">
+              {currentTrack === 'studio'
+                ? (lang === 'en' ? 'ACTIVE TRACK: MITRA TURNKEY PROJECT (RAB, SPK SHA-256, UAT & BAST)' : 'JALUR AKTIF: MITRA PROYEK TURNKEY (RAB, SPK SHA-256, UAT & BAST)')
+                : (lang === 'en' ? 'ACTIVE TRACK: RETAIL SELF-DEV (PRD, ULID SQL, 7-PHASE PROMPTS & MCP)' : 'JALUR AKTIF: RETAIL MANDIRI (PRD, SQL ULID, 7-FASE PROMPT & MCP)')}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <a
+              href="/pricing"
+              className="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 font-bold uppercase text-[10px] rounded-none"
+            >
+              &larr; {lang === 'en' ? 'Pricing Wizard' : 'Harga & Simulasi RAB'}
+            </a>
+            <a
+              href={`/blueprint/studio?mode=${currentTrack === 'studio' ? 'mitra' : 'retail'}${formData.primarySector ? `&sector=${formData.primarySector}` : ''}${formData.stackPreset ? `&stack=${formData.stackPreset}` : ''}`}
+              className="px-2.5 py-0.5 bg-amber-400 hover:bg-amber-300 text-zinc-950 font-black uppercase text-[10px] rounded-none"
+            >
+              🖥️ {lang === 'en' ? 'Open 3-Pane Studio →' : 'Buka 3-Pane Studio →'}
+            </a>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-zinc-200 dark:divide-zinc-800 bg-zinc-50 dark:bg-zinc-950 font-mono text-[10px]">
+          {[
+            { num: '01', label: lang === 'en' ? 'Path & 12 Sectors' : 'Pilih Jalur & 12 Sektor', done: true, active: false },
+            { num: '02', label: lang === 'en' ? '26-Param Discovery' : 'Elaborasi 26 Parameter', done: completeness.score >= 90, active: true },
+            { num: '03', label: currentTrack === 'studio' ? (lang === 'en' ? 'RAB & SPK SHA-256' : 'RAB & Kunci SPK SHA-256') : (lang === 'en' ? 'Instant License' : 'Lisensi & Unduh Kit'), done: false, active: false },
+            { num: '04', label: currentTrack === 'studio' ? (lang === 'en' ? '7-Milestone & Staging' : '7-Milestone & Live Staging') : (lang === 'en' ? '7-Phase IDE & MCP' : '7 Fase AI & Live MCP'), done: false, active: false },
+            { num: '05', label: currentTrack === 'studio' ? (lang === 'en' ? 'UAT & Digital BAST' : 'Checklist UAT & BAST') : (lang === 'en' ? 'Verify.sh & RedTeam' : 'Verify.sh & Red-Team'), done: false, active: false },
+          ].map((st) => (
+            <div
+              key={st.num}
+              className={`px-3 py-2 flex items-center gap-2 ${
+                st.active
+                  ? 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200 font-black'
+                  : st.done
+                  ? 'text-emerald-900 dark:text-emerald-300 font-bold'
+                  : 'text-zinc-600 dark:text-zinc-400 font-bold'
+              }`}
+            >
+              <span
+                className={`px-1.5 py-0.5 border ${
+                  st.active
+                    ? 'bg-zinc-950 text-emerald-400 border-zinc-950 dark:bg-emerald-400 dark:text-zinc-950 dark:border-emerald-400'
+                    : st.done
+                    ? 'bg-emerald-600 text-white border-emerald-600'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700'
+                }`}
+              >
+                {st.done && !st.active ? '✓' : st.num}
+              </span>
+              <span className="leading-tight">{st.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* TOP TOOLBAR: BRANDING, THEME, LANGUAGE & LIVE AUTO-SAVE TELEMETRY */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
         <div>
@@ -5860,14 +5945,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div className="flex flex-wrap gap-2 mb-2">
                 {(currentTrack === 'retail' ? [
                   lang === 'en' ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)' : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)',
-                  lang === 'en' ? 'Starter: Rp 190,000 (PRD 26 Parameters, Strict ULID DDL & AI Directives)' : 'Starter: Rp 190.000 (PRD 26 Parameter, Schema DDL & AI Directives)',
-                  lang === 'en' ? 'Pro: Rp 490,000 (Full Architecture Bundle: DDL, Docker Compose & Seeder)' : 'Pro: Rp 490.000 (Bundel Lengkap DDL, Docker Compose & Seeder)',
-                  lang === 'en' ? 'Ultimate: Rp 1,490,000 (Full 10 Pillars Software Factory OS Turnkey Starter Kit)' : 'Ultimate: Rp 1.490.000 (Full 10 Pilar Software Factory OS Turnkey Starter Kit)',
+                  lang === 'en' ? 'Lite: Rp 99,000 (PRD 26 Parameters, Strict ULID DDL & AI Directives)' : 'Lite: Rp 99.000 (PRD 26 Parameter, Schema DDL & AI Directives)',
+                  lang === 'en' ? 'Pro: Rp 399,000 (Full Architecture Bundle: DDL, 7-Phase Prompts, Docker & Seeder)' : 'Pro: Rp 399.000 (Bundel Lengkap DDL, 7-Fase Prompt AI, Docker & Seeder)',
+                  lang === 'en' ? 'Ultimate: Rp 1,490,000 (Full 10 Pillars Software Factory OS + Live MCP Kit)' : 'Ultimate: Rp 1.490.000 (Full 10 Pilar Software Factory OS + Live MCP Kit)',
                 ] : [
-                  lang === 'en' ? 'Advisory Tier: Rp 2,500,000 (PRD 26 Parameters, Strict DDL & Gantt WBS)' : 'Advisory Tier: Rp 2.500.000 (PRD 26 Parameter, Strict DDL & Gantt WBS)',
-                  lang === 'en' ? 'UMKM Digital Starter: Rp 3,750,000 (Cashier Web Engine & Admin Dashboard)' : 'UMKM Digital Starter: Rp 3.750.000 (Engine Transaksi Web Kasir & Admin Dashboard)',
-                  lang === 'en' ? '$1,000 - $3,000 USD (Growth / Custom Business Portal - Multi-Role & Gateway)' : 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
-                  lang === 'en' ? 'Enterprise Monolith: Custom Quotation (Dedicated Senior Architect Squad - Full Turnkey)' : 'Enterprise Monolith: Custom Quotation (Dedicated Senior Architect Squad - Full Turnkey)',
+                  lang === 'en' ? 'Advisory Tier: Rp 2,500,000 (PRD 26 Parameters, Strict DDL & Gantt WBS — 100% DP Credit)' : 'Advisory Tier: Rp 2.500.000 (PRD 26 Parameter, Strict DDL & Gantt WBS — Kredit DP 100%)',
+                  lang === 'en' ? 'UMKM Digital Starter: Rp 3,750,000 (50% Subsidy — Web Engine & Admin Dashboard)' : 'UMKM Digital Starter: Rp 3.750.000 (Subsidi 50% — Engine Transaksi Web & Admin Dashboard)',
+                  lang === 'en' ? 'Mitra Turnkey Project: Algorithmic Fair RAB (30% DP / 50% Staging / 20% Digital BAST)' : 'Mitra Proyek Turnkey: RAB Algoritmik Transparan (Termin 30% DP / 50% Staging / 20% BAST Digital)',
+                  lang === 'en' ? 'Enterprise Monolith / Decoupled: Custom Quotation (Dedicated Senior Architect Squad + SLA)' : 'Enterprise Monolith / Decoupled: Custom Quotation (Dedicated Senior Architect Squad + Garansi SLA)',
                 ]).map((tierOpt, idx) => (
                   <button
                     key={idx}

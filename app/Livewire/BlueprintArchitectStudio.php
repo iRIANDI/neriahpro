@@ -9,6 +9,7 @@ use App\Models\VisionBlueprint;
 use App\Services\BlueprintDeltaEvolutionService;
 use App\Services\BlueprintDoctorService;
 use App\Services\BlueprintSlopScannerService;
+use App\Services\PosCommercialBridgeService;
 use App\Services\ProjectOsBlueprintCompilerService;
 use App\Services\ScaffoldGeneratorService;
 use App\Support\PosLifecycleAndStudioCatalog;
@@ -37,13 +38,24 @@ class BlueprintArchitectStudio extends Component
         'PRIMITIVE_DOUBLE_ENTRY_LEDGER',
     ];
 
+    // Dual-Mode Satu Pintu: 'RETAIL_SELF_DEV' vs 'MITRA_TURNKEY_PROJECT'
+    public string $engagementMode = PosCommercialBridgeService::MODE_RETAIL;
+
     // 3-Pane Studio UI State
-    public string $centerTab = 'schema'; // schema | states | ui_print | decisions | delta_verify
+    public string $centerTab = 'schema'; // schema | states | ui_print | decisions | delta_verify | commercial_mitra
     public string $rightDockMode = 'phases'; // phases | agents_md | graph_json | mcp_json | env_blueprint
     public int $activePhase = 1;
     public bool $showWizardModal = false;
     public int $wizardStep = 1;
     public bool $showSlopDiffModal = false;
+
+    // Mitra Commercial, SPK, UAT & Digital BAST State
+    public array $uatChecklistState = [];
+    public array $bastSignoffState = [];
+    public array $latestSpkResult = [];
+    public array $latestAddendumResult = [];
+    public string $bastSignerName = '';
+    public string $bastSignerEmail = '';
 
     // Custom Table & Unguarded Status Simulation (Blueprint Doctor Live Guard)
     public string $newCustomTableName = '';
@@ -93,6 +105,25 @@ class BlueprintArchitectStudio extends Component
         } else {
             $this->showWizardModal = request()->boolean('wizard', false);
         }
+
+        // Satu Pintu URL Query Overrides (?mode=mitra|retail, ?track=mitra|retail, ?sector=..., ?stack=...)
+        $queryMode = strtolower((string) (request()->query('mode') ?? request()->query('track') ?? ''));
+        if (in_array($queryMode, ['mitra', 'mitra_turnkey_project', 'studio', 'project'], true)) {
+            $this->engagementMode = PosCommercialBridgeService::MODE_MITRA;
+            $this->centerTab = 'commercial_mitra';
+        } elseif (in_array($queryMode, ['retail', 'retail_self_dev', 'self_service'], true)) {
+            $this->engagementMode = PosCommercialBridgeService::MODE_RETAIL;
+        }
+
+        $querySector = (string) request()->query('sector', '');
+        if ($querySector !== '') {
+            $this->selectSector($querySector);
+        }
+
+        $queryStack = (string) request()->query('stack', '');
+        if ($queryStack !== '') {
+            $this->selectStack($queryStack);
+        }
     }
 
     protected function hydrateFromBlueprint(VisionBlueprint $blueprint): void
@@ -100,6 +131,8 @@ class BlueprintArchitectStudio extends Component
         $this->blueprintId = $blueprint->id;
         $this->slug = $blueprint->slug;
         $this->projectName = (string) ($blueprint->nama_bisnis ?: 'Enterprise Blueprint');
+        $this->bastSignerName = (string) ($blueprint->client_name ?: 'PIC Klien Resmi');
+        $this->bastSignerEmail = (string) ($blueprint->email ?: 'client@neriahpro.com');
 
         $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
         if (! $posProject) {
@@ -113,9 +146,22 @@ class BlueprintArchitectStudio extends Component
             if (! empty($posProject->drift_verification_json) && is_array($posProject->drift_verification_json)) {
                 $this->driftBadges = array_merge($this->driftBadges, $posProject->drift_verification_json);
             }
+            if (! empty($posProject->engagement_mode)) {
+                $this->engagementMode = (string) $posProject->engagement_mode;
+            }
+            if (is_array($posProject->uat_checklist_json)) {
+                $this->uatChecklistState = $posProject->uat_checklist_json;
+            }
+            if (is_array($posProject->bast_signoff_json)) {
+                $this->bastSignoffState = $posProject->bast_signoff_json;
+            }
         }
 
         $meta = is_array($blueprint->user_metadata) ? $blueprint->user_metadata : [];
+        $tier = (string) ($meta['package_tier'] ?? $meta['retail_tier'] ?? '');
+        if ($tier !== '' && \App\Support\PricingRegistry::isStudioContract($tier) && empty($posProject?->engagement_mode)) {
+            $this->engagementMode = PosCommercialBridgeService::MODE_MITRA;
+        }
         $schema = $posProject && ! empty($posProject->compiled_schema_json)
             ? (is_array($posProject->compiled_schema_json) ? $posProject->compiled_schema_json : (json_decode((string) $posProject->compiled_schema_json, true) ?: []))
             : [];
@@ -390,6 +436,12 @@ class BlueprintArchitectStudio extends Component
             $this->projectName
         );
 
+        $bridge = app(PosCommercialBridgeService::class);
+        $posProj = $this->posProjectId ? PosProject::query()->find($this->posProjectId) : null;
+        $commercialQuotation = $bridge->calculateScopeQuotation($schema);
+        $uatChecklist = $bridge->buildUatChecklist($schema, $this->uatChecklistState);
+        $milestoneGantt = $bridge->buildMilestoneGanttAndStaging($bpDummy, $posProj, $schema);
+
         return view('livewire.blueprint-architect-studio', [
             'catalog' => $catalog,
             'schema' => $schema,
@@ -400,9 +452,131 @@ class BlueprintArchitectStudio extends Component
             'compiledDecisionPhp' => $compiledDecisionPhp,
             'sizingProfiles' => PosLifecycleAndStudioCatalog::stackServerSizingProfiles(),
             'slopDiffPairs' => PosLifecycleAndStudioCatalog::slopVsProjectOsDiffPairs(),
+            'commercialQuotation' => $commercialQuotation,
+            'uatChecklist' => $uatChecklist,
+            'milestoneGantt' => $milestoneGantt,
+            'guidedJourneySteps' => PosCommercialBridgeService::guidedClientJourneySteps(),
         ])->layout('components.layouts.studio', [
-            'title' => 'Project OS Architect Studio v4.0',
+            'title' => 'Project OS Architect Studio v5.0 (Retail & Mitra Satu Pintu)',
         ]);
+    }
+
+    public function switchEngagementMode(string $mode): void
+    {
+        $normalized = $mode === PosCommercialBridgeService::MODE_MITRA
+            ? PosCommercialBridgeService::MODE_MITRA
+            : PosCommercialBridgeService::MODE_RETAIL;
+
+        $this->engagementMode = $normalized;
+
+        if ($normalized === PosCommercialBridgeService::MODE_MITRA && $this->centerTab === 'schema') {
+            $this->centerTab = 'commercial_mitra';
+        } elseif ($normalized === PosCommercialBridgeService::MODE_RETAIL && $this->centerTab === 'commercial_mitra') {
+            $this->centerTab = 'schema';
+        }
+
+        if ($this->posProjectId) {
+            $proj = PosProject::query()->find($this->posProjectId);
+            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'engagement_mode')) {
+                $proj->forceFill(['engagement_mode' => $normalized])->saveQuietly();
+            }
+        }
+    }
+
+    public function freezeScopeAndIssueSpk(PosCommercialBridgeService $bridge): void
+    {
+        $bp = $this->blueprintId ? VisionBlueprint::query()->find($this->blueprintId) : null;
+        if (! $bp) {
+            $schema = $this->compileCurrentStudioSchema();
+            $quot = $bridge->calculateScopeQuotation($schema);
+            $this->latestSpkResult = [
+                'success' => true,
+                'scope_hash_full' => $quot['scope_hash_full'],
+                'scope_hash_short' => $quot['scope_hash_short'],
+                'quotation' => $quot,
+                'document_title' => 'Simulasi SPK & Lampiran Scope SHA-256 - ' . $this->projectName,
+            ];
+
+            return;
+        }
+
+        $proj = $this->posProjectId ? PosProject::query()->find($this->posProjectId) : null;
+        $this->latestSpkResult = $bridge->lockScopeAndGenerateSpk($bp, $proj);
+        $this->engagementMode = PosCommercialBridgeService::MODE_MITRA;
+    }
+
+    public function approveStudioAddendum(PosCommercialBridgeService $bridge): void
+    {
+        $crId = $this->latestDeltaResult['id'] ?? null;
+        if (! $crId) {
+            return;
+        }
+
+        $cr = \App\Models\PosChangeRequest::query()->find($crId);
+        if (! $cr) {
+            return;
+        }
+
+        $this->latestAddendumResult = $bridge->approveAddendumAndCreateInvoice($cr, [
+            'signer_name' => $this->bastSignerName ?: 'PIC Klien Resmi',
+            'signer_email' => $this->bastSignerEmail ?: 'client@neriahpro.com',
+        ]);
+    }
+
+    public function toggleStudioUatScenario(string $scenarioId, PosCommercialBridgeService $bridge): void
+    {
+        $schema = $this->compileCurrentStudioSchema();
+        $proj = $this->posProjectId ? PosProject::query()->find($this->posProjectId) : null;
+
+        if ($proj) {
+            $this->uatChecklistState = $bridge->toggleUatScenario(
+                $proj,
+                $schema,
+                $scenarioId,
+                null,
+                $this->bastSignerName ?: 'Client UAT Reviewer'
+            );
+        } else {
+            $current = $bridge->buildUatChecklist($schema, $this->uatChecklistState);
+            $next = [];
+            foreach ($current['scenarios'] as $sc) {
+                if ($scenarioId === 'ALL' || $sc['id'] === $scenarioId) {
+                    $sc['passed'] = ! $sc['passed'];
+                    $sc['checked_at'] = $sc['passed'] ? now()->toIso8601String() : null;
+                }
+                $next[] = $sc;
+            }
+            $this->uatChecklistState = $bridge->buildUatChecklist($schema, ['scenarios' => $next]);
+        }
+    }
+
+    public function signStudioDigitalBast(PosCommercialBridgeService $bridge): void
+    {
+        $bp = $this->blueprintId ? VisionBlueprint::query()->find($this->blueprintId) : null;
+        $proj = $this->posProjectId ? PosProject::query()->find($this->posProjectId) : null;
+
+        if ($bp) {
+            $res = $bridge->signOffUatAndIssueBast($bp, $proj, [
+                'signer_name' => $this->bastSignerName ?: 'PIC Klien Resmi',
+                'signer_email' => $this->bastSignerEmail ?: 'client@neriahpro.com',
+                'mark_all_passed' => true,
+            ]);
+            if (! empty($res['bast'])) {
+                $this->bastSignoffState = $res['bast'];
+                $this->uatChecklistState = $res['uat'] ?? $this->uatChecklistState;
+            }
+        } else {
+            $schema = $this->compileCurrentStudioSchema();
+            $quot = $bridge->calculateScopeQuotation($schema);
+            $this->toggleStudioUatScenario('ALL', $bridge);
+            $this->bastSignoffState = [
+                'bast_number' => 'BAST/NPRO/' . now()->format('Y/m') . '/SIMUL',
+                'bast_sha256' => hash('sha256', $this->projectName . '|' . $quot['scope_hash_full']),
+                'signer_name' => $this->bastSignerName ?: 'PIC Klien Resmi',
+                'signed_at' => now()->toIso8601String(),
+                'formatted_final_termin' => $quot['termin_schedule'][count($quot['termin_schedule']) - 1]['formatted_amount'] ?? 'Rp 0',
+            ];
+        }
     }
 }
 

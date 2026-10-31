@@ -38,21 +38,49 @@
     <header class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 z-30">
         <div class="flex flex-wrap items-center gap-2">
             <a href="/blueprint" class="px-2 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[11px] font-black uppercase tracking-wider rounded-none hover:opacity-90 transition">
-                [NeriahPro OS v4.0]
+                [NeriahPro OS v5.0]
             </a>
             <div class="flex items-center gap-1.5 font-mono text-xs">
-                <span class="font-black text-zinc-950 dark:text-zinc-100 truncate max-w-52">{{ $projectName }}</span>
+                <span class="font-black text-zinc-950 dark:text-zinc-100 truncate max-w-44">{{ $projectName }}</span>
                 <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 text-[10px] font-black rounded-xs tabular-nums">
                     {{ $currentVersion }}
                 </span>
-                <span class="px-1.5 py-0.5 bg-zinc-100 text-zinc-900 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 text-[10px] font-bold rounded-xs">
-                    [{{ $activeStackObj['short_code'] ?? 'M1' }}] {{ $sectorCode }}
-                </span>
+            </div>
+
+            <!-- Dual-Mode Switcher: Retail Self-Dev vs Mitra Proyek Turnkey (Satu Pintu) -->
+            <div class="inline-flex p-0.5 bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs font-mono text-[10px]">
+                <button
+                    type="button"
+                    wire:click="switchEngagementMode('RETAIL_SELF_DEV')"
+                    class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $engagementMode === 'RETAIL_SELF_DEV' ? 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black' : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 font-bold' }}"
+                >
+                    Mode Retail (Self-Dev AI)
+                </button>
+                <button
+                    type="button"
+                    wire:click="switchEngagementMode('MITRA_TURNKEY_PROJECT')"
+                    class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $engagementMode === 'MITRA_TURNKEY_PROJECT' ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black' : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 font-bold' }}"
+                >
+                    Mode Mitra Proyek (Kontrak &amp; BAST)
+                </button>
             </div>
         </div>
 
-        <!-- Screen 3: Blueprint Doctor & Zero-Assumption Determinism Score -->
+        <!-- Screen 3: Blueprint Doctor + Scope Hash + Mitra RAB Badge -->
         <div class="flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+            <div class="hidden xl:flex items-center gap-1.5 px-2 py-1 bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs tabular-nums text-[10px]">
+                <span class="text-zinc-600 dark:text-zinc-400">Scope Hash:</span>
+                <code class="font-black text-zinc-950 dark:text-emerald-300">{{ $commercialQuotation['scope_hash_short'] ?? '-' }}</code>
+            </div>
+            @if($engagementMode === 'MITRA_TURNKEY_PROJECT')
+                <button
+                    type="button"
+                    wire:click="$set('centerTab', 'commercial_mitra')"
+                    class="px-2 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 rounded-xs font-black tabular-nums text-[10px] cursor-pointer"
+                >
+                    RAB: {{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }} &bull; {{ $commercialQuotation['timeline_days'] ?? 0 }} Hari
+                </button>
+            @endif
             <div class="flex items-center gap-1.5 px-2.5 py-1 border rounded-xs tabular-nums {{ $isZeroAssumptionReady ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700' : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700' }}">
                 <span class="font-black">Determinism Score: {{ $detScore }}%</span>
                 <span>{{ $isZeroAssumptionReady ? 'Zero-Assumption Ready ✅' : '⚠️ Celah Asumsi Terdeteksi' }}</span>
@@ -110,6 +138,27 @@
             </button>
         </div>
     </header>
+
+    <!-- =================================================================== -->
+    <!-- END-TO-END 5-STEP SATU PINTU CLIENT JOURNEY STEPPER                 -->
+    <!-- =================================================================== -->
+    <div class="shrink-0 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-3 py-1 flex items-center justify-between gap-2 overflow-x-auto font-mono text-[10px]">
+        <div class="flex items-center gap-1.5 whitespace-nowrap">
+            <span class="font-black text-emerald-900 dark:text-emerald-400 uppercase">ALUR SATU PINTU:</span>
+            <a href="/pricing" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500">01. Pilih Paket &amp; Sektor</a>
+            <span class="text-zinc-400">&rarr;</span>
+            <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black">02. Rakit 3-Pane Studio [AKTIF]</span>
+            <span class="text-zinc-400">&rarr;</span>
+            <button type="button" wire:click="$set('centerTab', 'commercial_mitra')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">03. Kunci SPK SHA-256 / Lisensi</button>
+            <span class="text-zinc-400">&rarr;</span>
+            <button type="button" wire:click="$set('rightDockMode', 'mcp_json')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">04. Live 7-Fase MCP ({{ $verifiedCount }}/7)</button>
+            <span class="text-zinc-400">&rarr;</span>
+            <button type="button" wire:click="$set('centerTab', 'commercial_mitra')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">05. UAT ({{ $uatChecklist['progress_percent'] ?? 0 }}%) &amp; BAST</button>
+        </div>
+        <a href="/customer/dashboard" class="whitespace-nowrap px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black hover:opacity-90">
+            Portal Klien &rarr;
+        </a>
+    </div>
 
     <!-- Optional Blueprint Doctor Warning Banner when Assumption Gap Exists -->
     @if(!empty($doctor['findings']))
@@ -232,7 +281,7 @@
                 <div class="text-emerald-900 dark:text-emerald-300">✓ 5 Historical *_snapshot Columns</div>
                 <div class="text-emerald-900 dark:text-emerald-300">✓ Zero CDN / Zero Capsule / Local SVG QR</div>
                 <div class="font-black text-zinc-950 dark:text-zinc-100 uppercase pt-1">&gt; 5. 4-Pillar AI &amp; MCP Sync</div>
-                <div class="text-zinc-700 dark:text-zinc-300">RAG pgvector + CAG + KAG + 21 Tools + SHA-256 Audit</div>
+                <div class="text-zinc-700 dark:text-zinc-300">RAG pgvector + CAG + KAG + 24 Tools + SHA-256 Audit</div>
             </div>
         </aside>
 
@@ -248,11 +297,12 @@
                     'ui_print' => '3. UI & Print',
                     'decisions' => '4. Decision Matrix',
                     'delta_verify' => '5. Delta v1.1 & Verify',
+                    'commercial_mitra' => '6. Kontrak, RAB & BAST',
                 ] as $tabKey => $tabLabel)
                     <button
                         type="button"
                         wire:click="$set('centerTab', '{{ $tabKey }}')"
-                        class="px-2.5 py-1 border rounded-xs cursor-pointer transition {{ $centerTab === $tabKey ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 dark:border-zinc-700 font-bold' }}"
+                        class="px-2.5 py-1 border rounded-xs cursor-pointer transition {{ $centerTab === $tabKey ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black' : ($tabKey === 'commercial_mitra' && $engagementMode === 'MITRA_TURNKEY_PROJECT' ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 dark:border-zinc-700 font-bold') }}"
                     >
                         {{ $tabLabel }}
                     </button>
@@ -517,6 +567,31 @@
                         </button>
 
                         @if(!empty($latestDeltaResult['surgical_delta_prompt']))
+                            @if(!empty($latestDeltaResult['paid_change_order']))
+                                @php $pco = $latestDeltaResult['paid_change_order']; @endphp
+                                <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-400 dark:border-emerald-700 rounded-xs flex flex-wrap items-center justify-between gap-2 font-mono text-[11px]">
+                                    <div>
+                                        <div class="font-black text-emerald-950 dark:text-emerald-200">
+                                            PAID CHANGE-ORDER ADDENDUM ({{ $latestDeltaResult['from_version'] }} &rarr; {{ $latestDeltaResult['to_version'] }})
+                                        </div>
+                                        <div class="text-zinc-800 dark:text-zinc-300 tabular-nums">
+                                            +{{ $pco['delta_man_hours'] }} Jam Kerja &bull; +{{ $pco['delta_working_days'] }} Hari Kerja &bull; <strong>{{ $pco['formatted_delta_quotation'] }}</strong>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        wire:click="approveStudioAddendum"
+                                        class="px-2.5 py-1 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black text-[10px] rounded-none cursor-pointer"
+                                    >
+                                        [ Setujui Addendum &amp; Bayar Invoice Delta ]
+                                    </button>
+                                </div>
+                            @endif
+                            @if(!empty($latestAddendumResult['midtrans_order_id']))
+                                <div class="p-2 bg-zinc-950 text-emerald-300 border border-emerald-600 font-mono text-[10px]">
+                                    ✓ Invoice Addendum Aktif: <strong>{{ $latestAddendumResult['midtrans_order_id'] }}</strong> ({{ $latestAddendumResult['formatted_delta_quotation'] }}) — Siap dibayar via Portal Klien / Midtrans Snap!
+                                </div>
+                            @endif
                             <pre class="p-2.5 bg-zinc-950 text-emerald-200 border border-zinc-800 rounded-xs text-[10px] font-mono overflow-x-auto max-h-52 studio-scroll">{{ $latestDeltaResult['surgical_delta_prompt'] }}</pre>
                         @endif
                     </div>
@@ -565,6 +640,172 @@
                                 <strong class="font-mono text-zinc-950 dark:text-zinc-100">{{ $rv['vector_id'] }}:</strong> {{ $rv['title'] }}
                             </div>
                         @endforeach
+                    </div>
+                @endif
+
+                <!-- TAB 6: MITRA COMMERCIAL BRIDGE (RAB, WBS, SPK SHA-256, MILESTONE & DIGITAL BAST) -->
+                @if($centerTab === 'commercial_mitra')
+                    <!-- 1. Algorithmic Scope-to-Quotation & WBS Estimator -->
+                    <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                            <div>
+                                <div class="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                                    1. ALGORITHMIC SCOPE-TO-QUOTATION &amp; WBS ESTIMATOR (ANTI-UNDERPRICING)
+                                </div>
+                                <div class="text-xs font-bold text-zinc-950 dark:text-zinc-100">
+                                    Estimasi Kontrak &amp; Jadwal Pengerjaan Tim Mitra Proyek (Satu Pintu)
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[11px] font-black tabular-nums rounded-none">
+                                Durasi: {{ $commercialQuotation['timeline_days'] ?? 0 }} Hari Kerja ({{ $commercialQuotation['stack_multiplier'] ?? 1 }}x Stack)
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono tabular-nums">
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs">
+                                <div class="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400">Total Beban Kerja</div>
+                                <div class="text-base font-black text-zinc-950 dark:text-zinc-100 mt-0.5">{{ $commercialQuotation['man_hours'] ?? 0 }} Jam</div>
+                                <div class="text-[9px] text-zinc-600 dark:text-zinc-400">{{ $commercialQuotation['formatted_man_hour_rate'] ?? '' }}</div>
+                            </div>
+                            <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-700 rounded-xs">
+                                <div class="text-[10px] font-bold uppercase text-emerald-900 dark:text-emerald-300">Nilai Proyek (RAB)</div>
+                                <div class="text-base font-black text-emerald-950 dark:text-emerald-200 mt-0.5">{{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }}</div>
+                                <div class="text-[9px] text-emerald-900 dark:text-emerald-300">{{ $commercialQuotation['counts']['tables'] ?? 0 }} Tabel &bull; {{ $commercialQuotation['counts']['states'] ?? 0 }} State &bull; {{ $commercialQuotation['counts']['locks'] ?? 0 }} Lock</div>
+                            </div>
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs">
+                                <div class="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400">Kunci Scope SPK</div>
+                                <div class="text-[11px] font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate">SHA256:{{ $commercialQuotation['scope_hash_short'] ?? '-' }}</div>
+                                <div class="text-[9px] text-zinc-600 dark:text-zinc-400">Anti-Scope Creep Seal</div>
+                            </div>
+                        </div>
+
+                        <!-- Termin Payment Schedule -->
+                        <div class="space-y-1.5">
+                            <div class="font-mono text-[10px] font-black uppercase text-zinc-800 dark:text-zinc-300">
+                                Tahapan Termin Pembayaran &amp; Milestone Serah Terima
+                            </div>
+                            @foreach(($commercialQuotation['termin_schedule'] ?? []) as $tItem)
+                                <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono tabular-nums">
+                                    <span class="text-zinc-900 dark:text-zinc-200">{{ $tItem['label'] }}</span>
+                                    <span class="font-black text-emerald-900 dark:text-emerald-300">{{ $tItem['formatted_amount'] }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <!-- Cryptographic Scope Freeze & Print Pack Actions -->
+                        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                            <button
+                                type="button"
+                                wire:click="freezeScopeAndIssueSpk"
+                                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[11px] font-black rounded-xs cursor-pointer"
+                            >
+                                🔒 Kunci Scope SHA-256 &amp; Terbitkan Kontrak SPK
+                            </button>
+                            @if($slug)
+                                <a href="{{ url('/blueprint/' . $slug . '/mitra-document/rab') }}" target="_blank" class="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs">
+                                    🖨️ Cetak RAB A4
+                                </a>
+                                <a href="{{ url('/blueprint/' . $slug . '/mitra-document/spk-appendix') }}" target="_blank" class="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs">
+                                    📜 Lampiran SPK SHA-256
+                                </a>
+                                <a href="{{ url('/blueprint/' . $slug . '/mitra-document/bast') }}" target="_blank" class="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs">
+                                    ✅ Cetak BAST &amp; UAT
+                                </a>
+                            @endif
+                        </div>
+
+                        @if(!empty($latestSpkResult['scope_hash_full']))
+                            <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-700 font-mono text-[10px] text-emerald-950 dark:text-emerald-200 space-y-1">
+                                <div class="font-black">✓ SCOPE TERKUNCI KRIPTOGRAFIS: {{ $latestSpkResult['document_title'] ?? '' }}</div>
+                                <div class="break-all">SHA-256: {{ $latestSpkResult['scope_hash_full'] }}</div>
+                                @if(!empty($latestSpkResult['sign_url']))
+                                    <div>
+                                        <a href="{{ $latestSpkResult['sign_url'] }}" target="_blank" class="underline font-black">Buka Halaman E-Sign Kontrak SPK &rarr;</a>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- 2. Phase-to-Milestone Gantt (7 Milestones) & Live Staging -->
+                    <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-2">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="font-mono text-[10px] font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                2. 7-MILESTONE LIVE TIMELINE &amp; STAGING PREVIEW ({{ $milestoneGantt['completion_percent'] ?? 0 }}%)
+                            </span>
+                            <span class="font-mono text-[10px] text-emerald-900 dark:text-emerald-300 truncate max-w-60">
+                                {{ $milestoneGantt['staging_url'] ?? '' }}
+                            </span>
+                        </div>
+                        <div class="space-y-1 font-mono text-[10px] tabular-nums">
+                            @foreach(($milestoneGantt['milestones'] ?? []) as $ms)
+                                <div class="p-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2">
+                                    <span class="truncate text-zinc-900 dark:text-zinc-200">{{ $ms['title'] }} ({{ $ms['working_days'] }}h)</span>
+                                    <span class="px-1.5 py-0.5 font-black whitespace-nowrap {{ $ms['status'] === 'VERIFIED' ? 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700' : 'bg-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-300' }}">
+                                        {{ $ms['badge'] }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- 3. Automated UAT Sign-Off (Given-When-Then) & Digital BAST -->
+                    <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-2.5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <div class="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                                    3. INTERACTIVE UAT CHECKLIST (GIVEN-WHEN-THEN) &amp; DIGITAL BAST
+                                </div>
+                                <div class="text-xs font-bold text-zinc-950 dark:text-zinc-100 tabular-nums">
+                                    Progres Uji Terima Klien: {{ $uatChecklist['passed_scenarios'] ?? 0 }}/{{ $uatChecklist['total_scenarios'] ?? 0 }} Skenario ({{ $uatChecklist['progress_percent'] ?? 0 }}%)
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                wire:click="toggleStudioUatScenario('ALL')"
+                                class="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-none cursor-pointer"
+                            >
+                                Centang Semua UAT
+                            </button>
+                        </div>
+
+                        <div class="space-y-1.5 max-h-56 overflow-y-auto studio-scroll pr-1">
+                            @foreach(($uatChecklist['scenarios'] ?? []) as $sc)
+                                <label class="flex items-start gap-2 p-2 border rounded-xs cursor-pointer {{ !empty($sc['passed']) ? 'bg-emerald-50 border-emerald-400 dark:bg-emerald-950/40 dark:border-emerald-700' : 'bg-zinc-50 border-zinc-200 dark:bg-zinc-950 dark:border-zinc-800' }}">
+                                    <input
+                                        type="checkbox"
+                                        wire:click="toggleStudioUatScenario('{{ $sc['id'] }}')"
+                                        @checked(!empty($sc['passed']))
+                                        class="mt-0.5 rounded-none"
+                                    />
+                                    <div class="text-[11px] leading-snug">
+                                        <div class="font-mono font-black text-zinc-950 dark:text-zinc-100">[{{ $sc['id'] }}] {{ $sc['title'] }}</div>
+                                        <div class="text-zinc-700 dark:text-zinc-300"><strong>Given:</strong> {{ $sc['given'] }} | <strong>When:</strong> {{ $sc['when'] }} | <strong class="text-emerald-900 dark:text-emerald-300">Then:</strong> {{ $sc['then'] }}</div>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+                            <input type="text" wire:model="bastSignerName" placeholder="Nama PIC Penandatangan BAST" class="px-2 py-1 text-xs font-mono bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xs" />
+                            <input type="email" wire:model="bastSignerEmail" placeholder="Email Resmi PIC Klien" class="px-2 py-1 text-xs font-mono bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xs" />
+                        </div>
+
+                        <button
+                            type="button"
+                            wire:click="signStudioDigitalBast"
+                            class="w-full py-2 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 font-mono text-xs font-black rounded-xs cursor-pointer"
+                        >
+                            ✍️ Sahkan UAT 100%, Terbitkan BAST Digital Resmi &amp; Tagihkan Termin Akhir
+                        </button>
+
+                        @if(!empty($bastSignoffState['bast_number']))
+                            <div class="p-2.5 bg-emerald-100 text-emerald-950 border border-emerald-500 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-600 font-mono text-[10px] space-y-1">
+                                <div class="font-black">🎉 BAST DIGITAL RESMI DITERBITKAN: {{ $bastSignoffState['bast_number'] }}</div>
+                                <div>Disahkan oleh: {{ $bastSignoffState['signer_name'] ?? '-' }} &bull; Termin Akhir: <strong>{{ $bastSignoffState['formatted_final_termin'] ?? '-' }}</strong></div>
+                                <div class="break-all">SHA-256 BAST Seal: {{ $bastSignoffState['bast_sha256'] ?? '-' }}</div>
+                            </div>
+                        @endif
                     </div>
                 @endif
             </div>

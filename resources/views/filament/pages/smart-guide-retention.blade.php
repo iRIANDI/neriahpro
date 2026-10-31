@@ -315,6 +315,9 @@
             <a href="#sec-lifecycle-studio" @click.prevent="scrollTo('sec-lifecycle-studio')" :class="activeSection === 'sec-lifecycle-studio' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 11. <span x-text="t[lang].nav_lifecycle_studio"></span>
             </a>
+            <a href="#sec-mitra-commercial-bridge" @click.prevent="scrollTo('sec-mitra-commercial-bridge')" :class="activeSection === 'sec-mitra-commercial-bridge' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                12. <span x-text="t[lang].nav_mitra_bridge"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -1218,6 +1221,112 @@
         </div>
     </div>
 
+    <!-- 12. Section Project OS v5.0 — Mitra Commercial-to-Code Bridge & Arsitektur Satu Pintu Retail vs Mitra -->
+    <div id="sec-mitra-commercial-bridge" class="sg-card" x-show="matchesSearch('mitra proyek commercial bridge rab wbs estimator man-hours spk pks sha-256 scope freeze paid change order addendum bast uat given-when-then satu pintu retail vs mitra wizard v5.0')">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #d97706; text-transform: uppercase; font-weight: 800;">
+                    12 // COMMERCIAL-TO-CODE BRIDGE &amp; SATU PINTU RETAIL VS MITRA (PROJECT OS v5.0)
+                </span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec12_title"></h3>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <a href="{{ url('/blueprint/studio?mode=mitra') }}" target="_blank" style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; padding: 6px 12px; background: #d97706; color: #ffffff; border: 1px solid #b45309; border-radius: 2px; text-decoration: none;">
+                    🤝 BUKA STUDIO MODE MITRA &rarr;
+                </a>
+                <span class="sg-badge-confidential">SATU PINTU v5.0</span>
+            </div>
+        </div>
+
+        <p style="font-size: 13px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;" x-text="t[lang].sec12_desc"></p>
+
+        <!-- 5 Mitra Commercial-to-Code Bridge Engines -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-bottom: 18px;">
+            @foreach(($fiveCommercialFeatures ?? []) as $cf)
+                <div class="sg-subcard" style="border-left: 3px solid #d97706;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <strong style="font-size: 12px; color: var(--sg-text-title);">{{ $cf['title']['id'] ?? $cf['code'] }}</strong>
+                        <span style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; padding: 2px 6px; background: rgba(245, 158, 11, 0.14); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.4);">
+                            {{ $cf['badge'] ?? 'MITRA BRIDGE' }}
+                        </span>
+                    </div>
+                    <div style="font-family: ui-monospace, monospace; font-size: 10px; color: #0284c7; font-weight: 700; margin-bottom: 6px;">
+                        Artefak Hukum/Keuangan: {{ $cf['artifact'] ?? '-' }}
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--sg-text-muted); line-height: 1.55;">
+                        {{ $cf['summary']['id'] ?? '' }}
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <!-- Satu Pintu Package Classification Table (Retail vs Mitra across 12 Sectors) -->
+        <div style="padding: 14px; background: var(--sg-subcard-bg); border: 1px solid var(--sg-border); border-radius: 3px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #059669; text-transform: uppercase;">
+                    KATALOG SATU PINTU (PRICING REGISTRY + MANAGESETTINGS) — 12 SEKTOR FUNGSIONAL RETAIL VS MITRA
+                </div>
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; color: var(--sg-text-muted);">
+                    Rate Estimator Aktif: <strong>Rp {{ number_format((int) ($estimatorConfig['man_hour_rate_idr'] ?? 350000), 0, ',', '.') }}/jam</strong> &bull; Termin: <strong>{{ $estimatorConfig['termin_scheme'] ?? '30_50_20' }}</strong>
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="sg-table" style="margin-top: 4px;">
+                    <thead>
+                        <tr>
+                            <th>Paket &amp; Kode</th>
+                            <th>Mode Jalur</th>
+                            <th>Harga Aktif (Satu Pintu)</th>
+                            <th>Cakupan 12 Sektor &amp; Stack</th>
+                            <th>Mesin v5.0 yang Terbuka</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(($satuPintuPackages ?? []) as $pkgCode => $pkgMeta)
+                            <tr>
+                                <td>
+                                    <strong style="color: var(--sg-text-title);">{{ $pkgMeta['name_id'] ?? $pkgCode }}</strong>
+                                    <div style="font-family: ui-monospace, monospace; font-size: 10px; color: var(--sg-text-muted);">{{ $pkgCode }}</div>
+                                </td>
+                                <td>
+                                    <span style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; padding: 2px 6px; border: 1px solid {{ ($pkgMeta['track_mode'] ?? '') === 'MITRA_TURNKEY_PROJECT' ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.45)' }}; color: {{ ($pkgMeta['track_mode'] ?? '') === 'MITRA_TURNKEY_PROJECT' ? '#d97706' : '#059669' }};">
+                                        {{ $pkgMeta['track_mode'] ?? 'RETAIL_SELF_DEV' }}
+                                    </span>
+                                </td>
+                                <td style="font-family: ui-monospace, monospace; font-weight: 800; color: var(--sg-text-title);">
+                                    {{ $pkgMeta['formatted_price'] ?? ('Rp ' . number_format((int) ($pkgMeta['resolved_price'] ?? 0), 0, ',', '.')) }}
+                                </td>
+                                <td style="font-size: 11px;">
+                                    {{ $pkgMeta['sector_scope'] ?? 'Semua 12 Sektor' }}<br>
+                                    <span style="font-family: ui-monospace, monospace; font-size: 10px; color: var(--sg-text-muted);">{{ $pkgMeta['stack_scope'] ?? 'M1–S2' }}</span>
+                                </td>
+                                <td style="font-size: 11px; color: var(--sg-text-muted);">
+                                    {{ implode(' • ', array_slice($pkgMeta['included_v5_engines'] ?? [], 0, 3)) }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 5-Step Guided Client Wizard -->
+        <div style="padding: 14px; background: var(--sg-subcard-bg); border: 1px solid var(--sg-border); border-radius: 3px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #0284c7; text-transform: uppercase; margin-bottom: 10px;">
+                ALUR WIZARD TERPANDU SATU PINTU (END-TO-END DARI /PRICING SAMPAI DIGITAL BAST)
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; font-size: 11px;">
+                @foreach(($guidedJourneySteps ?? []) as $gStep)
+                    <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                        <strong style="font-family: ui-monospace, monospace; color: #d97706;">0{{ $gStep['step'] }} // {{ $gStep['title']['id'] ?? '' }}</strong>
+                        <div style="font-family: ui-monospace, monospace; font-size: 10px; color: #059669; margin-top: 2px;">{{ $gStep['route'] ?? '' }}</div>
+                        <div style="color: var(--sg-text-muted); margin-top: 4px; line-height: 1.45;">{{ $gStep['desc']['id'] ?? '' }}</div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1241,6 +1350,7 @@ function smartGuideApp() {
                 nav_killer_moat: '6 Killer Moat',
                 nav_day2_ops: '8 Layer Day-2 Ops',
                 nav_lifecycle_studio: 'Day-30+ & 3-Pane Studio',
+                nav_mitra_bridge: 'Mitra Bridge & Satu Pintu',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -1339,7 +1449,9 @@ function smartGuideApp() {
                 sec10_title: '8 Lapisan Produksi Day-2 (Operasional Hari Kedua) & 10 Pilar Kesempurnaan Ultimate',
                 sec10_desc: 'Menutup 100% celah operasional dunia nyata setelah Go-Live: dari cetak struk kasir thermal 58/80mm, onboarding tenant otomatis bebas layar kosong, pembekuan harga historis (*_snapshot), impor massal CSV bertahap, pemisahan 4 antrean Redis, hingga Blueprint Doctor.',
                 sec11_title: '5 Mesin Retensi Siklus Hidup Day-30 s/d Day-365 & The 3-Pane Architect Studio',
-                sec11_desc: 'Mengubah Neriah Pro dari generator blueprint satu kali menjadi Control Plane seumur hidup: evolusi iteratif v1.0 ke v1.1 (sumber pendapatan kredit berulang!), jembatan Live MCP langsung ke IDE developer, Decision Matrix PHP match(), Phase 7 Red-Team Tenant Shield, serta meja kerja 3-Pane Studio 100vh.'
+                sec11_desc: 'Mengubah Neriah Pro dari generator blueprint satu kali menjadi Control Plane seumur hidup: evolusi iteratif v1.0 ke v1.1 (sumber pendapatan kredit berulang!), jembatan Live MCP langsung ke IDE developer, Decision Matrix PHP match(), Phase 7 Red-Team Tenant Shield, serta meja kerja 3-Pane Studio 100vh.',
+                sec12_title: '5 Jembatan Komersial-ke-Kode "Mitra Proyek" & Ekosistem Satu Pintu Retail vs Mitra (v5.0)',
+                sec12_desc: 'Menghilangkan 100% underpricing, sengketa scope creep, dan telat cairnya termin akhir: kalkulator RAB algoritmik dari jumlah tabel ULID + state machine + lock, pembekuan SPK SHA-256 otomatis, kalkulator Addendum Berbayar (v1.0 -> v1.1), 7 Milestone Gantt Live, serta UAT Given-When-Then & BAST Digital.'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -1353,6 +1465,7 @@ function smartGuideApp() {
                 nav_killer_moat: '6 Killer Moat',
                 nav_day2_ops: '8 Day-2 Ops Layers',
                 nav_lifecycle_studio: 'Day-30+ & 3-Pane Studio',
+                nav_mitra_bridge: 'Mitra Bridge & One-Stop',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -1451,7 +1564,9 @@ function smartGuideApp() {
                 sec10_title: 'The Final 8 Day-2 Production Layers & 10 Ultimate Perfection Pillars',
                 sec10_desc: 'Eliminates 100% of Day-2 post-launch blind spots: thermal 58/80mm & A4 print contracts, atomic tenant zero-state provisioning, historical *_snapshot immutability, staged bulk CSV migration, 4-lane Redis queues, private disk Signed URLs, and Blueprint Doctor.',
                 sec11_title: '5 Day-30 to Day-365 Lifecycle Retention Engines & The 3-Pane Architect Studio',
-                sec11_desc: 'Transforms Neriah Pro from a one-off blueprint generator into a permanent engineering Control Plane: iterative v1.0 -> v1.1 Delta Prompts (recurring credit monetization), Live MCP IDE Bridge, PHP match() Decision Tables, Phase 7 Red-Team Suite, and the 100vh 3-Pane Architect Studio.'
+                sec11_desc: 'Transforms Neriah Pro from a one-off blueprint generator into a permanent engineering Control Plane: iterative v1.0 -> v1.1 Delta Prompts (recurring credit monetization), Live MCP IDE Bridge, PHP match() Decision Tables, Phase 7 Red-Team Suite, and the 100vh 3-Pane Architect Studio.',
+                sec12_title: '5 Commercial-to-Code Bridges for Mitra Proyek & Unified Retail vs Mitra Architecture (v5.0)',
+                sec12_desc: 'Eliminates underpricing, scope creep disputes, and delayed final settlements: algorithmic RAB/WBS man-hour estimator, cryptographic SPK SHA-256 Scope Freeze, Paid Change-Order Addendum calculator, 7-Milestone Live Gantt, and interactive Given-When-Then UAT + Digital BAST.'
             }
         },
 
@@ -1479,7 +1594,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

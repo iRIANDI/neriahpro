@@ -69,7 +69,11 @@ class SmartGuideRetentionPage extends Page
             'finalEightLayers' => \App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary(),
             'tenPerfectionPillars' => \App\Support\PosDayTwoProductionCatalog::tenPerfectionPillars(),
             'fiveLifecycleFeatures' => \App\Support\PosLifecycleAndStudioCatalog::fiveLifecycleFeatures(),
-            'slopDiffPairs' => \App\Support\PosLifecycleAndStudioCatalog::slopDiffPairs(),
+            'slopDiffPairs' => \App\Support\PosLifecycleAndStudioCatalog::slopVsProjectOsDiffPairs(),
+            'fiveCommercialFeatures' => \App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures(),
+            'guidedJourneySteps' => \App\Services\PosCommercialBridgeService::guidedClientJourneySteps(),
+            'satuPintuPackages' => \App\Support\PricingRegistry::getSatuPintuCatalog(),
+            'estimatorConfig' => \App\Support\PricingRegistry::getCommercialEstimatorConfig(),
             'stackPresetsCount' => count(\App\Support\PosStackPresetCatalog::stackPresets()),
             'nativeToolsCount' => count(\App\Services\Ai\GeminiToolRegistry::getDeclarations()),
         ];

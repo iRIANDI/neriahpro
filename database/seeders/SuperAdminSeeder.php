@@ -44,6 +44,10 @@ class SuperAdminSeeder extends Seeder
         $connectMcpBridgePerm = Permission::firstOrCreate(['name' => 'connect_mcp_bridge', 'guard_name' => 'web']);
         $runRedteamPerm = Permission::firstOrCreate(['name' => 'run_redteam_security_suite', 'guard_name' => 'web']);
         $validateEnvPerm = Permission::firstOrCreate(['name' => 'validate_env_vault', 'guard_name' => 'web']);
+        $manageMitraQuotationsPerm = Permission::firstOrCreate(['name' => 'manage_mitra_quotations', 'guard_name' => 'web']);
+        $freezeScopeSpkPerm = Permission::firstOrCreate(['name' => 'freeze_blueprint_scope_spk', 'guard_name' => 'web']);
+        $approvePaidAddendumPerm = Permission::firstOrCreate(['name' => 'approve_paid_change_orders', 'guard_name' => 'web']);
+        $signOffUatBastPerm = Permission::firstOrCreate(['name' => 'signoff_uat_and_issue_bast', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
@@ -66,6 +70,10 @@ class SuperAdminSeeder extends Seeder
             $connectMcpBridgePerm,
             $runRedteamPerm,
             $validateEnvPerm,
+            $manageMitraQuotationsPerm,
+            $freezeScopeSpkPerm,
+            $approvePaidAddendumPerm,
+            $signOffUatBastPerm,
         ]);
 
         $developerRole->givePermissionTo([
@@ -83,6 +91,10 @@ class SuperAdminSeeder extends Seeder
             $connectMcpBridgePerm,
             $runRedteamPerm,
             $validateEnvPerm,
+            $manageMitraQuotationsPerm,
+            $freezeScopeSpkPerm,
+            $approvePaidAddendumPerm,
+            $signOffUatBastPerm,
         ]);
 
         // Grant Due Diligence Read-Only permissions to Investor & Superadmin
@@ -114,6 +126,9 @@ class SuperAdminSeeder extends Seeder
             $connectMcpBridgePerm,
             $runRedteamPerm,
             $validateEnvPerm,
+            $freezeScopeSpkPerm,
+            $approvePaidAddendumPerm,
+            $signOffUatBastPerm,
         ]);
 
         // 1. Primary Superadmin (Founder & Chief Architect - Yoseph Iriandi Tambunan)

@@ -71,6 +71,14 @@
             <td class="label">Status Pembayaran</td>
             <td>{{ $document->status === 'signed' ? 'DP TERKONFIRMASI / LUNAS' : 'MENUNGGU DP' }}</td>
         </tr>
+        @if(!empty($document->document_hash) || !empty($document->related?->document_sha256))
+        <tr>
+            <td class="label">SHA-256 Scope Hash</td>
+            <td colspan="3" style="font-family: monospace; font-size: 8.5px; color: #047857; word-break: break-all;">
+                <strong>{{ $document->document_hash ?: $document->related?->document_sha256 }}</strong>
+            </td>
+        </tr>
+        @endif
     </table>
 
     <div style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #111827; margin-bottom: 6px;">

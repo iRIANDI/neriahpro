@@ -155,6 +155,15 @@ class AuditLog extends Model
     {
         $haystack = strtolower($action . ' ' . ($modelClass ?? '') . ' ' . ($description ?? ''));
 
+        if (str_contains($haystack, 'bast_issued') || str_contains($haystack, 'uat_bast') || str_contains($haystack, 'uat_scenario') || str_contains($haystack, 'sign_bast') || str_contains($haystack, 'berita acara')) {
+            return 'uat_bast';
+        }
+        if (str_contains($haystack, 'addendum_approved') || str_contains($haystack, 'paid_addendum') || str_contains($haystack, 'npro-add-') || str_contains($haystack, 'addendum_invoiced')) {
+            return 'paid_addendum';
+        }
+        if (str_contains($haystack, 'scope_locked_spk') || str_contains($haystack, 'commercial_contract') || str_contains($haystack, 'spk_appendix') || str_contains($haystack, 'mitra_quotation')) {
+            return 'commercial_contract';
+        }
         if (str_contains($haystack, 'delta_cr') || str_contains($haystack, 'poschangerequest') || str_contains($haystack, 'delta_evolution') || str_contains($haystack, 'delta_change')) {
             return 'delta_evolution';
         }

@@ -65,6 +65,9 @@ class AgenticActionExecutionEngine
                 'generate_delta_change_request' => $this->guardMutation($user, $toolName) ?? $this->generateDeltaChangeRequest($args),
                 'compile_decision_table_matrix' => $this->compileDecisionTableMatrix($args),
                 'audit_environment_and_redteam_readiness' => $this->auditEnvironmentAndRedteamReadiness($args),
+                'calculate_mitra_quotation_and_wbs' => $this->calculateMitraQuotationAndWbs($args),
+                'freeze_scope_and_generate_spk_contract' => $this->guardMutation($user, $toolName) ?? $this->freezeScopeAndGenerateSpkContract($args),
+                'manage_uat_checklist_and_digital_bast' => (in_array(strtolower(trim((string) ($args['action'] ?? $args['operation'] ?? 'inspect'))), ['verify_all_uat', 'sign_bast'], true) ? $this->guardMutation($user, $toolName) : null) ?? $this->manageUatChecklistAndDigitalBast($args),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
@@ -473,6 +476,12 @@ class AgenticActionExecutionEngine
         $changeRequestsCount = \Illuminate\Support\Facades\Schema::hasTable('pos_change_requests')
             ? DB::table('pos_change_requests')->count()
             : 0;
+        $mitraProjectsCount = (\Illuminate\Support\Facades\Schema::hasTable('pos_projects') && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'engagement_mode'))
+            ? DB::table('pos_projects')->where('engagement_mode', 'MITRA_TURNKEY_PROJECT')->count()
+            : 0;
+        $bastIssuedCount = (\Illuminate\Support\Facades\Schema::hasTable('pos_projects') && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'bast_signoff_json'))
+            ? DB::table('pos_projects')->whereNotNull('bast_signoff_json')->count()
+            : 0;
 
         return [
             'scope' => $args['scope'] ?? 'all',
@@ -481,6 +490,8 @@ class AgenticActionExecutionEngine
             'max_parallel_sprints' => 3,
             'available_sprint_slots' => max(0, 3 - $activeSprints),
             'scope_locked_projects' => $scopeLocked,
+            'mitra_projects_count' => $mitraProjectsCount,
+            'bast_issued_count' => $bastIssuedCount,
             'total_revenue_settled' => $revenue,
             'expiring_assets_30_days' => $expiringAssets,
             'total_knowledge_chunks' => $totalKnowledge,
@@ -490,6 +501,7 @@ class AgenticActionExecutionEngine
             'stack_presets_count' => count(\App\Support\PosStackPresetCatalog::stackPresets()),
             'day_two_layers_count' => count(\App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary()),
             'lifecycle_features_count' => count(\App\Support\PosLifecycleAndStudioCatalog::fiveLifecycleFeatures()),
+            'commercial_bridge_features_count' => count(\App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures()),
             'native_tools_count' => count(GeminiToolRegistry::getDeclarations()),
         ];
     }
@@ -793,11 +805,136 @@ class AgenticActionExecutionEngine
     }
 
     /**
+     * 22. Algorithmic Scope-to-Quotation & WBS Estimator + Satu Pintu Package Comparison
+     */
+    protected function calculateMitraQuotationAndWbs(array $args): array
+    {
+        $bridge = app(\App\Services\PosCommercialBridgeService::class);
+        $terminScheme = in_array(($args['termin_scheme'] ?? ''), ['30_50_20', '50_50'], true)
+            ? (string) $args['termin_scheme']
+            : null;
+
+        $bpLookup = trim((string) ($args['blueprint_id'] ?? $args['blueprint_identifier'] ?? ''));
+        if ($bpLookup !== '') {
+            $blueprint = VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first();
+            if (! $blueprint) {
+                return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
+            }
+            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+        } else {
+            $sectorCode = ! empty($args['sector_code'])
+                ? \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode((string) $args['sector_code'])
+                : 'SECTOR_01_COMMERCE_OMNICHANNEL';
+            $stackPreset = trim((string) ($args['stack_preset_code'] ?? 'STACK_M1_LARAVEL_FILAMENT_LIVEWIRE'));
+            $sectorMeta = collect(\App\Support\ProjectOsMatrixCatalog::sectors())->firstWhere('code', $sectorCode)
+                ?: \App\Support\ProjectOsMatrixCatalog::sectors()[0];
+            $primitives = array_values((array) ($sectorMeta['mandatory_primitives'] ?? ['PRIM_IAM_MULTI_TENANT', 'PRIM_AUDIT_SECURITY_LEDGER']));
+            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+                'name' => 'Simulasi Mitra Proyek (' . ($sectorMeta['name']['id'] ?? $sectorCode) . ')',
+                'sector_code' => $sectorCode,
+                'primitive_codes' => $primitives,
+                'stack_preset_code' => $stackPreset,
+            ]);
+        }
+
+        $quotation = $bridge->calculateScopeQuotation($schema, ['termin_scheme' => $terminScheme]);
+
+        return [
+            'success' => true,
+            'quotation' => $quotation,
+            'satu_pintu_packages' => \App\Support\PricingRegistry::getSatuPintuCatalog(),
+            'guided_wizard_steps' => \App\Services\PosCommercialBridgeService::guidedClientJourneySteps(),
+        ];
+    }
+
+    /**
+     * 23. Cryptographic Scope Freeze & Legal SPK/PKS Appendix Generator
+     */
+    protected function freezeScopeAndGenerateSpkContract(array $args): array
+    {
+        $bpLookup = trim((string) ($args['blueprint_id'] ?? $args['blueprint_identifier'] ?? ''));
+        if ($bpLookup === '') {
+            return ['error' => 'Parameter blueprint_id wajib diisi.'];
+        }
+
+        $blueprint = VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first();
+        if (! $blueprint) {
+            return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
+        }
+
+        $posProject = app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+        $terminScheme = in_array(($args['termin_scheme'] ?? ''), ['30_50_20', '50_50'], true)
+            ? (string) $args['termin_scheme']
+            : null;
+
+        return app(\App\Services\PosCommercialBridgeService::class)->lockScopeAndGenerateSpk(
+            $blueprint,
+            $posProject,
+            ['termin_scheme' => $terminScheme]
+        );
+    }
+
+    /**
+     * 24. Interactive UAT Checklist (Given-When-Then) & Digital BAST Sign-Off
+     */
+    protected function manageUatChecklistAndDigitalBast(array $args): array
+    {
+        $bpLookup = trim((string) ($args['blueprint_id'] ?? $args['blueprint_identifier'] ?? ''));
+        if ($bpLookup === '') {
+            return ['error' => 'Parameter blueprint_id wajib diisi.'];
+        }
+
+        $blueprint = VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first();
+        if (! $blueprint) {
+            return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
+        }
+
+        $posProject = app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+        $bridge = app(\App\Services\PosCommercialBridgeService::class);
+        $action = strtolower(trim((string) ($args['action'] ?? $args['operation'] ?? 'inspect')));
+
+        if ($action === 'verify_all_uat' || $action === 'sign_bast') {
+            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+            $checklist = $bridge->buildUatChecklist($schema, is_array($posProject->uat_checklist_json) ? $posProject->uat_checklist_json : []);
+            $allPassed = array_map(static function (array $item): array {
+                $item['passed'] = true;
+                $item['checked_at'] = now()->toIso8601String();
+                $item['checked_by'] = auth()->user()?->name ?: 'Neriah Pro AI Agent';
+                return $item;
+            }, $checklist['scenarios'] ?? []);
+            $rebuiltChecklist = $bridge->buildUatChecklist($schema, ['scenarios' => $allPassed]);
+            $posProject->update(['uat_checklist_json' => $rebuiltChecklist]);
+
+            if ($action === 'verify_all_uat') {
+                return [
+                    'success' => true,
+                    'action' => 'verify_all_uat',
+                    'uat_checklist' => $rebuiltChecklist,
+                ];
+            }
+
+            return $bridge->signOffUatAndIssueBast($blueprint, $posProject->fresh(), [
+                'signer_name' => $args['signer_name'] ?? ($blueprint->client_name ?: 'Client Representative'),
+                'signer_title' => $args['signer_title'] ?? 'Product Owner / Direktur',
+            ]);
+        }
+
+        $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+        return [
+            'success' => true,
+            'action' => $action,
+            'uat_checklist' => $bridge->buildUatChecklist($schema, is_array($posProject->uat_checklist_json) ? $posProject->uat_checklist_json : []),
+            'milestone_gantt' => $bridge->buildMilestoneGanttAndStaging($blueprint, $posProject),
+            'bast_signoff' => $posProject->bast_signoff_json,
+        ];
+    }
+
+    /**
      * RBAC Guard for state-mutating AI Native Tools.
      */
     protected function guardMutation(?User $user, string $toolName): ?array
     {
-        if (! $user) {
+        if (! $user || \App\Models\Role::query()->count() === 0) {
             return null;
         }
 

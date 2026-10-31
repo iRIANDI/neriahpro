@@ -130,6 +130,12 @@ class ManageSettings extends Page implements HasForms
             'pricing_advisory_price' => '2.500.000',
             'pricing_mvp_price' => 'Custom Quotation',
             'pricing_umkm_price' => '7.500.000',
+            'mitra_man_hour_rate_idr' => '350.000',
+            'mitra_hours_per_table' => '4',
+            'mitra_hours_per_state' => '6',
+            'mitra_hours_per_lock' => '5',
+            'mitra_base_setup_hours' => '24',
+            'mitra_termin_scheme' => '30_50_20',
             'pricing_active_promo_banner' => 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!',
             'pricing_retail_spark_price' => '0',
             'pricing_retail_lite_price' => '99.000',
@@ -1092,6 +1098,47 @@ class ManageSettings extends Page implements HasForms
                                             ->helperText('Pesan promosi yang tampil di bagian atas halaman paket & harga.')
                                             ->default('Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!')
                                             ->columnSpanFull(),
+                                    ])->columns(3),
+
+                                Section::make('Kalkulator RAB Algoritmik & Termin Mitra Proyek (Satu Pintu v5.0)')
+                                    ->description('Parameter tunggal (Single Source of Truth) untuk menghitung RAB wajar anti-underpricing di /pricing, /blueprint/studio?mode=mitra, Lampiran SPK SHA-256, dan Invoice Addendum Berbayar.')
+                                    ->schema([
+                                        TextInput::make('mitra_man_hour_rate_idr')
+                                            ->label('Tarif Engineer Senior per Man-Hour (Rp)')
+                                            ->helperText('Dipakai otomatis menghitung RAB berdasarkan Tabel ULID + State Machine + Concurrency Lock.')
+                                            ->prefix('Rp')
+                                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                            ->stripCharacters([',', '.'])
+                                            ->default('350.000')
+                                            ->required(),
+                                        TextInput::make('mitra_hours_per_table')
+                                            ->label('Bobot Jam / Tabel Strict ULID')
+                                            ->numeric()
+                                            ->default('4')
+                                            ->required(),
+                                        TextInput::make('mitra_hours_per_state')
+                                            ->label('Bobot Jam / Transisi State Machine')
+                                            ->numeric()
+                                            ->default('6')
+                                            ->required(),
+                                        TextInput::make('mitra_hours_per_lock')
+                                            ->label('Bobot Jam / Pessimistic Concurrency Lock')
+                                            ->numeric()
+                                            ->default('5')
+                                            ->required(),
+                                        TextInput::make('mitra_base_setup_hours')
+                                            ->label('Base DevOps, Docker & Red-Team Setup (Jam)')
+                                            ->numeric()
+                                            ->default('24')
+                                            ->required(),
+                                        Select::make('mitra_termin_scheme')
+                                            ->label('Skema Termin Pembayaran Kontrak Mitra')
+                                            ->options([
+                                                '30_50_20' => '30% DP Kickoff [Fase 1-2] • 50% Staging [Fase 3-5] • 20% BAST [Fase 6-7]',
+                                                '50_50' => '50% DP Kickoff [Fase 1-4] • 50% Pelunasan BAST [Fase 5-7]',
+                                            ])
+                                            ->default('30_50_20')
+                                            ->required(),
                                     ])->columns(3),
 
                                 Section::make('Paket Eceran Project OS Self-Service (Micro-SaaS & Retail)')

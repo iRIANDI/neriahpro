@@ -141,6 +141,9 @@ export default function ArchitecturePricingIsland({
 
   const [selectedSectorIdx, setSelectedSectorIdx] = useState(0);
   const [activeSlopDiffIdx, setActiveSlopDiffIdx] = useState(0);
+  const [wizardMode, setWizardMode] = useState('RETAIL_SELF_DEV'); // 'RETAIL_SELF_DEV' | 'MITRA_TURNKEY_PROJECT'
+  const [wizardStackCode, setWizardStackCode] = useState('STACK_M1_LARAVEL_MONOLITH');
+  const [showSatuPintuWizard, setShowSatuPintuWizard] = useState(true);
 
   useEffect(() => {
     const handleHash = () => {
@@ -922,6 +925,321 @@ export default function ArchitecturePricingIsland({
               </p>
             </div>
 
+            {/* 1.5 SATU PINTU END-TO-END GUIDED WIZARD & LIVE ALGORITHMIC RAB SIMULATOR (V5.0) */}
+            {(() => {
+              const parseCleanInt = (val, fallback) => {
+                const n = parseInt(String(val ?? '').replace(/\D+/g, ''), 10);
+                return Number.isFinite(n) && n > 0 ? n : fallback;
+              };
+              const parseCleanFloat = (val, fallback) => {
+                const n = parseFloat(String(val ?? '').replace(/[^0-9.]+/g, ''));
+                return Number.isFinite(n) && n > 0 ? n : fallback;
+              };
+              const formatIdrPlain = (num) => new Intl.NumberFormat('id-ID').format(Math.round(num));
+
+              const sectorComplexityMap = [
+                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 8, states: 6, locks: 3, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 12, states: 9, locks: 4, integrations: 3, recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
+                { tables: 11, states: 8, locks: 5, integrations: 3, recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
+                { tables: 11, states: 8, locks: 3, integrations: 2, recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
+                { tables: 10, states: 9, locks: 3, integrations: 3, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 8, states: 6, locks: 2, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 8, states: 6, locks: 2, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 9, states: 7, locks: 2, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
+                { tables: 10, states: 8, locks: 3, integrations: 3, recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
+                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+              ];
+
+              const wizardSector = SECTORAL_ARCHETYPES_SHOWCASE[selectedSectorIdx] || SECTORAL_ARCHETYPES_SHOWCASE[0];
+              const comp = sectorComplexityMap[selectedSectorIdx] || sectorComplexityMap[0];
+
+              const stackOptions = [
+                { code: 'STACK_M1_LARAVEL_MONOLITH', short: 'M1 Monolith (1.0x)', mult: 1.0, desc: 'Laravel 13 + Filament v5 + Livewire 4 + PG 16' },
+                { code: 'STACK_D1_LARAVEL_NEXTJS', short: 'D1 Decoupled (1.25x)', mult: 1.25, desc: 'Laravel 13 API + Next.js 15 App Router + OpenAPI' },
+                { code: 'STACK_S1_POLYGLOT_CORE', short: 'S1 Polyglot (1.5x)', mult: 1.5, desc: 'Go/Rust High-Throughput Core + Laravel Control Plane' },
+              ];
+              const activeStack = stackOptions.find((s) => s.code === wizardStackCode) || stackOptions[0];
+
+              const hourlyRate = parseCleanInt(pricingSettings.mitra_man_hour_rate_idr, 350000);
+              const hrsTable = parseCleanFloat(pricingSettings.mitra_hours_per_table, 4.0);
+              const hrsState = parseCleanFloat(pricingSettings.mitra_hours_per_state, 3.0);
+              const hrsLock = parseCleanFloat(pricingSettings.mitra_hours_per_lock, 6.0);
+              const baseSetupHours = parseCleanFloat(pricingSettings.mitra_base_setup_hours, 24.0);
+              const terminScheme = pricingSettings.mitra_termin_scheme || '30_50_20';
+
+              const rawHours = baseSetupHours + (comp.tables * hrsTable) + (comp.states * hrsState) + (comp.locks * hrsLock) + (comp.integrations * 8.0);
+              const totalHours = Math.round(rawHours * activeStack.mult);
+              const workingDays = Math.max(10, Math.ceil(totalHours / 7));
+              const estimatedRabIdr = Math.round((totalHours * hourlyRate) / 50000) * 50000;
+              const dp30 = Math.round(estimatedRabIdr * (terminScheme === '50_50' ? 0.5 : 0.3));
+              const milestone50 = terminScheme === '50_50' ? 0 : Math.round(estimatedRabIdr * 0.5);
+              const finalBast = estimatedRabIdr - dp30 - milestone50;
+
+              return (
+                <div className="max-w-7xl mx-auto mb-8 px-2 sm:px-4">
+                  <div className="border-2 border-zinc-900 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-none shadow-xs">
+                    {/* Top Satu Pintu Bar */}
+                    <div className="px-4 sm:px-6 py-3 bg-zinc-950 text-white dark:bg-zinc-950 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] font-black uppercase tracking-wider">
+                        <span className="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black">SATU PINTU WIZARD v5.0</span>
+                        <span>{isEn ? 'GUIDED CLIENT PATH: RETAIL SELF-DEV VS TURNKEY MITRA PROYEK' : 'PANDUAN KLIEN DARI AWAL SAMPAI AKHIR: RETAIL MANDIRI VS MITRA PROYEK'}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowSatuPintuWizard((v) => !v)}
+                        className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-mono text-[10px] font-black uppercase rounded-none cursor-pointer"
+                      >
+                        {showSatuPintuWizard ? (isEn ? 'Minimize Wizard ▲' : 'Ringkas Wizard ▲') : (isEn ? 'Expand Guided Wizard ▼' : 'Buka Panduan & Simulasi RAB ▼')}
+                      </button>
+                    </div>
+
+                    {/* 5-Step End-to-End Journey Strip */}
+                    <div className="grid grid-cols-2 sm:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-zinc-200 dark:divide-zinc-800 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 font-mono text-[10px]">
+                      {[
+                        { step: '01', label: isEn ? 'Choose Path & Sector' : 'Pilih Jalur & 12 Sektor', active: true },
+                        { step: '02', label: isEn ? '26-Param Blueprint & 3-Pane Studio' : '26 Parameter & 3-Pane Studio', active: false },
+                        { step: '03', label: isEn ? 'Instant License / SPK SHA-256 Lock' : 'Lisensi Instan / Kunci SPK SHA-256', active: false },
+                        { step: '04', label: isEn ? '7-Phase Prompts / Live Staging' : '7 Fase AI / Gantt & Live Staging', active: false },
+                        { step: '05', label: isEn ? 'Verify.sh / Interactive UAT & BAST' : 'Verify.sh / UAT & BAST Digital', active: false },
+                      ].map((st) => (
+                        <div key={st.step} className={`px-3 py-2 flex items-center gap-2 ${st.active ? 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200 font-black' : 'text-zinc-700 dark:text-zinc-400 font-bold'}`}>
+                          <span className={`px-1.5 py-0.5 border ${st.active ? 'bg-zinc-950 text-emerald-400 border-zinc-950 dark:bg-emerald-400 dark:text-zinc-950 dark:border-emerald-400' : 'bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700'}`}>
+                            {st.step}
+                          </span>
+                          <span className="leading-tight">{st.label}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {showSatuPintuWizard && (
+                      <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                        {/* Left Column: Step 1 & Step 2 Controls */}
+                        <div className="lg:col-span-7 space-y-4">
+                          <div>
+                            <div className="font-mono text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1.5">
+                              {isEn ? 'STEP A — WHO WRITES THE APPLICATION CODE?' : 'LANGKAH A — SIAPA YANG MENGODING APLIKASI ANDA?'}
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setWizardMode('RETAIL_SELF_DEV');
+                                  setPricingSectionTab('retail');
+                                }}
+                                className={`p-3 text-left border-2 transition rounded-none cursor-pointer ${wizardMode === 'RETAIL_SELF_DEV'
+                                  ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950/80 dark:text-white dark:border-emerald-500'
+                                  : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800/80 dark:text-zinc-100 dark:border-zinc-800'
+                                  }`}
+                              >
+                                <div className="flex items-center justify-between gap-2 font-mono text-[10px] font-black uppercase">
+                                  <span className={wizardMode === 'RETAIL_SELF_DEV' ? 'text-emerald-400' : 'text-emerald-800 dark:text-emerald-400'}>⚡ VERSI RETAIL</span>
+                                  <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 dark:bg-emerald-900 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700">Rp 0 – Rp {pricingSettings.retail_ultimate_price || '1.490.000'}</span>
+                                </div>
+                                <div className="font-bold text-xs mt-1">
+                                  {isEn ? 'Self-Service Blueprint & IDE Kit' : 'Koding Mandiri / Tim Developer Sendiri'}
+                                </div>
+                                <p className={`text-[11px] mt-0.5 leading-snug ${wizardMode === 'RETAIL_SELF_DEV' ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                                  {isEn ? 'Instant PRD, ULID SQL, 7-Phase AI Prompts, Decision Matrix & Live MCP.' : 'Unduh instan PRD 26 Parameter, SQL ULID, 7-Fase Prompt AI, CLI /init & Live MCP.'}
+                                </p>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setWizardMode('MITRA_TURNKEY_PROJECT');
+                                  setPricingSectionTab('project');
+                                }}
+                                className={`p-3 text-left border-2 transition rounded-none cursor-pointer ${wizardMode === 'MITRA_TURNKEY_PROJECT'
+                                  ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-amber-950/70 dark:text-white dark:border-amber-500'
+                                  : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800/80 dark:text-zinc-100 dark:border-zinc-800'
+                                  }`}
+                              >
+                                <div className="flex items-center justify-between gap-2 font-mono text-[10px] font-black uppercase">
+                                  <span className={wizardMode === 'MITRA_TURNKEY_PROJECT' ? 'text-amber-300' : 'text-amber-900 dark:text-amber-300'}>🤝 VERSI MITRA PROYEK</span>
+                                  <span className="px-1.5 py-0.5 bg-amber-100 text-amber-950 dark:bg-amber-900/80 dark:text-amber-200 border border-amber-400 dark:border-amber-700">TURNKEY SLA</span>
+                                </div>
+                                <div className="font-bold text-xs mt-1">
+                                  {isEn ? '100% Coded by Neriah Pro Studio' : 'Terima Beres 100% Dikodingkan Neriah Pro'}
+                                </div>
+                                <p className={`text-[11px] mt-0.5 leading-snug ${wizardMode === 'MITRA_TURNKEY_PROJECT' ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                                  {isEn ? 'Algorithmic Fair RAB, SPK SHA-256 Lock, Live Staging, UAT & Digital BAST.' : 'RAB Algoritmik Fair, Kontrak SPK SHA-256, Live Staging, Checklist UAT & BAST Digital.'}
+                                </p>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block font-mono text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                                {isEn ? 'STEP B — SELECT BUSINESS SECTOR (12 TAXONOMIES)' : 'LANGKAH B — PILIH SEKTOR BISNIS (12 SEKTOR)'}
+                              </label>
+                              <select
+                                value={selectedSectorIdx}
+                                onChange={(e) => setSelectedSectorIdx(Number(e.target.value))}
+                                className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-xs font-bold rounded-none focus:border-emerald-500 outline-none"
+                              >
+                                {SECTORAL_ARCHETYPES_SHOWCASE.map((sec, sIdx) => (
+                                  <option key={sec.code} value={sIdx}>
+                                    #{sec.num} — {sec.name} ({sec.primary})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block font-mono text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                                {isEn ? 'STEP C — ARCHITECTURE TOPOLOGY PRESET' : 'LANGKAH C — TOPOLOGI ARSITEKTUR SISTEM'}
+                              </label>
+                              <div className="grid grid-cols-3 gap-1.5">
+                                {stackOptions.map((st) => {
+                                  const active = st.code === wizardStackCode;
+                                  return (
+                                    <button
+                                      key={st.code}
+                                      type="button"
+                                      onClick={() => setWizardStackCode(st.code)}
+                                      className={`px-2 py-2 border font-mono text-[10px] font-black uppercase rounded-none transition cursor-pointer ${active
+                                        ? 'bg-zinc-950 text-emerald-400 border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-500'
+                                        : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-800 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+                                        }`}
+                                      title={st.desc}
+                                    >
+                                      {st.short}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
+                            <span className="font-bold text-zinc-800 dark:text-zinc-200">
+                              UI Cockpit: <strong className="text-emerald-800 dark:text-emerald-400">{wizardSector.primary}</strong> &bull; Seeder: <strong>{wizardSector.seeder}</strong>
+                            </span>
+                            <span className="px-2 py-0.5 bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200 font-black text-[10px]">
+                              {comp.tables} ULID Tables &bull; {comp.states} States &bull; {comp.locks} Locks
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Right Column: Satu Pintu Live Recommendation & 1-Click Guided Launch */}
+                        <div className="lg:col-span-5 border-2 border-emerald-500/80 dark:border-emerald-600 bg-zinc-50 dark:bg-zinc-950 p-4 flex flex-col justify-between">
+                          {wizardMode === 'RETAIL_SELF_DEV' ? (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
+                                  RETAIL SELF-DEV // SATU PINTU
+                                </span>
+                                <span className="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400">
+                                  100% {isEn ? 'Instant Digital License' : 'Lisensi Digital Instan'}
+                                </span>
+                              </div>
+                              <div>
+                                <div className="text-[11px] font-mono text-zinc-600 dark:text-zinc-400 uppercase font-bold">
+                                  {isEn ? 'Recommended Competitive Retail Tier:' : 'Rekomendasi Paket Retail Paling Kompetitif:'}
+                                </div>
+                                <div className="text-lg sm:text-xl font-black font-mono text-zinc-950 dark:text-white mt-0.5">
+                                  {comp.retailLabel}
+                                </div>
+                                <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1 leading-relaxed">
+                                  {isEn
+                                    ? `Includes ${wizardSector.primary} Industrial Cockpit, ${comp.tables} PostgreSQL Strict ULID tables, 7-Phase Sequencer, Decision Matrix match(), and Live MCP Bridge.`
+                                    : `Sudah memuat kontrak UI ${wizardSector.primary}, ${comp.tables} tabel PostgreSQL Strict ULID, 7-Fase Prompt AI, Decision Matrix match(), & Live MCP Bridge.`}
+                                </p>
+                              </div>
+                              <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                                <a
+                                  href={`/blueprint?track=retail&tier=${comp.recommendedRetail}&sector=${wizardSector.code}&stack=${wizardStackCode}`}
+                                  className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 rounded-none transition text-center"
+                                >
+                                  <span>{isEn ? '1. Start Guided 26-Param Wizard →' : '1. Mulai Wizard 26 Parameter Sektor Ini →'}</span>
+                                </a>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <a
+                                    href={`/blueprint/studio?mode=retail&sector=${wizardSector.code}&stack=${wizardStackCode}`}
+                                    className="py-2 px-2.5 bg-zinc-950 hover:bg-zinc-800 text-emerald-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 font-mono text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 rounded-none border border-zinc-800 dark:border-zinc-700 text-center"
+                                  >
+                                    <span>🖥️ 3-Pane Studio</span>
+                                  </a>
+                                  <button
+                                    type="button"
+                                    onClick={() => openRetailModal(comp.recommendedRetail === 'ultimate' ? 'retail_ultimate' : 'retail_pro')}
+                                    className="py-2 px-2.5 bg-white hover:bg-zinc-100 text-zinc-950 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 font-mono text-[10px] font-black uppercase tracking-wider border border-zinc-300 dark:border-zinc-700 rounded-none cursor-pointer"
+                                  >
+                                    <span>💳 {isEn ? 'Instant License' : 'Beli Lisensi'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black uppercase">
+                                  MITRA TURNKEY // ALGORITHMIC RAB
+                                </span>
+                                <span className="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400">
+                                  Rp {formatIdrPlain(hourlyRate)}/jam &bull; {activeStack.mult}x
+                                </span>
+                              </div>
+                              <div>
+                                <div className="flex items-baseline justify-between gap-2">
+                                  <span className="text-xl sm:text-2xl font-black font-mono text-zinc-950 dark:text-white">
+                                    Rp {formatIdrPlain(estimatedRabIdr)}
+                                  </span>
+                                  <span className="font-mono text-[11px] font-black text-emerald-800 dark:text-emerald-400">
+                                    {totalHours} Jam ({workingDays} Hari Kerja)
+                                  </span>
+                                </div>
+                                <div className="mt-2 grid grid-cols-3 gap-1.5 font-mono text-[10px]">
+                                  <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
+                                    <div className="text-zinc-500 font-bold">{terminScheme === '50_50' ? 'DP 50%' : 'DP 30% [F1-2]'}</div>
+                                    <div className="font-black text-zinc-950 dark:text-zinc-100">Rp {formatIdrPlain(dp30)}</div>
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
+                                    <div className="text-zinc-500 font-bold">{terminScheme === '50_50' ? 'Staging [F3-5]' : 'Termin 50% [F3-5]'}</div>
+                                    <div className="font-black text-zinc-950 dark:text-zinc-100">{terminScheme === '50_50' ? 'Included' : `Rp ${formatIdrPlain(milestone50)}`}</div>
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
+                                    <div className="text-zinc-500 font-bold">{terminScheme === '50_50' ? 'BAST 50%' : 'BAST 20% [F6-7]'}</div>
+                                    <div className="font-black text-emerald-800 dark:text-emerald-400">Rp {formatIdrPlain(finalBast)}</div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                                <a
+                                  href={`/blueprint/studio?mode=mitra&sector=${wizardSector.code}&stack=${wizardStackCode}`}
+                                  className="w-full py-2.5 px-3 bg-zinc-950 hover:bg-zinc-800 text-amber-300 dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 rounded-none transition text-center"
+                                >
+                                  <span>{isEn ? '1. Open Mitra Studio (RAB, SPK & UAT) →' : '1. Buka Studio Mitra (RAB, SPK & UAT) →'}</span>
+                                </a>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <a
+                                    href={`/blueprint?track=mitra&sector=${wizardSector.code}&stack=${wizardStackCode}`}
+                                    className="py-2 px-2.5 bg-white hover:bg-zinc-100 text-zinc-950 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 font-mono text-[10px] font-black uppercase tracking-wider border border-zinc-300 dark:border-zinc-700 rounded-none text-center"
+                                  >
+                                    <span>📐 Wizard 26 Param</span>
+                                  </a>
+                                  <button
+                                    type="button"
+                                    onClick={() => openBookingModal('full_mvp')}
+                                    className="py-2 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[10px] font-black uppercase tracking-wider rounded-none cursor-pointer"
+                                  >
+                                    <span>🗓️ Kunci Slot Sprint</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* 2. DYNAMIC 5-TAB NAVIGATION SWITCHER (RETAIL | STUDIO | 12-SECTOR UI & KILLER OS | MATRIX | FAQ) */}
             <div className="flex justify-center mb-8 sm:mb-10 w-full px-2 sm:px-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 p-1.5 bg-zinc-100 dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs font-mono text-xs w-full max-w-7xl gap-1.5 sm:gap-2">
@@ -931,28 +1249,28 @@ export default function ArchitecturePricingIsland({
                     id: 'retail',
                     num: '01',
                     title: isEn ? 'Retail Packages' : 'Paket Retail',
-                    sub: 'SELF-SERVICE',
+                    sub: 'SELF-DEV V5.0',
                     icon: ShoppingBag,
                   },
                   {
                     id: 'project',
                     num: '02',
-                    title: isEn ? 'Studio Packages' : 'Paket Studio',
-                    sub: 'TURNKEY',
+                    title: isEn ? 'Mitra & Studio' : 'Mitra & Studio',
+                    sub: 'TURNKEY V5.0',
                     icon: Rocket,
                   },
                   {
                     id: 'sectoral',
                     num: '03',
                     title: isEn ? '12-Sector UI & Killer OS' : '12 Sektor UI & Killer OS',
-                    sub: 'ANTI-SLOP V4.0',
+                    sub: 'ANTI-SLOP V5.0',
                     icon: Terminal,
                   },
                   {
                     id: 'matrix',
                     num: '04',
                     title: isEn ? 'Comparison Matrix' : 'Matriks Perbandingan',
-                    sub: isEn ? '10 PILLARS + V4.0' : '10 PILAR + V4.0',
+                    sub: isEn ? '10 PILLARS + V5.0' : '10 PILAR + V5.0',
                     icon: Layers,
                   },
                   {
@@ -1547,20 +1865,24 @@ export default function ArchitecturePricingIsland({
                       <div className="mb-5 p-3.5 bg-emerald-500/5 border border-emerald-500/30 space-y-2">
                         <div className="flex items-baseline justify-between">
                           <span className="text-xl sm:text-2xl font-black font-mono text-zinc-900 dark:text-white">
-                            Custom Quotation
+                            {isEn ? 'Algorithmic Fair RAB' : 'RAB Algoritmik Transparan'}
                           </span>
-                          <span className="text-[10px] font-mono text-zinc-500">{isEn ? 'Enterprise Scope' : 'Scope Enterprise'}</span>
+                          <span className="text-[10px] font-mono font-black text-emerald-800 dark:text-emerald-400">
+                            Rp {pricingSettings.mitra_man_hour_rate_idr ? new Intl.NumberFormat('id-ID').format(parseInt(String(pricingSettings.mitra_man_hour_rate_idr).replace(/\D+/g, ''), 10) || 350000) : '350.000'}/jam
+                          </span>
                         </div>
                         <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between text-xs font-mono">
-                          <span className="text-emerald-700 dark:text-emerald-300 font-bold">
-                            {isEn ? 'Staged Milestones:' : 'Termin Pembayaran:'}
+                          <span className="text-emerald-800 dark:text-emerald-300 font-bold">
+                            {isEn ? 'Protected Milestones:' : 'Termin Terproteksi:'}
                           </span>
-                          <span className="font-black text-emerald-800 dark:text-emerald-400">
-                            {isEn ? 'DP 50% & UAT Sign-off' : 'DP 50% & Pelunasan Pasca-UAT'}
+                          <span className="font-black text-emerald-900 dark:text-emerald-400">
+                            {(pricingSettings.mitra_termin_scheme || '30_50_20') === '50_50'
+                              ? (isEn ? '50% DP & 50% BAST' : '50% DP & 50% BAST')
+                              : (isEn ? '30% DP • 50% Staging • 20% BAST' : '30% DP • 50% Staging • 20% BAST')}
                           </span>
                         </div>
-                        <div className="text-[10px] font-mono text-zinc-500">
-                          &bull; {isEn ? 'Remaining 50% settled after UAT & live deployment' : 'Pelunasan sisa 50% setelah UAT & aplikasi live di VPS'}
+                        <div className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400">
+                          &bull; {isEn ? 'Exact cost derived from ULID tables, state machines & stack multiplier (zero guesswork)' : 'Dihitung matematis dari jumlah tabel ULID, state machine & pengali topologi (anti mark-up buta)'}
                         </div>
                       </div>
 
@@ -1730,6 +2052,81 @@ export default function ArchitecturePricingIsland({
                         </a>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* 5 COMMERCIAL-TO-CODE BRIDGES FOR VERSI MITRA PROYEK V5.0 */}
+                <div className="mt-8 border-2 border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-none">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-4 border-b border-zinc-200 dark:border-zinc-800">
+                    <div>
+                      <span className="font-mono text-[10px] font-black uppercase tracking-widest text-amber-900 dark:text-amber-300">
+                        PROJECT OS V5.0 // 5 COMMERCIAL-TO-CODE BRIDGES (VERSI MITRA PROYEK)
+                      </span>
+                      <h3 className="text-base sm:text-lg font-black uppercase text-zinc-950 dark:text-white mt-0.5">
+                        {isEn
+                          ? '5 Legal & Engineering Protections Connecting Client Quotation to Live Code'
+                          : '5 Jembatan Komersial & Hukum: Anti-Underpricing, Anti-Scope-Creep & BAST Digital'}
+                      </h3>
+                    </div>
+                    <a
+                      href="/blueprint/studio?mode=mitra"
+                      className="px-3.5 py-2 bg-zinc-950 hover:bg-zinc-800 text-amber-300 dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider rounded-none transition shrink-0 text-center"
+                    >
+                      {isEn ? 'Try Mitra Mode in 3-Pane Studio →' : 'Coba Mode Mitra di 3-Pane Studio →'}
+                    </a>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+                    {[
+                      {
+                        num: '01',
+                        title: isEn ? 'Algorithmic RAB & WBS' : 'Algorithmic RAB & WBS',
+                        desc: isEn
+                          ? 'Computes Man-Hours, Working Days & 3-Stage Termin mathematically from ULID tables, states, locks & topology multiplier.'
+                          : 'Menghitung Man-Hours, Hari Kerja & Termin 30/50/20 otomatis dari jumlah tabel ULID, state machine & pengali topologi.',
+                      },
+                      {
+                        num: '02',
+                        title: isEn ? 'SPK SHA-256 Scope Freeze' : 'SPK SHA-256 Scope Freeze',
+                        desc: isEn
+                          ? 'Seals Blueprint v1.0 with a cryptographic SHA-256 hash printed directly inside the official A4 SPK/PKS appendix.'
+                          : 'Mengunci Blueprint v1.0 dengan segel SHA-256 yang tercetak langsung pada Lampiran Teknis SPK/PKS A4 resmi.',
+                      },
+                      {
+                        num: '03',
+                        title: isEn ? 'Paid Delta Addendum v1.1' : 'Addendum Berbayar v1.1',
+                        desc: isEn
+                          ? 'Mid-sprint feature requests auto-calculate Delta Man-Hours & generate official Midtrans Addendum Invoices (NPRO-ADD).'
+                          : 'Tambahan fitur di tengah jalan otomatis menghitung selisih jam kerja & menerbitkan Invoice Addendum Midtrans resmi.',
+                      },
+                      {
+                        num: '04',
+                        title: isEn ? '7-Milestone Gantt & Staging' : '7-Milestone Gantt & Staging',
+                        desc: isEn
+                          ? 'Syncs Phases 1–7 from IDE MCP directly into Client Milestones with real-time progress & Live Staging URL.'
+                          : 'Menyinkronkan Fase 1–7 dari MCP IDE langsung ke 7 Milestone Klien beserta URL Live Staging secara real-time.',
+                      },
+                      {
+                        num: '05',
+                        title: isEn ? 'Interactive UAT & Digital BAST' : 'Checklist UAT & BAST Digital',
+                        desc: isEn
+                          ? 'Turns Given-When-Then acceptance criteria into a client sign-off checklist that issues Digital BAST & Final Invoice.'
+                          : 'Mengubah matriks Given-When-Then menjadi checklist UAT klien; saat 100% lolos otomatis menerbitkan BAST Digital resmi.',
+                      },
+                    ].map((bridge) => (
+                      <div key={bridge.num} className="p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                        <div>
+                          <div className="font-mono text-[10px] font-black text-emerald-800 dark:text-emerald-400 mb-1">
+                            BRIDGE #{bridge.num}
+                          </div>
+                          <div className="font-bold text-xs text-zinc-950 dark:text-zinc-100 mb-1">
+                            {bridge.title}
+                          </div>
+                          <p className="text-[11px] text-zinc-700 dark:text-zinc-400 leading-relaxed">
+                            {bridge.desc}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -1976,10 +2373,16 @@ export default function ArchitecturePricingIsland({
                         </span>
                         <div className="flex flex-wrap items-center gap-2">
                           <a
-                            href="/blueprint"
+                            href={`/blueprint?sector=${activeSectorItem.code}`}
                             className="px-4 py-2 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider rounded-none transition"
                           >
-                            {isEn ? 'Compile Sector in Studio →' : 'Rakit Sektor Ini di Studio →'}
+                            {isEn ? 'Wizard 26-Param Sector →' : 'Rakit Sektor di Wizard →'}
+                          </a>
+                          <a
+                            href={`/blueprint/studio?sector=${activeSectorItem.code}`}
+                            className="px-3.5 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-700 font-mono text-xs font-black uppercase rounded-none transition"
+                          >
+                            {isEn ? '🖥️ 3-Pane Studio' : '🖥️ 3-Pane Studio'}
                           </a>
                           <button
                             type="button"

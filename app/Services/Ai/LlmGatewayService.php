@@ -674,7 +674,7 @@ class LlmGatewayService
      */
     public function buildLiveCagContext(?User $user = null): string
     {
-        $metrics = Cache::remember('ai_copilot:live_cag_telemetry:v40', 30, function () {
+        $metrics = Cache::remember('ai_copilot:live_cag_telemetry:v50', 30, function () {
             try {
                 $stats = $this->actionEngine->execute('get_system_stats', ['scope' => 'all']);
                 return $stats;
@@ -690,12 +690,12 @@ class LlmGatewayService
 
         return "### ⚡ CAG (CACHE-AUGMENTED GENERATION — TELEMETRI LIVE O(1))\n"
             . "- Operator Aktif: " . ($user?->name ?? 'System') . " (Roles: {$roleNames})\n"
-            . "- Total Blueprints Project OS: " . ($metrics['total_blueprints'] ?? 0) . " (Scope Locked: " . ($metrics['scope_locked_projects'] ?? 0) . " | Delta Change Requests: " . ($metrics['change_requests_count'] ?? 0) . ")\n"
+            . "- Total Blueprints Project OS: " . ($metrics['total_blueprints'] ?? 0) . " (Scope Locked SPK: " . ($metrics['scope_locked_projects'] ?? 0) . " | Mitra Turnkey: " . ($metrics['mitra_projects_count'] ?? 0) . " | BAST Terbit: " . ($metrics['bast_issued_count'] ?? 0) . " | Delta Change Requests: " . ($metrics['change_requests_count'] ?? 0) . ")\n"
             . "- Kapasitas Sprint Paralel: " . ($metrics['active_sprints'] ?? 0) . " / " . ($metrics['max_parallel_sprints'] ?? 3) . " Slot Terisi (Sisa Slot: " . ($metrics['available_sprint_slots'] ?? 3) . ")\n"
             . "- Pendapatan Terverifikasi (Settlement): {$revenueFormatted}\n"
             . "- Aset Domain/Hosting Mendekati Jatuh Tempo (<=30 hari): " . ($metrics['expiring_assets_30_days'] ?? 0) . "\n"
-            . "- Matriks Project OS v4.0 Ultimate: " . ($metrics['sectors_count'] ?? 12) . " Sektor UI/UX × " . ($metrics['primitives_count'] ?? 12) . " Primitif × " . ($metrics['stack_presets_count'] ?? 9) . " Stack Adapters (M1–S2) × " . ($metrics['day_two_layers_count'] ?? 8) . " Day-2 Ops Layers × " . ($metrics['lifecycle_features_count'] ?? 5) . " Day-30+ Lifecycle Engines × " . ($metrics['native_tools_count'] ?? 21) . " Native Tools | Chunks RAG: " . ($metrics['total_knowledge_chunks'] ?? 0) . "\n"
-            . "- Live MCP Server Bridge: `POST /api/mcp/project-os` (`neriahpro-mcp` JSON-RPC 2.0) | 3-Pane Studio IDE: `/blueprint/studio`\n";
+            . "- Matriks Project OS v5.0 Satu Pintu: " . ($metrics['sectors_count'] ?? 12) . " Sektor UI/UX × " . ($metrics['primitives_count'] ?? 12) . " Primitif × " . ($metrics['stack_presets_count'] ?? 9) . " Stack Adapters (M1–S2) × " . ($metrics['day_two_layers_count'] ?? 8) . " Day-2 Ops Layers × " . ($metrics['lifecycle_features_count'] ?? 5) . " Day-30+ Lifecycle × " . ($metrics['commercial_bridge_features_count'] ?? 5) . " Mitra Commercial Bridges × " . ($metrics['native_tools_count'] ?? 24) . " Native Tools | Chunks RAG: " . ($metrics['total_knowledge_chunks'] ?? 0) . "\n"
+            . "- Dual-Mode 3-Pane Studio IDE: `/blueprint/studio` (`RETAIL_SELF_DEV` & `MITRA_TURNKEY_PROJECT`) | Live MCP Bridge: `POST /api/mcp/project-os`\n";
     }
 
     /**
@@ -708,6 +708,7 @@ class LlmGatewayService
             . "2. **12 Sectoral Industrial UI/UX Archetypes & Thermal/A4 Print**: Dilarang menyarankan tabel CRUD standar untuk layar operasional utama! Gunakan ergonomi spesifik industri (`POS_SPLIT_TERMINAL`, `HORIZONTAL_RESOURCE_GANTT`, `CLINICAL_3_PANE_COCKPIT`, dsb.) plus kontrak cetak **Thermal 58mm/80mm ESC/POS** & **Official A4 PDF** (`break-inside: avoid` + inline SVG QR SHA-256 lokal tanpa API QR eksternal).\n"
             . "3. **Zero UI Slop & Zero Nested If-Else**: Haram memakai `rounded-full`, gradien warna-warni `bg-gradient-to-*`, dialog native `window.alert()/confirm()`, script CDN eksternal, magic string statis, atau `if-else` bersarang (>2 level) pada aturan bisnis (wajib menggunakan `DeterministicDecisionMatrix.php` berbasis PHP 8.4+ `match()`).\n"
             . "4. **6 Killer Engines + 8 Day-2 Production Layers**: Arahkan proyek melewati `run_blueprint_doctor` (Skor Determinisme `100.0%`), `get_day2_production_contracts` (`InitializeNewTenantAction`, Two-Step Staged CSV Importer `import_staging_*`, 4-Lane Redis Queue `critical|default|ai-rag|low-batch`, Private Disk 5-min Signed URLs, Omnichannel Notification Matrix), Phased Prompt Sequencer (Fase 1–7), dan 1-Command CLI Bootstrapper (`curl -sL .../init/{ULID} | bash`).\n"
-            . "5. **5 Day-30+ Lifecycle Retention Engines & 3-Pane Studio (`/blueprint/studio`)**: Gunakan `generate_delta_change_request` untuk evolusi iteratif `v1.0 -> v1.1` tanpa merusak kode produksi, hubungkan IDE klien melalui `.mcp.json` (`neriahpro-mcp`), kompilasi tabel keputusan via `compile_decision_table_matrix`, serta validasi keamanan multi-tenant & kesiapan `.env.blueprint` via `audit_environment_and_redteam_readiness` (`07-security-redteam.md` & `php artisan pos:check-env`).\n";
+            . "5. **5 Day-30+ Lifecycle Retention Engines & 3-Pane Studio (`/blueprint/studio`)**: Gunakan `generate_delta_change_request` untuk evolusi iteratif `v1.0 -> v1.1` tanpa merusak kode produksi, hubungkan IDE klien melalui `.mcp.json` (`neriahpro-mcp`), kompilasi tabel keputusan via `compile_decision_table_matrix`, serta validasi keamanan multi-tenant & kesiapan `.env.blueprint` via `audit_environment_and_redteam_readiness` (`07-security-redteam.md` & `php artisan pos:check-env`).\n"
+            . "6. **5 Mitra Commercial-to-Code Bridges & Satu Pintu Retail vs Mitra (v5.0)**: Dilarang menebak harga kontrak secara asal! Gunakan `calculate_mitra_quotation_and_wbs` untuk mengalkulasi RAB algoritmik (Tabel ULID + Transisi State + Lock Konkurensi × Pengali Stack `M1..S2`), bekukan ruang lingkup SPK bersegel SHA-256 via `freeze_scope_and_generate_spk_contract`, kenakan Invoice Addendum Berbayar untuk Delta `v1.0 -> v1.1`, dan terbitkan BAST Digital bersegel SHA-256 setelah 100% UAT Given-When-Then tercentang via `manage_uat_checklist_and_digital_bast`.\n";
     }
 }

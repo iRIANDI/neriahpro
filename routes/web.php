@@ -48,6 +48,12 @@ Route::get('/api/blueprint/{slug}/source-corpus', [BlueprintController::class, '
 Route::post('/api/blueprint/reset', [BlueprintController::class, 'resetDraft'])->name('api.blueprint.reset')->middleware('throttle:30,1');
 Route::post('/api/blueprint/{slug}/delta-request', [BlueprintController::class, 'createDeltaChangeRequest'])->name('api.blueprint.delta.create')->middleware('throttle:30,1');
 Route::get('/api/blueprint/{slug}/delta-requests', [BlueprintController::class, 'listDeltaChangeRequests'])->name('api.blueprint.delta.list')->middleware('throttle:60,1');
+Route::post('/api/blueprint/{slug}/delta-requests/{crId}/approve', [BlueprintController::class, 'approveDeltaAddendum'])->name('api.blueprint.delta.approve')->middleware('throttle:30,1');
+Route::post('/api/blueprint/commercial-estimate', [BlueprintController::class, 'commercialEstimate'])->name('api.blueprint.commercial-estimate')->middleware('throttle:60,1');
+Route::post('/api/blueprint/{slug}/lock-scope-spk', [BlueprintController::class, 'lockScopeAndGenerateSpk'])->name('api.blueprint.lock-scope-spk')->middleware('throttle:30,1');
+Route::post('/api/blueprint/{slug}/uat/toggle', [BlueprintController::class, 'toggleUatScenario'])->name('api.blueprint.uat.toggle')->middleware('throttle:60,1');
+Route::post('/api/blueprint/{slug}/uat/sign-bast', [BlueprintController::class, 'signOffUatAndIssueBast'])->name('api.blueprint.uat.sign-bast')->middleware('throttle:20,1');
+Route::get('/blueprint/{slug}/mitra-document/{docType}', [BlueprintController::class, 'mitraDocument'])->name('blueprint.mitra-document');
 Route::get('/api/blueprint/{slug}/mcp-config', [\App\Http\Controllers\ProjectOsMcpController::class, 'mcpConfig'])->name('api.blueprint.mcp-config')->middleware('throttle:30,1');
 Route::post('/api/mcp/project-os', [\App\Http\Controllers\ProjectOsMcpController::class, 'handleRpc'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])

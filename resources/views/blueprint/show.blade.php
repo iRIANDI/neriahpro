@@ -1747,10 +1747,26 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     <span class="text-zinc-700 dark:text-zinc-300 font-bold" x-text="collaborators.length + ' Kolaborator Live'"></span>
                 </div>
 
-                <!-- Launch Full-Screen 100vh 3-Pane Architect Studio v4.0 -->
-                <a href="{{ route('blueprint.studio', ['slug' => $blueprint->slug]) }}" class="px-2.5 sm:px-3 py-1 bg-zinc-950 hover:bg-zinc-800 text-emerald-400 dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:text-zinc-950 text-xs font-mono uppercase font-black rounded-none border border-emerald-500 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap" title="Buka Meja Kerja 3-Pane Architect Studio v4.0 (100vh Zero-Scroll IDE, Decision Matrix, Delta v1.1 & Live MCP)">
+                <!-- Launch Full-Screen 100vh 3-Pane Architect Studio v5.0 (Dual-Mode Retail & Mitra) -->
+                <a href="{{ route('blueprint.studio', ['slug' => $blueprint->slug]) }}" class="px-2.5 sm:px-3 py-1 bg-zinc-950 hover:bg-zinc-800 text-emerald-400 dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:text-zinc-950 text-xs font-mono uppercase font-black rounded-none border border-emerald-500 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap" title="Buka Meja Kerja 3-Pane Architect Studio v5.0 (Dual-Mode Retail & Mitra, Decision Matrix, Delta v1.1 & Live MCP)">
                     <span>🖥️ 3-PANE STUDIO</span>
                 </a>
+                <a href="{{ route('blueprint.studio', ['slug' => $blueprint->slug, 'mode' => 'mitra']) }}" class="px-2.5 sm:px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 text-xs font-mono uppercase font-black rounded-none border border-amber-400 dark:border-amber-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap" title="Buka Mode Mitra Proyek: RAB Algoritmik, Kunci SPK SHA-256, Checklist UAT & BAST Digital">
+                    <span>🤝 MODE MITRA</span>
+                </a>
+
+                <!-- Official A4 Mitra Commercial Pack (RAB, SPK Appendix SHA-256, Digital BAST) -->
+                <div class="inline-flex rounded-none border border-amber-400 dark:border-amber-700 divide-x divide-amber-400 dark:divide-amber-700 bg-amber-50 dark:bg-amber-950/40 text-xs font-mono font-black shrink-0 whitespace-nowrap">
+                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'rab']) }}" target="_blank" class="px-2 py-1 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-200 transition" title="Cetak / Unduh A4 Estimasi RAB Algoritmik & WBS 7 Fase">
+                        <span>RAB A4</span>
+                    </a>
+                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'spk-appendix']) }}" target="_blank" class="px-2 py-1 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-200 transition" title="Cetak / Unduh A4 Lampiran Teknis Kontrak SPK/PKS bersegel SHA-256">
+                        <span>SPK SHA-256</span>
+                    </a>
+                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'bast']) }}" target="_blank" class="px-2 py-1 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-200 transition" title="Cetak / Unduh A4 Berita Acara Serah Terima (BAST) Digital & Rekap UAT">
+                        <span>BAST A4</span>
+                    </a>
+                </div>
 
                 <!-- One-Click Scaffold & Boilerplate Exporter Modal Button -->
                 <button type="button" @click="openScaffoldModal()" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap" title="Ekspor Docker Compose, SQL Migrasi, & Struktur Route">

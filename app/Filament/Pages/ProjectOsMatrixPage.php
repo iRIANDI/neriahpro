@@ -29,7 +29,7 @@ class ProjectOsMatrixPage extends Page
 
     protected string $view = 'filament.pages.project-os-matrix-page';
 
-    public string $activeTab = 'sectors'; // sectors | primitives | stacks | rules | projects | day2 | lifecycle | lab
+    public string $activeTab = 'sectors'; // sectors | primitives | stacks | rules | projects | day2 | lifecycle | mitra | lab
     public string $viewMode = 'grid'; // grid | list
     public string $density = 'normal'; // compact | normal | relaxed
     public string $search = '';
@@ -38,6 +38,7 @@ class ProjectOsMatrixPage extends Page
     public string $sortDirection = 'asc'; // asc | desc | none
     public array $selectedIds = [];
     public string $decisionPreviewSector = 'SECTOR_01_COMMERCE_OMNICHANNEL';
+    public string $mitraPreviewStack = 'STACK_M1_LARAVEL_FILAMENT_LIVEWIRE';
 
     // Killer #4, #5 & Layer 8 Blueprint Doctor Interactive Lab State
     public string $brownfieldSql = '';
@@ -86,12 +87,12 @@ class ProjectOsMatrixPage extends Page
 
     public function getSubheading(): string | Htmlable | null
     {
-        return 'Project OS v4.0 Ultimate: 12 Sectoral UI/UX Archetypes, 12 Core Primitives, 9 Stack Adapters (M1–S2), 8 Layer Day-2 Ops, 5 Day-30+ Lifecycle Engines (Delta v1.1, Live MCP Bridge, Decision Matrix match(), Phase 7 Red-Team, .env Vault) & 3-Pane Studio.';
+        return 'Project OS v5.0 Satu Pintu Ultimate: 12 Sectoral UI/UX Archetypes, 12 Core Primitives, 9 Stack Adapters (M1–S2), 8 Layer Day-2 Ops, 5 Day-30+ Lifecycle Engines, serta 5 Mitra Commercial-to-Code Bridges (RAB Algoritmik, SPK SHA-256, Paid Addendum, 7-Milestone Gantt & Digital BAST).';
     }
 
     public function setTab(string $tab): void
     {
-        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lifecycle', 'lab'], true)) {
+        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lifecycle', 'mitra', 'lab'], true)) {
             $this->activeTab = $tab;
             $this->cursor = null;
             $this->selectedIds = [];

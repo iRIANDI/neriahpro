@@ -197,7 +197,7 @@
                         Autonomous AI Copilot Command Hub
                     </h2>
                     <p class="mt-2 text-xs md:text-sm text-zinc-300 max-w-2xl leading-relaxed">
-                        Pusat orkestrasi kecerdasan buatan Neriah Pro dengan Tri-Hybrid AI (RAG Dense+Sparse RRF, CAG Live Telemetry O(1), KAG Deterministic Rule Graph) serta <strong>21 Native Tools</strong> tervalidasi RBAC &amp; SHA-256 Audit Log untuk 12 Sectoral UI/UX Archetypes, 8 Layer Day-2 Production, 5 Day-30+ Lifecycle Engines (Delta v1.1, Live MCP Bridge, Decision Matrix match(), Phase 7 Red-Team, .env Vault), dan 3-Pane Architect Studio.
+                        Pusat orkestrasi kecerdasan buatan Neriah Pro dengan Tri-Hybrid AI (RAG Dense+Sparse RRF, CAG Live Telemetry O(1), KAG Deterministic Rule Graph) serta <strong>24 Native Tools</strong> tervalidasi RBAC &amp; SHA-256 Audit Log untuk 12 Sectoral UI/UX Archetypes, 8 Layer Day-2 Production, 5 Day-30+ Lifecycle Engines, serta 5 Mitra Commercial-to-Code Bridges Satu Pintu (RAB Algoritmik, SPK SHA-256, Paid Addendum, 7-Milestone Gantt &amp; Digital BAST).
                     </p>
                 </div>
 
@@ -205,7 +205,7 @@
                     <button type="button"
                             wire:click="triggerSyncKnowledge"
                             class="px-4 py-2.5 bg-zinc-800 text-zinc-100 hover:bg-zinc-700 border border-zinc-700 font-mono text-xs font-bold rounded-xs transition-all cursor-pointer">
-                        🔄 Sinkronkan Full RAG v4.0
+                        🔄 Sinkronkan Full RAG v5.0
                     </button>
                     <button type="button"
                             x-on:click="$dispatch('open-ai-copilot')"
@@ -226,8 +226,8 @@
 
                 <div class="ai-metric-card">
                     <div class="text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-400">Project OS Blueprints &amp; Tools</div>
-                    <div class="text-2xl font-black font-mono tabular-nums text-zinc-950 dark:text-zinc-100 mt-1">{{ number_format($totalBlueprints, 0, ',', '.') }} <span class="text-xs font-bold text-emerald-800 dark:text-emerald-400">// 21 Native Tools</span></div>
-                    <div class="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">Strict ULID + RBAC Guard + Live MCP Bridge + SHA-256 Audit</div>
+                    <div class="text-2xl font-black font-mono tabular-nums text-zinc-950 dark:text-zinc-100 mt-1">{{ number_format($totalBlueprints, 0, ',', '.') }} <span class="text-xs font-bold text-emerald-800 dark:text-emerald-400">// 24 Native Tools</span></div>
+                    <div class="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">Strict ULID + Mitra RAB/SPK/BAST + Live MCP + SHA-256 Audit</div>
                 </div>
 
                 <div class="ai-metric-card">

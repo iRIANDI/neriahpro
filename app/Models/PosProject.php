@@ -41,6 +41,12 @@ class PosProject extends Model
         'phase_progress_json',
         'drift_verification_json',
         'last_mcp_synced_at',
+        'engagement_mode',
+        'scope_hash_sha256',
+        'scope_locked_at',
+        'commercial_quotation_json',
+        'uat_checklist_json',
+        'bast_signoff_json',
     ];
 
     protected function casts(): array
@@ -55,6 +61,10 @@ class PosProject extends Model
             'phase_progress_json' => 'array',
             'drift_verification_json' => 'array',
             'last_mcp_synced_at' => 'datetime',
+            'scope_locked_at' => 'datetime',
+            'commercial_quotation_json' => 'array',
+            'uat_checklist_json' => 'array',
+            'bast_signoff_json' => 'array',
         ];
     }
 

@@ -362,6 +362,75 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+            [
+                'name' => 'calculate_mitra_quotation_and_wbs',
+                'description' => 'Menghitung RAB / Quotation algoritmik Mitra Proyek (Man-Hours, Hari Kerja, Pengali Stack M1-S2, WBS 7 Fase, Jadwal Termin 30/50/20 atau 50/50, SHA-256 Scope Hash, dan perbandingan paket Satu Pintu Retail vs Mitra) berdasarkan blueprint atau kombinasi sektor + stack.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID ID atau slug blueprint (opsional jika menggunakan sector_code).',
+                        ],
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode 12 sektor bisnis (misal: SECTOR_01_COMMERCE_OMNICHANNEL s/d SECTOR_12_GOVTECH_NONPROFIT).',
+                        ],
+                        'stack_preset_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode 9 stack adapter (misal: STACK_M1_LARAVEL_FILAMENT_LIVEWIRE, STACK_D1_LARAVEL_NEXTJS, STACK_S1_GO_NEXTJS).',
+                        ],
+                        'termin_scheme' => [
+                            'type' => 'STRING',
+                            'description' => 'Skema termin pembayaran: 30_50_20 (default) atau 50_50.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'freeze_scope_and_generate_spk_contract',
+                'description' => 'Membekukan ruang lingkup teknis Blueprint v1.0 dengan segel kriptografi SHA-256 Scope Hash dan menerbitkan dokumen legal SPK / PKS (Lampiran Teknis SPK) secara otomatis untuk mencegah scope creep.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID ID atau slug blueprint yang ingin dibekukan ruang lingkup SPK-nya.',
+                        ],
+                        'termin_scheme' => [
+                            'type' => 'STRING',
+                            'description' => 'Skema termin pembayaran kontrak: 30_50_20 atau 50_50.',
+                        ],
+                    ],
+                    'required' => ['blueprint_id'],
+                ],
+            ],
+            [
+                'name' => 'manage_uat_checklist_and_digital_bast',
+                'description' => 'Memeriksa status Interactive UAT Checklist (Given-When-Then), menandai skenario UAT terverifikasi, atau menandatangani Digital BAST (Berita Acara Serah Terima bersegel SHA-256) beserta penerbitan Invoice Pelunasan Akhir.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID ID atau slug blueprint.',
+                        ],
+                        'action' => [
+                            'type' => 'STRING',
+                            'description' => 'Aksi yang dijalankan: inspect (baca daftar UAT & milestone), verify_all_uat (tandai semua skenario UAT lulus), atau sign_bast (terbitkan BAST Digital & invoice pelunasan).',
+                        ],
+                        'signer_name' => [
+                            'type' => 'STRING',
+                            'description' => 'Nama penandatangan BAST dari pihak klien/admin saat action = sign_bast.',
+                        ],
+                        'signer_title' => [
+                            'type' => 'STRING',
+                            'description' => 'Jabatan penandatangan BAST (misal: Direktur Utama / Product Owner).',
+                        ],
+                    ],
+                    'required' => ['blueprint_id'],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

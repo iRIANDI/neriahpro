@@ -1140,6 +1140,33 @@
                                     >
                                         {{ $isEn ? 'OPEN PRD SPEC →' : 'BUKA PRD LENGKAP →' }}
                                     </a>
+                                    <a 
+                                        href="{{ route('blueprint.studio', ['slug' => $project->slug, 'mode' => 'mitra']) }}" 
+                                        class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/80 dark:hover:bg-amber-900 text-amber-950 dark:text-amber-200 border border-amber-400 dark:border-amber-700 font-mono text-xs font-black uppercase tracking-wider rounded-none transition"
+                                    >
+                                        🤝 {{ $isEn ? 'MITRA STUDIO & UAT' : 'STUDIO MITRA & UAT' }}
+                                    </a>
+                                    <a 
+                                        href="{{ route('blueprint.mitra-document', ['slug' => $project->slug, 'docType' => 'rab']) }}" 
+                                        target="_blank"
+                                        class="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-mono text-xs font-bold uppercase tracking-wider rounded-none transition"
+                                    >
+                                        📄 RAB A4
+                                    </a>
+                                    <a 
+                                        href="{{ route('blueprint.mitra-document', ['slug' => $project->slug, 'docType' => 'spk-appendix']) }}" 
+                                        target="_blank"
+                                        class="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-mono text-xs font-bold uppercase tracking-wider rounded-none transition"
+                                    >
+                                        🔒 SPK SHA-256
+                                    </a>
+                                    <a 
+                                        href="{{ route('blueprint.mitra-document', ['slug' => $project->slug, 'docType' => 'bast']) }}" 
+                                        target="_blank"
+                                        class="px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 text-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-mono text-xs font-black uppercase tracking-wider rounded-none transition"
+                                    >
+                                        ✅ BAST A4
+                                    </a>
                                     @if($contractDoc)
                                         <a 
                                             href="/document/{{ $contractDoc->id }}/preview" 
@@ -1171,7 +1198,7 @@
                                     </span>
                                 </div>
                                 <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-3 border border-zinc-200 dark:border-zinc-700 rounded-none overflow-hidden">
-                                    <div class="bg-gradient-to-r from-emerald-600 via-emerald-500 to-sky-400 h-full transition-all duration-500" style="width: {{ $progressPercent }}%"></div>
+                                    <div class="bg-emerald-600 dark:bg-emerald-500 h-full transition-all duration-500" style="width: {{ $progressPercent }}%"></div>
                                 </div>
                             </div>
 
@@ -1590,6 +1617,12 @@
                                         class="p-2 text-center bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black transition rounded-none"
                                     >
                                         📐 {{ $isEn ? 'Open PRD →' : 'Buka PRD →' }}
+                                    </a>
+                                    <a 
+                                        href="{{ route('blueprint.studio', ['slug' => $license->slug, 'mode' => 'retail']) }}" 
+                                        class="col-span-2 p-2 text-center bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase transition rounded-none"
+                                    >
+                                        🖥️ {{ $isEn ? 'Open 3-Pane Studio (Retail IDE Kit & MCP) →' : 'Buka 3-Pane Studio (Retail IDE Kit & MCP) →' }}
                                     </a>
                                 </div>
 

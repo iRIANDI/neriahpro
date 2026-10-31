@@ -223,6 +223,12 @@
                             'retail_login_policy' => $getSettingVal('pricing_retail_login_policy', 'Guest Mode untuk Spark (Free). Wajib Login / Daftar Akun untuk paket Lite, Pro, & Ultimate guna proteksi dokumen & lisensi.'),
                             'retail_disclaimer' => $getSettingVal('pricing_retail_disclaimer', 'Paket Instant Architectural Blueprint 100% Self-Service: Dihasilkan instan oleh AI Project OS untuk Anda atau tim developer Anda kerjakan sendiri. Tidak ada koding atau pembuatan aplikasi oleh Neriah Pro.'),
                             'active_promo_banner' => $getSettingVal('pricing_active_promo_banner', 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!'),
+                            'mitra_man_hour_rate_idr' => (int) preg_replace('/\D/', '', (string) $getSettingVal('mitra_man_hour_rate_idr', '350000')) ?: 350000,
+                            'mitra_hours_per_table' => (int) ($getSettingVal('mitra_hours_per_table', 4) ?: 4),
+                            'mitra_hours_per_state' => (int) ($getSettingVal('mitra_hours_per_state', 6) ?: 6),
+                            'mitra_hours_per_lock' => (int) ($getSettingVal('mitra_hours_per_lock', 5) ?: 5),
+                            'mitra_base_setup_hours' => (int) ($getSettingVal('mitra_base_setup_hours', 24) ?: 24),
+                            'mitra_termin_scheme' => (string) $getSettingVal('mitra_termin_scheme', '30_50_20'),
                         ]
                     ]))
                 @endif
@@ -249,6 +255,12 @@
                     'retail_login_policy' => $getSettingVal('pricing_retail_login_policy', 'Guest Mode untuk Spark (Free). Wajib Login / Daftar Akun untuk paket Lite, Pro, & Ultimate guna proteksi dokumen & lisensi.'),
                     'retail_disclaimer' => $getSettingVal('pricing_retail_disclaimer', 'Paket Instant Architectural Blueprint 100% Self-Service: Dihasilkan instan oleh AI Project OS untuk Anda atau tim developer Anda kerjakan sendiri. Tidak ada koding atau pembuatan aplikasi oleh Neriah Pro.'),
                     'active_promo_banner' => $getSettingVal('pricing_active_promo_banner', 'Gunakan Kode Voucher "UMKM-SUBSIDI-50" untuk subsidi 50% atau "CORP-INNOVATION-15M" untuk potongan Rp 15 Juta!'),
+                    'mitra_man_hour_rate_idr' => (int) preg_replace('/\D/', '', (string) $getSettingVal('mitra_man_hour_rate_idr', '350000')) ?: 350000,
+                    'mitra_hours_per_table' => (int) ($getSettingVal('mitra_hours_per_table', 4) ?: 4),
+                    'mitra_hours_per_state' => (int) ($getSettingVal('mitra_hours_per_state', 6) ?: 6),
+                    'mitra_hours_per_lock' => (int) ($getSettingVal('mitra_hours_per_lock', 5) ?: 5),
+                    'mitra_base_setup_hours' => (int) ($getSettingVal('mitra_base_setup_hours', 24) ?: 24),
+                    'mitra_termin_scheme' => (string) $getSettingVal('mitra_termin_scheme', '30_50_20'),
                 ]
             ])
         @endif

@@ -257,9 +257,17 @@ SQL;
 </SURGICAL_DELTA_BLUEPRINT>
 PROMPT;
 
+        $stackCodeForCalc = (string) ($existingSchema['project_metadata']['stack_preset'] ?? $posProject?->stack_preset ?? 'STACK_M1_LARAVEL_MONOLITH');
+        $commercialDelta = app(PosCommercialBridgeService::class)->calculatePaidChangeOrderDelta(
+            $deltaTables,
+            $addedPrimitives,
+            $addedDecisionRules,
+            $stackCodeForCalc
+        );
+
         $savedModel = null;
         if ($persist && Schema::hasTable('pos_change_requests')) {
-            $savedModel = PosChangeRequest::query()->create([
+            $crData = [
                 'pos_project_id' => $posProject?->exists ? $posProject->id : null,
                 'vision_blueprint_id' => $blueprint?->exists ? $blueprint->id : null,
                 'created_by' => Auth::id(),
@@ -276,7 +284,14 @@ PROMPT;
                 'regression_test_scenarios' => $regressionScenarios,
                 'surgical_delta_prompt' => $surgicalPrompt,
                 'status' => 'READY',
-            ]);
+            ];
+            if (Schema::hasColumn('pos_change_requests', 'delta_quotation_idr')) {
+                $crData['delta_man_hours'] = $commercialDelta['delta_man_hours'];
+                $crData['delta_working_days'] = $commercialDelta['delta_working_days'];
+                $crData['delta_quotation_idr'] = $commercialDelta['delta_quotation_idr'];
+                $crData['addendum_status'] = $commercialDelta['addendum_status'];
+            }
+            $savedModel = PosChangeRequest::query()->create($crData);
 
             if ($posProject && $posProject->exists && Schema::hasColumn('pos_projects', 'current_version')) {
                 $posProject->forceFill(['current_version' => $nextVersion])->saveQuietly();
@@ -291,8 +306,11 @@ PROMPT;
                     'title' => $title,
                     'added_primitives' => $addedPrimitives,
                     'added_tables' => array_column($deltaTables, 'table'),
+                    'delta_man_hours' => $commercialDelta['delta_man_hours'],
+                    'delta_working_days' => $commercialDelta['delta_working_days'],
+                    'delta_quotation_idr' => $commercialDelta['delta_quotation_idr'],
                 ],
-                description: "Iterative Delta Blueprint ({$currentVersion} -> {$nextVersion}) dibuat untuk '{$appName}': {$title}.",
+                description: "Iterative Delta Blueprint ({$currentVersion} -> {$nextVersion}) & Estimasi Addendum ({$commercialDelta['formatted_delta_quotation']}) dibuat untuk '{$appName}': {$title}.",
                 eventCategory: 'delta_evolution'
             );
         }
@@ -312,6 +330,7 @@ PROMPT;
             'delta_tool_declarations' => $deltaTools,
             'regression_test_scenarios' => $regressionScenarios,
             'surgical_delta_prompt' => $surgicalPrompt,
+            'paid_change_order' => $commercialDelta,
         ];
     }
 

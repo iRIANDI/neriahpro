@@ -474,16 +474,54 @@ class ProjectOsBlueprintCompilerService
     }
 
     /**
+     * Compile Universal Blueprint Schema v1.0 directly from an in-memory simulation payload (Zero DB writes).
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public static function compileSchemaFromPayload(array $payload): array
+    {
+        $sectorCode = (string) ($payload['sector_code'] ?? $payload['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL');
+        $primitives = array_values(array_map(
+            'strval',
+            (array) ($payload['primitive_codes'] ?? $payload['selected_primitives'] ?? [])
+        ));
+        $stackPreset = (string) ($payload['stack_preset_code'] ?? $payload['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH');
+        $appName = trim((string) ($payload['name'] ?? $payload['app_name'] ?? 'Enterprise Simulation'));
+
+        $dummyBp = new VisionBlueprint([
+            'nama_bisnis' => $appName,
+            'slug' => Str::slug($appName) ?: 'enterprise-simulation',
+            'user_metadata' => [
+                'primary_sector' => $sectorCode,
+                'selected_primitives' => $primitives,
+                'stack_preset' => $stackPreset,
+            ],
+        ]);
+
+        return self::compileUniversalSchema($dummyBp, [
+            'app_name' => $appName,
+            'primary_sector' => $sectorCode,
+            'selected_primitives' => $primitives,
+            'stack_preset' => $stackPreset,
+            'corpus' => (string) ($payload['corpus'] ?? ''),
+            'persist_project' => false,
+        ]);
+    }
+
+    /**
      * Compile the deterministic Project OS Universal Blueprint Schema v1.0 JSON & persist PosProject.
      */
     public static function compileUniversalSchema(?VisionBlueprint $blueprint = null, array $options = []): array
     {
         $meta = is_array($blueprint?->user_metadata) ? $blueprint->user_metadata : [];
         $explicitSector = $options['primary_sector']
+            ?? $options['sector_code']
             ?? ($meta['composable_matrix']['primary_sector_code'] ?? null)
             ?? ($meta['primary_sector'] ?? null);
 
         $explicitPrimitives = $options['selected_primitives']
+            ?? $options['primitive_codes']
             ?? ($meta['composable_matrix']['injected_primitives'] ?? [])
             ?? ($meta['selected_primitives'] ?? []);
 
@@ -512,6 +550,7 @@ class ProjectOsBlueprintCompilerService
 
         $appName = trim((string) ($options['app_name'] ?? $blueprint?->nama_bisnis ?? 'Target Enterprise Application'));
         $rawRequestedPreset = $options['stack_preset']
+            ?? $options['stack_preset_code']
             ?? ($meta['composable_matrix']['stack_preset_code'] ?? null)
             ?? ($meta['stack_preset'] ?? null);
         $stackPresetModel = self::resolveStackPreset(

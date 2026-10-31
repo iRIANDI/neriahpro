@@ -711,13 +711,72 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 9. Indeks 5 Commercial-to-Code Bridge Engines & Satu Pintu Retail vs Mitra (Project OS v5.0)
+        foreach (\App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures() as $cf) {
+            $cfCode = (string) ($cf['code'] ?? 'MITRA_BRIDGE');
+            $sourceId = 'mitra-bridge-v5-' . strtolower($cfCode);
+            if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+                continue;
+            }
+
+            $cfTitle = $cf['title']['id'] ?? $cfCode;
+            $cfSummary = $cf['summary']['id'] ?? '';
+            $cfArtifact = $cf['artifact'] ?? '';
+            $cfContent = "Mitra Commercial Bridge: {$cfCode} ({$cf['badge']})\nJudul: {$cfTitle}\nArtefak Hukum/Komersial: {$cfArtifact}\nSpesifikasi: {$cfSummary}";
+
+            $embedding = $this->generateEmbedding("{$cfTitle}\n{$cfContent}");
+            AiKnowledgeVector::create([
+                'title' => "Mitra Commercial Bridge v5.0: {$cfTitle}",
+                'source_type' => 'mitra_commercial_bridge',
+                'source_id' => $sourceId,
+                'content' => "### {$cfTitle}\n\n{$cfContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => '5 Mitra Commercial-to-Code Bridges (v5.0)',
+                    'feature_code' => $cfCode,
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        $satuPintuSourceId = 'project-os-v5-satu-pintu-retail-vs-mitra';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $satuPintuSourceId)->exists()) {
+            $pkgLines = [];
+            foreach (\App\Support\PricingRegistry::getSatuPintuCatalog() as $pKey => $pMeta) {
+                $pkgLines[] = "- [{$pMeta['track_mode']}] {$pMeta['name_id']} ({$pKey}): {$pMeta['formatted_price']} | Sektor: {$pMeta['sector_scope']} | Stack: {$pMeta['stack_scope']}";
+            }
+            $journeyLines = [];
+            foreach (\App\Services\PosCommercialBridgeService::guidedClientJourneySteps() as $gStep) {
+                $journeyLines[] = "Tahap {$gStep['step']} ({$gStep['route']}): {$gStep['title']['id']} — {$gStep['desc']['id']}";
+            }
+            $satuPintuContent = "Katalog Satu Pintu Project OS v5.0 (Retail Mandiri vs Mitra Terima Beres untuk 12 Sektor Fungsional):\n"
+                . implode("\n", $pkgLines)
+                . "\n\nWizard Terpandu Klien Satu Pintu (5 Tahap End-to-End):\n"
+                . implode("\n", $journeyLines);
+
+            $embedding = $this->generateEmbedding("Satu Pintu Retail vs Mitra Project OS v5.0\n{$satuPintuContent}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v5.0: Arsitektur Satu Pintu Retail vs Mitra & 5-Step Guided Client Wizard',
+                'source_type' => 'satu_pintu_pricing_wizard',
+                'source_id' => $satuPintuSourceId,
+                'content' => "### Project OS v5.0: Satu Pintu Retail vs Mitra & Guided Wizard\n\n{$satuPintuContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'Satu Pintu Retail vs Mitra (v5.0)',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
             'status' => 'success',
             'synced_sections' => $syncedSections,
             'total_chunks' => $totalChunks,
-            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (10 Pilar Factory OS, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 10 Perfection Pillars & 5 Day-30+ Lifecycle Engines + 3-Pane Studio v4.0) ke basis pengetahuan RAG pgvector.",
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (10 Pilar Factory OS, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 10 Perfection Pillars, 5 Day-30+ Lifecycle Engines, 3-Pane Studio & 5 Mitra Commercial-to-Code Bridges Satu Pintu v5.0) ke basis pengetahuan RAG pgvector.",
         ];
     }
 }

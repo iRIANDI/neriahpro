@@ -66,6 +66,7 @@
                         'projects' => ['label' => 'Assembled Projects', 'count' => $stats['projects'] ?? 0],
                         'day2' => ['label' => '8 Layer Day-2 & Doctor', 'count' => 'v3.0'],
                         'lifecycle' => ['label' => 'Day-30+ Lifecycle & MCP', 'count' => 'v4.0'],
+                        'mitra' => ['label' => 'Mitra Bridge & Satu Pintu', 'count' => 'v5.0'],
                         'lab' => ['label' => 'Brownfield & Slop Lab', 'count' => 'LAB'],
                     ] as $tabKey => $tabMeta)
                         <button
@@ -351,6 +352,124 @@
                             </div>
                             <pre class="p-3 bg-zinc-950 text-amber-200 border border-zinc-800 font-mono text-[11px] max-h-56 overflow-auto whitespace-pre-wrap">{{ $renderedEnvFile }}</pre>
                         </div>
+                    </div>
+                </div>
+            </div>
+        @elseif($this->activeTab === 'mitra')
+            @php
+                $fiveCommercial = \App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures();
+                $satuPintuCatalog = \App\Support\PricingRegistry::getSatuPintuCatalog();
+                $sectorListMitra = \App\Support\ProjectOsMatrixCatalog::sectors();
+                $stackListMitra = \App\Support\PosStackPresetCatalog::stackPresets();
+                $selectedSecMeta = collect($sectorListMitra)->firstWhere('code', $this->decisionPreviewSector) ?: ($sectorListMitra[0] ?? []);
+                $previewSchema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+                    'name' => 'Simulasi Mitra (' . ($selectedSecMeta['name']['id'] ?? $this->decisionPreviewSector) . ')',
+                    'sector_code' => $this->decisionPreviewSector,
+                    'primitive_codes' => $selectedSecMeta['mandatory_primitives'] ?? ['PRIM_IAM_MULTI_TENANT', 'PRIM_AUDIT_SECURITY_LEDGER'],
+                    'stack_preset_code' => $this->mitraPreviewStack,
+                ]);
+                $liveQuotation = app(\App\Services\PosCommercialBridgeService::class)->calculateScopeQuotation($previewSchema);
+            @endphp
+            <div class="space-y-4">
+                <!-- 5 Commercial-to-Code Bridge Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+                    @foreach($fiveCommercial as $cf)
+                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 hover:border-amber-500 rounded-sm space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black rounded-xs">
+                                    {{ $cf['badge'] }}
+                                </span>
+                                <span class="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400 tabular-nums">M-0{{ $cf['number'] }}</span>
+                            </div>
+                            <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $cf['title']['id'] ?? '' }}</div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">{{ $cf['summary']['id'] ?? '' }}</p>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Live Algorithmic RAB & WBS Simulator (Satu Pintu Sync) -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-4">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-amber-900 dark:text-amber-300">
+                                ALGORITHMIC SCOPE-TO-QUOTATION SIMULATOR (TERSINKRONISASI KE MANAGESETTINGS)
+                            </div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
+                                Kalkulasi RAB Deterministik per Sektor &amp; Stack Preset (Anti-Underpricing)
+                            </h3>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select wire:model.live="decisionPreviewSector" class="px-3 py-1.5 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs">
+                                @foreach($sectorListMitra as $sItem)
+                                    <option value="{{ $sItem['code'] }}">{{ $sItem['code'] }} — {{ $sItem['name']['id'] ?? '' }}</option>
+                                @endforeach
+                            </select>
+                            <select wire:model.live="mitraPreviewStack" class="px-3 py-1.5 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs">
+                                @foreach($stackListMitra as $stItem)
+                                    <option value="{{ $stItem['code'] }}">[{{ $stItem['short_code'] }}] {{ $stItem['name']['id'] ?? $stItem['code'] }}</option>
+                                @endforeach
+                            </select>
+                            <a href="{{ url('/blueprint/studio?mode=mitra&sector=' . $this->decisionPreviewSector . '&stack=' . $this->mitraPreviewStack) }}" target="_blank" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-mono text-xs font-black border border-amber-700 rounded-xs">
+                                🤝 Buka Mode Mitra di Studio
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono">
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                            <div class="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400">Beban Kompleksitas</div>
+                            <div class="text-sm font-black text-zinc-950 dark:text-zinc-100 tabular-nums mt-1">
+                                {{ $liveQuotation['metrics']['tables_count'] ?? 0 }} Tabel • {{ $liveQuotation['metrics']['transitions_count'] ?? 0 }} Transisi • {{ $liveQuotation['metrics']['concurrency_locks_count'] ?? 0 }} Lock
+                            </div>
+                        </div>
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                            <div class="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400">Total Effort × Pengali Stack</div>
+                            <div class="text-sm font-black text-zinc-950 dark:text-zinc-100 tabular-nums mt-1">
+                                {{ number_format((int) ($liveQuotation['total_man_hours'] ?? 0), 0, ',', '.') }} Jam ({{ $liveQuotation['estimated_working_days'] ?? 0 }} Hari) × {{ $liveQuotation['stack_multiplier'] ?? 1 }}x
+                            </div>
+                        </div>
+                        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-400 dark:border-emerald-700 rounded-xs">
+                            <div class="text-[10px] font-bold uppercase text-emerald-900 dark:text-emerald-300">RAB Turnkey Wajar</div>
+                            <div class="text-base font-black text-emerald-950 dark:text-emerald-200 tabular-nums mt-1">
+                                {{ $liveQuotation['formatted_total_quotation_idr'] ?? 'Rp 0' }}
+                            </div>
+                        </div>
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                            <div class="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400">SHA-256 Scope Hash</div>
+                            <div class="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate" title="{{ $liveQuotation['scope_hash_sha256'] ?? '' }}">
+                                {{ substr((string) ($liveQuotation['scope_hash_sha256'] ?? ''), 0, 22) }}…
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Satu Pintu Retail vs Mitra Table -->
+                    <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800">
+                        <table class="w-full text-left border-collapse font-mono text-xs">
+                            <thead class="bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border-b border-zinc-300 dark:border-zinc-800 uppercase text-[10px]">
+                                <tr>
+                                    <th class="py-2 px-3">Paket Satu Pintu</th>
+                                    <th class="py-2 px-3">Jalur Eksekusi</th>
+                                    <th class="py-2 px-3">Harga Aktif</th>
+                                    <th class="py-2 px-3">Cakupan 12 Sektor &amp; Stack</th>
+                                    <th class="py-2 px-3">Mesin v5.0</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                                @foreach($satuPintuCatalog as $pCode => $pRow)
+                                    <tr class="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/70 dark:even:bg-zinc-900/40">
+                                        <td class="py-2 px-3 font-black text-zinc-950 dark:text-zinc-100">{{ $pRow['name_id'] ?? $pCode }}</td>
+                                        <td class="py-2 px-3">
+                                            <span class="px-2 py-0.5 text-[10px] font-black rounded-xs border {{ ($pRow['track_mode'] ?? '') === 'MITRA_TURNKEY_PROJECT' ? 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700' : 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700' }}">
+                                                {{ $pRow['track_mode'] ?? 'RETAIL_SELF_DEV' }}
+                                            </span>
+                                        </td>
+                                        <td class="py-2 px-3 font-black tabular-nums text-emerald-900 dark:text-emerald-300">{{ $pRow['formatted_price'] ?? '-' }}</td>
+                                        <td class="py-2 px-3 text-zinc-800 dark:text-zinc-300">{{ $pRow['sector_scope'] ?? '-' }} ({{ $pRow['stack_scope'] ?? '-' }})</td>
+                                        <td class="py-2 px-3 text-zinc-700 dark:text-zinc-400">{{ implode(' • ', array_slice($pRow['included_v5_engines'] ?? [], 0, 2)) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

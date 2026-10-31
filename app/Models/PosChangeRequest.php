@@ -32,6 +32,12 @@ class PosChangeRequest extends Model
         'regression_test_scenarios',
         'surgical_delta_prompt',
         'status',
+        'delta_man_hours',
+        'delta_working_days',
+        'delta_quotation_idr',
+        'addendum_status',
+        'midtrans_addendum_order_id',
+        'approved_by_client_at',
     ];
 
     protected function casts(): array
@@ -43,6 +49,10 @@ class PosChangeRequest extends Model
             'delta_graph_diff' => 'array',
             'delta_tool_declarations' => 'array',
             'regression_test_scenarios' => 'array',
+            'delta_man_hours' => 'integer',
+            'delta_working_days' => 'integer',
+            'delta_quotation_idr' => 'decimal:2',
+            'approved_by_client_at' => 'datetime',
         ];
     }
 

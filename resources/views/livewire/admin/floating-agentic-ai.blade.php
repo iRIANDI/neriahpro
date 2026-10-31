@@ -647,6 +647,11 @@
                                                 class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
                                             🔐 Audit .env &amp; Red-Team P7
                                         </button>
+                                        <button type="button"
+                                                wire:click="sendSuggestedPrompt('Hitung RAB algoritmik Mitra Proyek, man-hours, WBS 7 fase, dan jadwal termin 30/50/20 untuk SECTOR_01_COMMERCE_OMNICHANNEL dengan STACK_M1_LARAVEL_FILAMENT_LIVEWIRE')"
+                                                class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-amber-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
+                                            🤝 Hitung RAB &amp; Termin Mitra
+                                        </button>
                                     </div>
                                 </div>
                             @endif

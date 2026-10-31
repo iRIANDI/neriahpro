@@ -8,6 +8,7 @@ use App\Models\PosRulePack;
 use App\Models\PosSector;
 use App\Models\PosStackPreset;
 use App\Models\VisionBlueprint;
+use App\Support\PosSectorUiArchetypeCatalog;
 use App\Support\PosStackPresetCatalog;
 use App\Support\ProjectOsMatrixCatalog;
 use Illuminate\Support\Facades\Cache;
@@ -183,6 +184,8 @@ class ProjectOsBlueprintCompilerService
                     'description' => $s->description,
                     'domain_terminology' => $s->domain_terminology,
                     'blueprint_invariants' => $s->blueprint_invariants,
+                    'ui_ux_archetypes' => $s->resolvedUiArchetypes(),
+                    'realistic_seeder_contract' => $s->resolvedSeederContract(),
                     'default_compliance_standards' => $s->default_compliance_standards,
                     'detection_keywords' => $s->detection_keywords ?? [],
                     'mandatory_primitives' => $s->primitives->filter(fn ($p) => $p->pivot?->is_mandatory)->pluck('code')->values()->all(),
@@ -204,6 +207,7 @@ class ProjectOsBlueprintCompilerService
                 'rule_packs' => ProjectOsMatrixCatalog::rulePacks(),
                 'stack_presets' => $mem['stack_presets']->values()->map(fn (PosStackPreset $sp) => self::formatStackPresetForCatalog($sp))->all(),
                 'stack_comparison_matrix' => PosStackPresetCatalog::comparisonMatrix(),
+                'killer_features' => PosSectorUiArchetypeCatalog::killerFeaturesSummary(),
             ];
         }
 
@@ -232,6 +236,8 @@ class ProjectOsBlueprintCompilerService
                         'description' => $s->description,
                         'domain_terminology' => $s->domain_terminology,
                         'blueprint_invariants' => $s->blueprint_invariants,
+                        'ui_ux_archetypes' => $s->resolvedUiArchetypes(),
+                        'realistic_seeder_contract' => $s->resolvedSeederContract(),
                         'default_compliance_standards' => $s->default_compliance_standards,
                         'detection_keywords' => $s->detection_keywords ?? [],
                         'mandatory_primitives' => $mandatory,
@@ -308,6 +314,7 @@ class ProjectOsBlueprintCompilerService
                 'rule_packs' => $rulePacks,
                 'stack_presets' => $stackPresets,
                 'stack_comparison_matrix' => PosStackPresetCatalog::comparisonMatrix(),
+                'killer_features' => PosSectorUiArchetypeCatalog::killerFeaturesSummary(),
             ];
         });
     }
@@ -770,9 +777,14 @@ class ProjectOsBlueprintCompilerService
                 'table_policies' => $deletionGovernanceMatrix,
             ],
             'ui_screen_archetypes' => $uiScreenArchetypes,
+            'sectoral_ui_ux_archetype' => $sector ? $sector->resolvedUiArchetypes() : PosSectorUiArchetypeCatalog::forSector('SECTOR_08_PROFESSIONAL_PSA'),
+            'realistic_domain_seeder' => $sector ? $sector->resolvedSeederContract() : PosSectorUiArchetypeCatalog::seederForSector('SECTOR_08_PROFESSIONAL_PSA'),
             'acceptance_test_matrix' => $acceptanceTestMatrix,
             'gemini_native_tools' => $geminiTools,
         ];
+
+        $phasedPrompts = self::compilePhasedPrompts($schema);
+        $schema['phased_prompt_sequencer'] = $phasedPrompts;
 
         // Persist or synchronize PosProject record in database when sector & table exist
         if ($hasTables && $sector && $sector->exists && Schema::hasTable('pos_projects') && ($blueprint?->exists || ! empty($options['persist_project']))) {
@@ -805,11 +817,46 @@ class ProjectOsBlueprintCompilerService
             if ($stackPresetModel->exists && Schema::hasColumn('pos_projects', 'stack_preset_id')) {
                 $projectPayload['stack_preset_id'] = $stackPresetModel->id;
             }
+            if (Schema::hasColumn('pos_projects', 'phased_prompts_json')) {
+                $projectPayload['phased_prompts_json'] = $phasedPrompts;
+            }
 
             PosProject::query()->updateOrCreate($lookup, $projectPayload);
         }
 
         return $schema;
+    }
+
+    /**
+     * Compile and return the persisted (or in-memory) PosProject model for a VisionBlueprint.
+     */
+    public function compileAndPersist(VisionBlueprint $blueprint, array $options = []): PosProject
+    {
+        $options['persist_project'] = true;
+        $schema = self::compileUniversalSchema($blueprint, $options);
+
+        $existing = $blueprint->exists
+            ? PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first()
+            : null;
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $fallback = new PosProject([
+            'vision_blueprint_id' => $blueprint->id,
+            'app_name' => $schema['project_metadata']['name'] ?? $blueprint->nama_bisnis,
+            'architecture_archetype' => $schema['project_metadata']['architecture_archetype'] ?? 'COMPOSITE',
+            'stack_preset' => $schema['project_metadata']['stack_preset'] ?? 'STACK_M1_LARAVEL_FILAMENT_LIVEWIRE',
+            'compiled_schema_json' => json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            'compiled_execution_md' => self::renderExecutionBlueprintMarkdown($schema),
+            'compiled_agents_md' => self::renderUnifiedAgentsMarkdown($schema),
+            'compiled_graph_json' => self::renderInitialGraphifyJson($schema),
+            'phased_prompts_json' => $schema['phased_prompt_sequencer'] ?? [],
+        ]);
+        $fallback->id = $fallback->newUniqueId();
+
+        return $fallback;
     }
 
     /**
@@ -1053,6 +1100,38 @@ class ProjectOsBlueprintCompilerService
             $md .= "  - *Error State:* {$arch['error_state']}\n";
         }
         $md .= "\n";
+
+        if (! empty($schema['sectoral_ui_ux_archetype'])) {
+            $secUi = $schema['sectoral_ui_ux_archetype'];
+            $primaryArch = $secUi['primary_archetype'] ?? 'SECTOR_ARCHETYPE';
+            $secondaryArch = $secUi['secondary_archetype'] ?? '';
+            $headlineId = $secUi['headline']['id'] ?? '';
+            $md .= "### Sectoral Industrial UI/UX Archetype Contract (`{$primaryArch}` & `{$secondaryArch}`)\n";
+            if ($headlineId !== '') {
+                $md .= "- **Industrial Ergonomics:** {$headlineId}\n";
+            }
+            foreach (($secUi['ergonomics_and_layout'] ?? []) as $erg) {
+                $md .= "- **Layout Mandate:** {$erg}\n";
+            }
+            if (! empty($secUi['keyboard_shortcuts'])) {
+                $keys = array_map(fn ($k) => "`{$k['key']}` ({$k['action']})", $secUi['keyboard_shortcuts']);
+                $md .= '- **Mandatory Keyboard Shortcuts:** ' . implode(' | ', $keys) . "\n";
+            }
+            foreach (($secUi['forbidden_ux_patterns'] ?? []) as $forbid) {
+                $md .= "- **FORBIDDEN UX:** {$forbid}\n";
+            }
+            $md .= "\n";
+        }
+
+        if (! empty($schema['realistic_domain_seeder'])) {
+            $seederSpec = $schema['realistic_domain_seeder'];
+            $md .= "### Realistic Domain Seeder & Stress-Test Factory (`" . ($seederSpec['seeder_class'] ?? 'RealisticSectorSeeder') . "`)\n";
+            $md .= '- **Forbidden Dummy Strings:** `' . implode('`, `', $seederSpec['forbidden_dummy_strings'] ?? ['Test Name 1', 'Lorem ipsum']) . "`\n";
+            foreach (($seederSpec['realistic_fixtures'] ?? []) as $fx) {
+                $md .= "- **Fixture:** {$fx}\n";
+            }
+            $md .= "\n";
+        }
 
         $md .= "## 9. Pre-Built Acceptance Test Matrix (Given-When-Then Gate)\n";
         $md .= "AI MUST implement automated tests covering every scenario below and run them to 100% green before declaring completion:\n\n";
@@ -1367,5 +1446,150 @@ MD;
             'nodes' => $nodes,
             'edges' => $edges,
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Killer Feature #1: Phased Prompt Sequencer (Phase 1 to 6 Anti-Context Overflow Engine).
+     */
+    public static function compilePhasedPrompts(array $schema): array
+    {
+        $meta = $schema['project_metadata'] ?? [];
+        $stack = $schema['tech_stack_contract'] ?? [];
+        $secUi = $schema['sectoral_ui_ux_archetype'] ?? [];
+        $seeder = $schema['realistic_domain_seeder'] ?? [];
+
+        $appName = $meta['name'] ?? 'Enterprise App';
+        $sectorCode = $meta['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL';
+        $sectorLabel = $meta['primary_sector_name']['id'] ?? $sectorCode;
+        $stackCode = $stack['preset_code'] ?? 'STACK_M1_LARAVEL_FILAMENT_LIVEWIRE';
+        $stackShort = $stack['short_code'] ?? 'M1';
+        $topology = $stack['topology'] ?? 'MONOLITH';
+        $primitivesList = implode(', ', $meta['injected_primitives'] ?? []);
+        $tableNames = implode(', ', array_map(fn ($t) => $t['table'] ?? '', $schema['data_dictionary'] ?? []));
+        $stateEntities = implode(', ', array_map(fn ($sm) => ($sm['entity'] ?? '') . ' (' . implode(' -> ', $sm['states'] ?? []) . ')', $schema['state_machines'] ?? []));
+        $primaryArch = $secUi['primary_archetype'] ?? 'POS_SPLIT_TERMINAL';
+        $secondaryArch = $secUi['secondary_archetype'] ?? 'DENSE_SKU_MATRIX';
+        $ergonomicsBullets = implode("\n", array_map(fn ($e) => "- {$e}", $secUi['ergonomics_and_layout'] ?? []));
+        $seederBullets = implode("\n", array_map(fn ($f) => "- {$f}", $seeder['realistic_fixtures'] ?? []));
+
+        return [
+            [
+                'phase' => 1,
+                'filename' => '01-foundation.md',
+                'title' => 'Fase 1: Foundation, Guardrails & Multi-Tenant ULID Architecture',
+                'objective' => 'Memasang AGENTS.md, graph.json awal, adapter stack [' . $stackShort . '], konfigurasi PostgreSQL 16 Strict ULID, dan isolasi organization_id.',
+                'prompt' => <<<PROMPT
+# PROJECT OS EXECUTION — FASE 1/6: FOUNDATION & GUARDRAILS ({$appName})
+Baca terlebih dahulu `AGENTS.md`, `.agents/STACK_TOPOLOGY_CONTRACT.md`, dan `.agents/graphify/graph.json`.
+
+**Target Sektor:** `{$sectorCode}` ({$sectorLabel})
+**Target Topologi & Stack:** `[{$stackShort}] {$topology}` — `{$stackCode}`
+**Modul Primitif Aktif:** `{$primitivesList}`
+
+## Instruksi Eksekusi Fase 1 (JANGAN sentuh UI atau Domain Logic dulu!):
+1. Siapkan struktur direktori sesuai `.agents/STACK_TOPOLOGY_CONTRACT.md` dan konfigurasi database PostgreSQL 16 Strict Mode (`CHAR(26)` ULID Primary Keys).
+2. Buat fondasi Multi-Tenancy (`organizations` anchor table + trait/middleware isolasi `organization_id`) dan standar respons error `RFC 9457 (application/problem+json)` beserta header wajib (`X-Request-ID`, `X-Tenant-ID`, `X-Idempotency-Key`).
+3. Pastikan tidak ada paket atau script CDN eksternal; seluruh dependensi terkonfigurasi lokal.
+4. Setelah selesai, laporkan daftar file fondasi yang dibuat dan perbarui `.agents/graphify/graph.json`, lalu BERHENTI menunggu instruksi Fase 2.
+PROMPT,
+            ],
+            [
+                'phase' => 2,
+                'filename' => '02-database-states.md',
+                'title' => 'Fase 2: Database Migrations, Deletion Policies & State Machine Enums',
+                'objective' => 'Mengeksekusi seluruh migrasi ULID, DECIMAL(19,4), ON DELETE RESTRICT, outbox_messages, webhook_inbound_logs, dan Enum status tanpa menyentuh UI.',
+                'prompt' => <<<PROMPT
+# PROJECT OS EXECUTION — FASE 2/6: DATABASE SCHEMA & STATE MACHINES ({$appName})
+Baca Bagian 2 & Bagian 3 di `PROJECT_OS_EXECUTION_BLUEPRINT.md` serta `.agents/BLUEPRINT_SCHEMA.json`.
+
+**Tabel Wajib Dibuat:** `{$tableNames}`
+**State Machines Wajib:** `{$stateEntities}`
+
+## Instruksi Eksekusi Fase 2 (ZERO UI — Fokus 100% Data & State Layer):
+1. Buat seluruh migrasi untuk tabel di atas dengan aturan mutlak:
+   - Primary Key 26-karakter ULID (`->ulid('id')->primary()` / `CHAR(26)`), **HARAM** `AUTO_INCREMENT` atau `uuid('id')`.
+   - Seluruh kolom uang/kuantitas wajib `DECIMAL(19,4)`.
+   - Seluruh Foreign Key transaksional wajib `ON DELETE RESTRICT` sesuai `deletion_policy` (`IMMUTABLE_LEDGER`, `ANONYMIZE_PII`, `SOFT_ARCHIVE`).
+   - Sertakan tabel `outbox_messages`, `webhook_inbound_logs`, dan `audit_logs` (dengan `integrity_hash` SHA-256).
+2. Buat seluruh Backed Enum untuk State Machine beserta Model/Entity, relasi, dan casts yang presisi.
+3. Jalankan migrasi sampai bersih 0 error dan perbarui `.agents/graphify/graph.json`, lalu BERHENTI menunggu Fase 3.
+PROMPT,
+            ],
+            [
+                'phase' => 3,
+                'filename' => '03-domain-actions.md',
+                'title' => 'Fase 3: Deterministic Domain Actions, Pessimistic Locks & Realistic Seeder',
+                'objective' => 'Membangun Action Classes (DB::transaction + lockForUpdate), rumus Penny Allocation, Saga Outbox, dan Realistic Domain Seeder Indonesia.',
+                'prompt' => <<<PROMPT
+# PROJECT OS EXECUTION — FASE 3/6: DETERMINISTIC ACTIONS, FORMULAS & REALISTIC SEEDER ({$appName})
+Baca Bagian 3, 6, dan 7 di `PROJECT_OS_EXECUTION_BLUEPRINT.md`.
+
+## Instruksi Eksekusi Fase 3:
+1. Implementasikan setiap transisi State Machine sebagai Dedicated Invokable Action Class di dalam `DB::transaction()` dengan `SELECT ... FOR UPDATE` (`lockForUpdate()`) sesuai urutan kunci anti-deadlock.
+2. Terapkan rumus matematika eksak `DECIMAL(19,4)` pembulatan `HALF_UP` dan **Penny Allocation** (`Rp 100.000 / 3 = [33333, 33333, 33334]`) agar 0 selisih sen.
+3. Pastikan setiap mutasi domain menulis event ke `outbox_messages` dan mencatat `AuditLog::record()` berstempel SHA-256 di transaksi yang sama.
+4. Bangun **Domain-Realistic Seeder (`{$seeder['seeder_class']}`)** (HARAM memakai `"Test Name 1"` atau `"Lorem ipsum"`):
+{$seederBullets}
+5. Jalankan seeder untuk memastikan data awal terisi sempurna, lalu BERHENTI menunggu Fase 4.
+PROMPT,
+            ],
+            [
+                'phase' => 4,
+                'filename' => '04-verification-suite.md',
+                'title' => 'Fase 4: Automated Acceptance Test Suite (100% Green Before Any UI)',
+                'objective' => 'Menulis dan menjalankan Pest PHP / Integration Tests untuk semua skenario Given-When-Then sampai 100% hijau sebelum menyentuh satu baris UI pun.',
+                'prompt' => <<<PROMPT
+# PROJECT OS EXECUTION — FASE 4/6: AUTOMATED VERIFICATION SUITE BEFORE UI ({$appName})
+Baca Bagian 9 (`Pre-Built Acceptance Test Matrix`) di `PROJECT_OS_EXECUTION_BLUEPRINT.md`.
+
+## Instruksi Eksekusi Fase 4 (TDD GATEKEEPER):
+1. Implementasikan seluruh skenario `Given-When-Then` pada suite pengujian otomatis (`ZeroAssumptionAcceptanceMatrixTest`), mencakup:
+   - Pencegahan race-condition / double-spending / double-booking pada aksi konkuren.
+   - Akurasi pembulatan pajak & alokasi sisa 1 Rupiah (Penny Allocation).
+   - Penolakan penghapusan langsung pada tabel `IMMUTABLE_LEDGER` dan verifikasi signature HMAC-SHA256 pada `webhook_inbound_logs`.
+   - Isolasi ketetapan multi-tenant (`organization_id`) dan otorisasi RBAC.
+2. Jalankan test runner sampai **100% PASSED (0 failures, 0 errors)**. DILARANG lanjut ke UI jika masih ada 1 test gagal!
+PROMPT,
+            ],
+            [
+                'phase' => 5,
+                'filename' => '05-sectoral-ui-ux.md',
+                'title' => "Fase 5: Sectoral UI/UX Archetypes ({$primaryArch} & {$secondaryArch})",
+                'objective' => 'Membangun antarmuka operasional sesuai ergonomi spesifik industri (bukan CRUD tabel membosankan) dan patuh 100% aturan Anti-Slop.',
+                'prompt' => <<<PROMPT
+# PROJECT OS EXECUTION — FASE 5/6: SECTORAL UI/UX ARCHETYPES ({$appName})
+Baca `.agents/UI_UX_CONTRACT.md` dan kontrak **Sectoral Industrial UI/UX Archetype** di `PROJECT_OS_EXECUTION_BLUEPRINT.md`.
+
+**Archetype Wajib Industri:** `{$primaryArch}` & `{$secondaryArch}`
+
+## Ergonomi & Layout Spesifik Industri yang WAJIB Dibangun:
+{$ergonomicsBullets}
+
+## Aturan Ketat Zero-Slop UI:
+1. **HARAM** membuat sekadar tabel CRUD standar untuk layar operasional utama di atas!
+2. **HARAM** `rounded-full`, gradien warna-warni `bg-gradient-to-*`, font pastel pudar di atas kartu terang, CDN eksternal, dan dialog native `alert()`/`confirm()`.
+3. **WAJIB** menggunakan sudut tipis (`rounded-none` / `rounded-xs` / `rounded-sm`), mode terang & gelap berkontras tinggi WCAG AA/AAA, `tabular-nums` + pemisah ribuan, Keyset Cursor Pagination `O(1)` (`cursorPaginate()`), serta Empty, Skeleton Loading, dan RFC 9457 Error States.
+PROMPT,
+            ],
+            [
+                'phase' => 6,
+                'filename' => '06-deployment.md',
+                'title' => 'Fase 6: 4-Pillar AI Copilot (RAG+CAG+KAG), Slop Audit & Production Pack',
+                'objective' => 'Menyinkronkan pgvector RAG, Native Tools, Smart Guide, SHA-256 Audit Log, menjalankan ./verify-blueprint.sh, dan menyiapkan deploy.sh + Caddyfile.',
+                'prompt' => <<<PROMPT
+# PROJECT OS EXECUTION — FASE 6/6: AI COPILOT RAG, SLOP SCANNER & PRODUCTION DEPLOY ({$appName})
+Baca `.agents/AGENT_HARNESS_ECC.md` dan `STACK_TOPOLOGY_CONTRACT.md`.
+
+## Instruksi Finalisasi Produksi:
+1. Sinkronkan **4 Pilar Tata Kelola Enterprise**:
+   - **AI Copilot Tri-Hybrid (RAG `pgvector` 768-dim RRF + CAG Live Telemetry + KAG Rule Graph)** beserta deklarasi `gemini_native_tools` tervalidasi RBAC.
+   - **Smart Guide Admin** & dokumentasi operasional internal.
+   - **RBAC Policies** untuk setiap role & tenant.
+   - **Tamper-Evident SHA-256 Audit Log** pada seluruh mutasi kritikal.
+2. Siapkan artefak rilis produksi: `deploy.sh` (6-skenario zero-downtime), `Caddyfile` / `railpack.json`, serta health probes (`/healthz`, `/livez`, `/readyz`).
+3. Jalankan `./verify-blueprint.sh` dan suite pengujian penuh hingga **0 pelanggaran & 100% hijau**. Perbarui `.agents/graphify/graph.json`.
+PROMPT,
+            ],
+        ];
     }
 }

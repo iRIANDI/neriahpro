@@ -23,31 +23,58 @@ class SuperAdminSeeder extends Seeder
         $clientRetailRole = Role::firstOrCreate(['name' => 'client_retail', 'guard_name' => 'web']);
         $clientPartnerRole = Role::firstOrCreate(['name' => 'client_partner', 'guard_name' => 'web']);
 
-        // Explicit Global & Executive Permissions
+        // Explicit Global, Project OS v2.5 & Executive Permissions
         $executiveGuidePerm = Permission::firstOrCreate(['name' => 'view_executive_smart_guide', 'guard_name' => 'web']);
         $manageSettingsPerm = Permission::firstOrCreate(['name' => 'manage_settings', 'guard_name' => 'web']);
         $manageVouchersPerm = Permission::firstOrCreate(['name' => 'manage_vouchers', 'guard_name' => 'web']);
         $auditLogPerm = Permission::firstOrCreate(['name' => 'view_audit_logs', 'guard_name' => 'web']);
+        $exportAuditLogPerm = Permission::firstOrCreate(['name' => 'export_audit_logs', 'guard_name' => 'web']);
         $aiCopilotPerm = Permission::firstOrCreate(['name' => 'view_ai_copilot', 'guard_name' => 'web']);
+        $executeAiToolsPerm = Permission::firstOrCreate(['name' => 'execute_ai_native_tools', 'guard_name' => 'web']);
         $twoFactorPerm = Permission::firstOrCreate(['name' => 'manage_two_factor', 'guard_name' => 'web']);
+        $viewMatrixPerm = Permission::firstOrCreate(['name' => 'view_project_os_matrix', 'guard_name' => 'web']);
+        $manageMatrixPerm = Permission::firstOrCreate(['name' => 'manage_project_os_matrix', 'guard_name' => 'web']);
+        $brownfieldImportPerm = Permission::firstOrCreate(['name' => 'execute_brownfield_importer', 'guard_name' => 'web']);
+        $slopScannerPerm = Permission::firstOrCreate(['name' => 'run_slop_drift_scanner', 'guard_name' => 'web']);
+        $cliBootstrapPerm = Permission::firstOrCreate(['name' => 'export_cli_bootstrapper', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
             $manageSettingsPerm,
             $manageVouchersPerm,
             $auditLogPerm,
+            $exportAuditLogPerm,
             $aiCopilotPerm,
+            $executeAiToolsPerm,
             $twoFactorPerm,
+            $viewMatrixPerm,
+            $manageMatrixPerm,
+            $brownfieldImportPerm,
+            $slopScannerPerm,
+            $cliBootstrapPerm,
         ]);
 
-        if (!$developerRole->hasPermissionTo($aiCopilotPerm)) {
-            $developerRole->givePermissionTo([$aiCopilotPerm, $twoFactorPerm]);
-        }
+        $developerRole->givePermissionTo([
+            $aiCopilotPerm,
+            $executeAiToolsPerm,
+            $twoFactorPerm,
+            $viewMatrixPerm,
+            $brownfieldImportPerm,
+            $slopScannerPerm,
+            $cliBootstrapPerm,
+        ]);
 
-        // Grant Due Diligence permissions to Investor & Superadmin
-        if (!$investorRole->hasPermissionTo($executiveGuidePerm)) {
-            $investorRole->givePermissionTo($executiveGuidePerm);
-        }
+        // Grant Due Diligence Read-Only permissions to Investor & Superadmin
+        $investorRole->givePermissionTo([
+            $executiveGuidePerm,
+            $viewMatrixPerm,
+            $aiCopilotPerm,
+            $auditLogPerm,
+        ]);
+
+        // Retail & Partner Clients can export CLI bootstrapper & phased prompts for their own licensed blueprints
+        $clientRetailRole->givePermissionTo([$cliBootstrapPerm]);
+        $clientPartnerRole->givePermissionTo([$cliBootstrapPerm, $brownfieldImportPerm]);
 
         // 1. Primary Superadmin (Founder & Chief Architect - Yoseph Iriandi Tambunan)
         $admin = User::updateOrCreate(

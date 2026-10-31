@@ -29,7 +29,7 @@ class ProjectOsMatrixPage extends Page
 
     protected string $view = 'filament.pages.project-os-matrix-page';
 
-    public string $activeTab = 'sectors'; // sectors | primitives | rules | projects
+    public string $activeTab = 'sectors'; // sectors | primitives | stacks | rules | projects | lab
     public string $viewMode = 'grid'; // grid | list
     public string $density = 'normal'; // compact | normal | relaxed
     public string $search = '';
@@ -37,6 +37,13 @@ class ProjectOsMatrixPage extends Page
     public string $sortBy = 'default';
     public string $sortDirection = 'asc'; // asc | desc | none
     public array $selectedIds = [];
+
+    // Killer #4 & #5 Interactive Lab State
+    public string $brownfieldSql = '';
+    public string $brownfieldHint = '';
+    public array $brownfieldResult = [];
+    public string $slopSnippet = '';
+    public array $slopResult = [];
 
     public function getMaxContentWidth(): Width | string | null
     {
@@ -55,7 +62,8 @@ class ProjectOsMatrixPage extends Page
             return false;
         }
 
-        return $user->hasAnyRole(['super_admin', 'investor'])
+        return $user->can('view_project_os_matrix')
+            || $user->hasAnyRole(['super_admin', 'developer', 'investor'])
             || in_array(strtolower($user->email ?? ''), [
                 'yoseph.iriandi.tambunan@gmail.com',
                 'iriandi@neriahpro.com',
@@ -66,17 +74,17 @@ class ProjectOsMatrixPage extends Page
 
     public function getHeading(): string | Htmlable
     {
-        return '12-Sector Composable Blueprint & Core Primitives Matrix';
+        return '12-Sector Industrial UI/UX, Core Primitives & Zero-to-Production Matrix';
     }
 
     public function getSubheading(): string | Htmlable | null
     {
-        return 'Taksonomi 12 Sektor Fungsional, 12 Core Primitives (7 Dimensi Zero-Assumption), 9 Curated Tech Stack & Topology Presets (M1–S2), dan 6 Global Anti-Slop Rule Packs.';
+        return '12 Sectoral Industrial UI/UX Archetypes & Realistic Seeders, 12 Core Primitives (7 Dimensi Zero-Assumption), 9 Stack Adapters (M1–S2), serta Laboratorium Audit Brownfield SQL & Slop Scanner.';
     }
 
     public function setTab(string $tab): void
     {
-        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects'], true)) {
+        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'lab'], true)) {
             $this->activeTab = $tab;
             $this->cursor = null;
             $this->selectedIds = [];
@@ -141,6 +149,16 @@ class ProjectOsMatrixPage extends Page
 
     public function syncMatrixSeeder(): void
     {
+        $user = auth()->user();
+        if ($user && ! $user->hasRole('super_admin') && ! $user->can('manage_project_os_matrix')) {
+            Notification::make()
+                ->danger()
+                ->title('Akses Ditolak RBAC')
+                ->body('Hanya Super Admin atau pemilik izin manage_project_os_matrix yang dapat menyinkronkan seeder matriks.')
+                ->send();
+            return;
+        }
+
         try {
             if (Schema::hasTable('pos_sectors')) {
                 app(\Database\Seeders\ProjectOsMatrixSeeder::class)->run();
@@ -150,8 +168,8 @@ class ProjectOsMatrixPage extends Page
                 Cache::forget(PosSector::CACHE_KEY);
                 Notification::make()
                     ->success()
-                    ->title('Matriks 12-Sektor & 9 Stack Presets Tersinkronisasi')
-                    ->body('Seluruh 12 Sektor Fungsional, 12 Core Primitives (7 Dimensi Zero-Assumption), 9 Stack Presets (M1–S2), dan 6 Rule Packs berhasil diperbarui di database & cache O(1).')
+                    ->title('Matriks 12-Sektor UI/UX & 9 Stack Presets Tersinkronisasi')
+                    ->body('Seluruh 12 Sectoral UI/UX Archetypes & Realistic Seeders, 12 Core Primitives, 9 Stack Presets (M1–S2), dan 6 Rule Packs berhasil diperbarui.')
                     ->send();
             } else {
                 Notification::make()
@@ -331,18 +349,28 @@ class ProjectOsMatrixPage extends Page
 
                 return [
                     'stats' => $stats,
-                    'items' => collect($paginated->items())->map(fn (PosSector $s) => [
-                        'id' => $s->id,
-                        'sector_number' => $s->sector_number,
-                        'code' => $s->code,
-                        'name' => $s->name['id'] ?? $s->code,
-                        'name_en' => $s->name['en'] ?? '',
-                        'description' => $s->description['id'] ?? '',
-                        'mandatory_primitives' => $s->primitives->filter(fn ($p) => $p->pivot?->is_mandatory)->pluck('code')->values()->all(),
-                        'optional_primitives' => $s->primitives->reject(fn ($p) => $p->pivot?->is_mandatory)->pluck('code')->values()->all(),
-                        'invariants' => $s->blueprint_invariants ?? [],
-                        'compliance' => $s->default_compliance_standards ?? [],
-                    ])->all(),
+                    'items' => collect($paginated->items())->map(function (PosSector $s) {
+                        $uiArch = $s->resolvedUiArchetypes();
+                        $seeder = $s->resolvedSeederContract();
+                        return [
+                            'id' => $s->id,
+                            'sector_number' => $s->sector_number,
+                            'code' => $s->code,
+                            'name' => $s->name['id'] ?? $s->code,
+                            'name_en' => $s->name['en'] ?? '',
+                            'description' => $s->description['id'] ?? '',
+                            'mandatory_primitives' => $s->primitives->filter(fn ($p) => $p->pivot?->is_mandatory)->pluck('code')->values()->all(),
+                            'optional_primitives' => $s->primitives->reject(fn ($p) => $p->pivot?->is_mandatory)->pluck('code')->values()->all(),
+                            'invariants' => $s->blueprint_invariants ?? [],
+                            'compliance' => $s->default_compliance_standards ?? [],
+                            'primary_archetype' => $uiArch['primary_archetype'] ?? '',
+                            'secondary_archetype' => $uiArch['secondary_archetype'] ?? '',
+                            'ui_headline' => $uiArch['headline']['id'] ?? '',
+                            'wireframe_panes' => $uiArch['wireframe_blueprint']['panes'] ?? [],
+                            'keyboard_shortcuts' => $uiArch['keyboard_shortcuts'] ?? [],
+                            'seeder_class' => $seeder['seeder_class'] ?? 'RealisticSectorSeeder',
+                        ];
+                    })->all(),
                     'next_cursor' => $paginated->nextCursor()?->encode(),
                     'prev_cursor' => $paginated->previousCursor()?->encode(),
                 ];
@@ -466,6 +494,8 @@ class ProjectOsMatrixPage extends Page
                         'archetype' => $p->architecture_archetype,
                         'primitives_count' => count($p->selected_primitive_ids ?? []),
                         'blueprint_slug' => $p->visionBlueprint?->slug,
+                        'cli_init_command' => 'curl -sL ' . url('/init/' . ($p->visionBlueprint?->id ?: $p->id)) . ' | bash',
+                        'phases_count' => count($p->phased_prompts_json ?: []) ?: 6,
                         'updated_at' => $p->updated_at?->format('d M Y H:i') ?? '-',
                     ])->all(),
                     'next_cursor' => $paginated->nextCursor()?->encode(),
@@ -477,18 +507,28 @@ class ProjectOsMatrixPage extends Page
         // Resilient In-Memory Fallback before migration runs
         $catalog = ProjectOsBlueprintCompilerService::getCachedCatalog();
         $rawItems = match ($this->activeTab) {
-            'sectors' => array_map(fn ($s) => [
-                'id' => $s['id'] ?? $s['code'],
-                'sector_number' => $s['sector_number'] ?? 0,
-                'code' => $s['code'],
-                'name' => $s['name']['id'] ?? $s['code'],
-                'name_en' => $s['name']['en'] ?? '',
-                'description' => $s['description']['id'] ?? '',
-                'mandatory_primitives' => $s['mandatory_primitives'] ?? [],
-                'optional_primitives' => $s['optional_primitives'] ?? [],
-                'invariants' => $s['blueprint_invariants'] ?? [],
-                'compliance' => $s['default_compliance_standards'] ?? [],
-            ], $catalog['sectors'] ?? []),
+            'sectors' => array_map(function ($s) {
+                $uiArch = $s['ui_ux_archetypes'] ?? \App\Support\PosSectorUiArchetypeCatalog::forSector($s['code']);
+                $seeder = $s['realistic_seeder_contract'] ?? \App\Support\PosSectorUiArchetypeCatalog::seederForSector($s['code']);
+                return [
+                    'id' => $s['id'] ?? $s['code'],
+                    'sector_number' => $s['sector_number'] ?? 0,
+                    'code' => $s['code'],
+                    'name' => $s['name']['id'] ?? $s['code'],
+                    'name_en' => $s['name']['en'] ?? '',
+                    'description' => $s['description']['id'] ?? '',
+                    'mandatory_primitives' => $s['mandatory_primitives'] ?? [],
+                    'optional_primitives' => $s['optional_primitives'] ?? [],
+                    'invariants' => $s['blueprint_invariants'] ?? [],
+                    'compliance' => $s['default_compliance_standards'] ?? [],
+                    'primary_archetype' => $uiArch['primary_archetype'] ?? '',
+                    'secondary_archetype' => $uiArch['secondary_archetype'] ?? '',
+                    'ui_headline' => $uiArch['headline']['id'] ?? '',
+                    'wireframe_panes' => $uiArch['wireframe_blueprint']['panes'] ?? [],
+                    'keyboard_shortcuts' => $uiArch['keyboard_shortcuts'] ?? [],
+                    'seeder_class' => $seeder['seeder_class'] ?? 'RealisticSectorSeeder',
+                ];
+            }, $catalog['sectors'] ?? []),
             'primitives' => array_map(fn ($p) => [
                 'id' => $p['id'] ?? $p['code'],
                 'code' => $p['code'],
@@ -536,6 +576,72 @@ class ProjectOsMatrixPage extends Page
             'next_cursor' => null,
             'prev_cursor' => null,
         ];
+    }
+
+    public function loadSampleBrownfieldSql(): void
+    {
+        $this->brownfieldHint = 'Sistem Kasir & Inventori Apotek Klinik';
+        $this->brownfieldSql = <<<'SQL'
+CREATE TABLE patients (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(150) NOT NULL,
+    nik VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE prescriptions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    total_price FLOAT DEFAULT 0,
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+);
+SQL;
+    }
+
+    public function runBrownfieldAudit(): void
+    {
+        $user = auth()->user();
+        if ($user && ! $user->hasAnyRole(['super_admin', 'developer']) && ! $user->can('execute_brownfield_importer')) {
+            Notification::make()->danger()->title('Akses Ditolak RBAC')->body('Akun Anda tidak memiliki izin execute_brownfield_importer.')->send();
+            return;
+        }
+
+        if (trim($this->brownfieldSql) === '') {
+            Notification::make()->warning()->title('Schema Kosong')->body('Tempelkan SQL DDL, migrasi Laravel, atau schema.prisma terlebih dahulu.')->send();
+            return;
+        }
+
+        $this->brownfieldResult = app(\App\Services\BrownfieldMigrationAuditorService::class)
+            ->auditSchema($this->brownfieldSql, $this->brownfieldHint ?: null, true);
+
+        Notification::make()
+            ->success()
+            ->title('Audit Brownfield Selesai — Skor ' . ($this->brownfieldResult['readiness_score'] ?? 0) . '/100')
+            ->body('Rencana Migrasi Shadow ULID 4 Tahap & AI Refactor Prompt siap disalin.')
+            ->send();
+    }
+
+    public function runSlopCodeScan(): void
+    {
+        $user = auth()->user();
+        if ($user && ! $user->hasAnyRole(['super_admin', 'developer']) && ! $user->can('run_slop_drift_scanner')) {
+            Notification::make()->danger()->title('Akses Ditolak RBAC')->body('Akun Anda tidak memiliki izin run_slop_drift_scanner.')->send();
+            return;
+        }
+
+        if (trim($this->slopSnippet) === '') {
+            Notification::make()->warning()->title('Kode Kosong')->body('Tempelkan potongan kode Blade/JSX/Migration untuk dipindai.')->send();
+            return;
+        }
+
+        $this->slopResult = app(\App\Services\BlueprintSlopScannerService::class)
+            ->scanCodeSnippet($this->slopSnippet, true);
+
+        Notification::make()
+            ->success()
+            ->title('Slop Scanner Selesai — Skor ' . ($this->slopResult['compliance_score'] ?? 100) . '/100')
+            ->body(($this->slopResult['violations_count'] ?? 0) . ' pelanggaran terdeteksi.')
+            ->send();
     }
 }
 

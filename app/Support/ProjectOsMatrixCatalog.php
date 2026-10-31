@@ -25,6 +25,8 @@ class ProjectOsMatrixCatalog
                 || \App\Models\PosStackPreset::query()->count() >= 9;
             $ultimateColsReady = ! Schema::hasColumn('pos_primitives', 'deterministic_formulas')
                 || PosPrimitive::query()->whereNotNull('deterministic_formulas')->count() >= 12;
+            $sectorUiColsReady = ! Schema::hasColumn('pos_sectors', 'ui_ux_archetypes')
+                || PosSector::query()->whereNotNull('ui_ux_archetypes')->count() >= 12;
 
             if (
                 PosSector::query()->count() >= 12
@@ -32,6 +34,7 @@ class ProjectOsMatrixCatalog
                 && PosRulePack::query()->count() >= 6
                 && $presetsReady
                 && $ultimateColsReady
+                && $sectorUiColsReady
             ) {
                 return;
             }
@@ -65,10 +68,14 @@ class ProjectOsMatrixCatalog
             $primitiveMap[$primData['code']] = $primitive;
         }
 
+        $hasSectorUiCols = Schema::hasTable('pos_sectors') && Schema::hasColumn('pos_sectors', 'ui_ux_archetypes');
         foreach (self::sectors() as $sectorDef) {
             $mandatoryCodes = $sectorDef['mandatory_primitives'] ?? [];
             $optionalCodes = $sectorDef['optional_primitives'] ?? [];
             unset($sectorDef['mandatory_primitives'], $sectorDef['optional_primitives']);
+            if (! $hasSectorUiCols) {
+                unset($sectorDef['ui_ux_archetypes'], $sectorDef['realistic_seeder_contract']);
+            }
 
             $sector = PosSector::query()->updateOrCreate(
                 ['code' => $sectorDef['code']],
@@ -115,6 +122,7 @@ class ProjectOsMatrixCatalog
         }
 
         PosStackPresetCatalog::seedDatabase();
+        PosSectorUiArchetypeCatalog::enrichDatabaseSectors();
 
         Cache::forget(PosSector::CACHE_KEY);
     }
@@ -124,7 +132,7 @@ class ProjectOsMatrixCatalog
      */
     public static function sectors(): array
     {
-        return [
+        $baseSectors = [
             [
                 'code' => 'SECTOR_01_COMMERCE_OMNICHANNEL',
                 'sector_number' => 1,
@@ -474,6 +482,17 @@ class ProjectOsMatrixCatalog
                 'optional_primitives' => ['PRIMITIVE_SUBSCRIPTION_COHORT'],
             ],
         ];
+
+        $uiArchetypes = PosSectorUiArchetypeCatalog::sectorUiArchetypes();
+        $realisticSeeders = PosSectorUiArchetypeCatalog::sectorRealisticSeeders();
+
+        return array_map(static function (array $sector) use ($uiArchetypes, $realisticSeeders): array {
+            $code = $sector['code'] ?? '';
+            $sector['ui_ux_archetypes'] = $uiArchetypes[$code] ?? ($sector['ui_ux_archetypes'] ?? []);
+            $sector['realistic_seeder_contract'] = $realisticSeeders[$code] ?? ($sector['realistic_seeder_contract'] ?? []);
+
+            return $sector;
+        }, $baseSectors);
     }
 
     /**

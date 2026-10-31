@@ -13,7 +13,7 @@ class PosSector extends Model
 {
     use HasFactory, HasUlids;
 
-    public const CACHE_KEY = 'project_os:matrix_catalog:v2';
+    public const CACHE_KEY = 'project_os:matrix_catalog:v2_5';
 
     protected $table = 'pos_sectors';
 
@@ -24,6 +24,8 @@ class PosSector extends Model
         'description',
         'domain_terminology',
         'blueprint_invariants',
+        'ui_ux_archetypes',
+        'realistic_seeder_contract',
         'default_compliance_standards',
         'detection_keywords',
         'is_active',
@@ -37,6 +39,8 @@ class PosSector extends Model
             'description' => 'array',
             'domain_terminology' => 'array',
             'blueprint_invariants' => 'array',
+            'ui_ux_archetypes' => 'array',
+            'realistic_seeder_contract' => 'array',
             'default_compliance_standards' => 'array',
             'detection_keywords' => 'array',
             'is_active' => 'boolean',
@@ -77,6 +81,24 @@ class PosSector extends Model
         $desc = is_array($this->description) ? $this->description : [];
 
         return (string) ($desc[$locale] ?? $desc['id'] ?? $desc['en'] ?? '');
+    }
+
+    public function resolvedUiArchetypes(): array
+    {
+        if (! empty($this->ui_ux_archetypes) && is_array($this->ui_ux_archetypes)) {
+            return $this->ui_ux_archetypes;
+        }
+
+        return \App\Support\PosSectorUiArchetypeCatalog::forSector((string) $this->code);
+    }
+
+    public function resolvedSeederContract(): array
+    {
+        if (! empty($this->realistic_seeder_contract) && is_array($this->realistic_seeder_contract)) {
+            return $this->realistic_seeder_contract;
+        }
+
+        return \App\Support\PosSectorUiArchetypeCatalog::seederForSector((string) $this->code);
     }
 }
 

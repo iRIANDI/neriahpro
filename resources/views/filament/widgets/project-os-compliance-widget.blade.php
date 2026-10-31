@@ -251,6 +251,9 @@
                     MIDTRANS COMPLIANCE READY
                 </span>
                 <span class="poc-badge poc-badge-sky">
+                    12 SECTORAL UI/UX &amp; 9 STACKS
+                </span>
+                <span class="poc-badge poc-badge-sky">
                     POSTGRESQL STRICT ULID
                 </span>
                 <span class="poc-badge poc-badge-amber">

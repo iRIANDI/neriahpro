@@ -362,6 +362,9 @@ class VectorEmbeddingService
         if ($forceRefresh) {
             AiKnowledgeVector::where('source_id', 'LIKE', 'smartguide-%')
                 ->orWhere('source_id', 'LIKE', 'pilar-%')
+                ->orWhere('source_id', 'LIKE', 'sectoral-ui-%')
+                ->orWhere('source_id', 'LIKE', 'stack-preset-%')
+                ->orWhere('source_id', 'LIKE', 'killer-engine-%')
                 ->delete();
         }
 
@@ -479,13 +482,127 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 3. Indeks 12 Sectoral Industrial UI/UX Archetypes & Realistic Seeders (Project OS v2.5)
+        $sectorCatalog = \App\Support\ProjectOsMatrixCatalog::sectors();
+        foreach ($sectorCatalog as $sec) {
+            $code = $sec['code'];
+            $sourceId = 'sectoral-ui-' . strtolower($code);
+            if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+                continue;
+            }
+
+            $uiArch = ! empty($sec['ui_ux_archetypes'])
+                ? $sec['ui_ux_archetypes']
+                : \App\Support\PosSectorUiArchetypeCatalog::forSector($code);
+            $seeder = ! empty($sec['realistic_seeder_contract'])
+                ? $sec['realistic_seeder_contract']
+                : \App\Support\PosSectorUiArchetypeCatalog::seederForSector($code);
+            $seederClass = $seeder['seeder_class'] ?? 'RealisticSectorSeeder';
+            $nameId = $sec['name']['id'] ?? $code;
+            $ergonomics = implode("\n- ", $uiArch['ergonomics_and_layout'] ?? []);
+            $shortcuts = implode(', ', array_map(
+                fn ($sc) => is_array($sc) ? ('[' . ($sc['key'] ?? '') . '] ' . ($sc['action'] ?? '')) : (string) $sc,
+                $uiArch['keyboard_shortcuts'] ?? []
+            ));
+            $forbidden = implode('; ', $uiArch['forbidden_ux_patterns'] ?? []);
+            $fixtures = implode("\n- ", $seeder['realistic_fixtures'] ?? []);
+
+            $secContent = "Sektor: {$code} — {$nameId}\n"
+                . "Primary UI Archetype: " . ($uiArch['primary_archetype'] ?? '-') . "\n"
+                . "Secondary UI Archetype: " . ($uiArch['secondary_archetype'] ?? '-') . "\n"
+                . "Headline Ergonomi: " . ($uiArch['headline']['id'] ?? '') . "\n"
+                . "Aturan Layout & Ergonomi Industri:\n- {$ergonomics}\n"
+                . "Pintasan Keyboard Operasional: {$shortcuts}\n"
+                . "Pola UX Terlarang: {$forbidden}\n"
+                . "Realistic Domain Seeder ({$seederClass}):\n- {$fixtures}";
+
+            $embedding = $this->generateEmbedding("{$nameId}\n{$secContent}");
+            AiKnowledgeVector::create([
+                'title' => "Sectoral UI/UX Archetype: {$nameId} ({$uiArch['primary_archetype']})",
+                'source_type' => 'sectoral_ui_archetype',
+                'source_id' => $sourceId,
+                'content' => "### Sectoral UI/UX Archetype: {$nameId}\n\n{$secContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => '12 Sectoral UI/UX Archetypes',
+                    'sector_code' => $code,
+                    'primary_archetype' => $uiArch['primary_archetype'] ?? '',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        // 4. Indeks 9 Curated Tech Stack & Topology Adapters (M1-M4, D1-D3, S1-S2)
+        foreach (\App\Support\PosStackPresetCatalog::stackPresets() as $preset) {
+            $pCode = $preset['code'];
+            $sourceId = 'stack-preset-' . strtolower($preset['short_code']);
+            if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+                continue;
+            }
+
+            $pName = $preset['name']['id'] ?? $pCode;
+            $layersText = json_encode($preset['layer_technologies'] ?? [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $antiSlopRules = is_array($preset['stack_specific_anti_slop_rules'] ?? null)
+                ? implode('; ', $preset['stack_specific_anti_slop_rules'])
+                : (string) ($preset['stack_specific_anti_slop_rules'] ?? '');
+            $pContent = "Preset Kode: [{$preset['short_code']}] {$pCode} ({$preset['topology']})\n"
+                . "Nama Stack: {$pName} | Bahasa Utama: " . ($preset['primary_language'] ?? '') . "\n"
+                . "Layer Technologies: {$layersText}\n"
+                . "Anti-Slop Spesifik Stack: {$antiSlopRules}";
+
+            $embedding = $this->generateEmbedding("{$pName}\n{$pContent}");
+            AiKnowledgeVector::create([
+                'title' => "Tech Stack Adapter [{$preset['short_code']}]: {$pName}",
+                'source_type' => 'stack_preset_adapter',
+                'source_id' => $sourceId,
+                'content' => "### Tech Stack Adapter [{$preset['short_code']}]: {$pName}\n\n{$pContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => '9 Tech Stack Adapters',
+                    'preset_code' => $pCode,
+                    'topology' => $preset['topology'],
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        // 5. Indeks 6 Killer Zero-to-Production Orchestration Engines
+        foreach (\App\Support\PosSectorUiArchetypeCatalog::killerFeaturesSummary() as $killer) {
+            $kCode = $killer['code'];
+            $sourceId = 'killer-engine-' . strtolower($kCode);
+            if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+                continue;
+            }
+
+            $kTitle = $killer['title']['id'] ?? $kCode;
+            $kDesc = $killer['desc']['id'] ?? '';
+            $kContent = "Kode Mesin: {$kCode} ({$killer['badge']})\nJudul: {$kTitle}\nPenjelasan Operasional: {$kDesc}";
+
+            $embedding = $this->generateEmbedding("{$kTitle}\n{$kContent}");
+            AiKnowledgeVector::create([
+                'title' => "Killer Engine Project OS: {$kTitle}",
+                'source_type' => 'killer_orchestration_engine',
+                'source_id' => $sourceId,
+                'content' => "### {$kTitle}\n\n{$kContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => '6 Killer Orchestration Engines',
+                    'engine_code' => $kCode,
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
             'status' => 'success',
             'synced_sections' => $syncedSections,
             'total_chunks' => $totalChunks,
-            'message' => "Berhasil menyinkronkan {$syncedSections} bagian panduan & 10 pilar arsitektur ke basis pengetahuan RAG pgvector.",
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (10 Pilar, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines & Smart Guide) ke basis pengetahuan RAG pgvector.",
         ];
     }
 }

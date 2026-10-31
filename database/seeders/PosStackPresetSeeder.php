@@ -14,6 +14,7 @@ class PosStackPresetSeeder extends Seeder
     public function run(): void
     {
         PosStackPresetCatalog::seedDatabase();
+        \App\Support\PosSectorUiArchetypeCatalog::enrichDatabaseSectors();
     }
 }
 

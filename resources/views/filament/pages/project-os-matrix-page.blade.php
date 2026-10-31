@@ -59,11 +59,12 @@
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                 <div class="flex flex-wrap items-center gap-1.5">
                     @foreach([
-                        'sectors' => ['label' => '12 Sektor Fungsional', 'count' => $stats['sectors'] ?? 12],
+                        'sectors' => ['label' => '12 Sektor UI/UX', 'count' => $stats['sectors'] ?? 12],
                         'primitives' => ['label' => '12 Core Primitives', 'count' => $stats['primitives'] ?? 12],
                         'stacks' => ['label' => '9 Stack Presets (M1–S2)', 'count' => $stats['stacks'] ?? 9],
                         'rules' => ['label' => 'Anti-Slop Rule Packs', 'count' => $stats['rules'] ?? 6],
                         'projects' => ['label' => 'Assembled Projects', 'count' => $stats['projects'] ?? 0],
+                        'lab' => ['label' => 'Brownfield & Slop Lab', 'count' => 'v2.5'],
                     ] as $tabKey => $tabMeta)
                         <button
                             type="button"
@@ -148,8 +149,95 @@
             </div>
         </div>
 
-        <!-- Content Area: Grid View vs Enterprise Sticky List View -->
-        @if(empty($items))
+        <!-- Content Area: Brownfield & Slop Lab vs Grid View vs Enterprise Sticky List View -->
+        @if($this->activeTab === 'lab')
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- Left Card: Killer #4 Brownfield SQL / Migration Importer -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2.5">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">KILLER ENGINE #4 // ZERO-DATA-LOSS REFACTOR</div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">Brownfield SQL / Migration / Prisma Importer</h3>
+                        </div>
+                        <button type="button" wire:click="loadSampleBrownfieldSql" class="px-2.5 py-1 text-[11px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xs cursor-pointer">
+                            Muat Contoh SQL Lama
+                        </button>
+                    </div>
+
+                    <input
+                        type="text"
+                        wire:model="brownfieldHint"
+                        placeholder="Konteks bisnis singkat (opsional, misal: Sistem Kasir & Apotek Klinik)"
+                        class="w-full px-3 py-1.5 text-xs font-mono bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs"
+                    />
+
+                    <textarea
+                        rows="8"
+                        wire:model="brownfieldSql"
+                        placeholder="Tempelkan CREATE TABLE SQL, Laravel Migration, atau schema.prisma di sini..."
+                        class="w-full p-3 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    ></textarea>
+
+                    <button type="button" wire:click="runBrownfieldAudit" class="w-full py-2 text-xs font-mono font-black bg-emerald-600 hover:bg-emerald-500 text-black border border-emerald-700 rounded-xs cursor-pointer">
+                        AUDIT SCHEMA &amp; SUSUN MIGRASI SHADOW ULID
+                    </button>
+
+                    @if(!empty($this->brownfieldResult['success']))
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xs space-y-2.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100 tabular-nums">
+                                    Readiness Score: {{ $this->brownfieldResult['readiness_score'] }}/100 ({{ $this->brownfieldResult['grade'] }})
+                                </span>
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">
+                                    {{ $this->brownfieldResult['recommended_sector']['code'] ?? '' }} → {{ $this->brownfieldResult['recommended_sector']['primary_ui_archetype'] ?? '' }}
+                                </span>
+                            </div>
+                            <div class="space-y-1">
+                                @foreach(($this->brownfieldResult['violations'] ?? []) as $v)
+                                    <div class="p-2 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs text-[11px]">
+                                        <span class="font-mono font-black text-amber-900 dark:text-amber-300">[{{ $v['code'] }}]</span>
+                                        <strong class="text-zinc-950 dark:text-zinc-100">{{ $v['title'] }}</strong>
+                                        <div class="text-zinc-700 dark:text-zinc-300 mt-0.5">{{ $v['remediation'] }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div>
+                                <div class="text-[10px] font-mono font-black uppercase text-zinc-800 dark:text-zinc-300 mb-1">AI Zero-Data-Loss Refactor Prompt:</div>
+                                <pre class="p-2.5 bg-zinc-950 text-zinc-100 text-[11px] font-mono overflow-x-auto max-h-48 border border-zinc-800 rounded-xs">{{ $this->brownfieldResult['ai_refactor_prompt'] ?? '' }}</pre>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Right Card: Killer #5 Slop & Drift Code Scanner -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                    <div class="border-b border-zinc-200 dark:border-zinc-800 pb-2.5">
+                        <div class="text-[10px] font-mono font-black uppercase text-amber-900 dark:text-amber-300">KILLER ENGINE #5 // ZERO-SLOP GATEKEEPER</div>
+                        <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">Blueprint Drift &amp; Code Slop Scanner (CLI: php artisan pos:audit)</h3>
+                    </div>
+
+                    <textarea
+                        rows="9"
+                        wire:model="slopSnippet"
+                        placeholder="Tempelkan kode Blade / React JSX / Migration untuk memindai pelanggaran rounded-full, bg-gradient-to-*, alert(), CDN eksternal, $table->id(), atau ->paginate()..."
+                        class="w-full p-3 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    ></textarea>
+
+                    <button type="button" wire:click="runSlopCodeScan" class="w-full py-2 text-xs font-mono font-black bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 border border-zinc-800 dark:border-zinc-300 rounded-xs cursor-pointer">
+                        PINDAI KEPATUHAN ANTI-SLOP &amp; STRICT ULID
+                    </button>
+
+                    @if(!empty($this->slopResult['success']))
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xs space-y-2">
+                            <div class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100 tabular-nums">
+                                Compliance Score: {{ $this->slopResult['compliance_score'] }}/100 ({{ $this->slopResult['violations_count'] }} Temuan)
+                            </div>
+                            <pre class="p-2.5 bg-zinc-950 text-zinc-100 text-[11px] font-mono overflow-x-auto max-h-48 border border-zinc-800 rounded-xs">{{ $this->slopResult['auto_fix_prompt'] ?? '' }}</pre>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @elseif(empty($items))
             <div class="p-8 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm text-center">
                 <div class="font-mono text-sm font-bold text-zinc-900 dark:text-zinc-100">Tidak ada data yang cocok</div>
                 <div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">Ubah kata kunci pencarian atau buat blueprint baru di halaman Studio `/blueprint`.</div>
@@ -172,6 +260,36 @@
                                 <div class="text-sm font-black text-zinc-950 dark:text-zinc-100">{{ $item['name'] }}</div>
                                 <div class="text-[11px] font-mono font-bold text-emerald-900 dark:text-emerald-300 mt-0.5">{{ $item['code'] }}</div>
                                 <p class="text-xs text-zinc-700 dark:text-zinc-300 mt-2 leading-relaxed">{{ $item['description'] }}</p>
+
+                                @if(!empty($item['primary_archetype']))
+                                    <div class="mt-3 p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-1.5">
+                                        <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">
+                                            Sectoral Industrial UI/UX Archetype
+                                        </div>
+                                        <div class="flex flex-wrap gap-1">
+                                            <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">
+                                                {{ $item['primary_archetype'] }}
+                                            </span>
+                                            @if(!empty($item['secondary_archetype']))
+                                                <span class="px-1.5 py-0.5 bg-zinc-200 text-zinc-950 border border-zinc-400 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs">
+                                                    {{ $item['secondary_archetype'] }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        @if(!empty($item['wireframe_panes']))
+                                            <div class="grid grid-cols-1 gap-1 pt-1">
+                                                @foreach(array_slice($item['wireframe_panes'], 0, 3) as $pane)
+                                                    <div class="px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-mono text-[10px] text-zinc-900 dark:text-zinc-200">
+                                                        <strong>[{{ $pane['span'] ?? 'PANE' }}]</strong> {{ $pane['title'] ?? '' }}
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                        <div class="text-[10px] font-mono text-zinc-700 dark:text-zinc-400">
+                                            Seeder: <strong class="text-zinc-950 dark:text-zinc-200">{{ $item['seeder_class'] ?? 'RealisticSectorSeeder' }}</strong>
+                                        </div>
+                                    </div>
+                                @endif
 
                                 <div class="mt-3">
                                     <div class="text-[10px] font-mono font-black uppercase text-zinc-700 dark:text-zinc-400 mb-1">Mandatory Primitives</div>
@@ -265,8 +383,13 @@
                                 <div class="text-sm font-black text-zinc-950 dark:text-zinc-100">{{ $item['app_name'] }}</div>
                                 <div class="text-[11px] font-mono font-bold text-emerald-900 dark:text-emerald-300 mt-0.5">{{ $item['sector_code'] }}</div>
                                 <div class="text-xs font-mono text-zinc-800 dark:text-zinc-300 mt-2 tabular-nums">
-                                    {{ $item['primitives_count'] }} Core Primitives Terpasang
+                                    {{ $item['primitives_count'] }} Core Primitives • {{ $item['phases_count'] ?? 6 }} Phased Prompts
                                 </div>
+                                @if(!empty($item['cli_init_command']))
+                                    <div class="mt-2 p-2 bg-zinc-950 text-emerald-300 border border-zinc-800 font-mono text-[10px] overflow-x-auto rounded-xs">
+                                        {{ $item['cli_init_command'] }}
+                                    </div>
+                                @endif
                             </div>
                             @if(!empty($item['blueprint_slug']))
                                 <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-2">

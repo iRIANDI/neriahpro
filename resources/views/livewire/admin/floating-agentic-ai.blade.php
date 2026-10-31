@@ -622,6 +622,16 @@
                                                 class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
                                             📊 Cek Kapasitas Sprint & Statistik
                                         </button>
+                                        <button type="button"
+                                                wire:click="sendSuggestedPrompt('Tampilkan kontrak UI/UX Archetype, pintasan keyboard, dan seeder Indonesia untuk SECTOR_01_COMMERCE_OMNICHANNEL')"
+                                                class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
+                                            🎨 Cek UI/UX Sektor & Seeder
+                                        </button>
+                                        <button type="button"
+                                                wire:click="sendSuggestedPrompt('Jalankan pemeriksaan blueprint slop scanner terkini dan laporkan skor kepatuhannya')"
+                                                class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
+                                            🛡️ Audit Anti-Slop Blueprint
+                                        </button>
                                     </div>
                                 </div>
                             @endif
@@ -879,7 +889,7 @@
 
                                 <div class="flex items-center justify-between px-0.5 text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
                                     <span class="truncate">Model: <strong class="text-zinc-800 dark:text-zinc-200">{{ $activeSubModel }}</strong></span>
-                                    <span class="truncate">12-Sector Project OS • Hemat Token 85%</span>
+                                    <span class="truncate">Project OS v2.5 • 16 Native Tools • RAG+CAG+KAG</span>
                                 </div>
                             </form>
                         </div>
@@ -892,8 +902,8 @@
                          class="flex-1 p-4 overflow-y-auto space-y-4 text-xs font-mono bg-white dark:bg-zinc-950">
                         <div class="p-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs flex items-center justify-between">
                             <div>
-                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100">Repositori Vektor 768 Dimensi</h4>
-                                <p class="text-[10px] text-zinc-500">Tersinkronisasi ke 10 Pilar Software Factory OS</p>
+                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100">Repositori Vektor 768 Dimensi (Tri-Hybrid v2.5)</h4>
+                                <p class="text-[10px] text-zinc-600 dark:text-zinc-400">10 Pilar + 12 Sektor UI/UX + 9 Stack + 6 Killer Engines</p>
                             </div>
                             <button type="button"
                                     wire:click="syncKnowledge"
@@ -909,18 +919,14 @@
                         </div>
 
                         <div class="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-2">
-                            <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Total Chunks Terindeks: {{ $totalKnowledgeChunks }}</span>
-                            <ul class="text-[10px] text-zinc-600 dark:text-zinc-400 space-y-1 list-disc pl-4">
-                                <li>Pilar 1: PRD Komprehensif 26 Parameter</li>
-                                <li>Pilar 2: PostgreSQL 16 Strict ULID & Keyset Cursor O(1)</li>
-                                <li>Pilar 3: Dockerized Environment Terstandarisasi</li>
-                                <li>Pilar 4: Synthetic Seeder & Anti-Zero Testing</li>
-                                <li>Pilar 5: AI Coding Rules (.cursorrules & AGENTS.md)</li>
-                                <li>Pilar 6: ApiContractTest Skeletal Suite (Pest)</li>
-                                <li>Pilar 7: CI/CD Pipeline & Zero-Downtime Deployment</li>
-                                <li>Pilar 8: Production Telemetry & Log Monitoring</li>
-                                <li>Pilar 9: Estafet Sprint Task Anti-Context-Rot</li>
-                                <li>Pilar 10: Managed Sprint Capacity & Anti-Collision Engine</li>
+                            <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">Total Chunks Terindeks: {{ $totalKnowledgeChunks }}</span>
+                            <ul class="text-[10px] text-zinc-700 dark:text-zinc-300 space-y-1 list-disc pl-4">
+                                <li>10 Pilar Software Factory OS &amp; Unit Economics</li>
+                                <li>12 Sectoral Industrial UI/UX Archetypes (POS Split, Clinical 3-Pane, KDS, ISAK 35)</li>
+                                <li>12 Realistic Indonesian Domain Seeders (Bebas Lorem Ipsum)</li>
+                                <li>9 Curated Tech Stack Topology Adapters (M1–M4, D1–D3, S1–S2)</li>
+                                <li>6 Killer Engines: Phased Prompts (1–6), Brownfield SQL Audit, verify-blueprint.sh &amp; CLI /init/{ULID}</li>
+                                <li>16 Native Function Calling Tools + RBAC Guards + SHA-256 Audit Trail</li>
                             </ul>
                         </div>
                     </div>

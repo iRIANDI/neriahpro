@@ -303,6 +303,12 @@
             <a href="#sec-factory-pillars" @click.prevent="scrollTo('sec-factory-pillars')" :class="activeSection === 'sec-factory-pillars' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 07. <span x-text="t[lang].nav_factory_pillars"></span>
             </a>
+            <a href="#sec-sectoral-ui" @click.prevent="scrollTo('sec-sectoral-ui')" :class="activeSection === 'sec-sectoral-ui' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                08. <span x-text="t[lang].nav_sectoral_ui"></span>
+            </a>
+            <a href="#sec-killer-moat" @click.prevent="scrollTo('sec-killer-moat')" :class="activeSection === 'sec-killer-moat' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                09. <span x-text="t[lang].nav_killer_moat"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -902,6 +908,14 @@
                 <div style="font-size: 12px; font-weight: 700; color: #ec4899; margin-bottom: 6px;" x-text="t[lang].sec6_q5"></div>
                 <div style="font-size: 12px; color: var(--sg-quote-text); font-style: italic; background: var(--sg-quote-bg); padding: 12px; border: 1px solid var(--sg-quote-border); border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a5"></div>
             </div>
+            <div class="sg-subcard">
+                <div style="font-size: 12px; font-weight: 700; color: #14b8a6; margin-bottom: 6px;" x-text="t[lang].sec6_q6"></div>
+                <div style="font-size: 12px; color: var(--sg-quote-text); font-style: italic; background: var(--sg-quote-bg); padding: 12px; border: 1px solid var(--sg-quote-border); border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a6"></div>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-size: 12px; font-weight: 700; color: #f59e0b; margin-bottom: 6px;" x-text="t[lang].sec6_q7"></div>
+                <div style="font-size: 12px; color: var(--sg-quote-text); font-style: italic; background: var(--sg-quote-bg); padding: 12px; border: 1px solid var(--sg-quote-border); border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a7"></div>
+            </div>
         </div>
     </div>
 
@@ -973,30 +987,106 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
             <div class="sg-subcard" style="border-left: 3px solid #10b981;">
                 <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 6px;">
-                    🤖 Tri-Hybrid AI Copilot &amp; Native Tool Calling
+                    🤖 Tri-Hybrid AI Copilot &amp; {{ $nativeToolsCount ?? 16 }} Native Tool Calling
                 </div>
                 <div style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5;">
-                    Sinergi memori <strong>RAG</strong> (Dense 768-dim pgvector + Sparse Lexical RRF), <strong>CAG</strong> (Cache-Augmented O(1)), dan <strong>KAG</strong> (Graph Rule Enforcement). Dilengkapi 12 Native Tools untuk pencarian blueprint, konversi kontrak legal, transaksi Midtrans, dan pemantauan infrastruktur.
+                    Sinergi memori <strong>RAG</strong> (Dense 768-dim pgvector + Sparse Lexical RRF), <strong>CAG</strong> (Cache-Augmented Live Telemetry O(1)), dan <strong>KAG</strong> (Deterministic Rule Graph). Dilengkapi <strong>{{ $nativeToolsCount ?? 16 }} Native Tools</strong> tervalidasi RBAC (termasuk Sectoral UI Archetypes, Phased Prompt Sequencer, Brownfield SQL Importer, &amp; Slop Scanner).
                 </div>
             </div>
 
             <div class="sg-subcard" style="border-left: 3px solid #6366f1;">
                 <div style="font-size: 12px; font-weight: 700; color: #6366f1; margin-bottom: 6px;">
-                    🔐 Otentikasi 2FA Password (TOTP RFC 6238)
+                    🔐 Otentikasi 2FA Password (TOTP RFC 6238) &amp; Granular RBAC
                 </div>
                 <div style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5;">
-                    Keamanan akun admin lapis dua berstandar industri RFC 6238 dengan Time-based One-Time Password (TOTP). Mendukung scan QR Code Google Authenticator, Bitwarden, 1Password, kunci manual, serta 8 kode pemulihan darurat sekali pakai.
+                    Keamanan akun admin lapis dua berstandar industri RFC 6238 dengan Time-based One-Time Password (TOTP) serta isolasi RBAC ketat (<code>super_admin</code>, <code>developer</code>, <code>investor</code>, <code>midtrans_reviewer</code>, <code>client_retail</code>, <code>client_partner</code>).
                 </div>
             </div>
 
             <div class="sg-subcard" style="border-left: 3px solid #f59e0b;">
                 <div style="font-size: 12px; font-weight: 700; color: #f59e0b; margin-bottom: 6px;">
-                    📋 Audit Trail &amp; CCTV Workflow Tracing
+                    📋 Tamper-Evident SHA-256 Audit Trail &amp; CCTV Workflow Tracing
                 </div>
                 <div style="font-size: 12px; color: var(--sg-text-muted); line-height: 1.5;">
-                    Mencatat seluruh perubahan data via trait <code>Auditable</code> dengan JSON diff sebelum/sesudah, identitas aktor, alamat IP, dan User-Agent. Setiap eksekusi AI terekam di tabel <code>ai_workflow_traces</code> dengan durasi milidetik untuk transparansi audit.
+                    Setiap mutasi, eksekusi AI Native Tool, tarikan CLI Bootstrapper, dan audit Brownfield/Slop dikategorikan (<code>event_category</code>) serta disegel dengan hash kanonik <code>integrity_hash</code> (SHA-256) di tabel <code>audit_logs</code> berkompleksitas O(1) Cursor.
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- 08. Section 12 Sectoral Industrial UI/UX Archetypes & Realistic Seeders -->
+    <div id="sec-sectoral-ui" class="sg-card" x-show="matchesSearch('12 sektor ui ux archetype pos split terminal clinical cockpit gantt ledger kds bom seat map roster donor seeder indonesia')">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #0284c7; text-transform: uppercase; font-weight: 700;">
+                    08 // 12 SECTORAL INDUSTRIAL UI/UX ARCHETYPES ({{ $stackPresetsCount ?? 9 }} STACK ADAPTERS M1–S2)
+                </span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec8_title"></h3>
+            </div>
+            <span class="sg-badge-active">ZERO GENERIC CRUD SLOP</span>
+        </div>
+
+        <p style="font-size: 13px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;" x-text="t[lang].sec8_desc"></p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px;">
+            @foreach(($sectorsCatalog ?? []) as $idx => $secItem)
+                @php
+                    $uiArch = $secItem['ui_ux_archetypes'] ?? [];
+                    $seederContract = $secItem['realistic_seeder_contract'] ?? [];
+                @endphp
+                <div class="sg-subcard" style="border-top: 3px solid #10b981;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px;">
+                        <div style="font-size: 12px; font-weight: 800; color: var(--sg-text-title);">
+                            {{ str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT) }}. {{ $secItem['name']['id'] ?? $secItem['code'] }}
+                        </div>
+                        <span style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 700; padding: 2px 6px; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35);">
+                            {{ $uiArch['primary_archetype'] ?? 'SECTOR_ARCHETYPE' }}
+                        </span>
+                    </div>
+                    <div style="font-family: ui-monospace, monospace; font-size: 10px; color: #0284c7; font-weight: 700; margin-bottom: 6px;">
+                        Secondary: {{ $uiArch['secondary_archetype'] ?? '-' }} &bull; Seeder: {{ $seederContract['seeder_class'] ?? 'RealisticSectorSeeder' }}
+                    </div>
+                    <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5; margin-bottom: 8px;">
+                        {{ $uiArch['headline']['id'] ?? '' }}
+                    </div>
+                    @if(!empty($uiArch['keyboard_shortcuts']))
+                        <div style="font-family: ui-monospace, monospace; font-size: 10px; color: var(--sg-text-muted); padding-top: 6px; border-top: 1px dashed var(--sg-border);">
+                            ⌨️ Shortcuts: {{ implode(' • ', array_slice($uiArch['keyboard_shortcuts'], 0, 3)) }}
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- 09. Section 6 Killer Zero-to-Production Orchestration Moat -->
+    <div id="sec-killer-moat" class="sg-card" x-show="matchesSearch('6 killer features phased prompt sequencer brownfield sql importer slop scanner verify-blueprint cli bootstrapper curl init retention moat')">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #8b5cf6; text-transform: uppercase; font-weight: 700;">
+                    09 // ZERO-TO-PRODUCTION DEVELOPER RETENTION MOAT
+                </span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec9_title"></h3>
+            </div>
+            <span class="sg-badge-confidential">COMPETITIVE MOAT v2.5</span>
+        </div>
+
+        <p style="font-size: 13px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;" x-text="t[lang].sec9_desc"></p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px;">
+            @foreach(($killerFeatures ?? []) as $kItem)
+                <div class="sg-subcard" style="border-left: 3px solid #8b5cf6;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <strong style="font-size: 12px; color: var(--sg-text-title);">{{ $kItem['title']['id'] ?? $kItem['code'] }}</strong>
+                        <span style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 700; padding: 2px 6px; background: rgba(139, 92, 246, 0.12); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.35);">
+                            {{ $kItem['badge'] ?? 'ACTIVE' }}
+                        </span>
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--sg-text-muted); line-height: 1.55;">
+                        {{ $kItem['desc']['id'] ?? '' }}
+                    </div>
+                </div>
+            @endforeach
         </div>
     </div>
 
@@ -1018,6 +1108,9 @@ function smartGuideApp() {
                 nav_simulator: 'Simulator Laba',
                 nav_matrix: 'Matriks Batasan',
                 nav_playbook: 'Playbook CS',
+                nav_factory_pillars: '10 Pilar OS',
+                nav_sectoral_ui: '12 Sektor UI/UX',
+                nav_killer_moat: '6 Killer Moat',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -1102,7 +1195,15 @@ function smartGuideApp() {
                 sec6_q4: 'Q: "Apa bedanya beli Blueprint Ultimate (Rp 1.49 Jt) dibanding kontrak Studio MVP (Rp 50 Jt)?"',
                 sec6_a4: '"Perbedaannya terletak pada SIAPA YANG MENULIS KODE Kak! Paket Ultimate Software Factory OS (Rp 1.49 Jt) memberikan seluruh 10 pilar cetak biru, wireframe, unit test suite, dan pipeline CI/CD lengkap untuk dieksekusi oleh tim programmer internal Kakak sendiri, ditambah 1 jam konsultasi arsitek. Sedangkan Kontrak Monolith MVP Studio (Rp 50 Jt) adalah layanan turnkey penuh di mana Senior Architect dan Engineer Neriah Pro yang menulis 100% kode aplikasi, memasang VPS, mengintegrasikan payment, dan memberikan garansi bug 3 bulan. Menariknya, biaya Rp 1.49 Jt ini otomatis memotong DP 50% jika Kakak memutuskan lanjut koding bersama kami!"',
                 sec6_q5: 'Q: "Gimana kalau di tengah pengerjaan MVP Studio saya mau tambah fitur baru yang ngga ada di PRD awal?"',
-                sec6_a5: '"Kami punya sistem Scope Locking Kak untuk menjaga kualitas dan timeline! Jika Kakak ingin tambah fitur di luar PRD yang disepakati, Kakak bisa langsung submit via modul \'Change Request (CR) / Addendum\' di Dashboard Portal Klien. Kami tidak menerima sisipan lewat chat WA/Email ya Kak agar tidak terjadi miskomunikasi. Nanti tim arsitek kami akan evaluasi CR tersebut dan menerbitkan Invoice Addendum plus estimasi waktu tambahan. Fiturnya langsung dikerjakan setelah Addendum disetujui!"'
+                sec6_a5: '"Kami punya sistem Scope Locking Kak untuk menjaga kualitas dan timeline! Jika Kakak ingin tambah fitur di luar PRD yang disepakati, Kakak bisa langsung submit via modul \'Change Request (CR) / Addendum\' di Dashboard Portal Klien. Kami tidak menerima sisipan lewat chat WA/Email ya Kak agar tidak terjadi miskomunikasi. Nanti tim arsitek kami akan evaluasi CR tersebut dan menerbitkan Invoice Addendum plus estimasi waktu tambahan. Fiturnya langsung dikerjakan setelah Addendum disetujui!"',
+                sec6_q6: 'Q: "Apa bedanya Project OS Neriah Pro dibanding sekadar minta ChatGPT / Claude bikin PRD sendiri?"',
+                sec6_a6: '"ChatGPT biasa hanya menghasilkan esai umum yang memicu AI context-rot dan tabel CRUD generik! Project OS v2.5 Neriah Pro mengompilasi kontrak arsitektur deterministik: 12 Sectoral Industrial UI/UX Archetypes (misal Split POS bebas mouse, Clinical 3-Pane Cockpit, atau Spreadsheet Ledger seimbang), 9 Stack Adapters (M1–S2), 7 Dimensi Zero-Assumption, Phased Prompt Sequencer Fase 1–6 anti-overflow, skrip ./verify-blueprint.sh, hingga 1-Command CLI Bootstrapper (curl -sL neriahpro.com/init/ID | bash) yang langsung siap jalan di terminal developer!"',
+                sec6_q7: 'Q: "Perusahaan kami sudah punya database SQL lama (Brownfield), apakah bisa dimodernisasi tanpa kehilangan data?"',
+                sec6_a7: '"Sangat bisa Kak! Project OS memiliki fitur Brownfield SQL & Migration Importer yang memindai skema lama Kakak (mendeteksi risiko AUTO_INCREMENT, CASCADE delete, tipe FLOAT, atau ketiadaan tenant/lock), lalu menyusun rencana migrasi 4 tahap Dual-Column Shadow ULID Backfill (Zero-Data-Loss) beserta AI Refactor Prompt otomatis!"',
+                sec8_title: 'Klasifikasi Ergonomi UI/UX 12 Sektor Fungsional & Realistic Domain Seeders',
+                sec8_desc: 'AI coding agent tidak boleh membuat sekadar tabel CRUD generik untuk semua jenis bisnis! Kasir ritel butuh POS 100vh bebas mouse, dokter butuh Clinical 3-Pane Cockpit tanpa tumpukan modal, dan akuntan butuh Spreadsheet Ledger dengan kunci keseimbangan Debit = Kredit.',
+                sec9_title: '6 Mesin "Killer" Zero-to-Production Orchestration (Alasan Developer Ketagihan)',
+                sec9_desc: 'Enam kapabilitas orkestrasi eksklusif yang menjembatani blueprint arsitektur langsung ke repositori kode produksi tanpa halusinasi dan tanpa context overflow:'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -1111,6 +1212,9 @@ function smartGuideApp() {
                 nav_simulator: 'Profit Simulator',
                 nav_matrix: 'Limit Matrix',
                 nav_playbook: 'Sales Playbook',
+                nav_factory_pillars: '10 OS Pillars',
+                nav_sectoral_ui: '12 Sector UI/UX',
+                nav_killer_moat: '6 Killer Moat',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -1195,7 +1299,15 @@ function smartGuideApp() {
                 sec6_q4: 'Q: "What is the difference between buying the Ultimate Blueprint (Rp 1.49M) vs hiring Studio MVP (Rp 50M)?"',
                 sec6_a4: '"The core difference is WHO WRITES THE CODE! The Ultimate Software Factory OS (Rp 1.49M) provides all 10 pillars of blueprint specifications, wireframes, contract test suites, and CI/CD pipelines for your internal developers to execute, plus a 1-hour Principal Architect consultation. Meanwhile, the Studio Monolith MVP Contract (Rp 50M) is a 100% turnkey service where Neriah Pro senior architects and engineers write every line of production code, harden your VPS, integrate payment gateways, and back it with a 3-month SLA warranty. Best of all, your advisory investment is 100% credited toward the 50% Down Payment if you proceed with our engineering studio!"',
                 sec6_q5: 'Q: "What if I want to add new features mid-development that weren\'t in the original PRD?"',
-                sec6_a5: '"We enforce a strict Scope Locking protocol to ensure elite quality and on-time delivery! If you need to add features outside the agreed PRD, you can formally submit it via the \'Change Request (CR) / Addendum\' module in your Client Portal Dashboard. We do not accept arbitrary requests via WhatsApp/Email to prevent miscommunication. Our architects will evaluate your CR and issue an Addendum Invoice along with a revised timeline estimate. The new feature development will commence immediately upon Addendum approval!"'
+                sec6_a5: '"We enforce a strict Scope Locking protocol to ensure elite quality and on-time delivery! If you need to add features outside the agreed PRD, you can formally submit it via the \'Change Request (CR) / Addendum\' module in your Client Portal Dashboard. We do not accept arbitrary requests via WhatsApp/Email to prevent miscommunication. Our architects will evaluate your CR and issue an Addendum Invoice along with a revised timeline estimate. The new feature development will commence immediately upon Addendum approval!"',
+                sec6_q6: 'Q: "How is Neriah Pro Project OS different from prompting ChatGPT or Claude for a PRD?"',
+                sec6_a6: '"Raw LLM prompts produce generic essays that cause context-rot and boring CRUD tables! Project OS v2.5 compiles deterministic engineering contracts: 12 Sectoral Industrial UI/UX Archetypes (mouse-free Split POS, 3-Pane Clinical Cockpit, Balanced Spreadsheet Ledger), 9 Stack Adapters (M1–S2), 7 Zero-Assumption Dimensions, a 6-Phase Prompt Sequencer, ./verify-blueprint.sh slop scanner, and a 1-Command CLI Bootstrapper (curl -sL neriahpro.com/init/ID | bash)!"',
+                sec6_q7: 'Q: "We already have a legacy SQL database (Brownfield). Can we modernize without data loss?"',
+                sec6_a7: '"Yes! Project OS includes a Brownfield SQL & Migration Importer that audits legacy schemas for AUTO_INCREMENT, CASCADE delete, FLOAT precision drift, and missing locks, generating a 4-stage Dual-Column Shadow ULID Backfill plan (Zero-Data-Loss) and ready-to-run AI Refactor Prompt!"',
+                sec8_title: '12 Functional Sectoral Industrial UI/UX Archetypes & Realistic Seeders',
+                sec8_desc: 'AI coding agents are strictly forbidden from building generic CRUD tables for primary operational screens. Retail cashiers get a mouse-free 100vh Split POS, doctors get a 3-Pane Clinical Cockpit, and accountants get a balanced Spreadsheet Ledger.',
+                sec9_title: '6 Killer Zero-to-Production Orchestration Engines (Developer Retention Moat)',
+                sec9_desc: 'Six proprietary orchestration engines that bridge architectural blueprints directly into zero-slop production repositories without context overflow:'
             }
         },
 
@@ -1223,7 +1335,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

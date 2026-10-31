@@ -46,16 +46,20 @@ class AgenticActionExecutionEngine
             $result = match ($toolName) {
                 'search_blueprints' => $this->searchBlueprints($args),
                 'get_blueprint_details' => $this->getBlueprintDetails($args),
-                'create_blueprint' => $this->createBlueprint($args, $user),
-                'update_blueprint_status' => $this->updateBlueprintStatus($args, $user),
-                'convert_to_contract' => $this->convertToContract($args, $user),
+                'create_blueprint' => $this->guardMutation($user, $toolName) ?? $this->createBlueprint($args, $user),
+                'update_blueprint_status' => $this->guardMutation($user, $toolName) ?? $this->updateBlueprintStatus($args, $user),
+                'convert_to_contract' => $this->guardMutation($user, $toolName) ?? $this->convertToContract($args, $user),
                 'search_transactions' => $this->searchTransactions($args),
-                'manage_domain_hosting' => $this->manageDomainHosting($args, $user),
+                'manage_domain_hosting' => (($args['action'] ?? '') === 'create' ? $this->guardMutation($user, $toolName) : null) ?? $this->manageDomainHosting($args, $user),
                 'query_knowledge_base' => $this->queryKnowledgeBase($args),
-                'sync_knowledge_base' => $this->syncKnowledgeBase($args),
+                'sync_knowledge_base' => $this->guardMutation($user, $toolName) ?? $this->syncKnowledgeBase($args),
                 'get_audit_logs' => $this->getAuditLogs($args),
                 'get_system_stats' => $this->getSystemStats($args),
                 'search_leads' => $this->searchLeads($args),
+                'get_sector_ui_archetype' => $this->getSectorUiArchetype($args),
+                'generate_phased_prompts' => $this->generatePhasedPrompts($args),
+                'audit_brownfield_schema' => $this->auditBrownfieldSchema($args),
+                'run_blueprint_slop_scanner' => $this->runBlueprintSlopScanner($args),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
@@ -294,9 +298,8 @@ class AgenticActionExecutionEngine
         if (!empty($args['query'])) {
             $term = '%' . trim($args['query']) . '%';
             $query->where(function ($q) use ($term) {
-                $q->where('invoice_number', 'LIKE', $term)
-                  ->orWhere('midtrans_order_id', 'LIKE', $term)
-                  ->orWhere('customer_name', 'LIKE', $term);
+                $q->where('midtrans_order_id', 'LIKE', $term)
+                  ->orWhere('midtrans_transaction_id', 'LIKE', $term);
             });
         }
 
@@ -311,11 +314,11 @@ class AgenticActionExecutionEngine
             'total_found' => $transactions->count(),
             'transactions' => $transactions->map(fn ($t) => [
                 'id' => $t->id,
-                'invoice_number' => $t->invoice_number,
-                'amount' => $t->amount,
+                'midtrans_order_id' => $t->midtrans_order_id,
+                'total_idr' => (float) $t->total_idr,
                 'status' => $t->status,
-                'payment_type' => $t->payment_type,
-                'customer_name' => $t->customer_name,
+                'customer_name' => $t->customer_details['name'] ?? null,
+                'package_tier' => $t->customer_details['package_tier'] ?? null,
                 'created_at' => $t->created_at?->format('Y-m-d H:i'),
             ])->toArray(),
         ];
@@ -427,6 +430,10 @@ class AgenticActionExecutionEngine
             $query->where('action', $args['action']);
         }
 
+        if (!empty($args['event_category']) && \Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'event_category')) {
+            $query->where('event_category', $args['event_category']);
+        }
+
         $limit = min(max((int) ($args['limit'] ?? 5), 1), 20);
         $logs = $query->orderBy('id', 'desc')->limit($limit)->get();
 
@@ -435,8 +442,10 @@ class AgenticActionExecutionEngine
             'logs' => $logs->map(fn ($l) => [
                 'id' => $l->id,
                 'action' => $l->action,
+                'event_category' => $l->event_category ?? 'system',
                 'actor' => $l->user?->name ?? 'System',
                 'description' => $l->description,
+                'integrity_hash' => $l->integrity_hash,
                 'ip_address' => $l->ip_address,
                 'created_at' => $l->created_at?->format('Y-m-d H:i:s'),
             ])->toArray(),
@@ -450,10 +459,12 @@ class AgenticActionExecutionEngine
     {
         $activeSprints = VisionBlueprint::where('project_status', 'Active Sprint')->count();
         $totalBlueprints = VisionBlueprint::count();
-        $scopeLocked = VisionBlueprint::where('scope_locked', true)->count();
-        $revenue = (float) Transaction::where('status', 'settlement')->sum('amount');
+        $scopeLocked = VisionBlueprint::where('signed_agreement', true)->count();
+        $revenue = (float) Transaction::where('status', 'settlement')->sum('total_idr');
         $expiringAssets = DomainHostingAsset::where('expiry_date', '<=', now()->addDays(30))->count();
-        $totalKnowledge = DB::table('ai_knowledge_vectors')->count();
+        $totalKnowledge = \Illuminate\Support\Facades\Schema::hasTable('ai_knowledge_vectors')
+            ? DB::table('ai_knowledge_vectors')->count()
+            : 0;
 
         return [
             'scope' => $args['scope'] ?? 'all',
@@ -465,6 +476,10 @@ class AgenticActionExecutionEngine
             'total_revenue_settled' => $revenue,
             'expiring_assets_30_days' => $expiringAssets,
             'total_knowledge_chunks' => $totalKnowledge,
+            'sectors_count' => count(\App\Support\ProjectOsMatrixCatalog::sectors()),
+            'primitives_count' => count(\App\Support\ProjectOsMatrixCatalog::primitives()),
+            'stack_presets_count' => count(\App\Support\PosStackPresetCatalog::presets()),
+            'native_tools_count' => count(GeminiToolRegistry::getDeclarations()),
         ];
     }
 
@@ -487,6 +502,148 @@ class AgenticActionExecutionEngine
                 'created_at' => $lead->created_at?->format('Y-m-d H:i'),
             ])->toArray(),
         ];
+    }
+
+    /**
+     * 13. Get Sectoral Industrial UI/UX Archetype & Realistic Seeder
+     */
+    protected function getSectorUiArchetype(array $args): array
+    {
+        $input = trim((string) ($args['sector_code'] ?? $args['sector_code_or_keyword'] ?? ''));
+        $allArchetypes = \App\Support\PosSectorUiArchetypeCatalog::sectorUiArchetypes();
+
+        if ($input === '') {
+            return [
+                'total_sectors' => count($allArchetypes),
+                'sectors' => collect(\App\Support\ProjectOsMatrixCatalog::sectors())->map(function (array $s) use ($allArchetypes) {
+                    $arch = $allArchetypes[$s['code']] ?? [];
+                    return [
+                        'code' => $s['code'],
+                        'name' => $s['name']['id'] ?? $s['code'],
+                        'primary_archetype' => $arch['primary_archetype'] ?? '',
+                        'secondary_archetype' => $arch['secondary_archetype'] ?? '',
+                        'headline' => $arch['headline']['id'] ?? '',
+                    ];
+                })->values()->all(),
+            ];
+        }
+
+        $upper = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode($input);
+        if (isset($allArchetypes[$upper])) {
+            $code = $upper;
+        } else {
+            $resolved = \App\Services\ProjectOsBlueprintCompilerService::resolveSectorAndPrimitives($input);
+            $code = (string) ($resolved['sector']->code ?? 'SECTOR_01_COMMERCE_OMNICHANNEL');
+        }
+
+        return [
+            'sector_code' => $code,
+            'ui_ux_archetype' => \App\Support\PosSectorUiArchetypeCatalog::forSector($code),
+            'realistic_domain_seeder' => \App\Support\PosSectorUiArchetypeCatalog::seederForSector($code),
+        ];
+    }
+
+    /**
+     * 14. Generate Phased Prompts (Phase 1 to 6) & CLI Bootstrapper Command
+     */
+    protected function generatePhasedPrompts(array $args): array
+    {
+        $id = trim((string) ($args['blueprint_id'] ?? ''));
+        if ($id === '') {
+            return ['error' => 'Parameter blueprint_id wajib diisi.'];
+        }
+
+        $blueprint = VisionBlueprint::where('id', $id)->orWhere('slug', $id)->first();
+        if (! $blueprint) {
+            return ['error' => "Blueprint '{$id}' tidak ditemukan."];
+        }
+
+        $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
+        $phases = $schema['phased_prompt_sequencer']
+            ?? \App\Services\ProjectOsBlueprintCompilerService::compilePhasedPrompts($schema);
+
+        $cliCommand = 'curl -sL ' . url('/init/' . $blueprint->id) . ' | bash';
+        $phaseNum = isset($args['phase_number']) ? (int) $args['phase_number'] : null;
+
+        if ($phaseNum && $phaseNum >= 1 && $phaseNum <= 6) {
+            return [
+                'blueprint_id' => $blueprint->id,
+                'slug' => $blueprint->slug,
+                'cli_bootstrap_command' => $cliCommand,
+                'selected_phase' => $phases[$phaseNum - 1] ?? null,
+            ];
+        }
+
+        return [
+            'blueprint_id' => $blueprint->id,
+            'slug' => $blueprint->slug,
+            'cli_bootstrap_command' => $cliCommand,
+            'total_phases' => count($phases),
+            'phases' => $phases,
+        ];
+    }
+
+    /**
+     * 15. Audit Brownfield SQL / Migration Schema
+     */
+    protected function auditBrownfieldSchema(array $args): array
+    {
+        $schemaText = (string) ($args['schema_text'] ?? '');
+        $hint = isset($args['project_hint']) ? (string) $args['project_hint'] : null;
+
+        return app(\App\Services\BrownfieldMigrationAuditorService::class)->auditSchema($schemaText, $hint, true);
+    }
+
+    /**
+     * 16. Run Blueprint Drift Auditor & Slop Scanner
+     */
+    protected function runBlueprintSlopScanner(array $args): array
+    {
+        $scanner = app(\App\Services\BlueprintSlopScannerService::class);
+
+        if (! empty($args['blueprint_id'])) {
+            $id = trim((string) $args['blueprint_id']);
+            $blueprint = VisionBlueprint::where('id', $id)->orWhere('slug', $id)->first();
+            if (! $blueprint) {
+                return ['error' => "Blueprint '{$id}' tidak ditemukan."];
+            }
+            return $scanner->auditBlueprint($blueprint, true);
+        }
+
+        if (! empty($args['code_snippet'])) {
+            return $scanner->scanCodeSnippet((string) $args['code_snippet'], true);
+        }
+
+        return ['error' => 'Harap isi blueprint_id atau code_snippet untuk dipindai oleh Slop Scanner.'];
+    }
+
+    /**
+     * RBAC Guard for state-mutating AI Native Tools.
+     */
+    protected function guardMutation(?User $user, string $toolName): ?array
+    {
+        if (! $user) {
+            return null;
+        }
+
+        $allowed = $user->hasAnyRole(['super_admin', 'developer'])
+            || $user->can('execute_ai_native_tools')
+            || $user->email === 'yoseph.iriandi.tambunan@gmail.com';
+
+        if (! $allowed) {
+            AuditLog::record(
+                action: 'rbac_tool_denied',
+                newValues: ['tool' => $toolName, 'user_id' => $user->id],
+                description: "RBAC menolak eksekusi mutating AI Native Tool '{$toolName}' oleh {$user->email}.",
+                eventCategory: 'security'
+            );
+
+            return [
+                'error' => "Akses ditolak oleh kebijakan RBAC: peran akun Anda tidak memiliki izin mutasi untuk tool '{$toolName}'.",
+            ];
+        }
+
+        return null;
     }
 }
 

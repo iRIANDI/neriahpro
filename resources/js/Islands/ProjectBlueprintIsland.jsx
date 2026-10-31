@@ -941,6 +941,105 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [activeTopologyFilter, setActiveTopologyFilter] = useState('ALL');
   const [showStackMatrixTable, setShowStackMatrixTable] = useState(false);
 
+  // Killer #4: Reverse-Engineer / Brownfield SQL & Migration Importer State
+  const [showBrownfieldLab, setShowBrownfieldLab] = useState(false);
+  const [brownfieldSqlText, setBrownfieldSqlText] = useState('');
+  const [brownfieldLoading, setBrownfieldLoading] = useState(false);
+  const [brownfieldReport, setBrownfieldReport] = useState(null);
+
+  const runBrownfieldAudit = async () => {
+    const trimmed = (brownfieldSqlText || '').trim();
+    if (!trimmed) {
+      if (window.showToast) {
+        window.showToast({
+          type: 'warning',
+          title: lang === 'en' ? 'Empty Schema' : 'Skema Kosong',
+          message: lang === 'en'
+            ? 'Paste legacy CREATE TABLE SQL, Laravel migration, or Prisma schema first.'
+            : 'Tempelkan CREATE TABLE SQL lama, migrasi Laravel, atau schema.prisma terlebih dahulu.',
+        });
+      }
+      return;
+    }
+
+    setBrownfieldLoading(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      const res = await fetch('/api/blueprint/brownfield-audit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+        },
+        body: JSON.stringify({
+          schema_text: trimmed,
+          project_hint: formData.namaBisnis || '',
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data?.success) {
+        setBrownfieldReport(data);
+        if (window.showToast) {
+          window.showToast({
+            type: 'success',
+            title: lang === 'en' ? 'Brownfield Audit Complete' : 'Audit Skema Legacy Selesai',
+            message: `${data.detected_tables_count || 0} tabel dipindai • Skor ${data.readiness_score}/100 (${data.violations_count} temuan).`,
+          });
+        }
+      } else if (window.showToast) {
+        window.showToast({
+          type: 'error',
+          title: lang === 'en' ? 'Audit Failed' : 'Gagal Audit Skema',
+          message: data?.message || 'Tidak dapat memproses skema legacy.',
+        });
+      }
+    } catch {
+      if (window.showToast) {
+        window.showToast({
+          type: 'error',
+          title: lang === 'en' ? 'Network Error' : 'Kendala Jaringan',
+          message: 'Gagal menghubungi endpoint Brownfield Auditor.',
+        });
+      }
+    } finally {
+      setBrownfieldLoading(false);
+    }
+  };
+
+  const applyBrownfieldRecommendation = () => {
+    if (!brownfieldReport?.recommended_sector?.code) return;
+    const recSector = brownfieldReport.recommended_sector.code;
+    const recPrims = (brownfieldReport.recommended_primitives || []).map((p) => p.code);
+    const planText = (brownfieldReport.zero_data_loss_migration_plan || []).join('\n');
+
+    setFormData((prev) => {
+      const existing = Array.isArray(prev.selectedPrimitives) ? prev.selectedPrimitives : [];
+      const mergedPrims = Array.from(new Set([...recPrims, ...existing]));
+      const nextMigrasi = prev.migrasiData
+        ? `${prev.migrasiData}\n\n[Brownfield Shadow ULID Plan]\n${planText}`
+        : `[Brownfield Shadow ULID Plan — Skor Awal ${brownfieldReport.readiness_score}/100]\n${planText}`;
+      const next = {
+        ...prev,
+        primarySector: recSector,
+        selectedPrimitives: mergedPrims,
+        migrasiData: nextMigrasi,
+      };
+      triggerAutoSave(next);
+      return next;
+    });
+
+    if (window.showToast) {
+      window.showToast({
+        type: 'success',
+        title: lang === 'en' ? 'Applied to Blueprint' : 'Diterapkan ke Blueprint',
+        message: lang === 'en'
+          ? 'Sector, Core Primitives, and 4-Stage Shadow ULID Migration Plan injected into your form.'
+          : 'Sektor utama, Core Primitives, dan rencana migrasi Shadow ULID 4 tahap berhasil disuntikkan ke form.',
+      });
+    }
+  };
+
   useEffect(() => {
     let active = true;
     fetch('/api/blueprint/matrix-catalog', { headers: { Accept: 'application/json' } })
@@ -3962,6 +4061,89 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   );
                 })}
               </div>
+
+              {/* Active Sector Industrial UI/UX Cockpit & Realistic Indonesian Seeder Contract */}
+              {activeMatrixSectorObj?.ui_ux_archetypes && (() => {
+                const uiArc = activeMatrixSectorObj.ui_ux_archetypes;
+                const seederContract = activeMatrixSectorObj.realistic_seeder_contract || {};
+                const panes = uiArc?.wireframe_blueprint?.panes || [];
+                const shortcuts = uiArc?.keyboard_shortcuts || [];
+                const forbidden = (uiArc?.forbidden_ux_patterns || [])[0] || '';
+                const headline = uiArc?.headline?.[lang] || uiArc?.headline?.id || uiArc?.primary_archetype || '';
+
+                return (
+                  <div className="mt-3 p-3.5 rounded-sm bg-zinc-50 dark:bg-zinc-950 border border-emerald-500/50 dark:border-emerald-700/70 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <span className="text-[10px] font-mono font-black uppercase text-emerald-800 dark:text-emerald-300 block">
+                          {lang === 'en'
+                            ? 'LOCKED INDUSTRIAL UI/UX COCKPIT & INDONESIAN DOMAIN SEEDER'
+                            : 'KONTRAK UI/UX SPESIFIK INDUSTRI & SEEDER KONTEKSTUAL INDONESIA'}
+                        </span>
+                        <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-0.5">
+                          {headline}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="px-2 py-0.5 rounded-xs bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black">
+                          1° {uiArc.primary_archetype}
+                        </span>
+                        {uiArc.secondary_archetype && (
+                          <span className="px-2 py-0.5 rounded-xs bg-zinc-200 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono text-[10px] font-black">
+                            2° {uiArc.secondary_archetype}
+                          </span>
+                        )}
+                        {seederContract.seeder_class && (
+                          <span className="px-2 py-0.5 rounded-xs bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[10px] font-black">
+                            {seederContract.seeder_class}.php
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {panes.length > 0 && (
+                      <div className={`grid grid-cols-1 ${panes.length >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-2`}>
+                        {panes.map((p, idx) => (
+                          <div
+                            key={idx}
+                            className="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs"
+                          >
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <span className="px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[9px] font-black">
+                                {p.span} COL
+                              </span>
+                              <span className="font-mono text-[9px] font-bold text-emerald-800 dark:text-emerald-400">
+                                PANE #{idx + 1}
+                              </span>
+                            </div>
+                            <div className="text-[11px] font-bold text-zinc-950 dark:text-zinc-100">
+                              {p.title}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {shortcuts.slice(0, 4).map((sc, sIdx) => (
+                          <span
+                            key={sIdx}
+                            className="px-2 py-0.5 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs"
+                          >
+                            [{sc.key}] {sc.action}
+                          </span>
+                        ))}
+                      </div>
+                      {forbidden && (
+                        <span className="font-mono text-[10px] font-bold text-amber-950 dark:text-amber-300">
+                          🚫 {forbidden}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Step 1B: Composable Cross-Sector Core Primitives */}
@@ -4193,6 +4375,141 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 </div>
               </div>
             )}
+
+            {/* Step 1D: Killer #4 — Reverse-Engineer / Brownfield SQL, Migration & Prisma Importer */}
+            <div className="mt-6 pt-5 border-t border-zinc-200 dark:border-zinc-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div>
+                  <span className="text-[11px] font-mono font-black uppercase tracking-wider text-zinc-950 dark:text-zinc-100 block">
+                    {lang === 'en'
+                      ? '4. Brownfield Legacy SQL / Laravel Migration / Prisma Importer (Zero-Data-Loss Shadow ULID)'
+                      : '4. Punya Proyek Lama? Impor & Audit SQL / Migrasi Laravel / Prisma (Shadow ULID Tanpa Kehilangan Data)'}
+                  </span>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
+                    {lang === 'en'
+                      ? 'Paste existing CREATE TABLE DDL, Schema::create(), or schema.prisma to detect AUTO_INCREMENT / FLOAT / CASCADE debt and auto-map your Sector + Primitives.'
+                      : 'Tempelkan CREATE TABLE SQL, Schema::create(), atau schema.prisma untuk mendeteksi utang teknis AUTO_INCREMENT / FLOAT / CASCADE serta memetakan Sektor + Primitives otomatis.'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowBrownfieldLab((v) => !v)}
+                  className="px-3 py-1.5 rounded-xs bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-950 font-mono text-[10px] font-black uppercase shrink-0 cursor-pointer"
+                >
+                  {showBrownfieldLab
+                    ? (lang === 'en' ? 'Close Brownfield Importer' : 'Tutup Importer Skema Lama')
+                    : (lang === 'en' ? '+ Audit Legacy SQL / Migration' : '+ Audit Skema SQL / Migrasi Lama')}
+                </button>
+              </div>
+
+              {showBrownfieldLab && (
+                <div className="mt-3 p-4 rounded-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-mono text-[10px] font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                      {lang === 'en' ? 'DDL / Migration / Prisma Input' : 'Input DDL SQL / Migrasi Laravel / Prisma'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setBrownfieldSqlText(
+                        "CREATE TABLE orders (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  patient_id INT NOT NULL,\n  total_amount FLOAT DEFAULT 0,\n  FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE\n);\nCREATE TABLE medical_records (\n  id BIGINT AUTO_INCREMENT PRIMARY KEY,\n  diagnosis TEXT\n);"
+                      )}
+                      className="px-2 py-1 rounded-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 font-mono text-[10px] font-bold hover:border-emerald-500 cursor-pointer"
+                    >
+                      {lang === 'en' ? 'Load Legacy Sample SQL' : 'Isi Contoh SQL Legacy'}
+                    </button>
+                  </div>
+
+                  <textarea
+                    rows={5}
+                    value={brownfieldSqlText}
+                    onChange={(e) => setBrownfieldSqlText(e.target.value)}
+                    placeholder="CREATE TABLE invoices ( id INT AUTO_INCREMENT PRIMARY KEY, amount FLOAT ... );"
+                    className="w-full p-3 rounded-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 font-mono text-xs text-zinc-950 dark:text-zinc-100 focus:outline-none focus:border-emerald-500"
+                  />
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={brownfieldLoading}
+                      onClick={runBrownfieldAudit}
+                      className="px-3.5 py-2 rounded-xs bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white dark:text-zinc-950 font-mono text-xs font-black uppercase cursor-pointer"
+                    >
+                      {brownfieldLoading
+                        ? (lang === 'en' ? 'Scanning Legacy Debt...' : 'Memindai Utang Teknis...')
+                        : (lang === 'en' ? 'Audit Legacy Schema & Map Sector' : 'Audit Skema & Petakan Sektor')}
+                    </button>
+
+                    {brownfieldReport && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={applyBrownfieldRecommendation}
+                          className="px-3.5 py-2 rounded-xs bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-xs font-black uppercase cursor-pointer"
+                        >
+                          {lang === 'en' ? 'Apply Sector + Shadow ULID Plan' : 'Terapkan Sektor + Rencana Shadow ULID'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (navigator?.clipboard?.writeText && brownfieldReport.ai_refactor_prompt) {
+                              navigator.clipboard.writeText(brownfieldReport.ai_refactor_prompt);
+                            }
+                            if (window.showToast) {
+                              window.showToast({
+                                type: 'success',
+                                title: lang === 'en' ? 'Refactor Prompt Copied' : 'Prompt Refactor Disalin',
+                                message: lang === 'en'
+                                  ? 'Paste into Claude Code / Cursor / Antigravity to execute the 4-stage migration.'
+                                  : 'Tempelkan ke Claude Code / Cursor / Antigravity untuk mengeksekusi migrasi 4 tahap.',
+                              });
+                            }
+                          }}
+                          className="px-3 py-2 rounded-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-xs font-bold uppercase cursor-pointer"
+                        >
+                          {lang === 'en' ? 'Copy AI Refactor Prompt' : 'Salin AI Refactor Prompt'}
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {brownfieldReport && (
+                    <div className="mt-3 p-3.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100">
+                          {lang === 'en' ? 'Recommended Sector:' : 'Rekomendasi Sektor:'}{' '}
+                          <span className="text-emerald-800 dark:text-emerald-300">
+                            {brownfieldReport.recommended_sector?.name} ({brownfieldReport.recommended_sector?.primary_ui_archetype})
+                          </span>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-xs font-mono text-[10px] font-black border ${
+                          brownfieldReport.readiness_score >= 85
+                            ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
+                            : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700'
+                        }`}>
+                          SCORE: {brownfieldReport.readiness_score}/100 &bull; {brownfieldReport.grade}
+                        </span>
+                      </div>
+
+                      {(brownfieldReport.violations || []).length > 0 && (
+                        <div className="space-y-1.5">
+                          {brownfieldReport.violations.map((v, vIdx) => (
+                            <div
+                              key={vIdx}
+                              className="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs text-[11px]"
+                            >
+                              <div className="font-mono font-black text-amber-950 dark:text-amber-300">
+                                [{v.code} • {v.severity}] {v.title}
+                              </div>
+                              <div className="text-zinc-700 dark:text-zinc-300 mt-0.5">{v.remediation}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </section>
         )}
 

@@ -197,7 +197,7 @@
                         Autonomous AI Copilot Command Hub
                     </h2>
                     <p class="mt-2 text-xs md:text-sm text-zinc-300 max-w-2xl leading-relaxed">
-                        Pusat orkestrasi kecerdasan buatan Neriah Pro dengan Tri-Hybrid AI (RAG Dense+Sparse RRF, CAG Context Invalidation, KAG Graph Rule Enforcement) serta 12 Native Tools untuk eksekusi blueprint, kontrak berstempel SHA-256, dan manajemen domain/hosting.
+                        Pusat orkestrasi kecerdasan buatan Neriah Pro dengan Tri-Hybrid AI (RAG Dense+Sparse RRF, CAG Live Telemetry O(1), KAG Deterministic Rule Graph) serta <strong>16 Native Tools</strong> tervalidasi RBAC &amp; SHA-256 Audit Log untuk 12 Sectoral UI/UX Archetypes, Phased Prompt Sequencer, Brownfield Importer, dan Slop Scanner.
                     </p>
                 </div>
 
@@ -205,7 +205,7 @@
                     <button type="button"
                             wire:click="triggerSyncKnowledge"
                             class="px-4 py-2.5 bg-zinc-800 text-zinc-100 hover:bg-zinc-700 border border-zinc-700 font-mono text-xs font-bold rounded-xs transition-all cursor-pointer">
-                        🔄 Sinkronkan 10 Pilar RAG
+                        🔄 Sinkronkan Full RAG v2.5
                     </button>
                     <button type="button"
                             x-on:click="$dispatch('open-ai-copilot')"
@@ -219,21 +219,21 @@
             {{-- Metric Cards Grid --}}
             <div class="ai-metric-grid">
                 <div class="ai-metric-card">
-                    <div class="text-[10px] font-mono uppercase text-zinc-500">Total Vektor Chunk (RAG)</div>
-                    <div class="text-2xl font-black font-mono text-zinc-950 dark:text-zinc-100 mt-1">{{ number_format($totalChunks, 0, ',', '.') }}</div>
-                    <div class="text-[11px] text-zinc-500 mt-1">Dense 768-dim + Sparse Lexical RRF</div>
+                    <div class="text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-400">Total Vektor Chunk (RAG)</div>
+                    <div class="text-2xl font-black font-mono tabular-nums text-zinc-950 dark:text-zinc-100 mt-1">{{ number_format($totalChunks, 0, ',', '.') }}</div>
+                    <div class="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">10 Pilar + 12 Sektor UI + 9 Stack + 6 Killer Moat</div>
                 </div>
 
                 <div class="ai-metric-card">
-                    <div class="text-[10px] font-mono uppercase text-zinc-500">Project OS Blueprints</div>
-                    <div class="text-2xl font-black font-mono text-zinc-950 dark:text-zinc-100 mt-1">{{ number_format($totalBlueprints, 0, ',', '.') }}</div>
-                    <div class="text-[11px] text-zinc-500 mt-1">Tersimpan dalam database strict ULID</div>
+                    <div class="text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-400">Project OS Blueprints &amp; Tools</div>
+                    <div class="text-2xl font-black font-mono tabular-nums text-zinc-950 dark:text-zinc-100 mt-1">{{ number_format($totalBlueprints, 0, ',', '.') }} <span class="text-xs font-bold text-emerald-800 dark:text-emerald-400">// 16 Native Tools</span></div>
+                    <div class="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">Strict ULID + RBAC Guard + SHA-256 Audit</div>
                 </div>
 
                 <div class="ai-metric-card">
-                    <div class="text-[10px] font-mono uppercase text-zinc-500">Active Sprint Parallel</div>
-                    <div class="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">{{ $activeSprints }} / 3 Slot</div>
-                    <div class="text-[11px] text-zinc-500 mt-1">Managed Capacity Anti-Collision</div>
+                    <div class="text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-400">Active Sprint Parallel</div>
+                    <div class="text-2xl font-black font-mono tabular-nums text-emerald-800 dark:text-emerald-400 mt-1">{{ $activeSprints }} / 3 Slot</div>
+                    <div class="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">Managed Capacity Anti-Collision</div>
                 </div>
             </div>
 

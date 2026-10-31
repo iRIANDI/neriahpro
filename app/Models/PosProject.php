@@ -30,6 +30,7 @@ class PosProject extends Model
         'compiled_execution_md',
         'compiled_agents_md',
         'compiled_graph_json',
+        'phased_prompts_json',
     ];
 
     protected function casts(): array
@@ -38,6 +39,7 @@ class PosProject extends Model
             'selected_primitive_ids' => 'array',
             'selected_rule_pack_ids' => 'array',
             'custom_entities' => 'array',
+            'phased_prompts_json' => 'array',
         ];
     }
 

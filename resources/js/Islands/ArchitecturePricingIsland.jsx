@@ -126,23 +126,27 @@ export default function ArchitecturePricingIsland({
   const isCvProEnabled = Boolean(featureFlags?.enable_cv_pro) && Boolean(featureFlags?.pricing_show_cv_tab);
   const [activeTab, setActiveTab] = useState('software'); // 'software' | 'cv'
 
-  // Pricing Section Tab: 'retail' | 'project' | 'matrix' | 'faq'
+  // Pricing Section Tab: 'retail' | 'project' | 'sectoral' | 'matrix' | 'faq'
   const [pricingSectionTab, setPricingSectionTab] = useState(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.toLowerCase().replace('#', '');
       if (['retail', 'instant'].includes(hash)) return 'retail';
       if (['project', 'studio'].includes(hash)) return 'project';
+      if (['sectoral', 'sectors', 'ui-ux', 'killer'].includes(hash)) return 'sectoral';
       if (['matrix', 'comparison'].includes(hash)) return 'matrix';
       if (['faq', 'faqs'].includes(hash)) return 'faq';
     }
     return 'retail';
   });
 
+  const [selectedSectorIdx, setSelectedSectorIdx] = useState(0);
+
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.toLowerCase().replace('#', '');
       if (['retail', 'instant'].includes(hash)) setPricingSectionTab('retail');
       else if (['project', 'studio'].includes(hash)) setPricingSectionTab('project');
+      else if (['sectoral', 'sectors', 'ui-ux', 'killer'].includes(hash)) setPricingSectionTab('sectoral');
       else if (['matrix', 'comparison'].includes(hash)) setPricingSectionTab('matrix');
       else if (['faq', 'faqs'].includes(hash)) setPricingSectionTab('faq');
     };
@@ -586,7 +590,242 @@ const ensureSnapReady = (snapUrl, clientKey) => {
       a: isEn
         ? 'Neriah Pro implements a strict Scope Locking protocol. Any feature request outside the initially agreed PRD blueprint must be submitted formally via the "Change Request (CR) / Addendum" module in your Customer Portal Dashboard. We do not accept arbitrary scope changes via WhatsApp or Email. Once submitted, our Principal Architect will evaluate the CR and issue a supplementary Addendum invoice with an estimated timeline adjustment. Coding for the new feature will only begin after the Addendum is signed and paid.'
         : 'Neriah Pro menerapkan protokol Scope Locking yang ketat untuk mencegah kelebihan beban kerja (scope creep). Seluruh permintaan fitur baru atau perubahan logika yang keluar dari spesifikasi dokumen PRD awal WAJIB diajukan secara resmi melalui modul "Change Request (CR) / Addendum" di Customer Portal Dashboard. Kami tidak menerima sisipan revisi dadakan via WhatsApp atau telepon. Setelah form diajukan, Principal Architect kami akan mengevaluasi CR tersebut dan menerbitkan Invoice Addendum beserta penyesuaian estimasi waktu. Pengerjaan fitur tambahan baru akan dimulai setelah Addendum disetujui dan dilunasi.'
+    },
+    {
+      q: isEn ? 'Why does Project OS classify applications into 12 Sectoral Industrial UI/UX Archetypes instead of standard CRUD tables?' : 'Mengapa Project OS memetakan aplikasi ke 12 Sectoral Industrial UI/UX Archetypes dan melarang tabel CRUD generik?',
+      a: isEn
+        ? 'Real-world operational software fails when every industry is forced into the same generic CRUD table. A retail cashier needs a mouse-free 100vh Split POS Terminal (F1/F2/F8 shortcuts), a doctor needs a 3-Pane Clinical Cockpit (Queue + Allergy Banner | SOAP | FEFO Rx) with zero stacked modals, and an accountant needs a balanced Spreadsheet Ledger locking [Post Journal] until Debit == Credit. Project OS compiles exact industry ergonomics, keyboard shortcuts, and Indonesian Realistic Domain Seeders automatically.'
+        : 'Aplikasi bisnis nyata gagal di lapangan jika seluruh industri dipaksa memakai tabel CRUD generik yang sama. Kasir toko membutuhkan Split POS Terminal 100vh bebas mouse (pintasan F1/F2/F8), dokter membutuhkan Clinical 3-Pane Cockpit (Antrean + Banner Alergi | SOAP | Resep FEFO) tanpa tumpukan modal, dan akuntan membutuhkan Spreadsheet Ledger yang mengunci tombol [Post Journal] hingga Debit == Kredit. Project OS mengompilasi ergonomi spesifik industri beserta Realistic Domain Seeder Indonesia secara otomatis.'
+    },
+    {
+      q: isEn ? 'How do the Phased Prompt Sequencer (Phase 1–6), Brownfield Importer, and 1-Command CLI Bootstrapper work?' : 'Bagaimana cara kerja Phased Prompt Sequencer (Fase 1–6), Brownfield SQL Importer, dan 1-Command CLI Bootstrapper?',
+      a: isEn
+        ? 'Instead of dumping a massive 50-page PRD into an AI IDE at once (which triggers context-overflow and broken code), Project OS slices execution into 6 deterministic phases (.agents/prompts/01-foundation.md through 06-deployment.md), enforces TDD 100% green before UI, includes ./verify-blueprint.sh to catch UI slop, audits legacy SQL schemas for Zero-Data-Loss Shadow ULID migration, and initializes your entire repository in 3 seconds via curl -sL https://neriahpro.com/init/{ULID} | bash.'
+        : 'Daripada menyuapi AI coding agent dengan satu dokumen raksasa sekaligus (yang menyebabkan context overflow dan halusinasi), Project OS memecah eksekusi ke dalam 6 fase deterministik (.agents/prompts/01-foundation.md s/d 06-deployment.md), mewajibkan 100% test hijau sebelum menyentuh UI, menyertakan ./verify-blueprint.sh pencegah UI slop, mengaudit database SQL warisan untuk migrasi Shadow ULID tanpa kehilangan data, serta menginisialisasi repositori dalam 3 detik cukup dengan satu perintah terminal: curl -sL https://neriahpro.com/init/{ULID} | bash.'
     }
+  ];
+
+  const SECTORAL_ARCHETYPES_SHOWCASE = [
+    {
+      num: '01',
+      code: 'SECTOR_01_COMMERCE_OMNICHANNEL',
+      name: isEn ? 'Commerce, POS & Omnichannel' : 'Perdagangan, Ritel POS & Distribusi',
+      primary: 'POS_SPLIT_TERMINAL',
+      secondary: 'DENSE_SKU_MATRIX',
+      seeder: 'RealisticCommercePosSeeder',
+      shortcuts: ['F1 Focus Barcode', 'F2 Search SKU', 'F4 Hold Cart', 'F8 Pay QRIS/Cash', 'Enter +1 Qty'],
+      panes: [
+        { span: '8-COL LEFT', title: isEn ? '100vh Zero-Scroll SKU Grid & 2D Size×Color Matrix' : 'Grid SKU Cepat 100vh Tanpa Scroll & Matriks 2D Ukuran×Warna' },
+        { span: '4-COL RIGHT', title: isEn ? 'Sticky Cart, Tiered Discount & Touch Virtual Numpad' : 'Keranjang Belanja Sticky, Diskon Bertingkat & Virtual Numpad' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Multi-page checkout reloads or mouse-dependent dropdowns.' : 'DILARANG: Checkout pindah halaman lambat atau form dropdown yang bergantung pada mouse.',
+    },
+    {
+      num: '02',
+      code: 'SECTOR_02_HOSPITALITY_SPACE',
+      name: isEn ? 'Hospitality, Property & Space Booking' : 'Perhotelan, Properti & Reservasi Aset',
+      primary: 'HORIZONTAL_RESOURCE_GANTT',
+      secondary: 'TIME_SLOT_HEATMAP',
+      seeder: 'RealisticHospitalityBookingSeeder',
+      shortcuts: ['Click Empty Slot → Slide-Over', 'G Toggle Gantt/Heatmap', 'M Toggle Maintenance'],
+      panes: [
+        { span: 'STICKY Y-AXIS', title: isEn ? 'Rooms / Courts / Fleet Units + Clean/Dirty Badge' : 'Daftar Kamar / Lapangan / Armada + Badge Clean/Dirty/Maintenance' },
+        { span: '06:00–24:00 X-AXIS', title: isEn ? 'PostgreSQL GiST Exclusion Blocks + 0-Reload Slide-Over' : 'Blok Waktu GiST Anti-Bentrok + Slide-Over Booking Tanpa Reload' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Plain text date tables that hide overlapping slot collisions.' : 'DILARANG: Tabel daftar tanggal teks biasa yang menyembunyikan bentrok jadwal.',
+    },
+    {
+      num: '03',
+      code: 'SECTOR_03_HEALTHCARE_CLINICAL',
+      name: isEn ? 'Healthcare, Clinic EMR & Pharmacy' : 'Layanan Kesehatan, EMR Klinik & Apotek',
+      primary: 'CLINICAL_3_PANE_COCKPIT',
+      secondary: 'TIMELINE_SOAP_EMR',
+      seeder: 'RealisticClinicalEmrSeeder',
+      shortcuts: ['Alt+1 Queue', 'Alt+2 SOAP Input', 'Alt+3 FEFO Rx & ICD-10', 'Ctrl+Enter Sign EMR'],
+      panes: [
+        { span: '2-COL LEFT', title: isEn ? 'Poly Queue + Sticky Rose-950 Drug Allergy Banner' : 'Antrean Poli + Banner Merah Peringatan Alergi Obat Akut' },
+        { span: '6-COL CENTER', title: isEn ? 'Chronological EMR & Structured S-O-A-P Workspace' : 'Riwayat Rekam Medis Kronologis & Form S-O-A-P Terstruktur' },
+        { span: '4-COL RIGHT', title: isEn ? 'ICD-10 Search & FEFO Batch Expiry E-Prescription' : 'Pencarian ICD-10 & E-Resep Stok Apotek Batch/Expiry FEFO' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Stacked modals hiding patient allergies or silent edits on signed EMRs.' : 'DILARANG: Modal bertumpuk yang menutupi alergi pasien atau edit diam-diam pada EMR terkunci.',
+    },
+    {
+      num: '04',
+      code: 'SECTOR_04_FINTECH_LEDGER',
+      name: isEn ? 'Fintech, Accounting & Double-Entry Ledger' : 'Keuangan, Akuntansi & Double-Entry Ledger',
+      primary: 'SPREADSHEET_LEDGER_GRID',
+      secondary: 'SIDE_BY_SIDE_RECONCILIATION',
+      seeder: 'RealisticFintechLedgerSeeder',
+      shortcuts: ['Tab Next Cell', 'Ctrl+Shift+B Auto-Balance', 'Ctrl+Enter Post Balanced Journal'],
+      panes: [
+        { span: 'COMPACT LEDGER', title: isEn ? 'py-1.5 Tabular-Nums DECIMAL(19,4) CoA Journal Grid' : 'Grid Jurnal CoA Padat py-1.5 Tabular-Nums DECIMAL(19,4)' },
+        { span: 'STICKY FOOTER', title: isEn ? 'Real-Time SUM(Debit)==SUM(Credit) Gatekeeper (Delta=0)' : 'Kalkulator Live SUM(Debit)==SUM(Kredit); Kunci [Post] jika Selisih != 0' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Floating-point math or allowing unbalanced journal submissions.' : 'DILARANG: Tipe FLOAT/DOUBLE atau mengizinkan tombol Post aktif saat jurnal belum seimbang.',
+    },
+    {
+      num: '05',
+      code: 'SECTOR_05_INDUSTRIAL_MRP',
+      name: isEn ? 'Manufacturing, MRP & Shop Floor' : 'Manufaktur, Pabrik MRP & Konstruksi',
+      primary: 'MULTI_LEVEL_BOM_TREE',
+      secondary: 'SHOP_FLOOR_KANBAN',
+      seeder: 'RealisticManufacturingMrpSeeder',
+      shortcuts: ['Space Expand BoM Node', 'F9 Record Scrap/Yield'],
+      panes: [
+        { span: 'BOM TREE', title: isEn ? 'Collapsible Raw → Semi → Finished Good HPP Roll-Up' : 'Pohon BoM Bertingkat Bahan Baku → WIP → Barang Jadi + HPP Roll-Up' },
+        { span: 'GLOVE TOUCH UI', title: isEn ? 'h-14 High-Contrast Shop Floor Start/Pause/Scrap Buttons' : 'Mode Operator Pabrik Tombol Besar h-14 Ramah Sarung Tangan' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Tiny 10px links unusable by factory floor operators.' : 'DILARANG: Tombol/teks kecil yang mustahil ditekan operator lantai produksi.',
+    },
+    {
+      num: '06',
+      code: 'SECTOR_06_LOGISTICS_FLEET',
+      name: isEn ? 'Logistics, Supply Chain & Fleet PoD' : 'Logistik, Ekspedisi & Manajemen Armada',
+      primary: 'SPLIT_MAP_DISPATCHER',
+      secondary: 'STEPPER_MANIFEST_TRACKER',
+      seeder: 'RealisticLogisticsFleetSeeder',
+      shortcuts: ['Ctrl+M Assign Waybill', 'Ctrl+P Print Manifest QR'],
+      panes: [
+        { span: '50% DISPATCH', title: isEn ? 'Unassigned Waybills + Truck Volume/Weight Load Bar' : 'Daftar Resi + Progress Bar Kapasitas Kubikasi/Tonase Truk' },
+        { span: '50% ROUTE / POD', title: isEn ? 'Mobile PWA Sticky Bottom Bar + Canvas Signature PoD' : 'PWA Kurir 1-Jempol + Bukti Foto Kamera & Tanda Tangan Kanvas PoD' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Desktop-only tables forced onto field couriers.' : 'DILARANG: Memaksa kurir lapangan memakai tabel desktop lebar di layar HP.',
+    },
+    {
+      num: '07',
+      code: 'SECTOR_07_EDTECH_MEMBERSHIP',
+      name: isEn ? 'EdTech, Campus SIAKAD & LMS' : 'Pendidikan, SIAKAD Kampus & Pelatihan',
+      primary: 'COHORT_GRADEBOOK_MATRIX',
+      secondary: 'DISTRACTION_FREE_PLAYER',
+      seeder: 'RealisticEdtechCohortSeeder',
+      shortcuts: ['Arrow Keys Navigate Cells', 'H/I/S/A Instant Attendance'],
+      panes: [
+        { span: '2D GRADEBOOK', title: isEn ? 'Student × Session 1..16 Inline Matrix + 1-Click H/I/S/A' : 'Matriks 2D Siswa × Pertemuan 1..16 + Presensi 1-Klik H/I/S/A' },
+        { span: 'EXAM PLAYER', title: isEn ? 'Collapsible Curriculum Tree + Server-Synced Exam Timer' : 'Player Materi Bebas Distraksi + Timer Ujian Anti-Reset Refresh' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Opening 30 separate modals just to grade 30 students.' : 'DILARANG: Membuka 30 modal terpisah hanya untuk menginput nilai 30 siswa.',
+    },
+    {
+      num: '08',
+      code: 'SECTOR_08_PROFESSIONAL_PSA',
+      name: isEn ? 'Agency, Consulting & Legal PSA' : 'Jasa Profesional, Agensi & Konsultan Hukum',
+      primary: 'MILESTONE_KANBAN_BOARD',
+      secondary: 'PERSISTENT_FLOATING_TIMER',
+      seeder: 'RealisticProfessionalPsaSeeder',
+      shortcuts: ['Alt+T Toggle Billable Timer', 'Alt+I Convert Timesheet → Invoice'],
+      panes: [
+        { span: 'PERSISTENT BAR', title: isEn ? 'Floating Billable Stopwatch Surviving Page Navigation' : 'Stopwatch Jam Kerja Melayang yang Tetap Hidup Saat Pindah Halaman' },
+        { span: 'CLIENT PORTAL', title: isEn ? 'Clean hideNav Deliverable Sign-Off & Scope Hash Seal' : 'Portal Persetujuan Klien Bersih (hideNav) + Segel Hash SHA-256' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Exposing internal staff cost rates on client-facing views.' : 'DILARANG: Menampilkan tarif modal internal staf pada layar portal klien.',
+    },
+    {
+      num: '09',
+      code: 'SECTOR_09_FOOD_BEVERAGE',
+      name: isEn ? 'F&B, Cloud Kitchen KDS & Table Map' : 'Kuliner, Restoran, Cloud Kitchen & KDS',
+      primary: 'KDS_TICKET_BOARD',
+      secondary: 'FLOOR_TABLE_MAP',
+      seeder: 'RealisticFnbKitchenKdsSeeder',
+      shortcuts: ['Space Bump Ticket', '1–9 Select Table Zone'],
+      panes: [
+        { span: 'DARK KDS BOARD', title: isEn ? 'Forced Dark SLA Tickets (<5m Emerald, >10m Pulsing Rose)' : 'Layar Dapur Dark Mode dengan Indikator SLA (<5m Hijau, >10m Merah)' },
+        { span: 'MODIFIER GRID', title: isEn ? '1-Tap Sugar/Ice/Topping Button Grid + Split/Merge Bill' : 'Grid Tombol Cepat Level Gula/Es/Topping + Pisah/Gabung Tagihan Meja' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Glaring white KDS screens in hot kitchens or slow modifier dropdowns.' : 'DILARANG: Layar KDS putih menyilaukan di dapur atau dropdown topping yang lambat.',
+    },
+    {
+      num: '10',
+      code: 'SECTOR_10_MEDIA_TICKETING',
+      name: isEn ? 'Event Ticketing, Venue & Creator DAM' : 'Media, Tiket Event, Konser & Ekonomi Kreator',
+      primary: 'INTERACTIVE_SEAT_MAP',
+      secondary: 'DAM_MASONRY_GRID',
+      seeder: 'RealisticTicketingEventSeeder',
+      shortcuts: ['Esc Clear Seat Selection', 'S Focus Gate QR Scanner'],
+      panes: [
+        { span: 'SEAT MAP + TTL', title: isEn ? 'Interactive VIP/CAT Grid + Sticky 10:00 Hold Countdown' : 'Peta Kursi Interaktif VIP/Festival + Banner Hitung Mundur Kunci 10:00' },
+        { span: 'CREATOR ROYALTY', title: isEn ? 'DAM Asset Grid + Transparent Gross/Fee/Net Split Ledger' : 'Galeri Aset Digital + Buku Besar Bagi Hasil Royalti Kreator Transparan' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Releasing held seats without visible countdown warning.' : 'DILARANG: Melepas kursi pesanan tanpa banner hitung mundur yang jelas.',
+    },
+    {
+      num: '11',
+      code: 'SECTOR_11_HRIS_INTERNAL_OPS',
+      name: isEn ? 'HRIS, Shift Roster & Payroll PPh21' : 'HRIS, Roster Shift, Absensi & Payroll PPh21',
+      primary: 'SHIFT_ROSTER_MATRIX',
+      secondary: 'PAYSLIP_SIMULATOR_VIEW',
+      seeder: 'RealisticHrisPayrollSeeder',
+      shortcuts: ['C Copy Last Week Roster', 'P Run Payroll Simulation'],
+      panes: [
+        { span: 'ROSTER MATRIX', title: isEn ? 'Employee × Date Grid + Night→Morning Red Clash Alert' : 'Matriks Karyawan × Tanggal + Peringatan Merah Bentrok Malam→Pagi' },
+        { span: '3-COL PAYROLL', title: isEn ? 'Gross | PPh21 TER & BPJS Deductions | Net THP + MoM Delta' : '3 Kolom Simulasi Gaji: Bruto | Potongan PPh21 TER & BPJS | Net THP' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Finalizing payroll runs without MoM anomaly review.' : 'DILARANG: Mengunci penggajian massal tanpa layar pratinjau selisih bulan lalu.',
+    },
+    {
+      num: '12',
+      code: 'SECTOR_12_GOVTECH_NONPROFIT',
+      name: isEn ? 'GovTech, Non-Profit, Zakat & Grants' : 'Layanan Publik, Yayasan, Donasi & Hibah (ISAK 35)',
+      primary: 'TRANSPARENCY_FUND_TRACKER',
+      secondary: 'DONOR_IMPACT_PORTAL',
+      seeder: 'RealisticNonprofitFundSeeder',
+      shortcuts: ['V Verify Geo Evidence', 'H Copy SHA-256 Receipt Hash'],
+      panes: [
+        { span: 'ISAK 35 SPLIT', title: isEn ? 'Restricted vs Unrestricted Fund Balance & Disbursement' : 'Pemisahan Ketat Saldo Dana Terikat vs Tidak Terikat (Standar ISAK 35)' },
+        { span: 'PUBLIC TRUST', title: isEn ? 'Field Geo/Photo Timeline + SHA-256 Tamper-Evident Badge' : 'Timeline Bukti Foto/Lokasi Penyaluran + Lencana Hash Audit SHA-256' },
+      ],
+      ban: isEn ? 'FORBIDDEN: Co-mingling restricted program funds with operational expenses.' : 'DILARANG: Mencampur saldo dana donasi terikat dengan kas operasional umum.',
+    },
+  ];
+
+  const KILLER_ENGINES_SHOWCASE = [
+    {
+      num: '01',
+      badge: 'ANTI-OVERFLOW',
+      title: isEn ? 'Phased Prompt Sequencer (Phase 1 to 6)' : 'Phased Prompt Sequencer (Fase 1 s/d 6)',
+      desc: isEn
+        ? 'Slices execution into .agents/prompts/01-foundation.md through 06-deployment.md. Enforces 100% green Acceptance Tests in Phase 4 BEFORE touching any UI in Phase 5.'
+        : 'Memecah eksekusi ke .agents/prompts/01-foundation.md s/d 06-deployment.md. Mewajibkan 100% Acceptance Test hijau di Fase 4 SEBELUM menyentuh UI di Fase 5.',
+    },
+    {
+      num: '02',
+      badge: 'INDONESIAN DATA',
+      title: isEn ? 'Realistic Domain Seeders & Stress Factory' : 'Realistic Domain Seeders & Stress Factory',
+      desc: isEn
+        ? 'Strictly bans "Test Name 1" & "Lorem ipsum". Auto-generates authentic Indonesian SKUs, ICD-10 clinical codes, PSAK CoA ledgers, and PPh21 TER fixtures.'
+        : 'Melarang keras "Test Name 1" & "Lorem ipsum". Menghasilkan SKU ritel Indonesia asli, kode medis ICD-10, CoA PSAK, dan tarif PPh21 TER siap demo ke investor.',
+    },
+    {
+      num: '03',
+      badge: 'LIVE TOPOLOGY',
+      title: isEn ? 'Visual ERD, State & UI Wireframe Previewer' : 'Visual ERD, State & UI Wireframe Previewer',
+      desc: isEn
+        ? 'Inspect PostgreSQL 16 ULID ERDs, State Machine transitions, and industry-specific multi-pane UI wireframes visually before writing a single line of code.'
+        : 'Inspeksi diagram ERD PostgreSQL 16 ULID, transisi State Machine, dan pratinjau tata letak panel UI spesifik industri sebelum menulis satu baris kode pun.',
+    },
+    {
+      num: '04',
+      badge: 'ZERO DATA LOSS',
+      title: isEn ? 'Reverse-Engineer / Brownfield SQL Importer' : 'Reverse-Engineer / Brownfield SQL Importer',
+      desc: isEn
+        ? 'Paste legacy CREATE TABLE SQL, Laravel migrations, or Prisma schemas to detect AUTO_INCREMENT/FLOAT/CASCADE debt and get a 4-stage Shadow ULID migration plan.'
+        : 'Tempelkan SQL lama, migrasi Laravel, atau schema.prisma untuk mendeteksi utang teknis AUTO_INCREMENT/FLOAT/CASCADE dan memperoleh rencana migrasi Shadow ULID 4 tahap.',
+    },
+    {
+      num: '05',
+      badge: 'CI GATEKEEPER',
+      title: isEn ? 'Blueprint Drift Auditor & ./verify-blueprint.sh' : 'Blueprint Drift Auditor & ./verify-blueprint.sh',
+      desc: isEn
+        ? 'Ships a standalone POSIX verify-blueprint.sh scanner & php artisan pos:audit CLI that catches rounded-full, gradients, alert(), or offset pagination and prints Auto-Fix Prompts.'
+        : 'Menyertakan pemindai verify-blueprint.sh & php artisan pos:audit yang menangkap pelanggaran rounded-full, gradien, alert(), atau offset pagination beserta Auto-Fix Prompt.',
+    },
+    {
+      num: '06',
+      badge: '3-SEC INIT',
+      title: isEn ? 'One-Command CLI Workspace Bootstrapper' : 'One-Command CLI Workspace Bootstrapper',
+      desc: isEn
+        ? 'Run curl -sL https://neriahpro.com/init/{ULID} | bash to materialize AGENTS.md, .cursorrules, graph.json, 6 phased prompts, and verify-blueprint.sh in 3 seconds.'
+        : 'Jalankan curl -sL https://neriahpro.com/init/{ULID} | bash untuk menanamkan AGENTS.md, .cursorrules, graph.json, 6 phased prompts, dan verify-blueprint.sh dalam 3 detik.',
+    },
   ];
 
   return (
@@ -672,9 +911,9 @@ const ensureSnapReady = (snapUrl, clientKey) => {
               </p>
             </div>
 
-            {/* 2. DYNAMIC 4-TAB NAVIGATION SWITCHER (RETAIL | STUDIO | MATRIX | FAQ) */}
+            {/* 2. DYNAMIC 5-TAB NAVIGATION SWITCHER (RETAIL | STUDIO | 12-SECTOR UI & KILLER OS | MATRIX | FAQ) */}
             <div className="flex justify-center mb-8 sm:mb-10 w-full px-2 sm:px-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 p-1.5 bg-zinc-100 dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs font-mono text-xs w-full max-w-6xl gap-1.5 sm:gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 p-1.5 bg-zinc-100 dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs font-mono text-xs w-full max-w-7xl gap-1.5 sm:gap-2">
                 
                 {[
                   {
@@ -692,17 +931,24 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                     icon: Rocket,
                   },
                   {
-                    id: 'matrix',
+                    id: 'sectoral',
                     num: '03',
+                    title: isEn ? '12-Sector UI & Killer OS' : '12 Sektor UI & Killer OS',
+                    sub: 'ANTI-SLOP V2.5',
+                    icon: Terminal,
+                  },
+                  {
+                    id: 'matrix',
+                    num: '04',
                     title: isEn ? 'Comparison Matrix' : 'Matriks Perbandingan',
-                    sub: isEn ? '10 PILLARS' : '10 PILAR',
+                    sub: isEn ? '10 PILLARS + V2.5' : '10 PILAR + V2.5',
                     icon: Layers,
                   },
                   {
                     id: 'faq',
-                    num: '04',
+                    num: '05',
                     title: isEn ? 'Project OS FAQ' : 'FAQ Project OS',
-                    sub: isEn ? '19 FAQS' : '19 FAQ',
+                    sub: isEn ? '21 FAQS' : '21 FAQ',
                     icon: HelpCircle,
                   }
                 ].map((tab) => {
@@ -1505,7 +1751,292 @@ const ensureSnapReady = (snapUrl, clientKey) => {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 3: TECHNICAL SPECIFICATION COMPARISON MATRIX                          */}
+      {/* TAB 3: 12 SECTORAL INDUSTRIAL UI/UX ARCHETYPES & 6 KILLER MOAT ENGINES     */}
+      {/* ========================================================================= */}
+      {pricingSectionTab === 'sectoral' && (() => {
+        const activeSectorItem = SECTORAL_ARCHETYPES_SHOWCASE[selectedSectorIdx] || SECTORAL_ARCHETYPES_SHOWCASE[0];
+        const sampleCliCmd = 'curl -sL https://neriahpro.com/init/01J9POSBLUEPRINTULID000001 | bash';
+        const copyCliSample = () => {
+          if (navigator?.clipboard?.writeText) {
+            navigator.clipboard.writeText(sampleCliCmd);
+          }
+          if (window.showToast) {
+            window.showToast({
+              type: 'success',
+              title: isEn ? 'CLI Command Copied' : 'Perintah CLI Disalin',
+              message: isEn
+                ? 'Generate your own ULID Blueprint in Studio to get your dedicated 3-second /init/{ULID} bootstrapper.'
+                : 'Buat Blueprint ULID Anda di Studio untuk mendapatkan skrip bootstrapper 3 detik /init/{ULID} khusus proyek Anda.',
+            });
+          }
+        };
+
+        return (
+          <motion.div
+            key="sectoral-tab-content"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="mb-16 space-y-8"
+          >
+            {/* A. TOP HERO & ONE-COMMAND CLI BOOTSTRAPPER BAR */}
+            <div className="border-2 border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-none">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-2 max-w-3xl">
+                  <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
+                    <span>PROJECT OS V2.5 // ZERO-TO-PRODUCTION INDUSTRIAL UX</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight text-zinc-950 dark:text-white font-sans">
+                    {isEn
+                      ? '12 Sectoral Industrial UI Cockpits & 6 Killer Orchestration Engines'
+                      : '12 Arketipe UI/UX Spesifik Industri & 6 Mesin Orkestrasi Anti-Slop'}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans">
+                    {isEn
+                      ? 'Generic AI tools dump identical 5-column CRUD tables onto POS cashiers, ICU doctors, and warehouse dispatchers. Project OS mechanically enforces domain-ergonomic multi-pane cockpits, keyboard-first shortcuts, Indonesian domain seeders, 6-phase prompts, and a 3-second CLI workspace bootstrapper.'
+                      : 'Generator AI generik memaksakan tabel CRUD 5 kolom yang sama untuk kasir ritel, dokter IGD, hingga akuntan jurnal. Project OS mengunci kokpit multi-panel spesifik profesi, pintasan keyboard kasir/klinis, data seeder Indonesia asli, 6 fase prompt bebas context-overflow, hingga bootstrapper terminal 3 detik.'}
+                  </p>
+                </div>
+
+                <div className="w-full lg:w-auto shrink-0 bg-zinc-950 text-zinc-100 border border-zinc-800 p-4 rounded-none space-y-2.5">
+                  <div className="flex items-center justify-between gap-3 font-mono text-[10px] uppercase">
+                    <span className="text-emerald-400 font-black">⚡ 3-SECOND WORKSPACE INIT</span>
+                    <span className="px-1.5 py-0.5 bg-zinc-800 text-zinc-200 border border-zinc-700 font-bold">POSIX SH</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-black border border-zinc-800 px-3 py-2 font-mono text-[11px] text-emerald-300 overflow-x-auto">
+                    <code className="whitespace-nowrap">{sampleCliCmd}</code>
+                    <button
+                      type="button"
+                      onClick={copyCliSample}
+                      className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-white font-mono text-[10px] font-black uppercase border border-zinc-600 shrink-0 cursor-pointer"
+                    >
+                      <Copy className="w-3 h-3 inline mr-1" />
+                      {isEn ? 'Copy' : 'Salin'}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 text-[10px] font-mono text-zinc-400">
+                    <span>+ ./verify-blueprint.sh (CI Gate)</span>
+                    <a
+                      href="/blueprint"
+                      className="text-emerald-400 hover:text-emerald-300 font-black uppercase underline"
+                    >
+                      {isEn ? 'Open Blueprint Studio →' : 'Buka Blueprint Studio →'}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* B. INTERACTIVE 12-SECTOR INDUSTRIAL UI/UX WIREFRAME EXPLORER */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              {/* Left Selector: 12 Sectors */}
+              <div className="lg:col-span-5 border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 rounded-none">
+                <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-zinc-200 dark:border-zinc-800">
+                  <span className="font-mono text-xs font-black uppercase text-zinc-950 dark:text-zinc-100">
+                    {isEn ? 'Select Business Sector (01–12)' : 'Pilih Sektor Fungsional (01–12)'}
+                  </span>
+                  <span className="px-2 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[10px] font-black">
+                    ZERO CRUD SLOP
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 max-h-[540px] overflow-y-auto pr-1">
+                  {SECTORAL_ARCHETYPES_SHOWCASE.map((sec, idx) => {
+                    const active = idx === selectedSectorIdx;
+                    return (
+                      <button
+                        key={sec.code}
+                        type="button"
+                        onClick={() => setSelectedSectorIdx(idx)}
+                        className={`w-full text-left px-3 py-2.5 border transition rounded-none cursor-pointer flex items-center justify-between gap-2 ${
+                          active
+                            ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950/80 dark:text-white dark:border-emerald-500'
+                            : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-950 dark:hover:bg-zinc-800/80 dark:text-zinc-200 dark:border-zinc-800'
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="font-mono text-[10px] font-black uppercase truncate">
+                            <span className={active ? 'text-emerald-400' : 'text-emerald-800 dark:text-emerald-400'}>
+                              #{sec.num}
+                            </span>{' '}
+                            &bull; {sec.primary}
+                          </div>
+                          <div className={`text-xs font-bold truncate mt-0.5 ${active ? 'text-white' : 'text-zinc-900 dark:text-zinc-100'}`}>
+                            {sec.name}
+                          </div>
+                        </div>
+                        <ArrowRight className={`w-3.5 h-3.5 shrink-0 ${active ? 'text-emerald-400' : 'text-zinc-400'}`} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right Live Cockpit Wireframe Inspector */}
+              <div className="lg:col-span-7 border-2 border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-none flex flex-col justify-between">
+                <div className="space-y-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+                    <div>
+                      <div className="font-mono text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-400">
+                        SECTOR #{activeSectorItem.num} // {activeSectorItem.code}
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-black text-zinc-950 dark:text-white mt-0.5">
+                        {activeSectorItem.name}
+                      </h3>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black">
+                        1° {activeSectorItem.primary}
+                      </span>
+                      <span className="px-2.5 py-1 bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-mono text-[10px] font-black">
+                        2° {activeSectorItem.secondary}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Simulated Multi-Pane Industrial Wireframe */}
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="font-mono text-[11px] font-black uppercase text-zinc-800 dark:text-zinc-200">
+                        {isEn ? 'Mandatory Multi-Pane Industrial Cockpit Topology' : 'Topologi Panel Layar Operasional Wajib (Multi-Pane Wireframe)'}
+                      </span>
+                      <span className="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400">
+                        .agents/UI_UX_CONTRACT.md
+                      </span>
+                    </div>
+                    <div className={`grid grid-cols-1 ${activeSectorItem.panes.length >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-3 p-3.5 bg-zinc-100 dark:bg-zinc-950 border-2 border-zinc-300 dark:border-zinc-800`}>
+                      {activeSectorItem.panes.map((pane, pIdx) => (
+                        <div
+                          key={pIdx}
+                          className="p-3.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 flex flex-col justify-between min-h-[112px]"
+                        >
+                          <div className="flex items-center justify-between gap-1.5 mb-2">
+                            <span className="px-2 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[9px] font-black uppercase">
+                              {pane.span}
+                            </span>
+                            <span className="font-mono text-[9px] font-bold text-emerald-800 dark:text-emerald-400">
+                              LOCKED PANE #{pIdx + 1}
+                            </span>
+                          </div>
+                          <p className="text-xs font-bold text-zinc-950 dark:text-zinc-100 leading-snug">
+                            {pane.title}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Keyboard Shortcuts & Realistic Indonesian Domain Seeder */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                      <div className="font-mono text-[10px] font-black uppercase text-zinc-700 dark:text-zinc-400 mb-2">
+                        {isEn ? 'Keyboard-First Operator Shortcuts' : 'Pintasan Keyboard Operator Wajib'}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {activeSectorItem.shortcuts.map((sc, sIdx) => (
+                          <span
+                            key={sIdx}
+                            className="px-2 py-1 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-400 dark:border-zinc-700 font-mono text-[10px] font-black"
+                          >
+                            ⌨ {sc}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                      <div className="font-mono text-[10px] font-black uppercase text-zinc-700 dark:text-zinc-400 mb-2">
+                        {isEn ? 'Realistic Indonesian Domain Seeder' : 'Seeder Data Kontekstual Indonesia'}
+                      </div>
+                      <div className="font-mono text-xs font-black text-emerald-900 dark:text-emerald-300">
+                        database/seeders/{activeSectorItem.seeder}.php
+                      </div>
+                      <div className="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">
+                        {isEn ? 'Zero "Lorem ipsum" / "Test User 1" — Investor-demo ready.' : 'Bebas "Lorem ipsum" / "Test User 1" — Langsung siap demo investor.'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sectoral Anti-Slop Ban */}
+                  <div className="p-3.5 bg-amber-100/80 dark:bg-amber-950/50 border border-amber-400 dark:border-amber-700 text-amber-950 dark:text-amber-200 font-mono text-xs font-bold">
+                    🚫 {activeSectorItem.ban}
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <span className="text-xs text-zinc-700 dark:text-zinc-300 font-sans">
+                    {isEn
+                      ? 'Included automatically in every Retail Blueprint & Studio MVP contract.'
+                      : 'Otomatis dikompilasi di setiap paket Retail Blueprint maupun kontrak Studio MVP.'}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href="/blueprint"
+                      className="px-4 py-2 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider rounded-none transition"
+                    >
+                      {isEn ? 'Compile Sector in Studio →' : 'Rakit Sektor Ini di Studio →'}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => switchPricingTab('retail')}
+                      className="px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-700 font-mono text-xs font-bold uppercase rounded-none cursor-pointer"
+                    >
+                      {isEn ? 'See Retail Pricing' : 'Lihat Harga Retail'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* C. 6 KILLER DEVELOPER-RETENTION & ZERO-TO-PRODUCTION ENGINES */}
+            <div className="border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-none">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
+                <div>
+                  <span className="font-mono text-[10px] font-black uppercase tracking-widest text-emerald-800 dark:text-emerald-400">
+                    COMPETITIVE MOAT // ANTI-CONTEXT-OVERFLOW & ZERO DATA LOSS
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-950 dark:text-white mt-1">
+                    {isEn
+                      ? '6 Killer Features Why Developers Never Leave Project OS'
+                      : '6 Killer Engine Pengunci Produktivitas Developer & Agensi'}
+                  </h3>
+                </div>
+                <span className="px-2.5 py-1 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[10px] font-black uppercase self-start sm:self-auto">
+                  6 / 6 ACTIVE IN PRODUCTION
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {KILLER_ENGINES_SHOWCASE.map((ke) => (
+                  <div
+                    key={ke.num}
+                    className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2.5">
+                        <span className="px-2 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[10px] font-black">
+                          KILLER #{ke.num}
+                        </span>
+                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black uppercase">
+                          {ke.badge}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-black text-zinc-950 dark:text-white mb-1.5">
+                        {ke.title}
+                      </h4>
+                      <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans">
+                        {ke.desc}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        );
+      })()}
+
+      {/* ========================================================================= */}
+      {/* TAB 4: TECHNICAL SPECIFICATION COMPARISON MATRIX                          */}
       {/* ========================================================================= */}
       {pricingSectionTab === 'matrix' && (
         <motion.div
@@ -2061,7 +2592,82 @@ const ensureSnapReady = (snapUrl, clientKey) => {
                   </td>
                 </tr>
 
-                {/* 11. HAK MILIK SOURCE CODE */}
+                {/* 11. 12 SECTORAL INDUSTRIAL UI/UX ARCHETYPES & REALISTIC SEEDER */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-900 dark:text-zinc-100">
+                    {isEn ? '12 Sectoral Industrial UI/UX Cockpits & Realistic ID Seeder' : '12 Arketipe UI/UX Spesifik Industri & Seeder Data Indonesia'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-800 dark:text-emerald-300 font-bold bg-cyan-500/5">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span>{isEn ? 'UI_UX_CONTRACT.md + RealisticSectorSeeder.php' : 'UI_UX_CONTRACT.md + RealisticSectorSeeder.php'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
+                    {isEn ? 'Included (Ergonomic Audit)' : 'Termasuk (Audit Ergonomi Sektor)'}
+                  </td>
+                  <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span>{isEn ? '100% Built Multi-Pane Cockpit + Shortcuts' : '100% Dibangun Multi-Pane Cockpit + Shortcut'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
+                    {isEn ? 'Primary Sector Layout' : 'Sesuai Sektor Utama'}
+                  </td>
+                </tr>
+
+                {/* 12. 9 CURATED TECH STACK ADAPTERS (M1-M4, D1-D3, S1-S2) */}
+                <tr className="bg-zinc-50/70 dark:bg-zinc-950/60">
+                  <td className="py-3 px-3 font-bold text-zinc-900 dark:text-zinc-100">
+                    {isEn ? '9 Curated Stack Topology Adapters (M1–S2)' : '9 Adapter Topologi & Tech Stack Terkurasi (M1–S2)'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-800 dark:text-emerald-300 font-bold bg-cyan-500/5">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span>{isEn ? 'All 9 Stacks (Monolith, Headless, Microservices)' : 'Bebas Pilih 9 Stack (Laravel, Go, Next.js, Temporal)'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
+                    {isEn ? 'Topology Advisory Matrix' : 'Rekomendasi Topologi & TCO'}
+                  </td>
+                  <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span>{isEn ? 'Turnkey M1 Monolith / Custom Stack' : 'Turnkey M1 Laravel 13 / Sesuai Kontrak'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
+                    M1 Monolith (PG16 ULID)
+                  </td>
+                </tr>
+
+                {/* 13. 6 KILLER ORCHESTRATION ENGINES */}
+                <tr>
+                  <td className="py-3 px-3 font-bold text-zinc-900 dark:text-zinc-100">
+                    {isEn ? 'Phased Prompts (1–6), Brownfield SQL Audit & CLI /init/{ULID}' : '6 Fase Prompt Anti-Overflow, Impor SQL Lama & CLI /init/{ULID}'}
+                  </td>
+                  <td className="py-3 px-3 text-emerald-800 dark:text-emerald-300 font-bold bg-cyan-500/5">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span>{isEn ? '100% Active + ./verify-blueprint.sh' : '100% Aktif + ./verify-blueprint.sh'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
+                    {isEn ? 'Includes Shadow ULID Plan' : 'Termasuk Rencana Shadow ULID'}
+                  </td>
+                  <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
+                    <span className="inline-flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span>{isEn ? 'Executed End-to-End by Senior Team' : 'Dieksekusi Penuh oleh Senior Architect'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
+                    {isEn ? 'Includes verify-blueprint.sh' : 'Termasuk verify-blueprint.sh'}
+                  </td>
+                </tr>
+
+                {/* 14. HAK MILIK SOURCE CODE */}
                 <tr>
                   <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
                     {isEn ? 'Document & Code Ownership' : 'Hak Milik Dokumen / Kode'}

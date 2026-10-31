@@ -19,6 +19,7 @@ class AuditLog extends Model
         'actor_name',
         'actor_type',
         'action',
+        'event_category',
         'description',
         'model_type',
         'model_id',
@@ -27,6 +28,7 @@ class AuditLog extends Model
         'ip_address',
         'user_agent',
         'context_url',
+        'integrity_hash',
     ];
 
     protected function casts(): array
@@ -67,7 +69,8 @@ class AuditLog extends Model
         ?string $actorName = null,
         ?string $actorType = null,
         ?string $contextUrl = null,
-        ?string $description = null
+        ?string $description = null,
+        ?string $eventCategory = null
     ): ?self {
         if (app()->runningInConsole()) {
             $argv = $_SERVER['argv'] ?? [];
@@ -100,23 +103,84 @@ class AuditLog extends Model
                 $userId = $user?->id;
             }
 
-            return static::create([
+            $modelClass = $model ? get_class($model) : null;
+            $modelKey = $model ? (string) $model->getKey() : null;
+            $resolvedIp = Request::ip() ?: '127.0.0.1';
+            $resolvedUrl = $contextUrl ?: substr((string) Request::fullUrl(), 0, 500);
+
+            $resolvedCategory = $eventCategory ?: static::inferCategory($action, $resolvedActorType, $modelClass, $description);
+
+            $canonicalPayload = json_encode([
+                'user_id' => $userId,
+                'actor_name' => $resolvedActorName,
+                'actor_type' => $resolvedActorType,
+                'action' => $action,
+                'event_category' => $resolvedCategory,
+                'model_type' => $modelClass,
+                'model_id' => $modelKey,
+                'old_values' => $oldValues,
+                'new_values' => $newValues,
+                'ip_address' => $resolvedIp,
+            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+            $payload = [
                 'user_id' => $userId,
                 'actor_name' => $resolvedActorName,
                 'actor_type' => $resolvedActorType,
                 'action' => $action,
                 'description' => $description,
-                'model_type' => $model ? get_class($model) : null,
-                'model_id' => $model ? (string) $model->getKey() : null,
+                'model_type' => $modelClass,
+                'model_id' => $modelKey,
                 'old_values' => $oldValues,
                 'new_values' => $newValues,
-                'ip_address' => Request::ip() ?: '127.0.0.1',
+                'ip_address' => $resolvedIp,
                 'user_agent' => substr((string) Request::userAgent(), 0, 500),
-                'context_url' => $contextUrl ?: substr((string) Request::fullUrl(), 0, 500),
-            ]);
+                'context_url' => $resolvedUrl,
+            ];
+
+            if (\Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'event_category')) {
+                $payload['event_category'] = $resolvedCategory;
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'integrity_hash')) {
+                $payload['integrity_hash'] = hash('sha256', (string) $canonicalPayload);
+            }
+
+            return static::create($payload);
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    public static function inferCategory(string $action, ?string $actorType, ?string $modelClass, ?string $description): string
+    {
+        $haystack = strtolower($action . ' ' . ($modelClass ?? '') . ' ' . ($description ?? ''));
+
+        if (str_contains($haystack, 'brownfield')) {
+            return 'brownfield_import';
+        }
+        if (str_contains($haystack, 'slop') || str_contains($haystack, 'pos:audit') || str_contains($haystack, 'drift')) {
+            return 'slop_audit';
+        }
+        if (str_contains($haystack, 'cli_bootstrap') || str_contains($haystack, '/init/')) {
+            return 'cli_bootstrap';
+        }
+        if ($actorType === 'ai_agent' || str_contains($haystack, 'ai agent') || str_contains($haystack, 'copilot') || str_contains($haystack, 'rag')) {
+            return 'ai_agent';
+        }
+        if (str_contains($haystack, 'pos') || str_contains($haystack, 'blueprint') || str_contains($haystack, 'document')) {
+            return 'project_os';
+        }
+        if (str_contains($haystack, 'transaction') || str_contains($haystack, 'midtrans') || str_contains($haystack, 'voucher')) {
+            return 'billing';
+        }
+        if (str_contains($haystack, 'role') || str_contains($haystack, 'permission') || str_contains($haystack, 'rbac')) {
+            return 'rbac';
+        }
+        if (str_contains($haystack, 'login') || str_contains($haystack, 'threat') || str_contains($haystack, 'security')) {
+            return 'security';
+        }
+
+        return 'system';
     }
 }
 

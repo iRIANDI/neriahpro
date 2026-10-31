@@ -1169,6 +1169,20 @@ class BlueprintController extends Controller
         $univSchema = $prd['universal_blueprint_schema']
             ?? \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
 
+        $phasedPrompts = $univSchema['phased_prompt_sequencer']
+            ?? \App\Services\ProjectOsBlueprintCompilerService::compilePhasedPrompts($univSchema);
+
+        if (preg_match('/^phase-([1-6])$/', $format, $m)) {
+            $phaseIdx = ((int) $m[1]) - 1;
+            $phaseItem = $phasedPrompts[$phaseIdx] ?? null;
+            if ($phaseItem) {
+                return response((string) ($phaseItem['prompt'] ?? ''), 200, [
+                    'Content-Type' => 'text/markdown; charset=UTF-8',
+                    'Content-Disposition' => 'attachment; filename="' . ($phaseItem['filename'] ?? ("0{$m[1]}-phase.md")) . '"',
+                ]);
+            }
+        }
+
         [$content, $filename] = match ($format) {
             'execution-blueprint' => [
                 \App\Services\ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($univSchema),
@@ -1189,6 +1203,10 @@ class BlueprintController extends Controller
             'ecc-harness' => [
                 \App\Services\ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
                 'AGENT_HARNESS_ECC.md',
+            ],
+            'verify-blueprint' => [
+                \App\Services\BlueprintSlopScannerService::generateVerifyBlueprintBashScript($blueprint->nama_bisnis ?: 'Enterprise App'),
+                'verify-blueprint.sh',
             ],
             'claude' => [
                 \App\Services\PrdGeneratorService::toCursorrules($blueprint, $prd),
@@ -1967,5 +1985,170 @@ class BlueprintController extends Controller
             'package_tier' => $packageName,
             'is_retail' => $isRetail,
         ]);
+    }
+
+    /**
+     * Killer Feature #6: One-Command CLI Bootstrapper (`curl -sL https://neriahpro.com/init/{identifier} | bash`).
+     * Resolves VisionBlueprint (by exact ULID `id` or exact `slug`) or PosProject (by exact ULID `id`).
+     */
+    public function cliInitScript(Request $request, string $identifier)
+    {
+        $blueprint = VisionBlueprint::query()->where('id', $identifier)->first()
+            ?? VisionBlueprint::query()->where('slug', $identifier)->first();
+
+        $posProject = null;
+        if (! $blueprint && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')) {
+            $posProject = \App\Models\PosProject::query()->where('id', $identifier)->first();
+            if ($posProject && $posProject->vision_blueprint_id) {
+                $blueprint = VisionBlueprint::query()->find($posProject->vision_blueprint_id);
+            }
+        }
+
+        if (! $blueprint && ! $posProject) {
+            $notFoundScript = "#!/usr/bin/env bash\necho \"[Project OS] Error 404: Blueprint '{$identifier}' tidak ditemukan.\" >&2\nexit 1\n";
+            return response($notFoundScript, 404, [
+                'Content-Type' => 'text/x-shellscript; charset=UTF-8',
+            ]);
+        }
+
+        if ($blueprint) {
+            $prd = $blueprint->prd_content ?? [];
+            if (empty($prd)) {
+                $prd = \App\Services\PrdGeneratorService::generate($blueprint);
+            }
+            $schema = $prd['universal_blueprint_schema']
+                ?? \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
+            $appName = $blueprint->nama_bisnis ?: ($schema['project_metadata']['name'] ?? 'Enterprise App');
+            $cursorRules = \App\Services\PrdGeneratorService::toCursorrules($blueprint, $prd);
+        } else {
+            $schema = json_decode((string) $posProject->compiled_schema_json, true) ?: [];
+            $appName = $posProject->app_name ?: 'Enterprise App';
+            $cursorRules = (string) $posProject->compiled_agents_md;
+        }
+
+        $phasedPrompts = $schema['phased_prompt_sequencer']
+            ?? \App\Services\ProjectOsBlueprintCompilerService::compilePhasedPrompts($schema);
+
+        $filesToMaterialize = [
+            'AGENTS.md' => \App\Services\ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($schema),
+            'CLAUDE.md' => $cursorRules,
+            '.cursorrules' => $cursorRules,
+            'PROJECT_OS_EXECUTION_BLUEPRINT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($schema),
+            '.agents/PONYTAIL.md' => \App\Services\ScaffoldGeneratorService::generatePonytailProtocolMarkdown(),
+            '.agents/STACK_TOPOLOGY_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderStackTopologyContractMarkdown($schema),
+            '.agents/UI_UX_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
+            '.agents/ENGINEERING_RULES.md' => \App\Services\ProjectOsBlueprintCompilerService::renderEngineeringRulesMarkdown(),
+            '.agents/AGENT_HARNESS_ECC.md' => \App\Services\ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
+            '.agents/BLUEPRINT_SCHEMA.json' => (string) json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            '.agents/graphify/graph.json' => \App\Services\ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
+            'database/seeders/RealisticSectorSeeder.php' => \App\Services\ScaffoldGeneratorService::generateRealisticSectorSeeder($schema),
+            'verify-blueprint.sh' => \App\Services\BlueprintSlopScannerService::generateVerifyBlueprintBashScript($appName),
+        ];
+
+        foreach ($phasedPrompts as $pItem) {
+            $fname = $pItem['filename'] ?? ('0' . ($pItem['phase'] ?? 1) . '-phase.md');
+            $filesToMaterialize['.agents/prompts/' . $fname] = (string) ($pItem['prompt'] ?? '');
+        }
+
+        $safeAppBanner = preg_replace('/[^a-zA-Z0-9 _\-\.\(\)]/', '', $appName);
+        $sectorCode = $schema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL';
+        $stackCode = $schema['project_metadata']['stack_preset'] ?? 'STACK_M1_LARAVEL_FILAMENT_LIVEWIRE';
+        $primaryUi = $schema['sectoral_ui_ux_archetype']['primary_archetype'] ?? 'POS_SPLIT_TERMINAL';
+
+        $lines = [
+            '#!/usr/bin/env bash',
+            '# ==============================================================================',
+            "# Neriah Pro Project OS v2.5 — One-Command CLI Bootstrapper",
+            "# Target Project : {$safeAppBanner}",
+            "# Sector / UI    : {$sectorCode} ({$primaryUi})",
+            "# Stack Adapter  : {$stackCode}",
+            '# ==============================================================================',
+            'set -euo pipefail',
+            '',
+            'decode_b64() {',
+            '  if base64 --decode </dev/null >/dev/null 2>&1; then',
+            '    base64 --decode',
+            '  else',
+            '    base64 -D',
+            '  fi',
+            '}',
+            '',
+            'echo "=================================================================="',
+            "echo \" [Project OS v2.5] Bootstrapping Blueprint: {$safeAppBanner}\"",
+            "echo \" [Sector UI] {$sectorCode} -> {$primaryUi}\"",
+            "echo \" [Stack]     {$stackCode}\"",
+            'echo "=================================================================="',
+            'mkdir -p .agents/graphify .agents/prompts database/seeders',
+            '',
+        ];
+
+        foreach ($filesToMaterialize as $relPath => $rawContent) {
+            $b64 = base64_encode($rawContent);
+            $lines[] = "echo \"  -> Materializing {$relPath}\"";
+            $lines[] = "cat <<'EOF_B64' | tr -d '\\n\\r' | decode_b64 > \"{$relPath}\"";
+            $lines[] = chunk_split($b64, 76, "\n") . 'EOF_B64';
+            if ($relPath === 'verify-blueprint.sh') {
+                $lines[] = 'chmod +x verify-blueprint.sh';
+            }
+            $lines[] = '';
+        }
+
+        $lines[] = 'echo "=================================================================="';
+        $lines[] = 'echo " [SUCCESS] Project OS v2.5 Workspace Initialized!"';
+        $lines[] = 'echo " Next Step 1: Buka AI Agent (Claude Code / Cursor / Antigravity)"';
+        $lines[] = 'echo " Next Step 2: Jalankan secara berurutan .agents/prompts/01-foundation.md s/d 06-deployment.md"';
+        $lines[] = 'echo " Next Step 3: Verifikasi anti-slop kapan saja dengan ./verify-blueprint.sh"';
+        $lines[] = 'echo "=================================================================="';
+
+        \App\Models\AuditLog::record(
+            action: 'cli_bootstrap_pulled',
+            model: $blueprint ?? $posProject,
+            newValues: [
+                'identifier' => $identifier,
+                'app_name' => $appName,
+                'sector' => $sectorCode,
+                'stack_preset' => $stackCode,
+                'files_count' => count($filesToMaterialize),
+            ],
+            description: "One-Command CLI Bootstrapper ditarik untuk '{$appName}' ({$identifier}).",
+            eventCategory: 'cli_bootstrap'
+        );
+
+        return response(implode("\n", $lines) . "\n", 200, [
+            'Content-Type' => 'text/x-shellscript; charset=UTF-8',
+            'X-Project-OS-Version' => '2.5.0',
+        ]);
+    }
+
+    /**
+     * Killer Feature #4: Reverse-Engineer / Brownfield SQL & Migration Importer API.
+     */
+    public function brownfieldAudit(Request $request, \App\Services\BrownfieldMigrationAuditorService $auditor): JsonResponse
+    {
+        $validated = $request->validate([
+            'schema_text' => 'required|string|max:150000',
+            'project_hint' => 'nullable|string|max:255',
+        ]);
+
+        $report = $auditor->auditSchema(
+            $validated['schema_text'],
+            $validated['project_hint'] ?? null,
+            true
+        );
+
+        return response()->json($report);
+    }
+
+    /**
+     * Killer Feature #5: Blueprint Drift Auditor & Slop Scanner API.
+     */
+    public function slopAudit(Request $request, string $slug, \App\Services\BlueprintSlopScannerService $scanner): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $report = $scanner->auditBlueprint($blueprint, true);
+
+        return response()->json($report);
     }
 }

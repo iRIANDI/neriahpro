@@ -86,12 +86,14 @@ class ScaffoldGeneratorService
             'app/api/route.ts' => self::generateNextJsRoute($blueprint, $erdTables),
             'nextjs/app/api/resources/route.ts' => self::generateNextJsRoute($blueprint, $erdTables),
 
-            // Pillar 4: Synthetic Mock Data & Stress Benchmark Engine
+            // Pillar 4: Synthetic Mock Data & Domain-Realistic Indonesian Seeder Engine
             'database/seeders/DatabaseSeeder.php' => self::generateDatabaseSeeder($blueprint),
             'database/seeders/SyntheticDataSeeder.php' => self::generateSyntheticDataSeeder($blueprint, $erdTables),
+            'database/seeders/RealisticSectorSeeder.php' => self::generateRealisticSectorSeeder($universalSchema),
 
-            // Pillar 5: AI Coding Agent Rules, Zero-Assumption Schema v2.0 & ECC Universal Governance
+            // Pillar 5: AI Coding Agent Rules, Zero-Assumption Schema v2.5 & ECC Universal Governance
             'PROJECT_OS_EXECUTION_BLUEPRINT.md' => ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($universalSchema),
+            '.agents/PONYTAIL.md' => self::generatePonytailProtocolMarkdown(),
             '.agents/BLUEPRINT_SCHEMA.json' => (string) json_encode($universalSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             '.agents/STACK_TOPOLOGY_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderStackTopologyContractMarkdown($universalSchema),
             '.agents/UI_UX_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
@@ -120,6 +122,7 @@ class ScaffoldGeneratorService
             'railpack.json' => self::generateRailpackConfig($slug),
             'Caddyfile' => self::generateFrankenPhpCaddyfile($slug),
             'deploy.sh' => self::generateDeployScript($blueprint, $slug),
+            'verify-blueprint.sh' => BlueprintSlopScannerService::generateVerifyBlueprintBashScript($projectName),
             'docker/systemd/queue-worker.service' => self::generateQueueWorkerService($slug),
 
             // Pillar 8: Observability, APM & SRE Incident Telemetry
@@ -169,6 +172,12 @@ class ScaffoldGeneratorService
         // Curated Tech Stack & Topology Adapter Scaffolding (M1..M4, D1..D3, S1..S2)
         $stackAdapterFiles = self::generateStackPresetAdapterFiles($universalSchema, $slug);
         $files = array_merge($files, $stackAdapterFiles);
+
+        // Killer #1: Phased Prompt Sequencer (.agents/prompts/01-foundation.md .. 06-deployment.md)
+        foreach (($universalSchema['phased_prompt_sequencer'] ?? []) as $phaseItem) {
+            $fname = $phaseItem['filename'] ?? ('0' . ($phaseItem['phase'] ?? 1) . '-phase.md');
+            $files[".agents/prompts/{$fname}"] = (string) ($phaseItem['prompt'] ?? '');
+        }
 
         // Multi-Platform & Decoupled Scaffolding
         if ($isApiGateway) {
@@ -4822,5 +4831,70 @@ TS,
 
             default => $files,
         };
+    }
+
+    public static function generateRealisticSectorSeeder(array $universalSchema): string
+    {
+        $meta = $universalSchema['project_metadata'] ?? [];
+        $seeder = $universalSchema['realistic_domain_seeder'] ?? [];
+        $sectorCode = $meta['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL';
+        $seederClass = $seeder['seeder_class'] ?? 'RealisticSectorSeeder';
+        $fixtures = $seeder['realistic_fixtures'] ?? [];
+        $volumes = var_export($seeder['seed_volumes'] ?? [], true);
+        $fixtureComments = implode("\n", array_map(fn ($f) => "     * - {$f}", $fixtures));
+
+        return <<<PHP
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+/**
+ * Domain-Realistic Indonesian Seeder & Stress-Test Factory ({$seederClass})
+ * Sector: {$sectorCode}
+ *
+ * STRICT PROHIBITION: Use authentic Indonesian business, regulatory, and operational records only (zero placeholder strings).
+ * Mandatory Realistic Fixtures:
+{$fixtureComments}
+ */
+class RealisticSectorSeeder extends Seeder
+{
+    public function run(): void
+    {
+        \$targetVolumes = {$volumes};
+
+        DB::transaction(function () use (\$targetVolumes): void {
+            \$orgId = (string) Str::ulid();
+            if (DB::getSchemaBuilder()->hasTable('organizations')) {
+                DB::table('organizations')->updateOrInsert(
+                    ['code' => 'ORG-NUSANTARA-UTAMA'],
+                    [
+                        'id' => \$orgId,
+                        'name' => json_encode(['id' => 'PT Nusantara Operasional Mandiri', 'en' => 'Nusantara Operations Corp']),
+                        'timezone' => 'Asia/Jakarta',
+                        'currency' => 'IDR',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+            }
+        });
+    }
+}
+PHP;
+    }
+
+    public static function generatePonytailProtocolMarkdown(): string
+    {
+        return <<<'MD'
+# Ponytail Protocol: 4-Rung Senior Developer Decision Ladder
+1. **Rung 1 (Framework Native First)**: Leverage built-in framework primitives before writing custom abstractions.
+2. **Rung 2 (Graphify O(1) Lookup)**: Consult `.agents/graphify/graph.json` and `.agents/BLUEPRINT_SCHEMA.json` before scanning files.
+3. **Rung 3 (Declarative Over Procedural)**: Prefer Backed Enums, Schema Contracts, and DB Constraints over procedural `if/else` soup.
+4. **Rung 4 (Surgical Diff)**: Edit only affected lines; preserve existing architecture and tests.
+MD;
     }
 }

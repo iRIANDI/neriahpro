@@ -157,13 +157,14 @@ class LlmGatewayService
             $ragPromptContext = $this->vectorService->formatContextForPrompt($ragChunks);
         }
 
-        // 2. System Prompt Engineering
-        $systemPrompt = "Anda adalah Lead Enterprise AI Architect & Autonomous Copilot resmi Neriah Pro Software Factory OS.\n" .
-            "Anda memiliki wewenang penuh untuk memeriksa basis data, membuat blueprint arsitektur, menerbitkan kontrak legal berstempel SHA-256 (Scope Lock), memantau transaksi Midtrans, dan mengelola aset domain & hosting.\n\n" .
-            "STANDAR REKAYASA WAJIB:\n" .
-            "- Patuhi 10 Pilar Software Factory OS (Strict ULID 26 char, Keyset Cursor Pagination O(1), Docker env, Synthetic Seeder, CI/CD deploy.sh, Managed Sprint Capacity).\n" .
-            "- Zero Tolerance Dosa Hardcode: Jangan pernah berasumsi atau menggunakan string statis. Gunakan tools untuk query data nyata.\n" .
-            "- Format respons rapi menggunakan GitHub-style Markdown dengan tabel, bullet points, dan kode.\n" .
+        // 2. Tri-Hybrid System Prompt Engineering (RAG + CAG Live Telemetry + KAG Rule Graph)
+        $cagLiveContext = $this->buildLiveCagContext($user);
+        $kagRuleGraph = $this->buildDeterministicKagRules();
+
+        $systemPrompt = "Anda adalah Lead Enterprise AI Architect & Autonomous Copilot resmi Neriah Pro Software Factory OS v2.5.\n" .
+            "Anda dilengkapi arsitektur Tri-Hybrid AI (RAG pgvector 768-dim RRF, CAG Cache O(1) Live Telemetry, KAG Deterministic Rule Graph) serta 16 Native Tools tervalidasi RBAC & SHA-256 Audit Log.\n\n" .
+            $cagLiveContext . "\n" .
+            $kagRuleGraph . "\n" .
             $ragPromptContext;
 
         $trace = AiWorkflowTracer::startTrace(
@@ -666,5 +667,45 @@ class LlmGatewayService
             'model' => $modelName,
             'provider' => 'gemini',
         ];
+    }
+
+    /**
+     * CAG (Cache-Augmented Generation) O(1) Live System Telemetry Context.
+     */
+    public function buildLiveCagContext(?User $user = null): string
+    {
+        $metrics = Cache::remember('ai_copilot:live_cag_telemetry:v25', 30, function () {
+            try {
+                $stats = $this->actionEngine->execute('get_system_stats', ['scope' => 'all']);
+                return $stats;
+            } catch (\Throwable) {
+                return [];
+            }
+        });
+
+        $roleNames = $user && method_exists($user, 'getRoleNames')
+            ? implode(', ', $user->getRoleNames()->toArray())
+            : 'system/cli';
+        $revenueFormatted = 'Rp ' . number_format((float) ($metrics['total_revenue_settled'] ?? 0), 0, ',', '.');
+
+        return "### ⚡ CAG (CACHE-AUGMENTED GENERATION — TELEMETRI LIVE O(1))\n"
+            . "- Operator Aktif: " . ($user?->name ?? 'System') . " (Roles: {$roleNames})\n"
+            . "- Total Blueprints Project OS: " . ($metrics['total_blueprints'] ?? 0) . " (Scope Locked: " . ($metrics['scope_locked_projects'] ?? 0) . ")\n"
+            . "- Kapasitas Sprint Paralel: " . ($metrics['active_sprints'] ?? 0) . " / " . ($metrics['max_parallel_sprints'] ?? 3) . " Slot Terisi (Sisa Slot: " . ($metrics['available_sprint_slots'] ?? 3) . ")\n"
+            . "- Pendapatan Terverifikasi (Settlement): {$revenueFormatted}\n"
+            . "- Aset Domain/Hosting Mendekati Jatuh Tempo (<=30 hari): " . ($metrics['expiring_assets_30_days'] ?? 0) . "\n"
+            . "- Matriks Project OS v2.5: " . ($metrics['sectors_count'] ?? 12) . " Sektor UI/UX Industri × " . ($metrics['primitives_count'] ?? 12) . " Modul Primitif × " . ($metrics['stack_presets_count'] ?? 9) . " Stack Adapters (M1–S2) × " . ($metrics['native_tools_count'] ?? 16) . " Native Tools | Chunks RAG: " . ($metrics['total_knowledge_chunks'] ?? 0) . "\n";
+    }
+
+    /**
+     * KAG (Knowledge-Augmented Generation) Deterministic Engineering & Anti-Slop Rule Graph.
+     */
+    public function buildDeterministicKagRules(): string
+    {
+        return "### 🧭 KAG (KNOWLEDGE-AUGMENTED GRAPH — INVA-ATURAN DETERMINISTIK WAJIB)\n"
+            . "1. **Database & Skalabilitas O(1)**: Wajib 26-char ULID (`->ulid('id')->primary()`), `DECIMAL(19,4)` dengan pembulatan `HALF_UP` & Largest-Remainder Penny Allocation (`0.0000` drift), `ON DELETE RESTRICT` (`IMMUTABLE_LEDGER` / `ANONYMIZE_PII` / `SOFT_ARCHIVE`), dan Keyset Cursor Pagination `O(1)` (`cursorPaginate()`).\n"
+            . "2. **12 Sectoral Industrial UI/UX Archetypes**: Dilarang menyarankan sekadar tabel CRUD standar untuk layar operasional utama! Gunakan ergonomi spesifik industri (`POS_SPLIT_TERMINAL`, `HORIZONTAL_RESOURCE_GANTT`, `CLINICAL_3_PANE_COCKPIT`, `SPREADSHEET_LEDGER_GRID`, `MULTI_LEVEL_BOM_TREE`, `SPLIT_MAP_DISPATCHER`, `COHORT_GRADEBOOK_MATRIX`, `MILESTONE_KANBAN_BOARD`, `KDS_TICKET_BOARD`, `INTERACTIVE_SEAT_MAP`, `SHIFT_ROSTER_MATRIX`, `TRANSPARENCY_FUND_TRACKER`). Gunakan tool `get_sector_ui_archetype` untuk detail lengkap.\n"
+            . "3. **Zero UI Slop & Zero Hardcode**: Haram memakai `rounded-full`, gradien warna-warni `bg-gradient-to-*`, dialog native `window.alert()/confirm()`, script CDN eksternal, atau magic string statis.\n"
+            . "4. **6 Killer Orchestration Engines**: Selalu arahkan eksekusi proyek melewati Phased Prompt Sequencer (Fase 1–6 via `generate_phased_prompts`), Realistic Domain Seeder Indonesia, Brownfield SQL Importer (`audit_brownfield_schema`), Slop Scanner (`run_blueprint_slop_scanner` / `./verify-blueprint.sh`), dan 1-Command CLI Bootstrapper (`curl -sL .../init/{ULID} | bash`).\n";
     }
 }

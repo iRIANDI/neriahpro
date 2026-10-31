@@ -190,6 +190,76 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+
+            // =========================================================================
+            // 7. MODUL PROJECT OS v2.5: SECTORAL UI/UX & 6 KILLER ORCHESTRATION ENGINES
+            // =========================================================================
+            [
+                'name' => 'get_sector_ui_archetype',
+                'description' => 'Mengambil kontrak Sectoral Industrial UI/UX Archetype (Primary & Secondary Archetype, ergonomi panel, pintasan keyboard, larangan UX, wireframe blueprint, dan Realistic Domain Seeder Indonesia) untuk salah satu dari 12 Sektor Fungsional Project OS.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor (misal: "SECTOR_01_COMMERCE_OMNICHANNEL", "SECTOR_03_HEALTHCARE_CLINICAL", "SECTOR_04_FINTECH_LEDGER") atau kata kunci industri (misal: "klinik", "kasir pos", "hotel", "akuntansi", "kds restoran"). Kosongkan untuk daftar ringkas 12 sektor.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'generate_phased_prompts',
+                'description' => 'Mengambil urutan Phased Prompt Sequencer (Fase 1 s/d 6 Anti-Context Overflow) beserta perintah One-Command CLI Bootstrapper (curl -sL .../init/{id} | bash) untuk sebuah Blueprint Project OS.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID ID atau slug unik dari blueprint yang ingin diambil urutan prompt eksekusinya.',
+                        ],
+                        'phase_number' => [
+                            'type' => 'INTEGER',
+                            'description' => 'Nomor fase spesifik (1 sampai 6). Kosongkan jika ingin mengambil ringkasan seluruh 6 fase.',
+                        ],
+                    ],
+                    'required' => ['blueprint_id'],
+                ],
+            ],
+            [
+                'name' => 'audit_brownfield_schema',
+                'description' => 'Menjalankan Reverse-Engineer / Brownfield SQL & Migration Importer pada skema database warisan (CREATE TABLE SQL, Laravel Migration, atau Prisma) untuk mendeteksi pelanggaran (AUTO_INCREMENT, CASCADE, FLOAT, ketiadaan organization_id/lockForUpdate) dan menyusun rencana migrasi Shadow ULID Zero-Data-Loss.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'schema_text' => [
+                            'type' => 'STRING',
+                            'description' => 'Teks skema DDL SQL, migrasi Laravel, atau schema.prisma yang akan diaudit.',
+                        ],
+                        'project_hint' => [
+                            'type' => 'STRING',
+                            'description' => 'Konteks singkat domain bisnis proyek (opsional, misal: "Sistem Klinik & Apotek").',
+                        ],
+                    ],
+                    'required' => ['schema_text'],
+                ],
+            ],
+            [
+                'name' => 'run_blueprint_slop_scanner',
+                'description' => 'Menjalankan Blueprint Drift Auditor & Slop Scanner terhadap sebuah Blueprint atau potongan kode untuk memverifikasi kepatuhan Strict ULID, Zero UI Slop (tanpa rounded-full, gradien, alert()), 7 Dimensi Zero-Assumption, dan menghasilkan Auto-Fix Prompt.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID ID atau slug blueprint yang ingin diaudit kepatuhannya (opsional jika memindai code_snippet).',
+                        ],
+                        'code_snippet' => [
+                            'type' => 'STRING',
+                            'description' => 'Potongan kode Blade, JSX, Migration, atau PHP yang ingin dipindai terhadap aturan Anti-Slop (opsional).',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

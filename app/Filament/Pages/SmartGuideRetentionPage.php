@@ -63,7 +63,11 @@ class SmartGuideRetentionPage extends Page
                 'ultimate_limit' => CmsGlobalSetting::getVal('pricing_retail_ultimate_limit', '1 Proyek Enterprise // 1 Tahun Prioritas Update'),
                 'login_policy' => CmsGlobalSetting::getVal('pricing_retail_login_policy', 'Spark Bebas Login // Paket Berbayar Wajib Login Akun'),
                 'disclaimer' => CmsGlobalSetting::getVal('pricing_retail_disclaimer', '100% Self-Service Blueprint // Zero Neriah Pro Coding'),
-            ]
+            ],
+            'sectorsCatalog' => \App\Support\ProjectOsMatrixCatalog::sectors(),
+            'killerFeatures' => \App\Support\PosSectorUiArchetypeCatalog::killerFeaturesSummary(),
+            'stackPresetsCount' => count(\App\Support\PosStackPresetCatalog::presets()),
+            'nativeToolsCount' => count(\App\Services\Ai\GeminiToolRegistry::getDeclarations()),
         ];
     }
 }

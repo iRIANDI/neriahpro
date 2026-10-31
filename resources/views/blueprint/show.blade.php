@@ -1782,6 +1782,10 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <span class="hidden xl:inline">STACK.MD</span>
                         <span class="xl:hidden">STACK</span>
                     </a>
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint']) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 font-black transition flex items-center gap-1" title="Unduh CI Gatekeeper Anti-Slop Scanner (verify-blueprint.sh)">
+                        <span class="hidden xl:inline">VERIFY.SH</span>
+                        <span class="xl:hidden">SH</span>
+                    </a>
                 </div>
 
                 <!-- Dedicated AI AGENT HELPER Trigger -->
@@ -6674,7 +6678,13 @@ class ProcessSecureDataset implements ShouldQueue
                 <!-- 13.5 Composable 12-Sector Matrix, 9 Stack Topologies & 7 Zero-Assumption Dimensions -->
                 @php
                     $posUniversalSchema = $blueprint->prd_content['universal_blueprint_schema'] ?? null;
-                    if (!is_array($posUniversalSchema) || empty($posUniversalSchema['project_metadata']) || (($posUniversalSchema['schema_version'] ?? '1.0.0') !== '2.0.0')) {
+                    if (
+                        !is_array($posUniversalSchema)
+                        || empty($posUniversalSchema['project_metadata'])
+                        || (($posUniversalSchema['schema_version'] ?? '1.0.0') !== '2.0.0')
+                        || empty($posUniversalSchema['sectoral_ui_ux_archetype'])
+                        || empty($posUniversalSchema['phased_prompt_sequencer'])
+                    ) {
                         try {
                             $posUniversalSchema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
                         } catch (\Throwable $e) {
@@ -6683,6 +6693,10 @@ class ProcessSecureDataset implements ShouldQueue
                     }
                     $posMeta = $posUniversalSchema['project_metadata'] ?? [];
                     $posStack = $posUniversalSchema['tech_stack_contract'] ?? [];
+                    $posSectorUi = $posUniversalSchema['sectoral_ui_ux_archetype'] ?? [];
+                    $posSeederSpec = $posUniversalSchema['realistic_domain_seeder'] ?? [];
+                    $posPhasedPrompts = $posUniversalSchema['phased_prompt_sequencer'] ?? [];
+                    $posCliInitCmd = 'curl -sL ' . url('/init/' . $blueprint->id) . ' | bash';
                     $posSectorLabel = is_array($posMeta['primary_sector_name'] ?? null)
                         ? ($posMeta['primary_sector_name'][$isEn ? 'en' : 'id'] ?? ($posMeta['primary_sector_name']['id'] ?? ($posMeta['primary_sector'] ?? '-')))
                         : ($posMeta['primary_sector'] ?? '-');
@@ -6835,6 +6849,224 @@ class ProcessSecureDataset implements ShouldQueue
                             </p>
                         </div>
                     </div>
+
+                    <!-- 13.5.A: One-Command CLI Bootstrapper (/init/{ULID}) & Live Slop Auditor -->
+                    <div
+                        class="mt-4 p-4 bg-zinc-950 text-zinc-100 border border-zinc-800 rounded-xs no-print"
+                        x-data="{
+                            cliCmd: @js($posCliInitCmd),
+                            auditingSlop: false,
+                            slopReport: null,
+                            copyCli() {
+                                if (navigator.clipboard) navigator.clipboard.writeText(this.cliCmd);
+                                if (window.showToast) window.showToast({ type: 'success', title: 'CLI COPIED', message: 'Jalankan di terminal proyek kosong Anda untuk memasang AGENTS.md, 6 fase prompt, seeder Indonesia, dan verify-blueprint.sh dalam 3 detik.' });
+                            },
+                            async runSlopAudit() {
+                                this.auditingSlop = true;
+                                try {
+                                    const res = await fetch('{{ route('api.blueprint.slop-audit', $blueprint->slug) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        }
+                                    });
+                                    const data = await res.json();
+                                    this.slopReport = data;
+                                    if (window.showToast) {
+                                        window.showToast({
+                                            type: data.status === 'PASS' ? 'success' : 'warning',
+                                            title: 'DRIFT & SLOP AUDIT: ' + (data.compliance_score ?? 100) + '/100',
+                                            message: data.status === 'PASS' ? 'Seluruh kontrak Zero-Assumption & Anti-Slop terverifikasi 100%.' : 'Ditemukan poin drift arsitektur yang perlu diselaraskan.'
+                                        });
+                                    }
+                                } catch (e) {
+                                    if (window.showToast) window.showToast({ type: 'error', title: 'AUDIT GAGAL', message: 'Tidak dapat menghubungi endpoint Slop Scanner.' });
+                                } finally {
+                                    this.auditingSlop = false;
+                                }
+                            }
+                        }"
+                    >
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2 font-mono text-[10px] uppercase">
+                                    <span class="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black">KILLER #6 • 3-SECOND CLI INIT</span>
+                                    <span class="text-zinc-400">AGENTS.md + graph.json + 6 Prompts + RealisticSectorSeeder + verify-blueprint.sh</span>
+                                </div>
+                                <div class="font-mono text-xs text-emerald-300 bg-black border border-zinc-800 px-3 py-2 overflow-x-auto">
+                                    <code x-text="cliCmd"></code>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 shrink-0 font-mono text-xs">
+                                <button type="button" @click="copyCli()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase cursor-pointer">
+                                    {{ $isEn ? 'COPY CLI INIT' : 'SALIN PERINTAH CLI' }}
+                                </button>
+                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint']) }}" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                    VERIFY-BLUEPRINT.SH
+                                </a>
+                                <button type="button" @click="runSlopAudit()" :disabled="auditingSlop" class="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 text-emerald-300 border border-emerald-700 font-bold uppercase cursor-pointer">
+                                    <span x-text="auditingSlop ? 'SCANNING...' : '{{ $isEn ? 'RUN LIVE AUDIT' : 'AUDIT ANTI-SLOP' }}'"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <template x-if="slopReport">
+                            <div class="mt-3 pt-3 border-t border-zinc-800 flex flex-wrap items-center justify-between gap-2 font-mono text-[11px]">
+                                <span class="text-emerald-300 font-bold">
+                                    STATUS: <span x-text="slopReport.status || 'PASS'"></span> &bull; SCORE: <span x-text="slopReport.compliance_score + '/100'"></span> &bull; CHECKS PASSED: <span x-text="slopReport.passed_checks + '/' + slopReport.total_checks"></span>
+                                </span>
+                                <span class="text-zinc-400">SHA-256 Forensic Audit Logged</span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- 13.5.B: Sectoral Industrial UI/UX Archetype & Realistic Indonesian Domain Seeder -->
+                    @if(!empty($posSectorUi))
+                    <div class="mt-4 p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div>
+                                <span class="font-mono text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-400 block">
+                                    {{ $isEn ? 'SECTORAL INDUSTRIAL UI/UX COCKPIT & REALISTIC INDONESIAN SEEDER' : 'KONTRAK UI/UX SPESIFIK INDUSTRI & SEEDER KONTEKSTUAL INDONESIA' }}
+                                </span>
+                                <h4 class="text-sm font-black text-zinc-950 dark:text-zinc-100 mt-0.5">
+                                    {{ $posSectorUi['headline'][$isEn ? 'en' : 'id'] ?? ($posSectorUi['headline']['id'] ?? ($posSectorUi['primary_archetype'] ?? '')) }}
+                                </h4>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black">
+                                    1° {{ $posSectorUi['primary_archetype'] ?? '-' }}
+                                </span>
+                                @if(!empty($posSectorUi['secondary_archetype']))
+                                    <span class="px-2 py-0.5 bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-black">
+                                        2° {{ $posSectorUi['secondary_archetype'] }}
+                                    </span>
+                                @endif
+                                @if(!empty($posSeederSpec['seeder_class']))
+                                    <span class="px-2 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black">
+                                        {{ $posSeederSpec['seeder_class'] }}.php
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+
+                        @php
+                            $posWireframePanes = $posSectorUi['wireframe_blueprint']['panes'] ?? [];
+                        @endphp
+                        @if(!empty($posWireframePanes))
+                            <div class="grid grid-cols-1 {{ count($posWireframePanes) >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2' }} gap-2.5 p-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 mb-3">
+                                @foreach($posWireframePanes as $pIdx => $pane)
+                                    <div class="p-3 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800">
+                                        <div class="flex items-center justify-between gap-1 font-mono text-[9px] font-black mb-1">
+                                            <span class="px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950">{{ $pane['span'] ?? 6 }} COL</span>
+                                            <span class="text-emerald-800 dark:text-emerald-400">PANE #{{ $pIdx + 1 }}</span>
+                                        </div>
+                                        <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $pane['title'] ?? '' }}</div>
+                                        @if(!empty($pane['highlights']))
+                                            <div class="mt-1.5 flex flex-wrap gap-1">
+                                                @foreach($pane['highlights'] as $hl)
+                                                    <span class="px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 font-mono text-[9px]">{{ $hl }}</span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <div class="font-mono text-[10px] font-black uppercase text-zinc-700 dark:text-zinc-400 mb-1.5">
+                                    {{ $isEn ? 'Mandatory Operator Keyboard Shortcuts' : 'Pintasan Keyboard Operator Wajib' }}
+                                </div>
+                                <div class="flex flex-wrap gap-1.5">
+                                    @foreach(($posSectorUi['keyboard_shortcuts'] ?? []) as $sc)
+                                        <span class="px-2 py-0.5 bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-mono text-[10px] font-bold">
+                                            [{{ $sc['key'] ?? '' }}] {{ $sc['action'] ?? '' }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <div>
+                                <div class="font-mono text-[10px] font-black uppercase text-zinc-700 dark:text-zinc-400 mb-1.5">
+                                    {{ $isEn ? 'Realistic Indonesian Seeder Fixtures (Zero Lorem Ipsum)' : 'Data Seeder Kontekstual Indonesia (Bebas Lorem Ipsum)' }}
+                                </div>
+                                <ul class="space-y-1 text-[11px] text-zinc-800 dark:text-zinc-300 list-disc list-inside">
+                                    @foreach(array_slice($posSeederSpec['realistic_fixtures'] ?? [], 0, 2) as $fx)
+                                        <li>{{ $fx }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- 13.5.C: Killer #1 — Interactive 6-Phase Prompt Sequencer (Zero Context Overflow) -->
+                    @if(!empty($posPhasedPrompts))
+                    <div
+                        class="mt-4 p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs no-print"
+                        x-data="{
+                            activePhase: 1,
+                            phases: @js($posPhasedPrompts),
+                            get currentPhaseObj() {
+                                return this.phases.find(p => p.phase === this.activePhase) || this.phases[0] || {};
+                            },
+                            copyPhasePrompt() {
+                                if (navigator.clipboard && this.currentPhaseObj.prompt) {
+                                    navigator.clipboard.writeText(this.currentPhaseObj.prompt);
+                                }
+                                if (window.showToast) {
+                                    window.showToast({
+                                        type: 'success',
+                                        title: 'FASE ' + this.activePhase + ' DISALIN',
+                                        message: 'Tempelkan prompt ' + (this.currentPhaseObj.filename || '') + ' ke AI Coding Agent Anda.'
+                                    });
+                                }
+                            }
+                        }"
+                    >
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                            <div>
+                                <span class="font-mono text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-400 block">
+                                    KILLER #1 • ANTI-CONTEXT-OVERFLOW ORCHESTRATOR (.agents/prompts/01..06)
+                                </span>
+                                <h4 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
+                                    {{ $isEn ? '6-Phase Deterministic Execution Prompts (TDD Gate Before UI)' : 'Sequencer Eksekusi Bertahap 6 Fase (100% Test Hijau di Fase 4 Sebelum UI di Fase 5)' }}
+                                </h4>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0 font-mono text-[11px]">
+                                <button type="button" @click="copyPhasePrompt()" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 font-black uppercase cursor-pointer">
+                                    {{ $isEn ? 'COPY PHASE PROMPT' : 'SALIN PROMPT FASE INI' }}
+                                </button>
+                                <a :href="'{{ route('blueprint.download-cursorrules', $blueprint->slug) }}?format=phase-' + activePhase" class="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-bold uppercase">
+                                    DOWNLOAD .MD
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 mb-3 font-mono text-[10px]">
+                            @foreach($posPhasedPrompts as $pp)
+                                <button
+                                    type="button"
+                                    @click="activePhase = {{ (int) $pp['phase'] }}"
+                                    :class="activePhase === {{ (int) $pp['phase'] }}
+                                        ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black'
+                                        : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold'"
+                                    class="p-2 border text-left transition cursor-pointer"
+                                >
+                                    <div>FASE 0{{ $pp['phase'] }}</div>
+                                    <div class="truncate text-[9px] opacity-85">{{ $pp['filename'] }}</div>
+                                </button>
+                            @endforeach
+                        </div>
+
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                            <div class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100" x-text="currentPhaseObj.title"></div>
+                            <div class="text-xs text-zinc-700 dark:text-zinc-300" x-text="currentPhaseObj.objective"></div>
+                            <pre class="p-3 bg-zinc-950 text-emerald-300 border border-zinc-800 font-mono text-[11px] leading-relaxed overflow-x-auto max-h-56 whitespace-pre-wrap" x-text="currentPhaseObj.prompt"></pre>
+                        </div>
+                    </div>
+                    @endif
                 </div>
                 @endif
 

@@ -632,6 +632,11 @@
                                                 class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
                                             🛡️ Audit Anti-Slop Blueprint
                                         </button>
+                                        <button type="button"
+                                                wire:click="sendSuggestedPrompt('Jalankan Blueprint Doctor pada sektor kesehatan apotek FEFO dengan target 30 hari dan berikan rekomendasi Auto-Fix')"
+                                                class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
+                                            🩺 Jalankan Blueprint Doctor
+                                        </button>
                                     </div>
                                 </div>
                             @endif
@@ -889,7 +894,7 @@
 
                                 <div class="flex items-center justify-between px-0.5 text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
                                     <span class="truncate">Model: <strong class="text-zinc-800 dark:text-zinc-200">{{ $activeSubModel }}</strong></span>
-                                    <span class="truncate">Project OS v2.5 • 16 Native Tools • RAG+CAG+KAG</span>
+                                    <span class="truncate">Project OS v3.0 • 18 Native Tools • RAG+CAG+KAG</span>
                                 </div>
                             </form>
                         </div>
@@ -902,8 +907,8 @@
                          class="flex-1 p-4 overflow-y-auto space-y-4 text-xs font-mono bg-white dark:bg-zinc-950">
                         <div class="p-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs flex items-center justify-between">
                             <div>
-                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100">Repositori Vektor 768 Dimensi (Tri-Hybrid v2.5)</h4>
-                                <p class="text-[10px] text-zinc-600 dark:text-zinc-400">10 Pilar + 12 Sektor UI/UX + 9 Stack + 6 Killer Engines</p>
+                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100">Repositori Vektor 768 Dimensi (Tri-Hybrid v3.0)</h4>
+                                <p class="text-[10px] text-zinc-600 dark:text-zinc-400">10 Ultimate Pillars + 12 Sektor UI/UX + 9 Stack + 8 Day-2 Ops Layers</p>
                             </div>
                             <button type="button"
                                     wire:click="syncKnowledge"
@@ -926,7 +931,8 @@
                                 <li>12 Realistic Indonesian Domain Seeders (Bebas Lorem Ipsum)</li>
                                 <li>9 Curated Tech Stack Topology Adapters (M1–M4, D1–D3, S1–S2)</li>
                                 <li>6 Killer Engines: Phased Prompts (1–6), Brownfield SQL Audit, verify-blueprint.sh &amp; CLI /init/{ULID}</li>
-                                <li>16 Native Function Calling Tools + RBAC Guards + SHA-256 Audit Trail</li>
+                                <li>8 Layer Day-2 Ops: Thermal 58/80mm &amp; A4 QR Print, Snapshot *_snapshot, Staged CSV, 4-Lane Queue &amp; Blueprint Doctor</li>
+                                <li>18 Native Function Calling Tools + RBAC Guards + SHA-256 Audit Trail</li>
                             </ul>
                         </div>
                     </div>

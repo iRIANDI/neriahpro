@@ -31,6 +31,7 @@ class PosProject extends Model
         'compiled_agents_md',
         'compiled_graph_json',
         'phased_prompts_json',
+        'doctor_diagnostics_json',
     ];
 
     protected function casts(): array
@@ -40,6 +41,7 @@ class PosProject extends Model
             'selected_rule_pack_ids' => 'array',
             'custom_entities' => 'array',
             'phased_prompts_json' => 'array',
+            'doctor_diagnostics_json' => 'array',
         ];
     }
 

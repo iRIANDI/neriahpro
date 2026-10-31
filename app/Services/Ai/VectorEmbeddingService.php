@@ -491,21 +491,25 @@ class VectorEmbeddingService
                 continue;
             }
 
-            $uiArch = ! empty($sec['ui_ux_archetypes'])
-                ? $sec['ui_ux_archetypes']
-                : \App\Support\PosSectorUiArchetypeCatalog::forSector($code);
-            $seeder = ! empty($sec['realistic_seeder_contract'])
-                ? $sec['realistic_seeder_contract']
-                : \App\Support\PosSectorUiArchetypeCatalog::seederForSector($code);
-            $seederClass = $seeder['seeder_class'] ?? 'RealisticSectorSeeder';
+            $uiArch = $sec['ui_ux_archetypes'] ?? \App\Support\PosSectorUiArchetypeCatalog::forSector($code);
+            $seeder = $sec['realistic_seeder_contract'] ?? \App\Support\PosSectorUiArchetypeCatalog::seederForSector($code);
             $nameId = $sec['name']['id'] ?? $code;
-            $ergonomics = implode("\n- ", $uiArch['ergonomics_and_layout'] ?? []);
+            $ergonomics = implode("\n- ", array_map(
+                fn ($item) => is_array($item) ? json_encode($item, JSON_UNESCAPED_UNICODE) : (string) $item,
+                $uiArch['ergonomics_and_layout'] ?? []
+            ));
             $shortcuts = implode(', ', array_map(
-                fn ($sc) => is_array($sc) ? ('[' . ($sc['key'] ?? '') . '] ' . ($sc['action'] ?? '')) : (string) $sc,
+                fn ($s) => is_array($s) ? (($s['key'] ?? '') . ': ' . ($s['action'] ?? '')) : (string) $s,
                 $uiArch['keyboard_shortcuts'] ?? []
             ));
-            $forbidden = implode('; ', $uiArch['forbidden_ux_patterns'] ?? []);
-            $fixtures = implode("\n- ", $seeder['realistic_fixtures'] ?? []);
+            $forbidden = implode('; ', array_map(
+                fn ($item) => is_array($item) ? json_encode($item, JSON_UNESCAPED_UNICODE) : (string) $item,
+                $uiArch['forbidden_ux_patterns'] ?? []
+            ));
+            $fixtures = implode("\n- ", array_map(
+                fn ($item) => is_array($item) ? json_encode($item, JSON_UNESCAPED_UNICODE) : (string) $item,
+                $seeder['realistic_fixtures'] ?? []
+            ));
 
             $secContent = "Sektor: {$code} — {$nameId}\n"
                 . "Primary UI Archetype: " . ($uiArch['primary_archetype'] ?? '-') . "\n"
@@ -514,7 +518,7 @@ class VectorEmbeddingService
                 . "Aturan Layout & Ergonomi Industri:\n- {$ergonomics}\n"
                 . "Pintasan Keyboard Operasional: {$shortcuts}\n"
                 . "Pola UX Terlarang: {$forbidden}\n"
-                . "Realistic Domain Seeder ({$seederClass}):\n- {$fixtures}";
+                . "Realistic Domain Seeder ({$seeder['seeder_class']}):\n- {$fixtures}";
 
             $embedding = $this->generateEmbedding("{$nameId}\n{$secContent}");
             AiKnowledgeVector::create([
@@ -542,13 +546,17 @@ class VectorEmbeddingService
             }
 
             $pName = $preset['name']['id'] ?? $pCode;
-            $layersText = json_encode($preset['layer_technologies'] ?? [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $layers = $preset['layer_technologies'] ?? [];
+            $backendStack = (string) ($layers['backend'] ?? ($preset['backend_stack'] ?? '-'));
+            $frontendStack = (string) ($layers['frontend_public'] ?? ($preset['frontend_stack'] ?? '-'));
+            $adminStack = (string) ($layers['frontend_admin'] ?? ($preset['admin_panel_stack'] ?? '-'));
             $antiSlopRules = is_array($preset['stack_specific_anti_slop_rules'] ?? null)
                 ? implode('; ', $preset['stack_specific_anti_slop_rules'])
                 : (string) ($preset['stack_specific_anti_slop_rules'] ?? '');
+
             $pContent = "Preset Kode: [{$preset['short_code']}] {$pCode} ({$preset['topology']})\n"
-                . "Nama Stack: {$pName} | Bahasa Utama: " . ($preset['primary_language'] ?? '') . "\n"
-                . "Layer Technologies: {$layersText}\n"
+                . "Nama Stack: {$pName}\n"
+                . "Backend: {$backendStack} | Frontend: {$frontendStack} | Admin: {$adminStack}\n"
                 . "Anti-Slop Spesifik Stack: {$antiSlopRules}";
 
             $embedding = $this->generateEmbedding("{$pName}\n{$pContent}");
@@ -596,13 +604,67 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 6. Indeks 8 Final Day-2 Production Layers (Project OS v3.0)
+        foreach (\App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary() as $layer) {
+            $lCode = (string) ($layer['code'] ?? 'LAYER');
+            $sourceId = 'day2-layer-' . strtolower($lCode);
+            if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+                continue;
+            }
+
+            $lTitle = $layer['title']['id'] ?? $lCode;
+            $lDesc = $layer['desc']['id'] ?? '';
+            $lContent = "Layer Kode: {$lCode} ({$layer['badge']})\nJudul: {$lTitle}\nSpesifikasi Day-2 Production: {$lDesc}";
+
+            $embedding = $this->generateEmbedding("{$lTitle}\n{$lContent}");
+            AiKnowledgeVector::create([
+                'title' => "Day-2 Production Layer: {$lTitle}",
+                'source_type' => 'day2_production_layer',
+                'source_id' => $sourceId,
+                'content' => "### {$lTitle}\n\n{$lContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => '8 Day-2 Production Layers (v3.0)',
+                    'layer_code' => $lCode,
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        // 7. Indeks 10 Ultimate Perfection Pillars (Project OS v3.0)
+        $perfectionSourceId = 'project-os-v3-ten-perfection-pillars';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $perfectionSourceId)->exists()) {
+            $tenLines = [];
+            foreach (\App\Support\PosDayTwoProductionCatalog::tenPerfectionPillars() as $tp) {
+                $pNum = $tp['number'] ?? '';
+                $pLabel = $tp['title']['id'] ?? ($tp['code'] ?? '');
+                $pSummary = $tp['summary']['id'] ?? ($tp['desc']['id'] ?? '');
+                $tenLines[] = "Pilar #{$pNum} — {$pLabel}: {$pSummary}";
+            }
+            $tenContent = implode("\n", $tenLines);
+            $embedding = $this->generateEmbedding("10 Ultimate Perfection Pillars Project OS v3.0\n{$tenContent}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v3.0: 10 Ultimate Perfection Pillars (100% Zero-Assumption)',
+                'source_type' => 'architecture_perfection_matrix',
+                'source_id' => $perfectionSourceId,
+                'content' => "### Project OS v3.0: 10 Ultimate Perfection Pillars\n\n{$tenContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'Project OS v3.0 Perfection Matrix',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
             'status' => 'success',
             'synced_sections' => $syncedSections,
             'total_chunks' => $totalChunks,
-            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (10 Pilar, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines & Smart Guide) ke basis pengetahuan RAG pgvector.",
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (10 Pilar Factory OS, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers & 10 Perfection Pillars v3.0) ke basis pengetahuan RAG pgvector.",
         ];
     }
 }

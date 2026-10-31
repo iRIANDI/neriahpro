@@ -37,6 +37,8 @@ Route::get('/api/ai/models', function () {
 Route::get('/init/{identifier}', [BlueprintController::class, 'cliInitScript'])->name('blueprint.cli-init')->middleware('throttle:30,1');
 Route::get('/api/blueprint/matrix-catalog', [BlueprintController::class, 'matrixCatalog'])->name('api.blueprint.matrix-catalog');
 Route::post('/api/blueprint/brownfield-audit', [BlueprintController::class, 'brownfieldAudit'])->name('api.blueprint.brownfield-audit')->middleware('throttle:20,1');
+Route::post('/api/blueprint/doctor', [BlueprintController::class, 'blueprintDoctor'])->name('api.blueprint.doctor')->middleware('throttle:40,1');
+Route::post('/api/blueprint/{slug}/doctor', [BlueprintController::class, 'blueprintSlugDoctor'])->name('api.blueprint.slug-doctor')->middleware('throttle:30,1');
 Route::post('/api/blueprint/{slug}/slop-audit', [BlueprintController::class, 'slopAudit'])->name('api.blueprint.slop-audit')->middleware('throttle:30,1');
 Route::post('/api/blueprint/analyze-idea', [BlueprintController::class, 'analyzeIdea'])->name('api.blueprint.analyze-idea')->middleware('throttle:15,1');
 Route::post('/api/blueprint/supplement-idea', [BlueprintController::class, 'supplementIdea'])->name('api.blueprint.supplement-idea')->middleware('throttle:30,1');

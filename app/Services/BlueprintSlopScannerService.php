@@ -40,6 +40,7 @@ class BlueprintSlopScannerService
         }
         $checks[] = [
             'id' => 'SCAN_01_STRICT_ULID_DDL',
+            'code' => 'SCAN_01_STRICT_ULID_DDL',
             'label' => 'Primary Key 100% Strict ULID & Keyset Cursor O(1)',
             'passed' => empty($nonUlidTables) && count($tables) > 0,
             'detail' => empty($nonUlidTables)
@@ -55,6 +56,7 @@ class BlueprintSlopScannerService
         $hasSectorUi = ! empty($sectorUi['primary_archetype']);
         $checks[] = [
             'id' => 'SCAN_02_SECTORAL_UI_ARCHETYPE',
+            'code' => 'SCAN_02_SECTORAL_UI_ARCHETYPE',
             'label' => 'Sectoral UI/UX Archetype & Anti-Slop Ergonomics',
             'passed' => $hasSectorUi,
             'detail' => $hasSectorUi
@@ -72,6 +74,7 @@ class BlueprintSlopScannerService
             && ! empty($schema['acceptance_test_matrix']);
         $checks[] = [
             'id' => 'SCAN_03_SEVEN_ZERO_ASSUMPTION_DIMS',
+            'code' => 'SCAN_03_SEVEN_ZERO_ASSUMPTION_DIMS',
             'label' => '7 Dimensi Zero-Assumption (RFC 9457, Outbox, Math, Acceptance Tests)',
             'passed' => $hasSevenDims,
             'detail' => $hasSevenDims
@@ -87,6 +90,7 @@ class BlueprintSlopScannerService
         $hasSixPhases = count($phasedPrompts) >= 6;
         $checks[] = [
             'id' => 'SCAN_04_PHASED_PROMPTS_6',
+            'code' => 'SCAN_04_PHASED_PROMPTS_6',
             'label' => 'Phased Prompt Sequencer (Fase 1 s/d 6 Anti-Context Overflow)',
             'passed' => $hasSixPhases,
             'detail' => $hasSixPhases
@@ -106,6 +110,7 @@ class BlueprintSlopScannerService
         }
         $checks[] = [
             'id' => 'SCAN_05_ZERO_SLOP_DIRECTIVES',
+            'code' => 'SCAN_05_ZERO_SLOP_DIRECTIVES',
             'label' => 'Zero UI Slop & 100% Local Asset Sovereignty',
             'passed' => empty($slopFound),
             'detail' => empty($slopFound)
@@ -113,11 +118,31 @@ class BlueprintSlopScannerService
                 : 'Ditemukan referensi mencurigakan: ' . implode(', ', $slopFound),
         ];
 
+        // Check 6: Day-2 Production Layers (Thermal/A4 Print, Tenant Zero-State, Snapshot, Staged Import, 4-Lane Queue & Private Disk)
+        $hasDayTwoLayers = ! empty($schema['printable_and_thermal_contracts'])
+            && ! empty($schema['tenant_onboarding_and_provisioning'])
+            && ! empty($schema['historical_snapshot_contract']['mandatory_snapshot_columns'])
+            && ! empty($schema['staged_bulk_import_export'])
+            && count((array) ($schema['day_two_operations_contract']['queue_lanes'] ?? [])) >= 4
+            && ! empty($schema['defense_in_depth_security']['media_disk_isolation']);
+        $checks[] = [
+            'id' => 'SCAN_06_HISTORICAL_SNAPSHOT_AND_DAY2_OPS',
+            'code' => 'SCAN_06_HISTORICAL_SNAPSHOT_AND_DAY2_OPS',
+            'label' => '8 Layer Day-2 Ops (Thermal/A4 Print, Snapshot *_snapshot, Staged CSV, 4-Lane Queue & Private Disk)',
+            'passed' => $hasDayTwoLayers,
+            'detail' => $hasDayTwoLayers
+                ? '5 kolom *_snapshot, InitializeNewTenantAction, Staged Importer, 4 Redis Queue Lanes, & Private Disk Signed URL aktif.'
+                : 'Sebagian kontrak Day-2 Operations v3.0 belum terkompilasi.',
+        ];
+        if (! $hasDayTwoLayers) {
+            $violations[] = 'Kompilasi ulang blueprint ke v3.0 untuk menyertakan 8 Layer Day-2 Production.';
+        }
+
         $passedCount = count(array_filter($checks, fn ($c) => $c['passed']));
         $score = (int) round(($passedCount / max(1, count($checks))) * 100);
 
         $autoFixPrompt = empty($violations)
-            ? "✅ Blueprint '{$blueprint->nama_bisnis}' LULUS 100% audit kepatuhan Project OS v2.5 (Zero Drift & Zero Slop). Lanjutkan eksekusi via Phased Prompt Sequencer Fase 1–6."
+            ? "✅ Blueprint '{$blueprint->nama_bisnis}' LULUS 100% audit kepatuhan Project OS v3.0 (10 Ultimate Pillars, Zero Drift & Zero Slop). Lanjutkan eksekusi via Phased Prompt Sequencer Fase 1–6."
             : "# AUTO-FIX BLUEPRINT DRIFT PROMPT\nPerbaiki seluruh penyimpangan berikut pada proyek `{$blueprint->nama_bisnis}`:\n- " . implode("\n- ", $violations);
 
         if ($recordAudit) {
@@ -155,7 +180,7 @@ class BlueprintSlopScannerService
             ['pattern' => '/\brounded-full\b/', 'rule' => 'UI_SLOP_CAPSULE', 'fix' => 'Ganti `rounded-full` dengan `rounded-none`, `rounded-xs`, atau `rounded-sm` (maks `rounded-md`).'],
             ['pattern' => '/\bbg-gradient-to-(?:r|l|t|b|tr|tl|br|bl)\b/', 'rule' => 'UI_SLOP_GRADIENT', 'fix' => 'Hapus gradien warna-warni `bg-gradient-to-*`; gunakan permukaan solid tegas (`bg-white dark:bg-zinc-950`) dengan border tajam.'],
             ['pattern' => '/(?<![a-zA-Z0-9_])(?:window\.)?(?:alert|confirm|prompt)\s*\(/', 'rule' => 'NATIVE_BROWSER_DIALOG', 'fix' => 'Ganti `alert()/confirm()/prompt()` dengan `window.showToast(...)` atau modal konfirmasi Alpine/Tailwind.'],
-            ['pattern' => '/https?:\/\/(?:cdn\.jsdelivr\.net|unpkg\.com|cdnjs\.cloudflare\.com)/i', 'rule' => 'EXTERNAL_CDN_DEPENDENCY', 'fix' => 'Unduh pustaka JS/CSS secara lokal ke `public/js/vendor/` atau bundel via Vite (Zero CDN Latency).'],
+            ['pattern' => '/https?:\/\/(?:cdn\.jsdelivr\.net|unpkg\.com|cdnjs\.cloudflare\.com|api\.qrserver\.com|chart\.googleapis\.com)/i', 'rule' => 'EXTERNAL_CDN_OR_QR_API_DEPENDENCY', 'fix' => 'Unduh pustaka JS/CSS secara lokal ke `public/js/vendor/` dan gunakan inline SVG QR lokal tanpa external QR API.'],
             ['pattern' => '/\$table->id\s*\(/', 'rule' => 'DB_AUTO_INCREMENT_ID', 'fix' => 'Ganti `$table->id()` menjadi `$table->ulid(\'id\')->primary()` dan gunakan trait `HasUlids`.'],
             ['pattern' => '/\$table->uuid\s*\(\s*[\'"]id[\'"]\s*\)/', 'rule' => 'PGSQL_UUID_MISMATCH', 'fix' => 'Ganti `$table->uuid(\'id\')` menjadi `$table->ulid(\'id\')->primary()` untuk mencegah SQLSTATE[22P02] di PostgreSQL 16.'],
             ['pattern' => '/(?:->|::)paginate\s*\(/', 'rule' => 'OFFSET_PAGINATION_SLOP', 'fix' => 'Ganti `->paginate()` / `::paginate()` dengan `->orderBy(\'id\', \'desc\')->cursorPaginate()` untuk kompleksitas O(1).'],
@@ -229,10 +254,10 @@ for dir in resources/views resources/js src app; do
       VIOLATIONS=\$((VIOLATIONS + 1))
       FIX_ITEMS="\${FIX_ITEMS}\n- Ganti seluruh dialog native alert()/confirm() di \$dir dengan sistem Toast terpusat (window.showToast) atau modal konfirmasi modern."
     fi
-    if grep -RInE "cdn\.jsdelivr\.net|unpkg\.com|cdnjs\.cloudflare\.com" "\$dir" --include="*.blade.php" --include="*.html" >/dev/null 2>&1; then
-      echo " [FAIL] Scan 1C: Found external third-party CDN link in \$dir"
+    if grep -RInE "cdn\.jsdelivr\.net|unpkg\.com|cdnjs\.cloudflare\.com|api\.qrserver\.com|chart\.googleapis\.com" "\$dir" --include="*.blade.php" --include="*.html" >/dev/null 2>&1; then
+      echo " [FAIL] Scan 1C: Found external third-party CDN or QR API link in \$dir"
       VIOLATIONS=\$((VIOLATIONS + 1))
-      FIX_ITEMS="\${FIX_ITEMS}\n- Pindahkan seluruh script/CSS CDN eksternal di \$dir ke aset lokal (public/js/vendor/ atau bundel Vite)."
+      FIX_ITEMS="\${FIX_ITEMS}\n- Pindahkan seluruh script/CSS CDN eksternal di \$dir ke aset lokal (public/js/vendor/ atau bundel Vite) dan render QR sebagai inline SVG lokal."
     fi
   fi
 done

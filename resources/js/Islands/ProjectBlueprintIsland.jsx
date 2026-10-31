@@ -930,16 +930,25 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     stackPreset: initialData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH',
   });
 
-  // 12-Sector, 12 Core Primitives & 9 Curated Tech Stack Presets Matrix Catalog
+  // 12-Sector, 12 Core Primitives, 9 Curated Tech Stack Presets & 8 Day-2 Layers Matrix Catalog (v3.0)
   const [matrixCatalog, setMatrixCatalog] = useState({
     sectors: [],
     primitives: [],
     rule_packs: [],
     stack_presets: [],
     stack_comparison_matrix: [],
+    final_eight_layers: [],
+    ten_perfection_pillars: [],
   });
+  // Progressive Disclosure Mode: 'express' (Founder-friendly default) | 'workbench' (5-Tab Senior Architect Workbench)
+  const [matrixMode, setMatrixMode] = useState('express');
+  const [activeWorkbenchTab, setActiveWorkbenchTab] = useState('sectors'); // 'sectors' | 'primitives' | 'stacks' | 'brownfield' | 'doctor'
   const [activeTopologyFilter, setActiveTopologyFilter] = useState('ALL');
   const [showStackMatrixTable, setShowStackMatrixTable] = useState(false);
+
+  // Layer 8: Interactive Pre-Flight Blueprint Doctor State
+  const [doctorLoading, setDoctorLoading] = useState(false);
+  const [doctorReport, setDoctorReport] = useState(null);
 
   // Killer #4: Reverse-Engineer / Brownfield SQL & Migration Importer State
   const [showBrownfieldLab, setShowBrownfieldLab] = useState(false);
@@ -1105,6 +1114,185 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     });
   }, [activeMatrixSectorObj]);
 
+  const effectivePrimitiveCodes = useMemo(() => {
+    const mandatory = activeMatrixSectorObj?.mandatory_primitives || [];
+    const selected = Array.isArray(formData.selectedPrimitives) ? formData.selectedPrimitives : [];
+    return Array.from(new Set([...mandatory, ...selected]));
+  }, [activeMatrixSectorObj, formData.selectedPrimitives]);
+
+  const estimatedTimelineDays = useMemo(() => {
+    const raw = String(formData.targetWaktu || '').toLowerCase();
+    const numMatch = raw.match(/(\d+)/);
+    const n = numMatch ? parseInt(numMatch[1], 10) : 0;
+    if (raw.includes('minggu') || raw.includes('week')) return n > 0 ? n * 7 : 21;
+    if (raw.includes('bulan') || raw.includes('month')) return n > 0 ? n * 30 : 45;
+    if (raw.includes('hari') || raw.includes('day')) return n > 0 ? n : 30;
+    if (raw.includes('cepat') || raw.includes('urgent') || raw.includes('segera')) return 21;
+    return 45;
+  }, [formData.targetWaktu]);
+
+  // Client-Side Instant Pre-Flight Telemetry (before or alongside server Blueprint Doctor)
+  const livePreFlightHints = useMemo(() => {
+    const corpus = `${ideaText || ''} ${formData.fiturWajib || ''} ${formData.alurKerja || ''} ${formData.fiturTambahan || ''}`.toLowerCase();
+    const hints = [];
+    const addPrims = [];
+    let recommendedStack = null;
+
+    if (
+      /(resep|apotek|farmasi|stok|gudang|batch|fefo|fifo|sku|inventori|inventory)/i.test(corpus) &&
+      !effectivePrimitiveCodes.includes('PRIMITIVE_INVENTORY_LEDGER')
+    ) {
+      hints.push({
+        code: 'DOC_MISSING_INVENTORY_LEDGER',
+        severity: 'CRITICAL',
+        title: lang === 'en'
+          ? 'Stock / Pharmacy Rx flow detected without Inventory Ledger'
+          : 'Alur Resep / Stok Gudang terdeteksi tanpa PRIMITIVE_INVENTORY_LEDGER',
+      });
+      addPrims.push('PRIMITIVE_INVENTORY_LEDGER');
+    }
+
+    if (
+      /(jurnal|pencairan|settlement|escrow|komisi|split bill|rekonsiliasi|wallet|dompet|hutang|piutang)/i.test(corpus) &&
+      !effectivePrimitiveCodes.includes('PRIMITIVE_DOUBLE_ENTRY_LEDGER')
+    ) {
+      hints.push({
+        code: 'DOC_MISSING_DOUBLE_ENTRY_LEDGER',
+        severity: 'CRITICAL',
+        title: lang === 'en'
+          ? 'Settlement / Commission / Wallet flow detected without Double-Entry Ledger'
+          : 'Alur Settlement / Komisi / Dompet terdeteksi tanpa PRIMITIVE_DOUBLE_ENTRY_LEDGER',
+      });
+      addPrims.push('PRIMITIVE_DOUBLE_ENTRY_LEDGER');
+    }
+
+    if (
+      /(approval|persetujuan|otorisasi|berjenjang|maker-checker|direksi|kepala cabang)/i.test(corpus) &&
+      !effectivePrimitiveCodes.includes('PRIMITIVE_APPROVAL_WORKFLOW')
+    ) {
+      hints.push({
+        code: 'DOC_MISSING_APPROVAL_WORKFLOW',
+        severity: 'WARNING',
+        title: lang === 'en'
+          ? 'Multi-level approval detected without Approval Workflow Engine'
+          : 'Alur Otorisasi Berjenjang terdeteksi tanpa PRIMITIVE_APPROVAL_WORKFLOW',
+      });
+      addPrims.push('PRIMITIVE_APPROVAL_WORKFLOW');
+    }
+
+    const currentStack = formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH';
+    if (
+      (currentStack.startsWith('STACK_S1') || currentStack.startsWith('STACK_S2')) &&
+      estimatedTimelineDays <= 35
+    ) {
+      hints.push({
+        code: 'DOC_TOPOLOGY_TIMELINE_MISMATCH',
+        severity: 'WARNING',
+        title: lang === 'en'
+          ? `Microservices selected on tight ${estimatedTimelineDays}d timeline — M1 Modular Monolith recommended`
+          : `Topologi Microservices pada target ketat ${estimatedTimelineDays} hari — disarankan M1 Modular Monolith`,
+      });
+      recommendedStack = 'STACK_M1_LARAVEL_MONOLITH';
+    }
+
+    return {
+      hints,
+      addPrims: Array.from(new Set(addPrims)),
+      recommendedStack,
+    };
+  }, [ideaText, formData.fiturWajib, formData.alurKerja, formData.fiturTambahan, formData.stackPreset, effectivePrimitiveCodes, estimatedTimelineDays, lang]);
+
+  const runPreFlightDoctor = async () => {
+    setDoctorLoading(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      const workflowCorpus = [
+        ideaText,
+        formData.namaBisnis,
+        formData.masalahUtama,
+        formData.fiturWajib,
+        formData.alurKerja,
+        formData.fiturTambahan,
+      ].filter(Boolean).join('\n');
+
+      const res = await fetch('/api/blueprint/doctor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+        },
+        body: JSON.stringify({
+          sector_code: formData.primarySector || (matrixCatalog.sectors?.[0]?.code ?? 'SECTOR_01_COMMERCE_OMNICHANNEL'),
+          primitive_codes: effectivePrimitiveCodes,
+          stack_preset_code: formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH',
+          workflow_text: workflowCorpus,
+          timeline_days: estimatedTimelineDays,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok && json?.success && json.doctor) {
+        setDoctorReport(json.doctor);
+        const bannerMsg = typeof json.doctor.summary_banner === 'object'
+          ? (json.doctor.summary_banner?.[lang] || json.doctor.summary_banner?.id || '')
+          : (json.doctor.summary_banner || '');
+        if (window.showToast) {
+          window.showToast({
+            type: json.doctor.status === 'OPTIMAL_READY' ? 'success' : 'warning',
+            title: `BLUEPRINT DOCTOR: ${json.doctor.readiness_score}/100`,
+            message: bannerMsg || 'Diagnosa Pre-Flight arsitektur selesai.',
+          });
+        }
+      }
+    } catch {
+      if (window.showToast) {
+        window.showToast({
+          type: 'error',
+          title: lang === 'en' ? 'Doctor Unavailable' : 'Gagal Menjalankan Doctor',
+          message: lang === 'en' ? 'Could not reach Pre-Flight Blueprint Doctor endpoint.' : 'Tidak dapat menghubungi endpoint Blueprint Doctor.',
+        });
+      }
+    } finally {
+      setDoctorLoading(false);
+    }
+  };
+
+  const applyDoctorAutoFix = () => {
+    const serverFix = doctorReport?.one_click_auto_fix;
+    const serverHasFix = !!(serverFix?.has_fixes || serverFix?.available);
+    const primsToAdd = serverHasFix
+      ? (serverFix.add_primitive_codes || [])
+      : livePreFlightHints.addPrims;
+    const nextStack = serverHasFix
+      ? (serverFix.recommended_stack_preset_code || null)
+      : livePreFlightHints.recommendedStack;
+
+    if (primsToAdd.length === 0 && !nextStack) return;
+
+    setFormData((prev) => {
+      const existing = Array.isArray(prev.selectedPrimitives) ? prev.selectedPrimitives : [];
+      const merged = Array.from(new Set([...existing, ...primsToAdd]));
+      const next = {
+        ...prev,
+        selectedPrimitives: merged,
+        ...(nextStack ? { stackPreset: nextStack } : {}),
+      };
+      triggerAutoSave(next);
+      return next;
+    });
+
+    setDoctorReport(null);
+    if (window.showToast) {
+      window.showToast({
+        type: 'success',
+        title: lang === 'en' ? '1-Click Auto-Fix Applied' : '1-Klik Auto-Fix Diterapkan',
+        message: lang === 'en'
+          ? 'Missing Core Primitives & optimal Topology Preset have been locked into your blueprint.'
+          : 'Modul Primitif yang kurang & rekomendasi Topologi Stack berhasil dikunci otomatis ke blueprint Anda.',
+      });
+    }
+  };
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [invalidFields, setInvalidFields] = useState([]);
@@ -1148,6 +1336,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const sectionGroupMap = useMemo(() => ({
     'section-ide-studio': 'studio',
     'section-ai-assistant': 'studio',
+    'section-composable-matrix': 'studio',
     'section-block-a': 'spec1',
     'section-block-b': 'spec1',
     'section-block-c': 'spec1',
@@ -1303,6 +1492,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const sectionIds = useMemo(() => [
     'section-ide-studio',
     'section-ai-assistant',
+    'section-composable-matrix',
     'section-block-a',
     'section-block-b',
     'section-block-c',
@@ -1461,6 +1651,29 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           code: 'P1',
           label: lang === 'en' ? 'Smart Recommendations' : 'Rekomendasi Pintar AI',
           isFilled: proactiveSuggestions.length > 0,
+        },
+      ],
+    },
+    {
+      id: 'section-composable-matrix',
+      badge: '🧩',
+      group: 'studio',
+      title: lang === 'en' ? '12-Sector Matrix & Doctor v3.0' : 'Matriks 12-Sektor & Doctor v3.0',
+      subtitle: lang === 'en' ? 'Sector UI, Primitives, 9 Stacks & Day-2 Ops' : 'UI Industri, Primitives, 9 Stack & 8 Layer Day-2',
+      countLabel: `${effectivePrimitiveCodes.length} MOD`,
+      isComplete: !!formData.primarySector || effectivePrimitiveCodes.length > 0,
+      subItems: [
+        {
+          id: 'section-composable-matrix',
+          code: 'M1',
+          label: lang === 'en' ? '12 Sectors & 9 Stack Adapters' : '12 Sektor Bisnis & 9 Adapter Stack',
+          isFilled: !!formData.primarySector || !!formData.stackPreset,
+        },
+        {
+          id: 'section-composable-matrix',
+          code: 'M2',
+          label: lang === 'en' ? 'Pre-Flight Blueprint Doctor & Day-2' : 'Blueprint Doctor & 8 Layer Day-2 Ops',
+          isFilled: livePreFlightHints.hints.length === 0,
         },
       ],
     },
@@ -1697,7 +1910,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         },
       ],
     },
-  ], [lang, ideaText, attachedFiles, proactiveSuggestions, blockCompletion, completeness, formData, isLocked]);
+  ], [lang, ideaText, attachedFiles, proactiveSuggestions, blockCompletion, completeness, formData, isLocked, effectivePrimitiveCodes, livePreFlightHints]);
 
   const isAllSubExpanded = useMemo(() => {
     return indexSections.every(sec => !sec.subItems || sec.subItems.length === 0 || expandedSubBlocks[sec.id]);
@@ -1727,7 +1940,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       key: 'studio',
       title: t.indexGroupStudio,
       desc: t.indexGroupStudioDesc,
-      itemCount: 2,
+      itemCount: 3,
     },
     {
       key: 'spec1',
@@ -1753,6 +1966,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     const map = {
       'section-ide-studio': lang === 'en' ? 'Quick Idea Studio' : 'Studio Ide & MarkItDown',
       'section-ai-assistant': lang === 'en' ? 'AI Co-Pilot' : 'Asisten Proaktif AI',
+      'section-composable-matrix': lang === 'en' ? '12-Sector Matrix & Doctor' : 'Matriks 12-Sektor & Doctor',
       'section-block-a': lang === 'en' ? 'Block A: Identity' : 'Blok A: Identitas Bisnis',
       'section-block-b': lang === 'en' ? 'Block B: RBAC & Platform' : 'Blok B: RBAC & Platform',
       'section-block-c': lang === 'en' ? 'Block C: MVP Features' : 'Blok C: Fitur MVP & Alur',
@@ -3993,525 +4207,849 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       <form onSubmit={handleFinalSubmit} className="space-y-8">
 
         {/* ---------------------------------------------------------------------
-            COMPOSABLE 12-SECTOR ARCHETYPE MATRIX & CORE PRIMITIVES ENGINE
+            COMPOSABLE 12-SECTOR ARCHETYPE MATRIX, CORE PRIMITIVES & BLUEPRINT DOCTOR v3.0
+            (PROGRESSIVE DISCLOSURE: EXPRESS FOUNDER MODE vs 5-TAB ARCHITECT WORKBENCH)
             --------------------------------------------------------------------- */}
-        {matrixCatalog.sectors.length > 0 && (
-          <section id="section-composable-matrix" className={panelClass}>
-            <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold block mb-1">
-                  ZERO-ASSUMPTION ENGINE // 12 SEKTOR FUNGSIONAL + CORE PRIMITIVES
-                </span>
-                <h3 className="text-lg font-black uppercase tracking-tight text-zinc-950 dark:text-zinc-100">
-                  {lang === 'en'
-                    ? 'Composable Sector Archetype & Technical Contracts'
-                    : 'Matriks 12 Sektor Bisnis & Modul Inti Lintas Sektor'}
-                </h3>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 font-sans">
-                  {lang === 'en'
-                    ? 'AI automatically selects your functional sector & cross-sector primitives (or customize manually below) to enforce exact ULID schemas, deterministic State Machines, Pessimistic Locks, and Edge-Case Playbooks.'
-                    : 'AI otomatis mendeteksi sektor fungsional & merakit modul lintas sektor (atau pilih manual di bawah) untuk mengunci Skema ULID, State Machine deterministik, Pessimistic Lock, dan Edge-Case Playbook tanpa asumsi.'}
-                </p>
-              </div>
-              <div className="shrink-0 flex flex-wrap items-center gap-1.5">
-                <span className="px-2.5 py-1 rounded-xs bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
-                  Schema v2.0.0 • 7 Zero-Assumption Dims
-                </span>
-                <span className="px-2.5 py-1 rounded-xs bg-zinc-100 text-zinc-900 border border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono text-[10px] font-bold">
-                  {activeStackPresetObj
-                    ? `[${activeStackPresetObj.short_code}] ${activeStackPresetObj.topology} • ${(activeStackPresetObj.name?.[lang] || activeStackPresetObj.name?.id || activeStackPresetObj.code)}`
-                    : 'Laravel 13 • Filament v5 • PG16 ULID • Railpack'}
-                </span>
-              </div>
-            </div>
+        {matrixCatalog.sectors.length > 0 && (() => {
+          const fallbackSector = matrixCatalog.sectors[0] || null;
+          const displaySectorObj = activeMatrixSectorObj || fallbackSector;
+          const displaySectorName = displaySectorObj
+            ? (displaySectorObj.name?.[lang] || displaySectorObj.name?.id || displaySectorObj.code)
+            : (lang === 'en' ? 'Auto-Detected by AI' : 'Deteksi Otomatis AI');
+          const displayUiArchetype = displaySectorObj?.ui_ux_archetypes?.primary_archetype || 'POS_SPLIT_TERMINAL';
+          const displayDayTwo = displaySectorObj?.day_two_ops_contract || {};
+          const thermalMode = displayDayTwo?.printable_and_thermal?.thermal_printer_spec?.mode || 'THERMAL_80MM_AND_58MM';
+          const officialDocsCount = (displayDayTwo?.printable_and_thermal?.official_a4_documents || []).length || 3;
+          const hasDoctorIssues = doctorReport
+            ? doctorReport.status !== 'OPTIMAL_READY'
+            : livePreFlightHints.hints.length > 0;
+          const canOneClickFix = !!(doctorReport?.one_click_auto_fix?.has_fixes || doctorReport?.one_click_auto_fix?.available || livePreFlightHints.addPrims.length > 0 || livePreFlightHints.recommendedStack);
+          const doctorSummaryText = doctorReport
+            ? (typeof doctorReport.summary_banner === 'object'
+                ? (doctorReport.summary_banner?.[lang] || doctorReport.summary_banner?.id || '')
+                : doctorReport.summary_banner)
+            : '';
 
-            {/* Step 1A: 12 Functional Sectors Grid */}
-            <div className="mb-5">
-              <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2.5">
-                {lang === 'en' ? '1. Primary Functional Sector (12 Domain-Driven Taxonomies)' : '1. Pilih Sektor Fungsional Utama (12 Domain-Driven Taxonomies)'}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                {matrixCatalog.sectors.map((sec) => {
-                  const isSelected = formData.primarySector === sec.code;
-                  const title = (sec.name && (sec.name[lang] || sec.name.id || sec.name.en)) || sec.code;
-                  const desc = (sec.description && (sec.description[lang] || sec.description.id || sec.description.en)) || '';
-                  return (
-                    <button
-                      key={sec.code}
-                      type="button"
-                      onClick={() => selectMatrixSector(sec.code)}
-                      className={`text-left p-3 rounded-sm border transition-colors cursor-pointer ${
-                        isSelected
-                          ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-emerald-950/70 dark:text-zinc-50 dark:border-emerald-500'
-                          : 'bg-zinc-50 hover:bg-zinc-100/90 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-600'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="text-xs font-bold leading-snug">{title}</span>
-                        {isSelected && (
-                          <span className="px-1.5 py-0.5 rounded-xs bg-emerald-500 text-zinc-950 font-mono text-[9px] font-black shrink-0">
-                            AKTIF
-                          </span>
-                        )}
-                      </div>
-                      <p className={`mt-1 text-[11px] leading-relaxed line-clamp-2 ${isSelected ? 'text-zinc-300 dark:text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'}`}>
-                        {desc}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Active Sector Industrial UI/UX Cockpit & Realistic Indonesian Seeder Contract */}
-              {activeMatrixSectorObj?.ui_ux_archetypes && (() => {
-                const uiArc = activeMatrixSectorObj.ui_ux_archetypes;
-                const seederContract = activeMatrixSectorObj.realistic_seeder_contract || {};
-                const panes = uiArc?.wireframe_blueprint?.panes || [];
-                const shortcuts = uiArc?.keyboard_shortcuts || [];
-                const forbidden = (uiArc?.forbidden_ux_patterns || [])[0] || '';
-                const headline = uiArc?.headline?.[lang] || uiArc?.headline?.id || uiArc?.primary_archetype || '';
-
-                return (
-                  <div className="mt-3 p-3.5 rounded-sm bg-zinc-50 dark:bg-zinc-950 border border-emerald-500/50 dark:border-emerald-700/70 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <span className="text-[10px] font-mono font-black uppercase text-emerald-800 dark:text-emerald-300 block">
-                          {lang === 'en'
-                            ? 'LOCKED INDUSTRIAL UI/UX COCKPIT & INDONESIAN DOMAIN SEEDER'
-                            : 'KONTRAK UI/UX SPESIFIK INDUSTRI & SEEDER KONTEKSTUAL INDONESIA'}
-                        </span>
-                        <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-0.5">
-                          {headline}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="px-2 py-0.5 rounded-xs bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black">
-                          1° {uiArc.primary_archetype}
-                        </span>
-                        {uiArc.secondary_archetype && (
-                          <span className="px-2 py-0.5 rounded-xs bg-zinc-200 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono text-[10px] font-black">
-                            2° {uiArc.secondary_archetype}
-                          </span>
-                        )}
-                        {seederContract.seeder_class && (
-                          <span className="px-2 py-0.5 rounded-xs bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[10px] font-black">
-                            {seederContract.seeder_class}.php
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {panes.length > 0 && (
-                      <div className={`grid grid-cols-1 ${panes.length >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-2`}>
-                        {panes.map((p, idx) => (
-                          <div
-                            key={idx}
-                            className="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs"
-                          >
-                            <div className="flex items-center justify-between gap-1 mb-1">
-                              <span className="px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[9px] font-black">
-                                {p.span} COL
-                              </span>
-                              <span className="font-mono text-[9px] font-bold text-emerald-800 dark:text-emerald-400">
-                                PANE #{idx + 1}
-                              </span>
-                            </div>
-                            <div className="text-[11px] font-bold text-zinc-950 dark:text-zinc-100">
-                              {p.title}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {shortcuts.slice(0, 4).map((sc, sIdx) => (
-                          <span
-                            key={sIdx}
-                            className="px-2 py-0.5 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs"
-                          >
-                            [{sc.key}] {sc.action}
-                          </span>
-                        ))}
-                      </div>
-                      {forbidden && (
-                        <span className="font-mono text-[10px] font-bold text-amber-950 dark:text-amber-300">
-                          🚫 {forbidden}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Step 1B: Composable Cross-Sector Core Primitives */}
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2.5">
-                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                  {lang === 'en'
-                    ? '2. Injected Cross-Sector Core Primitives (Combine freely for Composite Business)'
-                    : '2. Rakit Modul Primitif Lintas Sektor (Gabungkan Bebas untuk Bisnis Komposit)'}
-                </span>
-                <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-400 tabular-nums">
-                  {(formData.selectedPrimitives || []).length} Modul Aktif
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {matrixCatalog.primitives.map((prim) => {
-                  const mandatoryList = activeMatrixSectorObj?.mandatory_primitives || [];
-                  const isMandatory = mandatoryList.includes(prim.code);
-                  const isChecked = isMandatory || (formData.selectedPrimitives || []).includes(prim.code);
-                  const pTitle = (prim.name && (prim.name[lang] || prim.name.id || prim.name.en)) || prim.code;
-                  const tables = (prim.table_names || []).join(', ');
-                  return (
-                    <button
-                      key={prim.code}
-                      type="button"
-                      onClick={() => toggleMatrixPrimitive(prim.code)}
-                      className={`text-left p-2.5 rounded-sm border transition-colors flex items-start gap-2.5 cursor-pointer ${
-                        isChecked
-                          ? 'bg-emerald-50/90 border-emerald-500 text-zinc-950 dark:bg-emerald-950/40 dark:border-emerald-600 dark:text-zinc-100'
-                          : 'bg-white hover:bg-zinc-50 border-zinc-200 hover:border-zinc-400 text-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300'
-                      }`}
-                    >
-                      <span className={`mt-0.5 w-4 h-4 rounded-xs border flex items-center justify-center shrink-0 font-mono text-[10px] font-black ${
-                        isChecked
-                          ? 'bg-emerald-600 border-emerald-600 text-white dark:bg-emerald-500 dark:border-emerald-500 dark:text-zinc-950'
-                          : 'bg-white dark:bg-zinc-900 border-zinc-400 dark:border-zinc-600 text-transparent'
-                      }`}>
-                        ✓
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className="text-[11px] font-bold leading-tight truncate">{pTitle}</span>
-                          {isMandatory && (
-                            <span className="px-1 py-0.5 rounded-xs bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[8px] font-black shrink-0">
-                              WAJIB
-                            </span>
-                          )}
-                        </div>
-                        {tables && (
-                          <div className="mt-1 text-[10px] font-mono text-zinc-600 dark:text-zinc-400 truncate">
-                            DDL: {tables}
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Step 1C: 9 Curated Tech Stack & Topology Presets (Decoupled from Domain Contract) */}
-            {(matrixCatalog.stack_presets || []).length > 0 && (
-              <div className="mt-6 pt-5 border-t border-zinc-200 dark:border-zinc-800">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5 mb-3">
-                  <div>
-                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 block">
-                      {lang === 'en'
-                        ? '3. Topology & Curated Tech Stack Preset (9 Type-Safe Adapters — Zero Free-Text Stack Soup)'
-                        : '3. Pilih Topologi & Preset Tech Stack Terkurasi (9 Adapter Type-Safe — Domain Bisnis Terpisah 100% dari Stack)'}
-                    </span>
-                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
-                      {lang === 'en'
-                        ? 'Switch freely between Monolith (M1–M4), Decoupled Headless (D1–D3), and Microservices (S1–S2) while keeping the exact same 12-Sector & 7-Dimension domain blueprint.'
-                        : 'Blueprint bisnis yang sama dapat dikompilasi ke Laravel 13 Monolith (M1), Go + sqlc + Next.js (D2), atau Polyglot Microservices + Temporal.io (S1) hanya dengan mengganti adapter di bawah.'}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-                    {[
-                      { id: 'ALL', label: lang === 'en' ? 'ALL (9)' : 'SEMUA (9)' },
-                      { id: 'MONOLITH', label: 'MONOLITH (M1–M4)' },
-                      { id: 'DECOUPLED_HEADLESS', label: 'HEADLESS (D1–D3)' },
-                      { id: 'MICROSERVICES', label: 'MICROSERVICES (S1–S2)' },
-                    ].map((tab) => {
-                      const active = activeTopologyFilter === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => setActiveTopologyFilter(tab.id)}
-                          className={`px-2.5 py-1 rounded-xs border font-mono text-[10px] font-black transition-colors cursor-pointer ${
-                            active
-                              ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100'
-                              : 'bg-zinc-100 hover:bg-zinc-200/80 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
-                          }`}
-                        >
-                          {tab.label}
-                        </button>
-                      );
-                    })}
-                    {(matrixCatalog.stack_comparison_matrix || []).length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setShowStackMatrixTable((v) => !v)}
-                        className="px-2.5 py-1 rounded-xs border border-emerald-500 bg-emerald-100 hover:bg-emerald-200/80 text-emerald-950 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black transition-colors cursor-pointer"
-                      >
-                        {showStackMatrixTable
-                          ? (lang === 'en' ? 'Hide Decision Matrix' : 'Tutup Matriks Panduan')
-                          : (lang === 'en' ? 'Compare 9 Stacks' : 'Panduan Pilih Stack')}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {showStackMatrixTable && (matrixCatalog.stack_comparison_matrix || []).length > 0 && (
-                  <div className="mb-3.5 overflow-x-auto border border-zinc-300 dark:border-zinc-800 rounded-sm bg-white dark:bg-zinc-950">
-                    <table className="w-full text-left border-collapse text-[11px]">
-                      <thead className="bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 font-mono text-[10px] uppercase text-zinc-900 dark:text-zinc-200">
-                        <tr>
-                          <th className="py-2 px-3 font-black">{lang === 'en' ? 'Target Scale & Use Case' : 'Kebutuhan Bisnis & Skala Sistem'}</th>
-                          <th className="py-2 px-3 font-black">{lang === 'en' ? 'Recommended Preset' : 'Rekomendasi Preset'}</th>
-                          <th className="py-2 px-3 font-black">{lang === 'en' ? 'Architectural Rationale' : 'Alasan Arsitektural Utama'}</th>
-                          <th className="py-2 px-3 font-black text-right">{lang === 'en' ? 'Action' : 'Aksi'}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                        {matrixCatalog.stack_comparison_matrix.map((row, idx) => {
-                          const presetCode = row.code || row.preset_code;
-                          const isRowSelected = formData.stackPreset === presetCode;
-                          return (
-                            <tr
-                              key={presetCode || idx}
-                              className="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/70 dark:even:bg-zinc-900/40 hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80 transition-colors"
-                            >
-                              <td className="py-2 px-3 font-bold text-zinc-900 dark:text-zinc-100">
-                                {row.best_use_case?.[lang] || row.best_use_case?.id || row.use_case?.[lang] || ''}
-                              </td>
-                              <td className="py-2 px-3 font-mono font-black text-emerald-900 dark:text-emerald-300 whitespace-nowrap">
-                                [{row.short_code}] {row.architecture_label || row.topology}
-                              </td>
-                              <td className="py-2 px-3 text-zinc-700 dark:text-zinc-300">
-                                {row.inter_layer_contract || row.key_reason?.[lang] || ''}
-                              </td>
-                              <td className="py-2 px-3 text-right whitespace-nowrap">
-                                <button
-                                  type="button"
-                                  onClick={() => selectStackPreset(presetCode)}
-                                  className={`px-2 py-1 rounded-xs font-mono text-[10px] font-black border cursor-pointer ${
-                                    isRowSelected
-                                      ? 'bg-emerald-600 text-white border-emerald-700 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
-                                      : 'bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100'
-                                  }`}
-                                >
-                                  {isRowSelected ? 'AKTIF' : (lang === 'en' ? 'Select' : 'Gunakan')}
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                  {filteredStackPresets.map((preset) => {
-                    const isSelected = (formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH') === preset.code;
-                    const pName = (preset.name && (preset.name[lang] || preset.name.id || preset.name.en)) || preset.code;
-                    const pBestObj = preset.best_use_cases || preset.best_for || {};
-                    const pBest = pBestObj[lang] || pBestObj.id || pBestObj.en || '';
-                    const contractMech = preset.inter_layer_type_contract?.mechanism || '';
-                    return (
-                      <button
-                        key={preset.code}
-                        type="button"
-                        onClick={() => selectStackPreset(preset.code)}
-                        className={`text-left p-3 rounded-sm border transition-colors flex flex-col justify-between cursor-pointer ${
-                          isSelected
-                            ? 'bg-zinc-900 text-white border-zinc-900 ring-1 ring-emerald-500 dark:bg-emerald-950/75 dark:text-zinc-50 dark:border-emerald-500'
-                            : 'bg-white hover:bg-zinc-50 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-600'
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-1.5 mb-1.5">
-                            <div className="flex items-center gap-1.5">
-                              <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[10px] font-black ${
-                                isSelected
-                                  ? 'bg-emerald-500 text-zinc-950'
-                                  : 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                              }`}>
-                                {preset.short_code}
-                              </span>
-                              <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[9px] font-black border ${
-                                isSelected
-                                  ? 'bg-black text-white border-zinc-700'
-                                  : 'bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700'
-                              }`}>
-                                {preset.topology}
-                              </span>
-                            </div>
-                            {preset.is_default && (
-                              <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[8px] font-black uppercase ${
-                                isSelected
-                                  ? 'bg-white text-zinc-950'
-                                  : 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
-                              }`}>
-                                DEFAULT
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs font-black leading-snug">{pName}</div>
-                          <p className={`mt-1 text-[11px] leading-relaxed line-clamp-2 ${
-                            isSelected ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'
-                          }`}>
-                            {pBest}
-                          </p>
-                        </div>
-                        {contractMech && (
-                          <div className={`mt-2.5 pt-2 border-t font-mono text-[10px] truncate ${
-                            isSelected
-                              ? 'border-zinc-700 text-emerald-300'
-                              : 'border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'
-                          }`}>
-                            Contract: {contractMech}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Step 1D: Killer #4 — Reverse-Engineer / Brownfield SQL, Migration & Prisma Importer */}
-            <div className="mt-6 pt-5 border-t border-zinc-200 dark:border-zinc-800">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          return (
+            <section id="section-composable-matrix" className={panelClass}>
+              {/* Header + Progressive Disclosure Mode Switcher */}
+              <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                 <div>
-                  <span className="text-[11px] font-mono font-black uppercase tracking-wider text-zinc-950 dark:text-zinc-100 block">
-                    {lang === 'en'
-                      ? '4. Brownfield Legacy SQL / Laravel Migration / Prisma Importer (Zero-Data-Loss Shadow ULID)'
-                      : '4. Punya Proyek Lama? Impor & Audit SQL / Migrasi Laravel / Prisma (Shadow ULID Tanpa Kehilangan Data)'}
+                  <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-800 dark:text-emerald-400 font-black block mb-1">
+                    PROJECT OS V3.0 // 12 SEKTOR + 9 STACK + 8 LAYER DAY-2 + BLUEPRINT DOCTOR
                   </span>
-                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
+                  <h3 className="text-lg font-black uppercase tracking-tight text-zinc-950 dark:text-zinc-100">
                     {lang === 'en'
-                      ? 'Paste existing CREATE TABLE DDL, Schema::create(), or schema.prisma to detect AUTO_INCREMENT / FLOAT / CASCADE debt and auto-map your Sector + Primitives.'
-                      : 'Tempelkan CREATE TABLE SQL, Schema::create(), atau schema.prisma untuk mendeteksi utang teknis AUTO_INCREMENT / FLOAT / CASCADE serta memetakan Sektor + Primitives otomatis.'}
+                      ? 'Zero-Assumption Architecture & Day-2 Production Cockpit'
+                      : 'Kokpit Arsitektur Tanpa Asumsi & Kesiapan Produksi Day-2'}
+                  </h3>
+                  <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1 font-sans">
+                    {lang === 'en'
+                      ? 'Keep Guided AI Auto-Mode for zero-overwhelm speed, or switch to the 5-Tab Architect Workbench to customize Sector UI, Primitives, Stack Topology, Legacy SQL Import, and Pre-Flight Doctor.'
+                      : 'Gunakan Mode Ringkas Otomatis AI agar tetap praktis tanpa pusing teknis, atau buka Workbench Arsitek (5 Tab) untuk mengatur Sektor UI, Modul Primitif, Topologi Stack, Impor SQL Lama, dan Blueprint Doctor.'}
                   </p>
                 </div>
+
+                {/* Mode Switcher Buttons */}
+                <div className="shrink-0 flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setMatrixMode('express')}
+                    className={`px-3 py-1.5 rounded-xs border font-mono text-[10px] font-black uppercase transition-colors cursor-pointer ${
+                      matrixMode === 'express'
+                        ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
+                        : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+                    }`}
+                  >
+                    {lang === 'en' ? '⚡ Guided Auto Mode' : '⚡ Mode Ringkas AI'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMatrixMode('workbench')}
+                    className={`px-3 py-1.5 rounded-xs border font-mono text-[10px] font-black uppercase transition-colors cursor-pointer ${
+                      matrixMode === 'workbench'
+                        ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
+                        : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+                    }`}
+                  >
+                    {lang === 'en' ? '🛠️ Architect Workbench (5 Tabs)' : '🛠️ Workbench Arsitek (5 Tab)'}
+                  </button>
+                </div>
+              </div>
+
+              {/* =================================================================
+                  ALWAYS-VISIBLE COMPACT SUMMARY TILES + LIVE PRE-FLIGHT DOCTOR BAR
+                  ================================================================= */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 mb-3.5">
                 <button
                   type="button"
-                  onClick={() => setShowBrownfieldLab((v) => !v)}
-                  className="px-3 py-1.5 rounded-xs bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-950 font-mono text-[10px] font-black uppercase shrink-0 cursor-pointer"
+                  onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('sectors'); }}
+                  className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
                 >
-                  {showBrownfieldLab
-                    ? (lang === 'en' ? 'Close Brownfield Importer' : 'Tutup Importer Skema Lama')
-                    : (lang === 'en' ? '+ Audit Legacy SQL / Migration' : '+ Audit Skema SQL / Migrasi Lama')}
+                  <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
+                    <span>1. SEKTOR &amp; UI INDUSTRI</span>
+                    <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700">
+                      {formData.primarySector ? 'MANUAL' : 'AUTO AI'}
+                    </span>
+                  </div>
+                  <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate">{displaySectorName}</div>
+                  <div className="font-mono text-[10px] font-bold text-emerald-800 dark:text-emerald-300 mt-0.5 truncate">
+                    UI: {displayUiArchetype}
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('primitives'); }}
+                  className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
+                    <span>2. CORE PRIMITIVES</span>
+                    <span className="tabular-nums font-black text-zinc-950 dark:text-zinc-100">{effectivePrimitiveCodes.length}/12</span>
+                  </div>
+                  <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 tabular-nums">
+                    {effectivePrimitiveCodes.length} {lang === 'en' ? 'Composable Modules Locked' : 'Modul Lintas Sektor Terkunci'}
+                  </div>
+                  <div className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 mt-0.5 truncate">
+                    ULID • State Machine • FOR UPDATE
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('stacks'); }}
+                  className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
+                    <span>3. TOPOLOGI &amp; STACK</span>
+                    <span className="px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950">
+                      {activeStackPresetObj?.short_code || 'M1'}
+                    </span>
+                  </div>
+                  <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate">
+                    {activeStackPresetObj?.name?.[lang] || activeStackPresetObj?.name?.id || 'Laravel 13 + Filament v5 Monolith'}
+                  </div>
+                  <div className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 mt-0.5 truncate">
+                    {activeStackPresetObj?.topology || 'MONOLITH'} • Type-Safe
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('doctor'); }}
+                  className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
+                    <span>4. DAY-2 OPS &amp; PRINT</span>
+                    <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700">
+                      8 LAYER AKTIF
+                    </span>
+                  </div>
+                  <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate">
+                    {thermalMode === 'A4_OFFICIAL_ONLY' ? 'Official A4 + Inline SVG QR' : 'Thermal 58/80mm + A4 QR'}
+                  </div>
+                  <div className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 mt-0.5 truncate tabular-nums">
+                    {officialDocsCount} Dokumen Resmi • *_snapshot • CSV Staging
+                  </div>
                 </button>
               </div>
 
-              {showBrownfieldLab && (
-                <div className="mt-3 p-4 rounded-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-mono text-[10px] font-bold uppercase text-zinc-700 dark:text-zinc-300">
-                      {lang === 'en' ? 'DDL / Migration / Prisma Input' : 'Input DDL SQL / Migrasi Laravel / Prisma'}
+              {/* Pre-Flight Blueprint Doctor Instant Readiness Strip */}
+              <div className={`p-3 rounded-xs border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                hasDoctorIssues
+                  ? 'bg-amber-50 border-amber-400 text-amber-950 dark:bg-amber-950/50 dark:border-amber-700 dark:text-amber-100'
+                  : 'bg-emerald-50/90 border-emerald-400 text-emerald-950 dark:bg-emerald-950/40 dark:border-emerald-700 dark:text-emerald-100'
+              }`}>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] font-black uppercase">
+                    <span className={`px-1.5 py-0.5 rounded-xs ${
+                      hasDoctorIssues
+                        ? 'bg-amber-900 text-white dark:bg-amber-400 dark:text-zinc-950'
+                        : 'bg-emerald-700 text-white dark:bg-emerald-400 dark:text-zinc-950'
+                    }`}>
+                      {hasDoctorIssues ? '🩺 PERLU PENYELARASAN MODUL' : '🩺 BLUEPRINT DOCTOR: READY'}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setBrownfieldSqlText(
-                        "CREATE TABLE orders (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  patient_id INT NOT NULL,\n  total_amount FLOAT DEFAULT 0,\n  FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE\n);\nCREATE TABLE medical_records (\n  id BIGINT AUTO_INCREMENT PRIMARY KEY,\n  diagnosis TEXT\n);"
-                      )}
-                      className="px-2 py-1 rounded-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 font-mono text-[10px] font-bold hover:border-emerald-500 cursor-pointer"
-                    >
-                      {lang === 'en' ? 'Load Legacy Sample SQL' : 'Isi Contoh SQL Legacy'}
-                    </button>
+                    <span className="tabular-nums">
+                      {doctorReport
+                        ? `SKOR PRE-FLIGHT: ${doctorReport.readiness_score}/100`
+                        : (hasDoctorIssues ? `${livePreFlightHints.hints.length} CELAH LINTAS-MODUL TERDETEKSI` : 'ZERO CROSS-MODULE CONFLICT')}
+                    </span>
                   </div>
+                  <div className="text-xs font-bold mt-1">
+                    {doctorReport
+                      ? doctorSummaryText
+                      : (livePreFlightHints.hints[0]?.title || (lang === 'en'
+                          ? 'Thermal/A4 print contracts, immutable *_snapshot columns, staged CSV importer & 4-lane Redis queues are automatically compiled.'
+                          : 'Kontrak cetak Thermal/A4, kolom *_snapshot anti-rusak historis, Staged CSV Importer & 4 jalur Queue otomatis dikompilasi.'))}
+                  </div>
+                </div>
 
-                  <textarea
-                    rows={5}
-                    value={brownfieldSqlText}
-                    onChange={(e) => setBrownfieldSqlText(e.target.value)}
-                    placeholder="CREATE TABLE invoices ( id INT AUTO_INCREMENT PRIMARY KEY, amount FLOAT ... );"
-                    className="w-full p-3 rounded-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 font-mono text-xs text-zinc-950 dark:text-zinc-100 focus:outline-none focus:border-emerald-500"
-                  />
-
-                  <div className="flex flex-wrap items-center gap-2">
+                <div className="shrink-0 flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                  {canOneClickFix && (
                     <button
                       type="button"
-                      disabled={brownfieldLoading}
-                      onClick={runBrownfieldAudit}
-                      className="px-3.5 py-2 rounded-xs bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white dark:text-zinc-950 font-mono text-xs font-black uppercase cursor-pointer"
+                      onClick={applyDoctorAutoFix}
+                      className="px-3 py-1.5 rounded-xs bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-emerald-400 dark:hover:bg-emerald-300 dark:text-zinc-950 font-black uppercase cursor-pointer"
                     >
-                      {brownfieldLoading
-                        ? (lang === 'en' ? 'Scanning Legacy Debt...' : 'Memindai Utang Teknis...')
-                        : (lang === 'en' ? 'Audit Legacy Schema & Map Sector' : 'Audit Skema & Petakan Sektor')}
+                      {lang === 'en' ? '✨ 1-Click Auto-Fix' : '✨ Perbaiki Otomatis (1-Klik)'}
                     </button>
+                  )}
+                  <button
+                    type="button"
+                    disabled={doctorLoading}
+                    onClick={() => {
+                      runPreFlightDoctor();
+                      setMatrixMode('workbench');
+                      setActiveWorkbenchTab('doctor');
+                    }}
+                    className="px-2.5 py-1.5 rounded-xs bg-white hover:bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-black uppercase cursor-pointer"
+                  >
+                    {doctorLoading
+                      ? (lang === 'en' ? 'Diagnosing...' : 'Mendiagnosa...')
+                      : (lang === 'en' ? '🩺 Run Deep Doctor' : '🩺 Audit Blueprint Doctor')}
+                  </button>
+                  {matrixMode === 'express' && (
+                    <button
+                      type="button"
+                      onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('brownfield'); setShowBrownfieldLab(true); }}
+                      className="px-2.5 py-1.5 rounded-xs bg-white hover:bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-bold uppercase cursor-pointer"
+                    >
+                      {lang === 'en' ? '📥 Import Legacy SQL' : '📥 Impor SQL Lama'}
+                    </button>
+                  )}
+                </div>
+              </div>
 
-                    {brownfieldReport && (
-                      <>
+              {/* =================================================================
+                  5-TAB SENIOR ARCHITECT WORKBENCH (VISIBLE WHEN matrixMode === 'workbench')
+                  ================================================================= */}
+              {matrixMode === 'workbench' && (
+                <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                  {/* Horizontal 5-Tab Navigation Bar */}
+                  <div className="flex flex-wrap items-center gap-1.5 mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                    {[
+                      { id: 'sectors', label: lang === 'en' ? '1. Sectors & Industrial UI (12)' : '1. Sektor & UI Industri (12)' },
+                      { id: 'primitives', label: lang === 'en' ? `2. Core Primitives (${effectivePrimitiveCodes.length}/12)` : `2. Modul Primitif (${effectivePrimitiveCodes.length}/12)` },
+                      { id: 'stacks', label: lang === 'en' ? '3. Stack & Topology (9)' : '3. Topologi & Stack (9)' },
+                      { id: 'brownfield', label: lang === 'en' ? '4. Legacy SQL Importer' : '4. Impor SQL Lama' },
+                      { id: 'doctor', label: lang === 'en' ? '5. 🩺 Doctor & 8 Day-2 Layers' : '5. 🩺 Doctor & 8 Layer Day-2' },
+                    ].map((wbTab) => {
+                      const isTabActive = activeWorkbenchTab === wbTab.id;
+                      return (
                         <button
-                          type="button"
-                          onClick={applyBrownfieldRecommendation}
-                          className="px-3.5 py-2 rounded-xs bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-xs font-black uppercase cursor-pointer"
-                        >
-                          {lang === 'en' ? 'Apply Sector + Shadow ULID Plan' : 'Terapkan Sektor + Rencana Shadow ULID'}
-                        </button>
-                        <button
+                          key={wbTab.id}
                           type="button"
                           onClick={() => {
-                            if (navigator?.clipboard?.writeText && brownfieldReport.ai_refactor_prompt) {
-                              navigator.clipboard.writeText(brownfieldReport.ai_refactor_prompt);
-                            }
-                            if (window.showToast) {
-                              window.showToast({
-                                type: 'success',
-                                title: lang === 'en' ? 'Refactor Prompt Copied' : 'Prompt Refactor Disalin',
-                                message: lang === 'en'
-                                  ? 'Paste into Claude Code / Cursor / Antigravity to execute the 4-stage migration.'
-                                  : 'Tempelkan ke Claude Code / Cursor / Antigravity untuk mengeksekusi migrasi 4 tahap.',
-                              });
-                            }
+                            setActiveWorkbenchTab(wbTab.id);
+                            if (wbTab.id === 'brownfield') setShowBrownfieldLab(true);
                           }}
-                          className="px-3 py-2 rounded-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-xs font-bold uppercase cursor-pointer"
+                          className={`px-3 py-2 rounded-xs border font-mono text-[11px] font-black transition-colors cursor-pointer ${
+                            isTabActive
+                              ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
+                              : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-800'
+                          }`}
                         >
-                          {lang === 'en' ? 'Copy AI Refactor Prompt' : 'Salin AI Refactor Prompt'}
+                          {wbTab.label}
                         </button>
-                      </>
-                    )}
+                      );
+                    })}
                   </div>
 
-                  {brownfieldReport && (
-                    <div className="mt-3 p-3.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100">
-                          {lang === 'en' ? 'Recommended Sector:' : 'Rekomendasi Sektor:'}{' '}
-                          <span className="text-emerald-800 dark:text-emerald-300">
-                            {brownfieldReport.recommended_sector?.name} ({brownfieldReport.recommended_sector?.primary_ui_archetype})
-                          </span>
-                        </div>
-                        <span className={`px-2 py-0.5 rounded-xs font-mono text-[10px] font-black border ${
-                          brownfieldReport.readiness_score >= 85
-                            ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
-                            : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700'
-                        }`}>
-                          SCORE: {brownfieldReport.readiness_score}/100 &bull; {brownfieldReport.grade}
-                        </span>
+                  {/* TAB 1: 12 Functional Sectors & Industrial UI/UX Cockpit */}
+                  {activeWorkbenchTab === 'sectors' && (
+                    <div>
+                      <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2.5">
+                        {lang === 'en' ? '1. Primary Functional Sector (12 Domain-Driven Taxonomies)' : '1. Pilih Sektor Fungsional Utama (12 Domain-Driven Taxonomies)'}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                        {matrixCatalog.sectors.map((sec) => {
+                          const isSelected = formData.primarySector === sec.code;
+                          const title = (sec.name && (sec.name[lang] || sec.name.id || sec.name.en)) || sec.code;
+                          const desc = (sec.description && (sec.description[lang] || sec.description.id || sec.description.en)) || '';
+                          return (
+                            <button
+                              key={sec.code}
+                              type="button"
+                              onClick={() => selectMatrixSector(sec.code)}
+                              className={`text-left p-3 rounded-sm border transition-colors cursor-pointer ${
+                                isSelected
+                                  ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-emerald-950/70 dark:text-zinc-50 dark:border-emerald-500'
+                                  : 'bg-zinc-50 hover:bg-zinc-100/90 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-600'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-xs font-bold leading-snug">{title}</span>
+                                {isSelected && (
+                                  <span className="px-1.5 py-0.5 rounded-xs bg-emerald-500 text-zinc-950 font-mono text-[9px] font-black shrink-0">
+                                    AKTIF
+                                  </span>
+                                )}
+                              </div>
+                              <p className={`mt-1 text-[11px] leading-relaxed line-clamp-2 ${isSelected ? 'text-zinc-300 dark:text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                                {desc}
+                              </p>
+                            </button>
+                          );
+                        })}
                       </div>
 
-                      {(brownfieldReport.violations || []).length > 0 && (
-                        <div className="space-y-1.5">
-                          {brownfieldReport.violations.map((v, vIdx) => (
-                            <div
-                              key={vIdx}
-                              className="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs text-[11px]"
-                            >
-                              <div className="font-mono font-black text-amber-950 dark:text-amber-300">
-                                [{v.code} • {v.severity}] {v.title}
+                      {displaySectorObj?.ui_ux_archetypes && (() => {
+                        const uiArc = displaySectorObj.ui_ux_archetypes;
+                        const seederContract = displaySectorObj.realistic_seeder_contract || {};
+                        const panes = uiArc?.wireframe_blueprint?.panes || [];
+                        const shortcuts = uiArc?.keyboard_shortcuts || [];
+                        const forbidden = (uiArc?.forbidden_ux_patterns || [])[0] || '';
+                        const headline = uiArc?.headline?.[lang] || uiArc?.headline?.id || uiArc?.primary_archetype || '';
+
+                        return (
+                          <div className="mt-3 p-3.5 rounded-sm bg-zinc-50 dark:bg-zinc-950 border border-emerald-500/50 dark:border-emerald-700/70 space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <span className="text-[10px] font-mono font-black uppercase text-emerald-800 dark:text-emerald-300 block">
+                                  {lang === 'en'
+                                    ? 'LOCKED INDUSTRIAL UI/UX COCKPIT & INDONESIAN DOMAIN SEEDER'
+                                    : 'KONTRAK UI/UX SPESIFIK INDUSTRI & SEEDER KONTEKSTUAL INDONESIA'}
+                                </span>
+                                <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-0.5">
+                                  {headline}
+                                </div>
                               </div>
-                              <div className="text-zinc-700 dark:text-zinc-300 mt-0.5">{v.remediation}</div>
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="px-2 py-0.5 rounded-xs bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black">
+                                  1° {uiArc.primary_archetype}
+                                </span>
+                                {uiArc.secondary_archetype && (
+                                  <span className="px-2 py-0.5 rounded-xs bg-zinc-200 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono text-[10px] font-black">
+                                    2° {uiArc.secondary_archetype}
+                                  </span>
+                                )}
+                                {seederContract.seeder_class && (
+                                  <span className="px-2 py-0.5 rounded-xs bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[10px] font-black">
+                                    {seederContract.seeder_class}.php
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                          ))}
+
+                            {panes.length > 0 && (
+                              <div className={`grid grid-cols-1 ${panes.length >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-2`}>
+                                {panes.map((p, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs"
+                                  >
+                                    <div className="flex items-center justify-between gap-1 mb-1">
+                                      <span className="px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[9px] font-black">
+                                        {p.span} COL
+                                      </span>
+                                      <span className="font-mono text-[9px] font-bold text-emerald-800 dark:text-emerald-400">
+                                        PANE #{idx + 1}
+                                      </span>
+                                    </div>
+                                    <div className="text-[11px] font-bold text-zinc-950 dark:text-zinc-100">
+                                      {p.title}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                {shortcuts.slice(0, 4).map((sc, sIdx) => (
+                                  <span
+                                    key={sIdx}
+                                    className="px-2 py-0.5 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs"
+                                  >
+                                    [{sc.key}] {sc.action}
+                                  </span>
+                                ))}
+                              </div>
+                              {forbidden && (
+                                <span className="font-mono text-[10px] font-bold text-amber-950 dark:text-amber-300">
+                                  🚫 {forbidden}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {/* TAB 2: Composable Cross-Sector Core Primitives */}
+                  {activeWorkbenchTab === 'primitives' && (
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2.5">
+                        <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                          {lang === 'en'
+                            ? '2. Injected Cross-Sector Core Primitives (Combine freely for Composite Business)'
+                            : '2. Rakit Modul Primitif Lintas Sektor (Gabungkan Bebas untuk Bisnis Komposit)'}
+                        </span>
+                        <span className="text-[10px] font-mono font-black text-zinc-900 dark:text-zinc-200 tabular-nums">
+                          {effectivePrimitiveCodes.length} Modul Aktif
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {matrixCatalog.primitives.map((prim) => {
+                          const mandatoryList = displaySectorObj?.mandatory_primitives || [];
+                          const isMandatory = mandatoryList.includes(prim.code);
+                          const isChecked = isMandatory || (formData.selectedPrimitives || []).includes(prim.code);
+                          const pTitle = (prim.name && (prim.name[lang] || prim.name.id || prim.name.en)) || prim.code;
+                          const tables = (prim.table_names || []).join(', ');
+                          return (
+                            <button
+                              key={prim.code}
+                              type="button"
+                              onClick={() => toggleMatrixPrimitive(prim.code)}
+                              className={`text-left p-2.5 rounded-sm border transition-colors flex items-start gap-2.5 cursor-pointer ${
+                                isChecked
+                                  ? 'bg-emerald-50/90 border-emerald-500 text-zinc-950 dark:bg-emerald-950/40 dark:border-emerald-600 dark:text-zinc-100'
+                                  : 'bg-white hover:bg-zinc-50 border-zinc-200 hover:border-zinc-400 text-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300'
+                              }`}
+                            >
+                              <span className={`mt-0.5 w-4 h-4 rounded-xs border flex items-center justify-center shrink-0 font-mono text-[10px] font-black ${
+                                isChecked
+                                  ? 'bg-emerald-600 border-emerald-600 text-white dark:bg-emerald-500 dark:border-emerald-500 dark:text-zinc-950'
+                                  : 'bg-white dark:bg-zinc-900 border-zinc-400 dark:border-zinc-600 text-transparent'
+                              }`}>
+                                ✓
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center justify-between gap-1.5">
+                                  <span className="text-[11px] font-bold leading-tight truncate">{pTitle}</span>
+                                  {isMandatory && (
+                                    <span className="px-1 py-0.5 rounded-xs bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[8px] font-black shrink-0">
+                                      WAJIB
+                                    </span>
+                                  )}
+                                </div>
+                                {tables && (
+                                  <div className="mt-1 text-[10px] font-mono text-zinc-600 dark:text-zinc-400 truncate">
+                                    DDL: {tables}
+                                  </div>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 3: 9 Curated Tech Stack & Topology Presets */}
+                  {activeWorkbenchTab === 'stacks' && (matrixCatalog.stack_presets || []).length > 0 && (
+                    <div>
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5 mb-3">
+                        <div>
+                          <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 block">
+                            {lang === 'en'
+                              ? '3. Topology & Curated Tech Stack Preset (9 Type-Safe Adapters — Zero Free-Text Stack Soup)'
+                              : '3. Pilih Topologi & Preset Tech Stack Terkurasi (9 Adapter Type-Safe — Domain Bisnis Terpisah 100% dari Stack)'}
+                          </span>
+                          <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
+                            {lang === 'en'
+                              ? 'Switch freely between Monolith (M1–M4), Decoupled Headless (D1–D3), and Microservices (S1–S2) while keeping the exact same 12-Sector & 8-Layer Day-2 domain blueprint.'
+                              : 'Blueprint bisnis yang sama dapat dikompilasi ke Laravel 13 Monolith (M1), Go + sqlc + Next.js (D2), atau Polyglot Microservices + Temporal.io (S1) hanya dengan mengganti adapter di bawah.'}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                          {[
+                            { id: 'ALL', label: lang === 'en' ? 'ALL (9)' : 'SEMUA (9)' },
+                            { id: 'MONOLITH', label: 'MONOLITH (M1–M4)' },
+                            { id: 'DECOUPLED_HEADLESS', label: 'HEADLESS (D1–D3)' },
+                            { id: 'MICROSERVICES', label: 'MICROSERVICES (S1–S2)' },
+                          ].map((tab) => {
+                            const active = activeTopologyFilter === tab.id;
+                            return (
+                              <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setActiveTopologyFilter(tab.id)}
+                                className={`px-2.5 py-1 rounded-xs border font-mono text-[10px] font-black transition-colors cursor-pointer ${
+                                  active
+                                    ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100'
+                                    : 'bg-zinc-100 hover:bg-zinc-200/80 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+                                }`}
+                              >
+                                {tab.label}
+                              </button>
+                            );
+                          })}
+                          {(matrixCatalog.stack_comparison_matrix || []).length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setShowStackMatrixTable((v) => !v)}
+                              className="px-2.5 py-1 rounded-xs border border-emerald-500 bg-emerald-100 hover:bg-emerald-200/80 text-emerald-950 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black transition-colors cursor-pointer"
+                            >
+                              {showStackMatrixTable
+                                ? (lang === 'en' ? 'Hide Decision Matrix' : 'Tutup Matriks Panduan')
+                                : (lang === 'en' ? 'Compare 9 Stacks' : 'Panduan Pilih Stack')}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {showStackMatrixTable && (matrixCatalog.stack_comparison_matrix || []).length > 0 && (
+                        <div className="mb-3.5 overflow-x-auto border border-zinc-300 dark:border-zinc-800 rounded-sm bg-white dark:bg-zinc-950">
+                          <table className="w-full text-left border-collapse text-[11px]">
+                            <thead className="bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 font-mono text-[10px] uppercase text-zinc-900 dark:text-zinc-200">
+                              <tr>
+                                <th className="py-2 px-3 font-black">{lang === 'en' ? 'Target Scale & Use Case' : 'Kebutuhan Bisnis & Skala Sistem'}</th>
+                                <th className="py-2 px-3 font-black">{lang === 'en' ? 'Recommended Preset' : 'Rekomendasi Preset'}</th>
+                                <th className="py-2 px-3 font-black">{lang === 'en' ? 'Architectural Rationale' : 'Alasan Arsitektural Utama'}</th>
+                                <th className="py-2 px-3 font-black text-right">{lang === 'en' ? 'Action' : 'Aksi'}</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                              {matrixCatalog.stack_comparison_matrix.map((row, idx) => {
+                                const presetCode = row.code || row.preset_code;
+                                const isRowSelected = formData.stackPreset === presetCode;
+                                return (
+                                  <tr
+                                    key={presetCode || idx}
+                                    className="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/70 dark:even:bg-zinc-900/40 hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80 transition-colors"
+                                  >
+                                    <td className="py-2 px-3 font-bold text-zinc-900 dark:text-zinc-100">
+                                      {row.best_use_case?.[lang] || row.best_use_case?.id || row.use_case?.[lang] || ''}
+                                    </td>
+                                    <td className="py-2 px-3 font-mono font-black text-emerald-900 dark:text-emerald-300 whitespace-nowrap">
+                                      [{row.short_code}] {row.architecture_label || row.topology}
+                                    </td>
+                                    <td className="py-2 px-3 text-zinc-700 dark:text-zinc-300">
+                                      {row.inter_layer_contract || row.key_reason?.[lang] || ''}
+                                    </td>
+                                    <td className="py-2 px-3 text-right whitespace-nowrap">
+                                      <button
+                                        type="button"
+                                        onClick={() => selectStackPreset(presetCode)}
+                                        className={`px-2 py-1 rounded-xs font-mono text-[10px] font-black border cursor-pointer ${
+                                          isRowSelected
+                                            ? 'bg-emerald-600 text-white border-emerald-700 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
+                                            : 'bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100'
+                                        }`}
+                                      >
+                                        {isRowSelected ? 'AKTIF' : (lang === 'en' ? 'Select' : 'Gunakan')}
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                        {filteredStackPresets.map((preset) => {
+                          const isSelected = (formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH') === preset.code;
+                          const pName = (preset.name && (preset.name[lang] || preset.name.id || preset.name.en)) || preset.code;
+                          const pBestObj = preset.best_use_cases || preset.best_for || {};
+                          const pBest = pBestObj[lang] || pBestObj.id || pBestObj.en || '';
+                          const contractMech = preset.inter_layer_type_contract?.mechanism || '';
+                          return (
+                            <button
+                              key={preset.code}
+                              type="button"
+                              onClick={() => selectStackPreset(preset.code)}
+                              className={`text-left p-3 rounded-sm border transition-colors flex flex-col justify-between cursor-pointer ${
+                                isSelected
+                                  ? 'bg-zinc-900 text-white border-zinc-900 ring-1 ring-emerald-500 dark:bg-emerald-950/75 dark:text-zinc-50 dark:border-emerald-500'
+                                  : 'bg-white hover:bg-zinc-50 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-600'
+                              }`}
+                            >
+                              <div>
+                                <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[10px] font-black ${
+                                      isSelected
+                                        ? 'bg-emerald-500 text-zinc-950'
+                                        : 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
+                                    }`}>
+                                      {preset.short_code}
+                                    </span>
+                                    <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[9px] font-black border ${
+                                      isSelected
+                                        ? 'bg-black text-white border-zinc-700'
+                                        : 'bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700'
+                                    }`}>
+                                      {preset.topology}
+                                    </span>
+                                  </div>
+                                  {preset.is_default && (
+                                    <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[8px] font-black uppercase ${
+                                      isSelected
+                                        ? 'bg-white text-zinc-950'
+                                        : 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
+                                    }`}>
+                                      DEFAULT
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs font-black leading-snug">{pName}</div>
+                                <p className={`mt-1 text-[11px] leading-relaxed line-clamp-2 ${
+                                  isSelected ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'
+                                }`}>
+                                  {pBest}
+                                </p>
+                              </div>
+                              {contractMech && (
+                                <div className={`mt-2.5 pt-2 border-t font-mono text-[10px] truncate ${
+                                  isSelected
+                                    ? 'border-zinc-700 text-emerald-300'
+                                    : 'border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'
+                                }`}>
+                                  Contract: {contractMech}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 4: Brownfield Legacy SQL / Migration / Prisma Importer */}
+                  {activeWorkbenchTab === 'brownfield' && (
+                    <div className="p-4 rounded-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <span className="font-mono text-[11px] font-black uppercase text-zinc-950 dark:text-zinc-100 block">
+                            {lang === 'en'
+                              ? '4. Brownfield Legacy SQL / Laravel Migration / Prisma Importer (Shadow ULID)'
+                              : '4. Audit & Impor Skema SQL / Migrasi Laravel / Prisma (Shadow ULID Tanpa Kehilangan Data)'}
+                          </span>
+                          <span className="text-[11px] text-zinc-600 dark:text-zinc-400">
+                            {lang === 'en'
+                              ? 'Detects AUTO_INCREMENT / FLOAT / ON DELETE CASCADE debt and maps Sector + Primitives automatically.'
+                              : 'Mendeteksi utang teknis AUTO_INCREMENT / FLOAT / CASCADE serta memetakan Sektor + Primitives otomatis.'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setBrownfieldSqlText(
+                            "CREATE TABLE orders (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  patient_id INT NOT NULL,\n  total_amount FLOAT DEFAULT 0,\n  FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE\n);\nCREATE TABLE medical_records (\n  id BIGINT AUTO_INCREMENT PRIMARY KEY,\n  diagnosis TEXT\n);"
+                          )}
+                          className="px-2.5 py-1 rounded-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 font-mono text-[10px] font-bold hover:border-emerald-500 cursor-pointer"
+                        >
+                          {lang === 'en' ? 'Load Legacy Sample SQL' : 'Isi Contoh SQL Legacy'}
+                        </button>
+                      </div>
+
+                      <textarea
+                        rows={5}
+                        value={brownfieldSqlText}
+                        onChange={(e) => setBrownfieldSqlText(e.target.value)}
+                        placeholder="CREATE TABLE invoices ( id INT AUTO_INCREMENT PRIMARY KEY, amount FLOAT ... );"
+                        className="w-full p-3 rounded-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 font-mono text-xs text-zinc-950 dark:text-zinc-100 focus:outline-none focus:border-emerald-500"
+                      />
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={brownfieldLoading}
+                          onClick={runBrownfieldAudit}
+                          className="px-3.5 py-2 rounded-xs bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white dark:text-zinc-950 font-mono text-xs font-black uppercase cursor-pointer"
+                        >
+                          {brownfieldLoading
+                            ? (lang === 'en' ? 'Scanning Legacy Debt...' : 'Memindai Utang Teknis...')
+                            : (lang === 'en' ? 'Audit Legacy Schema & Map Sector' : 'Audit Skema & Petakan Sektor')}
+                        </button>
+
+                        {brownfieldReport && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={applyBrownfieldRecommendation}
+                              className="px-3.5 py-2 rounded-xs bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-xs font-black uppercase cursor-pointer"
+                            >
+                              {lang === 'en' ? 'Apply Sector + Shadow ULID Plan' : 'Terapkan Sektor + Rencana Shadow ULID'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (navigator?.clipboard?.writeText && brownfieldReport.ai_refactor_prompt) {
+                                  navigator.clipboard.writeText(brownfieldReport.ai_refactor_prompt);
+                                }
+                                if (window.showToast) {
+                                  window.showToast({
+                                    type: 'success',
+                                    title: lang === 'en' ? 'Refactor Prompt Copied' : 'Prompt Refactor Disalin',
+                                    message: lang === 'en'
+                                      ? 'Paste into Claude Code / Cursor / Antigravity to execute the 4-stage migration.'
+                                      : 'Tempelkan ke Claude Code / Cursor / Antigravity untuk mengeksekusi migrasi 4 tahap.',
+                                  });
+                                }
+                              }}
+                              className="px-3 py-2 rounded-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-xs font-bold uppercase cursor-pointer"
+                            >
+                              {lang === 'en' ? 'Copy AI Refactor Prompt' : 'Salin AI Refactor Prompt'}
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      {brownfieldReport && (
+                        <div className="mt-3 p-3.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100">
+                              {lang === 'en' ? 'Recommended Sector:' : 'Rekomendasi Sektor:'}{' '}
+                              <span className="text-emerald-800 dark:text-emerald-300">
+                                {brownfieldReport.recommended_sector?.name} ({brownfieldReport.recommended_sector?.primary_ui_archetype})
+                              </span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-xs font-mono text-[10px] font-black border tabular-nums ${
+                              brownfieldReport.readiness_score >= 85
+                                ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
+                                : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700'
+                            }`}>
+                              SCORE: {brownfieldReport.readiness_score}/100 &bull; {brownfieldReport.grade}
+                            </span>
+                          </div>
+
+                          {(brownfieldReport.violations || []).length > 0 && (
+                            <div className="space-y-1.5">
+                              {brownfieldReport.violations.map((v, vIdx) => (
+                                <div
+                                  key={vIdx}
+                                  className="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs text-[11px]"
+                                >
+                                  <div className="font-mono font-black text-amber-950 dark:text-amber-300">
+                                    [{v.code} • {v.severity}] {v.title}
+                                  </div>
+                                  <div className="text-zinc-700 dark:text-zinc-300 mt-0.5">{v.remediation}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* TAB 5: Layer 8 Blueprint Doctor & 8 Day-2 Production Layers */}
+                  {activeWorkbenchTab === 'doctor' && (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                          <div>
+                            <span className="font-mono text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300 block">
+                              LAYER 8 • PRE-FLIGHT CONFLICT RESOLVER &amp; READINESS VALIDATOR
+                            </span>
+                            <h4 className="text-sm font-black text-zinc-950 dark:text-zinc-100 mt-0.5">
+                              {lang === 'en'
+                                ? 'Interactive Blueprint Doctor (Cross-Module & Topology Validator)'
+                                : 'Diagnosa Pre-Flight Blueprint Doctor (Validasi Lintas Modul & Topologi)'}
+                            </h4>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 font-mono text-[10px]">
+                            <button
+                              type="button"
+                              disabled={doctorLoading}
+                              onClick={runPreFlightDoctor}
+                              className="px-3 py-1.5 rounded-xs bg-emerald-600 hover:bg-emerald-500 text-white dark:text-zinc-950 font-black uppercase cursor-pointer"
+                            >
+                              {doctorLoading
+                                ? (lang === 'en' ? 'Scanning...' : 'Mendiagnosa...')
+                                : (lang === 'en' ? '🩺 Run Pre-Flight Audit' : '🩺 Jalankan Diagnosa Penuh')}
+                            </button>
+                            {canOneClickFix && (
+                              <button
+                                type="button"
+                                onClick={applyDoctorAutoFix}
+                                className="px-3 py-1.5 rounded-xs bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black uppercase cursor-pointer"
+                              >
+                                {lang === 'en' ? '✨ Apply 1-Click Auto-Fix' : '✨ Terapkan 1-Klik Auto-Fix'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {doctorReport ? (
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs font-mono text-[11px]">
+                              <span className="font-black text-zinc-950 dark:text-zinc-100 tabular-nums">
+                                STATUS: {doctorReport.status} &bull; SCORE: {doctorReport.readiness_score}/100
+                              </span>
+                              <span className="text-zinc-700 dark:text-zinc-300 tabular-nums">
+                                Warnings: {doctorReport.warning_count ?? 0} &bull; Suggestions: {doctorReport.recommendation_count ?? 0} &bull; SHA-256 Logged
+                              </span>
+                            </div>
+                            {(doctorReport.findings || []).map((f, fIdx) => {
+                              const fTitle = typeof f.title === 'object' ? (f.title?.[lang] || f.title?.id || f.code) : (f.title || f.code);
+                              const fMsg = typeof f.message === 'object' ? (f.message?.[lang] || f.message?.id || '') : (f.message || f.explanation || '');
+                              const fFixLabel = typeof f.auto_fix?.label === 'object' ? (f.auto_fix.label?.[lang] || f.auto_fix.label?.id || '') : (f.recommendation || '');
+                              return (
+                                <div
+                                  key={fIdx}
+                                  className="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs text-[11px]"
+                                >
+                                  <div className="flex items-center justify-between gap-2 font-mono font-black">
+                                    <span className={f.severity === 'WARNING' ? 'text-amber-950 dark:text-amber-300' : 'text-emerald-900 dark:text-emerald-300'}>
+                                      [{f.code} • {f.severity}] {fTitle}
+                                    </span>
+                                  </div>
+                                  <div className="text-zinc-700 dark:text-zinc-300 mt-0.5">{fMsg}</div>
+                                  {fFixLabel && (
+                                    <div className="font-mono text-[10px] text-emerald-800 dark:text-emerald-300 mt-1">
+                                      Fix: {fFixLabel}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-zinc-700 dark:text-zinc-300">
+                            {lang === 'en'
+                              ? 'Click "Run Pre-Flight Audit" to verify Pharmacy/Stock ledgers, Double-Entry settlement journals, Maker-Checker approvals, and Stack vs Timeline realism before locking your PRD.'
+                              : 'Klik "Jalankan Diagnosa Penuh" untuk memvalidasi kecocokan Buku Besar Stok/Resep, Jurnal Double-Entry Settlement, Otorisasi Berjenjang, dan kecocokan Topologi Stack terhadap target waktu Go-Live Anda.'}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* 8 Day-2 Production Layers Grid */}
+                      {(matrixCatalog.final_eight_layers || []).length > 0 && (
+                        <div>
+                          <div className="text-[11px] font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100 mb-2">
+                            {lang === 'en'
+                              ? '8 Day-2 Production Layers Automatically Compiled into Your Blueprint'
+                              : '8 Lapisan Operasional Day-2 yang Otomatis Dikompilasi ke Blueprint Anda'}
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                            {matrixCatalog.final_eight_layers.map((layer) => {
+                              const layerNum = layer.number || layer.layer;
+                              const layerDesc = layer.desc?.[lang] || layer.desc?.id || layer.summary?.[lang] || layer.summary?.id || '';
+                              return (
+                                <div
+                                  key={layerNum || layer.code}
+                                  className="p-2.5 rounded-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
+                                >
+                                  <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black mb-1">
+                                    <span className="px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950">
+                                      LAYER 0{layerNum}
+                                    </span>
+                                    <span className="text-emerald-800 dark:text-emerald-300">{layer.badge || layer.code}</span>
+                                  </div>
+                                  <div className="text-[11px] font-black text-zinc-950 dark:text-zinc-100 leading-snug">
+                                    {layer.title?.[lang] || layer.title?.id || layer.code}
+                                  </div>
+                                  <p className="text-[10px] text-zinc-700 dark:text-zinc-300 mt-1 leading-relaxed line-clamp-3">
+                                    {layerDesc}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
                   )}
                 </div>
               )}
-            </div>
-          </section>
-        )}
+            </section>
+          );
+        })()}
 
         {/* ---------------------------------------------------------------------
             BLOK A: IDENTITAS PROYEK & TUJUAN BISNIS (FIELDS 1 - 3)

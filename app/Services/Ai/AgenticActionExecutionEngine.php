@@ -60,6 +60,8 @@ class AgenticActionExecutionEngine
                 'generate_phased_prompts' => $this->generatePhasedPrompts($args),
                 'audit_brownfield_schema' => $this->auditBrownfieldSchema($args),
                 'run_blueprint_slop_scanner' => $this->runBlueprintSlopScanner($args),
+                'run_blueprint_doctor' => $this->runBlueprintDoctor($args),
+                'get_day2_production_contracts' => $this->getDay2ProductionContracts($args),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
@@ -478,7 +480,8 @@ class AgenticActionExecutionEngine
             'total_knowledge_chunks' => $totalKnowledge,
             'sectors_count' => count(\App\Support\ProjectOsMatrixCatalog::sectors()),
             'primitives_count' => count(\App\Support\ProjectOsMatrixCatalog::primitives()),
-            'stack_presets_count' => count(\App\Support\PosStackPresetCatalog::presets()),
+            'stack_presets_count' => count(\App\Support\PosStackPresetCatalog::stackPresets()),
+            'day_two_layers_count' => count(\App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary()),
             'native_tools_count' => count(GeminiToolRegistry::getDeclarations()),
         ];
     }
@@ -509,7 +512,7 @@ class AgenticActionExecutionEngine
      */
     protected function getSectorUiArchetype(array $args): array
     {
-        $input = trim((string) ($args['sector_code'] ?? $args['sector_code_or_keyword'] ?? ''));
+        $input = trim((string) ($args['sector_code'] ?? ''));
         $allArchetypes = \App\Support\PosSectorUiArchetypeCatalog::sectorUiArchetypes();
 
         if ($input === '') {
@@ -528,9 +531,9 @@ class AgenticActionExecutionEngine
             ];
         }
 
-        $upper = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode($input);
-        if (isset($allArchetypes[$upper])) {
-            $code = $upper;
+        $normalized = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode($input);
+        if (isset($allArchetypes[$normalized])) {
+            $code = $normalized;
         } else {
             $resolved = \App\Services\ProjectOsBlueprintCompilerService::resolveSectorAndPrimitives($input);
             $code = (string) ($resolved['sector']->code ?? 'SECTOR_01_COMMERCE_OMNICHANNEL');
@@ -615,6 +618,60 @@ class AgenticActionExecutionEngine
         }
 
         return ['error' => 'Harap isi blueprint_id atau code_snippet untuk dipindai oleh Slop Scanner.'];
+    }
+
+    /**
+     * 17. Run Interactive Blueprint Doctor (Pre-Flight Conflict Resolver & Readiness Validator)
+     */
+    protected function runBlueprintDoctor(array $args): array
+    {
+        $doctor = app(\App\Services\BlueprintDoctorService::class);
+
+        if (! empty($args['blueprint_id'])) {
+            $id = trim((string) $args['blueprint_id']);
+            $blueprint = VisionBlueprint::where('id', $id)->orWhere('slug', $id)->first();
+            if (! $blueprint) {
+                return ['error' => "Blueprint '{$id}' tidak ditemukan."];
+            }
+
+            return $doctor->diagnoseBlueprint($blueprint, true);
+        }
+
+        return $doctor->diagnose([
+            'sector_code' => $args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL',
+            'primitive_codes' => $args['primitive_codes'] ?? [],
+            'stack_preset_code' => $args['stack_preset_code'] ?? 'STACK_M1_LARAVEL_MONOLITH',
+            'workflow_text' => $args['workflow_text'] ?? '',
+            'timeline_days' => isset($args['timeline_days']) ? (int) $args['timeline_days'] : 45,
+        ], true);
+    }
+
+    /**
+     * 18. Get 8 Day-2 Production Contracts & 10 Ultimate Perfection Pillars for a Sector
+     */
+    protected function getDay2ProductionContracts(array $args): array
+    {
+        $input = trim((string) ($args['sector_code'] ?? ''));
+
+        if ($input === '') {
+            $code = 'SECTOR_01_COMMERCE_OMNICHANNEL';
+        } else {
+            $normalized = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode($input);
+            if ($normalized !== 'SECTOR_01_COMMERCE_OMNICHANNEL' || str_contains(strtoupper($input), 'COMMERCE') || str_contains(strtoupper($input), 'SECTOR_01')) {
+                $code = $normalized;
+            } else {
+                $resolved = \App\Services\ProjectOsBlueprintCompilerService::resolveSectorAndPrimitives($input);
+                $code = (string) ($resolved['sector']->code ?? 'SECTOR_01_COMMERCE_OMNICHANNEL');
+            }
+        }
+
+        return [
+            'success' => true,
+            'sector_code' => $code,
+            'day_two_bundle' => \App\Support\PosDayTwoProductionCatalog::bundleForSector($code),
+            'final_eight_layers' => \App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary(),
+            'ten_perfection_pillars' => \App\Support\PosDayTwoProductionCatalog::tenPerfectionPillars(),
+        ];
     }
 
     /**

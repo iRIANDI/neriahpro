@@ -8,6 +8,7 @@ use App\Models\PosRulePack;
 use App\Models\PosSector;
 use App\Models\PosStackPreset;
 use App\Models\VisionBlueprint;
+use App\Support\PosDayTwoProductionCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
 use App\Support\PosStackPresetCatalog;
 use App\Support\ProjectOsMatrixCatalog;
@@ -186,6 +187,7 @@ class ProjectOsBlueprintCompilerService
                     'blueprint_invariants' => $s->blueprint_invariants,
                     'ui_ux_archetypes' => $s->resolvedUiArchetypes(),
                     'realistic_seeder_contract' => $s->resolvedSeederContract(),
+                    'day_two_ops_contract' => $s->resolvedDayTwoOpsContract(),
                     'default_compliance_standards' => $s->default_compliance_standards,
                     'detection_keywords' => $s->detection_keywords ?? [],
                     'mandatory_primitives' => $s->primitives->filter(fn ($p) => $p->pivot?->is_mandatory)->pluck('code')->values()->all(),
@@ -208,6 +210,8 @@ class ProjectOsBlueprintCompilerService
                 'stack_presets' => $mem['stack_presets']->values()->map(fn (PosStackPreset $sp) => self::formatStackPresetForCatalog($sp))->all(),
                 'stack_comparison_matrix' => PosStackPresetCatalog::comparisonMatrix(),
                 'killer_features' => PosSectorUiArchetypeCatalog::killerFeaturesSummary(),
+                'final_eight_layers' => PosDayTwoProductionCatalog::finalEightLayersSummary(),
+                'ten_perfection_pillars' => PosDayTwoProductionCatalog::tenPerfectionPillars(),
             ];
         }
 
@@ -238,6 +242,7 @@ class ProjectOsBlueprintCompilerService
                         'blueprint_invariants' => $s->blueprint_invariants,
                         'ui_ux_archetypes' => $s->resolvedUiArchetypes(),
                         'realistic_seeder_contract' => $s->resolvedSeederContract(),
+                        'day_two_ops_contract' => $s->resolvedDayTwoOpsContract(),
                         'default_compliance_standards' => $s->default_compliance_standards,
                         'detection_keywords' => $s->detection_keywords ?? [],
                         'mandatory_primitives' => $mandatory,
@@ -315,6 +320,8 @@ class ProjectOsBlueprintCompilerService
                 'stack_presets' => $stackPresets,
                 'stack_comparison_matrix' => PosStackPresetCatalog::comparisonMatrix(),
                 'killer_features' => PosSectorUiArchetypeCatalog::killerFeaturesSummary(),
+                'final_eight_layers' => PosDayTwoProductionCatalog::finalEightLayersSummary(),
+                'ten_perfection_pillars' => PosDayTwoProductionCatalog::tenPerfectionPillars(),
             ];
         });
     }
@@ -645,6 +652,15 @@ class ProjectOsBlueprintCompilerService
             }
         }
 
+        // Inject Two-Step Staged Bulk Import tables (`import_staging_batches` & `import_staging_rows` — Layer 4)
+        foreach (PosDayTwoProductionCatalog::stagingTablesDefinition() as $stagingTbl) {
+            $tName = $stagingTbl['table'] ?? '';
+            if ($tName !== '' && ! isset($seenTables[$tName])) {
+                $seenTables[$tName] = true;
+                $dataDictionary[] = $stagingTbl;
+            }
+        }
+
         // Synthesize Custom Domain Entities from user's unique features if not already covered by primitive tables
         $customEntities = $options['custom_entities'] ?? self::extractCustomDomainTables($blueprint, $seenTables);
         foreach ($customEntities as $customTbl) {
@@ -657,6 +673,29 @@ class ProjectOsBlueprintCompilerService
                 $dataDictionary[] = $customTbl;
             }
         }
+
+        // Layer 3: Historical Master Data Immutability & Snapshot Contract (`*_snapshot`)
+        $historicalSnapshotContract = PosDayTwoProductionCatalog::historicalSnapshotContract($dataDictionary);
+        $snapshotTableSet = array_flip($historicalSnapshotContract['enforced_on_tables'] ?? []);
+        foreach ($dataDictionary as &$tblDef) {
+            $tblNameLower = strtolower((string) ($tblDef['table'] ?? ''));
+            if (isset($snapshotTableSet[$tblNameLower])) {
+                $tblDef['historical_snapshot_enforced'] = true;
+                $tblDef['mandatory_snapshot_columns'] = [
+                    'item_name_snapshot',
+                    'sku_or_code_snapshot',
+                    'unit_price_snapshot',
+                    'tax_rate_snapshot',
+                    'counterparty_snapshot',
+                ];
+            }
+        }
+        unset($tblDef);
+
+        // Layer 7: Enrich State Machines with Omnichannel Notification Dispatch Matrix
+        $resolvedSectorCode = (string) ($sector?->code ?? 'SECTOR_08_PROFESSIONAL_PSA');
+        $stateMachines = PosDayTwoProductionCatalog::enrichStateMachinesWithNotifications($stateMachines, $resolvedSectorCode);
+        $dayTwoBundle = $sector ? $sector->resolvedDayTwoOpsContract() : PosDayTwoProductionCatalog::bundleForSector($resolvedSectorCode);
 
         // Summarize per-table Data Lifecycle, PII Masking & Deletion Governance (Dimension 5)
         $deletionGovernanceMatrix = array_values(array_map(static fn (array $tbl): array => [
@@ -779,9 +818,39 @@ class ProjectOsBlueprintCompilerService
             'ui_screen_archetypes' => $uiScreenArchetypes,
             'sectoral_ui_ux_archetype' => $sector ? $sector->resolvedUiArchetypes() : PosSectorUiArchetypeCatalog::forSector('SECTOR_08_PROFESSIONAL_PSA'),
             'realistic_domain_seeder' => $sector ? $sector->resolvedSeederContract() : PosSectorUiArchetypeCatalog::seederForSector('SECTOR_08_PROFESSIONAL_PSA'),
+            // === PROJECT OS v3.0: THE FINAL 8 DAY-2 PRODUCTION LAYERS & 10 PERFECTION PILLARS ===
+            'engine_release' => '3.0.0-day2-ultimate',
+            'printable_and_thermal_contracts' => $dayTwoBundle['printable_and_thermal'] ?? PosDayTwoProductionCatalog::printableAndThermalContract($resolvedSectorCode),
+            'tenant_onboarding_and_provisioning' => $dayTwoBundle['tenant_onboarding'] ?? PosDayTwoProductionCatalog::tenantOnboardingContract($resolvedSectorCode),
+            'historical_snapshot_contract' => $historicalSnapshotContract,
+            'staged_bulk_import_export' => $dayTwoBundle['staged_bulk_import_export'] ?? PosDayTwoProductionCatalog::stagedBulkImportExportContract($resolvedSectorCode),
+            'day_two_operations_contract' => $dayTwoBundle['day_two_queue_and_cron'] ?? PosDayTwoProductionCatalog::dayTwoOpsQueueAndCronContract($resolvedSectorCode),
+            'defense_in_depth_security' => $dayTwoBundle['defense_in_depth_security'] ?? PosDayTwoProductionCatalog::defenseInDepthSecurityContract(),
+            'final_eight_layers' => PosDayTwoProductionCatalog::finalEightLayersSummary(),
+            'ten_perfection_pillars' => PosDayTwoProductionCatalog::tenPerfectionPillars(),
             'acceptance_test_matrix' => $acceptanceTestMatrix,
             'gemini_native_tools' => $geminiTools,
         ];
+
+        $doctorWorkflowText = implode(' ', array_filter([
+            (string) ($blueprint?->masalah_utama ?? ''),
+            (string) ($blueprint?->tujuan_utama ?? ''),
+            (string) ($blueprint?->alur_kerja ?? ''),
+            is_array($blueprint?->fitur_wajib) ? implode(' ', $blueprint->fitur_wajib) : (string) ($blueprint?->fitur_wajib ?? ''),
+        ]));
+        $doctorReport = app(BlueprintDoctorService::class)->diagnose([
+            'sector_code' => $resolvedSectorCode,
+            'primitive_codes' => $primitives->pluck('code')->values()->all(),
+            'stack_preset_code' => $stackPreset,
+            'workflow_text' => $doctorWorkflowText,
+            'compiled_metrics' => [
+                'ulid_tables_count' => count($dataDictionary),
+                'state_machines_count' => count($stateMachines),
+                'pessimistic_locks_count' => count($concurrencyLocks),
+                'acceptance_tests_count' => count($acceptanceTestMatrix),
+            ],
+        ], false);
+        $schema['blueprint_doctor_report'] = $doctorReport;
 
         $phasedPrompts = self::compilePhasedPrompts($schema);
         $schema['phased_prompt_sequencer'] = $phasedPrompts;
@@ -819,6 +888,9 @@ class ProjectOsBlueprintCompilerService
             }
             if (Schema::hasColumn('pos_projects', 'phased_prompts_json')) {
                 $projectPayload['phased_prompts_json'] = $phasedPrompts;
+            }
+            if (Schema::hasColumn('pos_projects', 'doctor_diagnostics_json')) {
+                $projectPayload['doctor_diagnostics_json'] = $doctorReport;
             }
 
             PosProject::query()->updateOrCreate($lookup, $projectPayload);
@@ -1145,13 +1217,102 @@ class ProjectOsBlueprintCompilerService
 
         $md .= "## 10. Step-by-Step Implementation Order for AI (6-Stage ECC Loop)\n";
         $md .= "1. **Enums & Contracts First:** Generate State Machine Enums and Inter-Layer Type Contracts (`" . ($stackInfo['inter_layer_type_contract']['mechanism'] ?? 'Typed DTOs & Actions') . "`) for every entity in Section 3.\n";
-        $md .= "2. **ULID Migrations & RESTRICT Deletion Policies:** Generate PostgreSQL 16 migrations (`CHAR(26)` ULID PK, `DECIMAL(19,4)`, `ON DELETE RESTRICT`, `outbox_messages`, `webhook_inbound_logs`).\n";
-        $md .= "3. **Atomic Domain Actions & Mathematical Formulas:** Implement Action/Service classes enforcing Section 3 Guards, `SELECT ... FOR UPDATE` row locks, Section 6 Outbox Compensations, and Section 7 Penny-Allocation Formulas.\n";
+        $md .= "2. **ULID Migrations, Historical Snapshots & RESTRICT Policies:** Generate PostgreSQL 16 migrations (`CHAR(26)` ULID PK, `DECIMAL(19,4)`, `*_snapshot` columns, `ON DELETE RESTRICT`, `outbox_messages`, `webhook_inbound_logs`, `import_staging_batches`, `import_staging_rows`).\n";
+        $md .= "3. **Atomic Domain Actions, Tenant Zero-State & Formulas:** Implement `InitializeNewTenantAction`, State Machine Actions (`SELECT ... FOR UPDATE`), Section 6 Outbox Compensations, Section 7 Penny-Allocation Formulas, and Omnichannel `notification_dispatch`.\n";
         $md .= "4. **Acceptance Test Matrix First (TDD):** Implement all Given-When-Then scenarios from Section 9 and verify 100% pass.\n";
-        $md .= "5. **Zero-Slop UI Archetypes:** Build every screen strictly following Section 8 Archetypes (including Empty, Skeleton Loading, and RFC 9457 Error states) and `.agents/UI_UX_CONTRACT.md`.\n";
-        $md .= "6. **Graphify Sync & Deployment:** Update `.agents/graphify/graph.json`, run full verification suite, and deploy using the stack's deployment manifest.\n";
+        $md .= "5. **Zero-Slop UI Archetypes + Thermal/A4 Print Layouts:** Build every screen strictly following Section 8 Archetypes, `GuidedSetupChecklistWidget`, Staged CSV Importer UI, and Section 11 Print Specs (`58mm/80mm` ESC/POS + Official A4 local SVG QR).\n";
+        $md .= "6. **Day-2 Ops, Security & Deployment:** Configure 4-Lane Redis Queue, Tiered Rate Limiters, `disk = \"private\"` 5-min Signed URLs, update `.agents/graphify/graph.json`, run `./verify-blueprint.sh`, and deploy.\n\n";
+
+        $md .= self::renderPrintSpecMarkdown($schema) . "\n\n";
+        $md .= self::renderDayTwoOpsMarkdown($schema) . "\n";
 
         return $md;
+    }
+
+    /**
+     * Render Dedicated Printable Document, Thermal Receipt (58mm/80mm ESC/POS) & Official A4 PDF Spec (.agents/PRINT_THERMAL_AND_A4_CONTRACT.md).
+     */
+    public static function renderPrintSpecMarkdown(array $schema): string
+    {
+        $print = $schema['printable_and_thermal_contracts'] ?? [];
+        $thermal = $print['thermal_printer_spec'] ?? [];
+        $a4 = $print['official_a4_pdf_spec'] ?? [];
+        $thermalMode = $thermal['mode'] ?? 'NONE';
+        $thermalArtifacts = ! empty($thermal['artifacts']) ? implode(', ', $thermal['artifacts']) : 'N/A (Corporate A4 Only)';
+        $a4Artifacts = implode(', ', $a4['artifacts'] ?? ['Official A4 Invoice / Report']);
+        $watermarks = implode(' | ', $a4['status_watermarks'] ?? ['LUNAS', 'DRAFT']);
+        $cssContract = $thermal['css_contract'] ?? '';
+        $hwBridge = $thermal['hardware_bridge'] ?? '';
+        $paginationRule = $a4['pagination_safety'] ?? '';
+        $qrRule = $a4['cryptographic_qr_verification'] ?? '';
+
+        return <<<MD
+## 11. Printable Document, Thermal Receipt (58mm/80mm ESC/POS) & Official A4 PDF Contract
+- **Thermal Receipt Mode:** `{$thermalMode}`
+- **Thermal Artifacts:** {$thermalArtifacts}
+- **Hardware Bridge:** {$hwBridge}
+- **Thermal `@media print` CSS Mandate:** `{$cssContract}`
+- **Official A4 PDF Artifacts:** {$a4Artifacts}
+- **Pagination Safety:** {$paginationRule}
+- **Cryptographic Local SVG QR (Zero External QR API):** {$qrRule}
+- **Dynamic Status Watermarks:** `{$watermarks}`
+MD;
+    }
+
+    /**
+     * Render Dedicated Day-2 Operations, Snapshot Immutability, Staged Import, Security & Notification Matrix (.agents/DAY2_OPERATIONS_AND_SECURITY.md).
+     */
+    public static function renderDayTwoOpsMarkdown(array $schema): string
+    {
+        $onboard = $schema['tenant_onboarding_and_provisioning'] ?? [];
+        $snapshot = $schema['historical_snapshot_contract'] ?? [];
+        $importer = $schema['staged_bulk_import_export'] ?? [];
+        $ops = $schema['day_two_operations_contract'] ?? [];
+        $sec = $schema['defense_in_depth_security'] ?? [];
+        $doctor = $schema['blueprint_doctor_report'] ?? [];
+
+        $seedList = implode("\n", array_map(fn ($s) => "  - {$s}", $onboard['atomic_foundation_records'] ?? []));
+        $snapTables = implode('`, `', $snapshot['enforced_on_tables'] ?? ['order_items']);
+        $snapCols = implode("\n", array_map(fn ($c) => "  - `{$c['column']}` (`{$c['type']}`): {$c['purpose']}", $snapshot['mandatory_snapshot_columns'] ?? []));
+        $lanes = implode("\n", array_map(fn ($q) => "  - **`{$q['lane']}`** (SLA {$q['sla_target']}): {$q['workloads']}", $ops['queue_lanes'] ?? []));
+        $crons = implode("\n", array_map(fn ($c) => "  - `{$c['cron']}` -> `php artisan {$c['command']}`: {$c['purpose']}", $ops['scheduler_registry'] ?? []));
+        $limiters = implode("\n", array_map(fn ($l) => "  - **`{$l['limiter']}`** (`{$l['limit']}`): {$l['scope']}", $sec['tiered_rate_limiters'] ?? []));
+        $doctorBanner = $doctor['summary_banner']['id'] ?? 'Ready';
+
+        return <<<MD
+## 12. Tenant Onboarding, Zero-State Provisioning & Guided Setup Checklist
+- **Provisioning Action:** `{$onboard['action_class']}` — {$onboard['execution_guarantee']}
+- **Atomic Default Foundation Records Seeded on Sign-Up:**
+{$seedList}
+- **Progressive Dashboard Banner:** `{$onboard['guided_setup_widget']['component']}` — {$onboard['guided_setup_widget']['behavior']}
+
+## 13. Historical Master Data Immutability & Snapshot Contract (`*_snapshot`)
+- **Core Invariant:** {$snapshot['core_invariant']}
+- **Enforced Transactional Tables:** `{$snapTables}`
+- **Mandatory Frozen Snapshot Columns:**
+{$snapCols}
+- **Master FK Usage Rule:** {$snapshot['foreign_key_usage_rule']}
+
+## 14. Two-Step Staged Bulk CSV/XLSX Import & Corporate Migration Engine
+- **Pattern:** `{$importer['pattern']}` (`import_staging_batches` & `import_staging_rows` strict ULID tables)
+- **Step 1 (Validate & Stage):** {$importer['step_1_validate_and_stage']}
+- **Step 2 (Idempotent Chunk Commit):** {$importer['step_2_idempotent_chunk_commit']}
+
+## 15. Day-2 Operations (4-Lane Queue Segregation & Cron Registry)
+- **Supervisor Command:** `{$ops['worker_supervisor_command']}`
+- **4 Priority Queue Lanes:**
+{$lanes}
+- **Deterministic `routes/console.php` Scheduler Registry:**
+{$crons}
+
+## 16. Defense-in-Depth Security, Private Disk Isolation & Blueprint Doctor Telemetry
+- **Multi-Tenant Anti-IDOR Global Scope:** {$sec['multi_tenant_idor_shield']}
+- **4-Tier Rate Limiters:**
+{$limiters}
+- **Private Media Disk (`disk = "private"`):** {$sec['media_disk_isolation']['private_disk']}
+- **Upload Sanitization:** {$sec['media_disk_isolation']['upload_sanitization']}
+- **Blueprint Doctor Pre-Flight Telemetry:** {$doctorBanner}
+MD;
     }
 
     /**
@@ -1509,8 +1670,9 @@ Baca Bagian 2 & Bagian 3 di `PROJECT_OS_EXECUTION_BLUEPRINT.md` serta `.agents/B
 1. Buat seluruh migrasi untuk tabel di atas dengan aturan mutlak:
    - Primary Key 26-karakter ULID (`->ulid('id')->primary()` / `CHAR(26)`), **HARAM** `AUTO_INCREMENT` atau `uuid('id')`.
    - Seluruh kolom uang/kuantitas wajib `DECIMAL(19,4)`.
+   - Wajib menyertakan **Historical Snapshot Columns** (`item_name_snapshot`, `sku_or_code_snapshot`, `unit_price_snapshot`, `tax_rate_snapshot`, `counterparty_snapshot`) pada tabel item/baris transaksi agar perubahan harga/pajak master di masa depan tidak pernah merusak laporan historis.
    - Seluruh Foreign Key transaksional wajib `ON DELETE RESTRICT` sesuai `deletion_policy` (`IMMUTABLE_LEDGER`, `ANONYMIZE_PII`, `SOFT_ARCHIVE`).
-   - Sertakan tabel `outbox_messages`, `webhook_inbound_logs`, dan `audit_logs` (dengan `integrity_hash` SHA-256).
+   - Sertakan tabel `outbox_messages`, `webhook_inbound_logs`, `import_staging_batches`, `import_staging_rows`, dan `audit_logs` (dengan `integrity_hash` SHA-256).
 2. Buat seluruh Backed Enum untuk State Machine beserta Model/Entity, relasi, dan casts yang presisi.
 3. Jalankan migrasi sampai bersih 0 error dan perbarui `.agents/graphify/graph.json`, lalu BERHENTI menunggu Fase 3.
 PROMPT,
@@ -1527,10 +1689,11 @@ Baca Bagian 3, 6, dan 7 di `PROJECT_OS_EXECUTION_BLUEPRINT.md`.
 ## Instruksi Eksekusi Fase 3:
 1. Implementasikan setiap transisi State Machine sebagai Dedicated Invokable Action Class di dalam `DB::transaction()` dengan `SELECT ... FOR UPDATE` (`lockForUpdate()`) sesuai urutan kunci anti-deadlock.
 2. Terapkan rumus matematika eksak `DECIMAL(19,4)` pembulatan `HALF_UP` dan **Penny Allocation** (`Rp 100.000 / 3 = [33333, 33333, 33334]`) agar 0 selisih sen.
-3. Pastikan setiap mutasi domain menulis event ke `outbox_messages` dan mencatat `AuditLog::record()` berstempel SHA-256 di transaksi yang sama.
-4. Bangun **Domain-Realistic Seeder (`{$seeder['seeder_class']}`)** (HARAM memakai `"Test Name 1"` atau `"Lorem ipsum"`):
+3. Pastikan setiap mutasi domain menulis event ke `outbox_messages`, men-dispatch **Omnichannel State-Transition Notification (`notification_dispatch`)** ke jalur `queue:default`, dan mencatat `AuditLog::record()` berstempel SHA-256 di transaksi yang sama.
+4. Bangun **`InitializeNewTenantAction`** (Zero-State Tenant Provisioning untuk men-seed Gudang Utama, CoA PSAK/ISAK 35, & Kas Default secara atomik saat Sign-Up) serta **Two-Step Staged Bulk CSV Importer** (validasi `import_staging_rows` + commit chunk 250 baris di `queue:low-batch`).
+5. Bangun **Domain-Realistic Seeder (`{$seeder['seeder_class']}`)** (HARAM memakai `"Test Name 1"` atau `"Lorem ipsum"`):
 {$seederBullets}
-5. Jalankan seeder untuk memastikan data awal terisi sempurna, lalu BERHENTI menunggu Fase 4.
+6. Jalankan seeder untuk memastikan data awal terisi sempurna, lalu BERHENTI menunggu Fase 4.
 PROMPT,
             ],
             [
@@ -1568,7 +1731,7 @@ Baca `.agents/UI_UX_CONTRACT.md` dan kontrak **Sectoral Industrial UI/UX Archety
 ## Aturan Ketat Zero-Slop UI:
 1. **HARAM** membuat sekadar tabel CRUD standar untuk layar operasional utama di atas!
 2. **HARAM** `rounded-full`, gradien warna-warni `bg-gradient-to-*`, font pastel pudar di atas kartu terang, CDN eksternal, dan dialog native `alert()`/`confirm()`.
-3. **WAJIB** menggunakan sudut tipis (`rounded-none` / `rounded-xs` / `rounded-sm`), mode terang & gelap berkontras tinggi WCAG AA/AAA, `tabular-nums` + pemisah ribuan, Keyset Cursor Pagination `O(1)` (`cursorPaginate()`), serta Empty, Skeleton Loading, dan RFC 9457 Error States.
+3. **WAJIB** menggunakan sudut tipis (`rounded-none` / `rounded-xs` / `rounded-sm`), mode terang & gelap berkontras tinggi WCAG AA/AAA, `tabular-nums` + pemisah ribuan, Keyset Cursor Pagination `O(1)` (`cursorPaginate()`), `GuidedSetupChecklistWidget` (auto-hide saat 100%), serta **Printable Thermal Receipt (58mm/80mm ESC/POS)** & **Official A4 PDF (`break-inside: avoid` + local inline SVG QR SHA-256 + watermark status)**.
 PROMPT,
             ],
             [
@@ -1586,7 +1749,10 @@ Baca `.agents/AGENT_HARNESS_ECC.md` dan `STACK_TOPOLOGY_CONTRACT.md`.
    - **Smart Guide Admin** & dokumentasi operasional internal.
    - **RBAC Policies** untuk setiap role & tenant.
    - **Tamper-Evident SHA-256 Audit Log** pada seluruh mutasi kritikal.
-2. Siapkan artefak rilis produksi: `deploy.sh` (6-skenario zero-downtime), `Caddyfile` / `railpack.json`, serta health probes (`/healthz`, `/livez`, `/readyz`).
+2. Aktifkan **Day-2 Operations & Defense-in-Depth Security**:
+   - **4-Lane Redis Queue Priority** (`queue:critical`, `queue:default`, `queue:ai-rag`, `queue:low-batch`) + jadwal deterministik di `routes/console.php`.
+   - **Global Scope `BelongsToOrganization`** (anti-IDOR `404`), **4-Tier Rate Limiter** (`auth_otp`, `checkout_booking`, `ai_copilot`, `inbound_webhook`), dan isolasi **`disk = "private"`** dengan `URL::temporarySignedRoute()` 5 menit untuk dokumen rahasia (KTP/EMR/Slip Gaji/Kontrak).
+   - `deploy.sh` (6-skenario zero-downtime), `Caddyfile` / `railpack.json`, serta health probes (`/healthz`, `/livez`, `/readyz`).
 3. Jalankan `./verify-blueprint.sh` dan suite pengujian penuh hingga **0 pelanggaran & 100% hijau**. Perbarui `.agents/graphify/graph.json`.
 PROMPT,
             ],

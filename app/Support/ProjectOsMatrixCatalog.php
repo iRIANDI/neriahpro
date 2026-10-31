@@ -27,6 +27,8 @@ class ProjectOsMatrixCatalog
                 || PosPrimitive::query()->whereNotNull('deterministic_formulas')->count() >= 12;
             $sectorUiColsReady = ! Schema::hasColumn('pos_sectors', 'ui_ux_archetypes')
                 || PosSector::query()->whereNotNull('ui_ux_archetypes')->count() >= 12;
+            $dayTwoColsReady = ! Schema::hasColumn('pos_sectors', 'day_two_ops_contract')
+                || PosSector::query()->whereNotNull('day_two_ops_contract')->count() >= 12;
 
             if (
                 PosSector::query()->count() >= 12
@@ -35,6 +37,7 @@ class ProjectOsMatrixCatalog
                 && $presetsReady
                 && $ultimateColsReady
                 && $sectorUiColsReady
+                && $dayTwoColsReady
             ) {
                 return;
             }
@@ -69,12 +72,16 @@ class ProjectOsMatrixCatalog
         }
 
         $hasSectorUiCols = Schema::hasTable('pos_sectors') && Schema::hasColumn('pos_sectors', 'ui_ux_archetypes');
+        $hasDayTwoCols = Schema::hasTable('pos_sectors') && Schema::hasColumn('pos_sectors', 'day_two_ops_contract');
         foreach (self::sectors() as $sectorDef) {
             $mandatoryCodes = $sectorDef['mandatory_primitives'] ?? [];
             $optionalCodes = $sectorDef['optional_primitives'] ?? [];
             unset($sectorDef['mandatory_primitives'], $sectorDef['optional_primitives']);
             if (! $hasSectorUiCols) {
                 unset($sectorDef['ui_ux_archetypes'], $sectorDef['realistic_seeder_contract']);
+            }
+            if (! $hasDayTwoCols) {
+                unset($sectorDef['day_two_ops_contract']);
             }
 
             $sector = PosSector::query()->updateOrCreate(
@@ -490,6 +497,7 @@ class ProjectOsMatrixCatalog
             $code = $sector['code'] ?? '';
             $sector['ui_ux_archetypes'] = $uiArchetypes[$code] ?? ($sector['ui_ux_archetypes'] ?? []);
             $sector['realistic_seeder_contract'] = $realisticSeeders[$code] ?? ($sector['realistic_seeder_contract'] ?? []);
+            $sector['day_two_ops_contract'] = PosDayTwoProductionCatalog::bundleForSector($code);
 
             return $sector;
         }, $baseSectors);

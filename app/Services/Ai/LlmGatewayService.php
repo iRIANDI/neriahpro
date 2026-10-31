@@ -674,7 +674,7 @@ class LlmGatewayService
      */
     public function buildLiveCagContext(?User $user = null): string
     {
-        $metrics = Cache::remember('ai_copilot:live_cag_telemetry:v25', 30, function () {
+        $metrics = Cache::remember('ai_copilot:live_cag_telemetry:v30', 30, function () {
             try {
                 $stats = $this->actionEngine->execute('get_system_stats', ['scope' => 'all']);
                 return $stats;
@@ -694,7 +694,7 @@ class LlmGatewayService
             . "- Kapasitas Sprint Paralel: " . ($metrics['active_sprints'] ?? 0) . " / " . ($metrics['max_parallel_sprints'] ?? 3) . " Slot Terisi (Sisa Slot: " . ($metrics['available_sprint_slots'] ?? 3) . ")\n"
             . "- Pendapatan Terverifikasi (Settlement): {$revenueFormatted}\n"
             . "- Aset Domain/Hosting Mendekati Jatuh Tempo (<=30 hari): " . ($metrics['expiring_assets_30_days'] ?? 0) . "\n"
-            . "- Matriks Project OS v2.5: " . ($metrics['sectors_count'] ?? 12) . " Sektor UI/UX Industri × " . ($metrics['primitives_count'] ?? 12) . " Modul Primitif × " . ($metrics['stack_presets_count'] ?? 9) . " Stack Adapters (M1–S2) × " . ($metrics['native_tools_count'] ?? 16) . " Native Tools | Chunks RAG: " . ($metrics['total_knowledge_chunks'] ?? 0) . "\n";
+            . "- Matriks Project OS v3.0: " . ($metrics['sectors_count'] ?? 12) . " Sektor UI/UX Industri × " . ($metrics['primitives_count'] ?? 12) . " Modul Primitif × " . ($metrics['stack_presets_count'] ?? 9) . " Stack Adapters (M1–S2) × " . ($metrics['day2_layers_count'] ?? 8) . " Day-2 Ops Layers × " . ($metrics['native_tools_count'] ?? 18) . " Native Tools | Chunks RAG: " . ($metrics['total_knowledge_chunks'] ?? 0) . "\n";
     }
 
     /**
@@ -703,9 +703,9 @@ class LlmGatewayService
     public function buildDeterministicKagRules(): string
     {
         return "### 🧭 KAG (KNOWLEDGE-AUGMENTED GRAPH — INVA-ATURAN DETERMINISTIK WAJIB)\n"
-            . "1. **Database & Skalabilitas O(1)**: Wajib 26-char ULID (`->ulid('id')->primary()`), `DECIMAL(19,4)` dengan pembulatan `HALF_UP` & Largest-Remainder Penny Allocation (`0.0000` drift), `ON DELETE RESTRICT` (`IMMUTABLE_LEDGER` / `ANONYMIZE_PII` / `SOFT_ARCHIVE`), dan Keyset Cursor Pagination `O(1)` (`cursorPaginate()`).\n"
-            . "2. **12 Sectoral Industrial UI/UX Archetypes**: Dilarang menyarankan sekadar tabel CRUD standar untuk layar operasional utama! Gunakan ergonomi spesifik industri (`POS_SPLIT_TERMINAL`, `HORIZONTAL_RESOURCE_GANTT`, `CLINICAL_3_PANE_COCKPIT`, `SPREADSHEET_LEDGER_GRID`, `MULTI_LEVEL_BOM_TREE`, `SPLIT_MAP_DISPATCHER`, `COHORT_GRADEBOOK_MATRIX`, `MILESTONE_KANBAN_BOARD`, `KDS_TICKET_BOARD`, `INTERACTIVE_SEAT_MAP`, `SHIFT_ROSTER_MATRIX`, `TRANSPARENCY_FUND_TRACKER`). Gunakan tool `get_sector_ui_archetype` untuk detail lengkap.\n"
+            . "1. **Database, Historical Snapshot & Skalabilitas O(1)**: Wajib 26-char ULID (`->ulid('id')->primary()`), `DECIMAL(19,4)` dengan pembulatan `HALF_UP` & Largest-Remainder Penny Allocation (`0.0000` drift), `ON DELETE RESTRICT` (`IMMUTABLE_LEDGER` / `ANONYMIZE_PII` / `SOFT_ARCHIVE`), kolom bekukan historis (`item_name_snapshot`, `unit_price_snapshot`, `tax_rate_snapshot`, `counterparty_snapshot`), dan Keyset Cursor Pagination `O(1)` (`cursorPaginate()`).\n"
+            . "2. **12 Sectoral Industrial UI/UX Archetypes & Thermal/A4 Print**: Dilarang menyarankan tabel CRUD standar untuk layar operasional utama! Gunakan ergonomi spesifik industri (`POS_SPLIT_TERMINAL`, `HORIZONTAL_RESOURCE_GANTT`, `CLINICAL_3_PANE_COCKPIT`, dsb.) plus kontrak cetak **Thermal 58mm/80mm ESC/POS** & **Official A4 PDF** (`break-inside: avoid` + inline SVG QR SHA-256 lokal tanpa API QR eksternal).\n"
             . "3. **Zero UI Slop & Zero Hardcode**: Haram memakai `rounded-full`, gradien warna-warni `bg-gradient-to-*`, dialog native `window.alert()/confirm()`, script CDN eksternal, atau magic string statis.\n"
-            . "4. **6 Killer Orchestration Engines**: Selalu arahkan eksekusi proyek melewati Phased Prompt Sequencer (Fase 1–6 via `generate_phased_prompts`), Realistic Domain Seeder Indonesia, Brownfield SQL Importer (`audit_brownfield_schema`), Slop Scanner (`run_blueprint_slop_scanner` / `./verify-blueprint.sh`), dan 1-Command CLI Bootstrapper (`curl -sL .../init/{ULID} | bash`).\n";
+            . "4. **6 Killer Engines + 8 Day-2 Production Layers**: Arahkan proyek melewati `run_blueprint_doctor` (Pre-Flight Conflict Resolver), `get_day2_production_contracts` (`InitializeNewTenantAction`, Two-Step Staged CSV Importer `import_staging_*`, 4-Lane Redis Queue `critical|default|ai-rag|low-batch`, Private Disk 5-min Signed URLs, Omnichannel State Notification Matrix), Phased Prompt Sequencer (Fase 1–6), dan 1-Command CLI Bootstrapper (`curl -sL .../init/{ULID} | bash`).\n";
     }
 }

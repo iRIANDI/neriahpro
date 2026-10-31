@@ -64,7 +64,8 @@
                         'stacks' => ['label' => '9 Stack Presets (M1–S2)', 'count' => $stats['stacks'] ?? 9],
                         'rules' => ['label' => 'Anti-Slop Rule Packs', 'count' => $stats['rules'] ?? 6],
                         'projects' => ['label' => 'Assembled Projects', 'count' => $stats['projects'] ?? 0],
-                        'lab' => ['label' => 'Brownfield & Slop Lab', 'count' => 'v2.5'],
+                        'day2' => ['label' => '8 Layer Day-2 & Doctor', 'count' => 'v3.0'],
+                        'lab' => ['label' => 'Brownfield & Slop Lab', 'count' => 'LAB'],
                     ] as $tabKey => $tabMeta)
                         <button
                             type="button"
@@ -149,8 +150,115 @@
             </div>
         </div>
 
-        <!-- Content Area: Brownfield & Slop Lab vs Grid View vs Enterprise Sticky List View -->
-        @if($this->activeTab === 'lab')
+        <!-- Content Area: Day-2 Ops & Blueprint Doctor vs Brownfield & Slop Lab vs Grid/List -->
+        @if($this->activeTab === 'day2')
+            @php
+                $eightLayers = \App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary();
+                $tenPillars = \App\Support\PosDayTwoProductionCatalog::tenPerfectionPillars();
+                $sectorOptions = \App\Support\ProjectOsMatrixCatalog::sectors();
+                $stackOptions = \App\Support\PosStackPresetCatalog::stackPresets();
+            @endphp
+            <div class="space-y-4">
+                <!-- Interactive Layer 8: Blueprint Doctor Pre-Flight Conflict Resolver -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2.5">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">LAYER 08 // INTERACTIVE PRE-FLIGHT CONFLICT RESOLVER</div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">Blueprint Doctor — Deteksi Celah Lintas Modul &amp; Auto-Fix 1-Klik</h3>
+                        </div>
+                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">
+                            PROJECT OS v3.0
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-400 mb-1">Sektor Fungsional</label>
+                            <select wire:model="doctorSectorCode" class="w-full px-3 py-1.5 text-xs font-mono bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs">
+                                @foreach($sectorOptions as $sOpt)
+                                    <option value="{{ $sOpt['code'] }}">{{ $sOpt['code'] }} — {{ $sOpt['name']['id'] ?? '' }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-400 mb-1">Preset Topologi &amp; Stack</label>
+                            <select wire:model="doctorStackCode" class="w-full px-3 py-1.5 text-xs font-mono bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs">
+                                @foreach($stackOptions as $stOpt)
+                                    <option value="{{ $stOpt['code'] }}">[{{ $stOpt['short_code'] }}] {{ $stOpt['name']['id'] ?? $stOpt['code'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-400 mb-1">Target Durasi (Hari)</label>
+                            <input type="number" min="7" max="365" wire:model="doctorTimelineDays" class="w-full px-3 py-1.5 text-xs font-mono tabular-nums bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs" />
+                        </div>
+                    </div>
+
+                    <textarea rows="2" wire:model="doctorWorkflow" placeholder="Ketik deskripsi alur kerja bisnis (mis. resep apotek, stok FEFO, jurnal kas, approval yayasan)..." class="w-full p-2.5 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs"></textarea>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" wire:click="runBlueprintDoctorLab" class="px-4 py-2 text-xs font-mono font-black bg-emerald-600 hover:bg-emerald-500 text-black border border-emerald-700 rounded-xs cursor-pointer">
+                            🩺 JALANKAN BLUEPRINT DOCTOR PRE-FLIGHT
+                        </button>
+                        @if(!empty($this->doctorResult['one_click_auto_fix']['has_fixes']))
+                            <button type="button" wire:click="applyBlueprintDoctorAutoFix" class="px-4 py-2 text-xs font-mono font-black bg-amber-400 hover:bg-amber-300 text-black border border-amber-600 rounded-xs cursor-pointer">
+                                ⚡ TERAPKAN AUTO-FIX 1-KLIK ({{ count($this->doctorResult['one_click_auto_fix']['add_primitive_codes'] ?? []) }} MODUL)
+                            </button>
+                        @endif
+                    </div>
+
+                    @if(!empty($this->doctorResult))
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xs space-y-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100 tabular-nums">
+                                    {{ $this->doctorResult['summary_banner']['id'] ?? '' }}
+                                </span>
+                                <span class="px-2 py-0.5 font-mono text-[10px] font-black rounded-xs border {{ ($this->doctorResult['status'] ?? '') === 'OPTIMAL_READY' ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700' : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700' }}">
+                                    {{ $this->doctorResult['status'] ?? 'READY' }}
+                                </span>
+                            </div>
+                            @foreach(($this->doctorResult['findings'] ?? []) as $f)
+                                <div class="p-2.5 bg-white dark:bg-zinc-950 border border-amber-400 dark:border-amber-700 rounded-xs text-xs">
+                                    <div class="font-mono font-black text-amber-950 dark:text-amber-200">[{{ $f['code'] }}] {{ $f['title']['id'] ?? '' }}</div>
+                                    <div class="text-zinc-700 dark:text-zinc-300 mt-0.5">{{ $f['message']['id'] ?? '' }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Grid of 8 Day-2 Production Layers -->
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                    @foreach($eightLayers as $layer)
+                        <div class="p-3.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 rounded-sm space-y-1.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">
+                                    {{ $layer['badge'] }}
+                                </span>
+                                <span class="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400 tabular-nums">L-0{{ $layer['number'] }}</span>
+                            </div>
+                            <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $layer['title']['id'] }}</div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">{{ $layer['desc']['id'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- 10 Ultimate Perfection Pillars Matrix -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm">
+                    <div class="text-xs font-mono font-black uppercase text-zinc-950 dark:text-zinc-100 mb-3">
+                        Peta Kesempurnaan 10 Pilar Ultimate Blueprint neriahpro.com
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                        @foreach($tenPillars as $tp)
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                                <div class="font-mono text-[11px] font-black text-emerald-900 dark:text-emerald-300 tabular-nums">{{ $tp['num'] }} // {{ $tp['title'] }}</div>
+                                <div class="text-[11px] text-zinc-700 dark:text-zinc-300 mt-1 leading-snug">{{ $tp['detail'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @elseif($this->activeTab === 'lab')
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <!-- Left Card: Killer #4 Brownfield SQL / Migration Importer -->
                 <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">

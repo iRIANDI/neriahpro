@@ -155,6 +155,12 @@ class AuditLog extends Model
     {
         $haystack = strtolower($action . ' ' . ($modelClass ?? '') . ' ' . ($description ?? ''));
 
+        if (str_contains($haystack, 'blueprint_doctor') || str_contains($haystack, 'doctor_diagnos')) {
+            return 'blueprint_doctor';
+        }
+        if (str_contains($haystack, 'day2_ops') || str_contains($haystack, 'thermal_print') || str_contains($haystack, 'staged_import')) {
+            return 'day2_ops';
+        }
         if (str_contains($haystack, 'brownfield')) {
             return 'brownfield_import';
         }

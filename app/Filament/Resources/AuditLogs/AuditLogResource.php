@@ -118,8 +118,8 @@ class AuditLogResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => strtoupper($state ?: 'system'))
                     ->color(fn (?string $state): string => match ($state) {
-                        'project_os', 'cli_bootstrap' => 'success',
-                        'ai_agent' => 'info',
+                        'project_os', 'cli_bootstrap', 'day2_ops' => 'success',
+                        'ai_agent', 'blueprint_doctor' => 'info',
                         'brownfield_import', 'slop_audit' => 'warning',
                         'security', 'rbac' => 'danger',
                         'billing' => 'primary',
@@ -130,7 +130,7 @@ class AuditLogResource extends Resource
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'created', 'create', 'cli_bootstrap_pulled' => 'success',
-                        'updated', 'update', 'blueprint_slop_scanned', 'brownfield_schema_audited' => 'info',
+                        'updated', 'update', 'blueprint_slop_scanned', 'brownfield_schema_audited', 'blueprint_doctor_diagnosed' => 'info',
                         'deleted', 'force_deleted', 'rbac_tool_denied' => 'danger',
                         'login' => 'primary',
                         default => 'gray',
@@ -167,6 +167,8 @@ class AuditLogResource extends Resource
                     ->label('Kategori Domain')
                     ->options([
                         'project_os' => 'Project OS & Blueprint',
+                        'blueprint_doctor' => 'Blueprint Doctor Pre-Flight',
+                        'day2_ops' => 'Day-2 Ops, Print & Staged Import',
                         'ai_agent' => 'AI Copilot & Native Tools',
                         'brownfield_import' => 'Brownfield SQL Importer',
                         'slop_audit' => 'Slop & Drift Scanner',

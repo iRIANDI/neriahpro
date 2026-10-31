@@ -197,7 +197,7 @@
                         Autonomous AI Copilot Command Hub
                     </h2>
                     <p class="mt-2 text-xs md:text-sm text-zinc-300 max-w-2xl leading-relaxed">
-                        Pusat orkestrasi kecerdasan buatan Neriah Pro dengan Tri-Hybrid AI (RAG Dense+Sparse RRF, CAG Live Telemetry O(1), KAG Deterministic Rule Graph) serta <strong>16 Native Tools</strong> tervalidasi RBAC &amp; SHA-256 Audit Log untuk 12 Sectoral UI/UX Archetypes, Phased Prompt Sequencer, Brownfield Importer, dan Slop Scanner.
+                        Pusat orkestrasi kecerdasan buatan Neriah Pro dengan Tri-Hybrid AI (RAG Dense+Sparse RRF, CAG Live Telemetry O(1), KAG Deterministic Rule Graph) serta <strong>18 Native Tools</strong> tervalidasi RBAC &amp; SHA-256 Audit Log untuk 12 Sectoral UI/UX Archetypes, 8 Layer Day-2 Production, Interactive Blueprint Doctor, Phased Prompt Sequencer, Brownfield Importer, dan Slop Scanner.
                     </p>
                 </div>
 
@@ -205,7 +205,7 @@
                     <button type="button"
                             wire:click="triggerSyncKnowledge"
                             class="px-4 py-2.5 bg-zinc-800 text-zinc-100 hover:bg-zinc-700 border border-zinc-700 font-mono text-xs font-bold rounded-xs transition-all cursor-pointer">
-                        🔄 Sinkronkan Full RAG v2.5
+                        🔄 Sinkronkan Full RAG v3.0
                     </button>
                     <button type="button"
                             x-on:click="$dispatch('open-ai-copilot')"
@@ -226,7 +226,7 @@
 
                 <div class="ai-metric-card">
                     <div class="text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-400">Project OS Blueprints &amp; Tools</div>
-                    <div class="text-2xl font-black font-mono tabular-nums text-zinc-950 dark:text-zinc-100 mt-1">{{ number_format($totalBlueprints, 0, ',', '.') }} <span class="text-xs font-bold text-emerald-800 dark:text-emerald-400">// 16 Native Tools</span></div>
+                    <div class="text-2xl font-black font-mono tabular-nums text-zinc-950 dark:text-zinc-100 mt-1">{{ number_format($totalBlueprints, 0, ',', '.') }} <span class="text-xs font-bold text-emerald-800 dark:text-emerald-400">// 18 Native Tools</span></div>
                     <div class="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">Strict ULID + RBAC Guard + SHA-256 Audit</div>
                 </div>
 

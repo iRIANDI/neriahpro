@@ -66,7 +66,9 @@ class SmartGuideRetentionPage extends Page
             ],
             'sectorsCatalog' => \App\Support\ProjectOsMatrixCatalog::sectors(),
             'killerFeatures' => \App\Support\PosSectorUiArchetypeCatalog::killerFeaturesSummary(),
-            'stackPresetsCount' => count(\App\Support\PosStackPresetCatalog::presets()),
+            'finalEightLayers' => \App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary(),
+            'tenPerfectionPillars' => \App\Support\PosDayTwoProductionCatalog::tenPerfectionPillars(),
+            'stackPresetsCount' => count(\App\Support\PosStackPresetCatalog::stackPresets()),
             'nativeToolsCount' => count(\App\Services\Ai\GeminiToolRegistry::getDeclarations()),
         ];
     }

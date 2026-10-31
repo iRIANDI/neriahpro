@@ -1208,6 +1208,14 @@ class BlueprintController extends Controller
                 \App\Services\BlueprintSlopScannerService::generateVerifyBlueprintBashScript($blueprint->nama_bisnis ?: 'Enterprise App'),
                 'verify-blueprint.sh',
             ],
+            'print-spec' => [
+                \App\Services\ProjectOsBlueprintCompilerService::renderPrintSpecMarkdown($univSchema),
+                'PRINT_THERMAL_AND_A4_CONTRACT.md',
+            ],
+            'day2-ops' => [
+                \App\Services\ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($univSchema),
+                'DAY2_OPERATIONS_AND_SECURITY.md',
+            ],
             'claude' => [
                 \App\Services\PrdGeneratorService::toCursorrules($blueprint, $prd),
                 'CLAUDE.md',
@@ -2039,8 +2047,13 @@ class BlueprintController extends Controller
             '.agents/UI_UX_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
             '.agents/ENGINEERING_RULES.md' => \App\Services\ProjectOsBlueprintCompilerService::renderEngineeringRulesMarkdown(),
             '.agents/AGENT_HARNESS_ECC.md' => \App\Services\ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
+            '.agents/PRINT_THERMAL_AND_A4_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderPrintSpecMarkdown($schema),
+            '.agents/DAY2_OPERATIONS_AND_SECURITY.md' => \App\Services\ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($schema),
             '.agents/BLUEPRINT_SCHEMA.json' => (string) json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             '.agents/graphify/graph.json' => \App\Services\ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
+            'app/Actions/Tenancy/InitializeNewTenantAction.php' => \App\Services\ScaffoldGeneratorService::generateInitializeNewTenantAction($schema),
+            'resources/views/prints/thermal-and-official-a4.blade.php' => \App\Services\ScaffoldGeneratorService::generateThermalAndOfficialPrintView($schema),
+            'config/project_os_day2_ops.php' => \App\Services\ScaffoldGeneratorService::generateDayTwoOpsConfig($schema),
             'database/seeders/RealisticSectorSeeder.php' => \App\Services\ScaffoldGeneratorService::generateRealisticSectorSeeder($schema),
             'verify-blueprint.sh' => \App\Services\BlueprintSlopScannerService::generateVerifyBlueprintBashScript($appName),
         ];
@@ -2058,7 +2071,7 @@ class BlueprintController extends Controller
         $lines = [
             '#!/usr/bin/env bash',
             '# ==============================================================================',
-            "# Neriah Pro Project OS v2.5 — One-Command CLI Bootstrapper",
+            "# Neriah Pro Project OS v3.0 — One-Command CLI Bootstrapper",
             "# Target Project : {$safeAppBanner}",
             "# Sector / UI    : {$sectorCode} ({$primaryUi})",
             "# Stack Adapter  : {$stackCode}",
@@ -2074,11 +2087,11 @@ class BlueprintController extends Controller
             '}',
             '',
             'echo "=================================================================="',
-            "echo \" [Project OS v2.5] Bootstrapping Blueprint: {$safeAppBanner}\"",
+            "echo \" [Project OS v3.0] Bootstrapping Blueprint: {$safeAppBanner}\"",
             "echo \" [Sector UI] {$sectorCode} -> {$primaryUi}\"",
             "echo \" [Stack]     {$stackCode}\"",
             'echo "=================================================================="',
-            'mkdir -p .agents/graphify .agents/prompts database/seeders',
+            'mkdir -p .agents/graphify .agents/prompts app/Actions/Tenancy resources/views/prints config database/seeders',
             '',
         ];
 
@@ -2094,7 +2107,7 @@ class BlueprintController extends Controller
         }
 
         $lines[] = 'echo "=================================================================="';
-        $lines[] = 'echo " [SUCCESS] Project OS v2.5 Workspace Initialized!"';
+        $lines[] = 'echo " [SUCCESS] Project OS v3.0 Workspace Initialized!"';
         $lines[] = 'echo " Next Step 1: Buka AI Agent (Claude Code / Cursor / Antigravity)"';
         $lines[] = 'echo " Next Step 2: Jalankan secara berurutan .agents/prompts/01-foundation.md s/d 06-deployment.md"';
         $lines[] = 'echo " Next Step 3: Verifikasi anti-slop kapan saja dengan ./verify-blueprint.sh"';
@@ -2116,7 +2129,7 @@ class BlueprintController extends Controller
 
         return response(implode("\n", $lines) . "\n", 200, [
             'Content-Type' => 'text/x-shellscript; charset=UTF-8',
-            'X-Project-OS-Version' => '2.5.0',
+            'X-Project-OS-Version' => '3.0.0',
         ]);
     }
 
@@ -2150,5 +2163,39 @@ class BlueprintController extends Controller
         $report = $scanner->auditBlueprint($blueprint, true);
 
         return response()->json($report);
+    }
+
+    /**
+     * Layer 8: Interactive Pre-Flight Blueprint Doctor API (before or during blueprint creation).
+     */
+    public function blueprintDoctor(Request $request, \App\Services\BlueprintDoctorService $doctor): JsonResponse
+    {
+        $validated = $request->validate([
+            'sector_code' => 'nullable|string|max:120',
+            'primitive_codes' => 'nullable|array',
+            'primitive_codes.*' => 'string|max:120',
+            'stack_preset_code' => 'nullable|string|max:120',
+            'workflow_text' => 'nullable|string|max:20000',
+            'timeline_days' => 'nullable|integer|min:1|max:730',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'doctor' => $doctor->diagnose($validated, true),
+        ]);
+    }
+
+    /**
+     * Layer 8: Blueprint Doctor Live Audit on a persisted VisionBlueprint.
+     */
+    public function blueprintSlugDoctor(Request $request, string $slug, \App\Services\BlueprintDoctorService $doctor): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        return response()->json([
+            'success' => true,
+            'doctor' => $doctor->diagnoseBlueprint($blueprint, true),
+        ]);
     }
 }

@@ -373,15 +373,15 @@
             <!-- Pillar 6 -->
             <div class="poc-pillar-card" style="border-left: 3px solid #dc2626;">
                 <div class="poc-pillar-tag" style="color: #dc2626;">
-                    {{ $isEn ? '06 // ACTIVE CYBER DEFENSE' : '06 // PERTAHANAN SIBER AKTIF' }}
+                    {{ $isEn ? '06 // ACTIVE CYBER DEFENSE & DAY-2 OPS v3.0' : '06 // PERTAHANAN SIBER & 8 LAYER DAY-2 OPS v3.0' }}
                 </div>
                 <div class="poc-pillar-title">
-                    {{ $isEn ? 'AI-Shield & Secure Ingestion Pipeline' : 'AI-Shield & Jalur Ingesti Aman' }}
+                    {{ $isEn ? 'AI-Shield, Private Signed URLs, Snapshot & Blueprint Doctor' : 'AI-Shield, Private Signed URL, Snapshot & Blueprint Doctor' }}
                 </div>
                 <div class="poc-pillar-desc">
                     {{ $isEn 
-                        ? 'Active internal firewall preventing server-level RCE, dataset loader vulnerability mitigations (Exploit Gym / Hugging Face incident vectors), in-memory finfo_buffer file upload isolation, and automatic attacker IP quarantine.' 
-                        : 'Firewall internal aktif pencegah RCE tingkat server, mitigasi celah dataset loader (vektor insiden Exploit Gym / Hugging Face), isolasi unggahan berkas via finfo_buffer in-memory, dan karantina otomatis IP penyerang.' }}
+                        ? 'Active RCE firewall, Multi-Tenant anti-IDOR scope, Private Disk 5-min Signed URLs, Historical *_snapshot immutability, 58/80mm Thermal & A4 QR Print contracts, 4-Lane Redis Queue, and Interactive Blueprint Doctor.' 
+                        : 'Firewall anti-RCE, Global Scope anti-IDOR multi-tenant, Private Disk Signed URL 5 menit, pembekuan harga historis (*_snapshot), cetak Thermal 58/80mm & A4 QR SVG lokal, 4 jalur Queue Redis, serta Interactive Blueprint Doctor.' }}
                 </div>
             </div>
         </div>

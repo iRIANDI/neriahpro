@@ -29,7 +29,7 @@ class ProjectOsMatrixPage extends Page
 
     protected string $view = 'filament.pages.project-os-matrix-page';
 
-    public string $activeTab = 'sectors'; // sectors | primitives | stacks | rules | projects | lab
+    public string $activeTab = 'sectors'; // sectors | primitives | stacks | rules | projects | day2 | lab
     public string $viewMode = 'grid'; // grid | list
     public string $density = 'normal'; // compact | normal | relaxed
     public string $search = '';
@@ -38,12 +38,18 @@ class ProjectOsMatrixPage extends Page
     public string $sortDirection = 'asc'; // asc | desc | none
     public array $selectedIds = [];
 
-    // Killer #4 & #5 Interactive Lab State
+    // Killer #4, #5 & Layer 8 Blueprint Doctor Interactive Lab State
     public string $brownfieldSql = '';
     public string $brownfieldHint = '';
     public array $brownfieldResult = [];
     public string $slopSnippet = '';
     public array $slopResult = [];
+    public string $doctorSectorCode = 'SECTOR_03_HEALTHCARE_CLINICAL';
+    public string $doctorStackCode = 'STACK_M1_LARAVEL_MONOLITH';
+    public string $doctorWorkflow = 'Klinik poli umum, rekam medis dokter, dan penebusan resep obat apotek FEFO dengan jurnal kas.';
+    public int $doctorTimelineDays = 30;
+    public array $doctorSelectedPrimitives = ['PRIMITIVE_CLINICAL_EMR_AUDIT'];
+    public array $doctorResult = [];
 
     public function getMaxContentWidth(): Width | string | null
     {
@@ -79,12 +85,12 @@ class ProjectOsMatrixPage extends Page
 
     public function getSubheading(): string | Htmlable | null
     {
-        return '12 Sectoral Industrial UI/UX Archetypes & Realistic Seeders, 12 Core Primitives (7 Dimensi Zero-Assumption), 9 Stack Adapters (M1–S2), serta Laboratorium Audit Brownfield SQL & Slop Scanner.';
+        return 'Project OS v3.0: 12 Sectoral UI/UX Archetypes, 12 Core Primitives, 9 Stack Adapters (M1–S2), 8 Layer Day-2 Production (Thermal/A4 Print, Snapshot, Staged CSV, 4-Lane Queue), & Interactive Blueprint Doctor.';
     }
 
     public function setTab(string $tab): void
     {
-        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'lab'], true)) {
+        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lab'], true)) {
             $this->activeTab = $tab;
             $this->cursor = null;
             $this->selectedIds = [];
@@ -642,6 +648,41 @@ SQL;
             ->title('Slop Scanner Selesai — Skor ' . ($this->slopResult['compliance_score'] ?? 100) . '/100')
             ->body(($this->slopResult['violations_count'] ?? 0) . ' pelanggaran terdeteksi.')
             ->send();
+    }
+
+    public function runBlueprintDoctorLab(): void
+    {
+        $user = auth()->user();
+        if ($user && ! $user->hasAnyRole(['super_admin', 'developer', 'investor']) && ! $user->can('run_blueprint_doctor')) {
+            Notification::make()->danger()->title('Akses Ditolak RBAC')->body('Akun Anda tidak memiliki izin run_blueprint_doctor.')->send();
+            return;
+        }
+
+        $this->doctorResult = app(\App\Services\BlueprintDoctorService::class)->diagnose([
+            'sector_code' => $this->doctorSectorCode,
+            'primitive_codes' => $this->doctorSelectedPrimitives,
+            'stack_preset_code' => $this->doctorStackCode,
+            'workflow_text' => $this->doctorWorkflow,
+            'timeline_days' => max(7, $this->doctorTimelineDays),
+        ], true);
+
+        Notification::make()
+            ->success()
+            ->title('Blueprint Doctor Selesai — Skor ' . ($this->doctorResult['readiness_score'] ?? 100) . '/100')
+            ->body($this->doctorResult['summary_banner']['id'] ?? 'Audit kesiapan selesai.')
+            ->send();
+    }
+
+    public function applyBlueprintDoctorAutoFix(): void
+    {
+        $fix = $this->doctorResult['one_click_auto_fix'] ?? [];
+        if (! empty($fix['merged_primitive_codes'])) {
+            $this->doctorSelectedPrimitives = array_values(array_unique($fix['merged_primitive_codes']));
+        }
+        if (! empty($fix['recommended_stack_preset_code'])) {
+            $this->doctorStackCode = (string) $fix['recommended_stack_preset_code'];
+        }
+        $this->runBlueprintDoctorLab();
     }
 }
 

@@ -309,6 +309,9 @@
             <a href="#sec-killer-moat" @click.prevent="scrollTo('sec-killer-moat')" :class="activeSection === 'sec-killer-moat' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 09. <span x-text="t[lang].nav_killer_moat"></span>
             </a>
+            <a href="#sec-day2-ultimate" @click.prevent="scrollTo('sec-day2-ultimate')" :class="activeSection === 'sec-day2-ultimate' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                10. <span x-text="t[lang].nav_day2_ops"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -916,6 +919,10 @@
                 <div style="font-size: 12px; font-weight: 700; color: #f59e0b; margin-bottom: 6px;" x-text="t[lang].sec6_q7"></div>
                 <div style="font-size: 12px; color: var(--sg-quote-text); font-style: italic; background: var(--sg-quote-bg); padding: 12px; border: 1px solid var(--sg-quote-border); border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a7"></div>
             </div>
+            <div class="sg-subcard">
+                <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 6px;" x-text="t[lang].sec6_q8"></div>
+                <div style="font-size: 12px; color: var(--sg-quote-text); font-style: italic; background: var(--sg-quote-bg); padding: 12px; border: 1px solid var(--sg-quote-border); border-radius: 2px; line-height: 1.5;" x-text="t[lang].sec6_a8"></div>
+            </div>
         </div>
     </div>
 
@@ -1050,8 +1057,14 @@
                         {{ $uiArch['headline']['id'] ?? '' }}
                     </div>
                     @if(!empty($uiArch['keyboard_shortcuts']))
+                        @php
+                            $formattedKeys = array_map(
+                                fn ($ks) => is_array($ks) ? (($ks['key'] ?? '') . ' (' . ($ks['action'] ?? '') . ')') : (string) $ks,
+                                array_slice($uiArch['keyboard_shortcuts'], 0, 3)
+                            );
+                        @endphp
                         <div style="font-family: ui-monospace, monospace; font-size: 10px; color: var(--sg-text-muted); padding-top: 6px; border-top: 1px dashed var(--sg-border);">
-                            ⌨️ Shortcuts: {{ implode(' • ', array_slice($uiArch['keyboard_shortcuts'], 0, 3)) }}
+                            ⌨️ Shortcuts: {{ implode(' • ', $formattedKeys) }}
                         </div>
                     @endif
                 </div>
@@ -1090,6 +1103,51 @@
         </div>
     </div>
 
+    <!-- 10. Section Project OS v3.0 — The Final 8 Day-2 Production Layers & 10 Ultimate Perfection Pillars -->
+    <div id="sec-day2-ultimate" class="sg-card" x-show="matchesSearch('day-2 operations thermal 58mm 80mm escpos a4 pdf qr initialize new tenant snapshot staged csv import queue lanes private disk signed url notification matrix blueprint doctor 10 pillars v3.0')">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #10b981; text-transform: uppercase; font-weight: 700;">
+                    10 // DAY-2 OPERATIONS &amp; 100% ULTIMATE PERFECTION (PROJECT OS v3.0)
+                </span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec10_title"></h3>
+            </div>
+            <span class="sg-badge-confidential">ULTIMATE BLUEPRINT v3.0</span>
+        </div>
+
+        <p style="font-size: 13px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;" x-text="t[lang].sec10_desc"></p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-bottom: 20px;">
+            @foreach(($finalEightLayers ?? []) as $dLayer)
+                <div class="sg-subcard" style="border-left: 3px solid #10b981;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <strong style="font-size: 12px; color: var(--sg-text-title);">{{ $dLayer['title']['id'] ?? $dLayer['code'] }}</strong>
+                        <span style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 700; padding: 2px 6px; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35);">
+                            {{ $dLayer['badge'] ?? 'DAY-2' }}
+                        </span>
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--sg-text-muted); line-height: 1.55;">
+                        {{ $dLayer['desc']['id'] ?? '' }}
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div style="padding: 14px; background: var(--sg-subcard-bg); border: 1px solid var(--sg-border); border-radius: 3px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #0284c7; text-transform: uppercase; margin-bottom: 10px;">
+                PETA KESEMPURNAAN 10 PILAR ULTIMATE BLUEPRINT NERIAHPRO.COM
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; font-size: 11px;">
+                @foreach(($tenPerfectionPillars ?? []) as $tp)
+                    <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                        <strong style="font-family: ui-monospace, monospace; color: #10b981;">{{ $tp['num'] }} // {{ $tp['title'] }}</strong>
+                        <div style="color: var(--sg-text-muted); margin-top: 3px; line-height: 1.45;">{{ $tp['detail'] }}</div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1111,6 +1169,7 @@ function smartGuideApp() {
                 nav_factory_pillars: '10 Pilar OS',
                 nav_sectoral_ui: '12 Sektor UI/UX',
                 nav_killer_moat: '6 Killer Moat',
+                nav_day2_ops: '8 Layer Day-2 Ops',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -1203,7 +1262,11 @@ function smartGuideApp() {
                 sec8_title: 'Klasifikasi Ergonomi UI/UX 12 Sektor Fungsional & Realistic Domain Seeders',
                 sec8_desc: 'AI coding agent tidak boleh membuat sekadar tabel CRUD generik untuk semua jenis bisnis! Kasir ritel butuh POS 100vh bebas mouse, dokter butuh Clinical 3-Pane Cockpit tanpa tumpukan modal, dan akuntan butuh Spreadsheet Ledger dengan kunci keseimbangan Debit = Kredit.',
                 sec9_title: '6 Mesin "Killer" Zero-to-Production Orchestration (Alasan Developer Ketagihan)',
-                sec9_desc: 'Enam kapabilitas orkestrasi eksklusif yang menjembatani blueprint arsitektur langsung ke repositori kode produksi tanpa halusinasi dan tanpa context overflow:'
+                sec9_desc: 'Enam kapabilitas orkestrasi eksklusif yang menjembatani blueprint arsitektur langsung ke repositori kode produksi tanpa halusinasi dan tanpa context overflow:',
+                sec6_q8: 'Q: "Bagaimana jika kasir butuh cetak struk thermal 58/80mm, impor ribuan SKU Excel tanpa timeout, dan harga berubah tahun depan?"',
+                sec6_a8: '"Project OS v3.0 sudah mengunci 8 Layer Day-2 Operations Kak! Meliputi CSS & ESC/POS Thermal 58/80mm + A4 PDF ber-QR SVG lokal, kolom Historical Snapshot (*_snapshot) agar kenaikan harga/PPN tidak pernah merusak laporan historis, Two-Step Staged CSV Importer anti-504 timeout, 4 jalur antrean Redis prioritas, serta Interactive Blueprint Doctor Pre-Flight Validator!"',
+                sec10_title: '8 Lapisan Produksi Day-2 (Operasional Hari Kedua) & 10 Pilar Kesempurnaan Ultimate',
+                sec10_desc: 'Menutup 100% celah operasional dunia nyata setelah Go-Live: dari cetak struk kasir thermal 58/80mm, onboarding tenant otomatis bebas layar kosong, pembekuan harga historis (*_snapshot), impor massal CSV bertahap, pemisahan 4 antrean Redis, hingga Blueprint Doctor.'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -1215,6 +1278,7 @@ function smartGuideApp() {
                 nav_factory_pillars: '10 OS Pillars',
                 nav_sectoral_ui: '12 Sector UI/UX',
                 nav_killer_moat: '6 Killer Moat',
+                nav_day2_ops: '8 Day-2 Ops Layers',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -1307,7 +1371,11 @@ function smartGuideApp() {
                 sec8_title: '12 Functional Sectoral Industrial UI/UX Archetypes & Realistic Seeders',
                 sec8_desc: 'AI coding agents are strictly forbidden from building generic CRUD tables for primary operational screens. Retail cashiers get a mouse-free 100vh Split POS, doctors get a 3-Pane Clinical Cockpit, and accountants get a balanced Spreadsheet Ledger.',
                 sec9_title: '6 Killer Zero-to-Production Orchestration Engines (Developer Retention Moat)',
-                sec9_desc: 'Six proprietary orchestration engines that bridge architectural blueprints directly into zero-slop production repositories without context overflow:'
+                sec9_desc: 'Six proprietary orchestration engines that bridge architectural blueprints directly into zero-slop production repositories without context overflow:',
+                sec6_q8: 'Q: "What about 58/80mm thermal receipts, importing 5,000+ Excel SKUs without 504 timeouts, and historical price immutability?"',
+                sec6_a8: '"Project OS v3.0 bakes in all 8 Day-2 Production Layers: ESC/POS 58/80mm thermal + page-break proof A4 PDFs with local SVG QR codes, frozen *_snapshot columns on every transaction line, Two-Step Staged CSV Importer on queue:low-batch, 4 segregated Redis queue lanes, and the Interactive Blueprint Doctor!"',
+                sec10_title: 'The Final 8 Day-2 Production Layers & 10 Ultimate Perfection Pillars',
+                sec10_desc: 'Eliminates 100% of Day-2 post-launch blind spots: thermal 58/80mm & A4 print contracts, atomic tenant zero-state provisioning, historical *_snapshot immutability, staged bulk CSV migration, 4-lane Redis queues, private disk Signed URLs, and Blueprint Doctor.'
             }
         },
 
@@ -1335,7 +1403,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

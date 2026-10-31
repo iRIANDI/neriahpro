@@ -10,11 +10,31 @@ use App\Services\ScaffoldGeneratorService;
 use Database\Seeders\PosStackPresetSeeder;
 use Database\Seeders\ProjectOsMatrixSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class ProjectOsStackPresetsAndSevenDimensionsTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::fake([
+            '*' => Http::response([
+                'candidates' => [
+                    [
+                        'content' => [
+                            'parts' => [
+                                ['text' => '{}'],
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+    }
 
     public function test_seeder_populates_nine_curated_stack_presets_and_enriches_all_twelve_primitives_with_seven_dimensions(): void
     {

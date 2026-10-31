@@ -37,6 +37,9 @@ class SuperAdminSeeder extends Seeder
         $brownfieldImportPerm = Permission::firstOrCreate(['name' => 'execute_brownfield_importer', 'guard_name' => 'web']);
         $slopScannerPerm = Permission::firstOrCreate(['name' => 'run_slop_drift_scanner', 'guard_name' => 'web']);
         $cliBootstrapPerm = Permission::firstOrCreate(['name' => 'export_cli_bootstrapper', 'guard_name' => 'web']);
+        $blueprintDoctorPerm = Permission::firstOrCreate(['name' => 'run_blueprint_doctor', 'guard_name' => 'web']);
+        $manageDay2OpsPerm = Permission::firstOrCreate(['name' => 'manage_day2_ops_contracts', 'guard_name' => 'web']);
+        $exportPrintOpsPerm = Permission::firstOrCreate(['name' => 'export_print_and_ops_specs', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
@@ -52,6 +55,9 @@ class SuperAdminSeeder extends Seeder
             $brownfieldImportPerm,
             $slopScannerPerm,
             $cliBootstrapPerm,
+            $blueprintDoctorPerm,
+            $manageDay2OpsPerm,
+            $exportPrintOpsPerm,
         ]);
 
         $developerRole->givePermissionTo([
@@ -62,6 +68,9 @@ class SuperAdminSeeder extends Seeder
             $brownfieldImportPerm,
             $slopScannerPerm,
             $cliBootstrapPerm,
+            $blueprintDoctorPerm,
+            $manageDay2OpsPerm,
+            $exportPrintOpsPerm,
         ]);
 
         // Grant Due Diligence Read-Only permissions to Investor & Superadmin
@@ -70,11 +79,12 @@ class SuperAdminSeeder extends Seeder
             $viewMatrixPerm,
             $aiCopilotPerm,
             $auditLogPerm,
+            $blueprintDoctorPerm,
         ]);
 
-        // Retail & Partner Clients can export CLI bootstrapper & phased prompts for their own licensed blueprints
-        $clientRetailRole->givePermissionTo([$cliBootstrapPerm]);
-        $clientPartnerRole->givePermissionTo([$cliBootstrapPerm, $brownfieldImportPerm]);
+        // Retail & Partner Clients can export CLI bootstrapper, print/ops specs & run Blueprint Doctor for their own licensed blueprints
+        $clientRetailRole->givePermissionTo([$cliBootstrapPerm, $blueprintDoctorPerm, $exportPrintOpsPerm]);
+        $clientPartnerRole->givePermissionTo([$cliBootstrapPerm, $brownfieldImportPerm, $blueprintDoctorPerm, $exportPrintOpsPerm]);
 
         // 1. Primary Superadmin (Founder & Chief Architect - Yoseph Iriandi Tambunan)
         $admin = User::updateOrCreate(

@@ -260,6 +260,48 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+            [
+                'name' => 'run_blueprint_doctor',
+                'description' => 'Menjalankan Layer 8 Interactive Blueprint Doctor (Pre-Flight Conflict Resolver & Readiness Validator) pada sebuah Blueprint yang sudah ada atau konfigurasi sektor/modul untuk mendeteksi modul primitif yang terlewat (mis. Resep Apotek tanpa Inventory FEFO, pembayaran tanpa Double-Entry Ledger, Microservices pada jadwal mepet) beserta rekomendasi Auto-Fix 1-klik.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID ID atau slug blueprint yang ingin diperiksa oleh Blueprint Doctor (opsional jika menggunakan sector_code).',
+                        ],
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor bisnis (misal: SECTOR_03_HEALTHCARE_CLINICAL, SECTOR_01_COMMERCE_OMNICHANNEL).',
+                        ],
+                        'stack_preset_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode stack preset (misal: STACK_M1_LARAVEL_MONOLITH, STACK_S1_POLYGLOT_GO_LARAVEL_TEMPORAL).',
+                        ],
+                        'workflow_text' => [
+                            'type' => 'STRING',
+                            'description' => 'Deskripsi alur kerja bisnis untuk mendeteksi kebutuhan lintas modul.',
+                        ],
+                        'timeline_days' => [
+                            'type' => 'INTEGER',
+                            'description' => 'Target durasi pengerjaan proyek dalam hari (opsional, default 45).',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'get_day2_production_contracts',
+                'description' => 'Mengambil spesifikasi lengkap 8 Layer Day-2 Production (Thermal 58/80mm ESC/POS & Official A4 QR Print, InitializeNewTenantAction Zero-State, Historical *_snapshot Immutability, Staged Bulk CSV Importer, 4-Lane Redis Queue & Cron Registry, Defense-in-Depth Private Disk Signed URLs, & Omnichannel Notification Matrix) untuk sektor tertentu.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor bisnis (misal: SECTOR_01_COMMERCE_OMNICHANNEL s/d SECTOR_12_GOVTECH_NONPROFIT) atau kata kunci industri.',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

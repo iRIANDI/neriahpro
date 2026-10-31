@@ -155,6 +155,18 @@ class AuditLog extends Model
     {
         $haystack = strtolower($action . ' ' . ($modelClass ?? '') . ' ' . ($description ?? ''));
 
+        if (str_contains($haystack, 'project_isolation') || str_contains($haystack, 'isolation_token') || str_contains($haystack, 'hermetic_isolation') || str_contains($haystack, 'clean_state')) {
+            return 'project_isolation';
+        }
+        if (str_contains($haystack, 'symbol_manifest')) {
+            return 'symbol_manifest';
+        }
+        if (str_contains($haystack, 'dag_chunker') || str_contains($haystack, 'topological_chunk') || str_contains($haystack, 'kahn')) {
+            return 'dag_chunker';
+        }
+        if (str_contains($haystack, 'enterprise_glue') || str_contains($haystack, 'enterprise_menu') || str_contains($haystack, 'fiscal_period') || str_contains($haystack, 'maker_checker')) {
+            return 'enterprise_glue';
+        }
         if (str_contains($haystack, 'bast_issued') || str_contains($haystack, 'uat_bast') || str_contains($haystack, 'uat_scenario') || str_contains($haystack, 'sign_bast') || str_contains($haystack, 'berita acara')) {
             return 'uat_bast';
         }

@@ -872,14 +872,26 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
   const fileInputRef = useRef(null);
 
-  // Auto-Save Telemetry
+  // Auto-Save Telemetry & Hermetic Workspace Isolation (v6.0 Zero Cross-Project Bleed)
   const [autoSaveStatus, setAutoSaveStatus] = useState('idle');
   const [lastSavedTime, setLastSavedTime] = useState(() => {
     const tz = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     return `${tz} WIB`;
   });
   const autoSaveDebounceRef = useRef(null);
-  const draftIdRef = useRef(initialData._draft_id || null);
+  const isExplicitSlugEdit = Boolean(initialData?._meta?.is_editing_slug);
+  const isFreshWorkspace = Boolean(initialData?._meta?.is_fresh_workspace) || (!isExplicitSlugEdit && !initialData?._draft_id && !initialData?.namaBisnis);
+  const draftIdRef = useRef(
+    initialData?._meta?.draft_token
+      || initialData?._draft_id
+      || ('draft_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10))
+  );
+  const getScopedStorageKey = useCallback(() => {
+    if (isExplicitSlugEdit && initialData?._meta?.is_editing_slug) {
+      return `neriah_bp_slug_${initialData._meta.is_editing_slug}`;
+    }
+    return `neriah_bp_${draftIdRef.current || 'fresh'}`;
+  }, [isExplicitSlugEdit, initialData]);
 
   // Full 25 Fields Form Data (Single Source of Truth)
   const [formData, setFormData] = useState({
@@ -934,6 +946,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       }
     })(),
     selectedPrimitives: Array.isArray(initialData.selectedPrimitives) ? initialData.selectedPrimitives : [],
+    selectedMenus: Array.isArray(initialData.selectedMenus) ? initialData.selectedMenus : [],
     stackPreset: initialData.stackPreset || (() => {
       try {
         return new URLSearchParams(window.location.search).get('stack') || 'STACK_M1_LARAVEL_MONOLITH';
@@ -943,7 +956,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     })(),
   });
 
-  // 12-Sector, 12 Core Primitives, 9 Curated Tech Stack Presets & 8 Day-2 Layers Matrix Catalog (v3.0)
+  // 12-Sector, 12 Core Primitives, 9 Curated Tech Stack Presets, 8 Day-2 Layers & 5 Guarantee Engines (v6.0)
   const [matrixCatalog, setMatrixCatalog] = useState({
     sectors: [],
     primitives: [],
@@ -953,12 +966,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     final_eight_layers: [],
     ten_perfection_pillars: [],
     five_lifecycle_features: [],
+    five_deterministic_guarantees: [],
+    five_enterprise_glue_primitives: [],
     stack_server_sizing: {},
     slop_diff_pairs: [],
   });
-  // Progressive Disclosure Mode: 'express' (Founder-friendly default) | 'workbench' (5-Tab Senior Architect Workbench)
+  // Progressive Disclosure Mode: 'express' (Founder-friendly default) | 'workbench' (6-Tab Senior Architect Workbench)
   const [matrixMode, setMatrixMode] = useState('express');
-  const [activeWorkbenchTab, setActiveWorkbenchTab] = useState('sectors'); // 'sectors' | 'primitives' | 'stacks' | 'brownfield' | 'doctor'
+  const [activeWorkbenchTab, setActiveWorkbenchTab] = useState('sectors'); // 'sectors' | 'primitives' | 'stacks' | 'brownfield' | 'doctor' | 'menus_glue'
   const [activeTopologyFilter, setActiveTopologyFilter] = useState('ALL');
   const [showStackMatrixTable, setShowStackMatrixTable] = useState(false);
 
@@ -1118,14 +1133,82 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const selectMatrixSector = useCallback((sectorCode) => {
     const sec = matrixCatalog.sectors.find((s) => s.code === sectorCode);
     const mandatory = sec?.mandatory_primitives || [];
+    const defaultMenuCodes = (sec?.enterprise_menu_matrix?.all_menus_flat || []).map((m) => m.code);
     setFormData((prev) => {
       const existing = Array.isArray(prev.selectedPrimitives) ? prev.selectedPrimitives : [];
       const mergedPrims = Array.from(new Set([...mandatory, ...existing]));
-      const next = { ...prev, primarySector: sectorCode, selectedPrimitives: mergedPrims };
+      const next = {
+        ...prev,
+        primarySector: sectorCode,
+        selectedPrimitives: mergedPrims,
+        selectedMenus: defaultMenuCodes,
+      };
       triggerAutoSave(next);
       return next;
     });
   }, [matrixCatalog.sectors]);
+
+  const activeEnterpriseMenuMatrix = useMemo(() => {
+    const secObj = activeMatrixSectorObj || matrixCatalog.sectors?.[0] || null;
+    return secObj?.enterprise_menu_matrix || null;
+  }, [activeMatrixSectorObj, matrixCatalog.sectors]);
+
+  const effectiveSelectedMenus = useMemo(() => {
+    const flatMenus = activeEnterpriseMenuMatrix?.all_menus_flat || [];
+    const allCodes = flatMenus.map((m) => m.code);
+    const explicit = Array.isArray(formData.selectedMenus) ? formData.selectedMenus : [];
+    if (explicit.length === 0) {
+      return allCodes;
+    }
+    const matchingCurrentSector = explicit.filter((c) => allCodes.includes(c));
+    return matchingCurrentSector.length > 0 ? matchingCurrentSector : allCodes;
+  }, [activeEnterpriseMenuMatrix, formData.selectedMenus]);
+
+  const toggleEnterpriseMenuCode = useCallback((menuCode) => {
+    setFormData((prev) => {
+      const flatMenus = activeEnterpriseMenuMatrix?.all_menus_flat || [];
+      const allCodes = flatMenus.map((m) => m.code);
+      const base = Array.isArray(prev.selectedMenus) && prev.selectedMenus.some((c) => allCodes.includes(c))
+        ? prev.selectedMenus.filter((c) => allCodes.includes(c))
+        : allCodes;
+      const nextMenus = base.includes(menuCode)
+        ? base.filter((c) => c !== menuCode)
+        : [...base, menuCode];
+      const next = { ...prev, selectedMenus: nextMenus };
+      triggerAutoSave(next);
+      return next;
+    });
+  }, [activeEnterpriseMenuMatrix]);
+
+  const injectEnterpriseMenusIntoMvp = useCallback(() => {
+    const flatMenus = activeEnterpriseMenuMatrix?.all_menus_flat || [];
+    const activeItems = flatMenus.filter((m) => effectiveSelectedMenus.includes(m.code));
+    if (activeItems.length === 0) return;
+
+    setFormData((prev) => {
+      const existing = parseNumberedList(prev.fiturWajib);
+      const existingLower = new Set(existing.map((it) => it.toLowerCase()));
+      const additions = [];
+      activeItems.forEach((m) => {
+        const line = `[${m.code}] ${m.title}`;
+        if (!existingLower.has(line.toLowerCase())) {
+          additions.push(line);
+        }
+      });
+      const mergedList = [...existing, ...additions];
+      const next = { ...prev, fiturWajib: stringifyNumberedList(mergedList) };
+      triggerAutoSave(next);
+      return next;
+    });
+
+    showLocalToast(
+      'success',
+      lang === 'en'
+        ? `${activeItems.length} L1–L4 Enterprise Sub-Menus embedded into Phase 1 MVP Features!`
+        : `${activeItems.length} Sub-Menu Enterprise L1–L4 berhasil disematkan ke Fitur Wajib MVP!`,
+      'L1–L4 MENU MATRIX V6.0'
+    );
+  }, [activeEnterpriseMenuMatrix, effectiveSelectedMenus, lang, showLocalToast]);
 
   const toggleMatrixPrimitive = useCallback((primCode) => {
     const mandatory = activeMatrixSectorObj?.mandatory_primitives || [];
@@ -2019,7 +2102,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     );
   }, [indexSections, indexSearchQuery]);
 
-  // Initial local storage hydration
+  // Initial local storage hydration (v6.0 Hermetic Workspace Isolation)
   useEffect(() => {
     // Theme setup
     const savedTheme = localStorage.getItem('neriah_theme');
@@ -2031,10 +2114,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       document.documentElement.classList.remove('dark');
     }
 
-    // LocalStorage Draft Restoration if initialData is empty
-    if (!initialData.namaBisnis) {
+    // Purge legacy un-namespaced global autosave key so old projects NEVER bleed into new projects
+    try {
+      localStorage.removeItem('neriah_blueprint_autosave');
+    } catch (e) {}
+
+    // Scoped Draft Restoration ONLY when resuming an explicit slug or explicit draft_id (never on fresh workspace)
+    if (!isFreshWorkspace && !initialData.namaBisnis) {
       try {
-        const localSaved = localStorage.getItem('neriah_blueprint_autosave');
+        const localSaved = localStorage.getItem(getScopedStorageKey());
         if (localSaved) {
           const parsed = JSON.parse(localSaved);
           if (parsed && typeof parsed === 'object' && parsed.namaBisnis) {
@@ -2044,11 +2132,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               if (d.startsWith('62')) d = d.substring(2);
               setPhoneDigits(d.replace(/^0+/, ''));
             }
-            showLocalToast('info', 'Draft spesifikasi sebelumnya berhasil dimuat otomatis.', 'PULIHKAN DRAFT');
+            showLocalToast('info', 'Draft spesifikasi eksplisit berhasil dimuat.', 'PULIHKAN DRAFT');
           }
         }
       } catch (e) {
-        console.warn('Failed to parse localStorage blueprint draft', e);
+        console.warn('Failed to parse scoped blueprint draft', e);
       }
     }
   }, []);
@@ -2066,14 +2154,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     }
   };
 
-  // Dual-Tier Auto-Save: LocalStorage (Immediate) + Server Debounce (1500ms)
+  // Dual-Tier Auto-Save: Scoped LocalStorage (Immediate) + Isolated Server Debounce (1500ms)
   const triggerAutoSave = useCallback((updatedData) => {
-    // 1. Immediate LocalStorage save
+    // 1. Immediate Scoped LocalStorage save
     try {
-      localStorage.setItem('neriah_blueprint_autosave', JSON.stringify(updatedData));
+      localStorage.setItem(getScopedStorageKey(), JSON.stringify(updatedData));
     } catch (e) {}
 
-    // 2. Debounced server save
+    // 2. Debounced server save (never mutates existing VisionBlueprint unless is_explicit_slug_edit === true)
     setAutoSaveStatus('saving');
     if (autoSaveDebounceRef.current) {
       clearTimeout(autoSaveDebounceRef.current);
@@ -2092,7 +2180,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           body: JSON.stringify({
             blueprint: updatedData,
             draft_id: draftIdRef.current,
-            slug: initialData?._meta?.is_editing_slug || initialData?.slug || null,
+            is_explicit_slug_edit: isExplicitSlugEdit,
+            slug: isExplicitSlugEdit ? (initialData?._meta?.is_editing_slug || null) : null,
           }),
         });
 
@@ -2108,7 +2197,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         setAutoSaveStatus('saved');
       }
     }, 1500);
-  }, [csrfToken]);
+  }, [csrfToken, getScopedStorageKey, isExplicitSlugEdit, initialData]);
 
   // Form Field Updater
   const updateField = (field, value) => {
@@ -2224,6 +2313,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       }
       if (Array.isArray(formData.selectedPrimitives) && formData.selectedPrimitives.length > 0) {
         formDataUpload.append('selected_primitives', JSON.stringify(formData.selectedPrimitives));
+      }
+      if (effectiveSelectedMenus.length > 0) {
+        formDataUpload.append('selected_menus', JSON.stringify(effectiveSelectedMenus));
       }
       if (formData.stackPreset) {
         formDataUpload.append('stack_preset', formData.stackPreset);
@@ -2348,8 +2440,17 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       phone: '',
       primarySector: '',
       selectedPrimitives: [],
+      selectedMenus: [],
       stackPreset: 'STACK_M1_LARAVEL_MONOLITH',
     };
+
+    try {
+      localStorage.removeItem(getScopedStorageKey());
+      localStorage.removeItem('neriah_blueprint_autosave');
+    } catch (e) {}
+
+    const freshToken = 'draft_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    draftIdRef.current = freshToken;
 
     setFormData(blankForm);
     setIdeaText('');
@@ -2357,9 +2458,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     setConvertedMarkdown('');
     setPhoneDigits('');
     setAiTelemetry(null);
+    setDoctorReport(null);
+    setBrownfieldReport(null);
+    setBrownfieldSqlText('');
     setQuickInputText('');
     setAppliedSuggestionIds(new Set());
-    draftIdRef.current = null;
     setSuccessData(null);
     setErrorMessage(null);
 
@@ -2372,6 +2475,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           'X-CSRF-TOKEN': token,
           'Accept': 'application/json',
         },
+        body: JSON.stringify({ draft_id: freshToken }),
       });
     } catch (e) {}
 
@@ -2379,7 +2483,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    showLocalToast('info', t.resetFormSuccess || (lang === 'en' ? 'Blueprint form has been reset to blank.' : 'Seluruh isi formulir blueprint berhasil dibersihkan.'), 'RESET FORM');
+    showLocalToast(
+      'success',
+      lang === 'en'
+        ? 'Clean isolated project workspace initialized! Zero remnants from prior projects.'
+        : 'Ruang kerja proyek baru bersih & terisolasi! Tidak ada data proyek lama yang tersisa.',
+      'ISOLATED WORKSPACE V6.0'
+    );
   };
 
   // Proactive Co-Pilot: Submit additional requirement via AI Flash
@@ -2615,6 +2725,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     try {
       const payload = {
         ...formData,
+        selectedMenus: effectiveSelectedMenus,
+        selected_menus: effectiveSelectedMenus,
+        isolation_token: draftIdRef.current,
         track: currentTrack,
         selected_track: currentTrack,
         phone: formData.phone,
@@ -2643,7 +2756,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           if (el) el.classList.remove('field-stroke-alert', 'field-stroke-pulsing');
         });
         setInvalidFields([]);
-        try { localStorage.removeItem('neriah_blueprint_autosave'); } catch (e) {}
+        try {
+          localStorage.removeItem(getScopedStorageKey());
+          localStorage.removeItem('neriah_blueprint_autosave');
+        } catch (e) {}
         setSuccessData(result.data);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
@@ -2756,10 +2872,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             )}
             <button
               type="button"
-              onClick={() => { setSuccessData(null); }}
-              className="px-6 py-4 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-xs uppercase tracking-wider rounded-none transition"
+              onClick={handleResetForm}
+              className="px-6 py-4 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-200 font-mono text-xs font-black uppercase tracking-wider rounded-none transition cursor-pointer"
             >
-              {t.newProjectBtn}
+              + {t.newProjectBtn}
             </button>
           </div>
         </div>
@@ -3496,18 +3612,26 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         </AnimatePresence>
       </div>
       
-      {/* SATU PINTU 5-STEP END-TO-END GUIDED CLIENT WIZARD BAR (RETAIL & MITRA V5.0) */}
+      {/* SATU PINTU 5-STEP END-TO-END GUIDED CLIENT WIZARD BAR (RETAIL & MITRA V6.0) */}
       <div className="mb-5 border-2 border-zinc-900 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-none shadow-xs">
         <div className="px-3.5 py-2 bg-zinc-950 text-white flex flex-wrap items-center justify-between gap-2 font-mono text-[11px]">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black uppercase">SATU PINTU V5.0</span>
+            <span className="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black uppercase">SATU PINTU V6.0</span>
             <span className="font-bold uppercase">
               {currentTrack === 'studio'
                 ? (lang === 'en' ? 'ACTIVE TRACK: MITRA TURNKEY PROJECT (RAB, SPK SHA-256, UAT & BAST)' : 'JALUR AKTIF: MITRA PROYEK TURNKEY (RAB, SPK SHA-256, UAT & BAST)')
-                : (lang === 'en' ? 'ACTIVE TRACK: RETAIL SELF-DEV (PRD, ULID SQL, 7-PHASE PROMPTS & MCP)' : 'JALUR AKTIF: RETAIL MANDIRI (PRD, SQL ULID, 7-FASE PROMPT & MCP)')}
+                : (lang === 'en' ? 'ACTIVE TRACK: RETAIL SELF-DEV (PRD, ULID SQL, DAG SUB-PARTS & MCP)' : 'JALUR AKTIF: RETAIL MANDIRI (PRD, SQL ULID, DAG SUB-PART & MCP)')}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleResetForm}
+              className="px-2 py-0.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase text-[10px] rounded-none cursor-pointer"
+              title={lang === 'en' ? 'Start a 100% clean isolated new project' : 'Mulai ruang kerja proyek baru yang 100% bersih tanpa sisa proyek lama'}
+            >
+              + {lang === 'en' ? 'Clean New Project' : 'Proyek Baru Bersih'}
+            </button>
             <a
               href="/pricing"
               className="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 font-bold uppercase text-[10px] rounded-none"
@@ -4324,17 +4448,17 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                 <div>
                   <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-800 dark:text-emerald-400 font-black block mb-1">
-                    PROJECT OS V4.0 ULTIMATE // 12 SEKTOR + 9 STACK + 8 LAYER DAY-2 + 5 LIFECYCLE + MCP BRIDGE
+                    PROJECT OS V6.0 ULTIMATE // 12 SEKTOR + 25 MENU L1–L4 + 5 ENTERPRISE GLUE + DAG SUB-PARTS + SYMBOL LOCK
                   </span>
                   <h3 className="text-lg font-black uppercase tracking-tight text-zinc-950 dark:text-zinc-100">
                     {lang === 'en'
-                      ? 'Zero-Assumption Architecture, Day-2 Ops & 3-Pane Studio Cockpit'
-                      : 'Kokpit Arsitektur Tanpa Asumsi, Day-2 Ops & 3-Pane Studio IDE'}
+                      ? 'Zero-Assumption Architecture, L1–L4 Enterprise Menus & 5 Guarantee Engines'
+                      : 'Kokpit Arsitektur Tanpa Asumsi, 25 Menu L1–L4 & 5 Mesin Penjamin Enterprise'}
                   </h3>
                   <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1 font-sans">
                     {lang === 'en'
-                      ? 'Keep Guided AI Auto-Mode for zero-overwhelm speed, switch to the 5-Tab Workbench, or open the full-screen 100vh 3-Pane Architect Studio (with 60s Wizard, Decision Matrix match(), Delta v1.1 & Live MCP).'
-                      : 'Gunakan Mode Ringkas Otomatis AI agar praktis tanpa pusing teknis, buka Workbench 5 Tab, atau luncurkan 3-Pane Architect Studio 100vh (dilengkapi 60s Wizard, Decision Matrix match(), Delta v1.1 & Live MCP).'}
+                      ? 'Even a 5-word idea automatically blooms 25 L1–L4 Enterprise Sub-Menus + 5 Corporate Glue modules, compiled via Kahn\'s DAG Sub-Parts and SYMBOL_MANIFEST.json.'
+                      : 'Bahkan ide singkat 5 kata otomatis dimekarkan menjadi 25 Sub-Menu Operasional L1–L4 + 5 Modul Enterprise Glue setara SAP/Odoo, dikompilasi dengan Kahn DAG Sub-Part & SYMBOL_MANIFEST.json.'}
                   </p>
                 </div>
 
@@ -4366,7 +4490,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                         : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
                     }`}
                   >
-                    {lang === 'en' ? '🛠️ Architect Workbench (5 Tabs)' : '🛠️ Workbench Arsitek (5 Tab)'}
+                    {lang === 'en' ? '🛠️ Architect Workbench (6 Tabs)' : '🛠️ Workbench Arsitek (6 Tab)'}
                   </button>
                 </div>
               </div>
@@ -4374,7 +4498,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               {/* =================================================================
                   ALWAYS-VISIBLE COMPACT SUMMARY TILES + LIVE PRE-FLIGHT DOCTOR BAR
                   ================================================================= */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 mb-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 mb-3.5">
                 <button
                   type="button"
                   onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('sectors'); }}
@@ -4444,6 +4568,25 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   </div>
                   <div className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 mt-0.5 truncate tabular-nums">
                     {officialDocsCount} Dokumen Resmi • *_snapshot • CSV Staging
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('menus_glue'); }}
+                  className="text-left p-3 rounded-xs bg-emerald-50/70 hover:bg-emerald-100/70 dark:bg-emerald-950/35 dark:hover:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-700 hover:border-emerald-600 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-emerald-950 dark:text-emerald-200">
+                    <span>5. MENU L1–L4 &amp; GLUE</span>
+                    <span className="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 tabular-nums">
+                      {effectiveSelectedMenus.length}/25
+                    </span>
+                  </div>
+                  <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate tabular-nums">
+                    {effectiveSelectedMenus.length} Sub-Menu v1.0 + 5 Glue
+                  </div>
+                  <div className="font-mono text-[10px] font-bold text-emerald-900 dark:text-emerald-300 mt-0.5 truncate">
+                    SYMBOL LOCK • Kahn DAG
                   </div>
                 </button>
               </div>
@@ -4519,7 +4662,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   ================================================================= */}
               {matrixMode === 'workbench' && (
                 <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                  {/* Horizontal 5-Tab Navigation Bar */}
+                  {/* Horizontal 6-Tab Navigation Bar */}
                   <div className="flex flex-wrap items-center gap-1.5 mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-800">
                     {[
                       { id: 'sectors', label: lang === 'en' ? '1. Sectors & Industrial UI (12)' : '1. Sektor & UI Industri (12)' },
@@ -4527,6 +4670,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       { id: 'stacks', label: lang === 'en' ? '3. Stack & Topology (9)' : '3. Topologi & Stack (9)' },
                       { id: 'brownfield', label: lang === 'en' ? '4. Legacy SQL Importer' : '4. Impor SQL Lama' },
                       { id: 'doctor', label: lang === 'en' ? '5. 🩺 Doctor & 8 Day-2 Layers' : '5. 🩺 Doctor & 8 Layer Day-2' },
+                      { id: 'menus_glue', label: lang === 'en' ? `6. 🏢 25 L1–L4 Menus & 5 Glue (${effectiveSelectedMenus.length}/25)` : `6. 🏢 25 Menu L1–L4 & 5 Glue (${effectiveSelectedMenus.length}/25)` },
                     ].map((wbTab) => {
                       const isTabActive = activeWorkbenchTab === wbTab.id;
                       return (
@@ -5134,6 +5278,129 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                 </div>
                               );
                             })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* TAB 6: Project OS v6.0 — 25 L1–L4 Enterprise Sub-Menus + 5 Corporate Glue + 5 Guarantee Engines */}
+                  {activeWorkbenchTab === 'menus_glue' && (
+                    <div className="space-y-4">
+                      <div className="p-3.5 rounded-xs bg-zinc-50 dark:bg-zinc-950 border border-emerald-500/70 dark:border-emerald-700 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                        <div>
+                          <span className="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300 block">
+                            JAMINAN 1 &amp; 2 • L1–L4 ENTERPRISE MENU BLOOM (25 SUB-MENU) + 5 CORPORATE GLUE PRIMITIVES
+                          </span>
+                          <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-0.5">
+                            {displaySectorName} — {effectiveSelectedMenus.length}/25 Sub-Menu Aktif di v1.0 ({Math.max(0, 25 - effectiveSelectedMenus.length)} masuk v1.1 Backlog)
+                          </div>
+                          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 mt-0.5">
+                            {lang === 'en'
+                              ? 'Uncheck any sub-menu to defer it cleanly to Phase v1.1 Backlog without losing its ULID schema compatibility.'
+                              : 'Hilangkan centang pada sub-menu yang ingin ditunda ke Backlog v1.1 tanpa merusak kompatibilitas skema ULID utama.'}
+                          </p>
+                        </div>
+                        <div className="shrink-0 flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                          <button
+                            type="button"
+                            onClick={injectEnterpriseMenusIntoMvp}
+                            className="px-3 py-1.5 rounded-xs bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black uppercase cursor-pointer"
+                          >
+                            {lang === 'en' ? '✨ Embed v1.0 Menus into MVP Field' : '✨ Sematkan Menu v1.0 ke Fitur Wajib MVP'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 5 Operational Divisions × 5 Concrete L3 Sub-Menus */}
+                      {Array.isArray(activeEnterpriseMenuMatrix?.divisions) && (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                          {activeEnterpriseMenuMatrix.divisions.map((div) => {
+                            const divTitle = div.division_name?.[lang] || div.division_name?.id || div.division_code;
+                            return (
+                              <div
+                                key={div.division_code}
+                                className="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-2"
+                              >
+                                <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-zinc-200 dark:border-zinc-800">
+                                  <span className="font-mono text-[10px] font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                    {divTitle}
+                                  </span>
+                                  <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black">
+                                    5 SUB-MENU
+                                  </span>
+                                </div>
+                                <div className="space-y-1.5">
+                                  {(div.menus || []).map((menu) => {
+                                    const isMenuChecked = effectiveSelectedMenus.includes(menu.code);
+                                    return (
+                                      <button
+                                        key={menu.code}
+                                        type="button"
+                                        onClick={() => toggleEnterpriseMenuCode(menu.code)}
+                                        className={`w-full text-left p-2 rounded-xs border flex items-start gap-2 transition-colors cursor-pointer ${
+                                          isMenuChecked
+                                            ? 'bg-emerald-50/70 border-emerald-400 text-zinc-950 dark:bg-emerald-950/35 dark:border-emerald-700 dark:text-zinc-100'
+                                            : 'bg-zinc-50 border-zinc-200 text-zinc-600 dark:bg-zinc-950 dark:border-zinc-800 dark:text-zinc-400'
+                                        }`}
+                                      >
+                                        <span className={`mt-0.5 w-3.5 h-3.5 rounded-none border flex items-center justify-center shrink-0 font-mono text-[9px] font-black ${
+                                          isMenuChecked
+                                            ? 'bg-emerald-600 border-emerald-700 text-white dark:bg-emerald-400 dark:border-emerald-400 dark:text-zinc-950'
+                                            : 'bg-white dark:bg-zinc-900 border-zinc-400 dark:border-zinc-700 text-transparent'
+                                        }`}>
+                                          ✓
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex items-center justify-between gap-1.5">
+                                            <span className="font-mono text-[9px] font-black text-emerald-900 dark:text-emerald-300">
+                                              {menu.code}
+                                            </span>
+                                            <span className={`px-1 py-0.2 font-mono text-[8px] font-black border ${
+                                              isMenuChecked
+                                                ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-400 dark:text-zinc-950 dark:border-emerald-400'
+                                                : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-700'
+                                            }`}>
+                                              {isMenuChecked ? 'v1.0 MVP' : 'v1.1 BACKLOG'}
+                                            </span>
+                                          </div>
+                                          <div className="text-[11px] font-bold leading-snug mt-0.5">{menu.title}</div>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* 5 Corporate Glue Primitives + 5 Deterministic Guarantee Engines */}
+                      {(matrixCatalog.five_enterprise_glue_primitives || []).length > 0 && (
+                        <div>
+                          <div className="text-[11px] font-mono font-black uppercase tracking-wider text-zinc-950 dark:text-zinc-100 mb-2">
+                            {lang === 'en'
+                              ? '5 Enterprise Glue Primitives Auto-Injected into PostgreSQL 16 ULID Schema'
+                              : '5 Modul Perekat Korporat (Enterprise Glue) Otomatis Disuntikkan ke Skema PostgreSQL 16 ULID'}
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
+                            {matrixCatalog.five_enterprise_glue_primitives.map((glue) => (
+                              <div
+                                key={glue.code}
+                                className="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs"
+                              >
+                                <span className="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[9px] font-black inline-block mb-1">
+                                  {glue.table_name}
+                                </span>
+                                <div className="text-[11px] font-black text-zinc-950 dark:text-zinc-100 leading-tight">
+                                  {glue.name?.[lang] || glue.name?.id || glue.code}
+                                </div>
+                                <p className="text-[10px] text-zinc-700 dark:text-zinc-300 mt-1 leading-relaxed line-clamp-3">
+                                  {glue.invariant}
+                                </p>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}

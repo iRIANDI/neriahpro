@@ -118,8 +118,8 @@ class AuditLogResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => strtoupper($state ?: 'system'))
                     ->color(fn (?string $state): string => match ($state) {
-                        'project_os', 'cli_bootstrap', 'day2_ops', 'delta_evolution', 'commercial_contract', 'uat_bast' => 'success',
-                        'ai_agent', 'blueprint_doctor', 'mcp_bridge', 'env_vault' => 'info',
+                        'project_os', 'cli_bootstrap', 'day2_ops', 'delta_evolution', 'commercial_contract', 'uat_bast', 'enterprise_glue', 'project_isolation' => 'success',
+                        'ai_agent', 'blueprint_doctor', 'mcp_bridge', 'env_vault', 'symbol_manifest', 'dag_chunker' => 'info',
                         'brownfield_import', 'slop_audit', 'paid_addendum' => 'warning',
                         'security', 'rbac', 'redteam_security' => 'danger',
                         'billing' => 'primary',
@@ -129,8 +129,8 @@ class AuditLogResource extends Resource
                     ->label('Aksi')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'created', 'create', 'cli_bootstrap_pulled', 'delta_cr_created', 'mcp_phase_verified', 'env_vault_checked', 'scope_locked_spk', 'bast_issued' => 'success',
-                        'updated', 'update', 'blueprint_slop_scanned', 'brownfield_schema_audited', 'blueprint_doctor_diagnosed', 'mcp_config_exported', 'mcp_drift_verified', 'addendum_approved', 'uat_scenario_toggled' => 'info',
+                        'created', 'create', 'cli_bootstrap_pulled', 'delta_cr_created', 'mcp_phase_verified', 'env_vault_checked', 'scope_locked_spk', 'bast_issued', 'symbol_manifest_compiled', 'project_isolation_verified' => 'success',
+                        'updated', 'update', 'blueprint_slop_scanned', 'brownfield_schema_audited', 'blueprint_doctor_diagnosed', 'mcp_config_exported', 'mcp_drift_verified', 'addendum_approved', 'uat_scenario_toggled', 'enterprise_menu_expanded' => 'info',
                         'deleted', 'force_deleted', 'rbac_tool_denied', 'mcp_auth_denied' => 'danger',
                         'login' => 'primary',
                         default => 'gray',
@@ -167,6 +167,10 @@ class AuditLogResource extends Resource
                     ->label('Kategori Domain')
                     ->options([
                         'project_os' => 'Project OS & Blueprint',
+                        'symbol_manifest' => 'Exact Symbol Lock (SYMBOL_MANIFEST.json)',
+                        'dag_chunker' => 'Kahn Topological DAG Sub-Chunker',
+                        'enterprise_glue' => 'L1–L4 Menu Matrix & 5 Enterprise Glue',
+                        'project_isolation' => 'Hermetic Project Isolation & Clean State',
                         'commercial_contract' => 'Mitra SPK, Scope Freeze SHA-256 & RAB',
                         'paid_addendum' => 'Paid Change-Order Addendum (v1.0 -> v1.1)',
                         'uat_bast' => 'UAT Given-When-Then & Digital BAST',
@@ -197,6 +201,9 @@ class AuditLogResource extends Resource
                         'addendum_approved' => 'Paid Addendum Approved & Invoiced',
                         'uat_scenario_toggled' => 'UAT Scenario Toggled',
                         'bast_issued' => 'Digital BAST Issued & Final Settlement',
+                        'symbol_manifest_compiled' => 'SYMBOL_MANIFEST & DAG Chunks Compiled',
+                        'enterprise_menu_expanded' => 'L1–L4 Enterprise Menu Matrix Expanded',
+                        'project_isolation_verified' => 'Hermetic Project Isolation Verified',
                         'delta_cr_created' => 'Delta Change Request Created',
                         'mcp_phase_verified' => 'MCP Phase Verified (Green)',
                         'mcp_config_exported' => 'MCP .mcp.json Exported',

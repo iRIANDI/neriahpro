@@ -120,27 +120,45 @@ class BlueprintController extends Controller
                     'terminPembayaran' => $existingBp->user_metadata['termin_pembayaran'] ?? 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
                     'primarySector' => $existingBp->user_metadata['primary_sector'] ?? ($existingBp->prd_content['composable_matrix']['primary_sector'] ?? ''),
                     'selectedPrimitives' => $existingBp->user_metadata['selected_primitives'] ?? ($existingBp->prd_content['composable_matrix']['injected_primitives'] ?? []),
+                    'selectedMenus' => $existingBp->user_metadata['selected_menus'] ?? [],
                     'stackPreset' => \App\Support\PosStackPresetCatalog::normalizePresetCode(
                         $existingBp->user_metadata['stack_preset']
                         ?? ($existingBp->prd_content['universal_blueprint_schema']['project_metadata']['stack_preset'] ?? null)
                     ),
                     '_meta' => [
                         'is_editing_slug' => $slug,
+                        'draft_token' => 'edit_' . $slug,
+                        'is_fresh_workspace' => false,
                         'raw_idea_text' => $existingBp->masalah_utama,
                     ]
                 ];
             }
-        } elseif ($request->boolean('reset') || $request->has('new') || $request->has('clean')) {
+        } elseif ($draftId && !$request->boolean('reset') && !$request->has('new') && !$request->has('clean')) {
+            if (Cache::has('blueprint_draft_' . $draftId)) {
+                $initialData = Cache::get('blueprint_draft_' . $draftId, []);
+                if (is_array($initialData) && ! empty($initialData)) {
+                    $initialData['_meta'] = array_merge($initialData['_meta'] ?? [], [
+                        'draft_token' => $draftId,
+                        'is_fresh_workspace' => false,
+                    ]);
+                }
+            } else {
+                $initialData = [];
+            }
+        } else {
+            // HERMETIC ISOLATION (v6.0): Every fresh visit without an explicit ?slug=... or ?draft_id=...
+            // MUST start 100% clean with a brand-new draft_token — ZERO bleed from previous projects!
             session()->forget('blueprint_draft');
             if ($draftId) {
                 Cache::forget('blueprint_draft_' . $draftId);
             }
-            $initialData = [];
-        } elseif ($draftId && Cache::has('blueprint_draft_' . $draftId)) {
-            $initialData = Cache::get('blueprint_draft_' . $draftId, []);
-        } elseif (session()->has('blueprint_draft')) {
-            // Robust session fallback
-            $initialData = session('blueprint_draft', []);
+            $freshToken = 'draft_' . strtolower((string) Str::ulid());
+            $initialData = [
+                '_meta' => [
+                    'draft_token' => $freshToken,
+                    'is_fresh_workspace' => true,
+                ],
+            ];
         }
 
         if (!is_array($initialData)) {
@@ -421,15 +439,21 @@ class BlueprintController extends Controller
     public function autoSave(Request $request): JsonResponse
     {
         $blueprint = $request->input('blueprint', []);
-        $draftId = $request->input('draft_id') ?: (string) Str::ulid();
+        $draftId = $request->input('draft_id') ?: ('draft_' . strtolower((string) Str::ulid()));
         $persistedToDb = false;
 
         if (!empty($blueprint) && is_array($blueprint)) {
-            Cache::put('blueprint_draft_' . $draftId, $blueprint, now()->addDays(7));
-            session(['blueprint_draft' => $blueprint]);
+            // HERMETIC ISOLATION (v6.0): Scope draft strictly to its unique draft_id cache key;
+            // NEVER overwrite an existing DB VisionBlueprint unless explicitly editing a slug (`is_explicit_slug_edit === true`)!
+            $cleanDraft = $blueprint;
+            if (! $request->boolean('is_explicit_slug_edit')) {
+                unset($cleanDraft['_meta']['is_editing_slug']);
+            }
+            Cache::put('blueprint_draft_' . $draftId, $cleanDraft, now()->addDays(7));
 
-            // If editing an existing project slug, persist directly to PostgreSQL database
-            $slug = $blueprint['_meta']['is_editing_slug'] ?? $request->input('slug');
+            $slug = ($request->boolean('is_explicit_slug_edit') && $request->filled('slug'))
+                ? (string) $request->input('slug')
+                : null;
             if ($slug) {
                 $record = VisionBlueprint::where('slug', $slug)->first();
                 if ($record) {
@@ -480,6 +504,9 @@ class BlueprintController extends Controller
                     }
                     if (isset($blueprint['selectedPrimitives']) && is_array($blueprint['selectedPrimitives'])) {
                         $meta['selected_primitives'] = $blueprint['selectedPrimitives'];
+                    }
+                    if (isset($blueprint['selectedMenus']) && is_array($blueprint['selectedMenus'])) {
+                        $meta['selected_menus'] = $blueprint['selectedMenus'];
                     }
                     if (! empty($blueprint['stackPreset'])) {
                         $meta['stack_preset'] = \App\Support\PosStackPresetCatalog::normalizePresetCode($blueprint['stackPreset']);
@@ -1191,7 +1218,42 @@ class BlueprintController extends Controller
             }
         }
 
+        if (preg_match('/^subpart-([0-9]+\.[0-9]+)$/', $format, $sm)) {
+            $subParts = $univSchema['sub_chunked_prompts']
+                ?? \App\Services\TopologicalPromptChunker::compileSubChunkedPrompts($univSchema);
+            foreach ($subParts as $sp) {
+                if (($sp['part_code'] ?? '') === $sm[1]) {
+                    return response((string) ($sp['prompt'] ?? ''), 200, [
+                        'Content-Type' => 'text/markdown; charset=UTF-8',
+                        'Content-Disposition' => 'attachment; filename="' . ($sp['filename'] ?? ("part-{$sm[1]}.md")) . '"',
+                    ]);
+                }
+            }
+        }
+
+        if ($format === 'symbol-manifest') {
+            $manifest = $univSchema['symbol_manifest']
+                ?? \App\Services\TopologicalPromptChunker::generateSymbolManifest($univSchema);
+
+            return response(
+                (string) json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                200,
+                [
+                    'Content-Type' => 'application/json; charset=UTF-8',
+                    'Content-Disposition' => 'attachment; filename="SYMBOL_MANIFEST.json"',
+                ]
+            );
+        }
+
         [$content, $filename] = match ($format) {
+            'enterprise-menu' => [
+                \App\Support\PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown(
+                    $univSchema['enterprise_menu_matrix'] ?? \App\Support\PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector(
+                        (string) ($univSchema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
+                    )
+                ),
+                'ENTERPRISE_MENU_MATRIX.md',
+            ],
             'execution-blueprint' => [
                 \App\Services\ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($univSchema),
                 'PROJECT_OS_EXECUTION_BLUEPRINT.md',
@@ -2071,6 +2133,15 @@ class BlueprintController extends Controller
             '.agents/DAY2_OPERATIONS_AND_SECURITY.md' => \App\Services\ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($schema),
             '.agents/DECISION_TABLES_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($schema),
             '.agents/BLUEPRINT_SCHEMA.json' => (string) json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            '.agents/SYMBOL_MANIFEST.json' => (string) json_encode(
+                $schema['symbol_manifest'] ?? \App\Services\TopologicalPromptChunker::generateSymbolManifest($schema),
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+            ),
+            '.agents/ENTERPRISE_MENU_MATRIX.md' => \App\Support\PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown(
+                $schema['enterprise_menu_matrix'] ?? \App\Support\PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector(
+                    (string) ($schema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
+                )
+            ),
             '.agents/graphify/graph.json' => \App\Services\ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
             'app/Actions/Tenancy/InitializeNewTenantAction.php' => \App\Services\ScaffoldGeneratorService::generateInitializeNewTenantAction($schema),
             'app/Domains/Rules/DeterministicDecisionMatrix.php' => \App\Services\ScaffoldGeneratorService::generateDeterministicDecisionMatrixClass($schema, $appName),
@@ -2088,6 +2159,13 @@ class BlueprintController extends Controller
             $filesToMaterialize['.agents/prompts/' . $fname] = (string) ($pItem['prompt'] ?? '');
         }
 
+        $subChunkedPrompts = $schema['sub_chunked_prompts']
+            ?? \App\Services\TopologicalPromptChunker::compileSubChunkedPrompts($schema);
+        foreach ($subChunkedPrompts as $spItem) {
+            $spName = $spItem['filename'] ?? ('part-' . ($spItem['part_code'] ?? '1.0') . '.md');
+            $filesToMaterialize['.agents/prompts/subparts/' . $spName] = (string) ($spItem['prompt'] ?? '');
+        }
+
         $safeAppBanner = preg_replace('/[^a-zA-Z0-9 _\-\.\(\)]/', '', $appName);
         $sectorCode = $schema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL';
         $stackCode = $schema['project_metadata']['stack_preset'] ?? 'STACK_M1_LARAVEL_FILAMENT_LIVEWIRE';
@@ -2096,7 +2174,7 @@ class BlueprintController extends Controller
         $lines = [
             '#!/usr/bin/env bash',
             '# ==============================================================================',
-            "# Neriah Pro Project OS v3.0 — One-Command CLI Bootstrapper",
+            "# Neriah Pro Project OS v6.0 — One-Command CLI Bootstrapper",
             "# Target Project : {$safeAppBanner}",
             "# Sector / UI    : {$sectorCode} ({$primaryUi})",
             "# Stack Adapter  : {$stackCode}",
@@ -2112,11 +2190,11 @@ class BlueprintController extends Controller
             '}',
             '',
             'echo "=================================================================="',
-            "echo \" [Project OS v3.0] Bootstrapping Blueprint: {$safeAppBanner}\"",
+            "echo \" [Project OS v6.0] Bootstrapping Blueprint: {$safeAppBanner}\"",
             "echo \" [Sector UI] {$sectorCode} -> {$primaryUi}\"",
             "echo \" [Stack]     {$stackCode}\"",
             'echo "=================================================================="',
-            'mkdir -p .agents/graphify .agents/prompts app/Actions/Tenancy app/Domains/Rules tests/Feature/Security resources/views/prints config database/seeders',
+            'mkdir -p .agents/graphify .agents/prompts/subparts app/Actions/Tenancy app/Domains/Rules tests/Feature/Security resources/views/prints config database/seeders',
             '',
         ];
 
@@ -2154,7 +2232,58 @@ class BlueprintController extends Controller
 
         return response(implode("\n", $lines) . "\n", 200, [
             'Content-Type' => 'text/x-shellscript; charset=UTF-8',
-            'X-Project-OS-Version' => '3.0.0',
+            'X-Project-OS-Version' => '6.0.0',
+        ]);
+    }
+
+    /**
+     * Project OS v6.0: Live Topological DAG, L1–L4 Menu Matrix, 5 Enterprise Glue & SYMBOL_MANIFEST Preview API.
+     */
+    public function topologicalPreview(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'sector_code' => 'nullable|string|max:120',
+            'primitive_codes' => 'nullable|array',
+            'primitive_codes.*' => 'string|max:120',
+            'stack_preset' => 'nullable|string|max:120',
+            'selected_menus' => 'nullable|array',
+            'selected_menus.*' => 'string|max:40',
+            'app_name' => 'nullable|string|max:160',
+        ]);
+
+        $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+            (string) ($validated['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
+        );
+        $stackCode = \App\Support\PosStackPresetCatalog::normalizePresetCode(
+            (string) ($validated['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH')
+        );
+
+        $schema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+            'app_name' => $validated['app_name'] ?? 'Enterprise Isolated Preview',
+            'sector_code' => $sectorCode,
+            'primitive_codes' => $validated['primitive_codes'] ?? [],
+            'stack_preset_code' => $stackCode,
+            'selected_menus' => $validated['selected_menus'] ?? null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'guarantees_release' => $schema['guarantees_release'] ?? '6.0.0',
+            'project_isolation_id' => $schema['project_metadata']['project_isolation_id'] ?? null,
+            'five_deterministic_guarantees' => $schema['five_deterministic_guarantees'] ?? [],
+            'five_enterprise_glue_primitives' => $schema['five_enterprise_glue_primitives'] ?? [],
+            'enterprise_menu_matrix' => $schema['enterprise_menu_matrix'] ?? [],
+            'topological_dag_plan' => $schema['topological_dag_plan'] ?? [],
+            'symbol_manifest' => $schema['symbol_manifest'] ?? [],
+            'sub_chunked_prompts' => array_values(array_map(fn (array $sp): array => [
+                'part_code' => $sp['part_code'],
+                'major_phase' => $sp['major_phase'],
+                'filename' => $sp['filename'],
+                'title' => $sp['title'],
+                'dag_layer_badge' => $sp['dag_layer_badge'],
+                'entities_count' => $sp['entities_count'],
+                'estimated_loc' => $sp['estimated_loc'],
+            ], $schema['sub_chunked_prompts'] ?? [])),
         ]);
     }
 

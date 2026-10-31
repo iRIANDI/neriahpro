@@ -150,6 +150,19 @@ class PricingRegistry
     }
 
     /**
+     * Resolve live base price in IDR for a package ID from Satu Pintu Catalog (`CmsGlobalSetting` -> default).
+     */
+    public static function getBaseAmount(string $id): float
+    {
+        $catalog = self::getSatuPintuCatalog();
+        if (isset($catalog[$id])) {
+            return (float) ($catalog[$id]['resolved_price_idr'] ?? $catalog[$id]['default_price'] ?? 0);
+        }
+
+        return 0.0;
+    }
+
+    /**
      * Check if package is self-service (100% digital, automated generation).
      */
     public static function isSelfService(string $id): bool
@@ -224,16 +237,6 @@ class PricingRegistry
     }
 
     /**
-     * Resolve live base amount (IDR) for a package tier from Backend Admin ("Satu Pintu") or default.
-     */
-    public static function getBaseAmount(string $id): float
-    {
-        $catalog = self::getSatuPintuCatalog();
-
-        return (float) ($catalog[$id]['resolved_price_idr'] ?? self::PACKAGES[$id]['default_price'] ?? 0);
-    }
-
-    /**
      * Resolve all 7 Retail & Mitra packages with live Backend Admin prices ("Satu Pintu").
      *
      * @return array<string, array<string, mixed>>
@@ -265,12 +268,10 @@ class PricingRegistry
                 }
             }
 
-            $rawStackScope = $pkg['stack_scope'] ?? [];
-            $pkg['name_id'] = (string) ($pkg['name_id'] ?? $pkg['name'] ?? $id);
-            $pkg['stack_scope_list'] = is_array($rawStackScope) ? $rawStackScope : [$rawStackScope];
-            $pkg['stack_scope'] = is_array($rawStackScope) ? implode(', ', $rawStackScope) : (string) $rawStackScope;
-            $pkg['sector_scope'] = is_array($pkg['sector_scope'] ?? null) ? implode(', ', $pkg['sector_scope']) : (string) ($pkg['sector_scope'] ?? 'Semua 12 Sektor');
-            $pkg['resolved_price'] = $price;
+            $pkg['name_id'] = $pkg['name_id'] ?? $pkg['name'] ?? $id;
+            $pkg['stack_scope_label'] = is_array($pkg['stack_scope'] ?? null)
+                ? implode(', ', $pkg['stack_scope'])
+                : (string) ($pkg['stack_scope'] ?? 'M1–S2');
             $pkg['resolved_price_idr'] = $price;
             $pkg['formatted_price'] = $displayPrice;
             $resolved[$id] = $pkg;

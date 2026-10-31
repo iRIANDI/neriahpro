@@ -983,8 +983,8 @@ export default function ArchitecturePricingIsland({
                     {/* Top Satu Pintu Bar */}
                     <div className="px-4 sm:px-6 py-3 bg-zinc-950 text-white dark:bg-zinc-950 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] font-black uppercase tracking-wider">
-                        <span className="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black">SATU PINTU WIZARD v5.0</span>
-                        <span>{isEn ? 'GUIDED CLIENT PATH: RETAIL SELF-DEV VS TURNKEY MITRA PROYEK' : 'PANDUAN KLIEN DARI AWAL SAMPAI AKHIR: RETAIL MANDIRI VS MITRA PROYEK'}</span>
+                        <span className="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black">SATU PINTU WIZARD v6.0</span>
+                        <span>{isEn ? 'GUIDED CLIENT PATH: RETAIL SELF-DEV VS TURNKEY MITRA PROYEK (5 GUARANTEE ENGINES)' : 'PANDUAN KLIEN DARI AWAL SAMPAI AKHIR: RETAIL MANDIRI VS MITRA PROYEK (5 MESIN PENJAMIN)'}</span>
                       </div>
                       <button
                         type="button"
@@ -1116,11 +1116,26 @@ export default function ArchitecturePricingIsland({
 
                           <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
                             <span className="font-bold text-zinc-800 dark:text-zinc-200">
-                              UI Cockpit: <strong className="text-emerald-800 dark:text-emerald-400">{wizardSector.primary}</strong> &bull; Seeder: <strong>{wizardSector.seeder}</strong>
+                              UI Cockpit: <strong className="text-emerald-800 dark:text-emerald-400">{wizardSector.primary}</strong> &bull; <strong>25 Menu L1–L4 + 5 Glue</strong>
                             </span>
                             <span className="px-2 py-0.5 bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200 font-black text-[10px]">
-                              {comp.tables} ULID Tables &bull; {comp.states} States &bull; {comp.locks} Locks
+                              {comp.tables + 5} ULID Tables &bull; Kahn DAG &bull; SYMBOL LOCK
                             </span>
+                          </div>
+
+                          {/* v6.0 5 Deterministic Guarantee Engines Compact Strip */}
+                          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 font-mono text-[9px]">
+                            {[
+                              { code: 'G1', label: '25 Menu L1–L4' },
+                              { code: 'G2', label: '5 Enterprise Glue' },
+                              { code: 'G3', label: 'SYMBOL_MANIFEST' },
+                              { code: 'G4', label: 'Kahn DAG Chunker' },
+                              { code: 'G5', label: 'Exit-Code 0 Gate' },
+                            ].map((g) => (
+                              <div key={g.code} className="px-2 py-1.5 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-400 dark:border-emerald-700 text-emerald-950 dark:text-emerald-200 font-black truncate">
+                                [{g.code}] {g.label}
+                              </div>
+                            ))}
                           </div>
                         </div>
 
@@ -1130,7 +1145,7 @@ export default function ArchitecturePricingIsland({
                             <div className="space-y-3">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
-                                  RETAIL SELF-DEV // SATU PINTU
+                                  RETAIL SELF-DEV // SATU PINTU V6.0
                                 </span>
                                 <span className="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400">
                                   100% {isEn ? 'Instant Digital License' : 'Lisensi Digital Instan'}
@@ -1145,16 +1160,16 @@ export default function ArchitecturePricingIsland({
                                 </div>
                                 <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1 leading-relaxed">
                                   {isEn
-                                    ? `Includes ${wizardSector.primary} Industrial Cockpit, ${comp.tables} PostgreSQL Strict ULID tables, 7-Phase Sequencer, Decision Matrix match(), and Live MCP Bridge.`
-                                    : `Sudah memuat kontrak UI ${wizardSector.primary}, ${comp.tables} tabel PostgreSQL Strict ULID, 7-Fase Prompt AI, Decision Matrix match(), & Live MCP Bridge.`}
+                                    ? `Includes ${wizardSector.primary} Cockpit, 25 L1–L4 Sub-Menus, 5 Enterprise Glue tables, SYMBOL_MANIFEST.json, Kahn's DAG Sub-Parts & <MANDATORY_VERIFICATION_GATE>.`
+                                    : `Memuat UI ${wizardSector.primary}, 25 Sub-Menu L1–L4, 5 Tabel Enterprise Glue, SYMBOL_MANIFEST.json, Sub-Part DAG Kahn & <MANDATORY_VERIFICATION_GATE>.`}
                                 </p>
                               </div>
                               <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                                 <a
-                                  href={`/blueprint?track=retail&tier=${comp.recommendedRetail}&sector=${wizardSector.code}&stack=${wizardStackCode}`}
+                                  href={`/blueprint?track=retail&tier=${comp.recommendedRetail}&sector=${wizardSector.code}&stack=${wizardStackCode}&new=1`}
                                   className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 rounded-none transition text-center"
                                 >
-                                  <span>{isEn ? '1. Start Guided 26-Param Wizard →' : '1. Mulai Wizard 26 Parameter Sektor Ini →'}</span>
+                                  <span>{isEn ? '1. Start Clean 26-Param Wizard →' : '1. Mulai Wizard Baru Bersih (26 Parameter) →'}</span>
                                 </a>
                                 <div className="grid grid-cols-2 gap-2">
                                   <a
@@ -1177,7 +1192,7 @@ export default function ArchitecturePricingIsland({
                             <div className="space-y-3">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black uppercase">
-                                  MITRA TURNKEY // ALGORITHMIC RAB
+                                  MITRA TURNKEY // ALGORITHMIC RAB V6.0
                                 </span>
                                 <span className="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400">
                                   Rp {formatIdrPlain(hourlyRate)}/jam &bull; {activeStack.mult}x
@@ -1216,10 +1231,10 @@ export default function ArchitecturePricingIsland({
                                 </a>
                                 <div className="grid grid-cols-2 gap-2">
                                   <a
-                                    href={`/blueprint?track=mitra&sector=${wizardSector.code}&stack=${wizardStackCode}`}
+                                    href={`/blueprint?track=mitra&sector=${wizardSector.code}&stack=${wizardStackCode}&new=1`}
                                     className="py-2 px-2.5 bg-white hover:bg-zinc-100 text-zinc-950 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 font-mono text-[10px] font-black uppercase tracking-wider border border-zinc-300 dark:border-zinc-700 rounded-none text-center"
                                   >
-                                    <span>📐 Wizard 26 Param</span>
+                                    <span>📐 Wizard Baru</span>
                                   </a>
                                   <button
                                     type="button"
@@ -1249,14 +1264,14 @@ export default function ArchitecturePricingIsland({
                     id: 'retail',
                     num: '01',
                     title: isEn ? 'Retail Packages' : 'Paket Retail',
-                    sub: 'SELF-DEV V5.0',
+                    sub: 'SELF-DEV V6.0',
                     icon: ShoppingBag,
                   },
                   {
                     id: 'project',
                     num: '02',
                     title: isEn ? 'Mitra & Studio' : 'Mitra & Studio',
-                    sub: 'TURNKEY V5.0',
+                    sub: 'TURNKEY V6.0',
                     icon: Rocket,
                   },
                   {

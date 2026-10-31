@@ -431,6 +431,61 @@ class GeminiToolRegistry
                     'required' => ['blueprint_id'],
                 ],
             ],
+            [
+                'name' => 'expand_l1_l4_enterprise_menu_matrix',
+                'description' => 'Mekarkan matriks kapabilitas menu L1–L4 (5 Divisi Operasional × 5 Sub-Menu = 25 layar korporat lengkap) beserta 5 Primitif Perekat Korporat (Enterprise Glue) untuk salah satu dari 12 Sektor Fungsional Project OS v6.0.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor fungsional (misal: SECTOR_01_COMMERCE_OMNICHANNEL, SECTOR_03_HEALTHCARE_CLINICAL, SECTOR_04_FINTECH_LEDGER).',
+                        ],
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID atau slug VisionBlueprint jika ingin mengambil pilihan menu spesifik proyek.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'compile_symbol_manifest_and_dag_chunks',
+                'description' => 'Kompilasi kontrak simbol eksak SYMBOL_MANIFEST.json, pengurutan migrasi tabel berbasis Kahn Topological Sort (DAG), dan pemecahan prompt sub-part anti-truncation (Part 1.0 s/d Part 7.0 dengan <MANDATORY_VERIFICATION_GATE>).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID atau slug VisionBlueprint yang sudah tersimpan.',
+                        ],
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor fungsional bila melakukan simulasi tanpa blueprint_id.',
+                        ],
+                        'stack_preset' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode preset stack (misal: STACK_M1_LARAVEL_MONOLITH, STACK_D1_LARAVEL_NEXTJS).',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'verify_project_isolation_and_clean_state',
+                'description' => 'Audit isolasi hermetik lintas proyek (memastikan setiap proyek memiliki ULID, slug, isolation_token, dan staging_url unik tanpa menimpa proyek lama) atau bersihkan sisa draf sesi (action = purge_stale_drafts).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => [
+                            'type' => 'STRING',
+                            'description' => 'Mode operasi: inspect (audit isolasi seluruh proyek read-only) atau purge_stale_drafts (bersihkan sisa draf sesi aktif — wajib izin mutasi RBAC).',
+                        ],
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID atau slug proyek tertentu yang ingin diperiksa keunikan isolasinya.',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

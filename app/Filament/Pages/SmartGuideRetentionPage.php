@@ -71,6 +71,8 @@ class SmartGuideRetentionPage extends Page
             'fiveLifecycleFeatures' => \App\Support\PosLifecycleAndStudioCatalog::fiveLifecycleFeatures(),
             'slopDiffPairs' => \App\Support\PosLifecycleAndStudioCatalog::slopVsProjectOsDiffPairs(),
             'fiveCommercialFeatures' => \App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures(),
+            'fiveDeterministicGuarantees' => \App\Support\PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees(),
+            'fiveEnterpriseGluePrimitives' => \App\Support\PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives(),
             'guidedJourneySteps' => \App\Services\PosCommercialBridgeService::guidedClientJourneySteps(),
             'satuPintuPackages' => \App\Support\PricingRegistry::getSatuPintuCatalog(),
             'estimatorConfig' => \App\Support\PricingRegistry::getCommercialEstimatorConfig(),

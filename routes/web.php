@@ -50,6 +50,7 @@ Route::post('/api/blueprint/{slug}/delta-request', [BlueprintController::class, 
 Route::get('/api/blueprint/{slug}/delta-requests', [BlueprintController::class, 'listDeltaChangeRequests'])->name('api.blueprint.delta.list')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/delta-requests/{crId}/approve', [BlueprintController::class, 'approveDeltaAddendum'])->name('api.blueprint.delta.approve')->middleware('throttle:30,1');
 Route::post('/api/blueprint/commercial-estimate', [BlueprintController::class, 'commercialEstimate'])->name('api.blueprint.commercial-estimate')->middleware('throttle:60,1');
+Route::post('/api/blueprint/topological-preview', [BlueprintController::class, 'topologicalPreview'])->name('api.blueprint.topological-preview')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/lock-scope-spk', [BlueprintController::class, 'lockScopeAndGenerateSpk'])->name('api.blueprint.lock-scope-spk')->middleware('throttle:30,1');
 Route::post('/api/blueprint/{slug}/uat/toggle', [BlueprintController::class, 'toggleUatScenario'])->name('api.blueprint.uat.toggle')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/uat/sign-bast', [BlueprintController::class, 'signOffUatAndIssueBast'])->name('api.blueprint.uat.sign-bast')->middleware('throttle:20,1');

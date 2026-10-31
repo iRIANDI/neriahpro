@@ -318,6 +318,9 @@
             <a href="#sec-mitra-commercial-bridge" @click.prevent="scrollTo('sec-mitra-commercial-bridge')" :class="activeSection === 'sec-mitra-commercial-bridge' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 12. <span x-text="t[lang].nav_mitra_bridge"></span>
             </a>
+            <a href="#sec-v6-deterministic-guarantees" @click.prevent="scrollTo('sec-v6-deterministic-guarantees')" :class="activeSection === 'sec-v6-deterministic-guarantees' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                13. <span x-text="t[lang].nav_v6_guarantees"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -1298,7 +1301,7 @@
                                 </td>
                                 <td style="font-size: 11px;">
                                     {{ $pkgMeta['sector_scope'] ?? 'Semua 12 Sektor' }}<br>
-                                    <span style="font-family: ui-monospace, monospace; font-size: 10px; color: var(--sg-text-muted);">{{ $pkgMeta['stack_scope'] ?? 'M1–S2' }}</span>
+                                    <span style="font-family: ui-monospace, monospace; font-size: 10px; color: var(--sg-text-muted);">{{ $pkgMeta['stack_scope_label'] ?? (is_array($pkgMeta['stack_scope'] ?? null) ? implode(', ', $pkgMeta['stack_scope']) : ($pkgMeta['stack_scope'] ?? 'M1–S2')) }}</span>
                                 </td>
                                 <td style="font-size: 11px; color: var(--sg-text-muted);">
                                     {{ implode(' • ', array_slice($pkgMeta['included_v5_engines'] ?? [], 0, 3)) }}
@@ -1327,6 +1330,57 @@
         </div>
     </div>
 
+    <!-- 13. Section Project OS v6.0 — 5 Deterministic Guarantee Engines & Hermetic Project Isolation -->
+    <div id="sec-v6-deterministic-guarantees" class="sg-card" x-show="matchesSearch('v6.0 5 deterministic guarantees l1 l4 menu matrix 25 sub-menus 5 enterprise glue atomic numbering fiscal period lock maker checker reason evidence symbol_manifest.json kahn dag topological chunker mandatory_verification_gate hermetic project isolation zero bleed')">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #059669; text-transform: uppercase; font-weight: 700;">
+                    13 // PROJECT OS v6.0 — 5 DETERMINISTIC GUARANTEE ENGINES &amp; HERMETIC PROJECT ISOLATION
+                </span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec13_title"></h3>
+            </div>
+            <span class="sg-badge-active">ZERO TRUNCATION • ZERO AMNESIA • ZERO STATE BLEED</span>
+        </div>
+
+        <p style="font-size: 13px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;" x-text="t[lang].sec13_desc"></p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-bottom: 18px;">
+            @foreach(($fiveDeterministicGuarantees ?? []) as $dgItem)
+                <div class="sg-subcard" style="border-left: 3px solid #10b981;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <strong style="font-size: 12px; color: var(--sg-text-title);">Jaminan #{{ $dgItem['number'] }}: {{ $dgItem['title']['id'] ?? $dgItem['code'] }}</strong>
+                        <span style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 700; padding: 2px 6px; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35);">
+                            {{ $dgItem['badge'] ?? 'v6.0' }}
+                        </span>
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--sg-text-muted); line-height: 1.55;">
+                        {{ $dgItem['desc']['id'] ?? '' }}
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div style="padding: 14px; background: var(--sg-subcard-bg); border: 1px solid var(--sg-border); border-radius: 3px; margin-bottom: 14px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #0284c7; text-transform: uppercase; margin-bottom: 10px;">
+                5 PRIMITIF "PEREKAT KORPORAT" (ENTERPRISE GLUE — OTOMATIS DISUNTIKKAN DI 12 SEKTOR)
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; font-size: 11px;">
+                @foreach(($fiveEnterpriseGluePrimitives ?? []) as $glueP)
+                    <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                        <strong style="font-family: ui-monospace, monospace; color: #059669;">{{ $glueP['name']['id'] ?? $glueP['code'] }}</strong>
+                        <div style="font-family: ui-monospace, monospace; font-size: 10px; color: #0284c7; margin-top: 2px;">Table: <code>{{ $glueP['table'] }}</code></div>
+                        <div style="color: var(--sg-text-muted); margin-top: 4px; line-height: 1.45;">{{ $glueP['invariant'] }}</div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <div style="padding: 12px 14px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 3px; font-size: 12px; color: var(--sg-text-body); line-height: 1.55;">
+            <strong style="color: #059669;">🔒 Protokol Hermetic Project Isolation (Zero Cross-Project State Bleed):</strong>
+            Setiap pembuatan proyek baru di <code>/blueprint</code> maupun <code>/blueprint/studio</code> kini menghasilkan <code>isolation_token</code> &amp; <code>draft_token</code> ULID unik, melarang pencocokan <code>PosProject</code> berbasis <code>app_name</code> yang dapat menimpa proyek lama, mengisolasi <code>localStorage</code> per draf/slug, menyematkan akhiran ULID unik pada <code>staging_url</code>, serta menyediakan tombol <strong>+ Proyek Baru Bersih</strong> di seluruh antarmuka.
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1351,6 +1405,7 @@ function smartGuideApp() {
                 nav_day2_ops: '8 Layer Day-2 Ops',
                 nav_lifecycle_studio: 'Day-30+ & 3-Pane Studio',
                 nav_mitra_bridge: 'Mitra Bridge & Satu Pintu',
+                nav_v6_guarantees: '5 Jaminan v6.0 & Isolasi',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -1451,7 +1506,9 @@ function smartGuideApp() {
                 sec11_title: '5 Mesin Retensi Siklus Hidup Day-30 s/d Day-365 & The 3-Pane Architect Studio',
                 sec11_desc: 'Mengubah Neriah Pro dari generator blueprint satu kali menjadi Control Plane seumur hidup: evolusi iteratif v1.0 ke v1.1 (sumber pendapatan kredit berulang!), jembatan Live MCP langsung ke IDE developer, Decision Matrix PHP match(), Phase 7 Red-Team Tenant Shield, serta meja kerja 3-Pane Studio 100vh.',
                 sec12_title: '5 Jembatan Komersial-ke-Kode "Mitra Proyek" & Ekosistem Satu Pintu Retail vs Mitra (v5.0)',
-                sec12_desc: 'Menghilangkan 100% underpricing, sengketa scope creep, dan telat cairnya termin akhir: kalkulator RAB algoritmik dari jumlah tabel ULID + state machine + lock, pembekuan SPK SHA-256 otomatis, kalkulator Addendum Berbayar (v1.0 -> v1.1), 7 Milestone Gantt Live, serta UAT Given-When-Then & BAST Digital.'
+                sec12_desc: 'Menghilangkan 100% underpricing, sengketa scope creep, dan telat cairnya termin akhir: kalkulator RAB algoritmik dari jumlah tabel ULID + state machine + lock, pembekuan SPK SHA-256 otomatis, kalkulator Addendum Berbayar (v1.0 -> v1.1), 7 Milestone Gantt Live, serta UAT Given-When-Then & BAST Digital.',
+                sec13_title: '5 Mesin Penjamin Deterministik (L1–L4 Menu, 5 Glue, Symbol Lock, DAG Chunker, Verification Gate) & Isolasi Hermetik (v6.0)',
+                sec13_desc: 'Menutup 5 celah terakhir saat AI membangun sistem berskala 20–35+ tabel: mekar otomatis 25 sub-menu L1–L4 dari 5 kata ide (300 menu terkurasi lintas 12 sektor), 5 perekat korporat (penomoran atomik, tutup buku akuntansi, Maker-Checker, Reason+Evidence, Outbox Replay), SYMBOL_MANIFEST.json anti-amnesia, Kahn Topological Sub-Chunker, <MANDATORY_VERIFICATION_GATE>, dan isolasi proyek 100% bebas sisa draf lama.'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -1466,6 +1523,7 @@ function smartGuideApp() {
                 nav_day2_ops: '8 Day-2 Ops Layers',
                 nav_lifecycle_studio: 'Day-30+ & 3-Pane Studio',
                 nav_mitra_bridge: 'Mitra Bridge & One-Stop',
+                nav_v6_guarantees: '5 v6.0 Guarantees & Isolation',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -1566,7 +1624,9 @@ function smartGuideApp() {
                 sec11_title: '5 Day-30 to Day-365 Lifecycle Retention Engines & The 3-Pane Architect Studio',
                 sec11_desc: 'Transforms Neriah Pro from a one-off blueprint generator into a permanent engineering Control Plane: iterative v1.0 -> v1.1 Delta Prompts (recurring credit monetization), Live MCP IDE Bridge, PHP match() Decision Tables, Phase 7 Red-Team Suite, and the 100vh 3-Pane Architect Studio.',
                 sec12_title: '5 Commercial-to-Code Bridges for Mitra Proyek & Unified Retail vs Mitra Architecture (v5.0)',
-                sec12_desc: 'Eliminates underpricing, scope creep disputes, and delayed final settlements: algorithmic RAB/WBS man-hour estimator, cryptographic SPK SHA-256 Scope Freeze, Paid Change-Order Addendum calculator, 7-Milestone Live Gantt, and interactive Given-When-Then UAT + Digital BAST.'
+                sec12_desc: 'Eliminates underpricing, scope creep disputes, and delayed final settlements: algorithmic RAB/WBS man-hour estimator, cryptographic SPK SHA-256 Scope Freeze, Paid Change-Order Addendum calculator, 7-Milestone Live Gantt, and interactive Given-When-Then UAT + Digital BAST.',
+                sec13_title: '5 Deterministic Guarantee Engines (L1–L4 Menu, 5 Glue, Symbol Lock, DAG Chunker, Exit Gate) & Hermetic Isolation (v6.0)',
+                sec13_desc: 'Eliminates output truncation, cross-part naming drift, FK migration crashes, shallow apps, and cross-project draft bleed via 300 L1–L4 sector sub-menus, 5 SAP/Odoo-grade Enterprise Glue tables, frozen SYMBOL_MANIFEST.json, Kahn topological sub-chunking, <MANDATORY_VERIFICATION_GATE>, and strict ULID workspace isolation.'
             }
         },
 
@@ -1594,7 +1654,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

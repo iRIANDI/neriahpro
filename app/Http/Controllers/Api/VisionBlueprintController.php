@@ -44,6 +44,7 @@ class VisionBlueprintController extends Controller
             'target_waktu' => 'targetWaktu',
             'primary_sector' => 'primarySector',
             'selected_primitives' => 'selectedPrimitives',
+            'selected_menus' => 'selectedMenus',
             'stack_preset' => 'stackPreset',
         ];
         foreach ($camelToSnakeMap as $snakeKey => $camelKey) {
@@ -89,6 +90,8 @@ class VisionBlueprintController extends Controller
             'primarySector' => 'nullable|string|max:80',
             'selected_primitives' => 'nullable|array',
             'selectedPrimitives' => 'nullable|array',
+            'selected_menus' => 'nullable|array',
+            'selectedMenus' => 'nullable|array',
             'stack_preset' => 'nullable|string|max:120',
             'stackPreset' => 'nullable|string|max:120',
         ]);
@@ -121,6 +124,8 @@ class VisionBlueprintController extends Controller
             'package_tier' => $request->input('package_tier') ?: $request->input('tier') ?: $request->input('selected_tier'),
             'primary_sector' => $request->input('primary_sector') ?: $request->input('primarySector'),
             'selected_primitives' => $request->input('selected_primitives') ?: $request->input('selectedPrimitives', []),
+            'selected_menus' => $request->input('selected_menus') ?: $request->input('selectedMenus', []),
+            'isolation_token' => 'iso_' . strtolower((string) \Illuminate\Support\Str::ulid()),
             'stack_preset' => \App\Support\PosStackPresetCatalog::normalizePresetCode(
                 $request->input('stack_preset') ?: $request->input('stackPreset')
             ),

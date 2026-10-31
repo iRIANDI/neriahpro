@@ -7,6 +7,9 @@
     $printSpec = $schema['printable_and_thermal_contracts'] ?? [];
     $envVars = $schema['environment_secret_vault']['variables'] ?? [];
     $redTeamVectors = $schema['security_red_team_suite']['vectors'] ?? [];
+    $enterpriseMenuMatrix = $schema['enterprise_menu_matrix'] ?? [];
+    $enterpriseGlueList = $schema['five_enterprise_glue_primitives'] ?? [];
+    $dagLayers = $schema['topological_dag_plan']['layers'] ?? [];
     $detScore = number_format((float) ($doctor['determinism_score'] ?? 100.0), 1);
     $isZeroAssumptionReady = !empty($doctor['zero_assumption_ready']);
     $verifiedCount = count(array_filter($phaseProgress, fn ($p) => is_array($p) && ($p['status'] ?? '') === 'VERIFIED'));
@@ -37,14 +40,27 @@
     <!-- =================================================================== -->
     <header class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 z-30">
         <div class="flex flex-wrap items-center gap-2">
-            <a href="/blueprint" class="px-2 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[11px] font-black uppercase tracking-wider rounded-none hover:opacity-90 transition">
-                [NeriahPro OS v5.0]
+            <a href="/blueprint?tier=retail_spark&amp;new=1" class="px-2 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[11px] font-black uppercase tracking-wider rounded-none hover:opacity-90 transition">
+                [NeriahPro OS v6.0]
             </a>
             <div class="flex items-center gap-1.5 font-mono text-xs">
-                <span class="font-black text-zinc-950 dark:text-zinc-100 truncate max-w-44">{{ $projectName }}</span>
+                <input
+                    type="text"
+                    wire:model.live.debounce.400ms="projectName"
+                    aria-label="Nama Proyek"
+                    class="px-2 py-0.5 w-44 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-black text-zinc-950 dark:text-zinc-100 rounded-xs text-xs"
+                />
                 <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 text-[10px] font-black rounded-xs tabular-nums">
                     {{ $currentVersion }}
                 </span>
+                <button
+                    type="button"
+                    wire:click="startFreshIsolatedProject"
+                    class="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-700 text-[10px] font-black rounded-xs cursor-pointer transition"
+                    title="Reset workspace bersih 100% terisolasi tanpa menyentuh proyek sebelumnya"
+                >
+                    + Proyek Baru Bersih
+                </button>
             </div>
 
             <!-- Dual-Mode Switcher: Retail Self-Dev vs Mitra Proyek Turnkey (Satu Pintu) -->
@@ -280,8 +296,10 @@
                 <div class="text-emerald-900 dark:text-emerald-300">✓ ULID CHAR(26) + Keyset O(1)</div>
                 <div class="text-emerald-900 dark:text-emerald-300">✓ 5 Historical *_snapshot Columns</div>
                 <div class="text-emerald-900 dark:text-emerald-300">✓ Zero CDN / Zero Capsule / Local SVG QR</div>
-                <div class="font-black text-zinc-950 dark:text-zinc-100 uppercase pt-1">&gt; 5. 4-Pillar AI &amp; MCP Sync</div>
-                <div class="text-zinc-700 dark:text-zinc-300">RAG pgvector + CAG + KAG + 24 Tools + SHA-256 Audit</div>
+                <div class="font-black text-zinc-950 dark:text-zinc-100 uppercase pt-1">&gt; 5. 4-Pillar AI &amp; v6.0 Guarantees</div>
+                <div class="text-emerald-900 dark:text-emerald-300">✓ 25 Sub-Menu L1–L4 + 5 Enterprise Glue</div>
+                <div class="text-emerald-900 dark:text-emerald-300">✓ SYMBOL_MANIFEST + Kahn DAG Sub-Parts</div>
+                <div class="text-zinc-700 dark:text-zinc-300">RAG pgvector + CAG + KAG + 27 Tools + SHA-256 Audit</div>
             </div>
         </aside>
 
@@ -298,6 +316,7 @@
                     'decisions' => '4. Decision Matrix',
                     'delta_verify' => '5. Delta v1.1 & Verify',
                     'commercial_mitra' => '6. Kontrak, RAB & BAST',
+                    'menus_glue' => '7. L1–L4 Menu (25) & 5 Glue',
                 ] as $tabKey => $tabLabel)
                     <button
                         type="button"
@@ -808,6 +827,105 @@
                         @endif
                     </div>
                 @endif
+
+                <!-- TAB 7 (v6.0): L1–L4 ENTERPRISE MENU MATRIX (25 SUB-MENUS) & 5 CORPORATE GLUE + KAHN DAG -->
+                @if($centerTab === 'menus_glue')
+                    <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-2.5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <div class="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                                    JAMINAN 1: L1–L4 ENTERPRISE MENU &amp; CAPABILITY MATRIX (ANTI-SHALLOW APP)
+                                </div>
+                                <div class="text-xs font-bold text-zinc-950 dark:text-zinc-100 tabular-nums">
+                                    {{ $enterpriseMenuMatrix['included_v1_count'] ?? 25 }}/{{ $enterpriseMenuMatrix['total_menus'] ?? 25 }} Sub-Menu Operasional Aktif di v1.0 (5 Divisi Standar Korporat)
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                wire:click="selectAllEnterpriseMenus"
+                                class="px-2 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[10px] font-black rounded-none cursor-pointer"
+                            >
+                                Aktifkan Semua 25 Menu
+                            </button>
+                        </div>
+
+                        <div class="space-y-2">
+                            @foreach(($enterpriseMenuMatrix['divisions'] ?? []) as $div)
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-1.5">
+                                    <div class="flex items-center justify-between gap-2 font-mono text-[11px]">
+                                        <span class="font-black text-zinc-950 dark:text-zinc-100">
+                                            Divisi {{ $div['division_number'] }}: {{ $div['division_name']['id'] ?? '' }}
+                                        </span>
+                                        <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 text-[9px] font-black rounded-none tabular-nums">
+                                            Part 5.{{ $div['division_number'] }}
+                                        </span>
+                                    </div>
+                                    <div class="grid grid-cols-1 gap-1">
+                                        @foreach(($div['menus'] ?? []) as $mItem)
+                                            @php $isMenuChecked = !empty($mItem['included_in_v1']); @endphp
+                                            <label class="flex items-start justify-between gap-2 p-1.5 border rounded-none cursor-pointer {{ $isMenuChecked ? 'bg-white border-emerald-400 dark:bg-zinc-900 dark:border-emerald-700' : 'bg-zinc-100/70 border-zinc-200 dark:bg-zinc-900/40 dark:border-zinc-800 opacity-75' }}">
+                                                <div class="flex items-start gap-2 min-w-0">
+                                                    <input
+                                                        type="checkbox"
+                                                        wire:click="toggleEnterpriseMenu('{{ $mItem['code'] }}')"
+                                                        @checked($isMenuChecked)
+                                                        class="mt-0.5 rounded-none"
+                                                    />
+                                                    <div class="text-[11px] leading-tight">
+                                                        <div class="font-mono font-bold text-zinc-950 dark:text-zinc-100">
+                                                            [{{ $mItem['code'] }}] {{ $mItem['title'] }}
+                                                        </div>
+                                                        <div class="text-[10px] font-mono text-zinc-600 dark:text-zinc-400">
+                                                            L4: {{ implode(' • ', $mItem['l4_capabilities'] ?? []) }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <span class="shrink-0 px-1.5 py-0.5 font-mono text-[9px] font-black border {{ $isMenuChecked ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700' : 'bg-zinc-200 text-zinc-800 border-zinc-400 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700' }}">
+                                                    {{ $isMenuChecked ? 'v1.0 CORE' : 'v1.1 BACKLOG' }}
+                                                </span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-2">
+                        <div class="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                            JAMINAN 2: THE 5 CORPORATE "ENTERPRISE GLUE" PRIMITIVES (AUTO-INJECTED)
+                        </div>
+                        <div class="space-y-1.5">
+                            @foreach($enterpriseGlueList as $gp)
+                                <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none font-mono text-[10px] space-y-0.5">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="font-black text-zinc-950 dark:text-zinc-100">{{ $gp['name']['id'] ?? $gp['code'] }}</span>
+                                        <code class="px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black">{{ $gp['table'] }}</code>
+                                    </div>
+                                    <div class="text-zinc-700 dark:text-zinc-300">{{ $gp['invariant'] }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-2">
+                        <div class="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                            JAMINAN 4: KAHN'S ALGORITHM TOPOLOGICAL MIGRATION LAYERS (ZERO FK ERROR)
+                        </div>
+                        <div class="space-y-1 font-mono text-[10px]">
+                            @foreach($dagLayers as $layerObj)
+                                <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none flex flex-wrap items-center gap-1.5">
+                                    <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-zinc-200 dark:text-zinc-950 font-black">
+                                        Layer {{ $layerObj['layer_index'] }}
+                                    </span>
+                                    @foreach(($layerObj['tables'] ?? []) as $ltName)
+                                        <code class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-bold">{{ $ltName }}</code>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
         </section>
 
@@ -829,6 +947,9 @@
                 <div class="flex flex-wrap gap-1 font-mono text-[10px]">
                     @foreach([
                         'phases' => 'Prompts (1–7)',
+                        'dag_subparts' => 'DAG Sub-Parts (' . count($subParts ?? []) . ')',
+                        'symbol_manifest' => 'SYMBOL_MANIFEST.json',
+                        'enterprise_menu' => 'MENU_MATRIX.md',
                         'agents_md' => 'AGENTS.md',
                         'graph_json' => 'graph.json',
                         'mcp_json' => '.mcp.json',
@@ -860,6 +981,19 @@
                             </button>
                         @endfor
                     </div>
+                @elseif($rightDockMode === 'dag_subparts')
+                    <div class="flex flex-wrap gap-1 font-mono text-[10px] max-h-24 overflow-y-auto studio-scroll">
+                        @foreach(($subParts ?? []) as $spBtn)
+                            <button
+                                type="button"
+                                wire:click="$set('activeSubPartCode', '{{ $spBtn['part_code'] }}')"
+                                class="px-2 py-0.5 border tabular-nums cursor-pointer rounded-none {{ $activeSubPartCode === $spBtn['part_code'] ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 font-black' : 'bg-white text-zinc-800 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 font-bold' }}"
+                                title="{{ $spBtn['title'] }}"
+                            >
+                                Part {{ $spBtn['part_code'] }}
+                            </button>
+                        @endforeach
+                    </div>
                 @endif
             </div>
 
@@ -869,6 +1003,10 @@
                     @if($rightDockMode === 'phases')
                         <div class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100 truncate">
                             {{ $selectedPhaseObj['title'] ?? 'Phase Prompt' }}
+                        </div>
+                    @elseif($rightDockMode === 'dag_subparts')
+                        <div class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100 truncate">
+                            {{ $selectedSubPartObj['title'] ?? 'DAG Sub-Part Prompt' }}
                         </div>
                     @else
                         <div class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100 uppercase">

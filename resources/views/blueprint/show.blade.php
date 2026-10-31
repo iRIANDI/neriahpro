@@ -1811,6 +1811,18 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <span class="hidden xl:inline">VERIFY.SH</span>
                         <span class="xl:hidden">SH</span>
                     </a>
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'symbol-manifest']) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 font-black transition flex items-center gap-1" title="Unduh Exact Symbol Lock Anti-Amnesia (.agents/SYMBOL_MANIFEST.json)">
+                        <span class="hidden xl:inline">SYMBOL.JSON</span>
+                        <span class="xl:hidden">SYM</span>
+                    </a>
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'enterprise-menu']) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 font-bold transition flex items-center gap-1" title="Unduh 25 Sub-Menu Operasional L1–L4 (.agents/ENTERPRISE_MENU_MATRIX.md)">
+                        <span class="hidden xl:inline">MENU25.MD</span>
+                        <span class="xl:hidden">M25</span>
+                    </a>
+                    <a href="{{ url('/blueprint?tier=retail_spark&new=1') }}" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black transition flex items-center gap-1" title="Mulai Proyek Baru Bersih (100% Terisolasi Tanpa Sisa Proyek Ini)">
+                        <span class="hidden xl:inline">+ PROYEK BARU</span>
+                        <span class="xl:hidden">+BARU</span>
+                    </a>
                 </div>
 
                 <!-- Dedicated AI AGENT HELPER Trigger -->
@@ -6932,6 +6944,12 @@ class ProcessSecureDataset implements ShouldQueue
                                 </a>
                                 <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
                                     VERIFY.SH
+                                </a>
+                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'symbol-manifest']) }}" class="px-2.5 py-2 bg-emerald-900/80 hover:bg-emerald-800 text-emerald-100 border border-emerald-600 font-black uppercase">
+                                    SYMBOL_MANIFEST.JSON
+                                </a>
+                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'enterprise-menu']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                    MENU25.MD
                                 </a>
                                 <button type="button" @click="runBlueprintDoctor()" :disabled="runningDoctor" class="px-2.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-amber-300 border border-amber-700 font-bold uppercase cursor-pointer">
                                     <span x-text="runningDoctor ? 'DIAGNOSING...' : '🩺 DOCTOR'"></span>

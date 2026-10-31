@@ -132,7 +132,7 @@ class ProjectOsSectoralUiAndKillerFeaturesTest extends TestCase
         // Verify phase-4 & verify-blueprint download formats
         $phase4Resp = $this->get(route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'phase-4']));
         $phase4Resp->assertOk();
-        $this->assertStringContainsString('FASE 4/6', $phase4Resp->getContent());
+        $this->assertStringContainsString('FASE 4/7', $phase4Resp->getContent());
 
         $verifyShResp = $this->get(route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint']));
         $verifyShResp->assertOk();
@@ -217,11 +217,11 @@ SQL;
             );
         }
 
-        // Verify 24 valid Gemini & OpenAI Tool Declarations (Project OS v5.0)
+        // Verify 27 valid Gemini & OpenAI Tool Declarations (Project OS v6.0)
         $geminiTools = GeminiToolRegistry::getDeclarations();
         $openAiTools = GeminiToolRegistry::getOpenAiTools();
-        $this->assertCount(24, $geminiTools);
-        $this->assertCount(24, $openAiTools);
+        $this->assertCount(27, $geminiTools);
+        $this->assertCount(27, $openAiTools);
 
         $engine = app(AgenticActionExecutionEngine::class);
 

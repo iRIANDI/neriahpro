@@ -744,7 +744,11 @@ class VectorEmbeddingService
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $satuPintuSourceId)->exists()) {
             $pkgLines = [];
             foreach (\App\Support\PricingRegistry::getSatuPintuCatalog() as $pKey => $pMeta) {
-                $pkgLines[] = "- [{$pMeta['track_mode']}] {$pMeta['name_id']} ({$pKey}): {$pMeta['formatted_price']} | Sektor: {$pMeta['sector_scope']} | Stack: {$pMeta['stack_scope']}";
+                $pName = $pMeta['name_id'] ?? $pMeta['name'] ?? $pKey;
+                $stackScope = is_array($pMeta['stack_scope'] ?? null)
+                    ? implode(', ', $pMeta['stack_scope'])
+                    : (string) ($pMeta['stack_scope'] ?? 'M1–S2');
+                $pkgLines[] = "- [{$pMeta['track_mode']}] {$pName} ({$pKey}): {$pMeta['formatted_price']} | Sektor: {$pMeta['sector_scope']} | Stack: {$stackScope}";
             }
             $journeyLines = [];
             foreach (\App\Services\PosCommercialBridgeService::guidedClientJourneySteps() as $gStep) {
@@ -770,13 +774,67 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 10. Indeks 5 Deterministic Guarantee Engines, 5 Enterprise Glue & Hermetic Project Isolation (Project OS v6.0)
+        foreach (\App\Support\PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees() as $dg) {
+            $dgCode = (string) ($dg['code'] ?? 'GUARANTEE');
+            $sourceId = 'deterministic-guarantee-v6-' . strtolower($dgCode);
+            if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+                continue;
+            }
+
+            $dgTitle = $dg['title']['id'] ?? $dgCode;
+            $dgDesc = $dg['desc']['id'] ?? '';
+            $dgContent = "Mesin Penjamin Deterministik v6.0 #{$dg['number']}: {$dgCode} ({$dg['badge']})\nJudul: {$dgTitle}\nSpesifikasi Anti-Slop: {$dgDesc}";
+
+            $embedding = $this->generateEmbedding("{$dgTitle}\n{$dgContent}");
+            AiKnowledgeVector::create([
+                'title' => "Project OS v6.0 Guarantee #{$dg['number']}: {$dgTitle}",
+                'source_type' => 'deterministic_guarantee_v6',
+                'source_id' => $sourceId,
+                'content' => "### {$dgTitle}\n\n{$dgContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => '5 Deterministic Guarantee Engines (v6.0)',
+                    'guarantee_code' => $dgCode,
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        $glueIsolationSourceId = 'project-os-v6-enterprise-glue-and-hermetic-isolation';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $glueIsolationSourceId)->exists()) {
+            $glueLines = [];
+            foreach (\App\Support\PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives() as $gp) {
+                $glueLines[] = "- [{$gp['code']}] {$gp['name']['id']} (Tabel `{$gp['table']}`, Action `{$gp['action_fqcn']}`): {$gp['invariant']}";
+            }
+            $v6Overview = "Project OS v6.0 — 5 Primitif Perekat Korporat (Enterprise Glue) & Protokol Hermetic Project Isolation:\n"
+                . implode("\n", $glueLines)
+                . "\n\nMatriks Menu L1–L4 (300 Sub-Menu Terkurasi): 12 Sektor × 5 Divisi Operasional × 5 Sub-Menu L3 = 25 layar korporat otomatis mekar walau user hanya mengetik 5 kata ide.\n"
+                . "Hermetic Project Isolation: Setiap proyek wajib memiliki ULID, slug, draft_token, isolation_token, dan staging_url unik tanpa kebocoran localStorage/session dan dilarang keras menimpa proyek lama berbasis nama bisnis.";
+
+            $embedding = $this->generateEmbedding("5 Enterprise Glue & Hermetic Project Isolation v6.0\n{$v6Overview}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v6.0: 5 Enterprise Glue Primitives, 300 L1–L4 Menus & Hermetic Isolation',
+                'source_type' => 'enterprise_glue_and_isolation_v6',
+                'source_id' => $glueIsolationSourceId,
+                'content' => "### 5 Enterprise Glue & Hermetic Project Isolation (v6.0)\n\n{$v6Overview}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'Enterprise Glue & Hermetic Isolation (v6.0)',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
             'status' => 'success',
             'synced_sections' => $syncedSections,
             'total_chunks' => $totalChunks,
-            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (10 Pilar Factory OS, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 10 Perfection Pillars, 5 Day-30+ Lifecycle Engines, 3-Pane Studio & 5 Mitra Commercial-to-Code Bridges Satu Pintu v5.0) ke basis pengetahuan RAG pgvector.",
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (10 Pilar Factory OS, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 10 Perfection Pillars, 5 Day-30+ Lifecycle Engines, 3-Pane Studio, 5 Mitra Bridges v5.0 & 5 Deterministic Guarantee Engines + Hermetic Isolation v6.0) ke basis pengetahuan RAG pgvector.",
         ];
     }
 }

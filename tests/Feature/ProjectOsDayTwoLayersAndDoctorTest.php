@@ -217,7 +217,7 @@ class ProjectOsDayTwoLayersAndDoctorTest extends TestCase
 
         $cliResp = $this->get("/init/{$blueprint->id}");
         $cliResp->assertOk()
-            ->assertHeader('X-Project-OS-Version', '3.0.0')
+            ->assertHeader('X-Project-OS-Version', '6.0.0')
             ->assertSee('PRINT_THERMAL_AND_A4_CONTRACT.md', false)
             ->assertSee('InitializeNewTenantAction.php', false);
 
@@ -248,9 +248,9 @@ class ProjectOsDayTwoLayersAndDoctorTest extends TestCase
         $reviewer = User::query()->where('email', 'reviewer.midtrans@neriahpro.com')->firstOrFail();
         $this->assertFalse($reviewer->can('manage_day2_ops_contracts'));
 
-        // 24 Gemini & OpenAI Tools registered (v5.0)
-        $this->assertCount(24, GeminiToolRegistry::getDeclarations());
-        $this->assertCount(24, GeminiToolRegistry::getOpenAiTools());
+        // 27 Gemini & OpenAI Tools registered (v6.0)
+        $this->assertCount(27, GeminiToolRegistry::getDeclarations());
+        $this->assertCount(27, GeminiToolRegistry::getOpenAiTools());
 
         $admin = User::query()->where('email', 'yoseph.iriandi.tambunan@gmail.com')->firstOrFail();
         $this->actingAs($admin);

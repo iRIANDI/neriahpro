@@ -87,12 +87,12 @@ class ProjectOsMatrixPage extends Page
 
     public function getSubheading(): string | Htmlable | null
     {
-        return 'Project OS v5.0 Satu Pintu Ultimate: 12 Sectoral UI/UX Archetypes, 12 Core Primitives, 9 Stack Adapters (M1–S2), 8 Layer Day-2 Ops, 5 Day-30+ Lifecycle Engines, serta 5 Mitra Commercial-to-Code Bridges (RAB Algoritmik, SPK SHA-256, Paid Addendum, 7-Milestone Gantt & Digital BAST).';
+        return 'Project OS v6.0 Deterministic Guarantee Edition: 12 Sectoral UI/UX Archetypes, 300 Sub-Menu L1–L4 (25/Sektor), 5 Enterprise Glue Primitives, Exact Symbol Lock (SYMBOL_MANIFEST.json), Kahn DAG Sub-Chunker, Hard Compiler Exit-Gate (<MANDATORY_VERIFICATION_GATE>), serta Hermetic Project Isolation.';
     }
 
     public function setTab(string $tab): void
     {
-        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lifecycle', 'mitra', 'lab'], true)) {
+        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lifecycle', 'mitra', 'guarantees_v6', 'lab'], true)) {
             $this->activeTab = $tab;
             $this->cursor = null;
             $this->selectedIds = [];

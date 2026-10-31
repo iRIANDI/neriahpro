@@ -12,10 +12,13 @@ use App\Services\BlueprintSlopScannerService;
 use App\Services\PosCommercialBridgeService;
 use App\Services\ProjectOsBlueprintCompilerService;
 use App\Services\ScaffoldGeneratorService;
+use App\Services\TopologicalPromptChunker;
+use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
 use App\Support\PosStackPresetCatalog;
 use App\Support\ProjectOsMatrixCatalog;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -27,24 +30,30 @@ class BlueprintArchitectStudio extends Component
     #[Locked]
     public ?string $posProjectId = null;
 
+    #[Locked]
+    public string $workspaceIsolationId = '';
+
     public ?string $slug = null;
-    public string $projectName = 'Nusantara Enterprise Workspace';
+    public string $projectName = 'Proyek Enterprise Baru';
     public string $currentVersion = 'v1.0';
-    public string $sectorCode = 'SECTOR_02_HOSPITALITY_SPACE';
+    public string $sectorCode = 'SECTOR_01_COMMERCE_OMNICHANNEL';
     public string $stackCode = 'STACK_M1_LARAVEL_MONOLITH';
     public array $selectedPrimitives = [
         'PRIMITIVE_RBAC_TENANCY',
-        'PRIMITIVE_BOOKING_TIMESLOT',
+        'PRIMITIVE_CATALOG_SKU',
+        'PRIMITIVE_INVENTORY_LEDGER',
         'PRIMITIVE_DOUBLE_ENTRY_LEDGER',
     ];
+    public array $selectedMenus = [];
 
     // Dual-Mode Satu Pintu: 'RETAIL_SELF_DEV' vs 'MITRA_TURNKEY_PROJECT'
     public string $engagementMode = PosCommercialBridgeService::MODE_RETAIL;
 
     // 3-Pane Studio UI State
-    public string $centerTab = 'schema'; // schema | states | ui_print | decisions | delta_verify | commercial_mitra
-    public string $rightDockMode = 'phases'; // phases | agents_md | graph_json | mcp_json | env_blueprint
+    public string $centerTab = 'schema'; // schema | states | ui_print | decisions | delta_verify | commercial_mitra | menus_glue
+    public string $rightDockMode = 'phases'; // phases | dag_subparts | symbol_manifest | enterprise_menu | agents_md | graph_json | mcp_json | env_blueprint
     public int $activePhase = 1;
+    public string $activeSubPartCode = '1.0';
     public bool $showWizardModal = false;
     public int $wizardStep = 1;
     public bool $showSlopDiffModal = false;
@@ -89,20 +98,21 @@ class BlueprintArchitectStudio extends Component
     public function mount(?string $slug = null): void
     {
         ProjectOsMatrixCatalog::ensureSeeded();
+        $this->workspaceIsolationId = 'ws_' . strtolower((string) Str::ulid());
 
         $blueprint = null;
-        if ($slug) {
+        if ($slug && ! request()->boolean('new', false) && ! request()->boolean('reset', false)) {
             $blueprint = VisionBlueprint::query()
                 ->where('slug', $slug)
                 ->orWhere('id', $slug)
                 ->first();
-        } else {
-            $blueprint = VisionBlueprint::query()->orderBy('id', 'desc')->first();
         }
+        // HERMETIC ISOLATION (v6.0): NEVER auto-load the most recent database blueprint when $slug is omitted!
 
         if ($blueprint) {
             $this->hydrateFromBlueprint($blueprint);
         } else {
+            $this->syncDefaultEnterpriseMenusForSector($this->sectorCode);
             $this->showWizardModal = request()->boolean('wizard', false);
         }
 
@@ -176,6 +186,66 @@ class BlueprintArchitectStudio extends Component
         if (! empty($injected)) {
             $this->selectedPrimitives = array_values(array_unique(array_map('strval', $injected)));
         }
+
+        $savedMenus = (array) ($meta['selected_menus'] ?? []);
+        if (! empty($savedMenus)) {
+            $this->selectedMenus = array_values(array_unique(array_map('strval', $savedMenus)));
+        } else {
+            $this->syncDefaultEnterpriseMenusForSector($this->sectorCode);
+        }
+    }
+
+    protected function syncDefaultEnterpriseMenusForSector(string $sectorCode): void
+    {
+        $matrix = PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector($sectorCode);
+        $codes = [];
+        foreach (($matrix['divisions'] ?? []) as $div) {
+            foreach (($div['menus'] ?? []) as $m) {
+                if (! empty($m['code'])) {
+                    $codes[] = (string) $m['code'];
+                }
+            }
+        }
+        $this->selectedMenus = array_values(array_unique($codes));
+    }
+
+    public function startFreshIsolatedProject(): void
+    {
+        $this->blueprintId = null;
+        $this->posProjectId = null;
+        $this->slug = null;
+        $this->workspaceIsolationId = 'ws_' . strtolower((string) Str::ulid());
+        $this->projectName = 'Proyek Enterprise Baru';
+        $this->currentVersion = 'v1.0';
+        $this->customTables = [];
+        $this->autoStateMachineTables = [];
+        $this->customDecisionRules = [];
+        $this->phaseProgress = [];
+        $this->uatChecklistState = [];
+        $this->bastSignoffState = [];
+        $this->latestSpkResult = [];
+        $this->latestAddendumResult = [];
+        $this->latestDeltaResult = [];
+        $this->deltaTitle = '';
+        $this->deltaSummary = '';
+        $this->bastSignerName = '';
+        $this->bastSignerEmail = '';
+        $this->selectSector('SECTOR_01_COMMERCE_OMNICHANNEL');
+    }
+
+    public function toggleEnterpriseMenu(string $menuCode): void
+    {
+        if (in_array($menuCode, $this->selectedMenus, true)) {
+            $this->selectedMenus = array_values(array_diff($this->selectedMenus, [$menuCode]));
+        } else {
+            $this->selectedMenus[] = $menuCode;
+            $this->selectedMenus = array_values(array_unique($this->selectedMenus));
+        }
+    }
+
+    public function selectAllEnterpriseMenus(): void
+    {
+        $this->syncDefaultEnterpriseMenusForSector($this->sectorCode);
     }
 
     public function selectSector(string $code): void
@@ -193,6 +263,8 @@ class BlueprintArchitectStudio extends Component
                 break;
             }
         }
+
+        $this->syncDefaultEnterpriseMenusForSector($normalized);
     }
 
     public function selectStack(string $code): void
@@ -353,10 +425,12 @@ class BlueprintArchitectStudio extends Component
             ? VisionBlueprint::query()->find($this->blueprintId)
             : new VisionBlueprint([
                 'nama_bisnis' => $this->projectName,
-                'slug' => $this->slug ?: 'studio-live-workspace',
+                'slug' => $this->slug ?: ('studio-' . substr($this->workspaceIsolationId ?: 'isolated', -8)),
                 'user_metadata' => [
                     'primary_sector' => $this->sectorCode,
                     'selected_primitives' => $this->selectedPrimitives,
+                    'selected_menus' => $this->selectedMenus,
+                    'isolation_token' => $this->workspaceIsolationId ?: ('ws_' . strtolower((string) Str::ulid())),
                     'stack_preset' => $this->stackCode,
                 ],
             ]);
@@ -364,13 +438,20 @@ class BlueprintArchitectStudio extends Component
         $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($bp, [
             'sector_code' => $this->sectorCode,
             'primitive_codes' => $this->selectedPrimitives,
+            'selected_menus' => ! empty($this->selectedMenus) ? $this->selectedMenus : null,
+            'isolation_token' => $this->workspaceIsolationId ?: ('ws_' . strtolower((string) Str::ulid())),
             'stack_preset' => $this->stackCode,
             'custom_decision_rules' => $this->customDecisionRules,
             'persist_project' => false,
         ]);
 
         if (! empty($this->customTables)) {
-            $schema['data_dictionary'] = array_merge($schema['data_dictionary'] ?? [], $this->customTables);
+            $mergedTables = array_merge($schema['data_dictionary'] ?? [], $this->customTables);
+            $dagPlan = TopologicalPromptChunker::buildTopologicalTableLayers($mergedTables);
+            $schema['data_dictionary'] = $dagPlan['ordered_tables'];
+            $schema['topological_dag_plan'] = $dagPlan;
+            $schema['symbol_manifest'] = TopologicalPromptChunker::generateSymbolManifest($schema);
+            $schema['sub_chunked_prompts'] = TopologicalPromptChunker::compileSubChunkedPrompts($schema, $schema['symbol_manifest']);
         }
 
         foreach ($this->autoStateMachineTables as $tblName) {
@@ -421,9 +502,14 @@ class BlueprintArchitectStudio extends Component
         $doctor = $this->computeDoctorReport($schema);
         $phases = $schema['phased_prompt_sequencer'] ?? [];
         $selectedPhaseObj = $phases[max(0, $this->activePhase - 1)] ?? ($phases[0] ?? []);
+        $subParts = $schema['sub_chunked_prompts'] ?? [];
+        $selectedSubPartObj = collect($subParts)->firstWhere('part_code', $this->activeSubPartCode) ?? ($subParts[0] ?? []);
 
         $bpDummy = $this->blueprintId ? VisionBlueprint::query()->find($this->blueprintId) : null;
         $compiledRightContent = match ($this->rightDockMode) {
+            'dag_subparts' => (string) ($selectedSubPartObj['prompt'] ?? ''),
+            'symbol_manifest' => (string) json_encode($schema['symbol_manifest'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            'enterprise_menu' => PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown($schema['enterprise_menu_matrix'] ?? []),
             'agents_md' => ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($schema),
             'graph_json' => ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
             'mcp_json' => ScaffoldGeneratorService::generateMcpJsonFile($bpDummy),
@@ -447,6 +533,8 @@ class BlueprintArchitectStudio extends Component
             'schema' => $schema,
             'doctor' => $doctor,
             'phases' => $phases,
+            'subParts' => $subParts,
+            'selectedSubPartObj' => $selectedSubPartObj,
             'selectedPhaseObj' => $selectedPhaseObj,
             'compiledRightContent' => $compiledRightContent,
             'compiledDecisionPhp' => $compiledDecisionPhp,
@@ -457,7 +545,7 @@ class BlueprintArchitectStudio extends Component
             'milestoneGantt' => $milestoneGantt,
             'guidedJourneySteps' => PosCommercialBridgeService::guidedClientJourneySteps(),
         ])->layout('components.layouts.studio', [
-            'title' => 'Project OS Architect Studio v5.0 (Retail & Mitra Satu Pintu)',
+            'title' => 'Project OS Architect Studio v6.0 (5 Deterministic Guarantees & Hermetic Isolation)',
         ]);
     }
 

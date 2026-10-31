@@ -652,6 +652,21 @@
                                                 class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-amber-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
                                             🤝 Hitung RAB &amp; Termin Mitra
                                         </button>
+                                        <button type="button"
+                                                wire:click="sendSuggestedPrompt('Mekarkan 25 sub-menu L1–L4 Enterprise Menu Matrix beserta 5 Corporate Glue untuk SECTOR_02_HOSPITALITY_SPACE')"
+                                                class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
+                                            🏢 25 Menu L1–L4 &amp; 5 Glue v6.0
+                                        </button>
+                                        <button type="button"
+                                                wire:click="sendSuggestedPrompt('Kompilasi SYMBOL_MANIFEST.json dan Topological DAG Sub-Chunker Kahn Algorithm untuk SECTOR_03_HEALTHCARE_CLINICAL')"
+                                                class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
+                                            🧬 SYMBOL Lock &amp; Kahn DAG
+                                        </button>
+                                        <button type="button"
+                                                wire:click="sendSuggestedPrompt('Audit isolasi proyek (Hermetic Project Isolation) dan pastikan tidak ada sisa state atau slug yang saling menimpa')"
+                                                class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
+                                            🔒 Audit Isolasi Proyek Bersih
+                                        </button>
                                     </div>
                                 </div>
                             @endif

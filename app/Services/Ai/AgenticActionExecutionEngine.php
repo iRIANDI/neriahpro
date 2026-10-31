@@ -68,6 +68,9 @@ class AgenticActionExecutionEngine
                 'calculate_mitra_quotation_and_wbs' => $this->calculateMitraQuotationAndWbs($args),
                 'freeze_scope_and_generate_spk_contract' => $this->guardMutation($user, $toolName) ?? $this->freezeScopeAndGenerateSpkContract($args),
                 'manage_uat_checklist_and_digital_bast' => (in_array(strtolower(trim((string) ($args['action'] ?? $args['operation'] ?? 'inspect'))), ['verify_all_uat', 'sign_bast'], true) ? $this->guardMutation($user, $toolName) : null) ?? $this->manageUatChecklistAndDigitalBast($args),
+                'expand_l1_l4_enterprise_menu_matrix' => $this->expandL1L4EnterpriseMenuMatrix($args),
+                'compile_symbol_manifest_and_dag_chunks' => $this->compileSymbolManifestAndDagChunks($args),
+                'verify_project_isolation_and_clean_state' => (strtolower(trim((string) ($args['action'] ?? 'inspect'))) === 'purge_stale_drafts' ? $this->guardMutation($user, $toolName) : null) ?? $this->verifyProjectIsolationAndCleanState($args),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
@@ -502,6 +505,9 @@ class AgenticActionExecutionEngine
             'day_two_layers_count' => count(\App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary()),
             'lifecycle_features_count' => count(\App\Support\PosLifecycleAndStudioCatalog::fiveLifecycleFeatures()),
             'commercial_bridge_features_count' => count(\App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures()),
+            'deterministic_guarantees_count' => count(\App\Support\PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees()),
+            'enterprise_glue_tables_count' => count(\App\Support\PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives()),
+            'l1_l4_sector_submenus_count' => 300,
             'native_tools_count' => count(GeminiToolRegistry::getDeclarations()),
         ];
     }
@@ -926,6 +932,179 @@ class AgenticActionExecutionEngine
             'uat_checklist' => $bridge->buildUatChecklist($schema, is_array($posProject->uat_checklist_json) ? $posProject->uat_checklist_json : []),
             'milestone_gantt' => $bridge->buildMilestoneGanttAndStaging($blueprint, $posProject),
             'bast_signoff' => $posProject->bast_signoff_json,
+        ];
+    }
+
+    /**
+     * 25. Expand L1–L4 Enterprise Menu Matrix (25 Sub-Menus) & 5 Corporate Glue Primitives (v6.0)
+     */
+    protected function expandL1L4EnterpriseMenuMatrix(array $args): array
+    {
+        $bpLookup = trim((string) ($args['blueprint_id'] ?? ''));
+        $selectedMenus = null;
+        $sectorCode = (string) ($args['sector_code'] ?? '');
+        $blueprint = null;
+
+        if ($bpLookup !== '') {
+            $blueprint = VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first();
+            if ($blueprint) {
+                $meta = is_array($blueprint->user_metadata) ? $blueprint->user_metadata : [];
+                if ($sectorCode === '') {
+                    $sectorCode = (string) ($meta['primary_sector'] ?? '');
+                }
+                if (! empty($meta['selected_menus']) && is_array($meta['selected_menus'])) {
+                    $selectedMenus = $meta['selected_menus'];
+                }
+            }
+        }
+
+        $normalizedSector = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+            $sectorCode !== '' ? $sectorCode : 'SECTOR_01_COMMERCE_OMNICHANNEL'
+        );
+        $matrix = \App\Support\PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector($normalizedSector, $selectedMenus);
+        $glue = \App\Support\PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives();
+
+        AuditLog::record(
+            action: 'enterprise_menu_expanded',
+            model: $blueprint,
+            newValues: [
+                'sector_code' => $normalizedSector,
+                'total_menus' => $matrix['total_menus'],
+                'included_v1_count' => $matrix['included_v1_count'],
+            ],
+            description: "Matriks L1–L4 Enterprise Menu ({$matrix['total_menus']} sub-menu) & 5 Enterprise Glue diekstrak untuk {$normalizedSector}.",
+            eventCategory: 'enterprise_glue'
+        );
+
+        return [
+            'success' => true,
+            'sector_code' => $normalizedSector,
+            'total_sub_menus' => $matrix['total_enterprise_menus'],
+            'included_v1_count' => $matrix['included_v1_menus_count'],
+            'enterprise_menu_matrix' => $matrix,
+            'five_enterprise_glue_primitives' => $glue,
+            'enterprise_glue_primitives' => $glue,
+        ];
+    }
+
+    /**
+     * 26. Compile Exact SYMBOL_MANIFEST.json & Kahn Topological DAG Sub-Chunked Prompts (v6.0)
+     */
+    protected function compileSymbolManifestAndDagChunks(array $args): array
+    {
+        $bpLookup = trim((string) ($args['blueprint_id'] ?? ''));
+        $blueprint = $bpLookup !== ''
+            ? VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first()
+            : null;
+
+        if ($blueprint) {
+            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
+        } else {
+            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+                'sector_code' => $args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL',
+                'stack_preset_code' => $args['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH',
+            ]);
+        }
+
+        $manifest = $schema['symbol_manifest'] ?? [];
+        $dag = $schema['topological_dag_plan'] ?? [];
+        $subParts = $schema['sub_chunked_prompts'] ?? [];
+
+        AuditLog::record(
+            action: 'symbol_manifest_compiled',
+            model: $blueprint,
+            newValues: [
+                'entities_count' => $manifest['entities_count'] ?? 0,
+                'dag_layers_count' => $dag['total_layers'] ?? 0,
+                'sub_parts_count' => count($subParts),
+            ],
+            description: 'Kontrak SYMBOL_MANIFEST.json & Kahn Topological DAG Sub-Chunks berhasil dikompilasi.',
+            eventCategory: 'symbol_manifest'
+        );
+
+        return [
+            'success' => true,
+            'project_isolation_id' => $manifest['project_isolation_id'] ?? null,
+            'entities_count' => $manifest['entities_count'] ?? 0,
+            'topological_migration_order' => $manifest['topological_migration_order'] ?? [],
+            'dag_layers' => $dag['layers'] ?? [],
+            'sub_parts_count' => count($subParts),
+            'sub_chunked_parts_count' => count($subParts),
+            'sub_parts_summary' => array_values(array_map(fn (array $p): array => [
+                'part_code' => $p['part_code'],
+                'filename' => $p['filename'],
+                'title' => $p['title'],
+                'entities_count' => $p['entities_count'],
+                'has_verification_gate' => str_contains((string) ($p['prompt'] ?? ''), '<MANDATORY_VERIFICATION_GATE>'),
+            ], $subParts)),
+            'symbol_manifest' => $manifest,
+        ];
+    }
+
+    /**
+     * 27. Verify Hermetic Project Isolation & Optional Stale Draft Purge (v6.0)
+     */
+    protected function verifyProjectIsolationAndCleanState(array $args): array
+    {
+        $action = strtolower(trim((string) ($args['action'] ?? 'inspect')));
+        if ($action === 'purge_stale_drafts') {
+            session()->forget('blueprint_draft');
+        }
+
+        $totalBlueprints = VisionBlueprint::count();
+        $distinctSlugs = VisionBlueprint::distinct('slug')->count('slug');
+        $duplicateSlugsCount = max(0, $totalBlueprints - $distinctSlugs);
+
+        $posProjectsCount = \Illuminate\Support\Facades\Schema::hasTable('pos_projects')
+            ? DB::table('pos_projects')->count()
+            : 0;
+        $distinctTokens = (\Illuminate\Support\Facades\Schema::hasTable('pos_projects') && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'isolation_token'))
+            ? DB::table('pos_projects')->whereNotNull('isolation_token')->distinct('isolation_token')->count('isolation_token')
+            : 0;
+
+        $bpLookup = trim((string) ($args['blueprint_id'] ?? ''));
+        $targetInspection = null;
+        if ($bpLookup !== '') {
+            $bp = VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first();
+            if ($bp) {
+                $linkedPos = \Illuminate\Support\Facades\Schema::hasTable('pos_projects')
+                    ? \App\Models\PosProject::query()->where('vision_blueprint_id', $bp->id)->first()
+                    : null;
+                $targetInspection = [
+                    'blueprint_ulid' => $bp->id,
+                    'slug' => $bp->slug,
+                    'staging_url' => $bp->staging_url,
+                    'pos_project_ulid' => $linkedPos?->id,
+                    'isolation_token' => $linkedPos?->isolation_token ?? ($bp->user_metadata['isolation_token'] ?? null),
+                ];
+            }
+        }
+
+        $isHermeticallyClean = $duplicateSlugsCount === 0;
+
+        AuditLog::record(
+            action: 'project_isolation_verified',
+            newValues: [
+                'action' => $action,
+                'total_blueprints' => $totalBlueprints,
+                'duplicate_slugs' => $duplicateSlugsCount,
+                'pos_projects_count' => $posProjectsCount,
+                'distinct_isolation_tokens' => $distinctTokens,
+            ],
+            description: "Audit Hermetic Project Isolation dijalankan (status bersih: " . ($isHermeticallyClean ? 'YA' : 'PERLU TINDAKAN') . ").",
+            eventCategory: 'project_isolation'
+        );
+
+        return [
+            'success' => true,
+            'action' => $action,
+            'hermetic_isolation_verified' => $isHermeticallyClean,
+            'hermetic_isolation_healthy' => $isHermeticallyClean,
+            'total_blueprints' => $totalBlueprints,
+            'duplicate_slugs_count' => $duplicateSlugsCount,
+            'pos_projects_count' => $posProjectsCount,
+            'distinct_isolation_tokens' => $distinctTokens,
+            'target_project' => $targetInspection,
         ];
     }
 

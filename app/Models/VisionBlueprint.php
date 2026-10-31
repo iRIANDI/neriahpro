@@ -64,8 +64,15 @@ class VisionBlueprint extends Model
 
         static::creating(function ($model) {
             if (empty($model->slug)) {
-                $base = $model->nama_bisnis ?: $model->client_name;
-                $model->slug = Str::slug($base) . '-' . strtolower(Str::random(5));
+                $base = Str::slug((string) ($model->nama_bisnis ?: $model->client_name ?: 'proyek'));
+                if ($base === '') {
+                    $base = 'proyek';
+                }
+                do {
+                    $candidate = $base . '-' . strtolower(Str::random(6));
+                } while (static::query()->where('slug', $candidate)->exists());
+
+                $model->slug = $candidate;
             }
         });
     }
@@ -125,14 +132,27 @@ class VisionBlueprint extends Model
                 @file_put_contents("{$projectDir}/blueprint.json", json_encode($this->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
                 if (!empty($content['universal_blueprint_schema']) && is_array($content['universal_blueprint_schema'])) {
+                    $ubs = $content['universal_blueprint_schema'];
                     @file_put_contents(
                         "{$projectDir}/BLUEPRINT_SCHEMA.json",
-                        json_encode($content['universal_blueprint_schema'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        json_encode($ubs, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                     );
                     @file_put_contents(
                         "{$projectDir}/PROJECT_OS_EXECUTION_BLUEPRINT.md",
-                        \App\Services\ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($content['universal_blueprint_schema'])
+                        \App\Services\ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($ubs)
                     );
+                    if (!empty($ubs['symbol_manifest']) && is_array($ubs['symbol_manifest'])) {
+                        @file_put_contents(
+                            "{$projectDir}/SYMBOL_MANIFEST.json",
+                            json_encode($ubs['symbol_manifest'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        );
+                    }
+                    if (!empty($ubs['enterprise_menu_matrix']) && is_array($ubs['enterprise_menu_matrix'])) {
+                        @file_put_contents(
+                            "{$projectDir}/ENTERPRISE_MENU_MATRIX.md",
+                            \App\Support\PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown($ubs['enterprise_menu_matrix'])
+                        );
+                    }
                 }
             }
         } catch (\Throwable $e) {
@@ -288,9 +308,10 @@ class VisionBlueprint extends Model
             return $this->staging_url;
         }
 
-        $cleanSlug = Str::slug($this->nama_bisnis ?: $this->client_name ?: 'proyek');
+        $cleanSlug = Str::slug($this->nama_bisnis ?: $this->client_name ?: 'proyek') ?: 'proyek';
+        $uniqueSuffix = strtolower(substr((string) ($this->id ?: Str::ulid()), -6));
         $stagingDomain = config('app.staging_domain', 'staging.neriahpro.com');
-        $url = "https://{$cleanSlug}.{$stagingDomain}";
+        $url = "https://{$cleanSlug}-{$uniqueSuffix}.{$stagingDomain}";
 
         $this->update([
             'staging_url' => $url,

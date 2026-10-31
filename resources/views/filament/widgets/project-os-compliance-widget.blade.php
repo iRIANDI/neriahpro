@@ -251,7 +251,7 @@
                     MIDTRANS COMPLIANCE READY
                 </span>
                 <span class="poc-badge poc-badge-sky">
-                    SATU PINTU RETAIL &amp; MITRA v5.0
+                    SATU PINTU RETAIL &amp; MITRA v6.0
                 </span>
                 <span class="poc-badge poc-badge-sky">
                     POSTGRESQL STRICT ULID

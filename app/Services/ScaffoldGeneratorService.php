@@ -95,6 +95,15 @@ class ScaffoldGeneratorService
             'PROJECT_OS_EXECUTION_BLUEPRINT.md' => ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($universalSchema),
             '.agents/PONYTAIL.md' => self::generatePonytailProtocolMarkdown(),
             '.agents/BLUEPRINT_SCHEMA.json' => (string) json_encode($universalSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            '.agents/SYMBOL_MANIFEST.json' => (string) json_encode(
+                $universalSchema['symbol_manifest'] ?? TopologicalPromptChunker::generateSymbolManifest($universalSchema),
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+            ),
+            '.agents/ENTERPRISE_MENU_MATRIX.md' => \App\Support\PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown(
+                $universalSchema['enterprise_menu_matrix'] ?? \App\Support\PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector(
+                    (string) ($universalSchema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
+                )
+            ),
             '.agents/STACK_TOPOLOGY_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderStackTopologyContractMarkdown($universalSchema),
             '.agents/UI_UX_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
             '.agents/ENGINEERING_RULES.md' => ProjectOsBlueprintCompilerService::renderEngineeringRulesMarkdown(),
@@ -167,6 +176,14 @@ class ScaffoldGeneratorService
         // Celah 2: Mandiri Sprint Tasks (Estafet Anti Context-Rot)
         $sprintTaskFiles = self::generateSprintTasks($blueprint, $erdTables, $mvpEngineeringSpecs);
         $files = array_merge($files, $sprintTaskFiles);
+
+        // Project OS v6.0: Token-Safe Topological Sub-Chunked Prompts (.agents/prompts/subparts/*)
+        $subChunkedPrompts = $universalSchema['sub_chunked_prompts']
+            ?? TopologicalPromptChunker::compileSubChunkedPrompts($universalSchema);
+        foreach ($subChunkedPrompts as $spItem) {
+            $spFilename = $spItem['filename'] ?? ('part-' . ($spItem['part_code'] ?? '1.0') . '.md');
+            $files['.agents/prompts/subparts/' . $spFilename] = (string) ($spItem['prompt'] ?? '');
+        }
 
         // Celah 4: Individual Eloquent Migrations & Models (Strict ULID Standard)
         $migrationFiles = self::generateEloquentMigrations($erdTables);

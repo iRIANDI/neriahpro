@@ -67,6 +67,7 @@
                         'day2' => ['label' => '8 Layer Day-2 & Doctor', 'count' => 'v3.0'],
                         'lifecycle' => ['label' => 'Day-30+ Lifecycle & MCP', 'count' => 'v4.0'],
                         'mitra' => ['label' => 'Mitra Bridge & Satu Pintu', 'count' => 'v5.0'],
+                        'guarantees_v6' => ['label' => '5 Guarantee Engines & DAG', 'count' => 'v6.0'],
                         'lab' => ['label' => 'Brownfield & Slop Lab', 'count' => 'LAB'],
                     ] as $tabKey => $tabMeta)
                         <button
@@ -464,12 +465,127 @@
                                             </span>
                                         </td>
                                         <td class="py-2 px-3 font-black tabular-nums text-emerald-900 dark:text-emerald-300">{{ $pRow['formatted_price'] ?? '-' }}</td>
-                                        <td class="py-2 px-3 text-zinc-800 dark:text-zinc-300">{{ $pRow['sector_scope'] ?? '-' }} ({{ $pRow['stack_scope'] ?? '-' }})</td>
+                                        <td class="py-2 px-3 text-zinc-800 dark:text-zinc-300">{{ $pRow['sector_scope'] ?? '-' }} ({{ $pRow['stack_scope_label'] ?? (is_array($pRow['stack_scope'] ?? null) ? implode(', ', $pRow['stack_scope']) : ($pRow['stack_scope'] ?? '-')) }})</td>
                                         <td class="py-2 px-3 text-zinc-700 dark:text-zinc-400">{{ implode(' • ', array_slice($pRow['included_v5_engines'] ?? [], 0, 2)) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+        @elseif($this->activeTab === 'guarantees_v6')
+            @php
+                $v6Guarantees = \App\Support\PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees();
+                $v6Glues = \App\Support\PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives();
+                $v6MenuMatrix = \App\Support\PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector($this->decisionPreviewSector);
+                $v6CatalogSectors = \App\Support\ProjectOsMatrixCatalog::sectors();
+                $v6CompiledSample = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+                    'app_name' => 'Preview ' . $this->decisionPreviewSector,
+                    'sector_code' => $this->decisionPreviewSector,
+                    'stack_preset_code' => $this->mitraPreviewStack,
+                ]);
+                $v6DagPlan = $v6CompiledSample['topological_dag_plan'] ?? [];
+                $v6SubParts = $v6CompiledSample['sub_chunked_prompts'] ?? [];
+                $v6Manifest = $v6CompiledSample['symbol_manifest'] ?? [];
+            @endphp
+            <div class="space-y-4">
+                <!-- 5 Deterministic Guarantee Engines Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+                    @foreach($v6Guarantees as $g)
+                        <div class="p-3.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">
+                                    {{ $g['badge'] }}
+                                </span>
+                                <span class="font-mono text-[10px] font-black text-zinc-700 dark:text-zinc-400">{{ $g['code'] }}</span>
+                            </div>
+                            <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $g['title']['id'] ?? '' }}</div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">{{ $g['summary']['id'] ?? '' }}</p>
+                            <div class="pt-1.5 border-t border-zinc-200 dark:border-zinc-800 font-mono text-[10px] font-bold text-emerald-900 dark:text-emerald-300">
+                                {{ $g['guarantee'] ?? '' }}
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Interactive L1–L4 Enterprise Menu Matrix (25 Sub-Menus per Sector) + Topological DAG Layers -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-4">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">
+                                L1–L4 ENTERPRISE MENU MATRIX (300 CURATED SUB-MENUS) &amp; KAHN TOPOLOGICAL DAG CHUNKER
+                            </div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
+                                Inspeksi 5 Divisi Operasional (25 Sub-Menu), Urutan Foreign-Key Layer 0..N &amp; SYMBOL_MANIFEST.json
+                            </h3>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select wire:model.live="decisionPreviewSector" class="px-3 py-1.5 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs">
+                                @foreach($v6CatalogSectors as $secRow)
+                                    <option value="{{ $secRow['code'] }}">{{ $secRow['code'] }} — {{ $secRow['name']['id'] ?? '' }}</option>
+                                @endforeach
+                            </select>
+                            <a href="{{ url('/blueprint/studio?sector=' . $this->decisionPreviewSector . '&new=1') }}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-black font-mono text-xs font-black border border-emerald-700 rounded-xs">
+                                + Buka Proyek Baru Bersih di Studio
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-2.5">
+                        @foreach(($v6MenuMatrix['divisions'] ?? []) as $div)
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-2">
+                                <div class="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300 border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
+                                    {{ $div['division_name']['id'] ?? $div['division_code'] }}
+                                </div>
+                                <ul class="space-y-1.5 text-[11px]">
+                                    @foreach(($div['menus'] ?? []) as $mItem)
+                                        <li class="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                                            <span class="font-mono text-[9px] font-black text-emerald-900 dark:text-emerald-300 block">{{ $mItem['code'] }}</span>
+                                            <span class="font-bold text-zinc-950 dark:text-zinc-100">{{ $mItem['title'] }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <!-- 5 Corporate Glue Primitives + Kahn DAG Layer Summary -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-2">
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-2">
+                            <div class="font-mono text-[10px] font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                5 Corporate Glue Primitives (Wajib di Semua Sektor)
+                            </div>
+                            <div class="space-y-1.5">
+                                @foreach($v6Glues as $gl)
+                                    <div class="p-2 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs text-[11px]">
+                                        <div class="flex items-center justify-between gap-2 font-mono">
+                                            <span class="font-black text-emerald-900 dark:text-emerald-300">{{ $gl['table_name'] }}</span>
+                                            <span class="text-[9px] font-bold text-zinc-600 dark:text-zinc-400">{{ $gl['code'] }}</span>
+                                        </div>
+                                        <div class="text-zinc-800 dark:text-zinc-200 mt-0.5">{{ $gl['invariant'] }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-2 font-mono">
+                            <div class="flex items-center justify-between gap-2 text-[10px] font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                <span>Kahn Topological DAG Layers &amp; Sub-Parts ({{ count($v6SubParts) }} Parts)</span>
+                                <span class="px-1.5 py-0.5 bg-zinc-950 text-emerald-300">{{ count($v6Manifest['entities'] ?? []) }} Locked Entities</span>
+                            </div>
+                            <div class="space-y-1.5 text-[11px]">
+                                @foreach(($v6DagPlan['layers'] ?? []) as $layerNum => $layerTables)
+                                    <div class="p-2 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                                        <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 text-[9px] font-black mr-1.5">LAYER {{ $layerNum }}</span>
+                                        <span class="text-zinc-900 dark:text-zinc-100 font-bold">{{ implode(', ', is_array($layerTables) ? $layerTables : []) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="pt-1 text-[10px] text-emerald-900 dark:text-emerald-300 font-bold">
+                                Sub-Parts: {{ implode(' → ', array_map(fn ($p) => 'Part ' . ($p['part_code'] ?? ''), $v6SubParts)) }}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

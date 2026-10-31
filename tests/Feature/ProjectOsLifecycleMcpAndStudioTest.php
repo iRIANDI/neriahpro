@@ -290,7 +290,7 @@ PHP;
         // HTTP & Livewire Studio Workbench (/blueprint/studio and /blueprint/studio/{slug})
         $this->get('/blueprint/studio')
             ->assertOk()
-            ->assertSee('neriahpro.com - Project OS Architect Studio v5.0', false)
+            ->assertSee('neriahpro.com - Project OS Architect Studio v6.0', false)
             ->assertSee('60s Wizard', false);
 
         $this->get("/blueprint/studio/{$blueprint->slug}")
@@ -307,8 +307,8 @@ PHP;
             ->assertSet('phaseProgress.phase_1.status', 'VERIFIED')
             ->assertSet('driftBadges.database_ulid_strict_pgsql', '100% Pass');
 
-        // Verify 24 Native AI Tools & Prompt-Injection RBAC Mutation Guard on Tool #19
-        $this->assertCount(24, GeminiToolRegistry::getDeclarations());
+        // Verify 27 Native AI Tools & Prompt-Injection RBAC Mutation Guard on Tool #19
+        $this->assertCount(27, GeminiToolRegistry::getDeclarations());
         $engine = app(AgenticActionExecutionEngine::class);
 
         $this->actingAs($reviewer);

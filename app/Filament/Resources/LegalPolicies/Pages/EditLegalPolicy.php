@@ -8,6 +8,8 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditLegalPolicy extends EditRecord
 {
+    use \App\Filament\Concerns\HasTranslatableTabs;
+
     protected static string $resource = LegalPolicyResource::class;
 
     protected function getHeaderActions(): array

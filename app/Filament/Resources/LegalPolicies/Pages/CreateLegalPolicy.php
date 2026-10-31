@@ -7,5 +7,7 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateLegalPolicy extends CreateRecord
 {
+    use \App\Filament\Concerns\HasTranslatableTabs;
+
     protected static string $resource = LegalPolicyResource::class;
 }

@@ -105,6 +105,7 @@
             <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/rab') }}" class="screen-btn">1. RAB &amp; WBS</a>
             <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/spk-appendix') }}" class="screen-btn">2. Lampiran SPK SHA-256</a>
             <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/bast') }}" class="screen-btn">3. BAST &amp; UAT</a>
+            <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/sop-training') }}" class="screen-btn">4. Buku SOP &amp; Training Staf</a>
             <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/' . $docType . '?download=pdf') }}" class="screen-btn">Unduh PDF</a>
             <button type="button" onclick="window.print()" class="screen-btn screen-btn-primary">Cetak A4 Sekarang</button>
         </div>
@@ -119,6 +120,9 @@
             @elseif($docType === 'spk-appendix')
                 <div class="tag">Lampiran Hukum Kontrak SPK/PKS &bull; Cryptographic Scope Freeze</div>
                 <h1>Lampiran Ruang Lingkup Teknis &amp; Kunci Hash SHA-256</h1>
+            @elseif($docType === 'sop-training')
+                <div class="tag">Lampiran Serah Terima Operasional &bull; Auto-Generated Role SOP &amp; Hardware Guide</div>
+                <h1>Buku Manual Operasional Klien, SOP Per Role Staf &amp; Materi Training BAST</h1>
             @else
                 <div class="tag">Berita Acara Serah Terima Sistem &bull; UAT Given-When-Then Verified</div>
                 <h1>Berita Acara Serah Terima (BAST) Digital &amp; Rekapitulasi UAT</h1>
@@ -267,6 +271,59 @@
                     </tbody>
                 </table>
             @endif
+
+        @elseif($docType === 'sop-training')
+            @php
+                $sopData = $schema['client_sop_and_onboarding'] ?? \App\Support\PosRealWorldRuntimeCatalog::buildRoleBasedClientSopAndOnboarding($schema, 'id');
+                $hwData = $schema['hardware_iot_peripheral_contract'] ?? \App\Support\PosRealWorldRuntimeCatalog::hardwarePeripheralContractForSector($quotation['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL', [], $schema['enterprise_menu_matrix'] ?? [], 'id');
+            @endphp
+            <h2>1. Kesiapan Perangkat Keras Fisik &amp; Layar Real-Time ({{ $hwData['active_peripherals_count'] ?? 0 }} Periferal Aktif)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 28%;">Perangkat / Jembatan Fisik</th>
+                        <th style="width: 18%;">Status Proyek</th>
+                        <th style="width: 54%;">Kontrak Operasional Lapangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(($hwData['peripherals'] ?? []) as $p)
+                        <tr>
+                            <td><strong>{{ $p['title']['id'] ?? ($p['localized_title'] ?? '-') }}</strong></td>
+                            <td class="mono">{{ !empty($p['active_by_default']) ? 'AKTIF WAJIB' : 'OPSIONAL SIAP' }}</td>
+                            <td>{{ $p['contract']['id'] ?? ($p['localized_contract'] ?? '-') }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <h2>2. Panduan SOP Harian Langkah-demi-Langkah per Role / Departemen ({{ $sopData['total_interactive_tour_steps'] ?? 0 }} Menu Aktif v1.0)</h2>
+            @foreach(($sopData['role_playbooks'] ?? []) as $role)
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="3">
+                                {{ $role['role_title']['id'] ?? $role['localized_role_title'] }} <span class="mono">[{{ $role['role_code'] }}]</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3">
+                                <strong>Misi Harian:</strong> {{ $role['daily_mission']['id'] ?? $role['localized_daily_mission'] }}<br>
+                                <span style="color:#047857;"><strong>Aturan State Machine:</strong> {{ $role['state_machine_note']['id'] ?? '' }}</span>
+                            </td>
+                        </tr>
+                        @foreach(($role['steps'] ?? []) as $step)
+                            <tr>
+                                <td class="mono" style="width: 12%;"><strong>#{{ $step['step_number'] }}</strong> ({{ $step['menu_code'] }})</td>
+                                <td style="width: 34%;"><strong>{{ $step['title']['id'] ?? '' }}</strong><br><span class="mono" style="color:#52525b;">{{ $step['route_slug'] }}</span></td>
+                                <td style="width: 54%;">{{ $step['instruction']['id'] ?? '' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endforeach
 
         @else
             @php $bast = $posProject?->bast_signoff_json ?? null; @endphp

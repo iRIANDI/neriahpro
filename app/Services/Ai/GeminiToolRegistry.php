@@ -486,6 +486,77 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+            [
+                'name' => 'inspect_hardware_and_websocket_runtime_contracts',
+                'description' => 'Inspeksi Kontrak Elemen Dunia Nyata #1, #2 & #3: Jembatan Hardware Fisik (Scanner Barcode Keyboard Wedge <30ms, Dual-Screen QRIS Lokal tanpa CDN, Biometrik ZKTeco/Turnstile), Kanal WebSocket Zero-Polling (larangan wire:poll <30s), serta Composite Index Tenant & Partisi Kuartal PostgreSQL 16.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID atau slug VisionBlueprint yang sudah tersimpan.',
+                        ],
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor fungsional bila simulasi tanpa blueprint_id (misal: SECTOR_01_COMMERCE_OMNICHANNEL, SECTOR_03_HEALTHCARE_CLINICAL).',
+                        ],
+                        'stack_preset' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode preset stack (misal: STACK_M1_LARAVEL_MONOLITH, STACK_S1_POLYGLOT_GO_LARAVEL_TEMPORAL).',
+                        ],
+                        'locale' => [
+                            'type' => 'STRING',
+                            'description' => 'Bahasa output Tier-1: id atau en.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'generate_syntax_lock_and_client_sop_pack',
+                'description' => 'Kompilasi Kontrak Elemen Dunia Nyata #4 & #5: Kamus Sintaks Anti-Halusinasi SYNTAX_LOCK_2026.md & TROUBLESHOOTING_INSTINCTS.md sesuai Stack serta Panduan In-App SmartGuide.php & Buku SOP Training Staf (CLIENT_SOP_AND_TRAINING_MANUAL.md) per Role untuk serah terima BAST.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID atau slug VisionBlueprint yang sudah tersimpan.',
+                        ],
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor fungsional bila simulasi tanpa blueprint_id.',
+                        ],
+                        'stack_preset' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode preset stack target (M1..S2).',
+                        ],
+                        'locale' => [
+                            'type' => 'STRING',
+                            'description' => 'Bahasa buku SOP Tier-1: id atau en.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'audit_fifteen_pillars_architectural_freeze',
+                'description' => 'Audit status 15 Pilar Master Project OS Ultimate 100% (100% Architectural Freeze), verifikasi sinkronisasi kausalitas lintas tahap (Cross-Stage Causality Graph), dan opsional sinkronkan ulang katalog 15 pilar ke database (persist_sync = true memerlukan izin mutasi RBAC).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID atau slug VisionBlueprint untuk mengaudit kausalitas lintas tahap proyek tersebut.',
+                        ],
+                        'persist_sync' => [
+                            'type' => 'BOOLEAN',
+                            'description' => 'Jika true, menyinkronkan ulang 15 Pilar Master ke tabel pos_architecture_pillars dan mengkompilasi ulang proyek (wajib izin mutasi RBAC).',
+                        ],
+                        'locale' => [
+                            'type' => 'STRING',
+                            'description' => 'Bahasa output Tier-1: id atau en.',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

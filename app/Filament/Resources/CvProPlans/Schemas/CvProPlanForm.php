@@ -120,29 +120,27 @@ class CvProPlanForm
                             ->helperText('Poin kredit fleksibel sebagai cadangan jika kuota habis.'),
                     ])->columns(3),
 
-                Section::make('Nama & Deskripsi Multi-Bahasa')
+                Section::make('Nama & Deskripsi Multi-Bahasa Tier-1 (JSON ID & EN)')
                     ->schema([
-                        Tabs::make('Languages')
-                            ->tabs([
-                                Tabs\Tab::make('Bahasa Indonesia')
-                                    ->schema([
-                                        TextInput::make('name.id')
-                                            ->label('Nama Paket (ID)')
-                                            ->required(),
-                                        Textarea::make('description.id')
-                                            ->label('Deskripsi Paket (ID)')
-                                            ->rows(2),
-                                    ]),
-                                Tabs\Tab::make('English')
-                                    ->schema([
-                                        TextInput::make('name.en')
-                                            ->label('Plan Name (EN)')
-                                            ->required(),
-                                        Textarea::make('description.en')
-                                            ->label('Plan Description (EN)')
-                                            ->rows(2),
-                                    ]),
-                            ]),
+                        \App\Filament\Forms\Components\TranslatableTabs::make(
+                            'CV Pro Plan Bilingual Content',
+                            [
+                                TextInput::make('name.id')
+                                    ->label('Nama Paket (ID)')
+                                    ->required(),
+                                Textarea::make('description.id')
+                                    ->label('Deskripsi Paket (ID)')
+                                    ->rows(2),
+                            ],
+                            [
+                                TextInput::make('name.en')
+                                    ->label('Plan Name (EN)'),
+                                Textarea::make('description.en')
+                                    ->label('Plan Description (EN)')
+                                    ->rows(2),
+                            ],
+                            ['name', 'description']
+                        ),
                     ]),
             ]);
     }

@@ -8,6 +8,8 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditCmsPage extends EditRecord
 {
+    use \App\Filament\Concerns\HasTranslatableTabs;
+
     protected static string $resource = CmsPageResource::class;
 
     protected function getHeaderActions(): array

@@ -39,7 +39,7 @@ class ProjectOsComposableMatrixTest extends TestCase
 
         $this->assertSame(12, PosSector::query()->count());
         $this->assertSame(12, PosPrimitive::query()->count());
-        $this->assertSame(6, PosRulePack::query()->count());
+        $this->assertSame(7, PosRulePack::query()->count());
 
         $sector = PosSector::query()->where('code', 'SECTOR_01_COMMERCE_OMNICHANNEL')->with('primitives')->firstOrFail();
         $this->assertSame(26, strlen($sector->id));

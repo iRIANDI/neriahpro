@@ -924,7 +924,7 @@
 
                                 <div class="flex items-center justify-between px-0.5 text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
                                     <span class="truncate">Model: <strong class="text-zinc-800 dark:text-zinc-200">{{ $activeSubModel }}</strong></span>
-                                    <span class="truncate">Project OS v3.0 • 18 Native Tools • RAG+CAG+KAG</span>
+                                    <span class="truncate">Project OS v7.0 • 30 Native Tools • 15-Pillar Freeze • RAG+CAG+KAG</span>
                                 </div>
                             </form>
                         </div>
@@ -937,8 +937,8 @@
                          class="flex-1 p-4 overflow-y-auto space-y-4 text-xs font-mono bg-white dark:bg-zinc-950">
                         <div class="p-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs flex items-center justify-between">
                             <div>
-                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100">Repositori Vektor 768 Dimensi (Tri-Hybrid v3.0)</h4>
-                                <p class="text-[10px] text-zinc-600 dark:text-zinc-400">10 Ultimate Pillars + 12 Sektor UI/UX + 9 Stack + 8 Day-2 Ops Layers</p>
+                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100">Repositori Vektor 768 Dimensi (Tri-Hybrid v7.0)</h4>
+                                <p class="text-[10px] text-zinc-600 dark:text-zinc-400">15 Master Pillars (100% Freeze) + 5 Real-World Runtime + 12 Sektor + 9 Stack</p>
                             </div>
                             <button type="button"
                                     wire:click="syncKnowledge"
@@ -956,13 +956,13 @@
                         <div class="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-2">
                             <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">Total Chunks Terindeks: {{ $totalKnowledgeChunks }}</span>
                             <ul class="text-[10px] text-zinc-700 dark:text-zinc-300 space-y-1 list-disc pl-4">
-                                <li>10 Pilar Software Factory OS &amp; Unit Economics</li>
-                                <li>12 Sectoral Industrial UI/UX Archetypes (POS Split, Clinical 3-Pane, KDS, ISAK 35)</li>
-                                <li>12 Realistic Indonesian Domain Seeders (Bebas Lorem Ipsum)</li>
+                                <li>15 Master Architecture Pillars (100% Architectural Freeze) &amp; Unit Economics</li>
+                                <li>5 Real-World Field Runtime Contracts (&lt;30ms Scanner, Zero-Poll WS, 0% N+1 PG16 Partition, SYNTAX_LOCK_2026.md, Role SOP BAST)</li>
+                                <li>12 Sectoral Industrial UI/UX Archetypes &amp; 300 Sub-Menu L1–L4 (25/Sektor)</li>
                                 <li>9 Curated Tech Stack Topology Adapters (M1–M4, D1–D3, S1–S2)</li>
-                                <li>6 Killer Engines: Phased Prompts (1–6), Brownfield SQL Audit, verify-blueprint.sh &amp; CLI /init/{ULID}</li>
+                                <li>Kahn DAG Topological Chunker, SYMBOL_MANIFEST.json &amp; CLI /init/{ULID}</li>
                                 <li>8 Layer Day-2 Ops: Thermal 58/80mm &amp; A4 QR Print, Snapshot *_snapshot, Staged CSV, 4-Lane Queue &amp; Blueprint Doctor</li>
-                                <li>18 Native Function Calling Tools + RBAC Guards + SHA-256 Audit Trail</li>
+                                <li>30 Native Function Calling Tools + RBAC Guards + SHA-256 Audit Trail</li>
                             </ul>
                         </div>
                     </div>

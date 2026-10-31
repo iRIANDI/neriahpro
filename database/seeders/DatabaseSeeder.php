@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             EmailTemplateSeeder::class,
             ProjectOsMatrixSeeder::class,
             PosStackPresetSeeder::class,
+            PosArchitecturePillarSeeder::class,
         ]);
     }
 }

@@ -20,6 +20,9 @@ class ProjectIssuesTable
                     ->searchable(),
                 TextColumn::make('vision_blueprint_id')
                     ->searchable(),
+                TextColumn::make('title.id')
+                    ->label('Judul Isu (ID)')
+                    ->searchable(),
                 TextColumn::make('user.name')
                     ->searchable(),
                 TextColumn::make('feature_id')

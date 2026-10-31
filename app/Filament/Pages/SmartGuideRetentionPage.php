@@ -73,6 +73,8 @@ class SmartGuideRetentionPage extends Page
             'fiveCommercialFeatures' => \App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures(),
             'fiveDeterministicGuarantees' => \App\Support\PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees(),
             'fiveEnterpriseGluePrimitives' => \App\Support\PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives(),
+            'fiveRealWorldElements' => \App\Support\PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview(),
+            'fifteenMasterPillars' => \App\Models\PosArchitecturePillar::getCachedMatrix(),
             'guidedJourneySteps' => \App\Services\PosCommercialBridgeService::guidedClientJourneySteps(),
             'satuPintuPackages' => \App\Support\PricingRegistry::getSatuPintuCatalog(),
             'estimatorConfig' => \App\Support\PricingRegistry::getCommercialEstimatorConfig(),

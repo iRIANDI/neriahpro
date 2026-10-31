@@ -8,6 +8,8 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditEmailTemplate extends EditRecord
 {
+    use \App\Filament\Concerns\HasTranslatableTabs;
+
     protected static string $resource = EmailTemplateResource::class;
 
     protected function getHeaderActions(): array

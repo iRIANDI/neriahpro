@@ -87,12 +87,12 @@ class ProjectOsMatrixPage extends Page
 
     public function getSubheading(): string | Htmlable | null
     {
-        return 'Project OS v6.0 Deterministic Guarantee Edition: 12 Sectoral UI/UX Archetypes, 300 Sub-Menu L1–L4 (25/Sektor), 5 Enterprise Glue Primitives, Exact Symbol Lock (SYMBOL_MANIFEST.json), Kahn DAG Sub-Chunker, Hard Compiler Exit-Gate (<MANDATORY_VERIFICATION_GATE>), serta Hermetic Project Isolation.';
+        return 'Project OS v7.0 — 100% Architectural Freeze: 15 Master Architecture Pillars, 5 Real-World Field Runtime Contracts (<30ms Hardware Bridge, Zero-Polling WebSocket, 0% N+1 + PG16 Partitioning, SYNTAX_LOCK_2026.md, Role SmartGuide & BAST SOP), 12 Sektor × 25 Sub-Menu L1–L4, Kahn DAG Chunker & Hermetic Isolation.';
     }
 
     public function setTab(string $tab): void
     {
-        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lifecycle', 'mitra', 'guarantees_v6', 'lab'], true)) {
+        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lifecycle', 'mitra', 'guarantees_v6', 'freeze_15_pillars', 'lab'], true)) {
             $this->activeTab = $tab;
             $this->cursor = null;
             $this->selectedIds = [];
@@ -173,11 +173,15 @@ class ProjectOsMatrixPage extends Page
                 if (Schema::hasTable('pos_stack_presets')) {
                     app(\Database\Seeders\PosStackPresetSeeder::class)->run();
                 }
+                if (Schema::hasTable('pos_architecture_pillars')) {
+                    app(\Database\Seeders\PosArchitecturePillarSeeder::class)->run();
+                    Cache::forget(\App\Models\PosArchitecturePillar::CACHE_KEY);
+                }
                 Cache::forget(PosSector::CACHE_KEY);
                 Notification::make()
                     ->success()
-                    ->title('Matriks 12-Sektor UI/UX & 9 Stack Presets Tersinkronisasi')
-                    ->body('Seluruh 12 Sectoral UI/UX Archetypes & Realistic Seeders, 12 Core Primitives, 9 Stack Presets (M1–S2), dan 6 Rule Packs berhasil diperbarui.')
+                    ->title('Matriks 15 Pilar v7.0, 12 Sektor & 9 Stack Tersinkronisasi')
+                    ->body('Seluruh 15 Master Architecture Pillars (100% Freeze), 12 Sectoral UI/UX Archetypes, 12 Core Primitives, 9 Stack Presets (M1–S2), dan 7 Rule Packs berhasil diperbarui.')
                     ->send();
             } else {
                 Notification::make()
@@ -203,6 +207,7 @@ class ProjectOsMatrixPage extends Page
             'primitives' => $catalog['primitives'] ?? [],
             'stacks' => $catalog['stack_presets'] ?? [],
             'rules' => $catalog['rule_packs'] ?? [],
+            'freeze_15_pillars' => $catalog['fifteen_architecture_pillars'] ?? \App\Models\PosArchitecturePillar::getCachedMatrix(),
             default => $this->getProjectsSummaryList(),
         };
 
@@ -251,6 +256,14 @@ class ProjectOsMatrixPage extends Page
                 'layer' => $r['layer'] ?? '',
                 'name_id' => $r['name']['id'] ?? '',
             ], $catalog['rule_packs'] ?? []),
+            'freeze_15_pillars' => array_map(fn ($pl) => [
+                'pillar_number' => $pl['pillar_number'] ?? '',
+                'code' => $pl['code'] ?? '',
+                'name_id' => $pl['name']['id'] ?? '',
+                'name_en' => $pl['name']['en'] ?? '',
+                'artifact_contract' => $pl['artifact_contract'] ?? '',
+                'maturity_percent' => $pl['maturity_percent'] ?? 100,
+            ], $catalog['fifteen_architecture_pillars'] ?? \App\Models\PosArchitecturePillar::getCachedMatrix()),
             default => $this->getProjectsSummaryList(),
         };
 
@@ -315,6 +328,7 @@ class ProjectOsMatrixPage extends Page
             'primitives' => count(ProjectOsMatrixCatalog::primitives()),
             'stacks' => count(PosStackPresetCatalog::stackPresets()),
             'rules' => count(ProjectOsMatrixCatalog::rulePacks()),
+            'pillars' => count(\App\Models\PosArchitecturePillar::getCachedMatrix()),
             'projects' => 0,
         ];
 

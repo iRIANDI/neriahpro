@@ -51,6 +51,9 @@ class SuperAdminSeeder extends Seeder
         $manageEnterpriseMenuPerm = Permission::firstOrCreate(['name' => 'manage_enterprise_menu_matrix', 'guard_name' => 'web']);
         $compileSymbolDagPerm = Permission::firstOrCreate(['name' => 'compile_symbol_manifest_and_dag_chunks', 'guard_name' => 'web']);
         $overrideFiscalMakerCheckerPerm = Permission::firstOrCreate(['name' => 'override_fiscal_and_maker_checker_locks', 'guard_name' => 'web']);
+        $manage15PillarsPerm = Permission::firstOrCreate(['name' => 'manage_15_architecture_pillars', 'guard_name' => 'web']);
+        $configureHardwareWsPerm = Permission::firstOrCreate(['name' => 'configure_hardware_and_websocket_contracts', 'guard_name' => 'web']);
+        $generateClientSopPerm = Permission::firstOrCreate(['name' => 'generate_client_sop_and_onboarding_pack', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
@@ -80,6 +83,9 @@ class SuperAdminSeeder extends Seeder
             $manageEnterpriseMenuPerm,
             $compileSymbolDagPerm,
             $overrideFiscalMakerCheckerPerm,
+            $manage15PillarsPerm,
+            $configureHardwareWsPerm,
+            $generateClientSopPerm,
         ]);
 
         $developerRole->givePermissionTo([
@@ -103,6 +109,8 @@ class SuperAdminSeeder extends Seeder
             $signOffUatBastPerm,
             $manageEnterpriseMenuPerm,
             $compileSymbolDagPerm,
+            $configureHardwareWsPerm,
+            $generateClientSopPerm,
         ]);
 
         // Grant Due Diligence Read-Only permissions to Investor & Superadmin
@@ -115,6 +123,7 @@ class SuperAdminSeeder extends Seeder
             $runRedteamPerm,
             $validateEnvPerm,
             $compileSymbolDagPerm,
+            $generateClientSopPerm,
         ]);
 
         // Retail & Partner Clients can export CLI bootstrapper, print/ops specs, connect MCP bridge, & manage iterative Delta CRs for their own licensed blueprints
@@ -127,6 +136,7 @@ class SuperAdminSeeder extends Seeder
             $validateEnvPerm,
             $manageEnterpriseMenuPerm,
             $compileSymbolDagPerm,
+            $generateClientSopPerm,
         ]);
         $clientPartnerRole->givePermissionTo([
             $cliBootstrapPerm,
@@ -142,6 +152,8 @@ class SuperAdminSeeder extends Seeder
             $signOffUatBastPerm,
             $manageEnterpriseMenuPerm,
             $compileSymbolDagPerm,
+            $configureHardwareWsPerm,
+            $generateClientSopPerm,
         ]);
 
         // 1. Primary Superadmin (Founder & Chief Architect - Yoseph Iriandi Tambunan)

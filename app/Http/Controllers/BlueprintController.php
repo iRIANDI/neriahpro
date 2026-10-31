@@ -445,15 +445,22 @@ class BlueprintController extends Controller
         if (!empty($blueprint) && is_array($blueprint)) {
             // HERMETIC ISOLATION (v6.0): Scope draft strictly to its unique draft_id cache key;
             // NEVER overwrite an existing DB VisionBlueprint unless explicitly editing a slug (`is_explicit_slug_edit === true`)!
+            $isExplicitEdit = $request->has('is_explicit_slug_edit')
+                ? $request->boolean('is_explicit_slug_edit')
+                : (! empty($blueprint['_meta']['is_editing_slug']));
+
             $cleanDraft = $blueprint;
-            if (! $request->boolean('is_explicit_slug_edit')) {
+            if (! $isExplicitEdit) {
                 unset($cleanDraft['_meta']['is_editing_slug']);
             }
             Cache::put('blueprint_draft_' . $draftId, $cleanDraft, now()->addDays(7));
 
-            $slug = ($request->boolean('is_explicit_slug_edit') && $request->filled('slug'))
-                ? (string) $request->input('slug')
+            $slug = $isExplicitEdit
+                ? (string) ($request->input('slug') ?: ($blueprint['_meta']['is_editing_slug'] ?? ''))
                 : null;
+            if ($slug === '') {
+                $slug = null;
+            }
             if ($slug) {
                 $record = VisionBlueprint::where('slug', $slug)->first();
                 if ($record) {
@@ -1289,6 +1296,22 @@ class BlueprintController extends Controller
             'decision-tables' => [
                 \App\Services\ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($univSchema),
                 'DECISION_TABLES_CONTRACT.md',
+            ],
+            'syntax-lock' => [
+                \App\Support\PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($univSchema),
+                'SYNTAX_LOCK_2026.md',
+            ],
+            'troubleshooting' => [
+                \App\Support\PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($univSchema),
+                'TROUBLESHOOTING_INSTINCTS.md',
+            ],
+            'client-sop' => [
+                \App\Support\PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($univSchema, app()->getLocale()),
+                'CLIENT_SOP_AND_TRAINING_MANUAL.md',
+            ],
+            'pg16-partition' => [
+                \App\Support\PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($univSchema['data_dictionary'] ?? [], $blueprint->nama_bisnis ?: 'Enterprise App'),
+                'pg16_range_partitioning.sql',
             ],
             'env-blueprint' => [
                 \App\Services\ScaffoldGeneratorService::generateEnvBlueprintFile($univSchema, $blueprint->nama_bisnis ?: 'Enterprise App'),
@@ -2132,6 +2155,9 @@ class BlueprintController extends Controller
             '.agents/PRINT_THERMAL_AND_A4_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderPrintSpecMarkdown($schema),
             '.agents/DAY2_OPERATIONS_AND_SECURITY.md' => \App\Services\ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($schema),
             '.agents/DECISION_TABLES_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($schema),
+            '.agents/SYNTAX_LOCK_2026.md' => \App\Support\PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($schema),
+            '.agents/TROUBLESHOOTING_INSTINCTS.md' => \App\Support\PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($schema),
+            '.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md' => \App\Support\PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($schema, 'id'),
             '.agents/BLUEPRINT_SCHEMA.json' => (string) json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             '.agents/SYMBOL_MANIFEST.json' => (string) json_encode(
                 $schema['symbol_manifest'] ?? \App\Services\TopologicalPromptChunker::generateSymbolManifest($schema),
@@ -2145,6 +2171,9 @@ class BlueprintController extends Controller
             '.agents/graphify/graph.json' => \App\Services\ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
             'app/Actions/Tenancy/InitializeNewTenantAction.php' => \App\Services\ScaffoldGeneratorService::generateInitializeNewTenantAction($schema),
             'app/Domains/Rules/DeterministicDecisionMatrix.php' => \App\Services\ScaffoldGeneratorService::generateDeterministicDecisionMatrixClass($schema, $appName),
+            'app/Filament/Pages/SmartGuide.php' => \App\Support\PosRealWorldRuntimeCatalog::renderClientSmartGuidePhp($schema),
+            'database/sql/pg16_range_partitioning.sql' => \App\Support\PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($schema['data_dictionary'] ?? [], $appName),
+            'resources/js/peripherals/barcode-wedge-and-dual-screen.js' => \App\Support\PosRealWorldRuntimeCatalog::renderHardwareBridgeJs($schema),
             'tests/Feature/Security/TenantIsolationSecurityTest.php' => \App\Services\ScaffoldGeneratorService::generateTenantIsolationSecurityTest($schema, $appName),
             'resources/views/prints/thermal-and-official-a4.blade.php' => \App\Services\ScaffoldGeneratorService::generateThermalAndOfficialPrintView($schema),
             'config/project_os_day2_ops.php' => \App\Services\ScaffoldGeneratorService::generateDayTwoOpsConfig($schema),
@@ -2190,11 +2219,11 @@ class BlueprintController extends Controller
             '}',
             '',
             'echo "=================================================================="',
-            "echo \" [Project OS v6.0] Bootstrapping Blueprint: {$safeAppBanner}\"",
+            "echo \" [Project OS v7.0] Bootstrapping 100% Frozen Blueprint: {$safeAppBanner}\"",
             "echo \" [Sector UI] {$sectorCode} -> {$primaryUi}\"",
             "echo \" [Stack]     {$stackCode}\"",
             'echo "=================================================================="',
-            'mkdir -p .agents/graphify .agents/prompts/subparts app/Actions/Tenancy app/Domains/Rules tests/Feature/Security resources/views/prints config database/seeders',
+            'mkdir -p .agents/graphify .agents/prompts/subparts app/Actions/Tenancy app/Domains/Rules app/Filament/Pages database/sql resources/js/peripherals tests/Feature/Security resources/views/prints config database/seeders',
             '',
         ];
 
@@ -2232,12 +2261,12 @@ class BlueprintController extends Controller
 
         return response(implode("\n", $lines) . "\n", 200, [
             'Content-Type' => 'text/x-shellscript; charset=UTF-8',
-            'X-Project-OS-Version' => '6.0.0',
+            'X-Project-OS-Version' => '7.0.0',
         ]);
     }
 
     /**
-     * Project OS v6.0: Live Topological DAG, L1–L4 Menu Matrix, 5 Enterprise Glue & SYMBOL_MANIFEST Preview API.
+     * Project OS v7.0: Live Topological DAG, L1–L4 Menu Matrix, 5 Enterprise Glue, 5 Real-World Elements & 15 Pillars Preview API.
      */
     public function topologicalPreview(Request $request): JsonResponse
     {
@@ -2249,6 +2278,7 @@ class BlueprintController extends Controller
             'selected_menus' => 'nullable|array',
             'selected_menus.*' => 'string|max:40',
             'app_name' => 'nullable|string|max:160',
+            'locale' => 'nullable|string|in:id,en',
         ]);
 
         $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
@@ -2266,12 +2296,32 @@ class BlueprintController extends Controller
             'selected_menus' => $validated['selected_menus'] ?? null,
         ]);
 
+        $quotation = app(\App\Services\PosCommercialBridgeService::class)->calculateScopeQuotation($schema, [
+            'stack_preset' => $stackCode,
+        ]);
+
         return response()->json([
             'success' => true,
-            'guarantees_release' => $schema['guarantees_release'] ?? '6.0.0',
+            'guarantees_release' => $schema['guarantees_release'] ?? '7.0.0',
+            'architectural_freeze' => $schema['architectural_freeze'] ?? [],
             'project_isolation_id' => $schema['project_metadata']['project_isolation_id'] ?? null,
             'five_deterministic_guarantees' => $schema['five_deterministic_guarantees'] ?? [],
             'five_enterprise_glue_primitives' => $schema['five_enterprise_glue_primitives'] ?? [],
+            'five_real_world_elements' => \App\Support\PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview($validated['locale'] ?? app()->getLocale()),
+            'fifteen_pillars_freeze_matrix' => $schema['fifteen_pillars_freeze_matrix'] ?? [],
+            'hardware_iot_peripheral_contract' => $schema['hardware_iot_peripheral_contract'] ?? [],
+            'realtime_websocket_contract' => $schema['realtime_websocket_contract'] ?? [],
+            'strict_query_and_partition_contract' => $schema['strict_query_and_partition_contract'] ?? [],
+            'syntax_lock_2026_contract' => $schema['syntax_lock_2026_contract'] ?? [],
+            'client_sop_and_onboarding' => $schema['client_sop_and_onboarding'] ?? [],
+            'cross_stage_causality_graph' => $schema['cross_stage_causality_graph'] ?? [],
+            'live_commercial_sync' => [
+                'quotation_idr' => $quotation['quotation_idr'] ?? 0,
+                'formatted_quotation_idr' => $quotation['formatted_quotation_idr'] ?? 'Rp 0',
+                'man_hours' => $quotation['man_hours'] ?? 0,
+                'scope_hash_short' => $quotation['scope_hash_short'] ?? '',
+                'scope_hash_full' => $quotation['scope_hash_full'] ?? '',
+            ],
             'enterprise_menu_matrix' => $schema['enterprise_menu_matrix'] ?? [],
             'topological_dag_plan' => $schema['topological_dag_plan'] ?? [],
             'symbol_manifest' => $schema['symbol_manifest'] ?? [],
@@ -2418,6 +2468,8 @@ class BlueprintController extends Controller
             'primitive_codes' => 'nullable|array',
             'primitive_codes.*' => 'string|max:120',
             'stack_preset' => 'nullable|string|max:120',
+            'selected_menus' => 'nullable|array',
+            'selected_menus.*' => 'string|max:40',
             'termin_scheme' => 'nullable|string|in:30_50_20,50_50',
         ]);
 
@@ -2435,6 +2487,7 @@ class BlueprintController extends Controller
                 'primary_sector' => $sectorCode,
                 'selected_primitives' => $validated['primitive_codes'] ?? [],
                 'stack_preset' => $stackCode,
+                'selected_menus' => $validated['selected_menus'] ?? null,
             ],
         ]);
 
@@ -2442,6 +2495,7 @@ class BlueprintController extends Controller
             'sector_code' => $sectorCode,
             'primitive_codes' => $validated['primitive_codes'] ?? [],
             'stack_preset' => $stackCode,
+            'selected_menus' => $validated['selected_menus'] ?? null,
             'persist_project' => false,
         ]);
 
@@ -2570,7 +2624,7 @@ class BlueprintController extends Controller
     }
 
     /**
-     * Render or stream PDF for Official A4 Mitra Commercial Documents (`rab`, `spk-appendix`, `bast`).
+     * Render or stream PDF for Official A4 Mitra Commercial Documents (`rab`, `spk-appendix`, `bast`, `sop-training`).
      */
     public function mitraDocument(
         Request $request,
@@ -2578,7 +2632,7 @@ class BlueprintController extends Controller
         string $docType,
         \App\Services\PosCommercialBridgeService $bridge
     ) {
-        $docType = in_array($docType, ['rab', 'spk-appendix', 'bast'], true) ? $docType : 'rab';
+        $docType = in_array($docType, ['rab', 'spk-appendix', 'bast', 'sop-training'], true) ? $docType : 'rab';
         $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
 

@@ -10,6 +10,10 @@
     $enterpriseMenuMatrix = $schema['enterprise_menu_matrix'] ?? [];
     $enterpriseGlueList = $schema['five_enterprise_glue_primitives'] ?? [];
     $dagLayers = $schema['topological_dag_plan']['layers'] ?? [];
+    $hwContract = $schema['hardware_iot_peripheral_contract'] ?? [];
+    $wsContract = $schema['realtime_websocket_contract'] ?? [];
+    $sopContract = $schema['client_sop_and_onboarding'] ?? [];
+    $fifteenPillars = $schema['fifteen_architecture_pillars'] ?? [];
     $detScore = number_format((float) ($doctor['determinism_score'] ?? 100.0), 1);
     $isZeroAssumptionReady = !empty($doctor['zero_assumption_ready']);
     $verifiedCount = count(array_filter($phaseProgress, fn ($p) => is_array($p) && ($p['status'] ?? '') === 'VERIFIED'));
@@ -41,7 +45,7 @@
     <header class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 z-30">
         <div class="flex flex-wrap items-center gap-2">
             <a href="/blueprint?tier=retail_spark&amp;new=1" class="px-2 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[11px] font-black uppercase tracking-wider rounded-none hover:opacity-90 transition">
-                [NeriahPro OS v6.0]
+                [NeriahPro OS v7.0 • 100% FREEZE]
             </a>
             <div class="flex items-center gap-1.5 font-mono text-xs">
                 <input
@@ -176,6 +180,27 @@
         </a>
     </div>
 
+    <!-- =================================================================== -->
+    <!-- CROSS-STAGE LIVE CAUSALITY RIBBON (v7.0 — 15 PILLAR FREEZE)         -->
+    <!-- =================================================================== -->
+    <div class="shrink-0 bg-emerald-50/70 dark:bg-zinc-900/90 border-b border-emerald-300 dark:border-zinc-800 px-3 py-1 flex items-center justify-between gap-2 overflow-x-auto font-mono text-[10px] tabular-nums">
+        <div class="flex items-center gap-1.5 whitespace-nowrap">
+            <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black">RANTAI KAUSAL v7.0:</span>
+            <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ count($enterpriseMenuMatrix['v1_mvp_menus'] ?? []) }}/25 Menu</span>
+            <span class="text-emerald-700 dark:text-emerald-400">&rarr;</span>
+            <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $hwContract['active_bridges_count'] ?? 1 }} HW Bridge &bull; {{ count($wsContract['channels'] ?? []) }} WS Zero-Poll</span>
+            <span class="text-emerald-700 dark:text-emerald-400">&rarr;</span>
+            <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ count($tables) }} ULID PG16 &bull; {{ count($subParts ?? []) }} DAG Parts</span>
+            <span class="text-emerald-700 dark:text-emerald-400">&rarr;</span>
+            <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $sopContract['role_count'] ?? 4 }} Role SOP</span>
+            <span class="text-emerald-700 dark:text-emerald-400">&rarr;</span>
+            <span class="text-emerald-900 dark:text-emerald-300 font-black">{{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }} ({{ $commercialQuotation['scope_hash_short'] ?? '-' }})</span>
+        </div>
+        <button type="button" wire:click="$set('centerTab', 'runtime_sop_v7')" class="whitespace-nowrap px-2 py-0.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black cursor-pointer">
+            15 Pilar Freeze (100%) &rarr;
+        </button>
+    </div>
+
     <!-- Optional Blueprint Doctor Warning Banner when Assumption Gap Exists -->
     @if(!empty($doctor['findings']))
         <div class="shrink-0 bg-amber-100 dark:bg-amber-950/90 border-b border-amber-400 dark:border-amber-700 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-950 dark:text-amber-100">
@@ -296,10 +321,11 @@
                 <div class="text-emerald-900 dark:text-emerald-300">✓ ULID CHAR(26) + Keyset O(1)</div>
                 <div class="text-emerald-900 dark:text-emerald-300">✓ 5 Historical *_snapshot Columns</div>
                 <div class="text-emerald-900 dark:text-emerald-300">✓ Zero CDN / Zero Capsule / Local SVG QR</div>
-                <div class="font-black text-zinc-950 dark:text-zinc-100 uppercase pt-1">&gt; 5. 4-Pillar AI &amp; v6.0 Guarantees</div>
+                <div class="font-black text-zinc-950 dark:text-zinc-100 uppercase pt-1">&gt; 5. 4-Pillar AI &amp; v7.0 15-Pillar Freeze</div>
                 <div class="text-emerald-900 dark:text-emerald-300">✓ 25 Sub-Menu L1–L4 + 5 Enterprise Glue</div>
-                <div class="text-emerald-900 dark:text-emerald-300">✓ SYMBOL_MANIFEST + Kahn DAG Sub-Parts</div>
-                <div class="text-zinc-700 dark:text-zinc-300">RAG pgvector + CAG + KAG + 27 Tools + SHA-256 Audit</div>
+                <div class="text-emerald-900 dark:text-emerald-300">✓ &lt;30ms HW Wedge + Zero-Poll WS + 0% N+1</div>
+                <div class="text-emerald-900 dark:text-emerald-300">✓ SYNTAX_LOCK_2026 + Role SOP BAST</div>
+                <div class="text-zinc-700 dark:text-zinc-300">RAG pgvector + CAG + KAG + 30 Tools + SHA-256 Audit</div>
             </div>
         </aside>
 
@@ -317,6 +343,7 @@
                     'delta_verify' => '5. Delta v1.1 & Verify',
                     'commercial_mitra' => '6. Kontrak, RAB & BAST',
                     'menus_glue' => '7. L1–L4 Menu (25) & 5 Glue',
+                    'runtime_sop_v7' => '8. ⚡ 5 Runtime, SOP & 15 Pilar',
                 ] as $tabKey => $tabLabel)
                     <button
                         type="button"
@@ -926,6 +953,72 @@
                         </div>
                     </div>
                 @endif
+
+                <!-- TAB 8: 5 REAL-WORLD RUNTIME CONTRACTS, CLIENT SOP & MASTER 15 PILLARS (v7.0 FREEZE) -->
+                @if($centerTab === 'runtime_sop_v7')
+                    <div class="space-y-3">
+                        <div class="p-3 bg-white dark:bg-zinc-900 border-2 border-emerald-600 dark:border-emerald-500 rounded-xs space-y-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                                    PROJECT OS v7.0 • 100% ARCHITECTURAL FREEZE (5 REAL-WORLD ELEMENTS + 15 MASTER PILLARS)
+                                </span>
+                                @if($slug)
+                                    <a href="{{ route('blueprint.mitra-document', ['slug' => $slug, 'docType' => 'sop-training']) }}" target="_blank" class="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black">
+                                        🖨️ Cetak Buku SOP A4 (BAST)
+                                    </a>
+                                @endif
+                            </div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                                Mengunci jembatan perangkat keras fisik (&lt;30ms Barcode Wedge &amp; Layar Kedua QRIS lokal), WebSocket Tanpa Polling (<code>organization.{ulid}.{module}</code>), larangan N+1 Query + Partisi Kuartalan PostgreSQL 16, <code>SYNTAX_LOCK_2026.md</code>, serta Buku SOP Role Interaktif.
+                            </p>
+                            <div class="flex flex-wrap gap-1.5 font-mono text-[10px]">
+                                <button type="button" wire:click="$set('rightDockMode', 'syntax_lock_md')" class="px-2 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black cursor-pointer">
+                                    Lihat SYNTAX_LOCK_2026.md &rarr;
+                                </button>
+                                <button type="button" wire:click="$set('rightDockMode', 'client_sop_md')" class="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-bold cursor-pointer">
+                                    Lihat CLIENT_SOP.md &rarr;
+                                </button>
+                                <button type="button" wire:click="$set('rightDockMode', 'pg16_partition_sql')" class="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-bold cursor-pointer">
+                                    Lihat pg16_partition.sql &rarr;
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-mono text-[10px]">
+                            <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-1">
+                                <div class="font-black text-emerald-900 dark:text-emerald-300 uppercase">1. Hardware &amp; Dual-Screen</div>
+                                <div>Barcode/RFID &lt;30ms: <strong>{{ !empty($hwContract['barcode_rfid_wedge']['enabled']) ? 'AKTIF ✅' : 'STANDBY' }}</strong></div>
+                                <div>Dual-Screen + Local QRIS: <strong>{{ !empty($hwContract['customer_dual_screen']['enabled']) ? 'AKTIF ✅' : 'STANDBY' }}</strong></div>
+                                <div>Biometric ZKTeco / Gate &lt;150ms: <strong>{{ !empty($hwContract['biometric_and_turnstile_iot']['enabled']) ? 'AKTIF ✅' : 'STANDBY' }}</strong></div>
+                            </div>
+                            <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-1">
+                                <div class="font-black text-emerald-900 dark:text-emerald-300 uppercase">2. Zero-Poll WebSocket &amp; 0% N+1</div>
+                                <div>Engine: <strong>{{ $wsContract['engine'] ?? 'Laravel Reverb' }}</strong></div>
+                                <div>Channels: <strong>{{ count($wsContract['channels'] ?? []) }} Tenant Channels</strong></div>
+                                <div class="text-rose-900 dark:text-rose-300 font-black">Ban wire:poll.&lt;30s &bull; PG16 Range Partition</div>
+                            </div>
+                        </div>
+
+                        <!-- 15 Master Pillars Compact List -->
+                        <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-1.5">
+                            <div class="font-mono text-[10px] font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                Master 15 Canonical Architecture Pillars ({{ count($fifteenPillars) }}/15 — 100% Lock &amp; Freeze)
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                @foreach($fifteenPillars as $fp)
+                                    <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                                        <div class="flex items-center justify-between font-mono text-[9px]">
+                                            <span class="font-black text-emerald-900 dark:text-emerald-300">PILAR {{ sprintf('%02d', $fp['pillar_number'] ?? 0) }}</span>
+                                            <span class="font-black text-zinc-950 dark:text-zinc-100">{{ $fp['maturity_percent'] ?? 100 }}%</span>
+                                        </div>
+                                        <div class="text-[11px] font-black text-zinc-950 dark:text-zinc-100 mt-0.5 leading-snug">{{ $fp['name']['id'] ?? $fp['code'] }}</div>
+                                        <div class="font-mono text-[9px] text-zinc-600 dark:text-zinc-400 truncate mt-0.5">{{ $fp['artifact_contract'] ?? '' }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </section>
 
@@ -950,6 +1043,9 @@
                         'dag_subparts' => 'DAG Sub-Parts (' . count($subParts ?? []) . ')',
                         'symbol_manifest' => 'SYMBOL_MANIFEST.json',
                         'enterprise_menu' => 'MENU_MATRIX.md',
+                        'syntax_lock_md' => 'SYNTAX_LOCK_2026.md',
+                        'client_sop_md' => 'CLIENT_SOP.md',
+                        'pg16_partition_sql' => 'pg16_partition.sql',
                         'agents_md' => 'AGENTS.md',
                         'graph_json' => 'graph.json',
                         'mcp_json' => '.mcp.json',

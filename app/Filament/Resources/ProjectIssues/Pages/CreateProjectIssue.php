@@ -7,5 +7,7 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateProjectIssue extends CreateRecord
 {
+    use \App\Filament\Concerns\HasTranslatableTabs;
+
     protected static string $resource = ProjectIssueResource::class;
 }

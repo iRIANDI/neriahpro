@@ -2543,11 +2543,10 @@ return match (true) {
                                 key={idx}
                                 type="button"
                                 onClick={() => setActiveSlopDiffIdx(idx)}
-                                className={`px-3 py-1.5 border rounded-none cursor-pointer transition ${
-                                  activeSlopDiffIdx === idx
-                                    ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black'
-                                    : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold'
-                                }`}
+                                className={`px-3 py-1.5 border rounded-none cursor-pointer transition ${activeSlopDiffIdx === idx
+                                  ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black'
+                                  : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold'
+                                  }`}
                               >
                                 {item.label}
                               </button>
@@ -2617,6 +2616,129 @@ return match (true) {
                             <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">{lf.desc}</p>
                           </div>
                         ))}
+                      </div>
+                    </div>
+
+                    {/* v7.0: 5 Real-World Field Runtime Contracts & Master 15 Architecture Pillars (100% Architectural Freeze) */}
+                    <div className="pt-4 border-t-2 border-emerald-600 dark:border-emerald-500 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <span className="px-2 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 font-mono text-[10px] font-black uppercase">
+                              PROJECT OS v7.0 • 100% ARCHITECTURAL FREEZE
+                            </span>
+                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
+                              {isEn ? '5 REAL-WORLD ELEMENTS + 15 MASTER PILLARS' : '5 ELEMEN DUNIA NYATA + 15 PILAR UTAMA'}
+                            </span>
+                          </div>
+                          <div className="font-mono text-xs font-black uppercase text-zinc-950 dark:text-zinc-100">
+                            {isEn
+                              ? 'FIELD HARDWARE, ZERO-POLLING WEBSOCKET, 0% N+1 PARTITIONING, SYNTAX LOCK 2026 & BAST CLIENT SOP'
+                              : 'JEMBATAN HARDWARE FISIK, WEBSOCKET TANPA POLLING, PARTISI PG16 0% N+1, SYNTAX LOCK 2026 & BUKU SOP BAST'}
+                          </div>
+                        </div>
+                        <a
+                          href="/blueprint/studio"
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 border border-emerald-700 font-mono text-[10px] font-black uppercase rounded-none transition whitespace-nowrap"
+                        >
+                          {isEn ? 'INSPECT IN 3-PANE STUDIO →' : 'BUKA DI 3-PANE STUDIO →'}
+                        </a>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+                        {[
+                          {
+                            tag: 'RW-01 • <30MS HARDWARE',
+                            title: isEn ? 'Peripheral & Dual-Screen Bridge' : 'Scanner Fisik & Layar Kedua QRIS',
+                            desc: isEn
+                              ? 'Global <30ms Barcode/RFID Keyboard Wedge, BroadcastChannel Dual-Screen sync, 100% local Dynamic QRIS & <150ms Turnstile/ZKTeco webhook.'
+                              : 'Listener scanner Barcode/RFID global <30ms tanpa fokus input, sinkron layar pelanggan BroadcastChannel + QRIS Dinamis lokal & ZKTeco/Gate <150ms.'
+                          },
+                          {
+                            tag: 'RW-02 • ZERO WIRE:POLL',
+                            title: isEn ? 'Event-Driven WebSocket Contract' : 'WebSocket Real-Time Tanpa Polling',
+                            desc: isEn
+                              ? 'Strict ban on wire:poll.<30s! Laravel Reverb / Soketi / NATS broadcasts on private tenant channel organization.{ulid}.{module}.'
+                              : 'Larangan mutlak wire:poll.<30s! Broadcast instan via Reverb/Soketi/NATS di kanal privat terisolasi organization.{ulid}.{module}.'
+                          },
+                          {
+                            tag: 'RW-03 • 0% N+1 + PG16',
+                            title: isEn ? 'Strict N+1 Ban & Range Partition' : 'Anti N+1 & Partisi Kuartalan PG16',
+                            desc: isEn
+                              ? 'Model::shouldBeStrict(!isProduction()), tenant composite indexes & PostgreSQL 16 PARTITION BY RANGE (created_at) for 100M+ rows.'
+                              : 'Model::shouldBeStrict aktif otomatis, composite index per tenant & partisi kuartalan PostgreSQL 16 siap ratusan juta baris.'
+                          },
+                          {
+                            tag: 'RW-04 • SYNTAX LOCK 2026',
+                            title: isEn ? 'Self-Healing Error Dictionary' : 'Kamus Anti-Halusinasi 2026',
+                            desc: isEn
+                              ? 'Stack-tailored SYNTAX_LOCK_2026.md & TROUBLESHOOTING_INSTINCTS.md locking Filament v5 Schema, Livewire 4 #[Locked] & FrankenPHP.'
+                              : 'SYNTAX_LOCK_2026.md sesuai Stack M1–S2 mengunci sintaks Filament v5 Schema, Livewire 4 #[Locked], x-teleport & FrankenPHP.'
+                          },
+                          {
+                            tag: 'RW-05 • BAST CLIENT SOP',
+                            title: isEn ? 'Role Onboarding & A4 SOP Pack' : 'Tur Interaktif & Buku SOP BAST',
+                            desc: isEn
+                              ? 'Auto-generated SmartGuide.php per RBAC role + printable A4 CLIENT_SOP_AND_TRAINING_MANUAL.md reactively synced to L1–L4 menus.'
+                              : 'Halaman SmartGuide.php per peran staf + Buku SOP Operasional A4 siap cetak BAST yang tersinkron reaktif dari 25 Menu L1–L4.'
+                          }
+                        ].map((rw, idx) => (
+                          <div key={idx} className="p-3.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-600 dark:hover:border-emerald-500 transition">
+                            <span className="inline-block px-2 py-0.5 bg-zinc-950 text-white dark:bg-emerald-950 dark:text-emerald-200 border border-zinc-950 dark:border-emerald-700 font-mono text-[9px] font-black mb-2">
+                              {rw.tag}
+                            </span>
+                            <div className="text-xs font-black text-zinc-950 dark:text-white mb-1">{rw.title}</div>
+                            <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">{rw.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* 15 Master Architecture Pillars Matrix */}
+                      <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                          <span className="font-mono text-[11px] font-black uppercase text-zinc-950 dark:text-zinc-100">
+                            {isEn ? '15 CANONICAL ARCHITECTURE PILLARS — 100% LOCK & FREEZE MATRIX' : 'MATRIKS 15 PILAR UTAMA PROJECT OS — 100% LOCK & FREEZE'}
+                          </span>
+                          <span className="font-mono text-[10px] font-bold text-emerald-900 dark:text-emerald-300">
+                            {isEn ? 'Unified Causal Chain: Retail Self-Dev & Mitra Turnkey' : 'Rantai Kausalitas Satu Pintu: Retail Mandiri & Mitra Turnkey'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
+                          {[
+                            { no: '01', id: 'Intake Multi-Modal & Legacy SQL', en: 'Multi-Modal Intake & Legacy SQL', artifact: 'MarkItDown + Shadow ULID' },
+                            { no: '02', id: '12 Sektor × 12 Primitives × 9 Stack', en: '12 Sectors × 12 Primitives × 9 Stacks', artifact: 'BLUEPRINT_SCHEMA.json' },
+                            { no: '03', id: '25 Menu L1–L4 & 5 Corporate Glue', en: '25 L1–L4 Menus & 5 Corporate Glue', artifact: 'ENTERPRISE_MENU_MATRIX.md' },
+                            { no: '04', id: 'Skema PG16 ULID, Partisi & 0% N+1', en: 'PG16 ULID, Partitioning & 0% N+1', artifact: 'pg16_range_partitioning.sql' },
+                            { no: '05', id: 'Tabel Keputusan match() & ACID Saga', en: 'match() Decision Matrix & ACID Saga', artifact: 'DeterministicDecisionMatrix.php' },
+                            { no: '06', id: 'UI/UX Industri & Zero-Slop Brutalist', en: 'Industrial UI/UX & Zero-Slop', artifact: 'UI_UX_DESIGN_CONTRACT.md' },
+                            { no: '07', id: 'Hardware IoT, QRIS Lokal & Layar 2', en: 'Hardware IoT, Local QRIS & Screen 2', artifact: 'barcode-wedge-and-dual-screen.js' },
+                            { no: '08', id: 'WebSocket Real-Time Tanpa Polling', en: 'Zero-Polling Event WebSocket', artifact: 'organization.{ulid}.{module}' },
+                            { no: '09', id: 'Kahn DAG Chunker & Symbol Lock', en: 'Kahn DAG Chunker & Symbol Lock', artifact: 'SYMBOL_MANIFEST.json' },
+                            { no: '10', id: 'Kamus Self-Healing Syntax 2026', en: 'Self-Healing Syntax Lock 2026', artifact: 'SYNTAX_LOCK_2026.md' },
+                            { no: '11', id: 'CLI /init 3 Detik & Live MCP Bridge', en: '3-Sec CLI /init & Live MCP Bridge', artifact: '/init/{ulid} + .mcp.json' },
+                            { no: '12', id: '8 Layer Day-2 Ops & Cetak Thermal/A4', en: '8 Day-2 Ops & Thermal/A4 Print', artifact: 'DAY2_OPERATIONS.md' },
+                            { no: '13', id: 'Phase 07 Red-Team & Anti-Slop CI', en: 'Phase 07 Red-Team & Anti-Slop CI', artifact: 'verify-blueprint.sh' },
+                            { no: '14', id: 'Delta v1.1 & Mitra RAB/SPK/BAST', en: 'Surgical Delta v1.1 & RAB/SPK/BAST', artifact: 'SHA-256 Scope Lock' },
+                            { no: '15', id: 'Onboarding Role & Buku SOP Klien', en: 'Role Onboarding & Client SOP Pack', artifact: 'CLIENT_SOP_MANUAL.md' },
+                          ].map((p) => (
+                            <div key={p.no} className="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 transition flex flex-col justify-between">
+                              <div>
+                                <div className="flex items-center justify-between gap-1 mb-1">
+                                  <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black">
+                                    PILAR {p.no}
+                                  </span>
+                                  <span className="font-mono text-[9px] font-black text-emerald-900 dark:text-emerald-300">100%</span>
+                                </div>
+                                <div className="text-[11px] font-black text-zinc-950 dark:text-zinc-100 leading-snug">
+                                  {isEn ? p.en : p.id}
+                                </div>
+                              </div>
+                              <div className="mt-1.5 pt-1 border-t border-zinc-100 dark:border-zinc-800 font-mono text-[9px] font-bold text-zinc-600 dark:text-zinc-400 truncate">
+                                {p.artifact}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -1819,6 +1819,18 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <span class="hidden xl:inline">MENU25.MD</span>
                         <span class="xl:hidden">M25</span>
                     </a>
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'syntax-lock']) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 font-black transition flex items-center gap-1" title="Unduh Kamus Anti-Halusinasi Sintaks 2026 (.agents/SYNTAX_LOCK_2026.md)">
+                        <span class="hidden xl:inline">SYNTAX26.MD</span>
+                        <span class="xl:hidden">S26</span>
+                    </a>
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'client-sop']) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 font-bold transition flex items-center gap-1" title="Unduh Buku SOP Operasional & Training Klien (.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md)">
+                        <span class="hidden xl:inline">SOP.MD</span>
+                        <span class="xl:hidden">SOP</span>
+                    </a>
+                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'sop-training']) }}" target="_blank" class="px-2.5 py-1 hover:bg-amber-500/20 text-amber-950 dark:text-amber-200 font-black transition flex items-center gap-1" title="Buka Buku SOP & Panduan Training Staf Siap Cetak A4 (Lampiran BAST)">
+                        <span class="hidden xl:inline">SOP-A4</span>
+                        <span class="xl:hidden">A4</span>
+                    </a>
                     <a href="{{ url('/blueprint?tier=retail_spark&new=1') }}" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black transition flex items-center gap-1" title="Mulai Proyek Baru Bersih (100% Terisolasi Tanpa Sisa Proyek Ini)">
                         <span class="hidden xl:inline">+ PROYEK BARU</span>
                         <span class="xl:hidden">+BARU</span>
@@ -6666,27 +6678,27 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
                 </div>
 
-                <!-- Software Factory OS: 10-Pillar Scaffold & Repository Exporter -->
+                <!-- Software Factory OS v7.0: 15-Pillar Architectural Freeze & Repository Exporter -->
                 <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
                     <div class="p-6 bg-zinc-50 dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
                         <div class="space-y-2">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase">SOFTWARE FACTORY OS</span>
-                                <span class="text-zinc-600 dark:text-zinc-400 text-xs uppercase font-bold">{{ $isEn ? '10 PILLARS OF PRODUCTION CODE: DOCKER • ULID • SEEDER • AGENTS • CI/CD • TELEMETRY • BACKUPS • DOCS' : '10 PILAR KODE PRODUKSI: DOCKER • ULID • SEEDER • AGENTS • CI/CD • TELEMETRI • BACKUP • DOKUMEN' }}</span>
+                                <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase">PROJECT OS v7.0 • 100% FREEZE</span>
+                                <span class="text-zinc-700 dark:text-zinc-300 text-xs uppercase font-bold">{{ $isEn ? '15 ARCHITECTURE PILLARS: ULID PG16 PARTITION • HARDWARE <30MS • ZERO-POLL WS • SYNTAX 2026 • ROLE SOP' : '15 PILAR ARSITEKTUR: PARTISI PG16 ULID • HARDWARE <30MS • WS TANPA POLLING • SYNTAX 2026 • BUKU SOP' }}</span>
                             </div>
                             <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white">
-                                {{ $isEn ? '13. Export Complete 10 Pillars Software Factory OS Repository' : '13. Ekspor Repository Lengkap 10 Pilar Software Factory OS' }}
+                                {{ $isEn ? '13. Export Complete 15-Pillar Project OS Repository (100% Architectural Freeze)' : '13. Ekspor Repository Lengkap 15 Pilar Project OS (100% Architectural Freeze)' }}
                             </h3>
                             <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs max-w-2xl leading-relaxed">
                                 {{ $isEn 
-                                    ? 'Your PRD architectural blueprint can be directly exported into all 10 pillars of Software Factory OS: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), complete SQL schema (Strict ULID), routing (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ realistic records), AI rules (.cursorrules, CLAUDE.md, AGENTS.md), contract testing ApiContractTest.php, cloud deploy.sh pipeline, Kubernetes health probes (/healthz), encrypted disaster recovery scripts (backup.sh, restore.sh), and Scalar interactive API documentation (/docs/api).'
-                                    : 'Blueprint arsitektur PRD Anda dapat langsung diekspor menjadi 10 pilar Software Factory OS: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), skema SQL lengkap (Strict ULID), perutean (Laravel 13 & Next.js App Router), SyntheticDataSeeder.php (100+ data realistis), aturan agen AI (.cursorrules, CLAUDE.md, AGENTS.md), pengujian kontrak ApiContractTest.php, skrip deploy.sh cloud 1-klik, probe kesehatan (/healthz), skrip pemulihan bencana terenkripsi (backup.sh, restore.sh), dan dokumentasi interaktif Scalar (/docs/api).' }}
+                                    ? 'Your PRD architectural blueprint exports all 15 canonical Project OS pillars: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), Strict ULID & pg16_range_partitioning.sql (0% N+1), <30ms Barcode Wedge + Dual-Screen Local QRIS bridge, Zero-Polling Reverb/Soketi WebSocket contracts, SYNTAX_LOCK_2026.md, Role-Based SmartGuide.php + CLIENT_SOP_AND_TRAINING_MANUAL.md, SyntheticDataSeeder.php, ApiContractTest.php, and verify-blueprint.sh.'
+                                    : 'Blueprint arsitektur PRD Anda mengekspor seluruh 15 pilar kanonikal Project OS: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), skema Strict ULID & pg16_range_partitioning.sql (0% N+1), jembatan Scanner Barcode <30ms + Layar Kedua QRIS lokal, WebSocket Tanpa Polling Reverb/Soketi, SYNTAX_LOCK_2026.md, SmartGuide.php + CLIENT_SOP_AND_TRAINING_MANUAL.md, SyntheticDataSeeder.php, ApiContractTest.php, dan verify-blueprint.sh.' }}
                             </p>
                         </div>
                         <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
                             <button type="button" @click="openScaffoldModal()" class="w-full sm:w-auto px-5 py-3 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/60 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                <span>{{ $isEn ? 'PREVIEW CODE (10 PILLARS)' : 'PREVIEW KODE (10 PILAR)' }}</span>
+                                <span>{{ $isEn ? 'PREVIEW CODE (15 PILLARS)' : 'PREVIEW KODE (15 PILAR)' }}</span>
                             </button>
                             <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-4 py-3 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer" title="{{ $isEn ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE' }}">
                                 <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
@@ -6950,6 +6962,18 @@ class ProcessSecureDataset implements ShouldQueue
                                 </a>
                                 <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'enterprise-menu']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
                                     MENU25.MD
+                                </a>
+                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'syntax-lock']) }}" class="px-2.5 py-2 bg-emerald-950 hover:bg-emerald-900 text-emerald-200 border border-emerald-600 font-black uppercase">
+                                    SYNTAX_LOCK_2026.MD
+                                </a>
+                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'client-sop']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                    CLIENT_SOP.MD
+                                </a>
+                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'pg16-partition']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                    PG16_PARTITION.SQL
+                                </a>
+                                <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'sop-training']) }}" target="_blank" class="px-2.5 py-2 bg-amber-950/80 hover:bg-amber-900 text-amber-200 border border-amber-600 font-black uppercase">
+                                    {{ $isEn ? '🖨️ BAST SOP (A4)' : '🖨️ BUKU SOP BAST (A4)' }}
                                 </a>
                                 <button type="button" @click="runBlueprintDoctor()" :disabled="runningDoctor" class="px-2.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-amber-300 border border-amber-700 font-bold uppercase cursor-pointer">
                                     <span x-text="runningDoctor ? 'DIAGNOSING...' : '🩺 DOCTOR'"></span>

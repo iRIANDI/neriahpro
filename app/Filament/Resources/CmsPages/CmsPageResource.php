@@ -2,33 +2,27 @@
 
 namespace App\Filament\Resources\CmsPages;
 
+use App\Filament\Forms\Components\TranslatableTabs;
 use App\Filament\Resources\CmsPages\Pages\CreateCmsPage;
 use App\Filament\Resources\CmsPages\Pages\EditCmsPage;
 use App\Filament\Resources\CmsPages\Pages\ListCmsPages;
 use App\Models\CmsPage;
 use BackedEnum;
-use Filament\Resources\Resource;
-use Filament\Support\Icons\Heroicon;
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\KeyValue;
-use Filament\Forms\Components\Textarea;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Group;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
-use Filament\Actions\Action as FormAction; // prevent collision with extraItemActions Action
-use Illuminate\Support\Str;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Resources\Resource;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 
 class CmsPageResource extends Resource
 {
@@ -53,38 +47,51 @@ class CmsPageResource extends Resource
     public static function form(Schema $schema): Schema
     {
         $getCopyDropdown = function (string $blockType) {
-            return \Filament\Forms\Components\Select::make('copy_from_uuid')
+            return Select::make('copy_from_uuid')
                 ->label('💡 Copy Settings Dari Halaman Lain')
                 ->placeholder('Pilih plugin sejenis dari halaman lain untuk disalin...')
                 ->options(function () use ($blockType) {
                     $options = [];
-                    foreach (\App\Models\CmsPage::all() as $page) {
-                        if (! is_array($page->plugins)) continue;
-                        
+                    foreach (CmsPage::all() as $page) {
+                        if (! is_array($page->plugins)) {
+                            continue;
+                        }
+
                         $titles = is_array($page->title) ? $page->title : [];
-                        $titleStr = collect($titles)->map(fn($t, $k) => strtoupper($k) . ': ' . $t)->implode(' | ');
+                        $titleStr = collect($titles)->map(fn ($t, $k) => strtoupper($k) . ': ' . $t)->implode(' | ');
                         $pageName = $page->slug . ' - ' . ($titleStr ?: 'No Title');
-                        
+
                         foreach ($page->plugins as $uuid => $plugin) {
-                            if (! is_array($plugin) || ! isset($plugin['type'])) continue;
-                            if ($plugin['type'] !== $blockType) continue;
-                            
+                            if (! is_array($plugin) || ! isset($plugin['type'])) {
+                                continue;
+                            }
+                            if ($plugin['type'] !== $blockType) {
+                                continue;
+                            }
+
                             $anchor = $plugin['data']['anchor_id'] ?? 'no-anchor';
                             $options[$uuid] = "{$pageName} (Anchor: #{$anchor})";
                         }
                     }
+
                     return $options;
                 })
                 ->searchable()
                 ->live()
-                ->afterStateUpdated(function ($state, \Filament\Forms\Set $set) {
-                    if (! $state) return;
-                    foreach (\App\Models\CmsPage::all() as $page) {
-                        if (! is_array($page->plugins)) continue;
+                ->afterStateUpdated(function ($state, Set $set) {
+                    if (! $state) {
+                        return;
+                    }
+                    foreach (CmsPage::all() as $page) {
+                        if (! is_array($page->plugins)) {
+                            continue;
+                        }
                         if (isset($page->plugins[$state])) {
                             $pluginData = $page->plugins[$state]['data'] ?? [];
                             foreach ($pluginData as $key => $value) {
-                                if ($key === 'copy_from_uuid') continue;
+                                if ($key === 'copy_from_uuid') {
+                                    continue;
+                                }
                                 $set($key, $value);
                             }
                             break;
@@ -100,31 +107,55 @@ class CmsPageResource extends Resource
             ->columns(12)
             ->components([
                 Group::make()->schema([
-                    Section::make('Page Information')
-                        ->description('Basic information and content for this page.')
+                    Section::make('Page Information (Tier-1 Dwibahasa ID & EN)')
+                        ->description('Identitas URL halaman dan judul dwibahasa resmi (ID & EN) menggunakan TranslatableTabs.')
                         ->schema([
                             TextInput::make('slug')
                                 ->required()
                                 ->unique(ignoreRecord: true)
                                 ->prefix('/')
-                                ->disabled(fn (?\App\Models\CmsPage $record) => $record && in_array($record->slug, ['home', 'beranda', 'index', '/']))
+                                ->disabled(fn (?CmsPage $record) => $record && in_array($record->slug, ['home', 'beranda', 'index', '/']))
                                 ->dehydrated()
-                                ->helperText(fn (?\App\Models\CmsPage $record) => $record && in_array($record->slug, ['home', 'beranda', 'index', '/']) ? 'Slug landing page permanen dan tidak dapat diubah.' : 'The URL slug for this page (e.g. about-us)'),
-                            KeyValue::make('title')
-                                ->label('Page Titles (Multilingual)')
-                                ->keyLabel('Language Code (e.g. en, id)')
-                                ->valueLabel('Title')
-                                ->helperText('Define the page title in multiple languages.'),
+                                ->helperText(fn (?CmsPage $record) => $record && in_array($record->slug, ['home', 'beranda', 'index', '/']) ? 'Slug landing page permanen dan tidak dapat diubah.' : 'The URL slug for this page (e.g. about-us)'),
+
+                            TranslatableTabs::make(
+                                label: 'Judul Halaman CMS',
+                                idSchema: [
+                                    TextInput::make('title.id')
+                                        ->label('Judul Halaman (Indonesia)')
+                                        ->placeholder('e.g. Digital Services & Project OS Hub')
+                                        ->required()
+                                        ->maxLength(255),
+                                ],
+                                enSchema: [
+                                    TextInput::make('title.en')
+                                        ->label('Page Title (English)')
+                                        ->placeholder('e.g. Digital Services & Project OS Hub')
+                                        ->maxLength(255),
+                                ],
+                                fieldKeys: ['title']
+                            ),
                         ])->columns(1),
-                        
-                    Section::make('SEO & Metadata')
-                        ->description('Search engine optimization settings.')
+
+                    Section::make('SEO & Metadata (Tier-1 Dwibahasa ID & EN)')
+                        ->description('Deskripsi meta mesin pencari untuk Bahasa Indonesia dan Bahasa Inggris.')
                         ->schema([
-                            KeyValue::make('meta_description')
-                                ->label('Meta Descriptions')
-                                ->keyLabel('Language Code')
-                                ->valueLabel('Description')
-                                ->helperText('A brief description for search engines.'),
+                            TranslatableTabs::make(
+                                label: 'Meta Description SEO',
+                                idSchema: [
+                                    Textarea::make('meta_description.id')
+                                        ->label('Meta Description (Indonesia)')
+                                        ->rows(3)
+                                        ->maxLength(320),
+                                ],
+                                enSchema: [
+                                    Textarea::make('meta_description.en')
+                                        ->label('Meta Description (English)')
+                                        ->rows(3)
+                                        ->maxLength(320),
+                                ],
+                                fieldKeys: ['meta_description']
+                            ),
                         ])->columns(1),
                 ])->columnSpan(['default' => 12, 'md' => 8]),
 
@@ -138,7 +169,7 @@ class CmsPageResource extends Resource
                                 ->default(false),
                         ])->columns(1),
                 ])->columnSpan(['default' => 12, 'md' => 4]),
-                
+
                 Group::make()->schema([
                     Section::make('Page Content (Plugins)')
                         ->description('Add and arrange the content blocks (React Islands) for this page.')
@@ -166,7 +197,7 @@ class CmsPageResource extends Resource
                                                 TextInput::make('button_url'),
                                             ])->columns(2)->columnSpan(['default' => 12, 'md' => 12]),
                                         ])->columns(12),
-                                        
+
                                     Builder\Block::make('onboarding_form')
                                         ->label('📝 Client Onboarding (React)')
                                         ->icon('heroicon-m-clipboard-document-list')
@@ -265,21 +296,23 @@ class CmsPageResource extends Resource
             ->columns([
                 TextColumn::make('title')
                     ->label('Page Title')
-                    ->getStateUsing(function (\App\Models\CmsPage $record) {
+                    ->getStateUsing(function (CmsPage $record) {
                         $titles = is_array($record->title) ? $record->title : [];
-                        return collect($titles)->first() ?? 'No Title';
+                        $locale = app()->getLocale();
+
+                        return $titles[$locale] ?? $titles['id'] ?? $titles['en'] ?? collect($titles)->first() ?? 'No Title';
                     })
-                    ->description(fn (\App\Models\CmsPage $record) => 'URL: /' . $record->slug)
+                    ->description(fn (CmsPage $record) => 'URL: /' . $record->slug)
                     ->searchable()
                     ->sortable(),
-                    
+
                 TextColumn::make('plugins_count')
                     ->label('Total Blocks')
-                    ->getStateUsing(fn (\App\Models\CmsPage $record) => is_array($record->plugins) ? count($record->plugins) : 0)
+                    ->getStateUsing(fn (CmsPage $record) => is_array($record->plugins) ? count($record->plugins) : 0)
                     ->badge()
                     ->color('info')
                     ->icon('heroicon-m-puzzle-piece'),
-                    
+
                 \Filament\Tables\Columns\ToggleColumn::make('is_published')
                     ->label('Public / Published')
                     ->sortable(),
@@ -292,19 +325,19 @@ class CmsPageResource extends Resource
                     ->label('Lihat Web')
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->color('primary')
-                    ->url(fn (\App\Models\CmsPage $record) => url('/' . ($record->slug === 'home' || $record->slug === 'index' ? '' : $record->slug)))
+                    ->url(fn (CmsPage $record) => url('/' . ($record->slug === 'home' || $record->slug === 'index' ? '' : $record->slug)))
                     ->openUrlInNewTab(),
                 EditAction::make(),
                 \Filament\Actions\DeleteAction::make()
-                    ->disabled(fn (\App\Models\CmsPage $record) => in_array($record->slug, ['home', 'beranda', 'index', '/']))
-                    ->tooltip(fn (\App\Models\CmsPage $record) => in_array($record->slug, ['home', 'beranda', 'index', '/']) ? 'Landing page inti tidak boleh dihapus.' : ''),
+                    ->disabled(fn (CmsPage $record) => in_array($record->slug, ['home', 'beranda', 'index', '/']))
+                    ->tooltip(fn (CmsPage $record) => in_array($record->slug, ['home', 'beranda', 'index', '/']) ? 'Landing page inti tidak boleh dihapus.' : ''),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
                             $records->each(function ($record) {
-                                if (!in_array($record->slug, ['home', 'beranda', 'index', '/'])) {
+                                if (! in_array($record->slug, ['home', 'beranda', 'index', '/'])) {
                                     $record->delete();
                                 }
                             });

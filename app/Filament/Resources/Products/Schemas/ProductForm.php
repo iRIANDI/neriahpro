@@ -28,39 +28,31 @@ class ProductForm
                             ->default(true),
                     ])->columns(2),
 
-                Section::make('Konten Multi-Bahasa (JSON)')
+                Section::make('Konten Multi-Bahasa Tier-1 (JSON ID & EN)')
                     ->schema([
-                        Tabs::make('Language Selector')
-                            ->tabs([
-                                Tabs\Tab::make('Bahasa Indonesia')
-                                    ->icon('heroicon-m-language')
-                                    ->badge('ID')
-                                    ->schema([
-                                        TextInput::make('name.id')
-                                            ->label('Nama Layanan / Produk (ID)')
-                                            ->placeholder('Contoh: Enterprise Rapid Monolith')
-                                            ->required()
-                                            ->maxLength(255),
-                                        \App\Support\FilamentRichEditor::make('description.id', 'products')
-                                            ->label('Deskripsi Layanan (ID)')
-                                            ->columnSpanFull(),
-                                    ]),
-
-                                Tabs\Tab::make('English')
-                                    ->icon('heroicon-m-globe-alt')
-                                    ->badge('EN')
-                                    ->schema([
-                                        TextInput::make('name.en')
-                                            ->label('Service / Product Name (EN)')
-                                            ->placeholder('e.g. Enterprise Rapid Monolith')
-                                            ->required()
-                                            ->maxLength(255),
-                                        \App\Support\FilamentRichEditor::make('description.en', 'products')
-                                            ->label('Service Description (EN)')
-                                            ->columnSpanFull(),
-                                    ]),
-                            ])
-                            ->columnSpanFull(),
+                        \App\Filament\Forms\Components\TranslatableTabs::make(
+                            'Product Bilingual Content',
+                            [
+                                TextInput::make('name.id')
+                                    ->label('Nama Layanan / Produk (ID)')
+                                    ->placeholder('Contoh: Enterprise Rapid Monolith')
+                                    ->required()
+                                    ->maxLength(255),
+                                \App\Support\FilamentRichEditor::make('description.id', 'products')
+                                    ->label('Deskripsi Layanan (ID)')
+                                    ->columnSpanFull(),
+                            ],
+                            [
+                                TextInput::make('name.en')
+                                    ->label('Service / Product Name (EN)')
+                                    ->placeholder('e.g. Enterprise Rapid Monolith')
+                                    ->maxLength(255),
+                                \App\Support\FilamentRichEditor::make('description.en', 'products')
+                                    ->label('Service Description (EN)')
+                                    ->columnSpanFull(),
+                            ],
+                            ['name', 'description']
+                        ),
                     ]),
 
                 Section::make('Fitur Unggulan Layanan')

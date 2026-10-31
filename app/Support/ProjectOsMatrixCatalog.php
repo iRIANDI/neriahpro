@@ -29,15 +29,18 @@ class ProjectOsMatrixCatalog
                 || PosSector::query()->whereNotNull('ui_ux_archetypes')->count() >= 12;
             $dayTwoColsReady = ! Schema::hasColumn('pos_sectors', 'day_two_ops_contract')
                 || PosSector::query()->whereNotNull('day_two_ops_contract')->count() >= 12;
+            $pillarsReady = ! Schema::hasTable('pos_architecture_pillars')
+                || \App\Models\PosArchitecturePillar::query()->count() >= 15;
 
             if (
                 PosSector::query()->count() >= 12
                 && PosPrimitive::query()->count() >= 12
-                && PosRulePack::query()->count() >= 6
+                && PosRulePack::query()->count() >= 7
                 && $presetsReady
                 && $ultimateColsReady
                 && $sectorUiColsReady
                 && $dayTwoColsReady
+                && $pillarsReady
             ) {
                 return;
             }
@@ -130,6 +133,7 @@ class ProjectOsMatrixCatalog
 
         PosStackPresetCatalog::seedDatabase();
         PosSectorUiArchetypeCatalog::enrichDatabaseSectors();
+        PosRealWorldRuntimeCatalog::seedFifteenArchitecturePillars();
 
         Cache::forget(PosSector::CACHE_KEY);
     }
@@ -1920,6 +1924,19 @@ class ProjectOsMatrixCatalog
                 'bad_pattern_example' => '// Blind full-repo file scanning, skipping Pest tests for state guards, rewriting entire files without updating graph.json',
                 'good_pattern_example' => '// 1. PLAN (graph.json O(1)) -> 2. TEST (Pest Guards & Locks) -> 3. IMPLEMENT (Action + ULID) -> 4. REVIEW (Anti-Slop) -> 5. VERIFY -> 6. REMEMBER & DEPLOY',
                 'markdown_directive' => 'WAJIB mematuhi Ponytail 4-Rung Ladder (Native First, Graphify O(1) Lookup, Declarative Over Procedural, Surgical Diff) dan siklus 6-tahap ECC (PLAN -> TEST -> IMPLEMENT -> REVIEW -> VERIFY -> REMEMBER & DEPLOY) beserta File-Context Instincts otomatis.',
+                'is_global_default' => true,
+            ],
+            [
+                'slug' => 'realtime-websocket-zero-poll-n1-strict',
+                'name' => [
+                    'id' => 'Zero-Polling WebSocket Reverb/NATS, Hardware Bridge, Strict N+1 & PG16 Partitioning',
+                    'en' => 'Zero-Polling WebSocket Reverb/NATS, Hardware Bridge, Strict N+1 & PG16 Partitioning',
+                ],
+                'layer' => 'RUNTIME',
+                'enforcement_level' => 'HARAM',
+                'bad_pattern_example' => '<div wire:poll.2s="refreshKitchenBoard">...</div> // Missing Model::shouldBeStrict() & missing composite index (organization_id, status, created_at)',
+                'good_pattern_example' => 'Model::shouldBeStrict(! $this->app->isProduction()); // Echo.private(`organization.${orgUlid}.kitchen_kds_board`) + $table->index([\'organization_id\', \'status\', \'created_at\'])',
+                'markdown_directive' => 'HARAM wire:poll (<30s) pada layar bersama; WAJIB WebSocket (Laravel Reverb / Soketi / NATS) di Private Tenant Channel organization.{ulid}.{module}. WAJIB Model::shouldBeStrict(! app()->isProduction()), Mandatory Tenant Composite Index (organization_id, status, created_at) & (organization_id, id), PG16 Range Partitioning pada tabel jutaan baris, serta mematuhi SYNTAX_LOCK_2026.md.',
                 'is_global_default' => true,
             ],
         ];

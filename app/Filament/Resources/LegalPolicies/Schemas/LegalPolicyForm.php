@@ -28,41 +28,32 @@ class LegalPolicyForm
                             ->default(true),
                     ])->columns(2),
 
-                Section::make('Konten Kebijakan Hukum (JSON)')
+                Section::make('Konten Kebijakan Hukum Tier-1 (JSON ID & EN)')
                     ->schema([
-                        Tabs::make('Language Selector')
-                            ->tabs([
-                                Tabs\Tab::make('Bahasa Indonesia')
-                                    ->icon('heroicon-m-language')
-                                    ->badge('ID')
-                                    ->schema([
-                                        TextInput::make('title.id')
-                                            ->label('Judul Kebijakan (ID)')
-                                            ->placeholder('Contoh: Syarat dan Ketentuan Layanan')
-                                            ->required()
-                                            ->maxLength(255),
-                                        \App\Support\FilamentRichEditor::make('content.id', 'policies')
-                                            ->label('Isi Kebijakan Lengkap (ID)')
-                                            ->required()
-                                            ->columnSpanFull(),
-                                    ]),
-
-                                Tabs\Tab::make('English')
-                                    ->icon('heroicon-m-globe-alt')
-                                    ->badge('EN')
-                                    ->schema([
-                                        TextInput::make('title.en')
-                                            ->label('Policy Title (EN)')
-                                            ->placeholder('e.g. Terms and Conditions of Service')
-                                            ->required()
-                                            ->maxLength(255),
-                                        \App\Support\FilamentRichEditor::make('content.en', 'policies')
-                                            ->label('Full Policy Content (EN)')
-                                            ->required()
-                                            ->columnSpanFull(),
-                                    ]),
-                            ])
-                            ->columnSpanFull(),
+                        \App\Filament\Forms\Components\TranslatableTabs::make(
+                            'Legal Policy Bilingual Content',
+                            [
+                                TextInput::make('title.id')
+                                    ->label('Judul Kebijakan (ID)')
+                                    ->placeholder('Contoh: Syarat dan Ketentuan Layanan')
+                                    ->required()
+                                    ->maxLength(255),
+                                \App\Support\FilamentRichEditor::make('content.id', 'policies')
+                                    ->label('Isi Kebijakan Lengkap (ID)')
+                                    ->required()
+                                    ->columnSpanFull(),
+                            ],
+                            [
+                                TextInput::make('title.en')
+                                    ->label('Policy Title (EN)')
+                                    ->placeholder('e.g. Terms and Conditions of Service')
+                                    ->maxLength(255),
+                                \App\Support\FilamentRichEditor::make('content.en', 'policies')
+                                    ->label('Full Policy Content (EN)')
+                                    ->columnSpanFull(),
+                            ],
+                            ['title', 'content']
+                        ),
                     ]),
             ]);
     }

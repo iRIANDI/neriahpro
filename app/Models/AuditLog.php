@@ -155,6 +155,21 @@ class AuditLog extends Model
     {
         $haystack = strtolower($action . ' ' . ($modelClass ?? '') . ' ' . ($description ?? ''));
 
+        if (str_contains($haystack, 'pillars_freeze') || str_contains($haystack, 'fifteen_pillars') || str_contains($haystack, 'posarchitecturepillar') || str_contains($haystack, 'architectural_freeze')) {
+            return 'pillars_freeze_100';
+        }
+        if (str_contains($haystack, 'client_sop') || str_contains($haystack, 'sop_training') || str_contains($haystack, 'onboarding_tour')) {
+            return 'client_sop_onboarding';
+        }
+        if (str_contains($haystack, 'syntax_lock') || str_contains($haystack, 'troubleshooting_instincts')) {
+            return 'syntax_lock_2026';
+        }
+        if (str_contains($haystack, 'websocket') || str_contains($haystack, 'zero_poll') || str_contains($haystack, 'reverb')) {
+            return 'websocket_zero_poll';
+        }
+        if (str_contains($haystack, 'hardware') || str_contains($haystack, 'barcode_wedge') || str_contains($haystack, 'zkteco') || str_contains($haystack, 'turnstile')) {
+            return 'hardware_iot_bridge';
+        }
         if (str_contains($haystack, 'project_isolation') || str_contains($haystack, 'isolation_token') || str_contains($haystack, 'hermetic_isolation') || str_contains($haystack, 'clean_state')) {
             return 'project_isolation';
         }

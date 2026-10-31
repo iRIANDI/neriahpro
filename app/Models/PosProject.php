@@ -51,6 +51,12 @@ class PosProject extends Model
         'commercial_quotation_json',
         'uat_checklist_json',
         'bast_signoff_json',
+        'hardware_iot_contract_json',
+        'websocket_contract_json',
+        'query_partition_contract_json',
+        'syntax_lock_version',
+        'client_sop_onboarding_json',
+        'architectural_freeze_score',
     ];
 
     protected function casts(): array
@@ -72,6 +78,11 @@ class PosProject extends Model
             'commercial_quotation_json' => 'array',
             'uat_checklist_json' => 'array',
             'bast_signoff_json' => 'array',
+            'hardware_iot_contract_json' => 'array',
+            'websocket_contract_json' => 'array',
+            'query_partition_contract_json' => 'array',
+            'client_sop_onboarding_json' => 'array',
+            'architectural_freeze_score' => 'integer',
         ];
     }
 

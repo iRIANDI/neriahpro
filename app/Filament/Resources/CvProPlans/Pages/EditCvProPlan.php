@@ -8,6 +8,8 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditCvProPlan extends EditRecord
 {
+    use \App\Filament\Concerns\HasTranslatableTabs;
+
     protected static string $resource = CvProPlanResource::class;
 
     protected function getHeaderActions(): array

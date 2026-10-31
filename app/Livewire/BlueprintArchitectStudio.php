@@ -15,6 +15,7 @@ use App\Services\ScaffoldGeneratorService;
 use App\Services\TopologicalPromptChunker;
 use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
+use App\Support\PosRealWorldRuntimeCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
 use App\Support\PosStackPresetCatalog;
 use App\Support\ProjectOsMatrixCatalog;
@@ -510,6 +511,10 @@ class BlueprintArchitectStudio extends Component
             'dag_subparts' => (string) ($selectedSubPartObj['prompt'] ?? ''),
             'symbol_manifest' => (string) json_encode($schema['symbol_manifest'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             'enterprise_menu' => PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown($schema['enterprise_menu_matrix'] ?? []),
+            'syntax_lock_md' => PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($schema),
+            'troubleshooting_md' => PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($schema),
+            'client_sop_md' => PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($schema, 'id'),
+            'pg16_partition_sql' => PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($schema['data_dictionary'] ?? [], $this->projectName),
             'agents_md' => ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($schema),
             'graph_json' => ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
             'mcp_json' => ScaffoldGeneratorService::generateMcpJsonFile($bpDummy),
@@ -545,7 +550,7 @@ class BlueprintArchitectStudio extends Component
             'milestoneGantt' => $milestoneGantt,
             'guidedJourneySteps' => PosCommercialBridgeService::guidedClientJourneySteps(),
         ])->layout('components.layouts.studio', [
-            'title' => 'Project OS Architect Studio v6.0 (5 Deterministic Guarantees & Hermetic Isolation)',
+            'title' => 'Project OS Architect Studio v7.0 (15-Pillar Freeze & 5 Real-World Runtime Contracts)',
         ]);
     }
 

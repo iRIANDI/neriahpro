@@ -828,13 +828,75 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 11. Indeks 5 Elemen Dunia Nyata & 15 Pilar Master "Project OS Ultimate 100%" (Project OS v7.0 Architectural Freeze)
+        foreach (\App\Support\PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview('id') as $rw) {
+            $rwCode = (string) ($rw['code'] ?? 'REALWORLD_ELEMENT');
+            $sourceId = 'realworld-element-v7-' . strtolower($rwCode);
+            if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+                continue;
+            }
+
+            $rwTitle = $rw['title']['id'] ?? $rwCode;
+            $rwTitleEn = $rw['title']['en'] ?? $rwCode;
+            $rwDesc = $rw['desc']['id'] ?? '';
+            $rwDescEn = $rw['desc']['en'] ?? '';
+            $rwContent = "Elemen Dunia Nyata Project OS v7.0 #{$rw['number']}: {$rwCode} ({$rw['badge']})\nJudul ID: {$rwTitle}\nTitle EN: {$rwTitleEn}\nKontrak Lapangan (ID): {$rwDesc}\nField Contract (EN): {$rwDescEn}";
+
+            $embedding = $this->generateEmbedding("{$rwTitle}\n{$rwContent}");
+            AiKnowledgeVector::create([
+                'title' => "Project OS v7.0 Real-World Element #{$rw['number']}: {$rwTitle}",
+                'source_type' => 'realworld_runtime_v7',
+                'source_id' => $sourceId,
+                'content' => "### {$rwTitle}\n\n{$rwContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => '5 Real-World Runtime Elements (v7.0 Freeze)',
+                    'element_code' => $rwCode,
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        $fifteenFreezeSourceId = 'project-os-v7-fifteen-master-pillars-architectural-freeze';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $fifteenFreezeSourceId)->exists()) {
+            $pLines = [];
+            foreach (\App\Models\PosArchitecturePillar::getCachedMatrix('id') as $mp) {
+                $pLines[] = sprintf(
+                    "%d. [%s] %s — %s | Kontrak: %s",
+                    (int) ($mp['pillar_number'] ?? 0),
+                    (string) ($mp['code'] ?? ''),
+                    (string) ($mp['name']['id'] ?? ''),
+                    (string) ($mp['function_guarantee']['id'] ?? ''),
+                    (string) ($mp['technical_contract']['id'] ?? '')
+                );
+            }
+            $freezeOverview = "Rekapitulasi Final 15 Pilar Master 'Project OS Ultimate 100%' (100% Architectural Freeze):\n"
+                . implode("\n", $pLines)
+                . "\n\nSinkronisasi Kausalitas Lintas Tahap: Pemilihan Sektor -> Primitif -> Menu L1–L4 v1.0 -> Stack Adapter secara reaktif memperbarui Hardware Bridge, WebSocket Channel, Composite Index + Partisi PG16, SYNTAX_LOCK_2026.md, Buku SOP Training Staf (SmartGuide.php), Nilai RAB IDR, Hash SPK SHA-256, hingga Checklist UAT/BAST.";
+
+            $embedding = $this->generateEmbedding("15 Master Pillars Project OS v7.0 100% Architectural Freeze\n{$freezeOverview}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v7.0: 15 Master Architecture Pillars (100% Lock & Freeze) & Cross-Stage Causality',
+                'source_type' => 'fifteen_pillars_freeze_v7',
+                'source_id' => $fifteenFreezeSourceId,
+                'content' => "### 15 Master Architecture Pillars (100% Freeze)\n\n{$freezeOverview}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => '15 Master Pillars Architectural Freeze (v7.0)',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
             'status' => 'success',
             'synced_sections' => $syncedSections,
             'total_chunks' => $totalChunks,
-            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (10 Pilar Factory OS, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 10 Perfection Pillars, 5 Day-30+ Lifecycle Engines, 3-Pane Studio, 5 Mitra Bridges v5.0 & 5 Deterministic Guarantee Engines + Hermetic Isolation v6.0) ke basis pengetahuan RAG pgvector.",
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (15 Pilar Master Architectural Freeze v7.0, 5 Elemen Dunia Nyata, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 5 Day-30+ Lifecycle Engines, 5 Mitra Bridges & 5 Deterministic Guarantees) ke basis pengetahuan RAG pgvector.",
         ];
     }
 }

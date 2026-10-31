@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\PosArchitecturePillar;
 use App\Models\PosPrimitive;
 use App\Models\PosProject;
 use App\Models\PosRulePack;
@@ -11,6 +12,7 @@ use App\Models\VisionBlueprint;
 use App\Support\PosDayTwoProductionCatalog;
 use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
+use App\Support\PosRealWorldRuntimeCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
 use App\Support\PosStackPresetCatalog;
 use App\Support\ProjectOsMatrixCatalog;
@@ -195,6 +197,8 @@ class ProjectOsBlueprintCompilerService
                     'mandatory_primitives' => $s->primitives->filter(fn ($p) => $p->pivot?->is_mandatory)->pluck('code')->values()->all(),
                     'optional_primitives' => $s->primitives->reject(fn ($p) => $p->pivot?->is_mandatory)->pluck('code')->values()->all(),
                     'enterprise_menu_matrix' => PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector($s->code),
+                    'hardware_iot_peripheral_contract' => PosRealWorldRuntimeCatalog::hardwarePeripheralContractForSector($s->code),
+                    'realtime_websocket_contract' => PosRealWorldRuntimeCatalog::websocketBroadcastContract($s->code),
                 ])->values()->all(),
                 'primitives' => $mem['primitives']->values()->map(fn (PosPrimitive $p) => [
                     'id' => $p->id,
@@ -218,6 +222,9 @@ class ProjectOsBlueprintCompilerService
                 'five_lifecycle_features' => PosLifecycleAndStudioCatalog::fiveLifecycleFeaturesSummary(),
                 'five_deterministic_guarantees' => PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees(),
                 'five_enterprise_glue_primitives' => PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives(),
+                'five_real_world_elements' => PosRealWorldRuntimeCatalog::fiveRealWorldElements(),
+                'fifteen_master_pillars' => PosArchitecturePillar::getCachedMatrix(),
+                'fifteen_architecture_pillars' => PosArchitecturePillar::getCachedMatrix(),
                 'stack_server_sizing' => PosLifecycleAndStudioCatalog::stackServerSizingProfiles(),
                 'slop_diff_pairs' => PosLifecycleAndStudioCatalog::slopVsProjectOsDiffPairs(),
             ];
@@ -256,6 +263,8 @@ class ProjectOsBlueprintCompilerService
                         'mandatory_primitives' => $mandatory,
                         'optional_primitives' => $optional,
                         'enterprise_menu_matrix' => PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector($s->code),
+                        'hardware_iot_peripheral_contract' => PosRealWorldRuntimeCatalog::hardwarePeripheralContractForSector($s->code, $mandatory),
+                        'realtime_websocket_contract' => PosRealWorldRuntimeCatalog::websocketBroadcastContract($s->code),
                     ];
                 })
                 ->values()
@@ -334,6 +343,9 @@ class ProjectOsBlueprintCompilerService
                 'five_lifecycle_features' => PosLifecycleAndStudioCatalog::fiveLifecycleFeaturesSummary(),
                 'five_deterministic_guarantees' => PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees(),
                 'five_enterprise_glue_primitives' => PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives(),
+                'five_real_world_elements' => PosRealWorldRuntimeCatalog::fiveRealWorldElements(),
+                'fifteen_master_pillars' => PosArchitecturePillar::getCachedMatrix(),
+                'fifteen_architecture_pillars' => PosArchitecturePillar::getCachedMatrix(),
                 'stack_server_sizing' => PosLifecycleAndStudioCatalog::stackServerSizingProfiles(),
                 'slop_diff_pairs' => PosLifecycleAndStudioCatalog::slopVsProjectOsDiffPairs(),
             ];
@@ -741,7 +753,8 @@ class ProjectOsBlueprintCompilerService
 
         // JAMINAN 4 (v6.0): Sort ALL tables via Kahn's Topological Algorithm so foreignUlid dependencies NEVER fail
         $dagPlan = TopologicalPromptChunker::buildTopologicalTableLayers($dataDictionary);
-        $dataDictionary = $dagPlan['ordered_tables'];
+        $dataDictionary = PosRealWorldRuntimeCatalog::injectMandatoryTenantCompositeIndexes($dagPlan['ordered_tables']);
+        $dagPlan['ordered_tables'] = $dataDictionary;
 
         // Layer 3: Historical Master Data Immutability & Snapshot Contract (`*_snapshot`)
         $historicalSnapshotContract = PosDayTwoProductionCatalog::historicalSnapshotContract($dataDictionary);
@@ -848,6 +861,8 @@ class ProjectOsBlueprintCompilerService
                     'DO NOT invent inconsistent JSON error shapes; ALWAYS enforce RFC 9457 (application/problem+json) and mandatory headers (X-Request-ID, X-Tenant-ID, X-Idempotency-Key).',
                     'DO NOT use AUTO_INCREMENT ($table->id()) or $table->uuid(\'id\') for ULID models in PostgreSQL, and DO NOT use OFFSET-based ->paginate(); ALWAYS use 26-char ULID + O(1) keyset cursor pagination.',
                     'DO NOT generate AI-Slop UI (rounded-full capsule buttons, cheesy purple-pink gradients, thick shadow-2xl, hover:scale-105, native alert()/confirm(), blank unhappy-path screens, or external CDN scripts).',
+                    'DO NOT use high-frequency wire:poll (< 30s) on shared operational screens (KDS, Queue, Calendar, Dispatch); ALWAYS broadcast ShouldBroadcastNow events over Private Tenant Channel organization.{ulid}.{module}.',
+                    'DO NOT omit Model::shouldBeStrict(! app()->isProduction()) in AppServiceProvider or omit Mandatory Tenant Composite Indexes ($table->index([\'organization_id\', \'status\', \'created_at\']) & $table->index([\'organization_id\', \'id\'])).',
                 ],
             ],
             'domain_invariants' => [
@@ -938,15 +953,47 @@ class ProjectOsBlueprintCompilerService
                 ],
             ],
             'five_lifecycle_features' => PosLifecycleAndStudioCatalog::fiveLifecycleFeaturesSummary(),
-            // === PROJECT OS v6.0: THE 5 DETERMINISTIC GUARANTEE ENGINES & HERMETIC ISOLATION ===
-            'guarantees_release' => '6.0.0-deterministic-guarantees-hermetic-isolation',
+            // === PROJECT OS v6.0 & v7.0: 5 DETERMINISTIC GUARANTEES + 5 REAL-WORLD ELEMENTS + 15 PILLARS 100% FREEZE ===
+            'guarantees_release' => '7.0.0-architectural-freeze-15-pillars',
+            'architectural_freeze' => [
+                'version' => PosRealWorldRuntimeCatalog::FREEZE_VERSION,
+                'syntax_lock_version' => PosRealWorldRuntimeCatalog::SYNTAX_LOCK_VERSION,
+                'score' => 100,
+                'is_locked_100_percent' => true,
+                'pillars_count' => 15,
+            ],
             'five_deterministic_guarantees' => PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees(),
             'five_enterprise_glue_primitives' => PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives(),
+            'five_real_world_elements' => PosRealWorldRuntimeCatalog::fiveRealWorldElements(),
+            'fifteen_pillars_freeze_matrix' => PosArchitecturePillar::getCachedMatrix(),
+            'fifteen_architecture_pillars' => PosArchitecturePillar::getCachedMatrix(),
             'enterprise_menu_matrix' => $enterpriseMenuMatrix,
+            'hardware_iot_peripheral_contract' => PosRealWorldRuntimeCatalog::hardwarePeripheralContractForSector(
+                $resolvedSectorCode,
+                $primitives->pluck('code')->values()->all(),
+                $enterpriseMenuMatrix
+            ),
+            'realtime_websocket_contract' => PosRealWorldRuntimeCatalog::websocketBroadcastContract(
+                $resolvedSectorCode,
+                $enterpriseMenuMatrix,
+                $stackPreset
+            ),
+            'strict_query_and_partition_contract' => PosRealWorldRuntimeCatalog::strictQueryAndPartitionContract(
+                $dataDictionary,
+                $stackPreset
+            ),
+            'syntax_lock_2026_contract' => [
+                'version' => PosRealWorldRuntimeCatalog::SYNTAX_LOCK_VERSION,
+                'syntax_lock_file' => '.agents/SYNTAX_LOCK_2026.md',
+                'troubleshooting_file' => '.agents/TROUBLESHOOTING_INSTINCTS.md',
+            ],
             'topological_dag_plan' => $dagPlan,
             'acceptance_test_matrix' => $acceptanceTestMatrix,
             'gemini_native_tools' => $geminiTools,
         ];
+
+        $schema['client_sop_and_onboarding'] = PosRealWorldRuntimeCatalog::buildRoleBasedClientSopAndOnboarding($schema);
+        $schema['cross_stage_causality_graph'] = PosRealWorldRuntimeCatalog::computeCrossStageCausalityGraph($schema);
 
         // JAMINAN 3 & 4 (v6.0): Freeze Exact Symbol Manifest + Token-Safe Sub-Chunked Prompts
         $symbolManifest = TopologicalPromptChunker::generateSymbolManifest($schema);
@@ -1024,6 +1071,24 @@ class ProjectOsBlueprintCompilerService
             }
             if (Schema::hasColumn('pos_projects', 'topological_chunks_json')) {
                 $projectPayload['topological_chunks_json'] = $subChunkedPrompts;
+            }
+            if (Schema::hasColumn('pos_projects', 'hardware_iot_contract_json')) {
+                $projectPayload['hardware_iot_contract_json'] = $schema['hardware_iot_peripheral_contract'] ?? [];
+            }
+            if (Schema::hasColumn('pos_projects', 'websocket_contract_json')) {
+                $projectPayload['websocket_contract_json'] = $schema['realtime_websocket_contract'] ?? [];
+            }
+            if (Schema::hasColumn('pos_projects', 'query_partition_contract_json')) {
+                $projectPayload['query_partition_contract_json'] = $schema['strict_query_and_partition_contract'] ?? [];
+            }
+            if (Schema::hasColumn('pos_projects', 'syntax_lock_version')) {
+                $projectPayload['syntax_lock_version'] = PosRealWorldRuntimeCatalog::SYNTAX_LOCK_VERSION;
+            }
+            if (Schema::hasColumn('pos_projects', 'client_sop_onboarding_json')) {
+                $projectPayload['client_sop_onboarding_json'] = $schema['client_sop_and_onboarding'] ?? [];
+            }
+            if (Schema::hasColumn('pos_projects', 'architectural_freeze_score')) {
+                $projectPayload['architectural_freeze_score'] = 100;
             }
 
             $existingProject = null;
@@ -1670,11 +1735,11 @@ MD;
         $primitives = implode(', ', $meta['injected_primitives'] ?? []);
         $isolationId = (string) ($meta['project_isolation_id'] ?? 'isolated-workspace');
 
-        return "# AGENTS.md & CLAUDE.md — {$meta['name']} (Project OS v6.0 Zero-Assumption Edition)\n\n"
+        return "# AGENTS.md & CLAUDE.md — {$meta['name']} (Project OS v7.0 — 15-Pillar 100% Architectural Freeze)\n\n"
             . "> **Project Isolation ID:** `{$isolationId}` (100% Isolated Workspace — Zero Cross-Project State Bleed)\n"
             . "> **Primary Sector:** `{$meta['primary_sector']}` | **Archetype:** `{$meta['architecture_archetype']}` | **Stack Preset:** `{$meta['stack_preset']}`\n"
             . "> **Injected Primitives:** `{$primitives}`\n"
-            . "> **Canonical Machine Contracts:** Always read `.agents/SYMBOL_MANIFEST.json`, `.agents/ENTERPRISE_MENU_MATRIX.md`, `.agents/BLUEPRINT_SCHEMA.json`, and `PROJECT_OS_EXECUTION_BLUEPRINT.md` before writing any code. NEVER deviate from `__invoke()` signatures or column names in `.agents/SYMBOL_MANIFEST.json`!\n\n"
+            . "> **Canonical Machine Contracts:** Always read `.agents/SYNTAX_LOCK_2026.md`, `.agents/TROUBLESHOOTING_INSTINCTS.md`, `.agents/SYMBOL_MANIFEST.json`, `.agents/ENTERPRISE_MENU_MATRIX.md`, `.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md`, `.agents/BLUEPRINT_SCHEMA.json`, and `PROJECT_OS_EXECUTION_BLUEPRINT.md` before writing any code. NEVER deviate from `__invoke()` signatures in `.agents/SYMBOL_MANIFEST.json`, NEVER use `wire:poll.<30s` (use Private Tenant Channel `organization.{ulid}.{module}`), and ALWAYS enforce `Model::shouldBeStrict(! app()->isProduction())`!\n\n"
             . "---\n\n"
             . self::renderAgentHarnessEccMarkdown() . "\n\n---\n\n"
             . self::renderEngineeringRulesMarkdown() . "\n\n---\n\n"

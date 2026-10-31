@@ -98,50 +98,41 @@ class EmailTemplateForm
                             ')),
                     ]),
 
-                Section::make('Konten Multibahasa Email (Bilingual Tabs: ID & EN)')
-                    ->description('Kelola subjek dan struktur HTML template untuk Bahasa Indonesia dan Bahasa Inggris secara terpisah.')
+                Section::make('Konten Multibahasa Email (Tier-1 TranslatableTabs: ID & EN)')
+                    ->description('Kelola subjek dan struktur HTML template untuk Bahasa Indonesia dan Bahasa Inggris secara terpisah dengan translasi cerdas 1-klik.')
                     ->schema([
-                        Tabs::make('Language Selector')
-                            ->tabs([
-                                Tabs\Tab::make('Bahasa Indonesia')
-                                    ->icon('heroicon-m-language')
-                                    ->badge('ID')
-                                    ->schema([
-                                        TextInput::make('subject.id')
-                                            ->label('Subjek Email (Bahasa Indonesia)')
-                                            ->placeholder('e.g. [Neriah Pro] {{otp}} adalah Kode OTP Masuk Anda')
-                                            ->required()
-                                            ->maxLength(255)
-                                            ->helperText('Subjek email dalam Bahasa Indonesia.'),
+                        \App\Filament\Forms\Components\TranslatableTabs::make(
+                            label: 'Konten Email Dwibahasa',
+                            idSchema: [
+                                TextInput::make('subject.id')
+                                    ->label('Subjek Email (Bahasa Indonesia)')
+                                    ->placeholder('e.g. [Neriah Pro] {{otp}} adalah Kode OTP Masuk Anda')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->helperText('Subjek email dalam Bahasa Indonesia.'),
 
-                                        Textarea::make('body_html.id')
-                                            ->label('Template HTML Body (Bahasa Indonesia)')
-                                            ->required()
-                                            ->rows(18)
-                                            ->extraAttributes(['class' => 'font-mono text-xs leading-relaxed'])
-                                            ->helperText('Markup HTML email standar dengan inline styles dan token tema untuk Bahasa Indonesia.'),
-                                    ]),
+                                Textarea::make('body_html.id')
+                                    ->label('Template HTML Body (Bahasa Indonesia)')
+                                    ->required()
+                                    ->rows(18)
+                                    ->extraAttributes(['class' => 'font-mono text-xs leading-relaxed'])
+                                    ->helperText('Markup HTML email standar dengan inline styles dan token tema untuk Bahasa Indonesia.'),
+                            ],
+                            enSchema: [
+                                TextInput::make('subject.en')
+                                    ->label('Email Subject (English)')
+                                    ->placeholder('e.g. [Neriah Pro] {{otp}} is Your Login OTP Code')
+                                    ->maxLength(255)
+                                    ->helperText('Email subject in English (auto-translated on save if left blank).'),
 
-                                Tabs\Tab::make('English')
-                                    ->icon('heroicon-m-globe-alt')
-                                    ->badge('EN')
-                                    ->schema([
-                                        TextInput::make('subject.en')
-                                            ->label('Email Subject (English)')
-                                            ->placeholder('e.g. [Neriah Pro] {{otp}} is Your Login OTP Code')
-                                            ->required()
-                                            ->maxLength(255)
-                                            ->helperText('Email subject in English (used whenever the client selects English or non-Indonesian locale).'),
-
-                                        Textarea::make('body_html.en')
-                                            ->label('HTML Body Template (English)')
-                                            ->required()
-                                            ->rows(18)
-                                            ->extraAttributes(['class' => 'font-mono text-xs leading-relaxed'])
-                                            ->helperText('Standard email HTML markup with inline styles and theme tokens for English.'),
-                                    ]),
-                            ])
-                            ->columnSpanFull(),
+                                Textarea::make('body_html.en')
+                                    ->label('HTML Body Template (English)')
+                                    ->rows(18)
+                                    ->extraAttributes(['class' => 'font-mono text-xs leading-relaxed'])
+                                    ->helperText('Standard email HTML markup with inline styles and theme tokens for English.'),
+                            ],
+                            fieldKeys: ['subject', 'body_html']
+                        ),
                     ]),
             ]);
     }

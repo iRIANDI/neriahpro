@@ -265,26 +265,49 @@ class PosCommercialBridgeService
         $decisions = (array) ($schema['decision_tables_matrix'] ?? []);
         $sagas = (array) ($schema['saga_and_webhook_contracts'] ?? []);
 
+        // Cross-Stage Causality (v7.0): Active L1-L4 v1.0 menus, Hardware Bridges & Real-Time WebSocket Channels
+        $menuMatrix = is_array($schema['enterprise_menu_matrix'] ?? null) ? $schema['enterprise_menu_matrix'] : [];
+        $activeMenuCodes = [];
+        foreach (($menuMatrix['divisions'] ?? []) as $div) {
+            foreach (($div['menus'] ?? []) as $m) {
+                if (! empty($m['included_in_v1']) && ! empty($m['code'])) {
+                    $activeMenuCodes[] = (string) $m['code'];
+                }
+            }
+        }
+        sort($activeMenuCodes);
+        $v1MenusCount = count($activeMenuCodes);
+        $hardwareActiveCount = (int) ($schema['hardware_iot_peripheral_contract']['active_peripherals_count'] ?? 0);
+        $wsChannelsCount = count((array) ($schema['realtime_websocket_contract']['channels'] ?? []))
+            + count((array) ($schema['realtime_websocket_contract']['linked_realtime_v1_menus'] ?? []));
+
         $tablesCount = max(1, count($tables));
         $statesCount = max(1, count($states));
         $locksCount = max(1, count($locks));
         $integrationsCount = max(1, count($sagas));
 
+        // Each active v1.0 ERP screen contributes 2h UI/SOP wiring, each active hardware peripheral bridge 4h, each WS channel 2h
+        $menuAndRuntimeHours = ($v1MenusCount * 2) + ($hardwareActiveCount * 4) + ($wsChannelsCount * 2);
+
         $rawHours = ($tablesCount * $hoursPerTable)
             + ($statesCount * $hoursPerState)
             + ($locksCount * $hoursPerLock)
             + ($integrationsCount * $hoursPerIntegration)
+            + $menuAndRuntimeHours
             + $baseSetupHours;
 
         $effectiveManHours = (int) ceil($rawHours * $stackMultiplier);
         $timelineDays = (int) max(7, ceil($effectiveManHours / 8));
         $quotationIdr = $effectiveManHours * $ratePerHour;
 
-        // Deterministic Cryptographic Scope Hash (SHA-256)
+        // Deterministic Cryptographic Scope Hash (SHA-256 — Cross-Stage Synchronized)
         $canonicalPayload = [
             'sector' => $sectorCode,
             'stack' => $normalizedStack,
             'primitives' => $primitives,
+            'active_v1_menus' => $activeMenuCodes,
+            'active_hardware_peripherals' => $hardwareActiveCount,
+            'websocket_channels_count' => $wsChannelsCount,
             'tables' => array_values(array_map(fn ($t) => [
                 'table' => $t['table'] ?? '',
                 'columns' => array_map(fn ($c) => is_array($c) ? ($c['name'] ?? '') : (string) $c, (array) ($t['columns'] ?? [])),
@@ -413,12 +436,18 @@ class PosCommercialBridgeService
                 'integrations' => $integrationsCount,
                 'primitives' => count($primitives),
                 'decision_rules' => count($decisions),
+                'v1_menus' => $v1MenusCount,
+                'hardware_bridges' => $hardwareActiveCount,
+                'websocket_channels' => $wsChannelsCount,
             ],
             'metrics' => [
                 'tables_count' => $tablesCount,
                 'transitions_count' => $statesCount,
                 'concurrency_locks_count' => $locksCount,
                 'integrations_count' => $integrationsCount,
+                'v1_menus_count' => $v1MenusCount,
+                'hardware_bridges_count' => $hardwareActiveCount,
+                'websocket_channels_count' => $wsChannelsCount,
             ],
             'raw_man_hours' => $rawHours,
             'man_hours' => $effectiveManHours,
@@ -895,6 +924,31 @@ class PosCommercialBridgeService
                 $d['checked_by'] = $prev['checked_by'] ?? null;
                 $scenarios[] = $d;
             }
+        }
+
+        // Project OS v7.0: Always ensure Field Hardware, Zero-Polling WebSocket & Role-Based SOP Handover UAT Scenario exists
+        $hasFieldSopScenario = false;
+        foreach ($scenarios as $scItem) {
+            if (($scItem['id'] ?? '') === 'UAT-V7-RUNTIME-SOP') {
+                $hasFieldSopScenario = true;
+                break;
+            }
+        }
+        if (! $hasFieldSopScenario && ! empty($schema['client_sop_and_onboarding'])) {
+            $prevV7 = $existingMap['UAT-V7-RUNTIME-SOP'] ?? null;
+            $sopSteps = (int) ($schema['client_sop_and_onboarding']['total_interactive_tour_steps'] ?? 25);
+            $hwCount = (int) ($schema['hardware_iot_peripheral_contract']['active_peripherals_count'] ?? 1);
+            $scenarios[] = [
+                'id' => 'UAT-V7-RUNTIME-SOP',
+                'primitive' => 'REALWORLD_RUNTIME_AND_SOP',
+                'title' => "Uji Perangkat Fisik ({$hwCount} Bridge), WebSocket Zero-Polling & Serah Terima Buku SOP ({$sopSteps} Langkah)",
+                'given' => 'Aplikasi berjalan pada lingkungan Staging dengan Model::shouldBeStrict() aktif dan perangkat/layar operasional terhubung.',
+                'when' => 'Staf menguji Scanner/Layar Pelanggan/WebSocket real-time serta membuka menu Panduan SOP & Tour Staf (/admin/smart-guide).',
+                'then' => 'Transaksi real-time terupdate instan tanpa wire:poll (<30s), bebas N+1 query, dan seluruh staf menerima panduan SOP sesuai Role masing-masing.',
+                'passed' => (bool) ($prevV7['passed'] ?? false),
+                'checked_at' => $prevV7['checked_at'] ?? null,
+                'checked_by' => $prevV7['checked_by'] ?? null,
+            ];
         }
 
         $total = count($scenarios);

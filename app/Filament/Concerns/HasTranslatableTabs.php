@@ -14,7 +14,22 @@ trait HasTranslatableTabs
      */
     protected function getTranslatableFields(): array
     {
-        return ['name', 'title', 'description', 'content', 'label', 'headline', 'subtitle'];
+        return [
+            'name',
+            'title',
+            'description',
+            'content',
+            'label',
+            'headline',
+            'subtitle',
+            'meta_description',
+            'subject',
+            'body_html',
+            'best_use_cases',
+            'summary',
+            'function_guarantee',
+            'technical_contract',
+        ];
     }
 
     /**

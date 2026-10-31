@@ -8,6 +8,8 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditProjectIssue extends EditRecord
 {
+    use \App\Filament\Concerns\HasTranslatableTabs;
+
     protected static string $resource = ProjectIssueResource::class;
 
     protected function getHeaderActions(): array

@@ -418,21 +418,23 @@ GATE;
             'part_code' => '1.0',
             'major_phase' => 1,
             'filename' => '01.0-foundation-and-symbol-lock.md',
-            'title' => 'Part 1.0: Foundation, Strict ULID Harness, SYMBOL_MANIFEST Lock & 5 Enterprise Glue Base',
+            'title' => 'Part 1.0: Foundation, Strict ULID Harness, SYNTAX_LOCK_2026, 0% N+1 Mode & SYMBOL_MANIFEST Lock',
             'dag_layer_badge' => 'Harness & Lock',
             'entities_count' => 1,
-            'estimated_loc' => 650,
-            'objective' => 'Menginisialisasi ruang kerja terisolasi, membekukan .agents/SYMBOL_MANIFEST.json, trait BelongsToOrganization, dan kerangka 5 Enterprise Glue.',
+            'estimated_loc' => 700,
+            'objective' => 'Menginisialisasi ruang kerja terisolasi, membekukan .agents/SYNTAX_LOCK_2026.md & .agents/SYMBOL_MANIFEST.json, mengaktifkan Model::shouldBeStrict(), trait BelongsToOrganization, dan kerangka 5 Enterprise Glue.',
             'prompt' => <<<PROMPT
-# PROJECT OS v6.0 — PART 1.0: FOUNDATION, STRICT ULID HARNESS & SYMBOL LOCK ({$appName})
+# PROJECT OS v7.0 — PART 1.0: FOUNDATION, STRICT ULID HARNESS, SYNTAX_LOCK_2026 & SYMBOL LOCK ({$appName})
 > **Project Isolation ID:** `{$isolationId}` (100% Isolated Workspace — DILARANG mencampur artefak proyek lain)
 > **Stack Topology:** `{$stackCode}` | **Primary Sector:** `{$sectorCode}`
 
 ## Kontrak Wajib Part 1.0:
-1. Pastikan berkas `.agents/SYMBOL_MANIFEST.json`, `.agents/ENTERPRISE_MENU_MATRIX.md`, dan `.agents/graphify/graph.json` tersimpan utuh sebagai Single Source of Truth penamaan class, method `__invoke()`, DTO, dan kolom ULID.
-2. Bangun base multi-tenant trait `App\Models\Concerns\BelongsToOrganization` (Global Scope `organization_id` anti-IDOR HTTP 404) serta `HasUlids` 26-karakter (`CHAR(26)` / `VARCHAR(26)` — DILARANG `uuid` native PostgreSQL atau `BIGSERIAL`).
-3. Siapkan direktori `app/Actions`, `app/Data`, `app/Enums`, dan `app/Domains/Rules/DeterministicDecisionMatrix.php` berbasis PHP 8.4+ `match()`.
-4. Buat tes fondasi `tests/Feature/Part1_0_FoundationAndHarnessTest.php` yang memverifikasi keberadaan `.agents/SYMBOL_MANIFEST.json` dan isolasi tenant.
+1. Baca dan kunci terlebih dahulu `.agents/SYNTAX_LOCK_2026.md` & `.agents/TROUBLESHOOTING_INSTINCTS.md` sebelum menulis baris kode apa pun agar 100% bebas error sintaks 2026 (Filament v5 `Schema`, `Width::Full`, `Filament\Actions\*`, Livewire 4 `#[Locked]`, `session.upload_progress.enabled = 0`).
+2. Pastikan berkas `.agents/SYMBOL_MANIFEST.json`, `.agents/ENTERPRISE_MENU_MATRIX.md`, dan `.agents/graphify/graph.json` tersimpan utuh sebagai Single Source of Truth penamaan class, method `__invoke()`, DTO, dan kolom ULID.
+3. Aktifkan **`Model::shouldBeStrict(! \$this->app->isProduction());`** di dalam `App\Providers\AppServiceProvider::boot()` (`preventLazyLoading` 0% N+1 query leaks, `preventSilentlyDiscardingAttributes`, `preventAccessingMissingAttributes`).
+4. Bangun base multi-tenant trait `App\Models\Concerns\BelongsToOrganization` (Global Scope `organization_id` anti-IDOR HTTP 404) serta `HasUlids` 26-karakter (`CHAR(26)` / `VARCHAR(26)` — DILARANG `uuid` native PostgreSQL atau `BIGSERIAL`).
+5. Siapkan direktori `app/Actions`, `app/Data`, `app/Enums`, dan `app/Domains/Rules/DeterministicDecisionMatrix.php` berbasis PHP 8.4+ `match()`.
+6. Buat tes fondasi `tests/Feature/Part1_0_FoundationAndHarnessTest.php` yang memverifikasi keberadaan `.agents/SYNTAX_LOCK_2026.md`, `.agents/SYMBOL_MANIFEST.json`, `Model::preventsLazyLoading()`, dan isolasi tenant.
 
 {$gate1}
 PROMPT,
@@ -488,8 +490,9 @@ PROMPT,
 
 ## Instruksi Eksekusi Presisi:
 1. Buat file migrasi Laravel menggunakan `\$table->ulid('id')->primary()`, `\$table->foreignUlid(...)`, dan `DECIMAL(19,4)` untuk seluruh nominal uang/stok (0 `FLOAT`).
-2. Buat Model Eloquent (`HasUlids`, `BelongsToOrganization` bila memiliki `organization_id`) dan PHP Backed Enum untuk `status_enum_fqcn` persis sesuai JSON di atas.
-3. Buat feature test `tests/Feature/{$testName}.php` yang memverifikasi pembuatan record ULID dan relasi Eloquent untuk ke-{$chunkTablesCount} tabel ini.
+2. **WAJIB Composite Index Tenant & Partisi PG16**: Untuk setiap tabel yang memiliki `organization_id`, tambahkan `\$table->index(['organization_id', 'id']);` (Keyset Cursor O(1)) serta `\$table->index(['organization_id', 'status', 'created_at']);` bila kolom tersebut ada. Pastikan kompatibilitas dengan `database/sql/pg16_range_partitioning.sql` untuk tabel berpertumbuhan masif (`audit_logs`, `inventory_movements`, `journal_lines`, `sys_integration_logs`).
+3. Buat Model Eloquent (`HasUlids`, `BelongsToOrganization` bila memiliki `organization_id`) dan PHP Backed Enum untuk `status_enum_fqcn` persis sesuai JSON di atas. Seluruh relasi yang dirender di UI wajib eager-loaded via `->with([...])` (mematuhi `Model::shouldBeStrict()`).
+4. Buat feature test `tests/Feature/{$testName}.php` yang memverifikasi pembuatan record ULID, composite index, dan relasi Eloquent untuk ke-{$chunkTablesCount} tabel ini.
 
 {$gate2}
 PROMPT,
@@ -626,10 +629,11 @@ PROMPT,
 ## Referensi Cepat Bound Actions (`SYMBOL_MANIFEST.json`):
 {$actionsRefBlock}
 
-## Standar Mutlak Zero-Slop UI:
-1. **HARAM** `rounded-full`, gradien warna-warni `bg-gradient-to-*`, font pudar di latar terang, CDN eksternal, dan `window.alert()`/`confirm()`.
-2. **WAJIB** sudut tajam/tipis (`rounded-none` / `rounded-xs` / `rounded-sm`), kontras tinggi Dark & Light mode WCAG AA/AAA, Keyset Cursor Pagination `O(1)` (`cursorPaginate()`), sticky header, tombol X clear pada search, `tabular-nums` + pemisah ribuan, serta cetak Thermal 80mm / A4 SVG QR lokal bila relevan.
-3. Buat feature test render & klik aksi `tests/Feature/{$testName}.php`.
+## Standar Mutlak Zero-Slop UI, Hardware Bridge & Zero-Polling WebSocket:
+1. **HARAM** `rounded-full`, gradien warna-warni `bg-gradient-to-*`, font pudar di latar terang, CDN eksternal, `window.alert()`/`confirm()`, dropdown `LocaleSwitcher::make()`, dan **HARAM `wire:poll` frekuensi tinggi (`< 30s`)** pada layar operasional bersama!
+2. **WAJIB** sudut tajam/tipis (`rounded-none` / `rounded-xs` / `rounded-sm`), kontras tinggi Dark & Light mode WCAG AA/AAA, `TranslatableTabs` in-place untuk field dwibahasa Tier-1 (`{"id": "...", "en": "..."}`), Keyset Cursor Pagination `O(1)` (`cursorPaginate()`), sticky header, tombol X clear pada search, dan `tabular-nums` + pemisah ribuan.
+3. **Hardware Peripheral & Real-Time Event Push**: Hubungkan `resources/js/peripherals/barcode-wedge-and-dual-screen.js` (Keyboard Wedge `< 30ms` + `BroadcastChannel` Layar Pelanggan QRIS SVG lokal) serta push event via Private Tenant Channel `organization.{ulid}.{module}` (`ShouldBroadcastNow`).
+4. Buat feature test render & klik aksi `tests/Feature/{$testName}.php`.
 
 {$gate5}
 PROMPT,
@@ -637,25 +641,26 @@ PROMPT,
         }
 
         // =========================================================================
-        // PART 6.0: 4-PILLAR AI COPILOT, DAY-2 OPS & ZERO-DOWNTIME DEPLOY PACK
+        // PART 6.0: 4-PILLAR AI COPILOT, CLIENT SOP SMARTGUIDE, DAY-2 OPS & DEPLOY
         // =========================================================================
         $gate6 = self::buildMandatoryVerificationGate('6.0', 'Part6_0_AiCopilotAndDay2OpsTest', [
-            '`bash verify-blueprint.sh` (Ensure 0 anti-slop violations across database, UI, and security)',
+            '`bash verify-blueprint.sh` (Ensure 0 anti-slop, zero wire:poll.<30s, and zero LocaleSwitcher violations across database, UI, and security)',
         ]);
         $parts[] = [
             'part_code' => '6.0',
             'major_phase' => 6,
             'filename' => '06.0-ai-copilot-and-production-pack.md',
-            'title' => 'Part 6.0: 4-Pillar AI Copilot (RAG+CAG+KAG+Tools), Outbox Replay & Production Pack',
-            'dag_layer_badge' => 'AI & Day-2 Ops',
-            'entities_count' => 4,
-            'estimated_loc' => 850,
-            'objective' => 'Menyinkronkan AI Copilot Tri-Hybrid pgvector, RBAC, Smart Guide, SHA-256 Audit Log, 4-Lane Queue, & deploy.sh.',
+            'title' => 'Part 6.0: 4-Pillar AI Copilot, Role-Based SmartGuide SOP, Zero-Polling WebSocket & Deploy Pack',
+            'dag_layer_badge' => 'AI, SOP & Day-2 Ops',
+            'entities_count' => 5,
+            'estimated_loc' => 920,
+            'objective' => 'Menyinkronkan AI Copilot Tri-Hybrid pgvector, RBAC, In-App SmartGuide.php + CLIENT_SOP_AND_TRAINING_MANUAL.md, SHA-256 Audit Log, 4-Lane Queue, & deploy.sh.',
             'prompt' => <<<PROMPT
-# PROJECT OS v6.0 — PART 6.0: 4-PILLAR AI COPILOT & PRODUCTION DEPLOYMENT ({$appName})
+# PROJECT OS v7.0 — PART 6.0: 4-PILLAR AI COPILOT, ROLE SOP SMARTGUIDE & PRODUCTION DEPLOYMENT ({$appName})
 1. Sinkronkan **4 Pilar Tata Kelola Enterprise** (AI Copilot RAG `pgvector` 768-dim + CAG + KAG + Native Tools tervalidasi RBAC, Smart Guide Admin, RBAC Policies, dan SHA-256 `AuditLog`).
-2. Hubungkan `sys_integration_logs` ke antarmuka 1-Click Webhook/Outbox Replay Admin dan siapkan health probes (`/healthz`, `/livez`, `/readyz`) + `deploy.sh`.
-3. Buat feature test `tests/Feature/Part6_0_AiCopilotAndDay2OpsTest.php`.
+2. Pasang dan verifikasi halaman In-App Interactive Onboarding **`app/Filament/Pages/SmartGuide.php`** serta dokumen serah terima BAST **`.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md`** yang otomatis memandu staf per Role/Divisi berdasarkan menu aktif `v1.0` & State Machine.
+3. Hubungkan `sys_integration_logs` (termasuk ZKTeco/ADMS Biometric Webhook & Turnstile Relay bila aktif) ke antarmuka 1-Click Webhook/Outbox Replay Admin dan siapkan health probes (`/healthz`, `/livez`, `/readyz`), `Caddyfile` FrankenPHP (`session.upload_progress.enabled = 0`), serta `deploy.sh`.
+4. Buat feature test `tests/Feature/Part6_0_AiCopilotAndDay2OpsTest.php`.
 
 {$gate6}
 PROMPT,

@@ -956,7 +956,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     })(),
   });
 
-  // 12-Sector, 12 Core Primitives, 9 Curated Tech Stack Presets, 8 Day-2 Layers & 5 Guarantee Engines (v6.0)
+  // 12-Sector, 12 Core Primitives, 9 Curated Tech Stack Presets, 8 Day-2 Layers, 5 Guarantee Engines & 15 Master Pillars (v7.0)
   const [matrixCatalog, setMatrixCatalog] = useState({
     sectors: [],
     primitives: [],
@@ -968,12 +968,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     five_lifecycle_features: [],
     five_deterministic_guarantees: [],
     five_enterprise_glue_primitives: [],
+    fifteen_architecture_pillars: [],
+    five_real_world_elements: [],
     stack_server_sizing: {},
     slop_diff_pairs: [],
   });
-  // Progressive Disclosure Mode: 'express' (Founder-friendly default) | 'workbench' (6-Tab Senior Architect Workbench)
+  // Progressive Disclosure Mode: 'express' (Founder-friendly default) | 'workbench' (7-Tab Senior Architect Workbench)
   const [matrixMode, setMatrixMode] = useState('express');
-  const [activeWorkbenchTab, setActiveWorkbenchTab] = useState('sectors'); // 'sectors' | 'primitives' | 'stacks' | 'brownfield' | 'doctor' | 'menus_glue'
+  const [activeWorkbenchTab, setActiveWorkbenchTab] = useState('sectors'); // 'sectors' | 'primitives' | 'stacks' | 'brownfield' | 'doctor' | 'menus_glue' | 'runtime_v7'
+  const [v7RuntimePreview, setV7RuntimePreview] = useState(null);
   const [activeTopologyFilter, setActiveTopologyFilter] = useState('ALL');
   const [showStackMatrixTable, setShowStackMatrixTable] = useState(false);
 
@@ -1229,6 +1232,40 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     const selected = Array.isArray(formData.selectedPrimitives) ? formData.selectedPrimitives : [];
     return Array.from(new Set([...mandatory, ...selected]));
   }, [activeMatrixSectorObj, formData.selectedPrimitives]);
+
+  // Cross-Stage Live Causality Sync (v7.0): Sector -> Primitives -> Menus -> Hardware & WebSocket -> DAG -> SOP -> RAB IDR & Scope Hash
+  useEffect(() => {
+    let active = true;
+    const timer = setTimeout(() => {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      fetch('/api/blueprint/topological-preview', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+        },
+        body: JSON.stringify({
+          primary_sector: formData.primarySector || 'SECTOR_01_COMMERCE_RETAIL',
+          selected_primitives: effectivePrimitiveCodes,
+          stack_preset: formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH',
+          selected_menus: effectiveSelectedMenus,
+          project_name: formData.namaBisnis || '',
+        }),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((json) => {
+          if (active && json?.success) {
+            setV7RuntimePreview(json);
+          }
+        })
+        .catch(() => {});
+    }, 280);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [formData.primarySector, effectivePrimitiveCodes, formData.stackPreset, effectiveSelectedMenus, formData.namaBisnis]);
 
   const estimatedTimelineDays = useMemo(() => {
     const raw = String(formData.targetWaktu || '').toLowerCase();
@@ -4657,12 +4694,43 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 </div>
               </div>
 
+              {/* v7.0 Cross-Stage Live Causality Ribbon (100% Architectural Freeze — Every Stage Mutates Downstream Stages) */}
+              <div className="mt-2.5 p-3 rounded-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5">
+                <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                  <span className="px-2 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black uppercase">
+                    v7.0 • 15 PILAR FREEZE (100%)
+                  </span>
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black tabular-nums">
+                    {lang === 'en'
+                      ? `HW Bridge: ${v7RuntimePreview?.hardware_iot_peripheral_contract?.active_bridges_count ?? 1} • WS Zero-Poll: ${v7RuntimePreview?.realtime_websocket_contract?.channels?.length ?? 3}ch`
+                      : `HW Bridge: ${v7RuntimePreview?.hardware_iot_peripheral_contract?.active_bridges_count ?? 1} • WS Zero-Poll: ${v7RuntimePreview?.realtime_websocket_contract?.channels?.length ?? 3} Kanal`}
+                  </span>
+                  <span className="px-2 py-0.5 bg-white text-zinc-950 border border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-bold tabular-nums">
+                    {lang === 'en'
+                      ? `0% N+1 + PG16 Partition • DAG: ${v7RuntimePreview?.summary?.total_sub_parts ?? 12} Parts • Role SOP: ${v7RuntimePreview?.client_sop_and_onboarding?.role_count ?? 4}`
+                      : `0% N+1 + Partisi PG16 • DAG: ${v7RuntimePreview?.summary?.total_sub_parts ?? 12} Part • SOP Role: ${v7RuntimePreview?.client_sop_and_onboarding?.role_count ?? 4}`}
+                  </span>
+                  {v7RuntimePreview?.live_commercial_sync && (
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-black tabular-nums">
+                      {lang === 'en' ? 'Mitra Turnkey Est:' : 'Est. Mitra Turnkey:'} {v7RuntimePreview.live_commercial_sync.formatted_quotation_idr} • SHA256:{v7RuntimePreview.live_commercial_sync.scope_hash_short}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('runtime_v7'); }}
+                  className="shrink-0 px-2.5 py-1.5 rounded-xs bg-emerald-600 hover:bg-emerald-500 text-zinc-950 border border-emerald-700 font-mono text-[10px] font-black uppercase cursor-pointer"
+                >
+                  {lang === 'en' ? '⚡ Inspect 5 Runtime & 15 Pillars' : '⚡ Lihat 5 Runtime & 15 Pilar'}
+                </button>
+              </div>
+
               {/* =================================================================
-                  5-TAB SENIOR ARCHITECT WORKBENCH (VISIBLE WHEN matrixMode === 'workbench')
+                  7-TAB SENIOR ARCHITECT WORKBENCH (VISIBLE WHEN matrixMode === 'workbench')
                   ================================================================= */}
               {matrixMode === 'workbench' && (
                 <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                  {/* Horizontal 6-Tab Navigation Bar */}
+                  {/* Horizontal 7-Tab Navigation Bar */}
                   <div className="flex flex-wrap items-center gap-1.5 mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-800">
                     {[
                       { id: 'sectors', label: lang === 'en' ? '1. Sectors & Industrial UI (12)' : '1. Sektor & UI Industri (12)' },
@@ -4671,6 +4739,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       { id: 'brownfield', label: lang === 'en' ? '4. Legacy SQL Importer' : '4. Impor SQL Lama' },
                       { id: 'doctor', label: lang === 'en' ? '5. 🩺 Doctor & 8 Day-2 Layers' : '5. 🩺 Doctor & 8 Layer Day-2' },
                       { id: 'menus_glue', label: lang === 'en' ? `6. 🏢 25 L1–L4 Menus & 5 Glue (${effectiveSelectedMenus.length}/25)` : `6. 🏢 25 Menu L1–L4 & 5 Glue (${effectiveSelectedMenus.length}/25)` },
+                      { id: 'runtime_v7', label: lang === 'en' ? '7. ⚡ 5 Real-World & 15 Pillars (100%)' : '7. ⚡ 5 Elemen Nyata & 15 Pilar (100%)' },
                     ].map((wbTab) => {
                       const isTabActive = activeWorkbenchTab === wbTab.id;
                       return (
@@ -5399,6 +5468,136 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                 <p className="text-[10px] text-zinc-700 dark:text-zinc-300 mt-1 leading-relaxed line-clamp-3">
                                   {glue.invariant}
                                 </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* TAB 7: Project OS v7.0 — 5 Real-World Field Runtime Contracts + Master 15 Architecture Pillars (100% Freeze) */}
+                  {activeWorkbenchTab === 'runtime_v7' && (
+                    <div className="space-y-4">
+                      <div className="p-3.5 rounded-xs bg-zinc-50 dark:bg-zinc-950 border border-emerald-500/70 dark:border-emerald-700 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                        <div>
+                          <span className="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300 block">
+                            PROJECT OS v7.0 • 100% ARCHITECTURAL FREEZE (5 REAL-WORLD ELEMENTS + 15 MASTER PILLARS)
+                          </span>
+                          <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-0.5">
+                            {displaySectorName} • {activeStackPresetObj?.code || formData.stackPreset} • {effectiveSelectedMenus.length}/25 Menu v1.0
+                          </div>
+                          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 mt-0.5">
+                            {lang === 'en'
+                              ? 'Every change in Sector, Core Primitives, L1–L4 Menus, or Stack Preset deterministically updates Hardware Bridges, Zero-Poll WebSocket Channels, Composite PG16 Schema, SYNTAX_LOCK_2026.md, Role SOPs, and Mitra RAB/SHA-256 Scope Hash.'
+                              : 'Setiap perubahan Sektor, Modul Primitif, Menu L1–L4, atau Stack secara deterministik memperbarui Jembatan Hardware, Kanal WebSocket Tanpa Polling, Skema Partisi PG16, SYNTAX_LOCK_2026.md, Buku SOP Role, hingga RAB & SHA-256 Scope Hash.'}
+                          </p>
+                        </div>
+                        {v7RuntimePreview?.live_commercial_sync && (
+                          <div className="shrink-0 p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 font-mono text-[10px]">
+                            <div className="font-black text-emerald-900 dark:text-emerald-300">
+                              {lang === 'en' ? 'LIVE CAUSAL SCOPE SYNC' : 'SINKRONISASI KAUSAL REAL-TIME'}
+                            </div>
+                            <div className="font-black text-zinc-950 dark:text-zinc-100 mt-0.5 tabular-nums">
+                              {v7RuntimePreview.live_commercial_sync.formatted_quotation_idr} ({v7RuntimePreview.live_commercial_sync.estimated_working_days} {lang === 'en' ? 'Days' : 'Hari'})
+                            </div>
+                            <div className="text-zinc-600 dark:text-zinc-400 tabular-nums">
+                              SHA-256: {v7RuntimePreview.live_commercial_sync.scope_hash_short}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Live 5 Real-World Contracts Breakdown for Selected Sector & Stack */}
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                        <div className="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-1.5">
+                          <div className="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                            {lang === 'en' ? '1. HARDWARE & DUAL-SCREEN BRIDGE' : '1. HARDWARE FISIK & LAYAR KEDUA'}
+                          </div>
+                          <div className="text-xs font-black text-zinc-950 dark:text-zinc-100">
+                            {v7RuntimePreview?.hardware_iot_peripheral_contract?.barcode_rfid_wedge?.enabled
+                              ? (lang === 'en' ? '<30ms Global Barcode/RFID Wedge: ACTIVE' : 'Scanner Barcode/RFID <30ms: AKTIF')
+                              : (lang === 'en' ? 'On-Demand Peripheral Ready' : 'Siap Periferal Opsional')}
+                          </div>
+                          <p className="text-[11px] text-zinc-700 dark:text-zinc-300">
+                            {v7RuntimePreview?.hardware_iot_peripheral_contract?.customer_dual_screen?.enabled
+                              ? (lang === 'en' ? 'BroadcastChannel Customer Screen + 100% Local Dynamic QRIS active.' : 'Layar kedua pelanggan BroadcastChannel + QRIS Dinamis 100% lokal aktif.')
+                              : (lang === 'en' ? 'Zero external QR CDN latency guaranteed.' : 'Jaminan nol latensi CDN eksternal untuk seluruh kode QR/dokumen.')}
+                          </p>
+                          {v7RuntimePreview?.hardware_iot_peripheral_contract?.biometric_and_turnstile_iot?.enabled && (
+                            <div className="font-mono text-[10px] font-bold text-amber-900 dark:text-amber-300">
+                              ZKTeco ADMS Idempotent Webhook + Turnstile Relay &lt;150ms
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-1.5">
+                          <div className="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                            {lang === 'en' ? '2. ZERO-POLLING WEBSOCKET & 0% N+1' : '2. WEBSOCKET TANPA POLLING & 0% N+1'}
+                          </div>
+                          <div className="text-xs font-black text-zinc-950 dark:text-zinc-100">
+                            {v7RuntimePreview?.realtime_websocket_contract?.engine || 'Laravel Reverb / Soketi'}
+                          </div>
+                          <div className="space-y-1 font-mono text-[10px] text-zinc-800 dark:text-zinc-200">
+                            {(v7RuntimePreview?.realtime_websocket_contract?.channels || ['organization.{ulid}.operations']).slice(0, 3).map((ch, idx) => (
+                              <div key={idx} className="px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 truncate">
+                                {typeof ch === 'string' ? ch : (ch.channel || ch.event)}
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-[10px] font-bold text-rose-900 dark:text-rose-300">
+                            {lang === 'en' ? 'STRICT BAN: wire:poll.<30s • Strict N+1 Guard ON • PG16 Quarterly Partitioning' : 'DILARANG: wire:poll.<30s • Anti N+1 Aktif • Partisi Kuartalan PG16'}
+                          </p>
+                        </div>
+
+                        <div className="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-1.5">
+                          <div className="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                            {lang === 'en' ? '3. SYNTAX LOCK 2026 & ROLE CLIENT SOP' : '3. SYNTAX LOCK 2026 & BUKU SOP KLIEN'}
+                          </div>
+                          <div className="text-xs font-black text-zinc-950 dark:text-zinc-100">
+                            .agents/SYNTAX_LOCK_2026.md + SmartGuide.php
+                          </div>
+                          <p className="text-[11px] text-zinc-700 dark:text-zinc-300">
+                            {lang === 'en'
+                              ? `${v7RuntimePreview?.client_sop_and_onboarding?.role_count ?? 4} RBAC Role Onboarding Tours & Printable A4 BAST Training Manual reactively compiled from ${effectiveSelectedMenus.length} active v1.0 menus.`
+                              : `${v7RuntimePreview?.client_sop_and_onboarding?.role_count ?? 4} Panduan Interaktif Peran Staf & Buku SOP Cetak A4 BAST otomatis disusun dari ${effectiveSelectedMenus.length} menu v1.0 aktif.`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Master 15 Architecture Pillars Grid */}
+                      {(matrixCatalog.fifteen_architecture_pillars || []).length > 0 && (
+                        <div>
+                          <div className="text-[11px] font-mono font-black uppercase tracking-wider text-zinc-950 dark:text-zinc-100 mb-2">
+                            {lang === 'en'
+                              ? 'Master 15 Canonical Architecture Pillars — 100% Lock & Freeze (Database Cached Forever)'
+                              : '15 Pilar Arsitektur Kanonikal Project OS — 100% Lock & Freeze (Tersimpan di Database)'}
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
+                            {matrixCatalog.fifteen_architecture_pillars.map((pillar) => (
+                              <div
+                                key={pillar.code}
+                                className="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs flex flex-col justify-between"
+                              >
+                                <div>
+                                  <div className="flex items-center justify-between gap-1 mb-1">
+                                    <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black">
+                                      #{String(pillar.pillar_number).padStart(2, '0')}
+                                    </span>
+                                    <span className="font-mono text-[9px] font-black text-emerald-900 dark:text-emerald-300">
+                                      {pillar.maturity_percent || 100}%
+                                    </span>
+                                  </div>
+                                  <div className="text-[11px] font-black text-zinc-950 dark:text-zinc-100 leading-snug">
+                                    {pillar.name?.[lang] || pillar.name?.id || pillar.code}
+                                  </div>
+                                  <p className="text-[10px] text-zinc-700 dark:text-zinc-300 mt-1 line-clamp-2">
+                                    {pillar.guaranteed_outcome?.[lang] || pillar.guaranteed_outcome?.id || ''}
+                                  </p>
+                                </div>
+                                <div className="mt-1.5 pt-1 border-t border-zinc-200 dark:border-zinc-800 font-mono text-[9px] font-bold text-zinc-600 dark:text-zinc-400 truncate">
+                                  {pillar.artifact_contract}
+                                </div>
                               </div>
                             ))}
                           </div>

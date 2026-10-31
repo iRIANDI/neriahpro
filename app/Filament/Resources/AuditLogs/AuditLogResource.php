@@ -118,8 +118,8 @@ class AuditLogResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => strtoupper($state ?: 'system'))
                     ->color(fn (?string $state): string => match ($state) {
-                        'project_os', 'cli_bootstrap', 'day2_ops', 'delta_evolution', 'commercial_contract', 'uat_bast', 'enterprise_glue', 'project_isolation' => 'success',
-                        'ai_agent', 'blueprint_doctor', 'mcp_bridge', 'env_vault', 'symbol_manifest', 'dag_chunker' => 'info',
+                        'project_os', 'cli_bootstrap', 'day2_ops', 'delta_evolution', 'commercial_contract', 'uat_bast', 'enterprise_glue', 'project_isolation', 'pillars_freeze_100', 'client_sop_onboarding' => 'success',
+                        'ai_agent', 'blueprint_doctor', 'mcp_bridge', 'env_vault', 'symbol_manifest', 'dag_chunker', 'hardware_iot_bridge', 'websocket_zero_poll', 'syntax_lock_2026' => 'info',
                         'brownfield_import', 'slop_audit', 'paid_addendum' => 'warning',
                         'security', 'rbac', 'redteam_security' => 'danger',
                         'billing' => 'primary',
@@ -129,8 +129,8 @@ class AuditLogResource extends Resource
                     ->label('Aksi')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'created', 'create', 'cli_bootstrap_pulled', 'delta_cr_created', 'mcp_phase_verified', 'env_vault_checked', 'scope_locked_spk', 'bast_issued', 'symbol_manifest_compiled', 'project_isolation_verified' => 'success',
-                        'updated', 'update', 'blueprint_slop_scanned', 'brownfield_schema_audited', 'blueprint_doctor_diagnosed', 'mcp_config_exported', 'mcp_drift_verified', 'addendum_approved', 'uat_scenario_toggled', 'enterprise_menu_expanded' => 'info',
+                        'created', 'create', 'cli_bootstrap_pulled', 'delta_cr_created', 'mcp_phase_verified', 'env_vault_checked', 'scope_locked_spk', 'bast_issued', 'symbol_manifest_compiled', 'project_isolation_verified', 'fifteen_pillars_freeze_audited' => 'success',
+                        'updated', 'update', 'blueprint_slop_scanned', 'brownfield_schema_audited', 'blueprint_doctor_diagnosed', 'mcp_config_exported', 'mcp_drift_verified', 'addendum_approved', 'uat_scenario_toggled', 'enterprise_menu_expanded', 'hardware_and_websocket_inspected', 'syntax_lock_and_client_sop_generated' => 'info',
                         'deleted', 'force_deleted', 'rbac_tool_denied', 'mcp_auth_denied' => 'danger',
                         'login' => 'primary',
                         default => 'gray',
@@ -167,6 +167,11 @@ class AuditLogResource extends Resource
                     ->label('Kategori Domain')
                     ->options([
                         'project_os' => 'Project OS & Blueprint',
+                        'pillars_freeze_100' => '15 Master Pillars Architectural Freeze (100%)',
+                        'hardware_iot_bridge' => 'Hardware, Barcode Wedge & Dual-Screen QRIS',
+                        'websocket_zero_poll' => 'WebSocket Zero-Polling (Reverb/Soketi)',
+                        'syntax_lock_2026' => 'Self-Healing SYNTAX_LOCK_2026.md',
+                        'client_sop_onboarding' => 'Auto-Generated Client SOP & SmartGuide Tour',
                         'symbol_manifest' => 'Exact Symbol Lock (SYMBOL_MANIFEST.json)',
                         'dag_chunker' => 'Kahn Topological DAG Sub-Chunker',
                         'enterprise_glue' => 'L1–L4 Menu Matrix & 5 Enterprise Glue',
@@ -204,6 +209,9 @@ class AuditLogResource extends Resource
                         'symbol_manifest_compiled' => 'SYMBOL_MANIFEST & DAG Chunks Compiled',
                         'enterprise_menu_expanded' => 'L1–L4 Enterprise Menu Matrix Expanded',
                         'project_isolation_verified' => 'Hermetic Project Isolation Verified',
+                        'hardware_and_websocket_inspected' => 'Hardware & WebSocket Contracts Inspected',
+                        'syntax_lock_and_client_sop_generated' => 'SYNTAX_LOCK_2026 & Client SOP Generated',
+                        'fifteen_pillars_freeze_audited' => '15 Master Pillars Freeze Audited',
                         'delta_cr_created' => 'Delta Change Request Created',
                         'mcp_phase_verified' => 'MCP Phase Verified (Green)',
                         'mcp_config_exported' => 'MCP .mcp.json Exported',

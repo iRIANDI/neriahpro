@@ -156,11 +156,31 @@ class BlueprintSlopScannerService
             $violations[] = 'Kompilasi ulang blueprint ke v4.0 untuk melengkapi 5 Fitur Day-30+ Lifecycle.';
         }
 
+        // Check 8: Project OS v7.0 — 5 Real-World Runtime Elements & 15 Master Pillars Architectural Freeze
+        $hasRealWorldV7 = ! empty($schema['hardware_iot_peripheral_contract']['peripherals'])
+            && ! empty($schema['realtime_websocket_contract']['zero_high_freq_polling_enforced'])
+            && ! empty($schema['strict_query_and_partition_contract']['partitioned_tables'])
+            && ! empty($schema['syntax_lock_2026_contract']['version'])
+            && ! empty($schema['client_sop_and_onboarding']['role_playbooks'])
+            && count((array) ($schema['fifteen_pillars_freeze_matrix'] ?? [])) === 15;
+        $checks[] = [
+            'id' => 'SCAN_08_REALTIME_ZERO_POLL_N1_AND_15_PILLARS',
+            'code' => 'SCAN_08_REALTIME_ZERO_POLL_N1_AND_15_PILLARS',
+            'label' => '5 Elemen Dunia Nyata & 15 Pilar Architectural Freeze (Hardware Bridge, WebSocket Zero-Poll, 0% N+1 & PG16 Partition, SYNTAX_LOCK_2026, Role SOP)',
+            'passed' => $hasRealWorldV7,
+            'detail' => $hasRealWorldV7
+                ? '15 Pilar Master terkunci 100%, Hardware Wedge <30ms + Local QRIS, Zero wire:poll (<30s), Composite Index + PG16 Partitioning, SYNTAX_LOCK_2026, & Role SmartGuide SOP siap.'
+                : 'Kompilasi ulang blueprint ke v7.0 untuk mengunci 5 Elemen Dunia Nyata & 15 Pilar Master.',
+        ];
+        if (! $hasRealWorldV7) {
+            $violations[] = 'Kompilasi ulang blueprint ke v7.0 untuk menyertakan 5 Elemen Dunia Nyata & 15 Pilar Architectural Freeze.';
+        }
+
         $passedCount = count(array_filter($checks, fn ($c) => $c['passed']));
         $score = (int) round(($passedCount / max(1, count($checks))) * 100);
 
         $autoFixPrompt = empty($violations)
-            ? "✅ Blueprint '{$blueprint->nama_bisnis}' LULUS 100% audit kepatuhan Project OS v3.0 (10 Ultimate Pillars, Zero Drift & Zero Slop). Lanjutkan eksekusi via Phased Prompt Sequencer Fase 1–6."
+            ? "✅ Blueprint '{$blueprint->nama_bisnis}' LULUS 100% audit kepatuhan Project OS v7.0 (15 Master Pillars Architectural Freeze, Zero Drift & Zero Slop). Lanjutkan eksekusi via Topological Sub-Chunked Prompts Part 1.0–7.0."
             : "# AUTO-FIX BLUEPRINT DRIFT PROMPT\nPerbaiki seluruh penyimpangan berikut pada proyek `{$blueprint->nama_bisnis}`:\n- " . implode("\n- ", $violations);
 
         if ($recordAudit) {
@@ -203,6 +223,8 @@ class BlueprintSlopScannerService
             ['pattern' => '/\$table->uuid\s*\(\s*[\'"]id[\'"]\s*\)/', 'rule' => 'PGSQL_UUID_MISMATCH', 'fix' => 'Ganti `$table->uuid(\'id\')` menjadi `$table->ulid(\'id\')->primary()` untuk mencegah SQLSTATE[22P02] di PostgreSQL 16.'],
             ['pattern' => '/(?:->|::)paginate\s*\(/', 'rule' => 'OFFSET_PAGINATION_SLOP', 'fix' => 'Ganti `->paginate()` / `::paginate()` dengan `->orderBy(\'id\', \'desc\')->cursorPaginate()` untuk kompleksitas O(1).'],
             ['pattern' => '/if\s*\([^)]+\)\s*\{[^{}]*if\s*\([^)]+\)\s*\{[^{}]*if\s*\([^)]+\)\s*\{/s', 'rule' => 'NESTED_IF_ELSE_SPAGHETTI', 'fix' => 'Ganti percabangan `if (...) { if (...) { if (...)` bersarang dengan `DeterministicDecisionMatrix` berbasis PHP 8.4+ `match()` / tabel kebenaran data-driven.'],
+            ['pattern' => '/\bwire:poll(?:\.(?:[1-9]|[12][0-9])s|\.\d+ms)?(?![0-9a-zA-Z\.])/', 'rule' => 'HIGH_FREQ_WIRE_POLL_SLOP', 'fix' => 'DILARANG menggunakan `wire:poll` frekuensi tinggi (`< 30s`) yang membebani CPU PostgreSQL; ganti ke Event-Driven WebSocket (`Laravel Reverb` / `Soketi`) pada Private Tenant Channel `organization.{ulid}.{module}`!'],
+            ['pattern' => '/\bFilament\\\\Forms\\\\(?:Form|Get|Set)\b|\bLocaleSwitcher::make\s*\(/', 'rule' => 'SYNTAX_OR_LOCALE_SWITCHER_DRIFT_2026', 'fix' => 'Patuhi `.agents/SYNTAX_LOCK_2026.md`: gunakan `Filament\\Schemas\\Schema`, `Filament\\Schemas\\Components\\Utilities\\Get`/`Set`, dan ganti `LocaleSwitcher::make()` dengan `TranslatableTabs::make()` in-place!'],
         ];
 
         foreach ($rules as $r) {
@@ -304,6 +326,22 @@ if [ -d "app/Actions" ]; then
     echo " [WARN] Scan 3: app/Actions belum memanggil DB::transaction()"
     VIOLATIONS=\$((VIOLATIONS + 1))
     FIX_ITEMS="\${FIX_ITEMS}\n- Bungkus mutasi state di dalam app/Actions menggunakan DB::transaction() + lockForUpdate() serta catat ke AuditLog::record()."
+  fi
+fi
+
+# Scan 4: Zero High-Frequency Polling (<30s) & Page-Level LocaleSwitcher Ban (Project OS v7.0)
+if [ -d "resources/views" ]; then
+  if grep -RInE "wire:poll(\.([1-9]|[12][0-9])s|\.[0-9]+ms)?([^0-9a-zA-Z\.]|\$)" resources/views >/dev/null 2>&1; then
+    echo " [FAIL] Scan 4A: Found high-frequency wire:poll (<30s) in resources/views"
+    VIOLATIONS=\$((VIOLATIONS + 1))
+    FIX_ITEMS="\${FIX_ITEMS}\n- Hapus wire:poll (<30s) pada layar operasional di resources/views; ganti dengan Event-Driven WebSocket (PrivateChannel organization.{ulid}.{module})."
+  fi
+fi
+if [ -d "app/Filament" ]; then
+  if grep -RInE "LocaleSwitcher::make\(|Filament\\\\Forms\\\\(Form|Get|Set)" app/Filament >/dev/null 2>&1; then
+    echo " [FAIL] Scan 4B: Found banned LocaleSwitcher::make() or legacy Filament\\Forms\\Form/Get/Set in app/Filament"
+    VIOLATIONS=\$((VIOLATIONS + 1))
+    FIX_ITEMS="\${FIX_ITEMS}\n- Ganti LocaleSwitcher::make() dengan TranslatableTabs::make() in-place dan gunakan namespace Filament v5 sesuai .agents/SYNTAX_LOCK_2026.md."
   fi
 fi
 

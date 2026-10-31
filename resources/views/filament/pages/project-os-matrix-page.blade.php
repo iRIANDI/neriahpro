@@ -68,6 +68,7 @@
                         'lifecycle' => ['label' => 'Day-30+ Lifecycle & MCP', 'count' => 'v4.0'],
                         'mitra' => ['label' => 'Mitra Bridge & Satu Pintu', 'count' => 'v5.0'],
                         'guarantees_v6' => ['label' => '5 Guarantee Engines & DAG', 'count' => 'v6.0'],
+                        'freeze_15_pillars' => ['label' => '15 Pilar Freeze & 5 Runtime', 'count' => 'v7.0'],
                         'lab' => ['label' => 'Brownfield & Slop Lab', 'count' => 'LAB'],
                     ] as $tabKey => $tabMeta)
                         <button
@@ -84,6 +85,9 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ url('/admin/pos-architecture-pillars') }}" class="px-3 py-1.5 text-xs font-mono font-black bg-emerald-100 hover:bg-emerald-200 text-emerald-950 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 rounded-xs transition">
+                        🏛️ CRUD 15 Pilar (ID/EN)
+                    </a>
                     <a href="{{ route('blueprint.studio') }}" target="_blank" class="px-3 py-1.5 text-xs font-mono font-black bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 border border-zinc-800 dark:border-zinc-300 rounded-xs transition">
                         🖥️ Buka 3-Pane Studio
                     </a>
@@ -586,6 +590,126 @@
                                 Sub-Parts: {{ implode(' → ', array_map(fn ($p) => 'Part ' . ($p['part_code'] ?? ''), $v6SubParts)) }}
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        @elseif($this->activeTab === 'freeze_15_pillars')
+            @php
+                $v7Pillars = \App\Models\PosArchitecturePillar::getCachedMatrix();
+                $v7Elements = \App\Support\PosRealWorldRuntimeCatalog::fiveRealWorldElements();
+                $v7SecObj = collect(\App\Support\ProjectOsMatrixCatalog::sectors())->firstWhere('code', $this->decisionPreviewSector) ?? \App\Support\ProjectOsMatrixCatalog::sectors()[0];
+                $v7PreviewSchema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema(null, [
+                    'sector_code' => $v7SecObj['code'],
+                    'primitive_codes' => $v7SecObj['mandatory_primitives'] ?? ['PRIMITIVE_RBAC_TENANCY'],
+                    'stack_preset' => $this->mitraPreviewStack ?: 'STACK_M1_LARAVEL_MONOLITH',
+                    'persist_project' => false,
+                ]);
+                $v7Hw = $v7PreviewSchema['hardware_iot_peripheral_contract'] ?? [];
+                $v7Ws = $v7PreviewSchema['realtime_websocket_contract'] ?? [];
+                $v7Sop = $v7PreviewSchema['client_sop_and_onboarding'] ?? [];
+                $v7Causal = $v7PreviewSchema['cross_stage_causality_graph'] ?? [];
+            @endphp
+            <div class="space-y-4">
+                <div class="p-4 bg-white dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 rounded-sm space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">
+                                PROJECT OS v7.0 // 100% ARCHITECTURAL FREEZE &amp; CROSS-STAGE CAUSALITY
+                            </div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
+                                Master 15 Architecture Pillars ({{ count($v7Pillars) }}/15 Locked) &amp; 5 Real-World Field Runtime Contracts
+                            </h3>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select wire:model.live="decisionPreviewSector" class="px-2.5 py-1 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xs text-zinc-950 dark:text-zinc-100">
+                                @foreach(\App\Support\ProjectOsMatrixCatalog::sectors() as $secOpt)
+                                    <option value="{{ $secOpt['code'] }}">SECTOR {{ sprintf('%02d', $secOpt['sector_number']) }} — {{ $secOpt['name']['id'] }}</option>
+                                @endforeach
+                            </select>
+                            <select wire:model.live="mitraPreviewStack" class="px-2.5 py-1 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xs text-zinc-950 dark:text-zinc-100">
+                                @foreach(\App\Support\PosStackPresetCatalog::stackPresets() as $stOpt)
+                                    <option value="{{ $stOpt['code'] }}">[{{ $stOpt['short_code'] }}] {{ $stOpt['name']['id'] }}</option>
+                                @endforeach
+                            </select>
+                            <a href="{{ url('/admin/pos-architecture-pillars') }}" class="px-3 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-xs font-black rounded-xs">
+                                Edit Dwibahasa (TranslatableTabs) &rarr;
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 5 Real-World Elements Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2.5">
+                        @foreach($v7Elements as $el)
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-1">
+                                <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black inline-block">
+                                    {{ $el['code'] }}
+                                </span>
+                                <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $el['name']['id'] ?? '' }}</div>
+                                <div class="text-[10px] font-mono text-zinc-600 dark:text-zinc-400">{{ $el['name']['en'] ?? '' }}</div>
+                                <p class="text-[11px] text-zinc-800 dark:text-zinc-200 leading-relaxed pt-1">
+                                    {{ $el['summary']['id'] ?? '' }}
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <!-- Live Sector & Stack Runtime Preview -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs font-mono text-[11px] space-y-1">
+                            <div class="font-black text-emerald-900 dark:text-emerald-300 uppercase">1. Hardware &amp; Dual-Screen ({{ $v7Hw['active_bridges_count'] ?? 0 }} Active)</div>
+                            <div>Barcode/RFID &lt;30ms: <strong>{{ !empty($v7Hw['barcode_rfid_wedge']['enabled']) ? 'ENABLED ✅' : 'STANDBY' }}</strong></div>
+                            <div>Dual-Screen + Local QRIS: <strong>{{ !empty($v7Hw['customer_dual_screen']['enabled']) ? 'ENABLED ✅' : 'STANDBY' }}</strong></div>
+                            <div>Biometric ZKTeco / Gate &lt;150ms: <strong>{{ !empty($v7Hw['biometric_and_turnstile_iot']['enabled']) ? 'ENABLED ✅' : 'STANDBY' }}</strong></div>
+                        </div>
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs font-mono text-[11px] space-y-1">
+                            <div class="font-black text-emerald-900 dark:text-emerald-300 uppercase">2. Zero-Polling WebSocket ({{ $v7Ws['engine'] ?? 'Laravel Reverb' }})</div>
+                            @foreach(array_slice($v7Ws['channels'] ?? [], 0, 3) as $chItem)
+                                <div class="px-1.5 py-0.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 truncate">
+                                    {{ is_array($chItem) ? ($chItem['channel'] ?? '') : $chItem }}
+                                </div>
+                            @endforeach
+                            <div class="text-[10px] font-black text-rose-900 dark:text-rose-300">STRICT BAN: wire:poll.&lt;30s &bull; Model::shouldBeStrict()</div>
+                        </div>
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs font-mono text-[11px] space-y-1">
+                            <div class="font-black text-emerald-900 dark:text-emerald-300 uppercase">3. Cross-Stage Causality &amp; SOP ({{ $v7Sop['role_count'] ?? 5 }} Roles)</div>
+                            @foreach(array_slice($v7Causal['stage_chain'] ?? [], 0, 4) as $cs)
+                                <div class="truncate text-[10px] text-zinc-800 dark:text-zinc-200">
+                                    <strong>{{ $cs['stage'] ?? '' }}:</strong> {{ $cs['impact'] ?? '' }}
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Master 15 Architecture Pillars Bilingual Table (Sticky Header, Zebra Rows) -->
+                    <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800 rounded-xs max-h-[520px]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="sticky top-0 z-20 bg-zinc-100/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-300 dark:border-zinc-700 font-mono text-[10px] uppercase">
+                                <tr>
+                                    <th class="py-2.5 px-3 font-black">No</th>
+                                    <th class="py-2.5 px-3 font-black">Kode Pilar</th>
+                                    <th class="py-2.5 px-3 font-black">🇮🇩 Nama Pilar (ID)</th>
+                                    <th class="py-2.5 px-3 font-black">🇬🇧 Pillar Name (EN)</th>
+                                    <th class="py-2.5 px-3 font-black">Artefak &amp; Kontrak</th>
+                                    <th class="py-2.5 px-3 font-black">Maturity</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                                @foreach($v7Pillars as $pl)
+                                    <tr class="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/60 dark:even:bg-zinc-900/40 hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80 transition">
+                                        <td class="py-2.5 px-3 font-mono font-black tabular-nums">#{{ sprintf('%02d', $pl['pillar_number'] ?? 0) }}</td>
+                                        <td class="py-2.5 px-3 font-mono font-bold text-emerald-900 dark:text-emerald-300">{{ $pl['code'] ?? '' }}</td>
+                                        <td class="py-2.5 px-3 font-black text-zinc-950 dark:text-zinc-100">{{ $pl['name']['id'] ?? '' }}</td>
+                                        <td class="py-2.5 px-3 font-semibold text-zinc-700 dark:text-zinc-300">{{ $pl['name']['en'] ?? '' }}</td>
+                                        <td class="py-2.5 px-3 font-mono text-[11px] text-zinc-800 dark:text-zinc-200">{{ $pl['artifact_contract'] ?? '' }}</td>
+                                        <td class="py-2.5 px-3">
+                                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black">
+                                                {{ $pl['maturity_percent'] ?? 100 }}% FREEZE
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

@@ -20,12 +20,28 @@ class ProjectIssueForm
                     ->relationship('user', 'name'),
                 TextInput::make('feature_id')
                     ->default(null),
-                Textarea::make('title')
-                    ->required()
-                    ->columnSpanFull(),
-                Textarea::make('description')
-                    ->required()
-                    ->columnSpanFull(),
+                \App\Filament\Forms\Components\TranslatableTabs::make(
+                    'Project Issue Bilingual Content',
+                    [
+                        TextInput::make('title.id')
+                            ->label('Judul Temuan / Isu (ID)')
+                            ->required()
+                            ->maxLength(255),
+                        Textarea::make('description.id')
+                            ->label('Deskripsi Rinci Temuan (ID)')
+                            ->required()
+                            ->rows(3),
+                    ],
+                    [
+                        TextInput::make('title.en')
+                            ->label('Issue Title (EN)')
+                            ->maxLength(255),
+                        Textarea::make('description.en')
+                            ->label('Detailed Issue Description (EN)')
+                            ->rows(3),
+                    ],
+                    ['title', 'description']
+                ),
                 TextInput::make('status')
                     ->required()
                     ->default('open'),

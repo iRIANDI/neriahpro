@@ -321,6 +321,9 @@
             <a href="#sec-v6-deterministic-guarantees" @click.prevent="scrollTo('sec-v6-deterministic-guarantees')" :class="activeSection === 'sec-v6-deterministic-guarantees' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 13. <span x-text="t[lang].nav_v6_guarantees"></span>
             </a>
+            <a href="#sec-v7-realworld-freeze" @click.prevent="scrollTo('sec-v7-realworld-freeze')" :class="activeSection === 'sec-v7-realworld-freeze' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                14. <span x-text="t[lang].nav_v7_freeze"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -1381,6 +1384,94 @@
         </div>
     </div>
 
+    <!-- 14. Project OS v7.0 — 5 Real-World Elements, 15 Master Pillars (100% Architectural Freeze) & Tier-1 Bilingual -->
+    <div id="sec-v7-realworld-freeze" class="sg-card" x-show="matchesSearch(t[lang].sec14_title + ' 5 elemen dunia nyata hardware barcode scanner qris dual screen biometrik zkteco turnstile websocket reverb zero polling wire:poll shouldbestrict n+1 composite index partitioning pg16 syntax_lock_2026 troubleshooting_instincts smartguide client sop 15 pilar architectural freeze 100% tier 1 translatabletabs')">
+        <div style="border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px;">
+            <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #059669; text-transform: uppercase; font-weight: 800;">
+                14 // PROJECT OS v7.0 — 5 REAL-WORLD ELEMENTS &amp; 15 MASTER PILLARS (100% ARCHITECTURAL FREEZE)
+            </span>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 6px 0;" x-text="t[lang].sec14_title"></h3>
+            <p style="font-size: 12.5px; color: var(--sg-text-muted); margin: 0; line-height: 1.6;" x-text="t[lang].sec14_desc"></p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 18px;">
+            @foreach(($fiveRealWorldElements ?? []) as $rwElem)
+                <div class="sg-subcard" style="border-left: 3px solid #10b981;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <strong style="font-size: 12px; color: var(--sg-text-title);">
+                            <span x-show="lang === 'id'">Elemen #{{ $rwElem['number'] }}: {{ $rwElem['title']['id'] ?? $rwElem['code'] }}</span>
+                            <span x-show="lang === 'en'" x-cloak>Element #{{ $rwElem['number'] }}: {{ $rwElem['title']['en'] ?? $rwElem['code'] }}</span>
+                        </strong>
+                        <span style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 700; padding: 2px 6px; background: rgba(16, 185, 129, 0.14); color: #059669; border: 1px solid rgba(16, 185, 129, 0.4);">
+                            {{ $rwElem['badge'] ?? 'v7.0' }}
+                        </span>
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--sg-text-muted); line-height: 1.55;">
+                        <span x-show="lang === 'id'">{{ $rwElem['desc']['id'] ?? '' }}</span>
+                        <span x-show="lang === 'en'" x-cloak>{{ $rwElem['desc']['en'] ?? '' }}</span>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div style="overflow-x: auto; margin-bottom: 14px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #059669; text-transform: uppercase; margin-bottom: 8px;">
+                <span x-show="lang === 'id'">REKAPITULASI FINAL 15 PILAR ARSITEKTUR "PROJECT OS ULTIMATE 100%" (100% LOCK &amp; FREEZE)</span>
+                <span x-show="lang === 'en'" x-cloak>MASTER 15 ARCHITECTURE PILLARS — "PROJECT OS ULTIMATE 100%" (100% LOCK &amp; FREEZE)</span>
+            </div>
+            <table class="sg-table">
+                <thead>
+                    <tr>
+                        <th style="width: 6%;">#</th>
+                        <th style="width: 28%;">
+                            <span x-show="lang === 'id'">Pilar Arsitektur Project OS</span>
+                            <span x-show="lang === 'en'" x-cloak>Project OS Architecture Pillar</span>
+                        </th>
+                        <th style="width: 38%;">
+                            <span x-show="lang === 'id'">Fungsi &amp; Jaminan Kualitas (Zero-Slop)</span>
+                            <span x-show="lang === 'en'" x-cloak>Function &amp; Zero-Slop Quality Guarantee</span>
+                        </th>
+                        <th style="width: 28%;">
+                            <span x-show="lang === 'id'">Kontrak Teknis &amp; Ketergantungan Lintas Tahap</span>
+                            <span x-show="lang === 'en'" x-cloak>Technical Contract &amp; Cross-Stage Dependency</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(($fifteenMasterPillars ?? []) as $pil)
+                        <tr>
+                            <td style="font-family: ui-monospace, monospace; font-weight: 800; color: #059669;">{{ str_pad((string) ($pil['pillar_number'] ?? ''), 2, '0', STR_PAD_LEFT) }}</td>
+                            <td>
+                                <strong style="color: var(--sg-text-title);">
+                                    <span x-show="lang === 'id'">{{ $pil['name']['id'] ?? $pil['localized_name'] ?? '' }}</span>
+                                    <span x-show="lang === 'en'" x-cloak>{{ $pil['name']['en'] ?? $pil['localized_name'] ?? '' }}</span>
+                                </strong>
+                                <div style="font-family: ui-monospace, monospace; font-size: 10px; color: #0284c7; margin-top: 2px;">{{ $pil['code'] ?? '' }}</div>
+                            </td>
+                            <td style="font-size: 11.5px; line-height: 1.5;">
+                                <span x-show="lang === 'id'">{{ $pil['function_guarantee']['id'] ?? '' }}</span>
+                                <span x-show="lang === 'en'" x-cloak>{{ $pil['function_guarantee']['en'] ?? '' }}</span>
+                            </td>
+                            <td style="font-size: 11px; color: var(--sg-text-muted); line-height: 1.45;">
+                                <span x-show="lang === 'id'">{{ $pil['technical_contract']['id'] ?? '' }}</span>
+                                <span x-show="lang === 'en'" x-cloak>{{ $pil['technical_contract']['en'] ?? '' }}</span>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <div style="padding: 12px 14px; background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.35); border-radius: 3px; font-size: 12px; color: var(--sg-text-body); line-height: 1.55;">
+            <strong style="color: #0284c7;">
+                <span x-show="lang === 'id'">🌐 Sinkronisasi Kausalitas Lintas Tahap &amp; Kepatuhan Bahasa Tier-1 100%:</span>
+                <span x-show="lang === 'en'" x-cloak>🌐 Cross-Stage Causality Synchronization &amp; 100% Tier-1 Dual-Locale Compliance:</span>
+            </strong>
+            <span x-show="lang === 'id'">Setiap perubahan pada <strong>Sektor / Primitif / Menu L1–L4 v1.0 / Stack Adapter</strong> secara otomatis mengalkulasi ulang Jembatan Hardware Fisik, Kanal WebSocket Privat, Composite Index &amp; Partisi PG16, <code>SYNTAX_LOCK_2026.md</code>, Langkah SOP per Role (<code>SmartGuide.php</code>), Nilai RAB IDR, Hash SPK SHA-256, hingga Skenario UAT/BAST. Seluruh resource dwibahasa Filament kini 100% memakai <code>TranslatableTabs</code> + tombol 1-klik <code>GoogleTranslateService</code> + <code>HasTranslatableTabs</code> tanpa satu pun sisa <code>LocaleSwitcher</code>.</span>
+            <span x-show="lang === 'en'" x-cloak>Every change to <strong>Sector / Primitives / v1.0 L1–L4 Menus / Stack Adapter</strong> reactively recomputes Field Hardware Bridges, Private WebSocket Channels, Tenant Composite Indexes &amp; PG16 Partitioning, <code>SYNTAX_LOCK_2026.md</code>, Role SOP Steps (<code>SmartGuide.php</code>), Algorithmic BoQ IDR, SHA-256 SPK Hash, and UAT/BAST scenarios. Every bilingual Filament resource uses <code>TranslatableTabs</code> + 1-click <code>GoogleTranslateService</code> + <code>HasTranslatableTabs</code> with zero <code>LocaleSwitcher</code> leftovers.</span>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1406,6 +1497,7 @@ function smartGuideApp() {
                 nav_lifecycle_studio: 'Day-30+ & 3-Pane Studio',
                 nav_mitra_bridge: 'Mitra Bridge & Satu Pintu',
                 nav_v6_guarantees: '5 Jaminan v6.0 & Isolasi',
+                nav_v7_freeze: '5 Elemen Nyata & 15 Pilar (100% Freeze)',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -1508,7 +1600,9 @@ function smartGuideApp() {
                 sec12_title: '5 Jembatan Komersial-ke-Kode "Mitra Proyek" & Ekosistem Satu Pintu Retail vs Mitra (v5.0)',
                 sec12_desc: 'Menghilangkan 100% underpricing, sengketa scope creep, dan telat cairnya termin akhir: kalkulator RAB algoritmik dari jumlah tabel ULID + state machine + lock, pembekuan SPK SHA-256 otomatis, kalkulator Addendum Berbayar (v1.0 -> v1.1), 7 Milestone Gantt Live, serta UAT Given-When-Then & BAST Digital.',
                 sec13_title: '5 Mesin Penjamin Deterministik (L1–L4 Menu, 5 Glue, Symbol Lock, DAG Chunker, Verification Gate) & Isolasi Hermetik (v6.0)',
-                sec13_desc: 'Menutup 5 celah terakhir saat AI membangun sistem berskala 20–35+ tabel: mekar otomatis 25 sub-menu L1–L4 dari 5 kata ide (300 menu terkurasi lintas 12 sektor), 5 perekat korporat (penomoran atomik, tutup buku akuntansi, Maker-Checker, Reason+Evidence, Outbox Replay), SYMBOL_MANIFEST.json anti-amnesia, Kahn Topological Sub-Chunker, <MANDATORY_VERIFICATION_GATE>, dan isolasi proyek 100% bebas sisa draf lama.'
+                sec13_desc: 'Menutup 5 celah terakhir saat AI membangun sistem berskala 20–35+ tabel: mekar otomatis 25 sub-menu L1–L4 dari 5 kata ide (300 menu terkurasi lintas 12 sektor), 5 perekat korporat (penomoran atomik, tutup buku akuntansi, Maker-Checker, Reason+Evidence, Outbox Replay), SYMBOL_MANIFEST.json anti-amnesia, Kahn Topological Sub-Chunker, <MANDATORY_VERIFICATION_GATE>, dan isolasi proyek 100% bebas sisa draf lama.',
+                sec14_title: '5 Elemen Dunia Nyata & Rekapitulasi Final 15 Pilar "Project OS Ultimate 100%" (100% Architectural Freeze)',
+                sec14_desc: 'Menutup 2% terakhir kesenjangan lapangan & runtime: Jembatan Perangkat Keras Fisik (Keyboard Wedge <30ms, Dual-Screen QRIS Lokal tanpa CDN, ZKTeco/Turnstile), WebSocket Zero-Polling (larangan mutlak wire:poll <30s), Strict 0% N+1 + Composite Index + Partisi PG16, Kamus Self-Healing SYNTAX_LOCK_2026.md, serta In-App SmartGuide.php & Buku SOP Training Staf otomatis untuk BAST.'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -1524,6 +1618,7 @@ function smartGuideApp() {
                 nav_lifecycle_studio: 'Day-30+ & 3-Pane Studio',
                 nav_mitra_bridge: 'Mitra Bridge & One-Stop',
                 nav_v6_guarantees: '5 v6.0 Guarantees & Isolation',
+                nav_v7_freeze: '5 Real-World & 15 Pillars (100% Freeze)',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -1626,7 +1721,9 @@ function smartGuideApp() {
                 sec12_title: '5 Commercial-to-Code Bridges for Mitra Proyek & Unified Retail vs Mitra Architecture (v5.0)',
                 sec12_desc: 'Eliminates underpricing, scope creep disputes, and delayed final settlements: algorithmic RAB/WBS man-hour estimator, cryptographic SPK SHA-256 Scope Freeze, Paid Change-Order Addendum calculator, 7-Milestone Live Gantt, and interactive Given-When-Then UAT + Digital BAST.',
                 sec13_title: '5 Deterministic Guarantee Engines (L1–L4 Menu, 5 Glue, Symbol Lock, DAG Chunker, Exit Gate) & Hermetic Isolation (v6.0)',
-                sec13_desc: 'Eliminates output truncation, cross-part naming drift, FK migration crashes, shallow apps, and cross-project draft bleed via 300 L1–L4 sector sub-menus, 5 SAP/Odoo-grade Enterprise Glue tables, frozen SYMBOL_MANIFEST.json, Kahn topological sub-chunking, <MANDATORY_VERIFICATION_GATE>, and strict ULID workspace isolation.'
+                sec13_desc: 'Eliminates output truncation, cross-part naming drift, FK migration crashes, shallow apps, and cross-project draft bleed via 300 L1–L4 sector sub-menus, 5 SAP/Odoo-grade Enterprise Glue tables, frozen SYMBOL_MANIFEST.json, Kahn topological sub-chunking, <MANDATORY_VERIFICATION_GATE>, and strict ULID workspace isolation.',
+                sec14_title: 'The Final 5 Real-World Runtime Elements & Master 15 Pillars (100% Architectural Freeze)',
+                sec14_desc: 'Closes the final 2% field & runtime gap: Hardware/IoT/Dual-Screen QRIS Bridge (<30ms Keyboard Wedge, BroadcastChannel local QRIS, ZKTeco/Turnstile), Event-Driven WebSocket Zero-Polling (strict ban on wire:poll <30s), Strict 0% N+1 + Composite Tenant Indexes + PG16 Quarterly Range Partitioning, SYNTAX_LOCK_2026.md self-healing dictionary, and auto-generated Role SmartGuide.php + BAST Client SOP Manual.'
             }
         },
 
@@ -1654,7 +1751,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

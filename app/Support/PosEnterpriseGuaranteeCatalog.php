@@ -203,6 +203,10 @@ class PosEnterpriseGuaranteeCatalog
             $item['name'] = $item['name'] ?? ($item['title'] ?? ['id' => $item['code'], 'en' => $item['code']]);
             $item['table_name'] = $item['table_name'] ?? ($item['table'] ?? '');
             $item['invariant'] = $item['invariant'] ?? ($item['rule'] ?? '');
+            $item['rule_i18n'] = $item['rule_i18n'] ?? [
+                'id' => (string) ($item['rule'] ?? ''),
+                'en' => self::translateGlueRuleToEn((string) $item['code'], (string) ($item['rule'] ?? '')),
+            ];
 
             return $item;
         }, $items));
@@ -422,6 +426,10 @@ class PosEnterpriseGuaranteeCatalog
                     'division_number' => $divMeta['number'],
                     'sort_order' => $idx + 1,
                     'title' => $itemTitle,
+                    'title_i18n' => [
+                        'id' => $itemTitle,
+                        'en' => self::translateMenuTitleToEn($itemTitle),
+                    ],
                     'route_slug' => '/app/' . strtolower(str_replace('_', '-', $divKey)) . '/' . strtolower($menuCode),
                     'l4_capabilities' => $divMeta['default_capabilities'],
                     'included_in_v1' => $includedInV1,
@@ -457,6 +465,7 @@ class PosEnterpriseGuaranteeCatalog
             'anti_shallow_guarantee' => 'Zero Toy CRUD — 5 Operational Divisions & 25 Concrete L1–L4 Sub-Menus Automatically Provisioned',
             'divisions' => $divisionsOutput,
             'flat_menus' => $allMenusFlat,
+            'all_menus_flat' => $allMenusFlat,
         ];
     }
 
@@ -779,5 +788,71 @@ class PosEnterpriseGuaranteeCatalog
         }
 
         return implode("\n", $lines) . "\n";
+    }
+
+    /**
+     * Tier-1 English translation for Corporate Enterprise Glue rules.
+     */
+    private static function translateGlueRuleToEn(string $code, string $fallbackId): string
+    {
+        return match ($code) {
+            'GLUE_01_ATOMIC_DOC_NUMBERING' => 'Official business document numbering (INV/{BRANCH}/{YYYY}/{MM}/{00001}, PO/..., BKG/..., GRN/...) MUST use row-level lock SELECT ... FOR UPDATE per organization/branch/year/month. rand() or Str::random() is STRICTLY FORBIDDEN.',
+            'GLUE_02_FISCAL_PERIOD_LOCK' => 'Prevents staff from backdating, mutating, or deleting transactions inside CLOSED_FINAL monthly accounting periods, except via an explicit Reversing Entry in the current open period.',
+            'GLUE_03_MAKER_CHECKER_CONTROL' => 'Sensitive mutations (Manual discount > 15%, Void/Delete Transaction, Payout/Refund, Negative Stock Opname) MUST enter PENDING_SUPERVISOR_APPROVAL enforcing maker_id !== checker_id or Supervisor PIN authorization.',
+            'GLUE_04_REASON_EVIDENCE_VAULT' => 'Every cancellation (CANCELLED), return (REFUNDED), void, or stock adjustment MUST record a standardized reason_code and store proof on storage disk = "private" (served via 5-minute temporarySignedRoute).',
+            'GLUE_05_IDEMPOTENT_OUTBOX_VAULT' => 'Logs all inbound/outbound Payment Gateway, WhatsApp, Email, Biometric, and Tax API payloads idempotently (unique idempotency_key) with 1-Click Admin Replay for third-party outages.',
+            default => $fallbackId,
+        };
+    }
+
+    /**
+     * Deterministic Tier-1 English normalization for L3 operational sub-menu titles.
+     */
+    public static function translateMenuTitleToEn(string $idTitle): string
+    {
+        $dictionary = [
+            'Manajemen' => 'Management',
+            'Pendaftaran' => 'Registration',
+            'Antrean' => 'Queue',
+            'Kasir' => 'Cashier',
+            'Buka/Tutup' => 'Open/Close',
+            'Laporan' => 'Report',
+            'Buku Besar' => 'General Ledger',
+            'Jurnal Umum' => 'General Journal',
+            'Jurnal Balik' => 'Reversing Entry',
+            'Tutup Buku' => 'Period Closing',
+            'Periode Fiskal' => 'Fiscal Period',
+            'Pembelian' => 'Procurement',
+            'Penerimaan Barang' => 'Goods Receipt',
+            'Gudang' => 'Warehouse',
+            'Stok' => 'Stock',
+            'Penyesuaian' => 'Adjustment',
+            'Persetujuan' => 'Approval',
+            'Pengaturan' => 'Settings',
+            'Cabang' => 'Branch',
+            'Hak Akses' => 'Access Control',
+            'Pelanggan' => 'Customer',
+            'Pemasok' => 'Supplier',
+            'Piutang' => 'Accounts Receivable',
+            'Hutang' => 'Accounts Payable',
+            'Rekonsiliasi' => 'Reconciliation',
+            'Penjadwalan' => 'Scheduling',
+            'Pemeliharaan' => 'Maintenance',
+            'Karyawan' => 'Employee',
+            'Penggajian' => 'Payroll',
+            'Absensi' => 'Attendance',
+            'Pengiriman' => 'Dispatch & Delivery',
+            'Armada' => 'Fleet',
+            'Kontrak' => 'Contract',
+            'Tagihan' => 'Billing & Invoicing',
+            'Pajak' => 'Tax',
+            'Pesanan' => 'Order',
+            'Retur' => 'Return',
+            ' Pembatalan' => ' Cancellation',
+            ' dan ' => ' & ',
+            ' & ' => ' & ',
+        ];
+
+        return strtr($idTitle, $dictionary);
     }
 }

@@ -25,6 +25,7 @@ class PricingRegistry
         self::TIER_RETAIL_SPARK => [
             'id' => self::TIER_RETAIL_SPARK,
             'name' => 'Spark Free Idea Audit',
+            'name_en' => 'Spark Free Idea Audit',
             'track_mode' => 'RETAIL_SELF_DEV',
             'category' => 'blueprint_self_service',
             'execution_model' => 'self_service',
@@ -36,12 +37,14 @@ class PricingRegistry
             'setting_key' => 'pricing_retail_spark_price',
             'limit_setting_key' => 'pricing_retail_spark_limit',
             'sector_scope' => '1 dari 12 Sektor (Audit & Preview ERD Dasar)',
+            'sector_scope_en' => '1 of 12 Sectors (Audit & Core ERD Preview)',
             'stack_scope' => ['STACK_M1_LARAVEL_MONOLITH'],
             'included_v5_engines' => ['Pre-Flight Blueprint Doctor', 'MarkItDown 0-Token Intake', 'Lean PRD & ULID Preview'],
         ],
         self::TIER_RETAIL_LITE => [
             'id' => self::TIER_RETAIL_LITE,
             'name' => 'Starter AI Architect (Lite PRD)',
+            'name_en' => 'Starter AI Architect (Lite PRD)',
             'track_mode' => 'RETAIL_SELF_DEV',
             'category' => 'blueprint_self_service',
             'execution_model' => 'self_service',
@@ -53,12 +56,14 @@ class PricingRegistry
             'setting_key' => 'pricing_retail_lite_price',
             'limit_setting_key' => 'pricing_retail_lite_limit',
             'sector_scope' => '1 Sektor Fungsional Kanonik Pilihan',
+            'sector_scope_en' => '1 Selected Canonical Functional Sector',
             'stack_scope' => ['STACK_M1_LARAVEL_MONOLITH', 'STACK_M2_INERTIA_REACT', 'STACK_M3_NEXTJS_TRPC', 'STACK_M4_DJANGO_HTMX'],
-            'included_v5_engines' => ['PRD 26 Parameter Utuh', 'PostgreSQL 16 Strict ULID SQL', 'AGENTS.md & .cursorrules Anti-Slop', 'Revisi Form 30 Hari'],
+            'included_v5_engines' => ['PRD 26 Parameter Utuh', 'PostgreSQL 16 Strict ULID SQL', 'AGENTS.md & .cursorrules Anti-Slop', 'SYNTAX_LOCK_2026.md & Revisi 30 Hari'],
         ],
         self::TIER_RETAIL_PRO => [
             'id' => self::TIER_RETAIL_PRO,
             'name' => 'Pro Agentic Blueprint & Scaffold',
+            'name_en' => 'Pro Agentic Blueprint & Scaffold',
             'track_mode' => 'RETAIL_SELF_DEV',
             'category' => 'blueprint_self_service',
             'execution_model' => 'self_service',
@@ -70,12 +75,14 @@ class PricingRegistry
             'setting_key' => 'pricing_retail_pro_price',
             'limit_setting_key' => 'pricing_retail_pro_limit',
             'sector_scope' => 'Seluruh 12 Sektor Composable Lintas-Primitif',
+            'sector_scope_en' => 'All 12 Composable Cross-Primitive Sectors',
             'stack_scope' => ['M1..M4 Monolith', 'D1..D3 Decoupled Headless', 'S1..S2 Microservices'],
-            'included_v5_engines' => ['3-Pane Architect Studio Penuh', '7-Phase Prompt Sequencer (P1–P7 Red-Team)', 'Decision Matrix match()', 'One-Command CLI /init/{ulid}', 'ZIP Scaffold 25+ File & .env.blueprint'],
+            'included_v5_engines' => ['3-Pane Architect Studio Penuh (15 Pilar Freeze)', 'Kahn DAG Chunker & SYMBOL_MANIFEST.json', 'Hardware/WebSocket & Strict N+1 Guard', 'One-Command CLI /init/{ulid} + SYNTAX_LOCK_2026.md', 'ZIP Scaffold 25+ File + Role-Based Client SOP'],
         ],
         self::TIER_RETAIL_ULTIMATE => [
             'id' => self::TIER_RETAIL_ULTIMATE,
             'name' => 'Ultimate CTO & Lifecycle Blueprint',
+            'name_en' => 'Ultimate CTO & Lifecycle Blueprint',
             'track_mode' => 'RETAIL_SELF_DEV',
             'category' => 'blueprint_self_service',
             'execution_model' => 'self_service',
@@ -87,12 +94,14 @@ class PricingRegistry
             'setting_key' => 'pricing_retail_ultimate_price',
             'limit_setting_key' => 'pricing_retail_ultimate_limit',
             'sector_scope' => 'Multi-Domain Enterprise (12 Sektor + Brownfield Legacy)',
+            'sector_scope_en' => 'Multi-Domain Enterprise (12 Sectors + Brownfield Legacy)',
             'stack_scope' => ['All 9 Stacks (M1–S2) + Multi-Tenant Isolation'],
-            'included_v5_engines' => ['Semua Fitur Pro', 'Live MCP Server Bridge (neriahpro-mcp)', 'Day-30 s/d Day-365 Surgical Delta CR (v1.0 -> v2.0)', 'Brownfield SQL Importer', '8 Layer Day-2 Ops & Print Struk/A4', '1-on-1 Architecture Call 60 Menit'],
+            'included_v5_engines' => ['Semua 15 Pilar Project OS 100% Freeze', 'Live MCP Server Bridge (neriahpro-mcp)', 'Day-30 s/d Day-365 Surgical Delta CR (v1.0 -> v2.0)', 'PG16 Range Partitioning + Dual-Screen QRIS & IoT Bridge', 'SmartGuide.php In-App SOP + 1-on-1 Architecture Call 60m'],
         ],
         self::TIER_BLUEPRINT_ADVISORY => [
             'id' => self::TIER_BLUEPRINT_ADVISORY,
             'name' => 'Mitra Discovery, Scope Lock & RAB Advisory',
+            'name_en' => 'Partner Discovery, Scope Lock & BoQ Advisory',
             'track_mode' => 'MITRA_TURNKEY_PROJECT',
             'category' => 'studio_engineering',
             'execution_model' => 'studio_contract',
@@ -103,12 +112,14 @@ class PricingRegistry
             'default_price' => 2500000,
             'setting_key' => 'pricing_advisory_price',
             'sector_scope' => 'Seluruh 12 Sektor (Didampingi Senior Architect)',
+            'sector_scope_en' => 'All 12 Sectors (Guided by Senior Architect)',
             'stack_scope' => ['Rekomendasi Terkurasi M1–S2 + Kalkulasi Server'],
-            'included_v5_engines' => ['Workshop 1-on-1 Senior Architect', 'Algorithmic RAB & WBS 7-Milestone Akurat', 'Cryptographic Scope Freeze SHA-256 & Draft SPK', '100% Biaya Dikreditkan Memotong DP Proyek Turnkey'],
+            'included_v5_engines' => ['Workshop 1-on-1 Senior Architect (15 Pilar Audit)', 'Algorithmic RAB & WBS 7-Milestone Akurat', 'Cryptographic Scope Freeze SHA-256 & Draft SPK', '100% Biaya Dikreditkan Memotong DP Proyek Turnkey'],
         ],
         self::TIER_UMKM_STARTER => [
             'id' => self::TIER_UMKM_STARTER,
             'name' => 'Mitra UMKM Digital Turnkey Starter',
+            'name_en' => 'Partner SME Digital Turnkey Starter',
             'track_mode' => 'MITRA_TURNKEY_PROJECT',
             'category' => 'studio_engineering',
             'execution_model' => 'studio_contract',
@@ -120,12 +131,14 @@ class PricingRegistry
             'subsidized_default_price' => 3750000,
             'setting_key' => 'pricing_umkm_price',
             'sector_scope' => 'Sektor Esensial UMKM (Ritel POS, F&B, Booking Jasa, Klinik Pratama, Katalog B2B)',
+            'sector_scope_en' => 'Essential SME Sectors (Retail POS, F&B, Service Booking, Clinic, B2B Catalog)',
             'stack_scope' => ['STACK_M1_LARAVEL_MONOLITH (Cepat & Hemat VPS)'],
-            'included_v5_engines' => ['100% Dikerjakan Tim Neriah Pro (10–14 Hari Kerja)', 'Subsidi 50% (Rp 3,75 Jt dgn Voucher UMKM-SUBSIDI-50)', 'Kontrak SPK SHA-256', 'Live Staging + Checklist UAT & Digital BAST'],
+            'included_v5_engines' => ['100% Dikerjakan Tim Neriah Pro (10–14 Hari Kerja)', 'Subsidi 50% (Rp 3,75 Jt dgn Voucher UMKM-SUBSIDI-50)', 'Kontrak SPK SHA-256 + Barcode/Struk Thermal', 'Live Staging + Manual SOP Klien & Digital BAST'],
         ],
         self::TIER_FULL_MVP => [
             'id' => self::TIER_FULL_MVP,
-            'name' => 'Mitra Enterprise Turnkey MVP (12-Sector Custom)',
+            'name' => 'Mitra Enterprise Turnkey MVP (15-Pillar Freeze)',
+            'name_en' => 'Partner Enterprise Turnkey MVP (15-Pillar Freeze)',
             'track_mode' => 'MITRA_TURNKEY_PROJECT',
             'category' => 'studio_engineering',
             'execution_model' => 'studio_contract',
@@ -136,8 +149,9 @@ class PricingRegistry
             'default_price' => 0,
             'setting_key' => 'pricing_mvp_price',
             'sector_scope' => 'Seluruh 12 Sektor Enterprise (Fintech Ledger, EMR RS, Manufaktur MRP, Logistik, HRIS, SaaS)',
+            'sector_scope_en' => 'All 12 Enterprise Sectors (Fintech Ledger, Hospital EMR, MRP, Logistics, HRIS, SaaS)',
             'stack_scope' => ['All 9 Curated Stacks (M1–S2) Sesuai Beban Konkurensi'],
-            'included_v5_engines' => ['100% Turnkey Software House (10 Pilar Software Factory OS)', 'Algorithmic Scope-to-Quotation (Termin 30% DP / 50% Milestone / 20% BAST)', 'Cryptographic SPK SHA-256 & Paid Change-Order Addendum', 'Live 7-Milestone Portal Sync & Digital BAST Sign-Off'],
+            'included_v5_engines' => ['100% Turnkey Software House (15 Pilar Project OS Freeze)', 'Algorithmic Scope-to-Quotation (Termin 30% DP / 50% Milestone / 20% BAST)', 'Hardware/IoT Bridge, Zero-Poll WebSocket, Strict N+1 & PG16 Partitioning', 'Interactive Role SmartGuide.php + Manual Training SOP & BAST Sign-Off'],
         ],
     ];
 
@@ -269,6 +283,15 @@ class PricingRegistry
             }
 
             $pkg['name_id'] = $pkg['name_id'] ?? $pkg['name'] ?? $id;
+            $pkg['name_en'] = $pkg['name_en'] ?? $pkg['name'] ?? $id;
+            $pkg['localized_name'] = [
+                'id' => $pkg['name_id'],
+                'en' => $pkg['name_en'],
+            ];
+            $pkg['localized_sector_scope'] = [
+                'id' => (string) ($pkg['sector_scope'] ?? ''),
+                'en' => (string) ($pkg['sector_scope_en'] ?? $pkg['sector_scope'] ?? ''),
+            ];
             $pkg['stack_scope_label'] = is_array($pkg['stack_scope'] ?? null)
                 ? implode(', ', $pkg['stack_scope'])
                 : (string) ($pkg['stack_scope'] ?? 'M1–S2');

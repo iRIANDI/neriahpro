@@ -29,7 +29,7 @@ class ProjectOsMatrixPage extends Page
 
     protected string $view = 'filament.pages.project-os-matrix-page';
 
-    public string $activeTab = 'sectors'; // sectors | primitives | stacks | rules | projects | day2 | lab
+    public string $activeTab = 'sectors'; // sectors | primitives | stacks | rules | projects | day2 | lifecycle | lab
     public string $viewMode = 'grid'; // grid | list
     public string $density = 'normal'; // compact | normal | relaxed
     public string $search = '';
@@ -37,6 +37,7 @@ class ProjectOsMatrixPage extends Page
     public string $sortBy = 'default';
     public string $sortDirection = 'asc'; // asc | desc | none
     public array $selectedIds = [];
+    public string $decisionPreviewSector = 'SECTOR_01_COMMERCE_OMNICHANNEL';
 
     // Killer #4, #5 & Layer 8 Blueprint Doctor Interactive Lab State
     public string $brownfieldSql = '';
@@ -85,12 +86,12 @@ class ProjectOsMatrixPage extends Page
 
     public function getSubheading(): string | Htmlable | null
     {
-        return 'Project OS v3.0: 12 Sectoral UI/UX Archetypes, 12 Core Primitives, 9 Stack Adapters (M1–S2), 8 Layer Day-2 Production (Thermal/A4 Print, Snapshot, Staged CSV, 4-Lane Queue), & Interactive Blueprint Doctor.';
+        return 'Project OS v4.0 Ultimate: 12 Sectoral UI/UX Archetypes, 12 Core Primitives, 9 Stack Adapters (M1–S2), 8 Layer Day-2 Ops, 5 Day-30+ Lifecycle Engines (Delta v1.1, Live MCP Bridge, Decision Matrix match(), Phase 7 Red-Team, .env Vault) & 3-Pane Studio.';
     }
 
     public function setTab(string $tab): void
     {
-        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lab'], true)) {
+        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lifecycle', 'lab'], true)) {
             $this->activeTab = $tab;
             $this->cursor = null;
             $this->selectedIds = [];
@@ -501,7 +502,7 @@ class ProjectOsMatrixPage extends Page
                         'primitives_count' => count($p->selected_primitive_ids ?? []),
                         'blueprint_slug' => $p->visionBlueprint?->slug,
                         'cli_init_command' => 'curl -sL ' . url('/init/' . ($p->visionBlueprint?->id ?: $p->id)) . ' | bash',
-                        'phases_count' => count($p->phased_prompts_json ?: []) ?: 6,
+                        'phases_count' => count($p->phased_prompts_json ?: []) ?: 7,
                         'updated_at' => $p->updated_at?->format('d M Y H:i') ?? '-',
                     ])->all(),
                     'next_cursor' => $paginated->nextCursor()?->encode(),

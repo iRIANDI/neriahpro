@@ -12,11 +12,26 @@ use App\Services\ProjectOsBlueprintCompilerService;
 use App\Services\ScaffoldGeneratorService;
 use Database\Seeders\ProjectOsMatrixSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class ProjectOsComposableMatrixTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::fake([
+            '*' => Http::response([
+                'embedding' => ['values' => array_fill(0, 768, 0.0125)],
+                'candidates' => [
+                    ['content' => ['parts' => [['text' => '{}']]]],
+                ],
+            ], 200),
+        ]);
+    }
 
     public function test_seeder_populates_twelve_sectors_twelve_primitives_and_rule_packs_with_strict_ulids(): void
     {

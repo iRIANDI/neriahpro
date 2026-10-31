@@ -1172,7 +1172,7 @@ class BlueprintController extends Controller
         $phasedPrompts = $univSchema['phased_prompt_sequencer']
             ?? \App\Services\ProjectOsBlueprintCompilerService::compilePhasedPrompts($univSchema);
 
-        if (preg_match('/^phase-([1-6])$/', $format, $m)) {
+        if (preg_match('/^phase-([1-7])$/', $format, $m)) {
             $phaseIdx = ((int) $m[1]) - 1;
             $phaseItem = $phasedPrompts[$phaseIdx] ?? null;
             if ($phaseItem) {
@@ -1215,6 +1215,18 @@ class BlueprintController extends Controller
             'day2-ops' => [
                 \App\Services\ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($univSchema),
                 'DAY2_OPERATIONS_AND_SECURITY.md',
+            ],
+            'decision-tables' => [
+                \App\Services\ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($univSchema),
+                'DECISION_TABLES_CONTRACT.md',
+            ],
+            'env-blueprint' => [
+                \App\Services\ScaffoldGeneratorService::generateEnvBlueprintFile($univSchema, $blueprint->nama_bisnis ?: 'Enterprise App'),
+                '.env.blueprint',
+            ],
+            'mcp-json' => [
+                \App\Services\ScaffoldGeneratorService::generateMcpJsonFile($blueprint),
+                '.mcp.json',
             ],
             'claude' => [
                 \App\Services\PrdGeneratorService::toCursorrules($blueprint, $prd),
@@ -2049,11 +2061,16 @@ class BlueprintController extends Controller
             '.agents/AGENT_HARNESS_ECC.md' => \App\Services\ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
             '.agents/PRINT_THERMAL_AND_A4_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderPrintSpecMarkdown($schema),
             '.agents/DAY2_OPERATIONS_AND_SECURITY.md' => \App\Services\ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($schema),
+            '.agents/DECISION_TABLES_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($schema),
             '.agents/BLUEPRINT_SCHEMA.json' => (string) json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             '.agents/graphify/graph.json' => \App\Services\ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
             'app/Actions/Tenancy/InitializeNewTenantAction.php' => \App\Services\ScaffoldGeneratorService::generateInitializeNewTenantAction($schema),
+            'app/Domains/Rules/DeterministicDecisionMatrix.php' => \App\Services\ScaffoldGeneratorService::generateDeterministicDecisionMatrixClass($schema, $appName),
+            'tests/Feature/Security/TenantIsolationSecurityTest.php' => \App\Services\ScaffoldGeneratorService::generateTenantIsolationSecurityTest($schema, $appName),
             'resources/views/prints/thermal-and-official-a4.blade.php' => \App\Services\ScaffoldGeneratorService::generateThermalAndOfficialPrintView($schema),
             'config/project_os_day2_ops.php' => \App\Services\ScaffoldGeneratorService::generateDayTwoOpsConfig($schema),
+            '.env.blueprint' => \App\Services\ScaffoldGeneratorService::generateEnvBlueprintFile($schema, $appName),
+            '.mcp.json' => \App\Services\ScaffoldGeneratorService::generateMcpJsonFile($blueprint),
             'database/seeders/RealisticSectorSeeder.php' => \App\Services\ScaffoldGeneratorService::generateRealisticSectorSeeder($schema),
             'verify-blueprint.sh' => \App\Services\BlueprintSlopScannerService::generateVerifyBlueprintBashScript($appName),
         ];
@@ -2091,7 +2108,7 @@ class BlueprintController extends Controller
             "echo \" [Sector UI] {$sectorCode} -> {$primaryUi}\"",
             "echo \" [Stack]     {$stackCode}\"",
             'echo "=================================================================="',
-            'mkdir -p .agents/graphify .agents/prompts app/Actions/Tenancy resources/views/prints config database/seeders',
+            'mkdir -p .agents/graphify .agents/prompts app/Actions/Tenancy app/Domains/Rules tests/Feature/Security resources/views/prints config database/seeders',
             '',
         ];
 
@@ -2196,6 +2213,61 @@ class BlueprintController extends Controller
         return response()->json([
             'success' => true,
             'doctor' => $doctor->diagnoseBlueprint($blueprint, true),
+        ]);
+    }
+
+    /**
+     * Lifecycle #1: Create a Surgical Delta Change Request (v1.0 -> v1.1) for Day-30+ Feature Evolution.
+     */
+    public function createDeltaChangeRequest(
+        Request $request,
+        string $slug,
+        \App\Services\BlueprintDeltaEvolutionService $deltaService
+    ): JsonResponse {
+        $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'change_summary' => 'nullable|string|max:10000',
+            'added_primitives' => 'nullable|array',
+            'added_primitives.*' => 'string|max:120',
+            'added_tables' => 'nullable|array',
+            'added_decision_rules' => 'nullable|array',
+        ]);
+
+        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $result = $deltaService->createChangeRequest($blueprint, $posProject, $validated, true);
+
+        return response()->json($result, 201);
+    }
+
+    /**
+     * Lifecycle #1: O(1) Keyset Cursor-Paginated Change Request History for a Blueprint.
+     */
+    public function listDeltaChangeRequests(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        if (! \Illuminate\Support\Facades\Schema::hasTable('pos_change_requests')) {
+            return response()->json([
+                'success' => true,
+                'items' => [],
+                'next_cursor' => null,
+            ]);
+        }
+
+        $cursorPage = \App\Models\PosChangeRequest::query()
+            ->where('vision_blueprint_id', $blueprint->id)
+            ->orderBy('id', 'desc')
+            ->cursorPaginate(15);
+
+        return response()->json([
+            'success' => true,
+            'items' => $cursorPage->items(),
+            'next_cursor' => $cursorPage->nextCursor()?->encode(),
+            'prev_cursor' => $cursorPage->previousCursor()?->encode(),
         ]);
     }
 }

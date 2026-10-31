@@ -62,6 +62,9 @@ class AgenticActionExecutionEngine
                 'run_blueprint_slop_scanner' => $this->runBlueprintSlopScanner($args),
                 'run_blueprint_doctor' => $this->runBlueprintDoctor($args),
                 'get_day2_production_contracts' => $this->getDay2ProductionContracts($args),
+                'generate_delta_change_request' => $this->guardMutation($user, $toolName) ?? $this->generateDeltaChangeRequest($args),
+                'compile_decision_table_matrix' => $this->compileDecisionTableMatrix($args),
+                'audit_environment_and_redteam_readiness' => $this->auditEnvironmentAndRedteamReadiness($args),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
@@ -467,6 +470,9 @@ class AgenticActionExecutionEngine
         $totalKnowledge = \Illuminate\Support\Facades\Schema::hasTable('ai_knowledge_vectors')
             ? DB::table('ai_knowledge_vectors')->count()
             : 0;
+        $changeRequestsCount = \Illuminate\Support\Facades\Schema::hasTable('pos_change_requests')
+            ? DB::table('pos_change_requests')->count()
+            : 0;
 
         return [
             'scope' => $args['scope'] ?? 'all',
@@ -478,10 +484,12 @@ class AgenticActionExecutionEngine
             'total_revenue_settled' => $revenue,
             'expiring_assets_30_days' => $expiringAssets,
             'total_knowledge_chunks' => $totalKnowledge,
+            'change_requests_count' => $changeRequestsCount,
             'sectors_count' => count(\App\Support\ProjectOsMatrixCatalog::sectors()),
             'primitives_count' => count(\App\Support\ProjectOsMatrixCatalog::primitives()),
             'stack_presets_count' => count(\App\Support\PosStackPresetCatalog::stackPresets()),
             'day_two_layers_count' => count(\App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary()),
+            'lifecycle_features_count' => count(\App\Support\PosLifecycleAndStudioCatalog::fiveLifecycleFeatures()),
             'native_tools_count' => count(GeminiToolRegistry::getDeclarations()),
         ];
     }
@@ -547,7 +555,7 @@ class AgenticActionExecutionEngine
     }
 
     /**
-     * 14. Generate Phased Prompts (Phase 1 to 6) & CLI Bootstrapper Command
+     * 14. Generate Phased Prompts (Phase 1 to 7) & CLI Bootstrapper Command
      */
     protected function generatePhasedPrompts(array $args): array
     {
@@ -568,7 +576,7 @@ class AgenticActionExecutionEngine
         $cliCommand = 'curl -sL ' . url('/init/' . $blueprint->id) . ' | bash';
         $phaseNum = isset($args['phase_number']) ? (int) $args['phase_number'] : null;
 
-        if ($phaseNum && $phaseNum >= 1 && $phaseNum <= 6) {
+        if ($phaseNum && $phaseNum >= 1 && $phaseNum <= 7) {
             return [
                 'blueprint_id' => $blueprint->id,
                 'slug' => $blueprint->slug,
@@ -604,11 +612,11 @@ class AgenticActionExecutionEngine
     {
         $scanner = app(\App\Services\BlueprintSlopScannerService::class);
 
-        if (! empty($args['blueprint_id'])) {
-            $id = trim((string) $args['blueprint_id']);
-            $blueprint = VisionBlueprint::where('id', $id)->orWhere('slug', $id)->first();
+        $bpLookup = trim((string) ($args['blueprint_id'] ?? $args['blueprint_identifier'] ?? ''));
+        if ($bpLookup !== '') {
+            $blueprint = VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first();
             if (! $blueprint) {
-                return ['error' => "Blueprint '{$id}' tidak ditemukan."];
+                return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
             }
             return $scanner->auditBlueprint($blueprint, true);
         }
@@ -627,11 +635,11 @@ class AgenticActionExecutionEngine
     {
         $doctor = app(\App\Services\BlueprintDoctorService::class);
 
-        if (! empty($args['blueprint_id'])) {
-            $id = trim((string) $args['blueprint_id']);
-            $blueprint = VisionBlueprint::where('id', $id)->orWhere('slug', $id)->first();
+        $bpLookup = trim((string) ($args['blueprint_id'] ?? $args['blueprint_identifier'] ?? ''));
+        if ($bpLookup !== '') {
+            $blueprint = VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first();
             if (! $blueprint) {
-                return ['error' => "Blueprint '{$id}' tidak ditemukan."];
+                return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
             }
 
             return $doctor->diagnoseBlueprint($blueprint, true);
@@ -671,6 +679,116 @@ class AgenticActionExecutionEngine
             'day_two_bundle' => \App\Support\PosDayTwoProductionCatalog::bundleForSector($code),
             'final_eight_layers' => \App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary(),
             'ten_perfection_pillars' => \App\Support\PosDayTwoProductionCatalog::tenPerfectionPillars(),
+        ];
+    }
+
+    /**
+     * 19. Generate Iterative Change Request & Surgical Delta Blueprint (v1.0 -> v1.1)
+     */
+    protected function generateDeltaChangeRequest(array $args): array
+    {
+        $id = trim((string) ($args['blueprint_id'] ?? ''));
+        $summary = trim((string) ($args['change_summary'] ?? ''));
+
+        if ($id === '' || $summary === '') {
+            return ['error' => 'Parameter blueprint_id dan change_summary wajib diisi.'];
+        }
+
+        $blueprint = VisionBlueprint::where('id', $id)->orWhere('slug', $id)->first();
+        if (! $blueprint) {
+            return ['error' => "Blueprint '{$id}' tidak ditemukan."];
+        }
+
+        $posProject = app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+        $title = trim((string) ($args['title'] ?? 'Penambahan Fitur Evolusi Bisnis'));
+
+        return app(\App\Services\BlueprintDeltaEvolutionService::class)->createChangeRequest(
+            $blueprint,
+            $posProject,
+            [
+                'title' => $title,
+                'change_summary' => $summary,
+            ],
+            true
+        );
+    }
+
+    /**
+     * 20. Compile Deterministic Business Rule Decision Tables (Anti-Nested if-else Slop)
+     */
+    protected function compileDecisionTableMatrix(array $args): array
+    {
+        $customRules = null;
+        $code = 'SECTOR_01_COMMERCE_OMNICHANNEL';
+        $appName = 'Project OS Enterprise';
+
+        $bpLookup = trim((string) ($args['blueprint_id'] ?? $args['blueprint_identifier'] ?? ''));
+        if ($bpLookup !== '') {
+            $blueprint = VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first();
+            if (! $blueprint) {
+                return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
+            }
+            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+            $code = (string) ($schema['project_metadata']['primary_sector'] ?? $code);
+            $appName = (string) ($schema['project_metadata']['name'] ?? $blueprint->nama_bisnis);
+            $posProject = \App\Models\PosProject::where('vision_blueprint_id', $blueprint->id)->first();
+            if ($posProject && is_array($posProject->decision_tables_json) && ! empty($posProject->decision_tables_json)) {
+                $customRules = $posProject->decision_tables_json;
+            }
+        } elseif (! empty($args['sector_code'])) {
+            $code = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode((string) $args['sector_code']);
+        }
+
+        $matrix = \App\Support\PosLifecycleAndStudioCatalog::decisionTablesForSector($code, $customRules);
+
+        return [
+            'success' => true,
+            'sector_code' => $code,
+            'decision_matrix' => $matrix,
+            'compiled_php_class' => \App\Support\PosLifecycleAndStudioCatalog::compileDecisionTablesToPhpClass($matrix, $appName),
+        ];
+    }
+
+    /**
+     * 21. Audit Environment Vault (.env.blueprint), Phase 7 Security Red-Team Suite & MCP Bridge
+     */
+    protected function auditEnvironmentAndRedteamReadiness(array $args): array
+    {
+        $code = 'SECTOR_01_COMMERCE_OMNICHANNEL';
+        $primitives = ['PRIM_IAM_MULTI_TENANT', 'PRIM_AUDIT_SECURITY_LEDGER'];
+        $stackPreset = trim((string) ($args['stack_preset_code'] ?? 'STACK_M1_LARAVEL_FILAMENT_LIVEWIRE'));
+        $blueprintSlug = null;
+
+        $bpLookup = trim((string) ($args['blueprint_id'] ?? $args['blueprint_identifier'] ?? ''));
+        if ($bpLookup !== '') {
+            $blueprint = VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first();
+            if (! $blueprint) {
+                return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
+            }
+            $blueprintSlug = $blueprint->slug;
+            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+            $code = (string) ($schema['project_metadata']['primary_sector'] ?? $code);
+            $primitives = array_values((array) ($schema['project_metadata']['injected_primitives'] ?? $primitives));
+            $stackPreset = (string) ($schema['project_metadata']['stack_preset'] ?? $stackPreset);
+        } elseif (! empty($args['sector_code'])) {
+            $code = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode((string) $args['sector_code']);
+        }
+
+        $envVault = \App\Support\PosLifecycleAndStudioCatalog::environmentVaultBlueprint($code, $primitives, $stackPreset);
+        $redTeam = \App\Support\PosLifecycleAndStudioCatalog::redTeamSecuritySuiteContract($code, $primitives);
+
+        return [
+            'success' => true,
+            'sector_code' => $code,
+            'stack_preset' => $stackPreset,
+            'environment_secret_vault' => $envVault,
+            'env_blueprint_preview' => \App\Support\PosLifecycleAndStudioCatalog::renderEnvBlueprintFile($envVault, $blueprintSlug ?? 'neriahpro-app'),
+            'phase_7_security_redteam_suite' => $redTeam,
+            'mcp_server_bridge' => [
+                'endpoint' => url('/api/mcp/project-os'),
+                'config_endpoint' => $blueprintSlug ? url("/api/blueprint/{$blueprintSlug}/mcp-config") : null,
+                'studio_url' => $blueprintSlug ? url("/blueprint/studio/{$blueprintSlug}") : url('/blueprint/studio'),
+            ],
         ];
     }
 

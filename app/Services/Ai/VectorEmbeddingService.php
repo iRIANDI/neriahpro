@@ -658,13 +658,66 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 8. Indeks 5 Day-30+ Lifecycle Retention Engines & 3-Pane Architect Studio (Project OS v4.0)
+        foreach (\App\Support\PosLifecycleAndStudioCatalog::fiveLifecycleFeatures() as $lf) {
+            $lfCode = (string) ($lf['code'] ?? 'LIFECYCLE');
+            $sourceId = 'day30-lifecycle-' . strtolower($lfCode);
+            if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+                continue;
+            }
+
+            $lfTitle = $lf['title']['id'] ?? $lfCode;
+            $lfSummary = $lf['summary']['id'] ?? '';
+            $lfArtifact = $lf['artifact'] ?? '';
+            $lfContent = "Engine Lifecycle: {$lfCode} ({$lf['badge']})\nJudul: {$lfTitle}\nArtefak: {$lfArtifact}\nSpesifikasi Day-30+ Retention: {$lfSummary}";
+
+            $embedding = $this->generateEmbedding("{$lfTitle}\n{$lfContent}");
+            AiKnowledgeVector::create([
+                'title' => "Day-30+ Lifecycle Engine: {$lfTitle}",
+                'source_type' => 'day30_lifecycle_engine',
+                'source_id' => $sourceId,
+                'content' => "### {$lfTitle}\n\n{$lfContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => '5 Day-30+ Lifecycle Engines (v4.0)',
+                    'feature_code' => $lfCode,
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        $studioSourceId = 'project-os-v4-architect-studio-5-screens';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $studioSourceId)->exists()) {
+            $studioContent = "The Architect Studio v4.0 (/blueprint/studio):
+1. Screen 1 — The 60-Second Architecture Wizard: 3-step split-screen wizard (12 Sectoral Archetypes, 9 Stack Adapters M1–S2 dengan estimasi Coolify RAM/CPU sizing, Anti-Slop Shield toggles).
+2. Screen 2 — The 3-Pane Blueprint Studio (100vh Zero-Scroll IDE): Pane Kiri col-span-3 Architecture Explorer Tree, Pane Tengah col-span-5 Visual Blueprint Canvas (Schema & Locks, State Machine, UI & Print, Decision Matrix Builder match(), Delta v1.1 & Verify), Pane Kanan col-span-4 Live Compiler & 7-Phase Prompt Dock (Ctrl+Shift+C copy & Verified toggle), Bottom Status Bar (Est. Token Saved: 64%).
+3. Screen 3 — Blueprint Doctor & Determinism Score: Skor determinisme tabular-nums hingga 100.0% Zero-Assumption Ready dengan deteksi kolom status tanpa State Machine Enum dan tombol [+ Buat Otomatis].
+4. Screen 4 — Side-by-Side Slop Diff Previewer: Perbandingan Raw AI Prompt Slop vs NeriahPro Project OS v4.0 (Database, UI/UX, Bisnis & Pajak).
+5. Screen 5 — Execution Tracker & Drift Audit Terminal: 4 badge kepatuhan 100% Pass & sinkronisasi real-time via Live MCP Server Bridge (neriahpro-mcp).";
+
+            $embedding = $this->generateEmbedding("The Architect Studio v4.0 3-Pane IDE\n{$studioContent}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v4.0: The 3-Pane Architect Studio & 5 Anti-Slop Screens',
+                'source_type' => 'architect_studio_ui',
+                'source_id' => $studioSourceId,
+                'content' => "### The 3-Pane Architect Studio v4.0 (/blueprint/studio)\n\n{$studioContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'The Architect Studio UI/UX (v4.0)',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
             'status' => 'success',
             'synced_sections' => $syncedSections,
             'total_chunks' => $totalChunks,
-            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (10 Pilar Factory OS, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers & 10 Perfection Pillars v3.0) ke basis pengetahuan RAG pgvector.",
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (10 Pilar Factory OS, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 10 Perfection Pillars & 5 Day-30+ Lifecycle Engines + 3-Pane Studio v4.0) ke basis pengetahuan RAG pgvector.",
         ];
     }
 }

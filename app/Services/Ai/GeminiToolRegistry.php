@@ -302,6 +302,66 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+            [
+                'name' => 'generate_delta_change_request',
+                'description' => 'Membuat Iterative Change Request & Surgical Delta Blueprint (v1.0 -> v1.1) pada proyek/blueprint aktif. Menghasilkan HANYA migrasi aditif strict-ULID, diff graph.json, delta tool declarations, dan skenario DeltaRegressionTest agar aplikasi produksi v1.0 tidak rusak oleh AI slop.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID ID atau slug blueprint yang ingin dievolusikan dari v1.0 ke v1.1.',
+                        ],
+                        'title' => [
+                            'type' => 'STRING',
+                            'description' => 'Judul ringkas penambahan fitur baru (misal: "Program Loyalty Poin & Cabang Surabaya").',
+                        ],
+                        'change_summary' => [
+                            'type' => 'STRING',
+                            'description' => 'Deskripsi rinci kebutuhan fitur evolusi bisnis untuk dikompilasi menjadi Surgical Delta Prompt.',
+                        ],
+                    ],
+                    'required' => ['blueprint_id', 'change_summary'],
+                ],
+            ],
+            [
+                'name' => 'compile_decision_table_matrix',
+                'description' => 'Mengambil dan mengompilasi Deterministic Business Rule Decision Tables (Anti-Nested if-else Slop) untuk suatu sektor atau blueprint menjadi tabel kebenaran spreadsheet dan class PHP 8.4+ match() (DeterministicDecisionMatrix.php) berpresisi DECIMAL(19,4) HALF_UP.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID ID atau slug blueprint (opsional jika menggunakan sector_code).',
+                        ],
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor bisnis (misal: SECTOR_01_COMMERCE_OMNICHANNEL s/d SECTOR_12_GOVTECH_NONPROFIT).',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'audit_environment_and_redteam_readiness',
+                'description' => 'Mengambil kontrak Environment & Secret Vault (.env.blueprint + php artisan pos:check-env), Phase 7 Automated Security Red-Team & Tenant-Leakage Test Suite (IDOR, Livewire Locked, Private Disk 403, Prompt Injection), serta status Live MCP Server Bridge (neriahpro-mcp) untuk suatu blueprint atau sektor.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID ID atau slug blueprint (opsional jika menggunakan sector_code).',
+                        ],
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor bisnis (misal: SECTOR_04_FINTECH_BILLING_LEDGER).',
+                        ],
+                        'stack_preset_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode stack preset (misal: STACK_M1_LARAVEL_FILAMENT_LIVEWIRE).',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

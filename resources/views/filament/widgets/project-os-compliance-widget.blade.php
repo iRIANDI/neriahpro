@@ -251,7 +251,7 @@
                     MIDTRANS COMPLIANCE READY
                 </span>
                 <span class="poc-badge poc-badge-sky">
-                    12 SECTORAL UI/UX &amp; 9 STACKS
+                    3-PANE STUDIO &amp; MCP BRIDGE v4.0
                 </span>
                 <span class="poc-badge poc-badge-sky">
                     POSTGRESQL STRICT ULID
@@ -373,15 +373,15 @@
             <!-- Pillar 6 -->
             <div class="poc-pillar-card" style="border-left: 3px solid #dc2626;">
                 <div class="poc-pillar-tag" style="color: #dc2626;">
-                    {{ $isEn ? '06 // ACTIVE CYBER DEFENSE & DAY-2 OPS v3.0' : '06 // PERTAHANAN SIBER & 8 LAYER DAY-2 OPS v3.0' }}
+                    {{ $isEn ? '06 // RED-TEAM SECURITY, DAY-2 OPS & DAY-30+ MCP v4.0' : '06 // KEAMANAN RED-TEAM, DAY-2 OPS & DAY-30+ MCP v4.0' }}
                 </div>
                 <div class="poc-pillar-title">
-                    {{ $isEn ? 'AI-Shield, Private Signed URLs, Snapshot & Blueprint Doctor' : 'AI-Shield, Private Signed URL, Snapshot & Blueprint Doctor' }}
+                    {{ $isEn ? 'Phase 7 Red-Team, Delta v1.1, Decision Matrix match() & Live MCP' : 'Fase 7 Red-Team, Delta v1.1, Decision Matrix match() & Live MCP' }}
                 </div>
                 <div class="poc-pillar-desc">
                     {{ $isEn 
-                        ? 'Active RCE firewall, Multi-Tenant anti-IDOR scope, Private Disk 5-min Signed URLs, Historical *_snapshot immutability, 58/80mm Thermal & A4 QR Print contracts, 4-Lane Redis Queue, and Interactive Blueprint Doctor.' 
-                        : 'Firewall anti-RCE, Global Scope anti-IDOR multi-tenant, Private Disk Signed URL 5 menit, pembekuan harga historis (*_snapshot), cetak Thermal 58/80mm & A4 QR SVG lokal, 4 jalur Queue Redis, serta Interactive Blueprint Doctor.' }}
+                        ? 'Phase 7 Tenant-Leakage Red-Team tests, Surgical Delta CR (v1.0 -> v1.1), Decision Matrix PHP match(), .env.blueprint (pos:check-env), Live MCP Server Bridge (neriahpro-mcp), and 3-Pane Studio.' 
+                        : 'Uji penetrasi otomatis Fase 7 (IDOR & Prompt Injection), evolusi Delta aditif v1.1, Tabel Keputusan PHP match(), brankas .env.blueprint, jembatan MCP langsung ke IDE, dan 3-Pane Studio.' }}
                 </div>
             </div>
         </div>

@@ -65,6 +65,7 @@
                         'rules' => ['label' => 'Anti-Slop Rule Packs', 'count' => $stats['rules'] ?? 6],
                         'projects' => ['label' => 'Assembled Projects', 'count' => $stats['projects'] ?? 0],
                         'day2' => ['label' => '8 Layer Day-2 & Doctor', 'count' => 'v3.0'],
+                        'lifecycle' => ['label' => 'Day-30+ Lifecycle & MCP', 'count' => 'v4.0'],
                         'lab' => ['label' => 'Brownfield & Slop Lab', 'count' => 'LAB'],
                     ] as $tabKey => $tabMeta)
                         <button
@@ -81,6 +82,9 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ route('blueprint.studio') }}" target="_blank" class="px-3 py-1.5 text-xs font-mono font-black bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 border border-zinc-800 dark:border-zinc-300 rounded-xs transition">
+                        🖥️ Buka 3-Pane Studio
+                    </a>
                     <button type="button" wire:click="syncMatrixSeeder" class="px-3 py-1.5 text-xs font-mono font-bold bg-emerald-600 hover:bg-emerald-500 text-black border border-emerald-700 rounded-xs transition cursor-pointer">
                         Sinkronkan Seeder O(1)
                     </button>
@@ -255,6 +259,98 @@
                                 <div class="text-[11px] text-zinc-700 dark:text-zinc-300 mt-1 leading-snug">{{ $tp['detail'] }}</div>
                             </div>
                         @endforeach
+                    </div>
+                </div>
+            </div>
+        @elseif($this->activeTab === 'lifecycle')
+            @php
+                $fiveLifecycle = \App\Support\PosLifecycleAndStudioCatalog::fiveLifecycleFeaturesSummary();
+                $sectorList = \App\Support\ProjectOsMatrixCatalog::sectors();
+                $activeDecisionMatrix = \App\Support\PosLifecycleAndStudioCatalog::decisionTablesForSector($this->decisionPreviewSector);
+                $compiledMatchPhp = \App\Support\PosLifecycleAndStudioCatalog::compileDecisionTablesToPhpClass($activeDecisionMatrix);
+                $activeEnvVault = \App\Support\PosLifecycleAndStudioCatalog::environmentVaultBlueprint($this->decisionPreviewSector);
+                $renderedEnvFile = \App\Support\PosLifecycleAndStudioCatalog::renderEnvBlueprintFile($activeEnvVault);
+            @endphp
+            <div class="space-y-4">
+                <!-- 5 Day-30 to Day-365 Lifecycle Retention Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+                    @foreach($fiveLifecycle as $lf)
+                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-emerald-600 rounded-sm space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">
+                                    {{ $lf['badge'] }}
+                                </span>
+                                <span class="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400 tabular-nums">F-0{{ $lf['number'] }}</span>
+                            </div>
+                            <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $lf['title']['id'] ?? '' }}</div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">{{ $lf['desc']['id'] ?? '' }}</p>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Interactive Sector Decision Matrix (match()) + .env.blueprint Inspector -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-4">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">
+                                DETERMINISTIC DECISION MATRIX COMPILER &amp; .ENV.BLUEPRINT VAULT
+                            </div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
+                                {{ $activeDecisionMatrix['matrix_name'] ?? 'Sectoral Truth-Table → PHP 8.4+ match()' }}
+                            </h3>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select wire:model.live="decisionPreviewSector" class="px-3 py-1.5 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs">
+                                @foreach($sectorList as $sItem)
+                                    <option value="{{ $sItem['code'] }}">{{ $sItem['code'] }} — {{ $sItem['name']['id'] ?? '' }}</option>
+                                @endforeach
+                            </select>
+                            <a href="{{ route('blueprint.studio') }}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-black font-mono text-xs font-black border border-emerald-700 rounded-xs">
+                                🖥️ Edit di 3-Pane Studio
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800">
+                        <table class="w-full text-left border-collapse font-mono text-xs">
+                            <thead class="bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border-b border-zinc-300 dark:border-zinc-800 uppercase text-[10px]">
+                                <tr>
+                                    <th class="py-2 px-3">Rule ID</th>
+                                    <th class="py-2 px-3">Condition A</th>
+                                    <th class="py-2 px-3">Condition B</th>
+                                    <th class="py-2 px-3">Condition C</th>
+                                    <th class="py-2 px-3">Action (`match()`)</th>
+                                    <th class="py-2 px-3">Exact Formula `DECIMAL(19,4)`</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                                @foreach(($activeDecisionMatrix['rules'] ?? []) as $rRow)
+                                    <tr class="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/70 dark:even:bg-zinc-900/40">
+                                        <td class="py-2 px-3 font-black text-emerald-900 dark:text-emerald-300">{{ $rRow['rule_id'] }}</td>
+                                        <td class="py-2 px-3 text-zinc-900 dark:text-zinc-200">{{ $rRow['condition_a'] }}</td>
+                                        <td class="py-2 px-3 text-zinc-900 dark:text-zinc-200">{{ $rRow['condition_b'] }}</td>
+                                        <td class="py-2 px-3 text-zinc-900 dark:text-zinc-200">{{ $rRow['condition_c'] }}</td>
+                                        <td class="py-2 px-3 font-bold text-zinc-950 dark:text-zinc-100">{{ $rRow['action_code'] }}</td>
+                                        <td class="py-2 px-3 text-emerald-950 dark:text-emerald-200">{{ $rRow['exact_formula'] }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <div class="font-mono text-[10px] font-black uppercase text-zinc-800 dark:text-zinc-300">
+                                Compiled PHP 8.4+ Class (`DeterministicDecisionMatrix.php` — Zero Nested If-Else):
+                            </div>
+                            <pre class="p-3 bg-zinc-950 text-emerald-300 border border-zinc-800 font-mono text-[11px] max-h-56 overflow-auto whitespace-pre-wrap">{{ $compiledMatchPhp }}</pre>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="font-mono text-[10px] font-black uppercase text-zinc-800 dark:text-zinc-300">
+                                Sectoral `.env.blueprint` + `php artisan pos:check-env`:
+                            </div>
+                            <pre class="p-3 bg-zinc-950 text-amber-200 border border-zinc-800 font-mono text-[11px] max-h-56 overflow-auto whitespace-pre-wrap">{{ $renderedEnvFile }}</pre>
+                        </div>
                     </div>
                 </div>
             </div>

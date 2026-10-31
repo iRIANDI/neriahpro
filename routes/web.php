@@ -46,7 +46,15 @@ Route::post('/api/blueprint/autosave', [BlueprintController::class, 'autoSave'])
 Route::post('/api/blueprint/{slug}/tweak-segment', [BlueprintController::class, 'tweakSegment'])->name('api.blueprint.tweak-segment')->middleware('throttle:60,1');
 Route::get('/api/blueprint/{slug}/source-corpus', [BlueprintController::class, 'getSourceCorpus'])->name('api.blueprint.source-corpus')->middleware('throttle:60,1');
 Route::post('/api/blueprint/reset', [BlueprintController::class, 'resetDraft'])->name('api.blueprint.reset')->middleware('throttle:30,1');
+Route::post('/api/blueprint/{slug}/delta-request', [BlueprintController::class, 'createDeltaChangeRequest'])->name('api.blueprint.delta.create')->middleware('throttle:30,1');
+Route::get('/api/blueprint/{slug}/delta-requests', [BlueprintController::class, 'listDeltaChangeRequests'])->name('api.blueprint.delta.list')->middleware('throttle:60,1');
+Route::get('/api/blueprint/{slug}/mcp-config', [\App\Http\Controllers\ProjectOsMcpController::class, 'mcpConfig'])->name('api.blueprint.mcp-config')->middleware('throttle:30,1');
+Route::post('/api/mcp/project-os', [\App\Http\Controllers\ProjectOsMcpController::class, 'handleRpc'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+    ->name('api.mcp.project-os')
+    ->middleware('throttle:120,1');
 Route::get('/blueprint', [BlueprintController::class, 'create'])->name('blueprint.create');
+Route::get('/blueprint/studio/{slug?}', \App\Livewire\BlueprintArchitectStudio::class)->name('blueprint.studio');
 Route::get('/blueprint/{slug}', [BlueprintController::class, 'show'])->name('blueprint.show');
 Route::post('/blueprint/{slug}/generate-contract', [BlueprintController::class, 'generateContract'])->name('blueprint.generate-contract');
 Route::post('/blueprint/{slug}/snap-token', [BlueprintController::class, 'getSnapToken'])->name('blueprint.snap-token');

@@ -1747,6 +1747,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     <span class="text-zinc-700 dark:text-zinc-300 font-bold" x-text="collaborators.length + ' Kolaborator Live'"></span>
                 </div>
 
+                <!-- Launch Full-Screen 100vh 3-Pane Architect Studio v4.0 -->
+                <a href="{{ route('blueprint.studio', ['slug' => $blueprint->slug]) }}" class="px-2.5 sm:px-3 py-1 bg-zinc-950 hover:bg-zinc-800 text-emerald-400 dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:text-zinc-950 text-xs font-mono uppercase font-black rounded-none border border-emerald-500 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap" title="Buka Meja Kerja 3-Pane Architect Studio v4.0 (100vh Zero-Scroll IDE, Decision Matrix, Delta v1.1 & Live MCP)">
+                    <span>🖥️ 3-PANE STUDIO</span>
+                </a>
+
                 <!-- One-Click Scaffold & Boilerplate Exporter Modal Button -->
                 <button type="button" @click="openScaffoldModal()" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap" title="Ekspor Docker Compose, SQL Migrasi, & Struktur Route">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -1778,9 +1783,13 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <span class="hidden xl:inline">EXECUTION.MD</span>
                         <span class="xl:hidden">EXEC</span>
                     </a>
-                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'stack-topology']) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 transition flex items-center gap-1" title="Unduh Kontrak Topologi & Tech Stack Adapter (.agents/STACK_TOPOLOGY_CONTRACT.md)">
-                        <span class="hidden xl:inline">STACK.MD</span>
-                        <span class="xl:hidden">STACK</span>
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'decision-tables']) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 transition flex items-center gap-1" title="Unduh Deterministic Business Rule Decision Tables (.agents/DECISION_TABLES_CONTRACT.md)">
+                        <span class="hidden xl:inline">DECISION.MD</span>
+                        <span class="xl:hidden">DEC</span>
+                    </a>
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'env-blueprint']) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" title="Unduh Environment & Secret Vault Blueprint (.env.blueprint)">
+                        <span class="hidden xl:inline">.ENV.BLUEPRINT</span>
+                        <span class="xl:hidden">ENV</span>
                     </a>
                     <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint']) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 font-black transition flex items-center gap-1" title="Unduh CI Gatekeeper Anti-Slop Scanner (verify-blueprint.sh)">
                         <span class="hidden xl:inline">VERIFY.SH</span>
@@ -6685,6 +6694,7 @@ class ProcessSecureDataset implements ShouldQueue
                         || empty($posUniversalSchema['sectoral_ui_ux_archetype'])
                         || empty($posUniversalSchema['phased_prompt_sequencer'])
                         || empty($posUniversalSchema['printable_and_thermal_contracts'])
+                        || empty($posUniversalSchema['decision_tables_matrix'])
                     ) {
                         try {
                             $posUniversalSchema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
@@ -6704,6 +6714,9 @@ class ProcessSecureDataset implements ShouldQueue
                     $posDayTwoOps = $posUniversalSchema['day_two_operations_contract'] ?? [];
                     $posDefenseSecurity = $posUniversalSchema['defense_in_depth_security'] ?? [];
                     $posDoctorReport = $posUniversalSchema['blueprint_doctor_report'] ?? [];
+                    $posDecisionMatrix = $posUniversalSchema['decision_tables_matrix'] ?? [];
+                    $posRedTeamSuite = $posUniversalSchema['security_red_team_suite'] ?? [];
+                    $posEnvVault = $posUniversalSchema['environment_secret_vault'] ?? [];
                     $posCliInitCmd = 'curl -sL ' . url('/init/' . $blueprint->id) . ' | bash';
                     $posSectorLabel = is_array($posMeta['primary_sector_name'] ?? null)
                         ? ($posMeta['primary_sector_name'][$isEn ? 'en' : 'id'] ?? ($posMeta['primary_sector_name']['id'] ?? ($posMeta['primary_sector'] ?? '-')))
@@ -6734,9 +6747,63 @@ class ProcessSecureDataset implements ShouldQueue
                         slopReport: null,
                         runningDoctor: false,
                         liveDoctor: @js($posDoctorReport),
+                        deltaTitle: '',
+                        deltaSummary: '',
+                        creatingDelta: false,
+                        latestDelta: null,
+                        mcpJsonText: '',
+                        loadingMcp: false,
+                        async generateDeltaCr() {
+                            if (!this.deltaSummary.trim()) {
+                                if (window.showToast) window.showToast({ type: 'warning', title: 'RINGKASAN KOSONG', message: 'Jelaskan fitur tambahan v1.1 yang diinginkan terlebih dahulu.' });
+                                return;
+                            }
+                            this.creatingDelta = true;
+                            try {
+                                const res = await fetch('{{ route('api.blueprint.delta.create', $blueprint->slug) }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        title: this.deltaTitle || 'Penambahan Fitur Evolusi v1.1',
+                                        change_summary: this.deltaSummary
+                                    })
+                                });
+                                const data = await res.json();
+                                if (data && data.success) {
+                                    this.latestDelta = data;
+                                    if (window.showToast) window.showToast({ type: 'success', title: 'DELTA ' + data.from_version + ' → ' + data.to_version, message: 'Surgical Delta Prompt aditif siap ditempelkan ke IDE Anda!' });
+                                }
+                            } catch (e) {
+                                if (window.showToast) window.showToast({ type: 'error', title: 'GAGAL MEMBUAT DELTA', message: 'Tidak dapat memproses Delta Change Request.' });
+                            } finally {
+                                this.creatingDelta = false;
+                            }
+                        },
+                        async fetchMcpConfig() {
+                            this.loadingMcp = true;
+                            try {
+                                const res = await fetch('{{ route('api.blueprint.mcp-config', $blueprint->slug) }}', {
+                                    headers: { 'Accept': 'application/json' }
+                                });
+                                const data = await res.json();
+                                if (data && data.mcp_json_pretty) {
+                                    this.mcpJsonText = data.mcp_json_pretty;
+                                    if (navigator.clipboard) navigator.clipboard.writeText(this.mcpJsonText);
+                                    if (window.showToast) window.showToast({ type: 'success', title: '.MCP.JSON DISALIN', message: 'Tempelkan ke .mcp.json di Claude Code / Cursor / Antigravity IDE.' });
+                                }
+                            } catch (e) {
+                                if (window.showToast) window.showToast({ type: 'error', title: 'MCP CONFIG ERROR', message: 'Gagal menghasilkan token MCP.' });
+                            } finally {
+                                this.loadingMcp = false;
+                            }
+                        },
                         copyCli() {
                             if (navigator.clipboard) navigator.clipboard.writeText(this.cliCmd);
-                            if (window.showToast) window.showToast({ type: 'success', title: 'CLI COPIED (v3.0)', message: 'Jalankan di terminal proyek kosong Anda untuk memasang AGENTS.md, 6 fase prompt, InitializeNewTenantAction, template cetak Thermal/A4, dan verify-blueprint.sh dalam 3 detik.' });
+                            if (window.showToast) window.showToast({ type: 'success', title: 'CLI COPIED (v4.0)', message: 'Jalankan di terminal proyek kosong Anda untuk memasang AGENTS.md, 7 fase prompt (+Red-Team), DecisionMatrix match(), .env.blueprint, .mcp.json, dan verify-blueprint.sh dalam 3 detik.' });
                         },
                         async runSlopAudit() {
                             this.auditingSlop = true;
@@ -6797,15 +6864,18 @@ class ProcessSecureDataset implements ShouldQueue
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-emerald-600 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-950 dark:text-zinc-100">
-                                {{ $isEn ? '13.5 Project OS v3.0 Engineering Workbench (12 Sectors • 9 Stacks • 8 Day-2 Layers)' : '13.5 Workbench Rekayasa Project OS v3.0 (12 Sektor • 9 Stack • 8 Layer Day-2)' }}
+                                {{ $isEn ? '13.5 Project OS v4.0 Ultimate Workbench (12 Sectors • 9 Stacks • Day-2 & Day-30+ MCP)' : '13.5 Workbench Rekayasa Project OS v4.0 Ultimate (12 Sektor • 9 Stack • Day-2 & Day-30+ MCP)' }}
                             </h3>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ route('blueprint.studio', ['slug' => $blueprint->slug]) }}" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono font-black text-[11px] rounded-xs border border-emerald-500">
+                                🖥️ OPEN 3-PANE STUDIO IDE
+                            </a>
                             <span class="px-2.5 py-1 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono font-black text-[11px] rounded-xs">
                                 [{{ $posStack['short_code'] ?? 'M1' }}] {{ $posStack['topology'] ?? 'MONOLITH' }}
                             </span>
                             <span class="px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono font-black text-[11px] rounded-xs">
-                                ENGINE v3.0 • 8 DAY-2 LAYERS
+                                v4.0 • 7 PHASES • MCP BRIDGE
                             </span>
                             <span class="px-2.5 py-1 bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono font-bold text-[11px] rounded-xs tabular-nums">
                                 {{ count($posPrimitives) }} PRIMITIVES • {{ count($posFormulas) }} FORMULAS • {{ $posAcceptanceCount }} TESTS
@@ -6813,13 +6883,13 @@ class ProcessSecureDataset implements ShouldQueue
                         </div>
                     </div>
 
-                    <!-- Pinned One-Command CLI Bootstrapper (/init/{ULID}) + Print/Day-2 Exports + Live Audits -->
+                    <!-- Pinned One-Command CLI Bootstrapper (/init/{ULID}) + Print/Day-2/v4.0 Exports + Live Audits -->
                     <div class="mb-4 p-4 bg-zinc-950 text-zinc-100 border border-zinc-800 rounded-xs no-print">
                         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                             <div class="space-y-1 min-w-0">
                                 <div class="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase">
-                                    <span class="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black">3-SECOND CLI INIT v3.0</span>
-                                    <span class="text-zinc-300">AGENTS.md + 6 Prompts + Thermal/A4 Print + InitializeNewTenantAction + Day-2 Ops + verify-blueprint.sh</span>
+                                    <span class="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black">3-SECOND CLI INIT v4.0</span>
+                                    <span class="text-zinc-300">AGENTS.md + 7 Prompts (Red-Team) + DecisionMatrix match() + .env.blueprint + .mcp.json + verify-blueprint.sh</span>
                                 </div>
                                 <div class="font-mono text-xs text-emerald-300 bg-black border border-zinc-800 px-3 py-2 overflow-x-auto">
                                     <code x-text="cliCmd"></code>
@@ -6829,6 +6899,15 @@ class ProcessSecureDataset implements ShouldQueue
                                 <button type="button" @click="copyCli()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase cursor-pointer">
                                     {{ $isEn ? 'COPY CLI INIT' : 'SALIN CLI' }}
                                 </button>
+                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'decision-tables']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                    DECISION.MD
+                                </a>
+                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'env-blueprint']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                    .ENV.BLUEPRINT
+                                </a>
+                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'phase-7']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                    P7-REDTEAM
+                                </a>
                                 <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'print-spec']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
                                     PRINT.MD
                                 </a>
@@ -6897,7 +6976,17 @@ class ProcessSecureDataset implements ShouldQueue
                                 : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold'"
                             class="px-3 py-2 border rounded-xs cursor-pointer transition"
                         >
-                            {{ $isEn ? '4. 6-Phase Prompts & Blueprint Doctor' : '4. Sequencer 6 Fase & Blueprint Doctor' }}
+                            {{ $isEn ? '4. 7-Phase Prompts & Blueprint Doctor' : '4. Sequencer 7 Fase & Blueprint Doctor' }}
+                        </button>
+                        <button
+                            type="button"
+                            @click="posTab = 'lifecycle'"
+                            :class="posTab === 'lifecycle'
+                                ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black'
+                                : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold'"
+                            class="px-3 py-2 border rounded-xs cursor-pointer transition"
+                        >
+                            {{ $isEn ? '5. Day-30+ Delta CR, Decision Matrix & MCP' : '5. Day-30+ Delta v1.1, Decision Matrix & MCP' }}
                         </button>
                     </div>
 
@@ -7231,10 +7320,10 @@ class ProcessSecureDataset implements ShouldQueue
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                                 <div>
                                     <span class="font-mono text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-400 block">
-                                        KILLER #1 • ANTI-CONTEXT-OVERFLOW ORCHESTRATOR (.agents/prompts/01..06)
+                                        KILLER #1 • ANTI-CONTEXT-OVERFLOW ORCHESTRATOR (.agents/prompts/01..07)
                                     </span>
                                     <h4 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
-                                        {{ $isEn ? '6-Phase Deterministic Execution Prompts (Includes Snapshot, Print & Day-2 Gates)' : 'Sequencer Eksekusi Bertahap 6 Fase (Termasuk Kontrak Snapshot, Cetak Thermal/A4 & Day-2 Ops)' }}
+                                        {{ $isEn ? '7-Phase Deterministic Execution Prompts (Includes Snapshot, Print, Day-2 & Phase 7 Red-Team)' : 'Sequencer Eksekusi Bertahap 7 Fase (Termasuk Snapshot, Cetak Thermal/A4, Day-2 & Fase 7 Red-Team)' }}
                                     </h4>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0 font-mono text-[11px]">
@@ -7247,7 +7336,7 @@ class ProcessSecureDataset implements ShouldQueue
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 mb-3 font-mono text-[10px]">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 mb-3 font-mono text-[10px]">
                                 @foreach($posPhasedPrompts as $pp)
                                     <button
                                         type="button"
@@ -7267,6 +7356,165 @@ class ProcessSecureDataset implements ShouldQueue
                                 <div class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100" x-text="currentPhaseObj.title"></div>
                                 <div class="text-xs text-zinc-700 dark:text-zinc-300" x-text="currentPhaseObj.objective"></div>
                                 <pre class="p-3 bg-zinc-950 text-emerald-300 border border-zinc-800 font-mono text-[11px] leading-relaxed overflow-x-auto max-h-56 whitespace-pre-wrap" x-text="currentPhaseObj.prompt"></pre>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- TAB 5: DAY-30 TO DAY-365 LIFECYCLE (DELTA v1.1, LIVE MCP BRIDGE, DECISION MATRIX, RED-TEAM & ENV VAULT) -->
+                    <div x-show="posTab === 'lifecycle'" x-cloak class="space-y-4 no-print">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                            <!-- Feature #1: Iterative Change Request & Delta Blueprint Generator (v1.0 -> v1.1) -->
+                            <div class="lg:col-span-7 p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-3">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black uppercase">
+                                            DAY-30+ FEATURE #1 • SURGICAL DELTA EVOLUTION (v1.0 → v1.1)
+                                        </span>
+                                        <h4 class="text-sm font-black text-zinc-950 dark:text-zinc-100 mt-1">
+                                            {{ $isEn ? 'Iterative Change Request & Additive ULID Delta Generator' : 'Generator Evolusi Delta v1.1 Aditif (Tanpa Merusak Kode v1.0)' }}
+                                        </h4>
+                                    </div>
+                                    <a href="{{ route('blueprint.studio', ['slug' => $blueprint->slug]) }}" class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 font-mono text-[10px] font-black uppercase">
+                                        🖥️ STUDIO CANVAS
+                                    </a>
+                                </div>
+                                <p class="text-xs text-zinc-700 dark:text-zinc-300">
+                                    {{ $isEn
+                                        ? 'Describe a new post-launch feature (e.g., Loyalty Points, Multi-Currency, Approval Escalation). Project OS generates ONLY additive ULID migrations, graph.json diff, Gemini tool delta, and Zero-Regression tests.'
+                                        : 'Ketik kebutuhan fitur tambahan pasca-rilis (misal: Sistem Poin Loyalitas, Multi-Mata Uang, atau Eskalasi Approval). Sistem menghasilkan HANYA migrasi ULID aditif, selisih graph.json, dan tes regresi tanpa menimpa tabel v1.0.' }}
+                                </p>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    <input
+                                        type="text"
+                                        x-model="deltaTitle"
+                                        placeholder="{{ $isEn ? 'CR Title (e.g., Loyalty Points v1.1)' : 'Judul CR (mis: Poin Loyalitas v1.1)' }}"
+                                        class="sm:col-span-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-xs rounded-xs"
+                                    />
+                                    <input
+                                        type="text"
+                                        x-model="deltaSummary"
+                                        placeholder="{{ $isEn ? 'Describe exact workflow / business rule delta...' : 'Jelaskan detail alur & aturan bisnis tambahan...' }}"
+                                        class="sm:col-span-2 px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-xs rounded-xs"
+                                    />
+                                </div>
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
+                                        Zero DROP TABLE • Strict 26-char ULID • SHA-256 Forensic Logged
+                                    </span>
+                                    <button
+                                        type="button"
+                                        @click="generateDeltaCr()"
+                                        :disabled="creatingDelta"
+                                        class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-xs font-black uppercase border border-emerald-500 cursor-pointer"
+                                    >
+                                        <span x-text="creatingDelta ? 'COMPILING DELTA...' : '{{ $isEn ? '+ GENERATE SURGICAL DELTA PROMPT' : '+ GENERATE PROMPT DELTA V1.1' }}'"></span>
+                                    </button>
+                                </div>
+
+                                <template x-if="latestDelta">
+                                    <div class="p-3 bg-zinc-950 text-zinc-100 border border-emerald-700 space-y-2">
+                                        <div class="flex items-center justify-between gap-2 font-mono text-[11px]">
+                                            <span class="text-emerald-400 font-black" x-text="'SURGICAL DELTA READY: ' + latestDelta.from_version + ' → ' + latestDelta.to_version"></span>
+                                            <button
+                                                type="button"
+                                                @click="navigator.clipboard && navigator.clipboard.writeText(latestDelta.surgical_delta_prompt || ''); window.showToast && window.showToast({ type: 'success', title: 'DELTA DISALIN', message: 'Surgical Delta Prompt disalin ke clipboard.' })"
+                                                class="px-2.5 py-1 bg-emerald-500 text-zinc-950 font-black uppercase cursor-pointer"
+                                            >
+                                                COPY DELTA .MD
+                                            </button>
+                                        </div>
+                                        <pre class="p-2.5 bg-black text-emerald-300 border border-zinc-800 font-mono text-[10px] max-h-44 overflow-auto whitespace-pre-wrap" x-text="latestDelta.surgical_delta_prompt"></pre>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Feature #2, #4, #5: Live MCP Server Bridge + Red-Team + .env.blueprint -->
+                            <div class="lg:col-span-5 p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-3">
+                                <div>
+                                    <span class="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[9px] font-black uppercase">
+                                        FEATURE #2, #4 &amp; #5 • MCP BRIDGE, RED-TEAM &amp; ENV VAULT
+                                    </span>
+                                    <h4 class="text-sm font-black text-zinc-950 dark:text-zinc-100 mt-1">
+                                        {{ $isEn ? 'Live IDE MCP Sync (.mcp.json) & Pre-Flight Security Vault' : 'Koneksi Langsung IDE (.mcp.json), Uji Red-Team & Brankas .env' }}
+                                    </h4>
+                                </div>
+                                <p class="text-xs text-zinc-700 dark:text-zinc-300">
+                                    {{ $isEn
+                                        ? 'Connect Claude Code, Cursor, or Antigravity IDE directly to neriahpro-mcp via JSON-RPC 2.0. When your agent completes Phase 1–7, your Studio & Client Portal turn Verified ✅ automatically.'
+                                        : 'Hubungkan Claude Code, Cursor, atau Antigravity IDE langsung ke server neriahpro-mcp. Saat AI menyelesaikan tiap fase, indikator progres berubah menjadi Hijau Terverifikasi ✅ secara real-time.' }}
+                                </p>
+                                <div class="flex flex-wrap gap-2 font-mono text-[11px]">
+                                    <button
+                                        type="button"
+                                        @click="fetchMcpConfig()"
+                                        :disabled="loadingMcp"
+                                        class="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 font-black uppercase cursor-pointer"
+                                    >
+                                        <span x-text="loadingMcp ? 'ISSUING TOKEN...' : '🔌 GENERATE & COPY .MCP.JSON'"></span>
+                                    </button>
+                                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'env-blueprint']) }}" class="px-3 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-bold uppercase">
+                                        🔐 .ENV.BLUEPRINT
+                                    </a>
+                                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'phase-7']) }}" class="px-3 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-bold uppercase">
+                                        🛡️ PHASE 7 RED-TEAM
+                                    </a>
+                                </div>
+
+                                <template x-if="mcpJsonText">
+                                    <pre class="p-2.5 bg-zinc-950 text-emerald-300 border border-zinc-800 font-mono text-[10px] max-h-36 overflow-auto whitespace-pre-wrap" x-text="mcpJsonText"></pre>
+                                </template>
+
+                                <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-[10px] space-y-1 text-zinc-800 dark:text-zinc-200">
+                                    <div class="font-black text-zinc-950 dark:text-zinc-100">PRE-DEPLOY COMMAND GUARD:</div>
+                                    <div class="text-emerald-900 dark:text-emerald-300">php artisan pos:check-env --sector={{ $posMeta['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL' }} --strict-prod</div>
+                                    <div>Red-Team Vectors: IDOR Cross-Tenant (404) • Livewire #[Locked] Tamper • Private Disk Signed URL (403) • Prompt Injection Guard</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature #3: Deterministic Business Rule Decision Tables (Spreadsheet Truth-Table -> PHP match()) -->
+                        @if(!empty($posDecisionMatrix['rules']))
+                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black uppercase">
+                                        FEATURE #3 • DETERMINISTIC BUSINESS RULE DECISION MATRIX (ANTI-NESTED IF-ELSE SLOP)
+                                    </span>
+                                    <h4 class="text-sm font-black text-zinc-950 dark:text-zinc-100 mt-1">
+                                        {{ $posDecisionMatrix['matrix_name'] ?? 'Sectoral Truth-Table Decision Matrix → Compiled PHP 8.4+ match()' }}
+                                    </h4>
+                                </div>
+                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'decision-tables']) }}" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 font-mono text-[10px] font-black uppercase">
+                                    📥 DOWNLOAD DECISION_TABLES_CONTRACT.MD
+                                </a>
+                            </div>
+
+                            <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800">
+                                <table class="w-full text-left border-collapse font-mono text-[11px]">
+                                    <thead class="bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border-b border-zinc-300 dark:border-zinc-800 uppercase text-[10px]">
+                                        <tr>
+                                            <th class="py-2 px-3">Rule ID</th>
+                                            <th class="py-2 px-3">Condition A</th>
+                                            <th class="py-2 px-3">Condition B</th>
+                                            <th class="py-2 px-3">Condition C</th>
+                                            <th class="py-2 px-3">Action (`match()`)</th>
+                                            <th class="py-2 px-3">Exact Formula `DECIMAL(19,4)`</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                                        @foreach($posDecisionMatrix['rules'] as $dRule)
+                                            <tr class="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/70 dark:even:bg-zinc-900/40 hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80">
+                                                <td class="py-2 px-3 font-black text-emerald-900 dark:text-emerald-300 whitespace-nowrap">{{ $dRule['rule_id'] ?? '-' }}</td>
+                                                <td class="py-2 px-3 text-zinc-900 dark:text-zinc-200">{{ $dRule['condition_a'] ?? '-' }}</td>
+                                                <td class="py-2 px-3 text-zinc-900 dark:text-zinc-200">{{ $dRule['condition_b'] ?? '-' }}</td>
+                                                <td class="py-2 px-3 text-zinc-900 dark:text-zinc-200">{{ $dRule['condition_c'] ?? '-' }}</td>
+                                                <td class="py-2 px-3 font-bold text-zinc-950 dark:text-zinc-100">{{ $dRule['action_code'] ?? '-' }}</td>
+                                                <td class="py-2 px-3 text-emerald-950 dark:text-emerald-200">{{ $dRule['exact_formula'] ?? '-' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         @endif

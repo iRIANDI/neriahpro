@@ -939,6 +939,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     stack_comparison_matrix: [],
     final_eight_layers: [],
     ten_perfection_pillars: [],
+    five_lifecycle_features: [],
+    stack_server_sizing: {},
+    slop_diff_pairs: [],
   });
   // Progressive Disclosure Mode: 'express' (Founder-friendly default) | 'workbench' (5-Tab Senior Architect Workbench)
   const [matrixMode, setMatrixMode] = useState('express');
@@ -4236,22 +4239,28 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                 <div>
                   <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-800 dark:text-emerald-400 font-black block mb-1">
-                    PROJECT OS V3.0 // 12 SEKTOR + 9 STACK + 8 LAYER DAY-2 + BLUEPRINT DOCTOR
+                    PROJECT OS V4.0 ULTIMATE // 12 SEKTOR + 9 STACK + 8 LAYER DAY-2 + 5 LIFECYCLE + MCP BRIDGE
                   </span>
                   <h3 className="text-lg font-black uppercase tracking-tight text-zinc-950 dark:text-zinc-100">
                     {lang === 'en'
-                      ? 'Zero-Assumption Architecture & Day-2 Production Cockpit'
-                      : 'Kokpit Arsitektur Tanpa Asumsi & Kesiapan Produksi Day-2'}
+                      ? 'Zero-Assumption Architecture, Day-2 Ops & 3-Pane Studio Cockpit'
+                      : 'Kokpit Arsitektur Tanpa Asumsi, Day-2 Ops & 3-Pane Studio IDE'}
                   </h3>
                   <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1 font-sans">
                     {lang === 'en'
-                      ? 'Keep Guided AI Auto-Mode for zero-overwhelm speed, or switch to the 5-Tab Architect Workbench to customize Sector UI, Primitives, Stack Topology, Legacy SQL Import, and Pre-Flight Doctor.'
-                      : 'Gunakan Mode Ringkas Otomatis AI agar tetap praktis tanpa pusing teknis, atau buka Workbench Arsitek (5 Tab) untuk mengatur Sektor UI, Modul Primitif, Topologi Stack, Impor SQL Lama, dan Blueprint Doctor.'}
+                      ? 'Keep Guided AI Auto-Mode for zero-overwhelm speed, switch to the 5-Tab Workbench, or open the full-screen 100vh 3-Pane Architect Studio (with 60s Wizard, Decision Matrix match(), Delta v1.1 & Live MCP).'
+                      : 'Gunakan Mode Ringkas Otomatis AI agar praktis tanpa pusing teknis, buka Workbench 5 Tab, atau luncurkan 3-Pane Architect Studio 100vh (dilengkapi 60s Wizard, Decision Matrix match(), Delta v1.1 & Live MCP).'}
                   </p>
                 </div>
 
-                {/* Mode Switcher Buttons */}
+                {/* Mode Switcher Buttons + 3-Pane Architect Studio Launch */}
                 <div className="shrink-0 flex flex-wrap items-center gap-1.5">
+                  <a
+                    href={initialData?.slug ? `/blueprint/studio/${initialData.slug}` : '/blueprint/studio'}
+                    className="px-3 py-1.5 rounded-xs border border-emerald-500 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-[10px] font-black uppercase transition-colors"
+                  >
+                    {lang === 'en' ? '🖥️ 3-Pane Studio IDE' : '🖥️ Buka 3-Pane Studio'}
+                  </a>
                   <button
                     type="button"
                     onClick={() => setMatrixMode('express')}

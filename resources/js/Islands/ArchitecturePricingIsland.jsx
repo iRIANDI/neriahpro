@@ -140,6 +140,7 @@ export default function ArchitecturePricingIsland({
   });
 
   const [selectedSectorIdx, setSelectedSectorIdx] = useState(0);
+  const [activeSlopDiffIdx, setActiveSlopDiffIdx] = useState(0);
 
   useEffect(() => {
     const handleHash = () => {
@@ -598,10 +599,22 @@ export default function ArchitecturePricingIsland({
         : 'Aplikasi bisnis nyata gagal di lapangan jika seluruh industri dipaksa memakai tabel CRUD generik yang sama. Kasir toko membutuhkan Split POS Terminal 100vh bebas mouse (pintasan F1/F2/F8), dokter membutuhkan Clinical 3-Pane Cockpit (Antrean + Banner Alergi | SOAP | Resep FEFO) tanpa tumpukan modal, dan akuntan membutuhkan Spreadsheet Ledger yang mengunci tombol [Post Journal] hingga Debit == Kredit. Project OS mengompilasi ergonomi spesifik industri beserta Realistic Domain Seeder Indonesia secara otomatis.'
     },
     {
-      q: isEn ? 'How do the Phased Prompt Sequencer (Phase 1–6), Brownfield Importer, and 1-Command CLI Bootstrapper work?' : 'Bagaimana cara kerja Phased Prompt Sequencer (Fase 1–6), Brownfield SQL Importer, dan 1-Command CLI Bootstrapper?',
+      q: isEn ? 'How do the Phased Prompt Sequencer (Phase 1–7), Brownfield Importer, and 1-Command CLI Bootstrapper work?' : 'Bagaimana cara kerja Phased Prompt Sequencer (Fase 1–7), Brownfield SQL Importer, dan 1-Command CLI Bootstrapper?',
       a: isEn
-        ? 'Instead of dumping a massive 50-page PRD into an AI IDE at once (which triggers context-overflow and broken code), Project OS slices execution into 6 deterministic phases (.agents/prompts/01-foundation.md through 06-deployment.md), enforces TDD 100% green before UI, includes ./verify-blueprint.sh to catch UI slop, audits legacy SQL schemas for Zero-Data-Loss Shadow ULID migration, and initializes your entire repository in 3 seconds via curl -sL https://neriahpro.com/init/{ULID} | bash.'
-        : 'Daripada menyuapi AI coding agent dengan satu dokumen raksasa sekaligus (yang menyebabkan context overflow dan halusinasi), Project OS memecah eksekusi ke dalam 6 fase deterministik (.agents/prompts/01-foundation.md s/d 06-deployment.md), mewajibkan 100% test hijau sebelum menyentuh UI, menyertakan ./verify-blueprint.sh pencegah UI slop, mengaudit database SQL warisan untuk migrasi Shadow ULID tanpa kehilangan data, serta menginisialisasi repositori dalam 3 detik cukup dengan satu perintah terminal: curl -sL https://neriahpro.com/init/{ULID} | bash.'
+        ? 'Instead of dumping a massive 50-page PRD into an AI IDE at once (which triggers context-overflow and broken code), Project OS slices execution into 7 deterministic phases (.agents/prompts/01-foundation.md through 07-security-redteam.md), enforces TDD 100% green before UI, includes ./verify-blueprint.sh to catch UI slop, audits legacy SQL schemas for Zero-Data-Loss Shadow ULID migration, and initializes your entire repository in 3 seconds via curl -sL https://neriahpro.com/init/{ULID} | bash.'
+        : 'Daripada menyuapi AI coding agent dengan satu dokumen raksasa sekaligus (yang menyebabkan context overflow dan halusinasi), Project OS memecah eksekusi ke dalam 7 fase deterministik (.agents/prompts/01-foundation.md s/d 07-security-redteam.md), mewajibkan 100% test hijau sebelum menyentuh UI, menyertakan ./verify-blueprint.sh pencegah UI slop, mengaudit database SQL warisan untuk migrasi Shadow ULID tanpa kehilangan data, serta menginisialisasi repositori dalam 3 detik cukup dengan satu perintah terminal: curl -sL https://neriahpro.com/init/{ULID} | bash.'
+    },
+    {
+      q: isEn ? 'What happens at Day-30 or Day-90 when I want to add new features (v1.0 -> v1.1) without breaking my live production app?' : 'Apa yang terjadi pada Hari ke-30 atau ke-90 saat saya ingin menambah fitur baru (v1.0 -> v1.1) tanpa merusak kode produksi yang sudah jalan?',
+      a: isEn
+        ? 'Project OS v4.0 includes an Iterative Change Request & Surgical Delta Generator. Instead of rewriting your application, it computes the exact delta between v1.0 and v1.1 and outputs ONLY additive strict-ULID migrations (zero DROP TABLE), graph.json diffs, Gemini tool deltas, and Zero-Regression tests. Plus, via the Live MCP Server Bridge (neriahpro-mcp .mcp.json), Claude Code, Cursor, and Antigravity IDE read your blueprint directly and mark phases Verified ✅ in real time.'
+        : 'Project OS v4.0 dilengkapi Iterative Change Request & Surgical Delta Generator (v1.0 -> v1.1). Alih-alih menulis ulang aplikasi dan berisiko merusak tabel yang sudah live, sistem menghitung selisih presisi dan HANYA menghasilkan migrasi ULID aditif (tanpa DROP TABLE), pembaruan graph.json, serta tes regresi otomatis. Ditambah lagi, melalui Live MCP Server Bridge (neriahpro-mcp .mcp.json), Claude Code, Cursor, dan Antigravity IDE terhubung langsung dua arah tanpa copy-paste manual.'
+    },
+    {
+      q: isEn ? 'How do the 3-Pane Architect Studio, Deterministic Decision Matrix match(), and Phase 7 Red-Team Suite prevent AI code slop?' : 'Bagaimana 3-Pane Architect Studio, Deterministic Decision Matrix match(), dan Fase 7 Red-Team mencegah kode AI Slop?',
+      a: isEn
+        ? 'Inside /blueprint/studio, complex multi-condition pricing/discount/penalty rules are modeled in a Spreadsheet Decision Matrix and compiled into deterministic PHP 8.4+ match() expressions with DECIMAL(19,4) HALF_UP rounding—eliminating spaghetti nested if-else blocks. Phase 7 automatically generates TenantIsolationSecurityTest.php to test cross-tenant IDOR (404), Livewire #[Locked] tampering, Private Disk unsigned URL leaks (403), and AI Copilot Prompt Injection before deployment.'
+        : 'Di dalam /blueprint/studio, aturan bisnis kompleks (diskon grosir bertingkat, denda keterlambatan, klaim split-bill) disusun dalam Spreadsheet Decision Matrix dan dikompilasi menjadi ekspresi PHP 8.4+ match() deterministik berpresisi DECIMAL(19,4) — membunuh tuntas kode spaghetti if-else bersarang. Fase 7 secara otomatis membangkitkan TenantIsolationSecurityTest.php untuk menguji kebocoran IDOR lintas-tenant (404), manipulasi Livewire #[Locked], kebocoran file Private Disk (403), dan serangan Prompt Injection sebelum rilis.'
     }
   ];
 
@@ -932,21 +945,21 @@ export default function ArchitecturePricingIsland({
                     id: 'sectoral',
                     num: '03',
                     title: isEn ? '12-Sector UI & Killer OS' : '12 Sektor UI & Killer OS',
-                    sub: 'ANTI-SLOP V2.5',
+                    sub: 'ANTI-SLOP V4.0',
                     icon: Terminal,
                   },
                   {
                     id: 'matrix',
                     num: '04',
                     title: isEn ? 'Comparison Matrix' : 'Matriks Perbandingan',
-                    sub: isEn ? '10 PILLARS + V2.5' : '10 PILAR + V2.5',
+                    sub: isEn ? '10 PILLARS + V4.0' : '10 PILAR + V4.0',
                     icon: Layers,
                   },
                   {
                     id: 'faq',
                     num: '05',
                     title: isEn ? 'Project OS FAQ' : 'FAQ Project OS',
-                    sub: isEn ? '21 FAQS' : '21 FAQ',
+                    sub: `${faqs.length} ${isEn ? 'FAQS' : 'FAQ'}`,
                     icon: HelpCircle,
                   }
                 ].map((tab) => {
@@ -2024,6 +2037,171 @@ export default function ArchitecturePricingIsland({
                       ))}
                     </div>
                   </div>
+
+                  {/* Section E: Screen 4 — Side-by-Side Anti-Slop Diff Previewer + 5 Day-30 to Day-365 Lifecycle Engines */}
+                  <div className="border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-none shadow-xs space-y-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                      <div>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase mb-2">
+                          <Code2 className="w-3 h-3" />
+                          <span>{isEn ? 'SCREEN 4 • SIDE-BY-SIDE ANTI-SLOP DIFF & DAY-30+ LIFECYCLE V4.0' : 'BUKTI ARSITEKTUR • PERBANDINGAN NYATA KODE AI SLOP VS PROJECT OS V4.0'}</span>
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-black uppercase text-zinc-950 dark:text-white font-mono">
+                          {isEn ? 'Raw AI Prompt Slop vs NeriahPro Deterministic Engineering' : 'Tanpa NeriahPro (Raw AI Prompt) vs Dengan Project OS v4.0'}
+                        </h3>
+                      </div>
+                      <a
+                        href="/blueprint/studio"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-xs font-black uppercase border border-emerald-500 rounded-none transition shrink-0"
+                      >
+                        <Terminal className="w-4 h-4" />
+                        <span>{isEn ? 'OPEN 3-PANE ARCHITECT STUDIO' : 'BUKA 3-PANE ARCHITECT STUDIO'}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+
+                    {(() => {
+                      const SLOP_DIFFS = [
+                        {
+                          label: isEn ? '1. Stock & Financial Concurrency' : '1. Stok & Saldo Keuangan Paralel',
+                          rawTitle: isEn ? '❌ WITHOUT NERIAHPRO: Race Condition & Float Drift' : '❌ TANPA NERIAHPRO: Stok Minus & Selisih Koma Float',
+                          rawCode: `// Raw AI Slop: AUTO_INCREMENT + float + static UPDATE (oversells!)
+$table->id();
+$table->float('price');
+$product = Product::find($request->id);
+if ($product->stock >= $qty) {
+    $product->update(['stock' => $product->stock - $qty]);
+}`,
+                          posTitle: isEn ? '✅ WITH PROJECT OS V4.0: ULID + FOR UPDATE + DECIMAL(19,4)' : '✅ DENGAN PROJECT OS V4.0: ULID + Kunci Atomik + DECIMAL(19,4)',
+                          posCode: `// Deterministic Contract: 26-char ULID + Pessimistic Lock + Movement Ledger
+$table->ulid('id')->primary();
+$table->decimal('unit_price_snapshot', 19, 4);
+DB::transaction(function () use ($skuUlid, $qty, $orgId) {
+    $stock = StockBalance::where('organization_id', $orgId)
+        ->where('id', $skuUlid)->lockForUpdate()->firstOrFail();
+    InventoryMovement::appendLockedDelta($stock, -$qty);
+});`
+                        },
+                        {
+                          label: isEn ? '2. Complex Discount & Penalty Rules' : '2. Aturan Diskon Bertingkat & Denda',
+                          rawTitle: isEn ? '❌ WITHOUT NERIAHPRO: Nested If-Else Spaghetti' : '❌ TANPA NERIAHPRO: Spaghetti If-Else Bersarang',
+                          rawCode: `// Unmaintainable AI Slop: magic strings & ambiguous precedence
+if ($tier == 'vip') {
+    if ($qty > 100) {
+        if ($coupon != '') { $disc = $total * 0.25; }
+    }
+} else if ($tier == 'reseller') { /* ... 80 lines ... */ }`,
+                          posTitle: isEn ? '✅ WITH PROJECT OS V4.0: Spreadsheet Decision Matrix -> match()' : '✅ DENGAN PROJECT OS V4.0: Tabel Keputusan -> PHP 8.4+ match()',
+                          posCode: `// Compiled from Studio Decision Matrix (Zero Nested If-Else Slop)
+return match (true) {
+    $ctx->tier === 'DISTRIBUTOR_VIP' && $ctx->qty >= 100
+        => MoneyDecimal::roundHalfUp($ctx->base * '0.8200', 4),
+    $ctx->tier === 'RESELLER' && $ctx->qty >= 24
+        => MoneyDecimal::roundHalfUp($ctx->base * '0.9000', 4),
+    default => $ctx->base,
+};`
+                        },
+                        {
+                          label: isEn ? '3. Day-30 Evolution & IDE Sync' : '3. Evolusi Fitur v1.1 & Sinkronisasi IDE',
+                          rawTitle: isEn ? '❌ WITHOUT NERIAHPRO: Destructive Rewrite & Stale Docs' : '❌ TANPA NERIAHPRO: Tabel Lama Tertimpa & Copy-Paste Manual',
+                          rawCode: `# Developer re-prompts AI 2 months later:
+"Add loyalty points to checkout"
+# Result: AI runs migrate:fresh, drops v1.0 columns,
+# forgets organization_id tenant isolation, breaks checkout.`,
+                          posTitle: isEn ? '✅ WITH PROJECT OS V4.0: Surgical Delta v1.1 + Live MCP Bridge' : '✅ DENGAN PROJECT OS V4.0: Delta Aditif v1.1 + Live MCP Server',
+                          posCode: `# Connected via .mcp.json (Claude Code / Cursor / Antigravity):
+> neriahpro_create_delta_cr("Add Loyalty Points Ledger")
+# Output: Additive-only ULID migration (v1.0 -> v1.1),
+# graph.json diff, TenantIsolationSecurityTest, Verified ✅`
+                        }
+                      ];
+                      const activeDiff = SLOP_DIFFS[activeSlopDiffIdx] || SLOP_DIFFS[0];
+
+                      return (
+                        <div className="space-y-4">
+                          <div className="flex flex-wrap gap-2 font-mono text-xs">
+                            {SLOP_DIFFS.map((item, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => setActiveSlopDiffIdx(idx)}
+                                className={`px-3 py-1.5 border rounded-none cursor-pointer transition ${
+                                  activeSlopDiffIdx === idx
+                                    ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black'
+                                    : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold'
+                                }`}
+                              >
+                                {item.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div className="border border-red-400 dark:border-red-900/80 bg-red-50/50 dark:bg-zinc-950 p-4 space-y-2">
+                              <div className="font-mono text-xs font-black text-red-950 dark:text-red-300">
+                                {activeDiff.rawTitle}
+                              </div>
+                              <pre className="p-3 bg-zinc-950 text-red-300 border border-zinc-800 font-mono text-[11px] leading-relaxed overflow-x-auto whitespace-pre-wrap">
+                                {activeDiff.rawCode}
+                              </pre>
+                            </div>
+                            <div className="border border-emerald-500 dark:border-emerald-700 bg-emerald-50/50 dark:bg-zinc-950 p-4 space-y-2">
+                              <div className="font-mono text-xs font-black text-emerald-950 dark:text-emerald-300">
+                                {activeDiff.posTitle}
+                              </div>
+                              <pre className="p-3 bg-zinc-950 text-emerald-300 border border-zinc-800 font-mono text-[11px] leading-relaxed overflow-x-auto whitespace-pre-wrap">
+                                {activeDiff.posCode}
+                              </pre>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* 5 Day-30 to Day-365 Lifecycle Retention Engines */}
+                    <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                      <div className="font-mono text-xs font-black uppercase text-zinc-950 dark:text-zinc-100 mb-3">
+                        {isEn ? '5 DAY-30 TO DAY-365 LIFECYCLE RETENTION ENGINES (INCLUDED IN V4.0)' : '5 MESIN SIKLUS HIDUP HARI KE-30 S/D HARI KE-365 (TERMASUK DI V4.0)'}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+                        {[
+                          {
+                            tag: 'DELTA v1.0 → v1.1',
+                            title: isEn ? 'Surgical Delta CR Generator' : 'Generator Delta Fitur v1.1',
+                            desc: isEn ? 'Additive-only ULID migrations, graph.json diff & regression suite without touching live tables.' : 'Migrasi ULID murni aditif, selisih graph.json & tes regresi tanpa merusak tabel produksi.'
+                          },
+                          {
+                            tag: 'NERIAHPRO-MCP',
+                            title: isEn ? 'Live MCP Server Bridge' : 'Jembatan MCP IDE Langsung',
+                            desc: isEn ? 'JSON-RPC 2.0 .mcp.json sync for Claude Code, Cursor & Antigravity IDE with live Verified ✅.' : 'Koneksi langsung .mcp.json ke Claude Code, Cursor & Antigravity IDE dengan status Verified ✅ otomatis.'
+                          },
+                          {
+                            tag: 'MATCH() MATRIX',
+                            title: isEn ? 'Decision Table Compiler' : 'Tabel Keputusan match()',
+                            desc: isEn ? 'Spreadsheet truth-tables compiled into PHP 8.4+ match() with DECIMAL(19,4) precision.' : 'Tabel kebenaran diskon/komisi/denda dikompilasi ke PHP 8.4+ match() tanpa if-else bersarang.'
+                          },
+                          {
+                            tag: 'PHASE 07 RED-TEAM',
+                            title: isEn ? 'Tenant-Leakage Security Suite' : 'Uji Penetrasi Otomatis Fase 7',
+                            desc: isEn ? 'Automated tests for cross-tenant IDOR (404), Livewire #[Locked] tamper & Prompt Injection.' : 'Pengujian otomatis kebocoran lintas-tenant IDOR (404), Livewire #[Locked] & Prompt Injection.'
+                          },
+                          {
+                            tag: 'POS:CHECK-ENV',
+                            title: isEn ? '.env.blueprint Secret Vault' : 'Brankas .env.blueprint',
+                            desc: isEn ? 'Pre-flight Artisan env validator per sector & payment/WA gateway before Coolify deploy.' : 'Validasi otomatis variabel environment gateway pembayaran/WA sebelum deploy ke VPS/Coolify.'
+                          }
+                        ].map((lf, idx) => (
+                          <div key={idx} className="p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 dark:hover:border-emerald-600 transition">
+                            <span className="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black mb-2">
+                              {lf.tag}
+                            </span>
+                            <div className="text-xs font-black text-zinc-950 dark:text-white mb-1">{lf.title}</div>
+                            <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">{lf.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
               );
             })()}
@@ -2635,10 +2813,10 @@ export default function ArchitecturePricingIsland({
                         </td>
                       </tr>
 
-                      {/* 13. 6 KILLER ORCHESTRATION ENGINES */}
+                      {/* 13. 7 KILLER ORCHESTRATION ENGINES */}
                       <tr>
                         <td className="py-3 px-3 font-bold text-zinc-900 dark:text-zinc-100">
-                          {isEn ? 'Phased Prompts (1–6), Brownfield SQL Audit & CLI /init/{ULID}' : '6 Fase Prompt Anti-Overflow, Impor SQL Lama & CLI /init/{ULID}'}
+                          {isEn ? 'Phased Prompts (1–7 + Red-Team), Brownfield SQL Audit & CLI /init/{ULID}' : '7 Fase Prompt (+Fase 7 Red-Team), Impor SQL Lama & CLI /init/{ULID}'}
                         </td>
                         <td className="py-3 px-3 text-emerald-800 dark:text-emerald-300 font-bold bg-cyan-500/5">
                           <span className="inline-flex items-center gap-1">
@@ -2660,7 +2838,32 @@ export default function ArchitecturePricingIsland({
                         </td>
                       </tr>
 
-                      {/* 14. HAK MILIK SOURCE CODE */}
+                      {/* 14. DAY-30 TO DAY-365 LIFECYCLE, MCP BRIDGE & 3-PANE STUDIO */}
+                      <tr>
+                        <td className="py-3 px-3 font-bold text-zinc-900 dark:text-zinc-100">
+                          {isEn ? 'Day-30+ Delta CR (v1.0 → v1.1), Live MCP Bridge (.mcp.json) & Decision Matrix match()' : 'Evolusi Delta v1.1, Live MCP IDE (.mcp.json), Decision Matrix match() & pos:check-env'}
+                        </td>
+                        <td className="py-3 px-3 text-emerald-800 dark:text-emerald-300 font-bold bg-cyan-500/5">
+                          <span className="inline-flex items-center gap-1">
+                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>{isEn ? '3-Pane Studio + Unlimited Delta Sync' : '3-Pane Studio + Sinkronisasi MCP'}</span>
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
+                          {isEn ? 'Includes .env.blueprint & Red-Team Spec' : 'Termasuk .env.blueprint & Red-Team'}
+                        </td>
+                        <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
+                          <span className="inline-flex items-center gap-1">
+                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>{isEn ? 'Full Lifecycle Retainer & MCP Verified' : 'Garansi Siklus Hidup & Terverifikasi MCP'}</span>
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
+                          {isEn ? 'Studio Preview + .env.blueprint' : 'Akses 3-Pane Studio + .env.blueprint'}
+                        </td>
+                      </tr>
+
+                      {/* 15. HAK MILIK SOURCE CODE */}
                       <tr>
                         <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
                           {isEn ? 'Document & Code Ownership' : 'Hak Milik Dokumen / Kode'}

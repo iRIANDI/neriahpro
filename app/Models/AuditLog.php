@@ -155,6 +155,18 @@ class AuditLog extends Model
     {
         $haystack = strtolower($action . ' ' . ($modelClass ?? '') . ' ' . ($description ?? ''));
 
+        if (str_contains($haystack, 'delta_cr') || str_contains($haystack, 'poschangerequest') || str_contains($haystack, 'delta_evolution') || str_contains($haystack, 'delta_change')) {
+            return 'delta_evolution';
+        }
+        if (str_contains($haystack, 'mcp_') || str_contains($haystack, 'mcp_bridge') || str_contains($haystack, 'neriahpro-mcp')) {
+            return 'mcp_bridge';
+        }
+        if (str_contains($haystack, 'redteam') || str_contains($haystack, 'red_team') || str_contains($haystack, 'tenant_isolation')) {
+            return 'redteam_security';
+        }
+        if (str_contains($haystack, 'pos:check-env') || str_contains($haystack, 'env_vault') || str_contains($haystack, 'env.blueprint')) {
+            return 'env_vault';
+        }
         if (str_contains($haystack, 'blueprint_doctor') || str_contains($haystack, 'doctor_diagnos')) {
             return 'blueprint_doctor';
         }

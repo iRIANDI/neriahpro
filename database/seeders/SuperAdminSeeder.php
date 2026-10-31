@@ -40,6 +40,10 @@ class SuperAdminSeeder extends Seeder
         $blueprintDoctorPerm = Permission::firstOrCreate(['name' => 'run_blueprint_doctor', 'guard_name' => 'web']);
         $manageDay2OpsPerm = Permission::firstOrCreate(['name' => 'manage_day2_ops_contracts', 'guard_name' => 'web']);
         $exportPrintOpsPerm = Permission::firstOrCreate(['name' => 'export_print_and_ops_specs', 'guard_name' => 'web']);
+        $manageChangeRequestsPerm = Permission::firstOrCreate(['name' => 'manage_blueprint_change_requests', 'guard_name' => 'web']);
+        $connectMcpBridgePerm = Permission::firstOrCreate(['name' => 'connect_mcp_bridge', 'guard_name' => 'web']);
+        $runRedteamPerm = Permission::firstOrCreate(['name' => 'run_redteam_security_suite', 'guard_name' => 'web']);
+        $validateEnvPerm = Permission::firstOrCreate(['name' => 'validate_env_vault', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
@@ -58,6 +62,10 @@ class SuperAdminSeeder extends Seeder
             $blueprintDoctorPerm,
             $manageDay2OpsPerm,
             $exportPrintOpsPerm,
+            $manageChangeRequestsPerm,
+            $connectMcpBridgePerm,
+            $runRedteamPerm,
+            $validateEnvPerm,
         ]);
 
         $developerRole->givePermissionTo([
@@ -71,6 +79,10 @@ class SuperAdminSeeder extends Seeder
             $blueprintDoctorPerm,
             $manageDay2OpsPerm,
             $exportPrintOpsPerm,
+            $manageChangeRequestsPerm,
+            $connectMcpBridgePerm,
+            $runRedteamPerm,
+            $validateEnvPerm,
         ]);
 
         // Grant Due Diligence Read-Only permissions to Investor & Superadmin
@@ -80,11 +92,29 @@ class SuperAdminSeeder extends Seeder
             $aiCopilotPerm,
             $auditLogPerm,
             $blueprintDoctorPerm,
+            $runRedteamPerm,
+            $validateEnvPerm,
         ]);
 
-        // Retail & Partner Clients can export CLI bootstrapper, print/ops specs & run Blueprint Doctor for their own licensed blueprints
-        $clientRetailRole->givePermissionTo([$cliBootstrapPerm, $blueprintDoctorPerm, $exportPrintOpsPerm]);
-        $clientPartnerRole->givePermissionTo([$cliBootstrapPerm, $brownfieldImportPerm, $blueprintDoctorPerm, $exportPrintOpsPerm]);
+        // Retail & Partner Clients can export CLI bootstrapper, print/ops specs, connect MCP bridge, & manage iterative Delta CRs for their own licensed blueprints
+        $clientRetailRole->givePermissionTo([
+            $cliBootstrapPerm,
+            $blueprintDoctorPerm,
+            $exportPrintOpsPerm,
+            $manageChangeRequestsPerm,
+            $connectMcpBridgePerm,
+            $validateEnvPerm,
+        ]);
+        $clientPartnerRole->givePermissionTo([
+            $cliBootstrapPerm,
+            $brownfieldImportPerm,
+            $blueprintDoctorPerm,
+            $exportPrintOpsPerm,
+            $manageChangeRequestsPerm,
+            $connectMcpBridgePerm,
+            $runRedteamPerm,
+            $validateEnvPerm,
+        ]);
 
         // 1. Primary Superadmin (Founder & Chief Architect - Yoseph Iriandi Tambunan)
         $admin = User::updateOrCreate(

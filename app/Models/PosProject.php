@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 
 class PosProject extends Model
 {
@@ -23,6 +25,7 @@ class PosProject extends Model
         'tenancy_model',
         'tenant_identifier',
         'stack_preset',
+        'current_version',
         'selected_primitive_ids',
         'selected_rule_pack_ids',
         'custom_entities',
@@ -32,6 +35,12 @@ class PosProject extends Model
         'compiled_graph_json',
         'phased_prompts_json',
         'doctor_diagnostics_json',
+        'mcp_token_hash',
+        'mcp_token_prefix',
+        'decision_tables_json',
+        'phase_progress_json',
+        'drift_verification_json',
+        'last_mcp_synced_at',
     ];
 
     protected function casts(): array
@@ -42,6 +51,10 @@ class PosProject extends Model
             'custom_entities' => 'array',
             'phased_prompts_json' => 'array',
             'doctor_diagnostics_json' => 'array',
+            'decision_tables_json' => 'array',
+            'phase_progress_json' => 'array',
+            'drift_verification_json' => 'array',
+            'last_mcp_synced_at' => 'datetime',
         ];
     }
 
@@ -63,6 +76,57 @@ class PosProject extends Model
     public function stackPreset(): BelongsTo
     {
         return $this->belongsTo(PosStackPreset::class, 'stack_preset_id');
+    }
+
+    public function changeRequests(): HasMany
+    {
+        return $this->hasMany(PosChangeRequest::class, 'pos_project_id')->orderByDesc('id');
+    }
+
+    /**
+     * Issue or deterministically derive an MCP token for IDE bridges (Cursor, Claude Code, Antigravity)
+     * while storing ONLY its SHA-256 hash in the database.
+     */
+    public function issueMcpToken(bool $rotate = false): string
+    {
+        $seed = $rotate
+            ? bin2hex(random_bytes(16))
+            : hash_hmac('sha256', 'neriahpro-mcp-v4:' . $this->id, (string) config('app.key', 'neriahpro-pos-v4'));
+
+        $plainToken = 'npro_mcp_' . substr($seed, 0, 32);
+        $hash = hash('sha256', $plainToken);
+        $prefix = substr($plainToken, 0, 14);
+
+        if ($this->exists && Schema::hasColumn('pos_projects', 'mcp_token_hash')) {
+            if ($rotate || empty($this->mcp_token_hash)) {
+                $this->forceFill([
+                    'mcp_token_hash' => $hash,
+                    'mcp_token_prefix' => $prefix,
+                ])->saveQuietly();
+            }
+        }
+
+        return $plainToken;
+    }
+
+    public function verifyMcpToken(string $candidateToken): bool
+    {
+        $clean = trim($candidateToken);
+        if ($clean === '') {
+            return false;
+        }
+
+        if (! empty($this->mcp_token_hash)) {
+            return hash_equals((string) $this->mcp_token_hash, hash('sha256', $clean));
+        }
+
+        $deterministic = 'npro_mcp_' . substr(
+            hash_hmac('sha256', 'neriahpro-mcp-v4:' . $this->id, (string) config('app.key', 'neriahpro-pos-v4')),
+            0,
+            32
+        );
+
+        return hash_equals($deterministic, $clean);
     }
 }
 

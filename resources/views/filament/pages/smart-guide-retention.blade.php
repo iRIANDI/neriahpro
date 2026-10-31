@@ -312,6 +312,9 @@
             <a href="#sec-day2-ultimate" @click.prevent="scrollTo('sec-day2-ultimate')" :class="activeSection === 'sec-day2-ultimate' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 10. <span x-text="t[lang].nav_day2_ops"></span>
             </a>
+            <a href="#sec-lifecycle-studio" @click.prevent="scrollTo('sec-lifecycle-studio')" :class="activeSection === 'sec-lifecycle-studio' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                11. <span x-text="t[lang].nav_lifecycle_studio"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -1148,6 +1151,73 @@
         </div>
     </div>
 
+    <!-- 11. Section Project OS v4.0 — Day-30 to Day-365 Lifecycle Retention Engines & 3-Pane Architect Studio -->
+    <div id="sec-lifecycle-studio" class="sg-card" x-show="matchesSearch('day-30 day-365 delta change request v1.0 v1.1 mcp server bridge neriahpro-mcp decision matrix match phase 7 redteam security tenant isolation env.blueprint pos:check-env 3-pane architect studio 60s wizard slop diff v4.0')">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #059669; text-transform: uppercase; font-weight: 800;">
+                    11 // DAY-30 TO DAY-365 RETENTION LIFECYCLE &amp; THE 3-PANE ARCHITECT STUDIO (v4.0)
+                </span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec11_title"></h3>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <a href="{{ url('/blueprint/studio') }}" target="_blank" style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; padding: 6px 12px; background: #059669; color: #ffffff; border: 1px solid #047857; border-radius: 2px; text-decoration: none;">
+                    🖥️ LAUNCH 3-PANE ARCHITECT STUDIO &rarr;
+                </a>
+                <span class="sg-badge-confidential">LIFECYCLE MOAT v4.0</span>
+            </div>
+        </div>
+
+        <p style="font-size: 13px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;" x-text="t[lang].sec11_desc"></p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-bottom: 18px;">
+            @foreach(($fiveLifecycleFeatures ?? []) as $lf)
+                <div class="sg-subcard" style="border-left: 3px solid #059669;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <strong style="font-size: 12px; color: var(--sg-text-title);">{{ $lf['title']['id'] ?? $lf['code'] }}</strong>
+                        <span style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; padding: 2px 6px; background: rgba(16, 185, 129, 0.14); color: #059669; border: 1px solid rgba(16, 185, 129, 0.4);">
+                            {{ $lf['badge'] ?? 'DAY-30+' }}
+                        </span>
+                    </div>
+                    <div style="font-family: ui-monospace, monospace; font-size: 10px; color: #0284c7; font-weight: 700; margin-bottom: 6px;">
+                        Artefak: {{ $lf['artifact'] ?? '-' }}
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--sg-text-muted); line-height: 1.55;">
+                        {{ $lf['summary']['id'] ?? '' }}
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div style="padding: 14px; background: var(--sg-subcard-bg); border: 1px solid var(--sg-border); border-radius: 3px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #059669; text-transform: uppercase; margin-bottom: 10px;">
+                5 LAYAR UTAMA "THE ARCHITECT STUDIO" (/BLUEPRINT/STUDIO) — ZERO-SLOP MONOCHROME IDE
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; font-size: 11px;">
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="font-family: ui-monospace, monospace; color: #059669;">Layar 1 // 60s Architecture Wizard</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 3px;">3-Step Split-Screen: 12 Sektor + 9 Stack (M1–S2 Coolify RAM/CPU sizing) + Anti-Slop Toggles.</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="font-family: ui-monospace, monospace; color: #059669;">Layar 2 // 3-Pane Blueprint Studio</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 3px;">100vh Zero-Scroll: Explorer Tree (3) + Visual Canvas (5) + 7-Phase Prompt Dock Ctrl+Shift+C (4) + 64% Token Saved.</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="font-family: ui-monospace, monospace; color: #059669;">Layar 3 // Blueprint Doctor Score</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 3px;">Skor Determinisme tabular-nums 100.0% Zero-Assumption Ready + tombol [+ Buat Otomatis] resolusi instan.</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="font-family: ui-monospace, monospace; color: #059669;">Layar 4 // Side-by-Side Slop Diff</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 3px;">Bukti visual konversi tinggi: Raw AI Prompt Slop vs NeriahPro Project OS v4.0 Deterministic Contract.</div>
+                </div>
+                <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid var(--sg-border);">
+                    <strong style="font-family: ui-monospace, monospace; color: #059669;">Layar 5 // Execution &amp; MCP Tracker</strong>
+                    <div style="color: var(--sg-text-muted); margin-top: 3px;">4 Badge 100% Pass + Sinkronisasi Fase 1–7 Verified hijau otomatis dari Claude Code/Cursor/Antigravity via MCP!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1170,6 +1240,7 @@ function smartGuideApp() {
                 nav_sectoral_ui: '12 Sektor UI/UX',
                 nav_killer_moat: '6 Killer Moat',
                 nav_day2_ops: '8 Layer Day-2 Ops',
+                nav_lifecycle_studio: 'Day-30+ & 3-Pane Studio',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -1266,7 +1337,9 @@ function smartGuideApp() {
                 sec6_q8: 'Q: "Bagaimana jika kasir butuh cetak struk thermal 58/80mm, impor ribuan SKU Excel tanpa timeout, dan harga berubah tahun depan?"',
                 sec6_a8: '"Project OS v3.0 sudah mengunci 8 Layer Day-2 Operations Kak! Meliputi CSS & ESC/POS Thermal 58/80mm + A4 PDF ber-QR SVG lokal, kolom Historical Snapshot (*_snapshot) agar kenaikan harga/PPN tidak pernah merusak laporan historis, Two-Step Staged CSV Importer anti-504 timeout, 4 jalur antrean Redis prioritas, serta Interactive Blueprint Doctor Pre-Flight Validator!"',
                 sec10_title: '8 Lapisan Produksi Day-2 (Operasional Hari Kedua) & 10 Pilar Kesempurnaan Ultimate',
-                sec10_desc: 'Menutup 100% celah operasional dunia nyata setelah Go-Live: dari cetak struk kasir thermal 58/80mm, onboarding tenant otomatis bebas layar kosong, pembekuan harga historis (*_snapshot), impor massal CSV bertahap, pemisahan 4 antrean Redis, hingga Blueprint Doctor.'
+                sec10_desc: 'Menutup 100% celah operasional dunia nyata setelah Go-Live: dari cetak struk kasir thermal 58/80mm, onboarding tenant otomatis bebas layar kosong, pembekuan harga historis (*_snapshot), impor massal CSV bertahap, pemisahan 4 antrean Redis, hingga Blueprint Doctor.',
+                sec11_title: '5 Mesin Retensi Siklus Hidup Day-30 s/d Day-365 & The 3-Pane Architect Studio',
+                sec11_desc: 'Mengubah Neriah Pro dari generator blueprint satu kali menjadi Control Plane seumur hidup: evolusi iteratif v1.0 ke v1.1 (sumber pendapatan kredit berulang!), jembatan Live MCP langsung ke IDE developer, Decision Matrix PHP match(), Phase 7 Red-Team Tenant Shield, serta meja kerja 3-Pane Studio 100vh.'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -1279,6 +1352,7 @@ function smartGuideApp() {
                 nav_sectoral_ui: '12 Sector UI/UX',
                 nav_killer_moat: '6 Killer Moat',
                 nav_day2_ops: '8 Day-2 Ops Layers',
+                nav_lifecycle_studio: 'Day-30+ & 3-Pane Studio',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -1375,7 +1449,9 @@ function smartGuideApp() {
                 sec6_q8: 'Q: "What about 58/80mm thermal receipts, importing 5,000+ Excel SKUs without 504 timeouts, and historical price immutability?"',
                 sec6_a8: '"Project OS v3.0 bakes in all 8 Day-2 Production Layers: ESC/POS 58/80mm thermal + page-break proof A4 PDFs with local SVG QR codes, frozen *_snapshot columns on every transaction line, Two-Step Staged CSV Importer on queue:low-batch, 4 segregated Redis queue lanes, and the Interactive Blueprint Doctor!"',
                 sec10_title: 'The Final 8 Day-2 Production Layers & 10 Ultimate Perfection Pillars',
-                sec10_desc: 'Eliminates 100% of Day-2 post-launch blind spots: thermal 58/80mm & A4 print contracts, atomic tenant zero-state provisioning, historical *_snapshot immutability, staged bulk CSV migration, 4-lane Redis queues, private disk Signed URLs, and Blueprint Doctor.'
+                sec10_desc: 'Eliminates 100% of Day-2 post-launch blind spots: thermal 58/80mm & A4 print contracts, atomic tenant zero-state provisioning, historical *_snapshot immutability, staged bulk CSV migration, 4-lane Redis queues, private disk Signed URLs, and Blueprint Doctor.',
+                sec11_title: '5 Day-30 to Day-365 Lifecycle Retention Engines & The 3-Pane Architect Studio',
+                sec11_desc: 'Transforms Neriah Pro from a one-off blueprint generator into a permanent engineering Control Plane: iterative v1.0 -> v1.1 Delta Prompts (recurring credit monetization), Live MCP IDE Bridge, PHP match() Decision Tables, Phase 7 Red-Team Suite, and the 100vh 3-Pane Architect Studio.'
             }
         },
 
@@ -1403,7 +1479,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

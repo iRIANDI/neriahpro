@@ -637,6 +637,16 @@
                                                 class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
                                             🩺 Jalankan Blueprint Doctor
                                         </button>
+                                        <button type="button"
+                                                wire:click="sendSuggestedPrompt('Kompilasi Decision Matrix match() anti-if-else untuk SECTOR_01_COMMERCE_OMNICHANNEL')"
+                                                class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
+                                            📐 Decision Matrix match()
+                                        </button>
+                                        <button type="button"
+                                                wire:click="sendSuggestedPrompt('Audit kesiapan .env.blueprint dan Red-Team Security Suite Fase 7 saat ini')"
+                                                class="text-[10px] font-mono px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 rounded-xs transition-colors cursor-pointer">
+                                            🔐 Audit .env &amp; Red-Team P7
+                                        </button>
                                     </div>
                                 </div>
                             @endif

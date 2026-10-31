@@ -97,9 +97,10 @@ class ProjectOsSectoralUiAndKillerFeaturesTest extends TestCase
 
         $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
         $this->assertSame('CLINICAL_3_PANE_COCKPIT', $schema['sectoral_ui_ux_archetype']['primary_archetype']);
-        $this->assertCount(6, $schema['phased_prompt_sequencer']);
+        $this->assertCount(7, $schema['phased_prompt_sequencer']);
         $this->assertSame('01-foundation.md', $schema['phased_prompt_sequencer'][0]['filename']);
         $this->assertSame('06-deployment.md', $schema['phased_prompt_sequencer'][5]['filename']);
+        $this->assertSame('07-security-redteam.md', $schema['phased_prompt_sequencer'][6]['filename']);
 
         // Preview Scaffold files
         $previewFiles = ScaffoldGeneratorService::generateFiles($blueprint);
@@ -216,11 +217,11 @@ SQL;
             );
         }
 
-        // Verify 18 valid Gemini & OpenAI Tool Declarations (Project OS v3.0)
+        // Verify 21 valid Gemini & OpenAI Tool Declarations (Project OS v4.0)
         $geminiTools = GeminiToolRegistry::getDeclarations();
         $openAiTools = GeminiToolRegistry::getOpenAiTools();
-        $this->assertCount(18, $geminiTools);
-        $this->assertCount(18, $openAiTools);
+        $this->assertCount(21, $geminiTools);
+        $this->assertCount(21, $openAiTools);
 
         $engine = app(AgenticActionExecutionEngine::class);
 
@@ -259,7 +260,7 @@ SQL;
         $phased = $engine->execute('generate_phased_prompts', [
             'blueprint_id' => $created['blueprint_id'],
         ]);
-        $this->assertSame(6, $phased['total_phases']);
+        $this->assertSame(7, $phased['total_phases']);
 
         $slopCheck = $engine->execute('run_blueprint_slop_scanner', [
             'blueprint_id' => $created['blueprint_id'],

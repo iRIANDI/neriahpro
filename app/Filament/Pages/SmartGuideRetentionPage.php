@@ -68,6 +68,8 @@ class SmartGuideRetentionPage extends Page
             'killerFeatures' => \App\Support\PosSectorUiArchetypeCatalog::killerFeaturesSummary(),
             'finalEightLayers' => \App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary(),
             'tenPerfectionPillars' => \App\Support\PosDayTwoProductionCatalog::tenPerfectionPillars(),
+            'fiveLifecycleFeatures' => \App\Support\PosLifecycleAndStudioCatalog::fiveLifecycleFeatures(),
+            'slopDiffPairs' => \App\Support\PosLifecycleAndStudioCatalog::slopDiffPairs(),
             'stackPresetsCount' => count(\App\Support\PosStackPresetCatalog::stackPresets()),
             'nativeToolsCount' => count(\App\Services\Ai\GeminiToolRegistry::getDeclarations()),
         ];

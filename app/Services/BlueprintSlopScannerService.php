@@ -135,7 +135,25 @@ class BlueprintSlopScannerService
                 : 'Sebagian kontrak Day-2 Operations v3.0 belum terkompilasi.',
         ];
         if (! $hasDayTwoLayers) {
-            $violations[] = 'Kompilasi ulang blueprint ke v3.0 untuk menyertakan 8 Layer Day-2 Production.';
+            $violations[] = 'Kompilasi ulang blueprint ke v3.0+ untuk menyertakan 8 Layer Day-2 Production.';
+        }
+
+        // Check 7: Project OS v4.0 Day-30+ Lifecycle (Decision Tables, Phase 7 Red-Team Suite, .env.blueprint & MCP Bridge)
+        $hasLifecycleV4 = ! empty($schema['decision_tables_matrix']['rules'])
+            && ! empty($schema['security_red_team_suite']['vectors'])
+            && ! empty($schema['environment_secret_vault']['variables'])
+            && count($phasedPrompts) >= 7;
+        $checks[] = [
+            'id' => 'SCAN_07_LIFECYCLE_DECISION_REDTEAM_ENV',
+            'code' => 'SCAN_07_LIFECYCLE_DECISION_REDTEAM_ENV',
+            'label' => '5 Fitur Day-30+ Lifecycle (Decision Matrix, Fase 7 Red-Team, .env.blueprint & MCP Bridge)',
+            'passed' => $hasLifecycleV4,
+            'detail' => $hasLifecycleV4
+                ? 'Decision Matrix bebas nested if-else, Fase 7 TenantIsolationSecurityTest, .env.blueprint + pos:check-env, & MCP Bridge aktif.'
+                : 'Kompilasi ulang blueprint ke v4.0 untuk menyertakan Decision Matrix, Fase 7 Red-Team, & Environment Vault.',
+        ];
+        if (! $hasLifecycleV4) {
+            $violations[] = 'Kompilasi ulang blueprint ke v4.0 untuk melengkapi 5 Fitur Day-30+ Lifecycle.';
         }
 
         $passedCount = count(array_filter($checks, fn ($c) => $c['passed']));
@@ -184,6 +202,7 @@ class BlueprintSlopScannerService
             ['pattern' => '/\$table->id\s*\(/', 'rule' => 'DB_AUTO_INCREMENT_ID', 'fix' => 'Ganti `$table->id()` menjadi `$table->ulid(\'id\')->primary()` dan gunakan trait `HasUlids`.'],
             ['pattern' => '/\$table->uuid\s*\(\s*[\'"]id[\'"]\s*\)/', 'rule' => 'PGSQL_UUID_MISMATCH', 'fix' => 'Ganti `$table->uuid(\'id\')` menjadi `$table->ulid(\'id\')->primary()` untuk mencegah SQLSTATE[22P02] di PostgreSQL 16.'],
             ['pattern' => '/(?:->|::)paginate\s*\(/', 'rule' => 'OFFSET_PAGINATION_SLOP', 'fix' => 'Ganti `->paginate()` / `::paginate()` dengan `->orderBy(\'id\', \'desc\')->cursorPaginate()` untuk kompleksitas O(1).'],
+            ['pattern' => '/if\s*\([^)]+\)\s*\{[^{}]*if\s*\([^)]+\)\s*\{[^{}]*if\s*\([^)]+\)\s*\{/s', 'rule' => 'NESTED_IF_ELSE_SPAGHETTI', 'fix' => 'Ganti percabangan `if (...) { if (...) { if (...)` bersarang dengan `DeterministicDecisionMatrix` berbasis PHP 8.4+ `match()` / tabel kebenaran data-driven.'],
         ];
 
         foreach ($rules as $r) {

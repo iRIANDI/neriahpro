@@ -161,8 +161,8 @@ class LlmGatewayService
         $cagLiveContext = $this->buildLiveCagContext($user);
         $kagRuleGraph = $this->buildDeterministicKagRules();
 
-        $systemPrompt = "Anda adalah Lead Enterprise AI Architect & Autonomous Copilot resmi Neriah Pro Software Factory OS v2.5.\n" .
-            "Anda dilengkapi arsitektur Tri-Hybrid AI (RAG pgvector 768-dim RRF, CAG Cache O(1) Live Telemetry, KAG Deterministic Rule Graph) serta 16 Native Tools tervalidasi RBAC & SHA-256 Audit Log.\n\n" .
+        $systemPrompt = "Anda adalah Lead Enterprise AI Architect & Autonomous Copilot resmi Neriah Pro Software Factory OS v4.0 Ultimate.\n" .
+            "Anda dilengkapi arsitektur Tri-Hybrid AI (RAG pgvector 768-dim RRF, CAG Cache O(1) Live Telemetry, KAG Deterministic Rule Graph), Live MCP Server Bridge (neriahpro-mcp), serta 21 Native Tools tervalidasi RBAC & SHA-256 Audit Log.\n\n" .
             $cagLiveContext . "\n" .
             $kagRuleGraph . "\n" .
             $ragPromptContext;
@@ -674,7 +674,7 @@ class LlmGatewayService
      */
     public function buildLiveCagContext(?User $user = null): string
     {
-        $metrics = Cache::remember('ai_copilot:live_cag_telemetry:v30', 30, function () {
+        $metrics = Cache::remember('ai_copilot:live_cag_telemetry:v40', 30, function () {
             try {
                 $stats = $this->actionEngine->execute('get_system_stats', ['scope' => 'all']);
                 return $stats;
@@ -690,11 +690,12 @@ class LlmGatewayService
 
         return "### ⚡ CAG (CACHE-AUGMENTED GENERATION — TELEMETRI LIVE O(1))\n"
             . "- Operator Aktif: " . ($user?->name ?? 'System') . " (Roles: {$roleNames})\n"
-            . "- Total Blueprints Project OS: " . ($metrics['total_blueprints'] ?? 0) . " (Scope Locked: " . ($metrics['scope_locked_projects'] ?? 0) . ")\n"
+            . "- Total Blueprints Project OS: " . ($metrics['total_blueprints'] ?? 0) . " (Scope Locked: " . ($metrics['scope_locked_projects'] ?? 0) . " | Delta Change Requests: " . ($metrics['change_requests_count'] ?? 0) . ")\n"
             . "- Kapasitas Sprint Paralel: " . ($metrics['active_sprints'] ?? 0) . " / " . ($metrics['max_parallel_sprints'] ?? 3) . " Slot Terisi (Sisa Slot: " . ($metrics['available_sprint_slots'] ?? 3) . ")\n"
             . "- Pendapatan Terverifikasi (Settlement): {$revenueFormatted}\n"
             . "- Aset Domain/Hosting Mendekati Jatuh Tempo (<=30 hari): " . ($metrics['expiring_assets_30_days'] ?? 0) . "\n"
-            . "- Matriks Project OS v3.0: " . ($metrics['sectors_count'] ?? 12) . " Sektor UI/UX Industri × " . ($metrics['primitives_count'] ?? 12) . " Modul Primitif × " . ($metrics['stack_presets_count'] ?? 9) . " Stack Adapters (M1–S2) × " . ($metrics['day2_layers_count'] ?? 8) . " Day-2 Ops Layers × " . ($metrics['native_tools_count'] ?? 18) . " Native Tools | Chunks RAG: " . ($metrics['total_knowledge_chunks'] ?? 0) . "\n";
+            . "- Matriks Project OS v4.0 Ultimate: " . ($metrics['sectors_count'] ?? 12) . " Sektor UI/UX × " . ($metrics['primitives_count'] ?? 12) . " Primitif × " . ($metrics['stack_presets_count'] ?? 9) . " Stack Adapters (M1–S2) × " . ($metrics['day_two_layers_count'] ?? 8) . " Day-2 Ops Layers × " . ($metrics['lifecycle_features_count'] ?? 5) . " Day-30+ Lifecycle Engines × " . ($metrics['native_tools_count'] ?? 21) . " Native Tools | Chunks RAG: " . ($metrics['total_knowledge_chunks'] ?? 0) . "\n"
+            . "- Live MCP Server Bridge: `POST /api/mcp/project-os` (`neriahpro-mcp` JSON-RPC 2.0) | 3-Pane Studio IDE: `/blueprint/studio`\n";
     }
 
     /**
@@ -705,7 +706,8 @@ class LlmGatewayService
         return "### 🧭 KAG (KNOWLEDGE-AUGMENTED GRAPH — INVA-ATURAN DETERMINISTIK WAJIB)\n"
             . "1. **Database, Historical Snapshot & Skalabilitas O(1)**: Wajib 26-char ULID (`->ulid('id')->primary()`), `DECIMAL(19,4)` dengan pembulatan `HALF_UP` & Largest-Remainder Penny Allocation (`0.0000` drift), `ON DELETE RESTRICT` (`IMMUTABLE_LEDGER` / `ANONYMIZE_PII` / `SOFT_ARCHIVE`), kolom bekukan historis (`item_name_snapshot`, `unit_price_snapshot`, `tax_rate_snapshot`, `counterparty_snapshot`), dan Keyset Cursor Pagination `O(1)` (`cursorPaginate()`).\n"
             . "2. **12 Sectoral Industrial UI/UX Archetypes & Thermal/A4 Print**: Dilarang menyarankan tabel CRUD standar untuk layar operasional utama! Gunakan ergonomi spesifik industri (`POS_SPLIT_TERMINAL`, `HORIZONTAL_RESOURCE_GANTT`, `CLINICAL_3_PANE_COCKPIT`, dsb.) plus kontrak cetak **Thermal 58mm/80mm ESC/POS** & **Official A4 PDF** (`break-inside: avoid` + inline SVG QR SHA-256 lokal tanpa API QR eksternal).\n"
-            . "3. **Zero UI Slop & Zero Hardcode**: Haram memakai `rounded-full`, gradien warna-warni `bg-gradient-to-*`, dialog native `window.alert()/confirm()`, script CDN eksternal, atau magic string statis.\n"
-            . "4. **6 Killer Engines + 8 Day-2 Production Layers**: Arahkan proyek melewati `run_blueprint_doctor` (Pre-Flight Conflict Resolver), `get_day2_production_contracts` (`InitializeNewTenantAction`, Two-Step Staged CSV Importer `import_staging_*`, 4-Lane Redis Queue `critical|default|ai-rag|low-batch`, Private Disk 5-min Signed URLs, Omnichannel State Notification Matrix), Phased Prompt Sequencer (Fase 1–6), dan 1-Command CLI Bootstrapper (`curl -sL .../init/{ULID} | bash`).\n";
+            . "3. **Zero UI Slop & Zero Nested If-Else**: Haram memakai `rounded-full`, gradien warna-warni `bg-gradient-to-*`, dialog native `window.alert()/confirm()`, script CDN eksternal, magic string statis, atau `if-else` bersarang (>2 level) pada aturan bisnis (wajib menggunakan `DeterministicDecisionMatrix.php` berbasis PHP 8.4+ `match()`).\n"
+            . "4. **6 Killer Engines + 8 Day-2 Production Layers**: Arahkan proyek melewati `run_blueprint_doctor` (Skor Determinisme `100.0%`), `get_day2_production_contracts` (`InitializeNewTenantAction`, Two-Step Staged CSV Importer `import_staging_*`, 4-Lane Redis Queue `critical|default|ai-rag|low-batch`, Private Disk 5-min Signed URLs, Omnichannel Notification Matrix), Phased Prompt Sequencer (Fase 1–7), dan 1-Command CLI Bootstrapper (`curl -sL .../init/{ULID} | bash`).\n"
+            . "5. **5 Day-30+ Lifecycle Retention Engines & 3-Pane Studio (`/blueprint/studio`)**: Gunakan `generate_delta_change_request` untuk evolusi iteratif `v1.0 -> v1.1` tanpa merusak kode produksi, hubungkan IDE klien melalui `.mcp.json` (`neriahpro-mcp`), kompilasi tabel keputusan via `compile_decision_table_matrix`, serta validasi keamanan multi-tenant & kesiapan `.env.blueprint` via `audit_environment_and_redteam_readiness` (`07-security-redteam.md` & `php artisan pos:check-env`).\n";
     }
 }

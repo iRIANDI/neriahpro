@@ -118,10 +118,10 @@ class AuditLogResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => strtoupper($state ?: 'system'))
                     ->color(fn (?string $state): string => match ($state) {
-                        'project_os', 'cli_bootstrap', 'day2_ops' => 'success',
-                        'ai_agent', 'blueprint_doctor' => 'info',
+                        'project_os', 'cli_bootstrap', 'day2_ops', 'delta_evolution' => 'success',
+                        'ai_agent', 'blueprint_doctor', 'mcp_bridge', 'env_vault' => 'info',
                         'brownfield_import', 'slop_audit' => 'warning',
-                        'security', 'rbac' => 'danger',
+                        'security', 'rbac', 'redteam_security' => 'danger',
                         'billing' => 'primary',
                         default => 'gray',
                     }),
@@ -129,9 +129,9 @@ class AuditLogResource extends Resource
                     ->label('Aksi')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'created', 'create', 'cli_bootstrap_pulled' => 'success',
-                        'updated', 'update', 'blueprint_slop_scanned', 'brownfield_schema_audited', 'blueprint_doctor_diagnosed' => 'info',
-                        'deleted', 'force_deleted', 'rbac_tool_denied' => 'danger',
+                        'created', 'create', 'cli_bootstrap_pulled', 'delta_cr_created', 'mcp_phase_verified', 'env_vault_checked' => 'success',
+                        'updated', 'update', 'blueprint_slop_scanned', 'brownfield_schema_audited', 'blueprint_doctor_diagnosed', 'mcp_config_exported', 'mcp_drift_verified' => 'info',
+                        'deleted', 'force_deleted', 'rbac_tool_denied', 'mcp_auth_denied' => 'danger',
                         'login' => 'primary',
                         default => 'gray',
                     })
@@ -167,6 +167,10 @@ class AuditLogResource extends Resource
                     ->label('Kategori Domain')
                     ->options([
                         'project_os' => 'Project OS & Blueprint',
+                        'delta_evolution' => 'Delta Evolution (v1.0 -> v1.1)',
+                        'mcp_bridge' => 'Live MCP Server Bridge (IDE)',
+                        'redteam_security' => 'Phase 7 Red-Team & Tenant Shield',
+                        'env_vault' => 'Environment Vault (.env.blueprint)',
                         'blueprint_doctor' => 'Blueprint Doctor Pre-Flight',
                         'day2_ops' => 'Day-2 Ops, Print & Staged Import',
                         'ai_agent' => 'AI Copilot & Native Tools',
@@ -186,6 +190,10 @@ class AuditLogResource extends Resource
                         'updated' => 'Updated',
                         'deleted' => 'Deleted',
                         'login' => 'Login',
+                        'delta_cr_created' => 'Delta Change Request Created',
+                        'mcp_phase_verified' => 'MCP Phase Verified (Green)',
+                        'mcp_config_exported' => 'MCP .mcp.json Exported',
+                        'env_vault_checked' => 'Environment Vault Checked',
                         'cli_bootstrap_pulled' => 'CLI Bootstrap Pulled',
                         'brownfield_schema_audited' => 'Brownfield Schema Audited',
                         'blueprint_slop_scanned' => 'Blueprint Slop Scanned',

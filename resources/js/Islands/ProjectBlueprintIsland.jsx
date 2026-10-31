@@ -927,17 +927,27 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     phone: initialData.phone || '',
     primarySector: initialData.primarySector || '',
     selectedPrimitives: Array.isArray(initialData.selectedPrimitives) ? initialData.selectedPrimitives : [],
+    stackPreset: initialData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH',
   });
 
-  // 12-Sector & Composable Core Primitives Matrix Catalog
-  const [matrixCatalog, setMatrixCatalog] = useState({ sectors: [], primitives: [], rule_packs: [] });
+  // 12-Sector, 12 Core Primitives & 9 Curated Tech Stack Presets Matrix Catalog
+  const [matrixCatalog, setMatrixCatalog] = useState({
+    sectors: [],
+    primitives: [],
+    rule_packs: [],
+    stack_presets: [],
+    stack_comparison_matrix: [],
+  });
+  const [activeTopologyFilter, setActiveTopologyFilter] = useState('ALL');
+  const [showStackMatrixTable, setShowStackMatrixTable] = useState(false);
+
   useEffect(() => {
     let active = true;
     fetch('/api/blueprint/matrix-catalog', { headers: { Accept: 'application/json' } })
       .then((res) => res.ok ? res.json() : null)
       .then((json) => {
         if (active && json?.success && json.catalog) {
-          setMatrixCatalog(json.catalog);
+          setMatrixCatalog((prev) => ({ ...prev, ...json.catalog }));
         }
       })
       .catch(() => {});
@@ -945,8 +955,30 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   }, []);
 
   const activeMatrixSectorObj = useMemo(() => {
-    return matrixCatalog.sectors.find((s) => s.code === formData.primarySector) || null;
+    return (matrixCatalog.sectors || []).find((s) => s.code === formData.primarySector) || null;
   }, [matrixCatalog.sectors, formData.primarySector]);
+
+  const activeStackPresetObj = useMemo(() => {
+    const presets = matrixCatalog.stack_presets || [];
+    return presets.find((p) => p.code === formData.stackPreset)
+      || presets.find((p) => p.is_default)
+      || presets[0]
+      || null;
+  }, [matrixCatalog.stack_presets, formData.stackPreset]);
+
+  const filteredStackPresets = useMemo(() => {
+    const presets = matrixCatalog.stack_presets || [];
+    if (activeTopologyFilter === 'ALL') return presets;
+    return presets.filter((p) => p.topology === activeTopologyFilter);
+  }, [matrixCatalog.stack_presets, activeTopologyFilter]);
+
+  const selectStackPreset = useCallback((presetCode) => {
+    setFormData((prev) => {
+      const next = { ...prev, stackPreset: presetCode };
+      triggerAutoSave(next);
+      return next;
+    });
+  }, []);
 
   const selectMatrixSector = useCallback((sectorCode) => {
     const sec = matrixCatalog.sectors.find((s) => s.code === sectorCode);
@@ -1853,6 +1885,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       if (Array.isArray(formData.selectedPrimitives) && formData.selectedPrimitives.length > 0) {
         formDataUpload.append('selected_primitives', JSON.stringify(formData.selectedPrimitives));
       }
+      if (formData.stackPreset) {
+        formDataUpload.append('stack_preset', formData.stackPreset);
+      }
 
       attachedFiles.forEach(file => {
         formDataUpload.append('files[]', file);
@@ -1892,11 +1927,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         handleTrackChange(result.track_recommendation.recommended_track);
       }
 
-      // Populate synthesized blueprint data into all 25 fields
+      // Populate synthesized blueprint data into all 25 fields while preserving user's explicit Stack Preset
       const synData = result.data || {};
+      const resolvedStackPreset = (formData.stackPreset && formData.stackPreset !== 'STACK_M1_LARAVEL_MONOLITH')
+        ? formData.stackPreset
+        : (synData.stackPreset || formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH');
       const merged = {
         ...formData,
         ...synData,
+        stackPreset: resolvedStackPreset,
         clientName: synData.clientName || formData.clientName,
         email: synData.email || formData.email,
         phone: synData.phone || formData.phone,
@@ -1969,6 +2008,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       phone: '',
       primarySector: '',
       selectedPrimitives: [],
+      stackPreset: 'STACK_M1_LARAVEL_MONOLITH',
     };
 
     setFormData(blankForm);
@@ -3876,10 +3916,12 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </div>
               <div className="shrink-0 flex flex-wrap items-center gap-1.5">
                 <span className="px-2.5 py-1 rounded-xs bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
-                  Anti-Slop Shield Active
+                  Schema v2.0.0 • 7 Zero-Assumption Dims
                 </span>
                 <span className="px-2.5 py-1 rounded-xs bg-zinc-100 text-zinc-900 border border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono text-[10px] font-bold">
-                  Laravel 13 • Filament v5 • PG16 ULID • Railpack
+                  {activeStackPresetObj
+                    ? `[${activeStackPresetObj.short_code}] ${activeStackPresetObj.topology} • ${(activeStackPresetObj.name?.[lang] || activeStackPresetObj.name?.id || activeStackPresetObj.code)}`
+                    : 'Laravel 13 • Filament v5 • PG16 ULID • Railpack'}
                 </span>
               </div>
             </div>
@@ -3979,6 +4021,178 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 })}
               </div>
             </div>
+
+            {/* Step 1C: 9 Curated Tech Stack & Topology Presets (Decoupled from Domain Contract) */}
+            {(matrixCatalog.stack_presets || []).length > 0 && (
+              <div className="mt-6 pt-5 border-t border-zinc-200 dark:border-zinc-800">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5 mb-3">
+                  <div>
+                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 block">
+                      {lang === 'en'
+                        ? '3. Topology & Curated Tech Stack Preset (9 Type-Safe Adapters — Zero Free-Text Stack Soup)'
+                        : '3. Pilih Topologi & Preset Tech Stack Terkurasi (9 Adapter Type-Safe — Domain Bisnis Terpisah 100% dari Stack)'}
+                    </span>
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
+                      {lang === 'en'
+                        ? 'Switch freely between Monolith (M1–M4), Decoupled Headless (D1–D3), and Microservices (S1–S2) while keeping the exact same 12-Sector & 7-Dimension domain blueprint.'
+                        : 'Blueprint bisnis yang sama dapat dikompilasi ke Laravel 13 Monolith (M1), Go + sqlc + Next.js (D2), atau Polyglot Microservices + Temporal.io (S1) hanya dengan mengganti adapter di bawah.'}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                    {[
+                      { id: 'ALL', label: lang === 'en' ? 'ALL (9)' : 'SEMUA (9)' },
+                      { id: 'MONOLITH', label: 'MONOLITH (M1–M4)' },
+                      { id: 'DECOUPLED_HEADLESS', label: 'HEADLESS (D1–D3)' },
+                      { id: 'MICROSERVICES', label: 'MICROSERVICES (S1–S2)' },
+                    ].map((tab) => {
+                      const active = activeTopologyFilter === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setActiveTopologyFilter(tab.id)}
+                          className={`px-2.5 py-1 rounded-xs border font-mono text-[10px] font-black transition-colors cursor-pointer ${
+                            active
+                              ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100'
+                              : 'bg-zinc-100 hover:bg-zinc-200/80 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      );
+                    })}
+                    {(matrixCatalog.stack_comparison_matrix || []).length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowStackMatrixTable((v) => !v)}
+                        className="px-2.5 py-1 rounded-xs border border-emerald-500 bg-emerald-100 hover:bg-emerald-200/80 text-emerald-950 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black transition-colors cursor-pointer"
+                      >
+                        {showStackMatrixTable
+                          ? (lang === 'en' ? 'Hide Decision Matrix' : 'Tutup Matriks Panduan')
+                          : (lang === 'en' ? 'Compare 9 Stacks' : 'Panduan Pilih Stack')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {showStackMatrixTable && (matrixCatalog.stack_comparison_matrix || []).length > 0 && (
+                  <div className="mb-3.5 overflow-x-auto border border-zinc-300 dark:border-zinc-800 rounded-sm bg-white dark:bg-zinc-950">
+                    <table className="w-full text-left border-collapse text-[11px]">
+                      <thead className="bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 font-mono text-[10px] uppercase text-zinc-900 dark:text-zinc-200">
+                        <tr>
+                          <th className="py-2 px-3 font-black">{lang === 'en' ? 'Target Scale & Use Case' : 'Kebutuhan Bisnis & Skala Sistem'}</th>
+                          <th className="py-2 px-3 font-black">{lang === 'en' ? 'Recommended Preset' : 'Rekomendasi Preset'}</th>
+                          <th className="py-2 px-3 font-black">{lang === 'en' ? 'Architectural Rationale' : 'Alasan Arsitektural Utama'}</th>
+                          <th className="py-2 px-3 font-black text-right">{lang === 'en' ? 'Action' : 'Aksi'}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                        {matrixCatalog.stack_comparison_matrix.map((row, idx) => {
+                          const presetCode = row.code || row.preset_code;
+                          const isRowSelected = formData.stackPreset === presetCode;
+                          return (
+                            <tr
+                              key={presetCode || idx}
+                              className="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/70 dark:even:bg-zinc-900/40 hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80 transition-colors"
+                            >
+                              <td className="py-2 px-3 font-bold text-zinc-900 dark:text-zinc-100">
+                                {row.best_use_case?.[lang] || row.best_use_case?.id || row.use_case?.[lang] || ''}
+                              </td>
+                              <td className="py-2 px-3 font-mono font-black text-emerald-900 dark:text-emerald-300 whitespace-nowrap">
+                                [{row.short_code}] {row.architecture_label || row.topology}
+                              </td>
+                              <td className="py-2 px-3 text-zinc-700 dark:text-zinc-300">
+                                {row.inter_layer_contract || row.key_reason?.[lang] || ''}
+                              </td>
+                              <td className="py-2 px-3 text-right whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => selectStackPreset(presetCode)}
+                                  className={`px-2 py-1 rounded-xs font-mono text-[10px] font-black border cursor-pointer ${
+                                    isRowSelected
+                                      ? 'bg-emerald-600 text-white border-emerald-700 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
+                                      : 'bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100'
+                                  }`}
+                                >
+                                  {isRowSelected ? 'AKTIF' : (lang === 'en' ? 'Select' : 'Gunakan')}
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {filteredStackPresets.map((preset) => {
+                    const isSelected = (formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH') === preset.code;
+                    const pName = (preset.name && (preset.name[lang] || preset.name.id || preset.name.en)) || preset.code;
+                    const pBestObj = preset.best_use_cases || preset.best_for || {};
+                    const pBest = pBestObj[lang] || pBestObj.id || pBestObj.en || '';
+                    const contractMech = preset.inter_layer_type_contract?.mechanism || '';
+                    return (
+                      <button
+                        key={preset.code}
+                        type="button"
+                        onClick={() => selectStackPreset(preset.code)}
+                        className={`text-left p-3 rounded-sm border transition-colors flex flex-col justify-between cursor-pointer ${
+                          isSelected
+                            ? 'bg-zinc-900 text-white border-zinc-900 ring-1 ring-emerald-500 dark:bg-emerald-950/75 dark:text-zinc-50 dark:border-emerald-500'
+                            : 'bg-white hover:bg-zinc-50 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-600'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[10px] font-black ${
+                                isSelected
+                                  ? 'bg-emerald-500 text-zinc-950'
+                                  : 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
+                              }`}>
+                                {preset.short_code}
+                              </span>
+                              <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[9px] font-black border ${
+                                isSelected
+                                  ? 'bg-black text-white border-zinc-700'
+                                  : 'bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700'
+                              }`}>
+                                {preset.topology}
+                              </span>
+                            </div>
+                            {preset.is_default && (
+                              <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[8px] font-black uppercase ${
+                                isSelected
+                                  ? 'bg-white text-zinc-950'
+                                  : 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
+                              }`}>
+                                DEFAULT
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs font-black leading-snug">{pName}</div>
+                          <p className={`mt-1 text-[11px] leading-relaxed line-clamp-2 ${
+                            isSelected ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'
+                          }`}>
+                            {pBest}
+                          </p>
+                        </div>
+                        {contractMech && (
+                          <div className={`mt-2.5 pt-2 border-t font-mono text-[10px] truncate ${
+                            isSelected
+                              ? 'border-zinc-700 text-emerald-300'
+                              : 'border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'
+                          }`}>
+                            Contract: {contractMech}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </section>
         )}
 

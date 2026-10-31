@@ -275,17 +275,37 @@ class PrdGeneratorService
                     'role' => 'High-throughput Session, Cache, & Async Background Queue Jobs',
                 ],
                 'infrastructure' => [
-                    'name' => 'Dedicated VPS via Nixpacks & Docker',
-                    'role' => 'Isolasi resource 100%, Cloudflare CDN fronting, Nginx HTTP/2 reverse-proxy',
+                    'name' => 'Dedicated VPS via Railpack FrankenPHP & Docker',
+                    'role' => 'Isolasi resource 100%, Cloudflare CDN fronting, FrankenPHP/Caddy HTTP/3 reverse-proxy',
                 ],
             ];
             $architecturePhilosophy = 'Untuk menjamin efisiensi biaya server, ketahanan jangka panjang, dan kecepatan peluncuran (Rapid Time-to-Market), sistem ini dirancang menggunakan arsitektur Modern Monolith (Laravel 13 & Filament PHP) yang Decoupled-Ready. Seluruh tabel bisnis menggunakan Primary Key ULID untuk skalabilitas terdistribusi dan kompatibilitas penuh PostgreSQL.';
         }
 
+        // Override / enrich tech_stack & architecture_philosophy when a curated PosStackPreset (M2..S2) is explicitly selected
+        $activeStackContract = $universalSchema['tech_stack_contract'] ?? [];
+        $activePresetCode = (string) ($activeStackContract['preset_code'] ?? 'STACK_M1_LARAVEL_MONOLITH');
+        if (! $isGame3D && ! $isApiGateway && $activePresetCode !== 'STACK_M1_LARAVEL_MONOLITH' && ! empty($activeStackContract['layer_technologies'])) {
+            $stackDef = (array) $activeStackContract['layer_technologies'];
+            $presetNameId = (string) ($universalSchema['project_metadata']['stack_preset_name']['id'] ?? $activePresetCode);
+            $topologyLabel = (string) ($activeStackContract['topology'] ?? 'MONOLITH');
+            $customTechStack = [];
+            foreach ($stackDef as $layerKey => $layerVal) {
+                $customTechStack[$layerKey] = [
+                    'name' => is_array($layerVal) ? implode(', ', $layerVal) : (string) $layerVal,
+                    'role' => 'Curated Stack Preset [' . ($activeStackContract['short_code'] ?? '') . ' · ' . $topologyLabel . '] — ' . ucfirst(str_replace('_', ' ', (string) $layerKey)),
+                ];
+            }
+            if (! empty($customTechStack)) {
+                $techStack = $customTechStack;
+            }
+            $architecturePhilosophy = 'Sistem ini dikompilasi menggunakan Preset Arsitektur Terkurasi [' . ($activeStackContract['short_code'] ?? '') . '] ' . $presetNameId . ' (Topologi: ' . $topologyLabel . '). Kontrak domain bisnis (Data Dictionary, State Machine, Formula Pajak/Pembulatan, dan Saga Compensation) dipisahkan 100% dari adapter stack serta mengikat kontrak tipe antar-layer melalui: ' . ((string) ($activeStackContract['inter_layer_type_contract']['mechanism'] ?? 'Type-Safe Schema Contract')) . '.';
+        }
+
         return [
             'meta' => [
                 'project_name' => $businessName,
-                'version' => '1.0.0-PROPOSAL',
+                'version' => '2.0.0-PROPOSAL',
                 'generated_at' => now()->toIso8601String(),
                 'status' => 'Ultimate Vision Blueprint',
                 'ai_telemetry' => $aiTelemetry,
@@ -307,9 +327,7 @@ class PrdGeneratorService
                 'market_reach' => $extraContext['jangkauan_pasar'],
                 'compliance_level' => $extraContext['kepatuhan_keamanan'],
                 'budget_range' => $extraContext['kisaran_budget'],
-                'architecture_philosophy' => $isDecoupledRequested
-                    ? 'Untuk mendukung tim rekayasa multi-disiplin, multi-channel mobile & web apps, serta performa edge global sub-20ms, sistem ini dirancang menggunakan arsitektur Enterprise Decoupled & Headless (Next.js 15 App Router / Nuxt 3, Flutter Mobile Client, dan Headless Laravel 13 RESTful/OpenAPI 3.1). Seluruh data transaksi diorkestrasi dengan PostgreSQL Strict ULID dan protokol sinkronisasi delta dengan proteksi idempotency.'
-                    : 'Untuk menjamin efisiensi biaya server, ketahanan jangka panjang, dan kecepatan peluncuran (Rapid Time-to-Market), sistem ini dirancang menggunakan arsitektur Modern Monolith (Laravel 13 & Filament PHP) yang Decoupled-Ready. Seluruh tabel bisnis menggunakan Primary Key ULID untuk skalabilitas terdistribusi dan kompatibilitas penuh PostgreSQL.',
+                'architecture_philosophy' => $architecturePhilosophy,
             ],
             'system_actors' => $actorItems,
             'features' => [
@@ -5822,6 +5840,23 @@ PROMPT;
                 }
                 $md .= "\n";
             }
+
+            // 16. Stack Topology Preset & 7 Zero-Assumption Dimensions
+            $stackC = $univSchema['tech_stack_contract'] ?? [];
+            $apiC = $univSchema['api_and_envelope_contract'] ?? [];
+            $sagaC = $univSchema['distributed_saga_and_outbox_contract'] ?? [];
+            $lifeC = $univSchema['data_lifecycle_and_pii_governance'] ?? [];
+
+            $md .= "## 16. Topologi Tech Stack Terkurasi & 7 Dimensi Zero-Assumption (Schema v2.0.0)\n\n";
+            $md .= "- **Preset Topologi & Tech Stack**: `[" . ($stackC['short_code'] ?? 'M1') . "] " . ($stackC['preset_code'] ?? 'STACK_M1_LARAVEL_MONOLITH') . "` (`" . ($stackC['topology'] ?? 'MONOLITH') . "`)\n";
+            $md .= "- **Kontrak Tipe Antar-Layer**: " . ($stackC['inter_layer_type_contract']['mechanism'] ?? '-') . "\n";
+            $md .= "- **Dimensi 1 (API & Error Envelope)**: `" . ($apiC['standard'] ?? 'RFC 9457 (application/problem+json)') . "` + Keyset Cursor O(1) (`meta.cursor.next`)\n";
+            $md .= "- **Dimensi 2 (Distributed Saga & Outbox)**: Tabel wajib `" . ($sagaC['outbox_table'] ?? 'outbox_messages') . "` + `" . count($sagaC['compensating_actions'] ?? []) . "` Compensating Actions deterministik\n";
+            $md .= "- **Dimensi 3 (Formula Matematika & Penny Rule)**: `" . count($univSchema['deterministic_formulas'] ?? []) . "` formula eksak (`DECIMAL(19,4)`, `HALF_UP`, selisih Rp 1 dialokasikan ke cicilan terakhir)\n";
+            $md .= "- **Dimensi 4 (Integrasi Eksternal & Webhook Security)**: Tabel `" . ($univSchema['external_integration_contracts']['inbound_webhook_vault_table'] ?? 'webhook_inbound_logs') . "` + HMAC-SHA256 + Exponential Backoff\n";
+            $md .= "- **Dimensi 5 (Data Lifecycle & UU PDP)**: `" . ($lifeC['cascade_delete_ban'] ?? 'ON DELETE RESTRICT') . "` (`IMMUTABLE_LEDGER` / `ANONYMIZE_PII` / `SOFT_ARCHIVE`)\n";
+            $md .= "- **Dimensi 6 (UI Screen Archetypes)**: `" . count($univSchema['ui_screen_archetypes'] ?? []) . "` pola layar operasional + Empty/Skeleton/RFC 9457 Error States\n";
+            $md .= "- **Dimensi 7 (Acceptance Test Matrix)**: `" . count($univSchema['acceptance_test_matrix'] ?? []) . "` skenario Given-When-Then pra-kompilasi\n\n";
         }
 
         return $md;
@@ -5845,16 +5880,20 @@ PROMPT;
         $mvpFeatures = $prd['features']['mvp_phase1'] ?? [];
         $univSchema = $prd['universal_blueprint_schema'] ?? ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
         $uMeta = $univSchema['project_metadata'] ?? [];
+        $stackC = $univSchema['tech_stack_contract'] ?? [];
 
         $rules = "# .cursorrules / CLAUDE.md — AI AGENT SYSTEM INSTRUCTIONS\n";
         $rules .= "# Project: {$projectName}\n";
         $rules .= "# Blueprint Spec ID: {$specId}\n";
         $rules .= "# Engine: Neriah Pro AI Project OS (Generated: " . ($blueprint->created_at?->format('Y-m-d') ?: date('Y-m-d')) . ")\n\n";
         $rules .= "<ZERO_ASSUMPTION_DIRECTIVES>\n";
-        $rules .= "1. STRICT COMPLIANCE: You are an execution engine. Do NOT invent columns, states, roles, or workflows outside `.agents/BLUEPRINT_SCHEMA.json` and `PROJECT_OS_EXECUTION_BLUEPRINT.md`.\n";
+        $rules .= "1. STRICT COMPLIANCE: You are an execution engine. Do NOT invent columns, states, roles, or workflows outside `.agents/BLUEPRINT_SCHEMA.json`, `.agents/STACK_TOPOLOGY_CONTRACT.md`, and `PROJECT_OS_EXECUTION_BLUEPRINT.md`.\n";
         $rules .= "2. MISSING REQUIREMENT PROTOCOL: If an edge case or relation is not explicitly defined in the Data Dictionary or State Machine, STOP and ask the developer before generating code.\n";
-        $rules .= "3. ATOMICITY: Every state transition MUST be implemented as a dedicated invokable Action class wrapped in `DB::transaction()`.\n";
+        $rules .= "3. ATOMICITY & SAGA OUTBOX: Every state transition MUST run inside an atomic DB transaction, write outbound events to `outbox_messages`, and execute compensating actions on downstream failure.\n";
         $rules .= "4. LOCKING: Every query modifying `inventory_batches`, `inventory_movements`, `allocatable_resources`, `bookings`, `accounts`, `journal_entries`, `event_seats`, or `fund_programs` MUST acquire `lockForUpdate()` first.\n";
+        $rules .= "5. STACK TOPOLOGY LOCK: Target preset is `[" . ($stackC['short_code'] ?? 'M1') . "] " . ($stackC['preset_code'] ?? 'STACK_M1_LARAVEL_MONOLITH') . "` (`" . ($stackC['topology'] ?? 'MONOLITH') . "`). Follow its directory layout and inter-layer type contract (`" . ($stackC['inter_layer_type_contract']['mechanism'] ?? 'Type-Safe Contract') . "`).\n";
+        $rules .= "6. API, WEBHOOK & PENNY MATH: Return errors strictly as RFC 9457 (`application/problem+json`), log inbound webhooks to `webhook_inbound_logs` with HMAC-SHA256 before async jobs, and use `DECIMAL(19,4)` `HALF_UP` with final-installment penny allocation (never IEEE-754 float).\n";
+        $rules .= "7. DATA LIFECYCLE & UU PDP: Never use blind `ON DELETE CASCADE`. Enforce `ON DELETE RESTRICT`, `IMMUTABLE_LEDGER` contra-entries, and `ANONYMIZE_PII` (`[REDACTED_USER_<ULID>]`).\n";
         $rules .= "</ZERO_ASSUMPTION_DIRECTIVES>\n\n";
         $rules .= "You are pair programming on \"{$projectName}\", a mission-critical enterprise digital system.\n";
         $rules .= "Always adhere strictly to the architectural constraints, database schemas, and 6-Stage ECC Harness (`PLAN -> TEST -> IMPLEMENT -> REVIEW -> VERIFY -> REMEMBER & DEPLOY`) defined below.\n\n";
@@ -5865,6 +5904,7 @@ PROMPT;
         $rules .= "- **Project Name**: {$projectName}\n";
         $rules .= "- **Primary Functional Sector**: `" . ($uMeta['primary_sector'] ?? 'SECTOR_08_PROFESSIONAL_PSA') . "` (" . ($uMeta['primary_sector_name']['en'] ?? 'Enterprise Sector') . ")\n";
         $rules .= "- **Architecture Archetype**: `" . ($uMeta['architecture_archetype'] ?? 'COMPOSITE') . "`\n";
+        $rules .= "- **Stack Topology Preset**: `[" . ($stackC['short_code'] ?? 'M1') . "] " . ($stackC['preset_code'] ?? 'STACK_M1_LARAVEL_MONOLITH') . "` (`" . ($stackC['topology'] ?? 'MONOLITH') . "`)\n";
         $rules .= "- **Injected Core Primitives**: `" . implode('`, `', $uMeta['injected_primitives'] ?? []) . "`\n";
         $rules .= "- **Compliance Standards**: " . implode(' | ', $uMeta['compliance_standards'] ?? []) . "\n";
         $rules .= "- **Primary Problem**: " . ($blueprint->masalah_utama ?: 'Enterprise operational digitization and centralized workflows.') . "\n";

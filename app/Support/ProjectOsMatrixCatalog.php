@@ -21,7 +21,18 @@ class ProjectOsMatrixCatalog
                 return;
             }
 
-            if (PosSector::query()->count() >= 12 && PosPrimitive::query()->count() >= 12 && PosRulePack::query()->count() >= 6) {
+            $presetsReady = ! Schema::hasTable('pos_stack_presets')
+                || \App\Models\PosStackPreset::query()->count() >= 9;
+            $ultimateColsReady = ! Schema::hasColumn('pos_primitives', 'deterministic_formulas')
+                || PosPrimitive::query()->whereNotNull('deterministic_formulas')->count() >= 12;
+
+            if (
+                PosSector::query()->count() >= 12
+                && PosPrimitive::query()->count() >= 12
+                && PosRulePack::query()->count() >= 6
+                && $presetsReady
+                && $ultimateColsReady
+            ) {
                 return;
             }
 
@@ -32,12 +43,21 @@ class ProjectOsMatrixCatalog
     }
 
     /**
-     * Idempotently seed the complete 12-Sector Composable Blueprint Matrix & Anti-Slop Rule Packs.
+     * Idempotently seed the complete 12-Sector Composable Blueprint Matrix, 9 Stack Presets & Anti-Slop Rule Packs.
      */
     public static function seedDatabase(): void
     {
+        $hasUltimateCols = Schema::hasTable('pos_primitives') && Schema::hasColumn('pos_primitives', 'deterministic_formulas');
         $primitiveMap = [];
         foreach (self::primitives() as $primData) {
+            if (! $hasUltimateCols) {
+                unset(
+                    $primData['deterministic_formulas'],
+                    $primData['saga_and_webhook_contracts'],
+                    $primData['ui_screen_archetypes'],
+                    $primData['acceptance_test_scenarios']
+                );
+            }
             $primitive = PosPrimitive::query()->updateOrCreate(
                 ['code' => $primData['code']],
                 $primData
@@ -93,6 +113,8 @@ class ProjectOsMatrixCatalog
                 $ruleData
             );
         }
+
+        PosStackPresetCatalog::seedDatabase();
 
         Cache::forget(PosSector::CACHE_KEY);
     }
@@ -459,7 +481,7 @@ class ProjectOsMatrixCatalog
      */
     public static function primitives(): array
     {
-        return [
+        $basePrimitives = [
             // 1. PRIMITIVE_CATALOG_SKU
             [
                 'code' => 'PRIMITIVE_CATALOG_SKU',
@@ -1764,6 +1786,29 @@ class ProjectOsMatrixCatalog
                 'is_active' => true,
             ],
         ];
+
+        $ultimateContracts = PosStackPresetCatalog::primitiveUltimateContracts();
+
+        return array_map(static function (array $prim) use ($ultimateContracts): array {
+            $code = $prim['code'] ?? '';
+            $extra = $ultimateContracts[$code] ?? [];
+
+            $prim['schema_blueprints'] = array_map(static function (array $tbl): array {
+                if (! isset($tbl['deletion_policy'])) {
+                    $policy = PosStackPresetCatalog::resolveTableDeletionPolicy((string) ($tbl['table'] ?? ''));
+                    $tbl = array_merge($tbl, $policy);
+                }
+
+                return $tbl;
+            }, $prim['schema_blueprints'] ?? []);
+
+            $prim['deterministic_formulas'] = $extra['deterministic_formulas'] ?? ($prim['deterministic_formulas'] ?? []);
+            $prim['saga_and_webhook_contracts'] = $extra['saga_and_webhook_contracts'] ?? ($prim['saga_and_webhook_contracts'] ?? []);
+            $prim['ui_screen_archetypes'] = $extra['ui_screen_archetypes'] ?? ($prim['ui_screen_archetypes'] ?? []);
+            $prim['acceptance_test_scenarios'] = $extra['acceptance_test_scenarios'] ?? ($prim['acceptance_test_scenarios'] ?? []);
+
+            return $prim;
+        }, $basePrimitives);
     }
 
     /**

@@ -1770,13 +1770,17 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <span class="hidden xl:inline">.CURSORRULES</span>
                         <span class="xl:hidden">RULES</span>
                     </a>
-                    <a href="{{ route('blueprint.download-schema-json', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" title="Unduh Universal Blueprint Schema v1.0 (BLUEPRINT_SCHEMA.json)">
+                    <a href="{{ route('blueprint.download-schema-json', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" title="Unduh Universal Blueprint Schema v2.0.0 (BLUEPRINT_SCHEMA.json)">
                         <span class="hidden xl:inline">SCHEMA.JSON</span>
                         <span class="xl:hidden">JSON</span>
                     </a>
                     <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint']) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" title="Unduh Kontrak Eksekusi Zero-Assumption (PROJECT_OS_EXECUTION_BLUEPRINT.md)">
                         <span class="hidden xl:inline">EXECUTION.MD</span>
                         <span class="xl:hidden">EXEC</span>
+                    </a>
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'stack-topology']) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 transition flex items-center gap-1" title="Unduh Kontrak Topologi & Tech Stack Adapter (.agents/STACK_TOPOLOGY_CONTRACT.md)">
+                        <span class="hidden xl:inline">STACK.MD</span>
+                        <span class="xl:hidden">STACK</span>
                     </a>
                 </div>
 
@@ -6667,24 +6671,36 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
                 </div>
 
-                <!-- 13.5 Composable 12-Sector Matrix & Zero-Assumption Deterministic Contract -->
+                <!-- 13.5 Composable 12-Sector Matrix, 9 Stack Topologies & 7 Zero-Assumption Dimensions -->
                 @php
                     $posUniversalSchema = $blueprint->prd_content['universal_blueprint_schema'] ?? null;
-                    if (!is_array($posUniversalSchema) || empty($posUniversalSchema['project_metadata'])) {
+                    if (!is_array($posUniversalSchema) || empty($posUniversalSchema['project_metadata']) || (($posUniversalSchema['schema_version'] ?? '1.0.0') !== '2.0.0')) {
                         try {
                             $posUniversalSchema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
                         } catch (\Throwable $e) {
-                            $posUniversalSchema = [];
+                            $posUniversalSchema = is_array($posUniversalSchema) ? $posUniversalSchema : [];
                         }
                     }
                     $posMeta = $posUniversalSchema['project_metadata'] ?? [];
+                    $posStack = $posUniversalSchema['tech_stack_contract'] ?? [];
                     $posSectorLabel = is_array($posMeta['primary_sector_name'] ?? null)
                         ? ($posMeta['primary_sector_name'][$isEn ? 'en' : 'id'] ?? ($posMeta['primary_sector_name']['id'] ?? ($posMeta['primary_sector'] ?? '-')))
                         : ($posMeta['primary_sector'] ?? '-');
+                    $posStackLabel = is_array($posMeta['stack_preset_name'] ?? null)
+                        ? ($posMeta['stack_preset_name'][$isEn ? 'en' : 'id'] ?? ($posMeta['stack_preset_name']['id'] ?? ($posStack['preset_code'] ?? 'STACK_M1_LARAVEL_MONOLITH')))
+                        : ($posStack['preset_code'] ?? 'STACK_M1_LARAVEL_MONOLITH');
                     $posPrimitives = $posMeta['injected_primitives'] ?? [];
                     $posStateMachines = $posUniversalSchema['state_machines'] ?? [];
                     $posLocks = $posUniversalSchema['domain_invariants']['concurrency_locks'] ?? [];
                     $posPlaybooks = $posUniversalSchema['edge_case_playbooks'] ?? [];
+                    $posFormulas = $posUniversalSchema['deterministic_formulas'] ?? [];
+                    $posSagas = $posUniversalSchema['distributed_saga_and_outbox_contract']['compensating_actions'] ?? [];
+                    $posArchetypes = $posUniversalSchema['ui_screen_archetypes'] ?? [];
+                    $rawAccMatrix = $posUniversalSchema['acceptance_test_matrix'] ?? [];
+                    $posAcceptanceCount = is_array($rawAccMatrix) ? (int) ($rawAccMatrix['total_scenarios'] ?? count($rawAccMatrix)) : 0;
+                    $posTablePolicies = $posUniversalSchema['data_lifecycle_and_pii_governance']['table_policies'] ?? [];
+                    $posImmutableTables = array_values(array_filter($posTablePolicies, fn ($tp) => ($tp['deletion_policy'] ?? '') === 'IMMUTABLE_LEDGER'));
+                    $posPiiTables = array_values(array_filter($posTablePolicies, fn ($tp) => ($tp['deletion_policy'] ?? '') === 'ANONYMIZE_PII'));
                 @endphp
                 @if(!empty($posMeta))
                 <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
@@ -6692,22 +6708,33 @@ class ProcessSecureDataset implements ShouldQueue
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-emerald-600 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-950 dark:text-zinc-100">
-                                {{ $isEn ? '13.5 Composable 12-Sector Blueprint & Deterministic State Machine Contract' : '13.5 Matriks Composable 12-Sektor & Kontrak State Machine Deterministik (Zero-Assumption)' }}
+                                {{ $isEn ? '13.5 Composable 12-Sector, Stack Topology & 7 Zero-Assumption Contracts (Schema v2.0.0)' : '13.5 Matriks 12-Sektor, Topologi Stack & 7 Dimensi Kontrak Zero-Assumption (Schema v2.0.0)' }}
                             </h3>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
+                            <span class="px-2.5 py-1 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono font-black text-[11px] rounded-xs">
+                                [{{ $posStack['short_code'] ?? 'M1' }}] {{ $posStack['topology'] ?? 'MONOLITH' }}
+                            </span>
                             <span class="px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono font-black text-[11px] rounded-xs">
                                 {{ $posMeta['architecture_archetype'] ?? 'COMPOSITE' }}
                             </span>
                             <span class="px-2.5 py-1 bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono font-bold text-[11px] rounded-xs tabular-nums">
-                                {{ count($posPrimitives) }} PRIMITIVES • {{ count($posStateMachines) }} STATE MACHINES • {{ count($posLocks) }} LOCKS
+                                {{ count($posPrimitives) }} PRIMITIVES • {{ count($posFormulas) }} FORMULAS • {{ $posAcceptanceCount }} ACCEPTANCE TESTS
                             </span>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                        <!-- Primary Sector & Injected Primitives -->
+                        <!-- Primary Sector, Stack Topology & Injected Primitives -->
                         <div class="lg:col-span-5 p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm">
+                            <div class="text-[11px] font-mono font-black uppercase text-zinc-700 dark:text-zinc-400 mb-1">
+                                {{ $isEn ? 'CURATED TOPOLOGY & TECH STACK ADAPTER' : 'ADAPTER TOPOLOGI & TECH STACK TERKURASI' }}
+                            </div>
+                            <div class="text-sm font-black text-zinc-950 dark:text-zinc-100 mb-0.5">[{{ $posStack['short_code'] ?? 'M1' }}] {{ $posStackLabel }}</div>
+                            <div class="text-[11px] font-mono text-emerald-900 dark:text-emerald-300 mb-3">
+                                {{ $posStack['inter_layer_type_contract']['mechanism'] ?? 'Type-Safe Schema Contract' }}
+                            </div>
+
                             <div class="text-[11px] font-mono font-black uppercase text-zinc-700 dark:text-zinc-400 mb-1">
                                 {{ $isEn ? 'PRIMARY FUNCTIONAL SECTOR' : 'SEKTOR FUNGSIONAL UTAMA' }}
                             </div>
@@ -6759,21 +6786,53 @@ class ProcessSecureDataset implements ShouldQueue
                                 @foreach($posLocks as $lock)
                                     <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 rounded-xs">
                                         <div class="flex flex-wrap items-center justify-between gap-2">
-                                            <span class="font-mono text-[11px] font-black text-zinc-950 dark:text-zinc-100">LOCK: {{ $lock['resource'] ?? '' }}</span>
-                                            <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">{{ $lock['strategy'] ?? 'PESSIMISTIC_LOCK' }}</span>
+                                            <span class="font-mono text-[11px] font-black text-zinc-950 dark:text-zinc-100">LOCK: {{ $lock['operation'] ?? ($lock['resource'] ?? '') }}</span>
+                                            <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">{{ $lock['mechanism'] ?? ($lock['strategy'] ?? 'SELECT ... FOR UPDATE') }}</span>
                                         </div>
-                                        @if(!empty($lock['rationale']))
-                                            <div class="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">{{ $lock['rationale'] }}</div>
+                                        @if(!empty($lock['fallback_action']) || !empty($lock['rationale']))
+                                            <div class="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">{{ $lock['fallback_action'] ?? $lock['rationale'] }}</div>
                                         @endif
                                     </div>
                                 @endforeach
                                 @foreach(array_slice($posPlaybooks, 0, 4) as $pb)
                                     <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 rounded-xs">
                                         <div class="font-mono text-[11px] font-black text-amber-950 dark:text-amber-300">EDGE CASE: {{ $pb['scenario'] ?? '' }}</div>
-                                        <div class="text-[11px] text-zinc-800 dark:text-zinc-300 mt-0.5">{{ $pb['deterministic_resolution'] ?? '' }}</div>
+                                        <div class="text-[11px] text-zinc-800 dark:text-zinc-300 mt-0.5">{{ $pb['resolution_rule'] ?? ($pb['deterministic_resolution'] ?? '') }}</div>
                                     </div>
                                 @endforeach
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- 7 Zero-Assumption Dimensions Summary Grid -->
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
+                        <div class="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                            <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 text-[9px] font-black uppercase">DIM 1 &amp; 4 • API &amp; WEBHOOK</span>
+                            <div class="font-black text-zinc-950 dark:text-zinc-100 mt-1.5">RFC 9457 + HMAC-SHA256</div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300 mt-1 font-sans">
+                                Error <code class="font-mono">application/problem+json</code>, Keyset Cursor O(1), &amp; tabel <code class="font-mono">webhook_inbound_logs</code> + Circuit Breaker.
+                            </p>
+                        </div>
+                        <div class="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                            <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 text-[9px] font-black uppercase">DIM 2 • DISTRIBUTED SAGA</span>
+                            <div class="font-black text-zinc-950 dark:text-zinc-100 mt-1.5 tabular-nums">{{ count($posSagas) }} Saga &amp; Outbox Flows</div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300 mt-1 font-sans">
+                                Tabel wajib <code class="font-mono">outbox_messages</code> dalam transaksi DB yang sama + Compensating Actions deterministik.
+                            </p>
+                        </div>
+                        <div class="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                            <span class="px-1.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 text-[9px] font-black uppercase">DIM 3 &amp; 5 • MATH &amp; UU PDP</span>
+                            <div class="font-black text-zinc-950 dark:text-zinc-100 mt-1.5 tabular-nums">{{ count($posFormulas) }} Formulas • {{ count($posImmutableTables) }} Immutable</div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300 mt-1 font-sans">
+                                <code class="font-mono">DECIMAL(19,4) HALF_UP</code> + Penny Rule (<code class="font-mono">[33333, 33333, 33334]</code>) &amp; <code class="font-mono">ON DELETE RESTRICT</code> ({{ count($posPiiTables) }} tabel PII).
+                            </p>
+                        </div>
+                        <div class="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                            <span class="px-1.5 py-0.5 bg-zinc-200 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 text-[9px] font-black uppercase">DIM 6 &amp; 7 • UI &amp; TESTS</span>
+                            <div class="font-black text-zinc-950 dark:text-zinc-100 mt-1.5 tabular-nums">{{ count($posArchetypes) }} Archetypes • {{ $posAcceptanceCount }} Specs</div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300 mt-1 font-sans">
+                                Screen Archetypes + Empty/Skeleton/Error states &amp; Given-When-Then Acceptance Matrix pra-kompilasi.
+                            </p>
                         </div>
                     </div>
                 </div>

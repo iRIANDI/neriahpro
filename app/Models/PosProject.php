@@ -17,6 +17,7 @@ class PosProject extends Model
         'user_id',
         'vision_blueprint_id',
         'primary_sector_id',
+        'stack_preset_id',
         'app_name',
         'architecture_archetype',
         'tenancy_model',
@@ -53,6 +54,11 @@ class PosProject extends Model
     public function primarySector(): BelongsTo
     {
         return $this->belongsTo(PosSector::class, 'primary_sector_id');
+    }
+
+    public function stackPreset(): BelongsTo
+    {
+        return $this->belongsTo(PosStackPreset::class, 'stack_preset_id');
     }
 }
 

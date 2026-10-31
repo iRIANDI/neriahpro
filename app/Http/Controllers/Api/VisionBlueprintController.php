@@ -121,7 +121,9 @@ class VisionBlueprintController extends Controller
             'package_tier' => $request->input('package_tier') ?: $request->input('tier') ?: $request->input('selected_tier'),
             'primary_sector' => $request->input('primary_sector') ?: $request->input('primarySector'),
             'selected_primitives' => $request->input('selected_primitives') ?: $request->input('selectedPrimitives', []),
-            'stack_preset' => $request->input('stack_preset') ?: $request->input('stackPreset', 'LARAVEL13_FILAMENT5_LIVEWIRE4_FLUX_PGSQL16_RAILPACK'),
+            'stack_preset' => \App\Support\PosStackPresetCatalog::normalizePresetCode(
+                $request->input('stack_preset') ?: $request->input('stackPreset')
+            ),
         ];
 
         // 4. Normalize phone number (Anti-0 and Country Code Protocol)

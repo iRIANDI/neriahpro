@@ -6,7 +6,9 @@ use App\Models\PosPrimitive;
 use App\Models\PosProject;
 use App\Models\PosRulePack;
 use App\Models\PosSector;
+use App\Models\PosStackPreset;
 use App\Services\ProjectOsBlueprintCompilerService;
+use App\Support\PosStackPresetCatalog;
 use App\Support\ProjectOsMatrixCatalog;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -69,12 +71,12 @@ class ProjectOsMatrixPage extends Page
 
     public function getSubheading(): string | Htmlable | null
     {
-        return 'Taksonomi Domain-Driven 12 Sektor Fungsional, 12 Cross-Sector Core Primitives, State Machine Deterministik, Pessimistic Concurrency Locks, dan 6 Global Anti-Slop Rule Packs.';
+        return 'Taksonomi 12 Sektor Fungsional, 12 Core Primitives (7 Dimensi Zero-Assumption), 9 Curated Tech Stack & Topology Presets (M1–S2), dan 6 Global Anti-Slop Rule Packs.';
     }
 
     public function setTab(string $tab): void
     {
-        if (in_array($tab, ['sectors', 'primitives', 'rules', 'projects'], true)) {
+        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects'], true)) {
             $this->activeTab = $tab;
             $this->cursor = null;
             $this->selectedIds = [];
@@ -142,11 +144,14 @@ class ProjectOsMatrixPage extends Page
         try {
             if (Schema::hasTable('pos_sectors')) {
                 app(\Database\Seeders\ProjectOsMatrixSeeder::class)->run();
+                if (Schema::hasTable('pos_stack_presets')) {
+                    app(\Database\Seeders\PosStackPresetSeeder::class)->run();
+                }
                 Cache::forget(PosSector::CACHE_KEY);
                 Notification::make()
                     ->success()
-                    ->title('Matriks 12-Sektor Tersinkronisasi')
-                    ->body('Seluruh 12 Sektor Fungsional, 12 Core Primitives, Pivot, dan 6 Rule Packs berhasil diperbarui di database & cache O(1).')
+                    ->title('Matriks 12-Sektor & 9 Stack Presets Tersinkronisasi')
+                    ->body('Seluruh 12 Sektor Fungsional, 12 Core Primitives (7 Dimensi Zero-Assumption), 9 Stack Presets (M1–S2), dan 6 Rule Packs berhasil diperbarui di database & cache O(1).')
                     ->send();
             } else {
                 Notification::make()
@@ -170,6 +175,7 @@ class ProjectOsMatrixPage extends Page
         $payload = match ($this->activeTab) {
             'sectors' => $catalog['sectors'] ?? [],
             'primitives' => $catalog['primitives'] ?? [],
+            'stacks' => $catalog['stack_presets'] ?? [],
             'rules' => $catalog['rule_packs'] ?? [],
             default => $this->getProjectsSummaryList(),
         };
@@ -205,6 +211,15 @@ class ProjectOsMatrixPage extends Page
                 'tables' => implode('|', $p['table_names'] ?? []),
                 'state_machines' => implode('|', $p['state_machine_entities'] ?? []),
             ], $catalog['primitives'] ?? []),
+            'stacks' => array_map(fn ($st) => [
+                'id' => $st['id'] ?? $st['code'] ?? '',
+                'short_code' => $st['short_code'] ?? '',
+                'code' => $st['code'] ?? '',
+                'topology' => $st['topology'] ?? '',
+                'name_id' => $st['name']['id'] ?? '',
+                'type_contract' => $st['inter_layer_type_contract']['mechanism'] ?? '',
+                'team_scale' => $st['primary_language'] ?? '',
+            ], $catalog['stack_presets'] ?? []),
             'rules' => array_map(fn ($r) => [
                 'slug' => $r['slug'] ?? '',
                 'layer' => $r['layer'] ?? '',
@@ -272,14 +287,23 @@ class ProjectOsMatrixPage extends Page
         $stats = [
             'sectors' => count(ProjectOsMatrixCatalog::sectors()),
             'primitives' => count(ProjectOsMatrixCatalog::primitives()),
+            'stacks' => count(PosStackPresetCatalog::stackPresets()),
             'rules' => count(ProjectOsMatrixCatalog::rulePacks()),
             'projects' => 0,
         ];
 
+        $hasStacksDb = false;
         if ($hasDb) {
             try {
                 $stats['sectors'] = PosSector::query()->count();
                 $stats['primitives'] = PosPrimitive::query()->count();
+                $hasStacksDb = Schema::hasTable('pos_stack_presets');
+                if ($hasStacksDb) {
+                    $dbStackCount = PosStackPreset::query()->count();
+                    if ($dbStackCount > 0) {
+                        $stats['stacks'] = $dbStackCount;
+                    }
+                }
                 $stats['rules'] = PosRulePack::query()->count();
                 $stats['projects'] = Schema::hasTable('pos_projects') ? PosProject::query()->count() : 0;
             } catch (\Throwable) {
@@ -353,6 +377,47 @@ class ProjectOsMatrixPage extends Page
                         'state_machines' => array_values(array_map(fn ($sm) => ($sm['entity'] ?? '') . ' (' . count($sm['states'] ?? []) . ' states)', $p->state_machines ?? [])),
                         'locks_count' => count($p->concurrency_contracts ?? []),
                         'playbooks_count' => count($p->edge_case_playbooks ?? []),
+                        'formulas_count' => count($p->deterministic_formulas ?? []),
+                        'sagas_count' => count($p->saga_and_webhook_contracts ?? []),
+                        'archetypes_count' => count($p->ui_screen_archetypes ?? []),
+                        'acceptance_count' => count($p->acceptance_test_scenarios ?? []),
+                    ])->all(),
+                    'next_cursor' => $paginated->nextCursor()?->encode(),
+                    'prev_cursor' => $paginated->previousCursor()?->encode(),
+                ];
+            }
+
+            if ($this->activeTab === 'stacks' && $hasStacksDb && PosStackPreset::query()->exists()) {
+                $query = PosStackPreset::query();
+                if ($q !== '') {
+                    $query->where(function ($sub) use ($q): void {
+                        $sub->whereRaw('LOWER(code) LIKE ?', ["%{$q}%"])
+                            ->orWhereRaw('LOWER(short_code) LIKE ?', ["%{$q}%"])
+                            ->orWhereRaw('LOWER(topology) LIKE ?', ["%{$q}%"])
+                            ->orWhereRaw('LOWER(CAST(name AS CHAR)) LIKE ?', ["%{$q}%"]);
+                    });
+                }
+                if ($this->sortBy === 'code' && $this->sortDirection !== 'none') {
+                    $query->orderBy('code', $this->sortDirection);
+                } else {
+                    $query->orderBy('sort_order', $this->sortDirection === 'desc' ? 'desc' : 'asc');
+                }
+                $query->orderBy('id', 'asc');
+                $paginated = $query->cursorPaginate(12, ['*'], 'cursor', $this->cursor);
+
+                return [
+                    'stats' => $stats,
+                    'items' => collect($paginated->items())->map(fn (PosStackPreset $st) => [
+                        'id' => $st->id,
+                        'code' => $st->code,
+                        'short_code' => $st->short_code,
+                        'topology' => $st->topology,
+                        'name' => $st->name['id'] ?? $st->code,
+                        'description' => $st->best_use_cases['id'] ?? '',
+                        'type_contract' => $st->inter_layer_type_contract['mechanism'] ?? '-',
+                        'team_scale' => $st->primary_language ?? '-',
+                        'is_default' => (bool) $st->is_default,
+                        'stack_layers' => array_keys($st->layer_technologies ?? []),
                     ])->all(),
                     'next_cursor' => $paginated->nextCursor()?->encode(),
                     'prev_cursor' => $paginated->previousCursor()?->encode(),
@@ -434,7 +499,23 @@ class ProjectOsMatrixPage extends Page
                 'state_machines' => $p['state_machine_entities'] ?? [],
                 'locks_count' => 1,
                 'playbooks_count' => 2,
+                'formulas_count' => $p['formulas_count'] ?? 1,
+                'sagas_count' => $p['sagas_count'] ?? 1,
+                'archetypes_count' => $p['ui_archetypes_count'] ?? 1,
+                'acceptance_count' => $p['acceptance_tests_count'] ?? 2,
             ], $catalog['primitives'] ?? []),
+            'stacks' => array_map(fn ($st) => [
+                'id' => $st['id'] ?? $st['code'],
+                'code' => $st['code'],
+                'short_code' => $st['short_code'] ?? '',
+                'topology' => $st['topology'] ?? 'MONOLITH',
+                'name' => $st['name']['id'] ?? $st['code'],
+                'description' => $st['best_use_cases']['id'] ?? '',
+                'type_contract' => $st['inter_layer_type_contract']['mechanism'] ?? '-',
+                'team_scale' => $st['primary_language'] ?? '-',
+                'is_default' => (bool) ($st['is_default'] ?? false),
+                'stack_layers' => array_keys($st['layer_technologies'] ?? []),
+            ], $catalog['stack_presets'] ?? []),
             'rules' => array_map(fn ($r) => [
                 'id' => $r['slug'],
                 'slug' => $r['slug'],

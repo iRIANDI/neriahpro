@@ -13,7 +13,7 @@ class PosSector extends Model
 {
     use HasFactory, HasUlids;
 
-    public const CACHE_KEY = 'project_os:matrix_catalog:v1';
+    public const CACHE_KEY = 'project_os:matrix_catalog:v2';
 
     protected $table = 'pos_sectors';
 

@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             BlueprintVoucherSeeder::class,
             EmailTemplateSeeder::class,
             ProjectOsMatrixSeeder::class,
+            PosStackPresetSeeder::class,
         ]);
     }
 }

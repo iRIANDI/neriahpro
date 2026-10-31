@@ -15,8 +15,8 @@
     @endphp
 
     <div class="space-y-5 font-sans text-zinc-950 dark:text-zinc-100">
-        <!-- KPI Summary Strip (12-Col Grid, Tabular Nums, Crisp 1px Borders, Zero-Slop) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- KPI Summary Strip (5-Col Grid, Tabular Nums, Crisp 1px Borders, Zero-Slop) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm">
                 <div class="text-[11px] font-mono font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-400">Domain-Driven Taxonomies</div>
                 <div class="mt-1 flex items-baseline justify-between">
@@ -28,7 +28,14 @@
                 <div class="text-[11px] font-mono font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-400">Composable Building Blocks</div>
                 <div class="mt-1 flex items-baseline justify-between">
                     <span class="text-2xl font-black font-mono tabular-nums text-zinc-950 dark:text-zinc-100">{{ number_format($stats['primitives'] ?? 12, 0, ',', '.') }}</span>
-                    <span class="px-2 py-0.5 bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono text-[10px] font-black rounded-xs">CORE PRIMITIVES</span>
+                    <span class="px-2 py-0.5 bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono text-[10px] font-black rounded-xs">7-DIM PRIMITIVES</span>
+                </div>
+            </div>
+            <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm">
+                <div class="text-[11px] font-mono font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-400">Curated Stack Adapters</div>
+                <div class="mt-1 flex items-baseline justify-between">
+                    <span class="text-2xl font-black font-mono tabular-nums text-zinc-950 dark:text-zinc-100">{{ number_format($stats['stacks'] ?? 9, 0, ',', '.') }}</span>
+                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">PRESETS M1–S2</span>
                 </div>
             </div>
             <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm">
@@ -54,6 +61,7 @@
                     @foreach([
                         'sectors' => ['label' => '12 Sektor Fungsional', 'count' => $stats['sectors'] ?? 12],
                         'primitives' => ['label' => '12 Core Primitives', 'count' => $stats['primitives'] ?? 12],
+                        'stacks' => ['label' => '9 Stack Presets (M1–S2)', 'count' => $stats['stacks'] ?? 9],
                         'rules' => ['label' => 'Anti-Slop Rule Packs', 'count' => $stats['rules'] ?? 6],
                         'projects' => ['label' => 'Assembled Projects', 'count' => $stats['projects'] ?? 0],
                     ] as $tabKey => $tabMeta)
@@ -200,8 +208,35 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-800 dark:text-zinc-300 tabular-nums">
-                                State Machines: {{ implode(', ', $item['state_machines']) ?: '-' }}
+                            <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800 space-y-1 text-[11px] font-mono text-zinc-800 dark:text-zinc-300 tabular-nums">
+                                <div>State Machines: {{ implode(', ', $item['state_machines']) ?: '-' }}</div>
+                                <div class="text-[10px] text-emerald-900 dark:text-emerald-300 font-bold">
+                                    7-Dim: {{ $item['formulas_count'] ?? 1 }} Formulas • {{ $item['sagas_count'] ?? 1 }} Sagas • {{ $item['archetypes_count'] ?? 1 }} UI Archetypes • {{ $item['acceptance_count'] ?? 2 }} Tests
+                                </div>
+                            </div>
+                        @elseif($this->activeTab === 'stacks')
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="px-2 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[10px] font-black rounded-xs">
+                                            {{ $item['short_code'] }}
+                                        </span>
+                                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">
+                                            {{ $item['topology'] }}
+                                        </span>
+                                        @if(!empty($item['is_default']))
+                                            <span class="px-1.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[9px] font-black rounded-xs">DEFAULT</span>
+                                        @endif
+                                    </div>
+                                    <input type="checkbox" wire:model.live="selectedIds" value="{{ $item['id'] }}" class="rounded-none border-zinc-400" />
+                                </div>
+                                <div class="text-sm font-black text-zinc-950 dark:text-zinc-100">{{ $item['name'] }}</div>
+                                <div class="text-[11px] font-mono font-bold text-emerald-900 dark:text-emerald-300 mt-0.5">{{ $item['code'] }}</div>
+                                <p class="text-xs text-zinc-700 dark:text-zinc-300 mt-2 leading-relaxed">{{ $item['description'] }}</p>
+                            </div>
+                            <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800 space-y-1 text-[11px] font-mono text-zinc-800 dark:text-zinc-300">
+                                <div><strong class="text-zinc-950 dark:text-zinc-100">Type Contract:</strong> {{ $item['type_contract'] }}</div>
+                                <div class="text-[10px] text-zinc-600 dark:text-zinc-400">Team Scale: {{ $item['team_scale'] }}</div>
                             </div>
                         @elseif($this->activeTab === 'rules')
                             <div>
@@ -284,7 +319,9 @@
                                     @if($this->activeTab === 'sectors')
                                         {{ implode(', ', $item['mandatory_primitives'] ?? []) }}
                                     @elseif($this->activeTab === 'primitives')
-                                        Tables: {{ implode(', ', $item['tables'] ?? []) }}
+                                        Tables: {{ implode(', ', $item['tables'] ?? []) }} ({{ $item['acceptance_count'] ?? 2 }} acceptance specs)
+                                    @elseif($this->activeTab === 'stacks')
+                                        [{{ $item['short_code'] ?? '' }}] {{ $item['topology'] ?? '' }} • {{ $item['type_contract'] ?? '-' }}
                                     @elseif($this->activeTab === 'rules')
                                         Layer: {{ $item['layer'] ?? '-' }} ({{ count($item['directives'] ?? []) }} directives)
                                     @else

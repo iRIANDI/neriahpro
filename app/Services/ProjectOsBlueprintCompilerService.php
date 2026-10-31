@@ -6,7 +6,9 @@ use App\Models\PosPrimitive;
 use App\Models\PosProject;
 use App\Models\PosRulePack;
 use App\Models\PosSector;
+use App\Models\PosStackPreset;
 use App\Models\VisionBlueprint;
+use App\Support\PosStackPresetCatalog;
 use App\Support\ProjectOsMatrixCatalog;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -69,7 +71,97 @@ class ProjectOsBlueprintCompilerService
             return $sector;
         });
 
-        return ['sectors' => $sectors, 'primitives' => $primitives];
+        $stackPresets = collect(PosStackPresetCatalog::stackPresets())->map(function (array $sp): PosStackPreset {
+            $m = new PosStackPreset($sp);
+            $m->id = $m->newUniqueId();
+
+            return $m;
+        })->keyBy('code');
+
+        return ['sectors' => $sectors, 'primitives' => $primitives, 'stack_presets' => $stackPresets];
+    }
+
+    /**
+     * Check safely whether pos_stack_presets table is ready in DB.
+     */
+    protected static function hasStackPresetsTable(): bool
+    {
+        try {
+            return Schema::hasTable('pos_stack_presets') && PosStackPreset::query()->count() > 0;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Format a PosStackPreset model for API / frontend catalog output.
+     */
+    protected static function formatStackPresetForCatalog(PosStackPreset $sp): array
+    {
+        return [
+            'id' => $sp->id,
+            'code' => $sp->code,
+            'short_code' => $sp->short_code,
+            'topology' => $sp->topology,
+            'sort_order' => $sp->sort_order,
+            'name' => $sp->name,
+            'primary_language' => $sp->primary_language,
+            'best_use_cases' => $sp->best_use_cases,
+            'layer_technologies' => $sp->layer_technologies,
+            'directory_structure_contract' => $sp->directory_structure_contract,
+            'inter_layer_type_contract' => $sp->inter_layer_type_contract,
+            'deployment_artifacts' => $sp->deployment_artifacts,
+            'stack_specific_anti_slop_rules' => $sp->stack_specific_anti_slop_rules,
+            'is_default' => (bool) $sp->is_default,
+        ];
+    }
+
+    /**
+     * Deterministically resolve one of the 9 Curated Tech Stack & Topology Presets (M1..S2).
+     */
+    public static function resolveStackPreset(?string $explicitCode = null, string $corpus = ''): PosStackPreset
+    {
+        ProjectOsMatrixCatalog::ensureSeeded();
+
+        $presets = self::hasStackPresetsTable()
+            ? PosStackPreset::query()->where('is_active', true)->orderBy('sort_order')->get()->keyBy('code')
+            : (self::buildInMemoryMatrix()['stack_presets'] ?? collect());
+
+        if ($explicitCode !== null && trim($explicitCode) !== '') {
+            $normalizedCode = PosStackPresetCatalog::normalizePresetCode($explicitCode);
+            if ($presets->has($normalizedCode)) {
+                return $presets->get($normalizedCode);
+            }
+        }
+
+        $normalizedCorpus = mb_strtolower($corpus);
+        if ($normalizedCorpus !== '') {
+            $bestCode = null;
+            $bestScore = 0;
+            foreach ($presets as $code => $preset) {
+                if ($code === PosStackPresetCatalog::DEFAULT_PRESET_CODE) {
+                    continue;
+                }
+                $score = 0;
+                foreach (($preset->detection_keywords ?? []) as $kw) {
+                    $kwLower = mb_strtolower(trim((string) $kw));
+                    if ($kwLower !== '' && str_contains($normalizedCorpus, $kwLower)) {
+                        $score += str_contains($kwLower, ' ') ? 3 : 2;
+                    }
+                }
+                if ($score > $bestScore && $score >= 3) {
+                    $bestScore = $score;
+                    $bestCode = $code;
+                }
+            }
+            if ($bestCode && $presets->has($bestCode)) {
+                return $presets->get($bestCode);
+            }
+        }
+
+        return $presets->get(PosStackPresetCatalog::DEFAULT_PRESET_CODE)
+            ?? $presets->first()
+            ?? new PosStackPreset(PosStackPresetCatalog::stackPresets()[0]);
     }
 
     /**
@@ -104,9 +196,14 @@ class ProjectOsBlueprintCompilerService
                     'description' => $p->description,
                     'table_names' => array_values(array_map(fn ($t) => $t['table'] ?? '', $p->schema_blueprints ?? [])),
                     'state_machine_entities' => array_values(array_map(fn ($sm) => $sm['entity'] ?? '', $p->state_machines ?? [])),
+                    'screen_archetypes' => array_values(array_map(fn ($ui) => $ui['archetype'] ?? '', $p->ui_screen_archetypes ?? [])),
+                    'formulas_count' => count($p->deterministic_formulas ?? []),
+                    'acceptance_tests_count' => count($p->acceptance_test_scenarios ?? []),
                     'detection_keywords' => $p->detection_keywords ?? [],
                 ])->all(),
                 'rule_packs' => ProjectOsMatrixCatalog::rulePacks(),
+                'stack_presets' => $mem['stack_presets']->values()->map(fn (PosStackPreset $sp) => self::formatStackPresetForCatalog($sp))->all(),
+                'stack_comparison_matrix' => PosStackPresetCatalog::comparisonMatrix(),
             ];
         }
 
@@ -144,20 +241,31 @@ class ProjectOsBlueprintCompilerService
                 ->values()
                 ->all();
 
+            $ultimateFallback = PosStackPresetCatalog::primitiveUltimateContracts();
             $primitives = PosPrimitive::query()
                 ->where('is_active', true)
                 ->orderBy('code')
                 ->get()
-                ->map(fn (PosPrimitive $p): array => [
-                    'id' => $p->id,
-                    'code' => $p->code,
-                    'name' => $p->name,
-                    'category' => $p->category,
-                    'description' => $p->description,
-                    'table_names' => array_values(array_map(fn ($t) => $t['table'] ?? '', $p->schema_blueprints ?? [])),
-                    'state_machine_entities' => array_values(array_map(fn ($sm) => $sm['entity'] ?? '', $p->state_machines ?? [])),
-                    'detection_keywords' => $p->detection_keywords ?? [],
-                ])
+                ->map(function (PosPrimitive $p) use ($ultimateFallback): array {
+                    $ext = $ultimateFallback[$p->code] ?? [];
+                    $formulas = ! empty($p->deterministic_formulas) ? $p->deterministic_formulas : ($ext['deterministic_formulas'] ?? []);
+                    $archetypes = ! empty($p->ui_screen_archetypes) ? $p->ui_screen_archetypes : ($ext['ui_screen_archetypes'] ?? []);
+                    $tests = ! empty($p->acceptance_test_scenarios) ? $p->acceptance_test_scenarios : ($ext['acceptance_test_scenarios'] ?? []);
+
+                    return [
+                        'id' => $p->id,
+                        'code' => $p->code,
+                        'name' => $p->name,
+                        'category' => $p->category,
+                        'description' => $p->description,
+                        'table_names' => array_values(array_map(fn ($t) => $t['table'] ?? '', $p->schema_blueprints ?? [])),
+                        'state_machine_entities' => array_values(array_map(fn ($sm) => $sm['entity'] ?? '', $p->state_machines ?? [])),
+                        'screen_archetypes' => array_values(array_map(fn ($ui) => $ui['archetype'] ?? '', $archetypes)),
+                        'formulas_count' => count($formulas),
+                        'acceptance_tests_count' => count($tests),
+                        'detection_keywords' => $p->detection_keywords ?? [],
+                    ];
+                })
                 ->values()
                 ->all();
 
@@ -176,10 +284,30 @@ class ProjectOsBlueprintCompilerService
                 ->values()
                 ->all();
 
+            $stackPresets = self::hasStackPresetsTable()
+                ? PosStackPreset::query()
+                    ->where('is_active', true)
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->map(fn (PosStackPreset $sp): array => self::formatStackPresetForCatalog($sp))
+                    ->values()
+                    ->all()
+                : collect(PosStackPresetCatalog::stackPresets())
+                    ->map(function (array $sp): array {
+                        $m = new PosStackPreset($sp);
+                        $m->id = $m->newUniqueId();
+
+                        return self::formatStackPresetForCatalog($m);
+                    })
+                    ->values()
+                    ->all();
+
             return [
                 'sectors' => $sectors,
                 'primitives' => $primitives,
                 'rule_packs' => $rulePacks,
+                'stack_presets' => $stackPresets,
+                'stack_comparison_matrix' => PosStackPresetCatalog::comparisonMatrix(),
             ];
         });
     }
@@ -362,11 +490,19 @@ class ProjectOsBlueprintCompilerService
         $primitives = $resolved['primitives'];
 
         $appName = trim((string) ($options['app_name'] ?? $blueprint?->nama_bisnis ?? 'Target Enterprise Application'));
-        $stackPreset = (string) ($options['stack_preset'] ?? 'LARAVEL13_FILAMENT5_LIVEWIRE4_FLUX_PGSQL16_RAILPACK');
+        $rawRequestedPreset = $options['stack_preset']
+            ?? ($meta['composable_matrix']['stack_preset_code'] ?? null)
+            ?? ($meta['stack_preset'] ?? null);
+        $stackPresetModel = self::resolveStackPreset(
+            is_string($rawRequestedPreset) ? $rawRequestedPreset : null,
+            $corpus
+        );
+        $stackPreset = $stackPresetModel->code;
+        $activeTopology = $stackPresetModel->topology ?: 'MONOLITH';
 
-        // Build Data Dictionary: Base Multi-Tenant Anchor + All Primitive Tables + Custom Blueprint Entities
+        // Build Data Dictionary: Base Multi-Tenant Anchor + All Primitive Tables + Reliability Outbox/Webhook Tables + Custom Blueprint Entities
         $dataDictionary = [
-            [
+            array_merge([
                 'table' => 'organizations',
                 'tenant_scoped' => false,
                 'soft_deletes' => false,
@@ -382,7 +518,7 @@ class ProjectOsBlueprintCompilerService
                 'unique_constraints' => [
                     ['name' => 'organizations_slug_unique', 'rule' => 'UNIQUE (slug)'],
                 ],
-            ],
+            ], PosStackPresetCatalog::resolveTableDeletionPolicy('organizations')),
         ];
 
         $seenTables = ['organizations' => true, 'users' => true];
@@ -393,8 +529,17 @@ class ProjectOsBlueprintCompilerService
         $seenActions = [];
         $edgeCasePlaybooks = [];
         $geminiTools = [];
+        $deterministicFormulas = [];
+        $outboxEvents = [];
+        $compensatingActions = [];
+        $externalIntegrations = [];
+        $uiScreenArchetypes = [];
+        $acceptanceTestMatrix = [];
+        $ultimateFallbackMap = PosStackPresetCatalog::primitiveUltimateContracts();
 
         foreach ($primitives as $primitive) {
+            $fallbackExt = $ultimateFallbackMap[$primitive->code] ?? [];
+
             foreach (($primitive->schema_blueprints ?? []) as $tblDef) {
                 $tName = $tblDef['table'] ?? '';
                 if ($tName === '' || isset($seenTables[$tName])) {
@@ -402,6 +547,9 @@ class ProjectOsBlueprintCompilerService
                 }
                 $seenTables[$tName] = true;
                 $tblDef['source_module'] = $primitive->code;
+                if (! isset($tblDef['deletion_policy'])) {
+                    $tblDef = array_merge($tblDef, PosStackPresetCatalog::resolveTableDeletionPolicy($tName));
+                }
                 $dataDictionary[] = $tblDef;
             }
 
@@ -437,6 +585,57 @@ class ProjectOsBlueprintCompilerService
             foreach (($primitive->gemini_tool_declarations ?? []) as $tool) {
                 $geminiTools[] = $tool;
             }
+
+            // 7 Zero-Assumption Ultimate Dimensions aggregation
+            $primFormulas = ! empty($primitive->deterministic_formulas)
+                ? $primitive->deterministic_formulas
+                : ($fallbackExt['deterministic_formulas'] ?? []);
+            foreach ($primFormulas as $f) {
+                $f['source_module'] = $primitive->code;
+                $deterministicFormulas[] = $f;
+            }
+
+            $primSaga = ! empty($primitive->saga_and_webhook_contracts)
+                ? $primitive->saga_and_webhook_contracts
+                : ($fallbackExt['saga_and_webhook_contracts'] ?? []);
+            foreach (($primSaga['transactional_outbox_events'] ?? []) as $evt) {
+                $outboxEvents[] = ['source_module' => $primitive->code, 'event_type' => $evt];
+            }
+            foreach (($primSaga['compensating_actions'] ?? []) as $comp) {
+                $comp['source_module'] = $primitive->code;
+                $compensatingActions[] = $comp;
+            }
+            foreach (($primSaga['external_integrations'] ?? []) as $extInt) {
+                $extInt['source_module'] = $primitive->code;
+                $externalIntegrations[] = $extInt;
+            }
+
+            $primArchetypes = ! empty($primitive->ui_screen_archetypes)
+                ? $primitive->ui_screen_archetypes
+                : ($fallbackExt['ui_screen_archetypes'] ?? []);
+            foreach ($primArchetypes as $arch) {
+                $arch['source_module'] = $primitive->code;
+                $uiScreenArchetypes[] = $arch;
+            }
+
+            $primTests = ! empty($primitive->acceptance_test_scenarios)
+                ? $primitive->acceptance_test_scenarios
+                : ($fallbackExt['acceptance_test_scenarios'] ?? []);
+            foreach ($primTests as $testCase) {
+                $testCase['source_module'] = $primitive->code;
+                $acceptanceTestMatrix[] = $testCase;
+            }
+        }
+
+        // Inject Transactional Outbox & Inbound Webhook Vault tables (`outbox_messages` & `webhook_inbound_logs`)
+        foreach (PosStackPresetCatalog::transactionalOutboxAndWebhookTables() as $infraTbl) {
+            $tName = $infraTbl['table'] ?? '';
+            if ($tName !== '' && ! isset($seenTables[$tName])) {
+                $seenTables[$tName] = true;
+                $infraTbl['tenant_scoped'] = $tName === 'outbox_messages';
+                $infraTbl['source_module'] = 'CORE_RELIABILITY_OUTBOX_VAULT';
+                $dataDictionary[] = $infraTbl;
+            }
         }
 
         // Synthesize Custom Domain Entities from user's unique features if not already covered by primitive tables
@@ -445,9 +644,22 @@ class ProjectOsBlueprintCompilerService
             $tName = $customTbl['table'] ?? '';
             if ($tName !== '' && ! isset($seenTables[$tName])) {
                 $seenTables[$tName] = true;
+                if (! isset($customTbl['deletion_policy'])) {
+                    $customTbl = array_merge($customTbl, PosStackPresetCatalog::resolveTableDeletionPolicy($tName));
+                }
                 $dataDictionary[] = $customTbl;
             }
         }
+
+        // Summarize per-table Data Lifecycle, PII Masking & Deletion Governance (Dimension 5)
+        $deletionGovernanceMatrix = array_values(array_map(static fn (array $tbl): array => [
+            'table' => $tbl['table'] ?? '',
+            'source_module' => $tbl['source_module'] ?? 'CORE',
+            'deletion_policy' => $tbl['deletion_policy'] ?? 'SOFT_ARCHIVE',
+            'foreign_key_on_delete' => $tbl['foreign_key_on_delete'] ?? 'RESTRICT',
+            'retention_period' => $tbl['retention_period'] ?? '5_YEARS_ACTIVE_THEN_PARTITION_ARCHIVE',
+            'pii_columns' => $tbl['pii_columns'] ?? [],
+        ], $dataDictionary));
 
         $hasTables = self::hasMatrixTables();
         $rulePacks = $hasTables
@@ -459,9 +671,14 @@ class ProjectOsBlueprintCompilerService
                 return $m;
             });
 
+        $layerTech = is_array($stackPresetModel->layer_technologies) ? $stackPresetModel->layer_technologies : [];
+        $tenancyModel = $activeTopology === 'MICROSERVICES'
+            ? 'DATABASE_PER_SERVICE_PLUS_ORGANIZATION_ID_COLUMN_SCOPE'
+            : 'MULTI_TENANT_SHARED_DB_COLUMN_SCOPED';
+
         $schema = [
             '$schema' => self::SCHEMA_URI,
-            'schema_version' => '1.0.0',
+            'schema_version' => '2.0.0',
             'project_metadata' => [
                 'name' => $appName,
                 'blueprint_id' => $blueprint?->id,
@@ -472,23 +689,36 @@ class ProjectOsBlueprintCompilerService
                 'compliance_standards' => $sector?->default_compliance_standards ?? ['UU PDP No. 27/2022', 'OWASP ASVS L2'],
                 'injected_primitives' => $primitives->pluck('code')->values()->all(),
                 'active_rule_packs' => $rulePacks->pluck('slug')->values()->all(),
-                'tenancy_model' => 'MULTI_TENANT_SHARED_DB_COLUMN_SCOPED',
+                'tenancy_model' => $tenancyModel,
                 'tenant_identifier' => 'organization_id',
                 'stack_preset' => $stackPreset,
+                'stack_short_code' => $stackPresetModel->short_code ?: 'M1',
+                'topology' => $activeTopology,
+                'stack_preset_name' => $stackPresetModel->name ?? ['id' => $stackPreset, 'en' => $stackPreset],
             ],
             'tech_stack_contract' => [
-                'backend' => 'Laravel 13+ / PHP 8.5+',
-                'frontend_admin' => 'FilamentPHP v5 + Livewire v4',
-                'frontend_public' => 'Livewire v4 + Flux UI + Tailwind CSS v4 + Alpine.js (100% Local Asset Bundle)',
-                'database' => 'PostgreSQL 16+ (Strict ULID Mode, pgvector 768-dim HNSW)',
-                'deployment' => 'Railpack (railpack.json) + FrankenPHP Caddyfile + Zero-Downtime 6-Scenario deploy.sh',
+                'preset_code' => $stackPreset,
+                'short_code' => $stackPresetModel->short_code ?: 'M1',
+                'topology' => $activeTopology,
+                'primary_language' => $stackPresetModel->primary_language ?: 'PHP 8.4/8.5',
+                'backend' => $layerTech['backend'] ?? $layerTech['backend_api'] ?? $layerTech['core_transactional_engine'] ?? 'Laravel 13+ / PHP 8.5+',
+                'frontend_admin' => $layerTech['frontend_admin'] ?? $layerTech['headless_admin'] ?? $layerTech['identity_and_backoffice_service'] ?? 'FilamentPHP v5',
+                'frontend_public' => $layerTech['frontend_public'] ?? $layerTech['frontend_web'] ?? $layerTech['frontend_apps'] ?? 'Livewire v4 + Flux UI + Tailwind CSS v4',
+                'database' => $layerTech['database'] ?? 'PostgreSQL 16+ (Strict ULID Mode, pgvector 768-dim HNSW)',
+                'deployment' => $layerTech['runtime_server'] ?? 'Railpack (railpack.json) + FrankenPHP Caddyfile + Zero-Downtime 6-Scenario deploy.sh',
+                'layer_technologies' => $layerTech,
+                'directory_structure_contract' => $stackPresetModel->directory_structure_contract ?? [],
+                'inter_layer_type_contract' => $stackPresetModel->inter_layer_type_contract ?? [],
+                'deployment_artifacts' => $stackPresetModel->deployment_artifacts ?? [],
+                'stack_specific_anti_slop_rules' => (string) ($stackPresetModel->stack_specific_anti_slop_rules ?? ''),
                 'Forbidden_Assumptions' => [
-                    'DO NOT use floating-point (float/double) for money or stock quantities; ALWAYS use DECIMAL(19,4) or BIGINT minor units.',
-                    'DO NOT update balances or stock directly with static UPDATE queries; ALWAYS append to journal_lines or inventory_movements inside DB::transaction() with lockForUpdate().',
-                    'DO NOT write raw business state transitions inside Controllers or Livewire components; ALWAYS encapsulate inside dedicated invokable Action classes wrapped in DB::transaction().',
-                    'DO NOT use AUTO_INCREMENT ($table->id()) or $table->uuid(\'id\') for ULID models in PostgreSQL; ALWAYS use $table->ulid(\'id\')->primary() + HasUlids + foreignUlid().',
-                    'DO NOT use OFFSET-based ->paginate(); ALWAYS use O(1) keyset ->cursorPaginate() ordered deterministically by id.',
-                    'DO NOT generate AI-Slop UI (rounded-full capsule buttons, cheesy purple-pink gradients, thick shadow-2xl, hover:scale-105, native alert()/confirm(), or external CDN scripts).',
+                    'DO NOT use floating-point (float/double/JS number) for money or stock quantities; ALWAYS use DECIMAL(19,4) or BIGINT minor units.',
+                    'DO NOT update balances or stock directly with static UPDATE queries; ALWAYS append to journal_lines or inventory_movements inside atomic DB transactions with row-level pessimistic lock (SELECT ... FOR UPDATE).',
+                    'DO NOT use blind cascadeOnDelete() on transactional, ledger, clinical, or audit foreign keys; ALWAYS enforce RESTRICT and obey each table\'s deletion_policy (IMMUTABLE_LEDGER / ANONYMIZE_PII / SOFT_ARCHIVE).',
+                    'DO NOT make synchronous blocking outbound HTTP calls inside HTTP Controllers; ALWAYS persist to outbox_messages / webhook_inbound_logs and process asynchronously with Circuit Breaker & Exponential Backoff [10s, 60s, 300s, 1800s].',
+                    'DO NOT invent inconsistent JSON error shapes; ALWAYS enforce RFC 9457 (application/problem+json) and mandatory headers (X-Request-ID, X-Tenant-ID, X-Idempotency-Key).',
+                    'DO NOT use AUTO_INCREMENT ($table->id()) or $table->uuid(\'id\') for ULID models in PostgreSQL, and DO NOT use OFFSET-based ->paginate(); ALWAYS use 26-char ULID + O(1) keyset cursor pagination.',
+                    'DO NOT generate AI-Slop UI (rounded-full capsule buttons, cheesy purple-pink gradients, thick shadow-2xl, hover:scale-105, native alert()/confirm(), blank unhappy-path screens, or external CDN scripts).',
                 ],
             ],
             'domain_invariants' => [
@@ -496,6 +726,7 @@ class ProjectOsBlueprintCompilerService
                 'currency_handling' => [
                     'type' => 'DECIMAL(19,4)',
                     'rounding_mode' => 'HALF_UP',
+                    'penny_allocation_strategy' => 'LARGEST_REMAINDER_OR_FINAL_INSTALLMENT_ABSORPTION (0.0000 drift guaranteed)',
                     'default_currency' => 'IDR',
                 ],
                 'timezone_strategy' => [
@@ -511,6 +742,35 @@ class ProjectOsBlueprintCompilerService
                 'permissions' => $permissions,
             ],
             'edge_case_playbooks' => $edgeCasePlaybooks,
+            // === THE 7 ULTIMATE ZERO-ASSUMPTION DIMENSIONS ===
+            'api_and_envelope_contract' => PosStackPresetCatalog::apiEnvelopeContract($activeTopology, $stackPreset),
+            'distributed_saga_and_outbox_contract' => [
+                'pattern' => $activeTopology === 'MICROSERVICES'
+                    ? 'Transactional Outbox (`outbox_messages`) + NATS JetStream + Temporal.io Saga Orchestrator'
+                    : 'Transactional Outbox (`outbox_messages`) + Atomic Local Transaction + Async Compensating Jobs',
+                'outbox_table' => 'outbox_messages',
+                'outbox_events' => $outboxEvents,
+                'compensating_actions' => $compensatingActions,
+            ],
+            'deterministic_formulas' => $deterministicFormulas,
+            'external_integration_contracts' => [
+                'inbound_webhook_vault_table' => 'webhook_inbound_logs',
+                'mandatory_signature_verification' => 'HMAC-SHA256 / SHA-512 verified against raw request body BEFORE JSON parsing; respond 202 Accepted in <50ms.',
+                'outbound_retry_schedule_seconds' => [10, 60, 300, 1800],
+                'circuit_breaker_policy' => 'Open circuit for 60s after 5 consecutive timeouts/5xx responses; route exhausted events to Dead-Letter Queue.',
+                'provider_contracts' => $externalIntegrations,
+            ],
+            'data_lifecycle_and_pii_governance' => [
+                'cascade_delete_ban' => 'Blind ON DELETE CASCADE on transactional/audit tables is STRICTLY FORBIDDEN (UU PDP No. 27/2022, PSAK, & Permenkes 24/2022).',
+                'policies_legend' => [
+                    'IMMUTABLE_LEDGER' => 'RESTRICT deletion & direct overwrite; corrections ONLY via contra-journal or signed addendum.',
+                    'ANONYMIZE_PII' => 'Preserve row & ULID PK for FK integrity; redact PII columns to `[REDACTED_USER_<ULID>]` upon erasure request.',
+                    'SOFT_ARCHIVE' => 'Mark `is_active = false` / `archived_at` and move to cold partition after statutory retention.',
+                ],
+                'table_policies' => $deletionGovernanceMatrix,
+            ],
+            'ui_screen_archetypes' => $uiScreenArchetypes,
+            'acceptance_test_matrix' => $acceptanceTestMatrix,
             'gemini_native_tools' => $geminiTools,
         ];
 
@@ -524,26 +784,29 @@ class ProjectOsBlueprintCompilerService
                 ? ['vision_blueprint_id' => $blueprint->id]
                 : ['app_name' => $appName, 'primary_sector_id' => $sector->id];
 
-            PosProject::query()->updateOrCreate(
-                $lookup,
-                [
-                    'user_id' => $options['user_id'] ?? auth()->id(),
-                    'vision_blueprint_id' => $blueprint?->id,
-                    'primary_sector_id' => $sector->id,
-                    'app_name' => $appName,
-                    'architecture_archetype' => $resolved['architecture_archetype'],
-                    'tenancy_model' => 'MULTI_TENANT_SHARED_DB_COLUMN_SCOPED',
-                    'tenant_identifier' => 'organization_id',
-                    'stack_preset' => $stackPreset,
-                    'selected_primitive_ids' => $primitives->pluck('id')->values()->all(),
-                    'selected_rule_pack_ids' => $rulePacks->pluck('id')->values()->all(),
-                    'custom_entities' => $customEntities,
-                    'compiled_schema_json' => json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-                    'compiled_execution_md' => $executionMd,
-                    'compiled_agents_md' => $agentsMd,
-                    'compiled_graph_json' => $graphJson,
-                ]
-            );
+            $projectPayload = [
+                'user_id' => $options['user_id'] ?? auth()->id(),
+                'vision_blueprint_id' => $blueprint?->id,
+                'primary_sector_id' => $sector->id,
+                'app_name' => $appName,
+                'architecture_archetype' => $resolved['architecture_archetype'],
+                'tenancy_model' => $tenancyModel,
+                'tenant_identifier' => 'organization_id',
+                'stack_preset' => $stackPreset,
+                'selected_primitive_ids' => $primitives->pluck('id')->values()->all(),
+                'selected_rule_pack_ids' => $rulePacks->pluck('id')->values()->all(),
+                'custom_entities' => $customEntities,
+                'compiled_schema_json' => json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                'compiled_execution_md' => $executionMd,
+                'compiled_agents_md' => $agentsMd,
+                'compiled_graph_json' => $graphJson,
+            ];
+
+            if ($stackPresetModel->exists && Schema::hasColumn('pos_projects', 'stack_preset_id')) {
+                $projectPayload['stack_preset_id'] = $stackPresetModel->id;
+            }
+
+            PosProject::query()->updateOrCreate($lookup, $projectPayload);
         }
 
         return $schema;
@@ -634,14 +897,26 @@ class ProjectOsBlueprintCompilerService
         $md .= "5. ZERO HARDCODE & STRICT ULID: Every business table MUST use `->ulid('id')->primary()` (`HasUlids`) and `DECIMAL(19,4)` for money/quantities. NEVER use `float`, `->id()`, `->uuid('id')`, `->paginate()`, or hardcoded entity names.\n";
         $md .= "</ZERO_ASSUMPTION_DIRECTIVES>\n\n";
 
-        $md .= "## 1. Domain & Architecture Context\n";
+        $stackInfo = $schema['tech_stack_contract'] ?? [];
+        $stackPresetCode = $meta['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH';
+        $stackShortCode = $meta['stack_short_code'] ?? ($stackInfo['short_code'] ?? 'M1');
+        $topology = $meta['topology'] ?? ($stackInfo['topology'] ?? 'MONOLITH');
+        $stackPresetLabel = $meta['stack_preset_name']['id'] ?? $stackPresetCode;
+
+        $md .= "## 1. Domain, Topology & Stack Adapter Context\n";
         $md .= "- **Application Name:** `{$meta['name']}`\n";
         $md .= "- **Architecture Archetype:** `{$meta['architecture_archetype']}`\n";
         $md .= "- **Primary Functional Sector:** `{$sectorCode}` — {$sectorLabel}\n";
         $md .= "- **Active Core Primitives:** `{$primitives}`\n";
+        $md .= "- **Selected Topology & Stack Preset:** `[{$stackShortCode}] {$topology}` — `{$stackPresetCode}` ({$stackPresetLabel})\n";
+        $md .= "- **Primary Language & Runtime:** `{$stackInfo['primary_language']}` | Backend: `{$stackInfo['backend']}` | Frontend: `{$stackInfo['frontend_public']}`\n";
         $md .= "- **Compliance & Regulatory Baseline:** {$compliance}\n";
-        $md .= "- **Multi-Tenancy Scope:** `{$meta['tenancy_model']}` — All tenant-owned tables MUST enforce `BelongsToTenant` global scope on `{$meta['tenant_identifier']}`.\n";
-        $md .= "- **Target Stack Contract:** Laravel 13+ (PHP 8.5+) | Filament v5 | Livewire v4 | Flux UI | PostgreSQL 16 (`pgvector` 768-dim) | Railpack FrankenPHP.\n\n";
+        $md .= "- **Multi-Tenancy Scope:** `{$meta['tenancy_model']}` — All tenant-owned tables MUST enforce tenant isolation on `{$meta['tenant_identifier']}`.\n\n";
+
+        if (! empty($stackInfo['stack_specific_anti_slop_rules'])) {
+            $md .= "### Stack-Specific Anti-Slop Rules (`{$stackPresetCode}`)\n";
+            $md .= $stackInfo['stack_specific_anti_slop_rules'] . "\n\n";
+        }
 
         if (! empty($schema['domain_invariants']['sector_invariants'])) {
             $md .= "### Sector Mandatory Invariants\n";
@@ -651,11 +926,13 @@ class ProjectOsBlueprintCompilerService
             $md .= "\n";
         }
 
-        $md .= "## 2. Exact Database Schema & Constraints\n";
+        $md .= "## 2. Exact Database Schema, Constraints & Deletion Governance\n";
         foreach (($schema['data_dictionary'] ?? []) as $table) {
             $scopeTag = ! empty($table['tenant_scoped']) ? 'Tenant-Scoped (`organization_id`)' : 'Global Anchor';
             $srcTag = $table['source_module'] ?? 'CORE';
-            $md .= "### Table: `{$table['table']}` — *{$scopeTag} | Module: `{$srcTag}`*\n";
+            $delPolicy = $table['deletion_policy'] ?? 'SOFT_ARCHIVE';
+            $fkRule = $table['foreign_key_on_delete'] ?? 'RESTRICT';
+            $md .= "### Table: `{$table['table']}` — *{$scopeTag} | Module: `{$srcTag}` | Deletion Policy: `{$delPolicy}` (`ON DELETE {$fkRule}`)*\n";
             $md .= "| Column | Exact Type | Modifiers / Foreign Key / Enum |\n";
             $md .= "| :--- | :--- | :--- |\n";
             foreach (($table['columns'] ?? []) as $col) {
@@ -679,7 +956,12 @@ class ProjectOsBlueprintCompilerService
             }
             if (! empty($table['unique_constraints'])) {
                 foreach ($table['unique_constraints'] as $uc) {
-                    $md .= "- **Constraint `{$uc['name']}`:** `{$uc['rule']}`\n";
+                    if (is_array($uc) && isset($uc['name'], $uc['rule'])) {
+                        $md .= "- **Constraint `{$uc['name']}`:** `{$uc['rule']}`\n";
+                    } elseif (is_array($uc)) {
+                        $cols = implode(', ', $uc);
+                        $md .= "- **Unique Constraint:** `UNIQUE ({$cols})`\n";
+                    }
                 }
             }
             $md .= "\n";
@@ -731,15 +1013,113 @@ class ProjectOsBlueprintCompilerService
         }
         $md .= "\n";
 
-        $md .= "## 6. Step-by-Step Implementation Order for AI (6-Stage ECC Loop)\n";
-        $md .= "1. **Enums First:** Generate PHP 8.5 Backed Enums (`app/Enums/*Status.php`) for every State Machine listed in Section 3.\n";
-        $md .= "2. **ULID Migrations & Models:** Generate PostgreSQL 16 migrations (`->ulid('id')->primary()`, `->foreignUlid()`, `DECIMAL(19,4)`) and Eloquent Models (`HasUlids`, `BelongsToTenant`).\n";
-        $md .= "3. **Atomic Domain Actions:** Generate Invokable Action classes (`app/Actions/*Action.php`) enforcing Guards, `DB::transaction()`, and `lockForUpdate()`.\n";
-        $md .= "4. **Pest TDD Verification First:** Generate Feature Tests (`tests/Feature/*ContractTest.php`) proving every State Guard, Pessimistic Lock, Tenant Isolation, and Edge-Case Playbook BEFORE building UI.\n";
-        $md .= "5. **Zero-Slop Filament v5 & Flux UI:** Bind Filament Resources (`Width::Full`, 12-col Grid, `TranslatableTabs`, `cursorPaginate()`) and Livewire Flux components exclusively to Action classes, strictly adhering to `.agents/UI_UX_CONTRACT.md`.\n";
-        $md .= "6. **Graphify Sync & Railpack Deploy:** Update `.agents/graphify/graph.json`, run full Pest verification, and deploy via `./deploy.sh`.\n";
+        $md .= "## 6. API Envelope (RFC 9457), Distributed Saga Outbox & Webhook Security\n";
+        $apiContract = $schema['api_and_envelope_contract'] ?? [];
+        $md .= "- **API Standard:** `{$apiContract['standard']}` (`application/problem+json` for all errors, O(1) `meta.cursor.next` for collections — NEVER offset `page`/`total`).\n";
+        $md .= "- **Required HTTP Headers:** `X-Request-ID` (ULID), `X-Tenant-ID` (ULID), `X-Idempotency-Key` (mandatory on POST/PUT/PATCH), `Accept-Language`.\n";
+        $sagaContract = $schema['distributed_saga_and_outbox_contract'] ?? [];
+        $md .= "- **Distributed Saga & Outbox Pattern:** {$sagaContract['pattern']} via `outbox_messages` & `webhook_inbound_logs` (HMAC-SHA256 verified before async processing; outbound Exponential Backoff `[10s, 60s, 300s, 1800s]` + Circuit Breaker).\n";
+        foreach (($sagaContract['compensating_actions'] ?? []) as $comp) {
+            $md .= "  - *Trigger `{$comp['trigger']}` (`{$comp['source_module']}`)* -> **Compensating Action:** `{$comp['compensation']}` ({$comp['mechanism']})\n";
+        }
+        $md .= "\n";
+
+        $md .= "## 7. Exact Mathematical Formulas, Tax Precedence & Penny Allocation\n";
+        foreach (($schema['deterministic_formulas'] ?? []) as $formula) {
+            $md .= "### Formula `{$formula['formula_code']}` (`{$formula['source_module']}`)\n";
+            $md .= "- **Expression:** `{$formula['expression']}`\n";
+            foreach (($formula['order_of_precedence'] ?? []) as $step) {
+                $md .= "  - {$step}\n";
+            }
+            if (! empty($formula['penny_allocation_rule'])) {
+                $md .= "- **Penny Allocation Rule:** {$formula['penny_allocation_rule']}\n";
+            }
+            $md .= "\n";
+        }
+
+        $md .= "## 8. UI Screen Archetypes & Mandatory Unhappy-Path States\n";
+        foreach (($schema['ui_screen_archetypes'] ?? []) as $arch) {
+            $shortcuts = [];
+            foreach (($arch['keyboard_shortcuts'] ?? []) as $k => $desc) {
+                $shortcuts[] = "`{$k}`: {$desc}";
+            }
+            $md .= "- **`{$arch['archetype']}` — {$arch['screen']} (`{$arch['source_module']}`)**\n";
+            $md .= "  - *Layout:* {$arch['layout_contract']}\n";
+            if (! empty($shortcuts)) {
+                $md .= '  - *Keyboard Shortcuts:* ' . implode(' | ', $shortcuts) . "\n";
+            }
+            $md .= "  - *Empty State:* {$arch['empty_state']}\n";
+            $md .= "  - *Loading State:* {$arch['loading_state']}\n";
+            $md .= "  - *Error State:* {$arch['error_state']}\n";
+        }
+        $md .= "\n";
+
+        $md .= "## 9. Pre-Built Acceptance Test Matrix (Given-When-Then Gate)\n";
+        $md .= "AI MUST implement automated tests covering every scenario below and run them to 100% green before declaring completion:\n\n";
+        foreach (($schema['acceptance_test_matrix'] ?? []) as $tc) {
+            $md .= "- **`{$tc['id']}` (`{$tc['source_module']}`)**\n";
+            $md .= "  - **GIVEN:** {$tc['given']}\n";
+            $md .= "  - **WHEN:** {$tc['when']}\n";
+            $md .= "  - **THEN:** {$tc['then']}\n";
+        }
+        $md .= "\n";
+
+        $md .= "## 10. Step-by-Step Implementation Order for AI (6-Stage ECC Loop)\n";
+        $md .= "1. **Enums & Contracts First:** Generate State Machine Enums and Inter-Layer Type Contracts (`" . ($stackInfo['inter_layer_type_contract']['mechanism'] ?? 'Typed DTOs & Actions') . "`) for every entity in Section 3.\n";
+        $md .= "2. **ULID Migrations & RESTRICT Deletion Policies:** Generate PostgreSQL 16 migrations (`CHAR(26)` ULID PK, `DECIMAL(19,4)`, `ON DELETE RESTRICT`, `outbox_messages`, `webhook_inbound_logs`).\n";
+        $md .= "3. **Atomic Domain Actions & Mathematical Formulas:** Implement Action/Service classes enforcing Section 3 Guards, `SELECT ... FOR UPDATE` row locks, Section 6 Outbox Compensations, and Section 7 Penny-Allocation Formulas.\n";
+        $md .= "4. **Acceptance Test Matrix First (TDD):** Implement all Given-When-Then scenarios from Section 9 and verify 100% pass.\n";
+        $md .= "5. **Zero-Slop UI Archetypes:** Build every screen strictly following Section 8 Archetypes (including Empty, Skeleton Loading, and RFC 9457 Error states) and `.agents/UI_UX_CONTRACT.md`.\n";
+        $md .= "6. **Graphify Sync & Deployment:** Update `.agents/graphify/graph.json`, run full verification suite, and deploy using the stack's deployment manifest.\n";
 
         return $md;
+    }
+
+    /**
+     * Render Dedicated Topology & Stack Adapter Contract (.agents/STACK_TOPOLOGY_CONTRACT.md).
+     */
+    public static function renderStackTopologyContractMarkdown(array $schema): string
+    {
+        $meta = $schema['project_metadata'] ?? [];
+        $stack = $schema['tech_stack_contract'] ?? [];
+        $api = $schema['api_and_envelope_contract'] ?? [];
+        $dirPaths = implode("\n", array_map(fn ($p) => "- `{$p}`", $stack['directory_structure_contract']['required_paths'] ?? []));
+        $layers = '';
+        foreach (($stack['layer_technologies'] ?? []) as $layer => $tech) {
+            $layers .= "- **{$layer}:** {$tech}\n";
+        }
+
+        $typeContract = $stack['inter_layer_type_contract'] ?? [];
+        $mech = $typeContract['mechanism'] ?? 'Typed Domain Actions';
+        $cmd = $typeContract['codegen_command'] ?? 'php artisan test';
+        $guarantee = $typeContract['zero_drift_guarantee'] ?? '';
+
+        return <<<MD
+# TOPOLOGY & TECH STACK ADAPTER CONTRACT (`{$stack['preset_code']}`)
+
+- **Topology Class:** `{$stack['topology']}` (`[{$stack['short_code']}]`)
+- **Primary Language:** `{$stack['primary_language']}`
+- **Tenancy Strategy:** `{$meta['tenancy_model']}` (`{$meta['tenant_identifier']}`)
+
+## 1. Layer Technologies
+{$layers}
+
+## 2. Exact Directory Structure Contract (`{$stack['directory_structure_contract']['root_pattern']}`)
+{$dirPaths}
+
+## 3. Inter-Layer Type-Safety Contract (0% Prop / Payload Guessing)
+- **Mechanism:** {$mech}
+- **Verification / Codegen Command:** `{$cmd}`
+- **Zero-Drift Guarantee:** {$guarantee}
+
+## 4. Stack-Specific Anti-Slop Prohibitions
+{$stack['stack_specific_anti_slop_rules']}
+
+## 5. RFC 9457 Problem Details & Payload Envelope Standard
+- **Standard:** {$api['standard']}
+- **Mandatory Headers:** `X-Request-ID`, `X-Tenant-ID`, `X-Idempotency-Key`, `Accept-Language`
+- **Error Content-Type:** `application/problem+json`
+MD;
     }
 
     /**

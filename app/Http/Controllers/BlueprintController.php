@@ -120,6 +120,10 @@ class BlueprintController extends Controller
                     'terminPembayaran' => $existingBp->user_metadata['termin_pembayaran'] ?? 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
                     'primarySector' => $existingBp->user_metadata['primary_sector'] ?? ($existingBp->prd_content['composable_matrix']['primary_sector'] ?? ''),
                     'selectedPrimitives' => $existingBp->user_metadata['selected_primitives'] ?? ($existingBp->prd_content['composable_matrix']['injected_primitives'] ?? []),
+                    'stackPreset' => \App\Support\PosStackPresetCatalog::normalizePresetCode(
+                        $existingBp->user_metadata['stack_preset']
+                        ?? ($existingBp->prd_content['universal_blueprint_schema']['project_metadata']['stack_preset'] ?? null)
+                    ),
                     '_meta' => [
                         'is_editing_slug' => $slug,
                         'raw_idea_text' => $existingBp->masalah_utama,
@@ -227,6 +231,8 @@ class BlueprintController extends Controller
             'ai_provider' => 'nullable|string|max:50',
             'primary_sector' => 'nullable|string|max:80',
             'selected_primitives' => 'nullable',
+            'stack_preset' => 'nullable|string|max:120',
+            'stackPreset' => 'nullable|string|max:120',
         ]);
 
         $rawIdeaText = $request->input('idea_text', '') ?: '';
@@ -238,6 +244,7 @@ class BlueprintController extends Controller
         $projectName = $request->input('nama_bisnis') ?: $request->input('namaBisnis') ?: $request->input('project_name');
         $aiModel = $request->input('ai_model') ?: $request->input('ai_provider');
         $explicitSector = $request->input('primary_sector') ?: $request->input('primarySector');
+        $explicitStackPreset = $request->input('stack_preset') ?: $request->input('stackPreset');
         $rawPrimitives = $request->input('selected_primitives') ?? $request->input('selectedPrimitives') ?? [];
         if (is_string($rawPrimitives)) {
             $decodedPrims = json_decode($rawPrimitives, true);
@@ -280,7 +287,8 @@ class BlueprintController extends Controller
                 $projectName,
                 $aiModel,
                 $explicitSector ?: null,
-                $explicitPrimitives
+                $explicitPrimitives,
+                $explicitStackPreset ?: null
             );
 
             // Increment Spark quota usage upon successful synthesis
@@ -463,6 +471,15 @@ class BlueprintController extends Controller
                     $meta['out_of_scope'] = $blueprint['outOfScope'] ?? ($meta['out_of_scope'] ?? null);
                     $meta['kepatuhan_keamanan'] = $blueprint['kepatuhanKeamanan'] ?? ($meta['kepatuhan_keamanan'] ?? null);
                     $meta['kisaran_budget'] = $blueprint['kisaranBudget'] ?? ($meta['kisaran_budget'] ?? null);
+                    if (! empty($blueprint['primarySector'])) {
+                        $meta['primary_sector'] = $blueprint['primarySector'];
+                    }
+                    if (isset($blueprint['selectedPrimitives']) && is_array($blueprint['selectedPrimitives'])) {
+                        $meta['selected_primitives'] = $blueprint['selectedPrimitives'];
+                    }
+                    if (! empty($blueprint['stackPreset'])) {
+                        $meta['stack_preset'] = \App\Support\PosStackPresetCatalog::normalizePresetCode($blueprint['stackPreset']);
+                    }
                     $meta['last_autosaved_at'] = now()->toIso8601String();
 
                     $updatePayload = [
@@ -1156,6 +1173,10 @@ class BlueprintController extends Controller
             'execution-blueprint' => [
                 \App\Services\ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($univSchema),
                 'PROJECT_OS_EXECUTION_BLUEPRINT.md',
+            ],
+            'stack-topology' => [
+                \App\Services\ProjectOsBlueprintCompilerService::renderStackTopologyContractMarkdown($univSchema),
+                'STACK_TOPOLOGY_CONTRACT.md',
             ],
             'ui-ux-contract' => [
                 \App\Services\ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),

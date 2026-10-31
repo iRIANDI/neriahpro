@@ -34,7 +34,8 @@ class BlueprintDiscoveryService
         ?string $projectName = null,
         ?string $preferredAiProvider = null,
         ?string $explicitSectorCode = null,
-        array $explicitPrimitiveCodes = []
+        array $explicitPrimitiveCodes = [],
+        ?string $explicitStackPresetCode = null
     ): array
     {
         $isEn = ($locale === 'en');
@@ -167,14 +168,20 @@ class BlueprintDiscoveryService
         );
         $resolvedSector = $matrixResolution['sector'] ?? null;
         $resolvedPrimitives = $matrixResolution['primitives'] ?? collect();
+        $resolvedStackPreset = ProjectOsBlueprintCompilerService::resolveStackPreset($explicitStackPresetCode, $corpusText);
 
         $result['primarySector'] = $resolvedSector?->code ?? 'SECTOR_08_PROFESSIONAL_PSA';
         $result['selectedPrimitives'] = $resolvedPrimitives->pluck('code')->values()->all();
+        $result['stackPreset'] = $resolvedStackPreset->code;
+        $result['stackTopology'] = $resolvedStackPreset->topology;
         $result['composableMatrix'] = [
             'primary_sector_code' => $result['primarySector'],
             'primary_sector_name' => $resolvedSector?->name ?? [],
             'architecture_archetype' => $matrixResolution['architecture_archetype'] ?? 'COMPOSITE',
             'injected_primitives' => $result['selectedPrimitives'],
+            'stack_preset_code' => $resolvedStackPreset->code,
+            'stack_short_code' => $resolvedStackPreset->short_code,
+            'topology' => $resolvedStackPreset->topology,
             'blueprint_invariants' => $resolvedSector?->blueprint_invariants ?? [],
             'compliance_standards' => $resolvedSector?->default_compliance_standards ?? [],
             'domain_terminology' => $resolvedSector?->domain_terminology ?? [],

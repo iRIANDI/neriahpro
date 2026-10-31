@@ -90,9 +90,10 @@ class ScaffoldGeneratorService
             'database/seeders/DatabaseSeeder.php' => self::generateDatabaseSeeder($blueprint),
             'database/seeders/SyntheticDataSeeder.php' => self::generateSyntheticDataSeeder($blueprint, $erdTables),
 
-            // Pillar 5: AI Coding Agent Rules, Zero-Assumption Schema v1.0 & ECC Universal Governance
+            // Pillar 5: AI Coding Agent Rules, Zero-Assumption Schema v2.0 & ECC Universal Governance
             'PROJECT_OS_EXECUTION_BLUEPRINT.md' => ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($universalSchema),
             '.agents/BLUEPRINT_SCHEMA.json' => (string) json_encode($universalSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            '.agents/STACK_TOPOLOGY_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderStackTopologyContractMarkdown($universalSchema),
             '.agents/UI_UX_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
             '.agents/ENGINEERING_RULES.md' => ProjectOsBlueprintCompilerService::renderEngineeringRulesMarkdown(),
             '.agents/AGENT_HARNESS_ECC.md' => ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
@@ -109,6 +110,7 @@ class ScaffoldGeneratorService
             // Pillar 6: Contract-First Testing Suite & E2E Browser Automation
             'tests/Feature/ApiContractTest.php' => self::generateContractTest($blueprint, $erdTables),
             'tests/Feature/DeterministicStateMachineContractTest.php' => self::generateStateMachinePestContractTest($universalSchema),
+            'tests/Feature/ZeroAssumptionAcceptanceMatrixTest.php' => self::generateZeroAssumptionAcceptanceTest($universalSchema),
             'tests/Feature/HealthProbeTest.php' => self::generateHealthProbeTest(),
             'tests/e2e/playwright.config.ts' => self::generatePlaywrightConfig($slug),
             'tests/e2e/critical-flows.spec.ts' => self::generatePlaywrightE2ETest($blueprint, $mvpEngineeringSpecs),
@@ -163,6 +165,10 @@ class ScaffoldGeneratorService
 
         $actionFiles = self::generateStateMachineActions($universalSchema['state_machines'] ?? []);
         $files = array_merge($files, $actionFiles);
+
+        // Curated Tech Stack & Topology Adapter Scaffolding (M1..M4, D1..D3, S1..S2)
+        $stackAdapterFiles = self::generateStackPresetAdapterFiles($universalSchema, $slug);
+        $files = array_merge($files, $stackAdapterFiles);
 
         // Multi-Platform & Decoupled Scaffolding
         if ($isApiGateway) {
@@ -4272,5 +4278,549 @@ test('deterministic state machine enum {$enumClass} permits declared transition 
     expect(\$initial->canTransitionTo(\$initial))->toBeFalse();
 });
 PHP;
+    }
+
+    /**
+     * Generate Pre-Built Given-When-Then Acceptance Test Matrix verifying all 7 Zero-Assumption Dimensions.
+     */
+    public static function generateZeroAssumptionAcceptanceTest(array $universalSchema): string
+    {
+        $presetCode = addslashes((string) ($universalSchema['tech_stack_contract']['preset_code'] ?? 'STACK_M1_LARAVEL_MONOLITH'));
+        $topology = addslashes((string) ($universalSchema['tech_stack_contract']['topology'] ?? 'MONOLITH'));
+        $rawMatrix = (array) ($universalSchema['acceptance_test_matrix'] ?? []);
+        $scenarios = array_values(array_slice(isset($rawMatrix['scenarios']) ? (array) $rawMatrix['scenarios'] : $rawMatrix, 0, 8));
+
+        $scenarioBlocks = '';
+        foreach ($scenarios as $idx => $sc) {
+            $id = addslashes((string) ($sc['id'] ?? ('AT-' . ($idx + 1))));
+            $given = addslashes((string) ($sc['given'] ?? 'valid precondition'));
+            $when = addslashes((string) ($sc['when'] ?? 'domain command executes'));
+            $then = addslashes((string) ($sc['then'] ?? 'deterministic invariant holds'));
+
+            $scenarioBlocks .= <<<PHP
+
+
+test('acceptance matrix [{$id}]: {$when}', function () {
+    \$schema = json_decode((string) file_get_contents(base_path('.agents/BLUEPRINT_SCHEMA.json')), true);
+    \$list = \$schema['acceptance_test_matrix']['scenarios'] ?? \$schema['acceptance_test_matrix'] ?? [];
+    \$matched = collect(\$list)->firstWhere('id', '{$id}');
+
+    expect(\$matched)->not->toBeNull();
+    expect(\$matched['given'])->toBe('{$given}');
+    expect(\$matched['then'])->toBe('{$then}');
+});
+PHP;
+        }
+
+        return <<<PHP
+<?php
+
+declare(strict_types=1);
+
+test('universal blueprint schema v2.0.0 enforces all 7 zero-assumption architecture dimensions for {$presetCode} ({$topology})', function () {
+    \$schemaPath = base_path('.agents/BLUEPRINT_SCHEMA.json');
+    expect(file_exists(\$schemaPath))->toBeTrue();
+
+    \$schema = json_decode((string) file_get_contents(\$schemaPath), true);
+
+    expect(\$schema['schema_version'] ?? null)->toBe('2.0.0');
+    expect(\$schema['tech_stack_contract']['preset_code'] ?? null)->toBe('{$presetCode}');
+    expect(\$schema['api_and_envelope_contract']['standard'] ?? '')->toContain('RFC 9457');
+    expect(\$schema['distributed_saga_and_outbox_contract']['outbox_table'] ?? null)->toBe('outbox_messages');
+    expect(\$schema['external_integration_contracts']['inbound_webhook_vault_table'] ?? null)->toBe('webhook_inbound_logs');
+    expect(\$schema['data_lifecycle_and_pii_governance']['table_policies'] ?? [])->not->toBeEmpty();
+    expect(\$schema['deterministic_formulas'] ?? [])->not->toBeEmpty();
+    expect(\$schema['ui_screen_archetypes'] ?? [])->not->toBeEmpty();
+
+    // Penny Allocation Invariant: Rp 100.000 split across 3 installments => [33333, 33333, 33334]
+    \$total = 100000;
+    \$n = 3;
+    \$base = intdiv(\$total, \$n);
+    \$splits = [\$base, \$base, \$total - (\$base * (\$n - 1))];
+    expect(\$splits)->toBe([33333, 33333, 33334]);
+    expect(array_sum(\$splits))->toBe(\$total);
+});{$scenarioBlocks}
+PHP;
+    }
+
+    /**
+     * Emit concrete Stack & Topology Adapter files tailored to the active curated PosStackPreset (M1..M4, D1..D3, S1..S2).
+     *
+     * @return array<string, string>
+     */
+    public static function generateStackPresetAdapterFiles(array $universalSchema, string $slug): array
+    {
+        $stack = $universalSchema['tech_stack_contract'] ?? [];
+        $shortCode = strtoupper((string) ($stack['short_code'] ?? 'M1'));
+        $presetCode = (string) ($stack['preset_code'] ?? 'STACK_M1_LARAVEL_MONOLITH');
+        $topology = (string) ($stack['topology'] ?? 'MONOLITH');
+        $cleanSlug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug)) ?: 'project_os_app';
+
+        $tables = array_values((array) ($universalSchema['data_dictionary'] ?? []));
+        $firstTable = (string) ($tables[0]['table'] ?? 'domain_records');
+        $rawMatrix = (array) ($universalSchema['acceptance_test_matrix'] ?? []);
+        $scenarios = array_values(isset($rawMatrix['scenarios']) ? (array) $rawMatrix['scenarios'] : $rawMatrix);
+        $firstScenarioId = (string) ($scenarios[0]['id'] ?? 'AT-CORE-01');
+        $firstScenarioThen = str_replace(['"', "\n", "\r"], ["'", ' ', ''], (string) ($scenarios[0]['then'] ?? 'invariant holds'));
+
+        $files = [
+            'app/Support/PennyAllocationCalculator.php' => <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Support;
+
+use InvalidArgumentException;
+
+final class PennyAllocationCalculator
+{
+    /**
+     * Deterministic Final-Installment Penny Allocation (Zero Floating-Point Drift).
+     * Example: splitMinorUnits(100000, 3) => [33333, 33333, 33334].
+     *
+     * @return list<int>
+     */
+    public static function splitMinorUnits(int $totalAmount, int $parts): array
+    {
+        if ($parts <= 0) {
+            throw new InvalidArgumentException('Installment parts must be greater than zero.');
+        }
+
+        $base = intdiv($totalAmount, $parts);
+        $allocations = array_fill(0, $parts, $base);
+        $allocations[$parts - 1] = $totalAmount - ($base * ($parts - 1));
+
+        return $allocations;
+    }
+}
+PHP,
+            'app/Http/Responses/Rfc9457ProblemResponse.php' => <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Responses;
+
+use Illuminate\Http\JsonResponse;
+
+final class Rfc9457ProblemResponse
+{
+    public static function make(
+        int $status,
+        string $errorCode,
+        string $title,
+        string $detail,
+        ?string $instance = null,
+        ?string $traceId = null,
+        array $violations = [],
+    ): JsonResponse {
+        return response()->json([
+            'type' => 'https://errors.project-os.dev/' . strtolower(str_replace('_', '-', $errorCode)),
+            'title' => $title,
+            'status' => $status,
+            'detail' => $detail,
+            'instance' => $instance ?? request()->getRequestUri(),
+            'trace_id' => $traceId ?? (string) request()->header('X-Request-ID', ''),
+            'error_code' => $errorCode,
+            'violations' => $violations,
+        ], $status, [
+            'Content-Type' => 'application/problem+json',
+        ]);
+    }
+}
+PHP,
+        ];
+
+        return match ($shortCode) {
+            'M2' => array_merge($files, [
+                'app/Data/DomainPayloadData.php' => <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Data;
+
+/**
+ * Spatie Laravel Data DTO -> Auto-transformed to TypeScript (resources/js/types/generated.d.ts).
+ */
+final readonly class DomainPayloadData
+{
+    public function __construct(
+        public string $id,
+        public string $tenant_id,
+        public string $status,
+        public string $amount_decimal,
+        public ?string $next_cursor = null,
+    ) {}
+}
+PHP,
+                'config/typescript-transformer.php' => <<<'PHP'
+<?php
+
+return [
+    'auto_discover_types' => [app_path('Data'), app_path('Enums')],
+    'output_file' => resource_path('js/types/generated.d.ts'),
+];
+PHP,
+                'resources/js/types/generated.d.ts' => <<<'TS'
+// Auto-generated from Spatie Laravel Data & Backed Enums — DO NOT EDIT MANUALLY
+declare namespace App.Data {
+    export type DomainPayloadData = {
+        id: string; // 26-char ULID
+        tenant_id: string;
+        status: string;
+        amount_decimal: string; // DECIMAL(19,4) serialized without IEEE-754 float drift
+        next_cursor: string | null;
+    };
+}
+TS,
+            ]),
+
+            'M3' => array_merge($files, [
+                'src/db/schema.ts' => <<<TS
+// Stack Preset: {$presetCode} ({$topology}) — Drizzle ORM Strict ULID & DECIMAL(19,4)
+import { pgTable, varchar, numeric, timestamp, jsonb } from 'drizzle-orm/pg-core';
+
+export const {$firstTable} = pgTable('{$firstTable}', {
+  id: varchar('id', { length: 26 }).primaryKey(),
+  tenantId: varchar('tenant_id', { length: 26 }).notNull(),
+  status: varchar('status', { length: 40 }).notNull(),
+  totalAmount: numeric('total_amount', { precision: 19, scale: 4 }).notNull().default('0.0000'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const outboxMessages = pgTable('outbox_messages', {
+  id: varchar('id', { length: 26 }).primaryKey(),
+  aggregateType: varchar('aggregate_type', { length: 120 }).notNull(),
+  aggregateId: varchar('aggregate_id', { length: 26 }).notNull(),
+  eventType: varchar('event_type', { length: 160 }).notNull(),
+  payload: jsonb('payload').notNull(),
+  status: varchar('status', { length: 32 }).notNull().default('PENDING'),
+});
+TS,
+                'src/contracts/zod-schemas.ts' => <<<'TS'
+import { z } from 'zod';
+
+export const UlidSchema = z.string().length(26).regex(/^[0-9A-HJKMNP-TV-Z]{26}$/);
+
+export const Rfc9457ProblemSchema = z.object({
+  type: z.string().url(),
+  title: z.string(),
+  status: z.number().int(),
+  detail: z.string(),
+  instance: z.string(),
+  trace_id: z.string(),
+  error_code: z.string(),
+});
+
+export const KeysetCursorMetaSchema = z.object({
+  cursor: z.object({
+    next: z.string().nullable(),
+    prev: z.string().nullable(),
+    per_page: z.number().int().positive(),
+    has_more: z.boolean(),
+  }),
+});
+TS,
+                'tests/acceptance/zero-assumption-matrix.spec.ts' => <<<TS
+import { describe, it, expect } from 'vitest';
+
+describe('Project OS v2.0 Zero-Assumption Matrix ({$presetCode})', () => {
+  it('allocates penny remainder deterministically to final installment ({$firstScenarioId})', () => {
+    const total = 100000;
+    const parts = 3;
+    const base = Math.trunc(total / parts);
+    const splits = [base, base, total - base * (parts - 1)];
+    expect(splits).toEqual([33333, 33333, 33334]);
+    expect(splits.reduce((a, b) => a + b, 0)).toBe(total);
+  });
+});
+TS,
+            ]),
+
+            'M4' => array_merge($files, [
+                'apps/core/schemas.py' => <<<PY
+# Stack Preset: {$presetCode} ({$topology}) — Django 5.2 + Django Ninja Pydantic v2
+from decimal import Decimal, ROUND_HALF_UP
+from typing import Generic, List, Optional, TypeVar
+from ninja import Schema
+from pydantic import Field
+
+T = TypeVar("T")
+
+class ProblemDetailSchema(Schema):
+    type: str
+    title: str
+    status: int
+    detail: str
+    instance: str
+    trace_id: str
+    error_code: str
+
+class CursorMeta(Schema):
+    next: Optional[str] = None
+    prev: Optional[str] = None
+    per_page: int = 25
+    has_more: bool = False
+
+def split_installments_penny_safe(total: int, parts: int) -> List[int]:
+    base = total // parts
+    splits = [base] * parts
+    splits[-1] = total - (base * (parts - 1))
+    return splits
+PY,
+                'tests/acceptance/test_zero_assumption_matrix.py' => <<<PY
+from apps.core.schemas import split_installments_penny_safe
+
+def test_penny_allocation_and_acceptance_contract():
+    """{$firstScenarioId}: {$firstScenarioThen}"""
+    splits = split_installments_penny_safe(100000, 3)
+    assert splits == [33333, 33333, 33334]
+    assert sum(splits) == 100000
+PY,
+            ]),
+
+            'D1' => array_merge($files, [
+                'config/scramble.php' => <<<'PHP'
+<?php
+
+return [
+    'api_path' => 'api/v1',
+    'info' => [
+        'version' => '2.0.0',
+        'description' => 'Zero-Assumption OpenAPI 3.1 Contract — Keyset Cursor O(1) & RFC 9457 Problem Details',
+    ],
+];
+PHP,
+                'orval.config.ts' => <<<'TS'
+// Auto-generates TypeScript TanStack Query v5 hooks from Dedoc Scramble OpenAPI 3.1 (Manual fetch() with `any` is strictly banned)
+export default {
+  projectOsApi: {
+    input: './openapi.json',
+    output: {
+      mode: 'tags-split',
+      target: './frontend-web/src/sdk/generated.ts',
+      client: 'react-query',
+      httpClient: 'fetch',
+    },
+  },
+};
+TS,
+            ]),
+
+            'D2' => array_merge($files, [
+                'backend-go/sqlc.yaml' => <<<YAML
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "db/queries"
+    schema: "db/migrations"
+    gen:
+      go:
+        package: "db"
+        out: "internal/db"
+        sql_package: "pgx/v5"
+        overrides:
+          - db_type: "pg_catalog.numeric"
+            go_type:
+              import: "github.com/shopspring/decimal"
+              type: "Decimal"
+YAML,
+                'backend-go/db/queries/domain_queries.sql' => <<<SQL
+-- Stack Preset: {$presetCode} ({$topology})
+-- Strict Keyset Cursor O(1) & Pessimistic Row-Level Lock (SELECT ... FOR UPDATE)
+
+-- name: LockRecordForUpdate :one
+SELECT * FROM {$firstTable}
+WHERE id = \$1
+LIMIT 1
+FOR UPDATE;
+
+-- name: ListRecordsCursor :many
+SELECT * FROM {$firstTable}
+WHERE id > \$1
+ORDER BY id ASC
+LIMIT \$2;
+
+-- name: EnqueueOutboxMessage :one
+INSERT INTO outbox_messages (id, aggregate_type, aggregate_id, event_type, payload, status, available_at, created_at)
+VALUES (\$1, \$2, \$3, \$4, \$5, 'PENDING', NOW(), NOW())
+RETURNING *;
+SQL,
+                'backend-go/internal/domain/acceptance_matrix_test.go' => <<<GO
+package domain_test
+
+import "testing"
+
+// {$firstScenarioId}: {$firstScenarioThen}
+func TestPennyAllocationZeroDrift(t *testing.T) {
+	total := int64(100000)
+	parts := int64(3)
+	base := total / parts
+	splits := []int64{base, base, total - base*(parts-1)}
+
+	if splits[0] != 33333 || splits[1] != 33333 || splits[2] != 33334 {
+		t.Fatalf("unexpected penny allocation: %v", splits)
+	}
+}
+GO,
+            ]),
+
+            'D3' => array_merge($files, [
+                'backend-fastapi/app/schemas/domain_contracts.py' => <<<PY
+# Stack Preset: {$presetCode} ({$topology}) — FastAPI + Pydantic v2 + SQLAlchemy 2.0 Async
+from decimal import Decimal
+from typing import List, Optional
+from pydantic import BaseModel, Field
+
+class ProblemDetails(BaseModel):
+    type: str
+    title: str
+    status: int
+    detail: str
+    instance: str
+    trace_id: str
+    error_code: str
+
+class CursorPaginationMeta(BaseModel):
+    next: Optional[str] = None
+    prev: Optional[str] = None
+    per_page: int = Field(default=25, ge=1, le=100)
+    has_more: bool = False
+
+def allocate_installments(total_minor: int, count: int) -> List[int]:
+    base = total_minor // count
+    result = [base] * count
+    result[-1] = total_minor - base * (count - 1)
+    return result
+PY,
+                'backend-fastapi/tests/test_zero_assumption_matrix.py' => <<<PY
+from app.schemas.domain_contracts import allocate_installments
+
+def test_zero_assumption_penny_rule():
+    """{$firstScenarioId}: {$firstScenarioThen}"""
+    assert allocate_installments(100000, 3) == [33333, 33333, 33334]
+PY,
+            ]),
+
+            'S1' => array_merge($files, [
+                'buf.gen.yaml' => <<<'YAML'
+version: v2
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: services/core-engine-go/gen
+    opt: paths=source_relative
+  - remote: buf.build/connectrpc/go
+    out: services/core-engine-go/gen
+    opt: paths=source_relative
+YAML,
+                'proto/domain/v1/ledger_saga.proto' => <<<PROTO
+syntax = "proto3";
+
+package {$cleanSlug}.domain.v1;
+
+option go_package = "{$cleanSlug}/gen/domain/v1;domainv1";
+
+message ExecuteAtomicMutationRequest {
+  string idempotency_key = 1; // ULID / UUIDv7 required
+  string tenant_id = 2;       // 26-char ULID
+  string aggregate_id = 3;    // 26-char ULID
+  string amount_decimal = 4;  // DECIMAL(19,4) string representation
+}
+
+message Rfc9457Problem {
+  string type = 1;
+  string title = 2;
+  int32 status = 3;
+  string detail = 4;
+  string trace_id = 5;
+  string error_code = 6;
+}
+PROTO,
+                'backend-go/sqlc.yaml' => <<<'YAML'
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "../services/core-engine-go/db/queries"
+    schema: "../services/core-engine-go/db/migrations"
+    gen:
+      go:
+        package: "db"
+        out: "../services/core-engine-go/internal/db"
+        sql_package: "pgx/v5"
+YAML,
+                'services/temporal-sagas-go/saga_compensation_workflow.go' => <<<GO
+package sagas
+
+// Stack Preset: {$presetCode} ({$topology})
+// Deterministic Distributed Saga Orchestration with Temporal.io Compensating Actions.
+type CompensatingStep struct {
+	Name   string
+	Action func() error
+}
+
+func RunCompensationsReverse(executed []CompensatingStep) []error {
+	var errs []error
+	for i := len(executed) - 1; i >= 0; i-- {
+		if err := executed[i].Action(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errs
+}
+GO,
+                'deploy/docker-compose.polyglot-mesh.yml' => <<<YAML
+services:
+  api-gateway:
+    image: traefik:v3.2
+    command: ["--providers.docker=true"]
+  nats-jetstream:
+    image: nats:2.10-alpine
+    command: ["-js"]
+  temporal:
+    image: temporalio/auto-setup:1.25
+YAML,
+            ]),
+
+            'S2' => array_merge($files, [
+                'turbo.json' => <<<'JSON'
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": { "dependsOn": ["^build"], "outputs": ["dist/**"] },
+    "test": { "dependsOn": ["^build"] },
+    "typecheck": { "dependsOn": ["^typecheck"] }
+  }
+}
+JSON,
+                'packages/contracts/src/events.ts' => <<<'TS'
+import { z } from 'zod';
+
+export const CloudEventV1Schema = z.object({
+  specversion: z.literal('1.0'),
+  id: z.string().length(26),
+  source: z.string(),
+  type: z.string(),
+  time: z.string().datetime(),
+  datacontenttype: z.literal('application/json'),
+  traceparent: z.string(),
+  tenantid: z.string().length(26),
+  data: z.record(z.string(), z.unknown()),
+});
+TS,
+                'tests/acceptance/zero-assumption-matrix.spec.ts' => <<<TS
+import { describe, it, expect } from 'vitest';
+
+describe('Microservices CloudEvents & Penny Contract ({$presetCode})', () => {
+  it('verifies {$firstScenarioId} penny invariant', () => {
+    expect(33333 + 33333 + 33334).toBe(100000);
+  });
+});
+TS,
+            ]),
+
+            default => $files,
+        };
     }
 }

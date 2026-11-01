@@ -327,6 +327,9 @@
             <a href="#sec-v8-inclusive-security" @click.prevent="scrollTo('sec-v8-inclusive-security')" :class="activeSection === 'sec-v8-inclusive-security' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 15. <span x-text="t[lang].nav_v8_inclusive"></span>
             </a>
+            <a href="#sec-v9-agentshield-codesign-audit" @click.prevent="scrollTo('sec-v9-agentshield-codesign-audit')" :class="activeSection === 'sec-v9-agentshield-codesign-audit' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                16. <span x-text="t[lang].nav_v9_agentshield"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -1557,6 +1560,118 @@
         </div>
     </div>
 
+    <!-- Section 16: Project OS v9.0 Ultimate — NeriahPro AgentShield (5 Layers), Co-Design Sign-Off Room & Crypto Audit Explorer -->
+    <div id="sec-v9-agentshield-codesign-audit" class="sg-card" x-show="matchesSearch('agentshield prompt injection slopquatting claude settings co-design sign-off dual-key scope lock sha-256 audit 3-sheet xlsx psak 109 isak 35 pp 93 rme kemenkes 36 tools')">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
+            <div>
+                <span class="sg-badge-confidential">16 // PROJECT OS v9.0 ULTIMATE — AGENTSHIELD + CO-DESIGN ROOM + CRYPTO AUDIT ({{ $nativeToolsCount ?? 36 }} NATIVE AI TOOLS)</span>
+                <h2 style="font-size: 20px; font-weight: 800; color: var(--sg-text-title); margin: 8px 0 4px;" x-text="t[lang].sec16_title"></h2>
+                <p style="font-size: 13px; color: var(--sg-text-muted); margin: 0;" x-text="t[lang].sec16_desc"></p>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <a href="{{ url('/blueprint/studio') }}" target="_blank" style="text-decoration: none; padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; background: #10b981; color: #000000; border: 1px solid #047857; border-radius: 2px;">
+                    🤝 <span x-show="lang === 'id'">Buka Co-Design Room</span><span x-show="lang === 'en'" x-cloak>Open Co-Design Room</span>
+                </a>
+                <a href="{{ url('/admin/crypto-audit-explorer') }}" style="text-decoration: none; padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; background: var(--sg-subcard-bg); color: var(--sg-text-title); border: 1px solid var(--sg-border); border-radius: 2px;">
+                    🔍 <span x-show="lang === 'id'">Buka Crypto Audit Explorer</span><span x-show="lang === 'en'" x-cloak>Open Crypto Audit Explorer</span>
+                </a>
+                <a href="{{ url('/admin/pos-sectors') }}" style="text-decoration: none; padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; background: var(--sg-subcard-bg); color: var(--sg-text-title); border: 1px solid var(--sg-border); border-radius: 2px;">
+                    🗂️ <span x-show="lang === 'id'">CRUD 12 Sektor (ID/EN)</span><span x-show="lang === 'en'" x-cloak>12 Sectors CRUD (ID/EN)</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 5-Layer AgentShield Defense Grid -->
+        <div class="sg-grid-3" style="margin-bottom: 16px;">
+            @foreach(($v9AgentShieldContract['layers'] ?? []) as $aLayer)
+                <div class="sg-subcard">
+                    <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #10b981;">
+                        AGENTSHIELD LAYER 0{{ $aLayer['layer'] }} // {{ $aLayer['service'] }}
+                    </div>
+                    <div style="font-size: 13px; font-weight: 800; color: var(--sg-text-title); margin-top: 4px; font-family: ui-monospace, monospace;">
+                        {{ $aLayer['code'] }}
+                    </div>
+                    <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 6px; line-height: 1.55;">
+                        <span x-show="lang === 'id'">{{ $aLayer['guarantee']['id'] ?? '' }}</span>
+                        <span x-show="lang === 'en'" x-cloak>{{ $aLayer['guarantee']['en'] ?? '' }}</span>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <!-- Co-Design Alignment Room + Crypto Audit Explorer Summary -->
+        <div class="sg-grid-3" style="margin-bottom: 16px;">
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #f59e0b;">
+                    CO-DESIGN ALIGNMENT &amp; SIGN-OFF ROOM
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: var(--sg-text-title); margin-top: 4px;">
+                    <span x-show="lang === 'id'">Layar Dual-Mirror + Persetujuan Per Modul + Dual-Key Scope Lock</span>
+                    <span x-show="lang === 'en'" x-cloak>Dual-Mirror Lens + Per-Module Sign-Off + Dual-Key Scope Lock</span>
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 6px; line-height: 1.55;">
+                    <span x-show="lang === 'id'">Klien memeriksa Wireframe Visual &amp; RAB sementara Arsitek memeriksa Tabel ULID, State Machine, dan Lock. Tombol <strong>Segel Kontrak &amp; Kunci Scope</strong> hanya menyala saat 100% modul berstatus APPROVED, mengunci v1.0 Read-Only + SHA-256 Master Hash.</span>
+                    <span x-show="lang === 'en'" x-cloak>Clients inspect Visual Wireframes &amp; Cost/Time while Architects inspect ULID Tables, State Machines, and Locks. The <strong>Dual-Key Scope Lock</strong> activates strictly when 100% of modules are APPROVED, sealing Read-Only v1.0 + SHA-256 Master Hash.</span>
+                </div>
+            </div>
+
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #10b981;">
+                    PRIMITIVE_CRYPTO_AUDIT_EXPLORER
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: var(--sg-text-title); margin-top: 4px;">
+                    <span x-show="lang === 'id'">Rantai SHA-256 (`prev_hash → current_hash`) &amp; Ekspor 3-Sheet `.xlsx`</span>
+                    <span x-show="lang === 'en'" x-cloak>SHA-256 Hash Chain (`prev_hash → current_hash`) &amp; 3-Sheet `.xlsx` Export</span>
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 6px; line-height: 1.55;">
+                    <span x-show="lang === 'id'">Memenuhi standar KAP PSAK 109, ISAK 35, PP 93/2010, RME Kemenkes, ISO 27001, &amp; SOC2: 8 dimensi filter terindeks, deteksi instan manipulasi DB (`TAMPER ALERT`), ekspor CSV streaming O(1), dan buku kerja Excel 3-Sheet bersegel kriptografi.</span>
+                    <span x-show="lang === 'en'" x-cloak>Meets CPA PSAK 109, ISAK 35, PP 93/2010, MoH EMR, ISO 27001, &amp; SOC2 standards: 8 indexed filter dimensions, instant DB mutation detection (`TAMPER ALERT`), O(1) streaming CSV, and cryptographically sealed 3-Sheet Excel workbooks.</span>
+                </div>
+            </div>
+
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #6366f1;">
+                    CAUSAL VISUAL UI → 5-SPRINT WORLD-CLASS BACKLOG
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: var(--sg-text-title); margin-top: 4px;">
+                    <span x-show="lang === 'id'">36 Visual Frontend Blueprints + 5 Shells → `TSK-101..TSK-502`</span>
+                    <span x-show="lang === 'en'" x-cloak>36 Visual Frontend Blueprints + 5 Shells → `TSK-101..TSK-502`</span>
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 6px; line-height: 1.55;">
+                    <span x-show="lang === 'id'">Saat klien memilih 1 dari 12 Sektor atau mengetik ide mentah, AI memetakan secara kausal Desain Layar Visual Frontend pasti (`UI_01A..UI_12C`), 25 Sub-Menu L1–L4, Skema PostgreSQL 16 Strict ULID, hingga 12+ Task Sprint Kelas Dunia &amp; 36 Native AI Tools.</span>
+                    <span x-show="lang === 'en'" x-cloak>When a client selects 1 of 12 Sectors or types a raw idea, AI causally maps an exact Visual Frontend UI Blueprint (`UI_01A..UI_12C`), 25 L1–L4 Sub-Menus, PostgreSQL 16 Strict ULID schemas, 12+ World-Class Sprint Tasks &amp; 36 Native AI Tools.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compact Table of 12 Sector Audit Filter Presets -->
+        <div style="overflow-x: auto;">
+            <table class="sg-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th><span x-show="lang === 'id'">Sektor &amp; Fokus Audit Industri</span><span x-show="lang === 'en'" x-cloak>Sector &amp; Industry Audit Focus</span></th>
+                        <th><span x-show="lang === 'id'">Aksi Kritis Terpantau</span><span x-show="lang === 'en'" x-cloak>Watched Critical Actions</span></th>
+                        <th><span x-show="lang === 'id'">Standar Kepatuhan</span><span x-show="lang === 'en'" x-cloak>Compliance Standards</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(($v9SectorAuditPresets ?? []) as $sPreset)
+                        <tr>
+                            <td style="font-family: ui-monospace, monospace; font-weight: 800;">{{ str_pad((string) ($sPreset['sector_number'] ?? 0), 2, '0', STR_PAD_LEFT) }}</td>
+                            <td>
+                                <span x-show="lang === 'id'">{{ $sPreset['title']['id'] ?? '' }}</span>
+                                <span x-show="lang === 'en'" x-cloak>{{ $sPreset['title']['en'] ?? '' }}</span>
+                            </td>
+                            <td style="font-family: ui-monospace, monospace; font-size: 11px;">{{ implode(', ', $sPreset['watched_actions'] ?? []) }}</td>
+                            <td style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700;">{{ implode(' • ', $sPreset['compliance_standards'] ?? []) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1584,6 +1699,7 @@ function smartGuideApp() {
                 nav_v6_guarantees: '5 Jaminan v6.0 & Isolasi',
                 nav_v7_freeze: '5 Elemen Nyata & 15 Pilar (100% Freeze)',
                 nav_v8_inclusive: '36 UI Visual, Tier-1 RTL & IP Canary (v8.0)',
+                nav_v9_agentshield: 'AgentShield, Co-Design & Audit (v9.0)',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -1690,7 +1806,9 @@ function smartGuideApp() {
                 sec14_title: '5 Elemen Dunia Nyata & Rekapitulasi Final 15 Pilar "Project OS Ultimate 100%" (100% Architectural Freeze)',
                 sec14_desc: 'Menutup 2% terakhir kesenjangan lapangan & runtime: Jembatan Perangkat Keras Fisik (Keyboard Wedge <30ms, Dual-Screen QRIS Lokal tanpa CDN, ZKTeco/Turnstile), WebSocket Zero-Polling (larangan mutlak wire:poll <30s), Strict 0% N+1 + Composite Index + Partisi PG16, Kamus Self-Healing SYNTAX_LOCK_2026.md, serta In-App SmartGuide.php & Buku SOP Training Staf otomatis untuk BAST.',
                 sec15_title: 'Project OS v8.0: Adaptive Dual-Persona Storyboard, 36 Varian Visual UI/UX, 7 Yurisdiksi Tier-1 (+RTL), Pricing Inklusif & 5-Layer Canary Security',
-                sec15_desc: 'Menjembatani founder awam & arsitek senior dalam satu kanvas: 5-Step Storyboard Wizard, pemilih visual pasti 36 UI Frontend (12 Sektor × 3 Opsi + 5 Shells), perpindahan kepatuhan hukum 7 bahasa Tier-1 (termasuk Arab dir="rtl" + ZATCA), paket CSR Non-Profit / Single-App UMKM Rp 299rb / Agency White-Label Rp 990rb, peringatan CVE + Auto-Patch, brankas AES-256, dan steganografi Zero-Width Canary 64-bit.'
+                sec15_desc: 'Menjembatani founder awam & arsitek senior dalam satu kanvas: 5-Step Storyboard Wizard, pemilih visual pasti 36 UI Frontend (12 Sektor × 3 Opsi + 5 Shells), perpindahan kepatuhan hukum 7 bahasa Tier-1 (termasuk Arab dir="rtl" + ZATCA), paket CSR Non-Profit / Single-App UMKM Rp 299rb / Agency White-Label Rp 990rb, peringatan CVE + Auto-Patch, brankas AES-256, dan steganografi Zero-Width Canary 64-bit.',
+                sec16_title: 'Project OS v9.0 Ultimate: NeriahPro AgentShield (5-Layer AI Malware Defense), Co-Design Alignment & Dual-Key Scope Lock, dan Cryptographic Audit Explorer (3-Sheet XLSX + 12 Sektor)',
+                sec16_desc: 'Mengunci postur keamanan & kolaborasi enterprise: firewall sanitasi Indirect Prompt Injection (<UNTRUSTED_CLIENT_DOCUMENT_DATA>), pemblokir Slopquatting Allowlist, sandbox .claude/settings.json, Co-Design Sign-Off Room dua arah (Developer <-> Klien), serta rantai audit SHA-256 siap kantor akuntan publik (PSAK 109, ISAK 35, PP 93/2010, RME Kemenkes, SOC2).'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -1708,6 +1826,7 @@ function smartGuideApp() {
                 nav_v6_guarantees: '5 v6.0 Guarantees & Isolation',
                 nav_v7_freeze: '5 Real-World & 15 Pillars (100% Freeze)',
                 nav_v8_inclusive: '36 Visual UI, Tier-1 RTL & IP Canary (v8.0)',
+                nav_v9_agentshield: 'AgentShield, Co-Design & Audit (v9.0)',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -1814,7 +1933,9 @@ function smartGuideApp() {
                 sec14_title: 'The Final 5 Real-World Runtime Elements & Master 15 Pillars (100% Architectural Freeze)',
                 sec14_desc: 'Closes the final 2% field & runtime gap: Hardware/IoT/Dual-Screen QRIS Bridge (<30ms Keyboard Wedge, BroadcastChannel local QRIS, ZKTeco/Turnstile), Event-Driven WebSocket Zero-Polling (strict ban on wire:poll <30s), Strict 0% N+1 + Composite Tenant Indexes + PG16 Quarterly Range Partitioning, SYNTAX_LOCK_2026.md self-healing dictionary, and auto-generated Role SmartGuide.php + BAST Client SOP Manual.',
                 sec15_title: 'Project OS v8.0: Adaptive Dual-Persona Storyboard, 36 Visual Sector UI Blueprints, 7 Tier-1 Jurisdictions (+RTL), Inclusive Pricing & 5-Layer Canary Security',
-                sec15_desc: 'Bridges non-technical founders & principal architects on one shared state: 5-Step Storyboard Wizard, deterministic 36 Visual Frontend UI Picker (12 Sectors × 3 Variants + 5 Shells), 7 Tier-1 statutory jurisdictions (including Arabic dir="rtl" + ZATCA), Impact CSR Grant / Single-App UMKM Pass / Agency White-Label PDF, Living CVE Auto-Patch, AES-256 Vault, and 64-bit Zero-Width Canary Watermarking.'
+                sec15_desc: 'Bridges non-technical founders & principal architects on one shared state: 5-Step Storyboard Wizard, deterministic 36 Visual Frontend UI Picker (12 Sectors × 3 Variants + 5 Shells), 7 Tier-1 statutory jurisdictions (including Arabic dir="rtl" + ZATCA), Impact CSR Grant / Single-App UMKM Pass / Agency White-Label PDF, Living CVE Auto-Patch, AES-256 Vault, and 64-bit Zero-Width Canary Watermarking.',
+                sec16_title: 'Project OS v9.0 Ultimate: NeriahPro AgentShield (5-Layer AI Malware Defense), Co-Design Alignment & Dual-Key Scope Lock, and Cryptographic Audit Explorer (3-Sheet XLSX + 12 Sectors)',
+                sec16_desc: 'Seals enterprise security & collaboration: Indirect Prompt Injection sanitization firewall (<UNTRUSTED_CLIENT_DOCUMENT_DATA>), Anti-Slopquatting package allowlist, .claude/settings.json sandbox jail, bidirectional Co-Design Sign-Off Room (Developer <-> Client), and CPA-ready SHA-256 chained audit trail (PSAK 109, ISAK 35, PP 93/2010, MoH EMR, SOC2).'
             }
         },
 
@@ -1842,7 +1963,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze', 'sec-v8-inclusive-security'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze', 'sec-v8-inclusive-security', 'sec-v9-agentshield-codesign-audit'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

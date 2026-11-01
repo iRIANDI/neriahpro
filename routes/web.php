@@ -52,6 +52,9 @@ Route::post('/api/blueprint/{slug}/delta-requests/{crId}/approve', [BlueprintCon
 Route::post('/api/blueprint/commercial-estimate', [BlueprintController::class, 'commercialEstimate'])->name('api.blueprint.commercial-estimate')->middleware('throttle:60,1');
 Route::post('/api/blueprint/topological-preview', [BlueprintController::class, 'topologicalPreview'])->name('api.blueprint.topological-preview')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/lock-scope-spk', [BlueprintController::class, 'lockScopeAndGenerateSpk'])->name('api.blueprint.lock-scope-spk')->middleware('throttle:30,1');
+Route::post('/api/blueprint/{slug}/codesign/sign-module', [BlueprintController::class, 'codesignSignModule'])->name('api.blueprint.codesign.sign-module')->middleware('throttle:60,1');
+Route::post('/api/blueprint/{slug}/codesign/annotate', [BlueprintController::class, 'codesignAnnotate'])->name('api.blueprint.codesign.annotate')->middleware('throttle:60,1');
+Route::post('/api/blueprint/{slug}/codesign/dual-key-lock', [BlueprintController::class, 'codesignDualKeyLock'])->name('api.blueprint.codesign.dual-key-lock')->middleware('throttle:20,1');
 Route::post('/api/blueprint/{slug}/uat/toggle', [BlueprintController::class, 'toggleUatScenario'])->name('api.blueprint.uat.toggle')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/uat/sign-bast', [BlueprintController::class, 'signOffUatAndIssueBast'])->name('api.blueprint.uat.sign-bast')->middleware('throttle:20,1');
 Route::get('/blueprint/{slug}/mitra-document/{docType}', [BlueprintController::class, 'mitraDocument'])->name('blueprint.mitra-document');

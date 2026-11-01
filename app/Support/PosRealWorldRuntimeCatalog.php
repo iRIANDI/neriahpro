@@ -1403,8 +1403,11 @@ PHP;
         $navShell = (string) ($schema['visual_frontend_ui_contract']['navigation_shell_code'] ?? $schema['project_metadata']['navigation_shell'] ?? 'SIDEBAR_ERP_DENSE');
         $outputLocale = (string) ($schema['jurisdiction_compliance_profile']['locale_code'] ?? $schema['project_metadata']['output_locale'] ?? 'id');
         $jurisdictionCode = (string) ($schema['jurisdiction_compliance_profile']['jurisdiction_code'] ?? 'ID_NKRI_STATUTORY');
+        $extraCoDesignHours = (int) ($schema['codesign_alignment_contract']['extra_codesign_man_hours'] ?? 0);
+        $approvedCoDesignModules = (int) ($schema['codesign_alignment_contract']['approved_modules_count'] ?? 0);
+        $worldClassTasksCount = (int) ($schema['world_class_task_matrix']['total_world_class_tasks'] ?? 13);
 
-        $fullSha256 = hash('sha256', implode('|', [
+        $hashParts = [
             $sector,
             $stack,
             $v1Menus,
@@ -1416,7 +1419,11 @@ PHP;
             $visualVariant,
             $navShell,
             $outputLocale,
-        ]));
+        ];
+        if ($extraCoDesignHours > 0 || $approvedCoDesignModules > 0) {
+            $hashParts[] = "codesign:{$approvedCoDesignModules}:{$extraCoDesignHours}";
+        }
+        $fullSha256 = hash('sha256', implode('|', $hashParts));
         $causalityHash = substr($fullSha256, 0, 16);
 
         return [
@@ -1438,6 +1445,9 @@ PHP;
                 'websocket_private_channels' => $wsChannels,
                 'tenant_composite_indexes' => $compositeIdx,
                 'role_sop_tour_steps' => $sopSteps,
+                'world_class_tasks_compiled' => $worldClassTasksCount,
+                'codesign_approved_modules' => $approvedCoDesignModules,
+                'extra_codesign_man_hours' => $extraCoDesignHours,
             ],
             'stage_chain' => [
                 [

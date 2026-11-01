@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Exceptions\SecurityException;
+use App\Services\Security\DocumentThreatSanitizerService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\UploadedFile;
@@ -258,6 +259,19 @@ class ProcessSecureDataset implements ShouldQueue
 
             if ($modified) {
                 file_put_contents($fullPath, implode("\n", $cleanLines));
+                $sanitized = true;
+            }
+        } elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true) && file_exists($fullPath)) {
+            // AgentShield Layer 4: Zero-Execution Binary Media Quarantine (Magic Bytes + EXIF Stripper)
+            $imgReport = DocumentThreatSanitizerService::verifyAndStripExifIfImage($fullPath);
+            if (! empty($imgReport['exif_stripped'])) {
+                $sanitized = true;
+            }
+        } elseif (in_array($ext, ['md', 'markdown', 'txt'], true) && $content !== '') {
+            // AgentShield Layer 1: Strip zero-width Unicode smuggling & Indirect Prompt Injection
+            $scan = app(DocumentThreatSanitizerService::class)->sanitizeDocumentText($content, $filename);
+            if (! $scan['is_clean'] && file_exists($fullPath)) {
+                file_put_contents($fullPath, $scan['sanitized_text']);
                 $sanitized = true;
             }
         }

@@ -65,6 +65,10 @@ class PosProject extends Model
         'encrypted_custom_vault',
         'canary_watermark_sig',
         'cve_alerts_ack_json',
+        'codesign_modules_json',
+        'codesign_dual_key_json',
+        'approved_dependency_manifest_json',
+        'agentshield_policy_json',
         'architectural_freeze_score',
     ];
 
@@ -94,6 +98,10 @@ class PosProject extends Model
             'white_label_branding_json' => 'array',
             'encrypted_custom_vault' => 'encrypted:array',
             'cve_alerts_ack_json' => 'array',
+            'codesign_modules_json' => 'array',
+            'codesign_dual_key_json' => 'array',
+            'approved_dependency_manifest_json' => 'array',
+            'agentshield_policy_json' => 'array',
             'architectural_freeze_score' => 'integer',
         ];
     }

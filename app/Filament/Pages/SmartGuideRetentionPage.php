@@ -46,7 +46,9 @@ class SmartGuideRetentionPage extends Page
 
     public function getSubheading(): string | Htmlable | null
     {
-        return 'Dokumentasi Rahasia Bisnis & Operasional Neriah Pro: Validasi Unit Economics 98%+ Gross Margin, Batasan Tier, Alur Passwordless OTP, dan Strategi Upsell Studio Rp 50 Juta.';
+        return app()->getLocale() === 'en'
+            ? 'Executive Business & Engineering Playbook (Project OS v9.0 Ultimate): 98%+ Margin Unit Economics, AgentShield 5-Layer AI Defense, Co-Design Dual-Key Scope Lock, SHA-256 3-Sheet Audit Explorer & 36 Visual Sector UIs.'
+            : 'Dokumentasi Rahasia Bisnis & Operasional Neriah Pro (Project OS v9.0 Ultimate): Validasi Unit Economics 98%+ Margin, AgentShield 5-Layer AI Defense, Co-Design Dual-Key Scope Lock, SHA-256 3-Sheet Audit Explorer & 36 Visual UI Sektor.';
     }
 
     public function getViewData(): array
@@ -59,7 +61,7 @@ class SmartGuideRetentionPage extends Page
                 'ultimate_price' => CmsGlobalSetting::getVal('pricing_retail_ultimate_price', 'Rp 1.490.000'),
                 'spark_limit' => CmsGlobalSetting::getVal('pricing_retail_spark_limit', '2x Audit/Bulan (Auto-Reset tgl 1)'),
                 'lite_limit' => CmsGlobalSetting::getVal('pricing_retail_lite_limit', '1 Proyek // 30 Hari Jendela Revisi Form'),
-                'pro_limit' => CmsGlobalSetting::getVal('pricing_retail_pro_limit', '1 Proyek // 6 Bulan Unlimited AI Re-prompt'),
+                'pro_limit' => CmsGlobalSetting::getVal('pricing_retail_pro_price_limit', CmsGlobalSetting::getVal('pricing_retail_pro_limit', '1 Proyek // 6 Bulan Unlimited AI Re-prompt')),
                 'ultimate_limit' => CmsGlobalSetting::getVal('pricing_retail_ultimate_limit', '1 Proyek Enterprise // 1 Tahun Prioritas Update'),
                 'login_policy' => CmsGlobalSetting::getVal('pricing_retail_login_policy', 'Spark Bebas Login // Paket Berbayar Wajib Login Akun'),
                 'disclaimer' => CmsGlobalSetting::getVal('pricing_retail_disclaimer', '100% Self-Service Blueprint // Zero Neriah Pro Coding'),
@@ -78,6 +80,12 @@ class SmartGuideRetentionPage extends Page
             'v8RetentionAndSecurity' => \App\Support\PosInclusiveCommercialCatalog::retentionAndSecurityMatrix(),
             'v8InclusiveValueSkus' => \App\Support\PricingRegistry::getInclusiveValueMetricCatalog(),
             'v8VisualUiTotalCount' => 36,
+            'v9AgentShieldContract' => \App\Services\Security\DocumentThreatSanitizerService::fiveLayersBlueprintContract(
+                'NeriahPro Project OS v9.0',
+                'STACK_M1_LARAVEL_MONOLITH',
+                'SECTOR_01_COMMERCE_OMNICHANNEL'
+            ),
+            'v9SectorAuditPresets' => \App\Support\PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets(),
             'guidedJourneySteps' => \App\Services\PosCommercialBridgeService::guidedClientJourneySteps(),
             'satuPintuPackages' => \App\Support\PricingRegistry::getSatuPintuCatalog(),
             'estimatorConfig' => \App\Support\PricingRegistry::getCommercialEstimatorConfig(),

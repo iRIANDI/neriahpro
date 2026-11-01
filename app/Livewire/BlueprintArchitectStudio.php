@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Models\AuditLog;
 use App\Models\PosProject;
 use App\Models\VisionBlueprint;
 use App\Services\BlueprintDeltaEvolutionService;
@@ -12,7 +13,9 @@ use App\Services\BlueprintSlopScannerService;
 use App\Services\PosCommercialBridgeService;
 use App\Services\ProjectOsBlueprintCompilerService;
 use App\Services\ScaffoldGeneratorService;
+use App\Services\Security\DocumentThreatSanitizerService;
 use App\Services\TopologicalPromptChunker;
+use App\Support\PosAgentShieldAndCoDesignCatalog;
 use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosInclusiveCommercialCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
@@ -78,6 +81,19 @@ class BlueprintArchitectStudio extends Component
     public array $latestAddendumResult = [];
     public string $bastSignerName = '';
     public string $bastSignerEmail = '';
+
+    // v9.0 Co-Design Alignment & Sign-Off Room ("Satu Data, Dua Kacamata") + AgentShield State
+    public string $codesignLensMode = 'CLIENT_BUSINESS'; // CLIENT_BUSINESS | ARCHITECT_TECHNICAL
+    public string $selectedCoDesignModuleCode = '';
+    public array $codesignModulesState = [];
+    public array $codesignDualKeyState = [];
+    public string $newCoDesignNote = '';
+    public string $newCoDesignAuthorRole = 'KLIEN_MITRA';
+    public string $newCustomModuleTitle = '';
+    public int $newCustomModuleHours = 12;
+    public string $codesignClientSignerName = '';
+    public string $codesignArchitectSignerName = 'Lead Architect NeriahPro';
+    public string $codesignStatusNotice = '';
 
     // Custom Table & Unguarded Status Simulation (Blueprint Doctor Live Guard)
     public string $newCustomTableName = '';
@@ -173,6 +189,15 @@ class BlueprintArchitectStudio extends Component
             $this->selectedUiVariant = (string) ($uiDefault['selected_variant_code'] ?? 'UI_01A_POS_SPLIT_TERMINAL');
             $this->navigationShell = (string) ($uiDefault['navigation_shell']['code'] ?? 'FULLSCREEN_OPERATIONAL_KIOSK');
         }
+
+        $queryTab = strtolower(trim((string) request()->query('tab', '')));
+        if (in_array($queryTab, [
+            'schema', 'states', 'ui_print', 'decisions', 'delta_verify',
+            'commercial_mitra', 'menus_glue', 'runtime_sop_v7',
+            'inclusive_security_v8', 'codesign_room', 'agentshield_tasks',
+        ], true)) {
+            $this->centerTab = $queryTab;
+        }
     }
 
     protected function hydrateFromBlueprint(VisionBlueprint $blueprint): void
@@ -182,6 +207,7 @@ class BlueprintArchitectStudio extends Component
         $this->projectName = (string) ($blueprint->nama_bisnis ?: 'Enterprise Blueprint');
         $this->bastSignerName = (string) ($blueprint->client_name ?: 'PIC Klien Resmi');
         $this->bastSignerEmail = (string) ($blueprint->email ?: 'client@neriahpro.com');
+        $this->codesignClientSignerName = (string) ($blueprint->client_name ?: 'PIC Klien Mitra');
 
         $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
         if (! $posProject) {
@@ -220,6 +246,12 @@ class BlueprintArchitectStudio extends Component
                 $this->whiteLabelEnabled = ! empty($posProject->white_label_branding_json['enabled']);
                 $this->whiteLabelAgencyName = (string) ($posProject->white_label_branding_json['agency_name'] ?? '');
                 $this->whiteLabelLegalEntity = (string) ($posProject->white_label_branding_json['legal_entity'] ?? '');
+            }
+            if (is_array($posProject->codesign_modules_json)) {
+                $this->codesignModulesState = $posProject->codesign_modules_json;
+            }
+            if (is_array($posProject->codesign_dual_key_json)) {
+                $this->codesignDualKeyState = $posProject->codesign_dual_key_json;
             }
         }
 
@@ -301,6 +333,10 @@ class BlueprintArchitectStudio extends Component
         $this->deltaSummary = '';
         $this->bastSignerName = '';
         $this->bastSignerEmail = '';
+        $this->codesignModulesState = [];
+        $this->codesignDualKeyState = [];
+        $this->selectedCoDesignModuleCode = '';
+        $this->codesignStatusNotice = '';
         $this->selectSector('SECTOR_01_COMMERCE_OMNICHANNEL');
     }
 
@@ -679,6 +715,9 @@ class BlueprintArchitectStudio extends Component
                 'agency_name' => $this->whiteLabelAgencyName,
                 'legal_entity' => $this->whiteLabelLegalEntity,
             ],
+            'codesign_modules' => ! empty($this->codesignModulesState) ? $this->codesignModulesState : null,
+            'codesign_dual_key' => ! empty($this->codesignDualKeyState) ? $this->codesignDualKeyState : null,
+            'pos_project_id' => $this->posProjectId,
             'persist_project' => false,
         ]);
 
@@ -755,8 +794,15 @@ class BlueprintArchitectStudio extends Component
             'graph_json' => ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
             'mcp_json' => ScaffoldGeneratorService::generateMcpJsonFile($bpDummy),
             'env_blueprint' => ScaffoldGeneratorService::generateEnvBlueprintFile($schema, $this->projectName),
+            'claude_settings_json' => DocumentThreatSanitizerService::renderClaudeSettingsJson($schema),
+            'dependency_manifest' => (string) json_encode($schema['approved_dependency_manifest'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             default => (string) ($selectedPhaseObj['prompt'] ?? ''),
         };
+
+        $codesignContract = $schema['codesign_alignment_contract'] ?? [];
+        if ($this->selectedCoDesignModuleCode === '' && ! empty($codesignContract['modules'][0]['module_code'])) {
+            $this->selectedCoDesignModuleCode = (string) $codesignContract['modules'][0]['module_code'];
+        }
 
         $compiledDecisionPhp = PosLifecycleAndStudioCatalog::compileDecisionTablesToPhpClass(
             $schema['decision_tables_matrix'] ?? [],
@@ -790,9 +836,237 @@ class BlueprintArchitectStudio extends Component
             'communityMarketplace' => PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
             'visualUiContract' => $schema['visual_frontend_ui_contract'] ?? [],
             'jurisdictionProfile' => $schema['jurisdiction_compliance_profile'] ?? [],
+            'codesignContract' => $codesignContract,
+            'agentShieldContract' => $schema['agentshield_security_contract'] ?? [],
+            'dependencyManifest' => $schema['approved_dependency_manifest'] ?? [],
+            'cryptoAuditContract' => $schema['cryptographic_audit_explorer_contract'] ?? [],
+            'worldClassTaskMatrix' => $schema['world_class_task_matrix'] ?? [],
         ])->layout('components.layouts.studio', [
-            'title' => 'Project OS Architect Studio v7.0 / v8.0 (Dual-Persona, 36 Visual UI & 15-Pillar Freeze)',
+            'title' => 'Project OS Architect Studio v9.0 (AgentShield, Co-Design Room, 36 Visual UI & 15-Pillar Freeze)',
         ]);
+    }
+
+    public function toggleCoDesignLens(string $lens): void
+    {
+        $this->codesignLensMode = strtoupper($lens) === 'ARCHITECT_TECHNICAL'
+            ? 'ARCHITECT_TECHNICAL'
+            : 'CLIENT_BUSINESS';
+    }
+
+    public function selectCoDesignModule(string $moduleCode): void
+    {
+        $this->selectedCoDesignModuleCode = trim($moduleCode);
+    }
+
+    public function signCoDesignModule(string $moduleCode, string $status = 'APPROVED'): void
+    {
+        if (! empty($this->codesignDualKeyState['locked_v1_readonly']) || ! empty($this->codesignDualKeyState['is_locked'])) {
+            $this->codesignStatusNotice = '⚠️ Scope v1.0 sudah disegel Read-Only dengan Dual-Key SHA-256! Perubahan modul wajib melalui Addendum v1.1.';
+
+            return;
+        }
+
+        $normalizedStatus = strtoupper(trim($status));
+        if (! in_array($normalizedStatus, ['APPROVED', 'DISCUSSION', 'PENDING'], true)) {
+            $normalizedStatus = 'APPROVED';
+        }
+
+        $schema = $this->compileCurrentStudioSchema();
+        $modules = $schema['codesign_alignment_contract']['modules'] ?? [];
+        $signer = trim($this->codesignClientSignerName) ?: ($this->bastSignerName ?: (auth()->user()?->name ?: 'PIC Klien Mitra'));
+        $ip = request()->ip() ?: '127.0.0.1';
+        $nowIso = now()->toIso8601String();
+
+        $nextState = [];
+        foreach ($modules as $mod) {
+            $code = (string) ($mod['module_code'] ?? '');
+            if ($code === '') {
+                continue;
+            }
+            if ($moduleCode === 'ALL' || $code === $moduleCode) {
+                $mod['status'] = $normalizedStatus;
+                $mod['approved_by_name'] = $normalizedStatus === 'APPROVED' ? $signer : null;
+                $mod['approved_by_ip'] = $normalizedStatus === 'APPROVED' ? $ip : null;
+                $mod['approved_at'] = $normalizedStatus === 'APPROVED' ? $nowIso : null;
+            }
+            $nextState[] = $mod;
+        }
+
+        $this->codesignModulesState = $nextState;
+        $this->persistCoDesignStateToProject('codesign_module_' . strtolower($normalizedStatus), [
+            'module_code' => $moduleCode,
+            'status' => $normalizedStatus,
+            'signer' => $signer,
+            'ip' => $ip,
+        ]);
+
+        $this->codesignStatusNotice = $moduleCode === 'ALL'
+            ? "✅ Seluruh modul berhasil ditandai {$normalizedStatus} oleh {$signer} ({$ip})."
+            : "✅ Modul [{$moduleCode}] ditandai {$normalizedStatus} oleh {$signer} ({$ip}).";
+    }
+
+    public function addCoDesignAnnotation(): void
+    {
+        $clean = DocumentThreatSanitizerService::sanitizeDocumentText(trim($this->newCoDesignNote), 'codesign_annotation')['sanitized_text'];
+        if ($clean === '') {
+            return;
+        }
+
+        $schema = $this->compileCurrentStudioSchema();
+        $modules = $schema['codesign_alignment_contract']['modules'] ?? [];
+        $targetCode = $this->selectedCoDesignModuleCode ?: (string) ($modules[0]['module_code'] ?? '');
+        if ($targetCode === '') {
+            return;
+        }
+
+        $author = $this->newCoDesignAuthorRole === 'ARSITEK_NERIAH'
+            ? ($this->codesignArchitectSignerName ?: 'Lead Architect NeriahPro')
+            : ($this->codesignClientSignerName ?: ($this->bastSignerName ?: 'PIC Klien Mitra'));
+
+        $nextState = [];
+        foreach ($modules as $mod) {
+            if (($mod['module_code'] ?? '') === $targetCode) {
+                $annotations = is_array($mod['annotations'] ?? null) ? $mod['annotations'] : [];
+                $annotations[] = [
+                    'id' => (string) Str::ulid(),
+                    'author' => $author,
+                    'role' => $this->newCoDesignAuthorRole,
+                    'note' => $clean,
+                    'created_at' => now()->toIso8601String(),
+                ];
+                $mod['annotations'] = $annotations;
+            }
+            $nextState[] = $mod;
+        }
+
+        $this->codesignModulesState = $nextState;
+        $this->newCoDesignNote = '';
+        $this->persistCoDesignStateToProject('codesign_annotation_added', [
+            'module_code' => $targetCode,
+            'author' => $author,
+            'role' => $this->newCoDesignAuthorRole,
+        ]);
+        $this->codesignStatusNotice = "💬 Anotasi kolaborasi ditambahkan ke modul [{$targetCode}].";
+    }
+
+    public function addCustomCoDesignModule(): void
+    {
+        if (! empty($this->codesignDualKeyState['locked_v1_readonly']) || ! empty($this->codesignDualKeyState['is_locked'])) {
+            $this->codesignStatusNotice = '⚠️ Scope v1.0 sudah disegel Read-Only! Gunakan Tab 5 (Delta v1.1 Addendum) untuk fitur baru.';
+
+            return;
+        }
+
+        $cleanTitle = DocumentThreatSanitizerService::sanitizeDocumentText(trim($this->newCustomModuleTitle), 'codesign_custom_module')['sanitized_text'];
+        if ($cleanTitle === '') {
+            return;
+        }
+
+        $hours = max(4, min(240, (int) $this->newCustomModuleHours));
+        $schema = $this->compileCurrentStudioSchema();
+        $modules = $schema['codesign_alignment_contract']['modules'] ?? [];
+        $newCode = 'MOD_CUSTOM_' . strtoupper(substr((string) Str::ulid(), -6));
+
+        $modules[] = [
+            'module_code' => $newCode,
+            'is_custom_client_addition' => true,
+            'title' => ['id' => $cleanTitle, 'en' => $cleanTitle],
+            'localized_title' => $cleanTitle,
+            'status' => 'PENDING',
+            'extra_man_hours' => $hours,
+            'annotations' => [],
+        ];
+
+        $this->codesignModulesState = $modules;
+        $this->selectedCoDesignModuleCode = $newCode;
+        $this->newCustomModuleTitle = '';
+        $this->newCustomModuleHours = 12;
+
+        $this->persistCoDesignStateToProject('codesign_custom_module_added', [
+            'module_code' => $newCode,
+            'title' => $cleanTitle,
+            'extra_man_hours' => $hours,
+        ]);
+        $this->codesignStatusNotice = "➕ Kebutuhan klien [{$cleanTitle}] (+{$hours} jam) ditambahkan & RAB dihitung ulang otomatis!";
+    }
+
+    public function executeDualKeyScopeLock(PosCommercialBridgeService $bridge): void
+    {
+        $schema = $this->compileCurrentStudioSchema();
+        $contract = $schema['codesign_alignment_contract'] ?? [];
+        $approved = (int) ($contract['approved_modules_count'] ?? 0);
+        $total = (int) ($contract['total_modules_count'] ?? 0);
+
+        if ($total === 0 || $approved < $total) {
+            $remaining = max(1, $total - $approved);
+            $this->codesignStatusNotice = "⛔ Upacara Dual-Key Ditolak: Masih ada {$remaining} modul yang belum disetujui (APPROVED). Setujui 100% modul terlebih dahulu.";
+
+            return;
+        }
+
+        $quot = $bridge->calculateScopeQuotation($schema);
+        $clientSigner = trim($this->codesignClientSignerName) ?: ($this->bastSignerName ?: 'PIC Klien Mitra');
+        $archSigner = trim($this->codesignArchitectSignerName) ?: 'Lead Architect NeriahPro';
+        $nowIso = now()->toIso8601String();
+
+        $spkDocId = null;
+        if ($this->blueprintId) {
+            $bp = VisionBlueprint::query()->find($this->blueprintId);
+            $proj = $this->posProjectId ? PosProject::query()->find($this->posProjectId) : null;
+            if ($bp) {
+                $spkRes = $bridge->lockScopeAndGenerateSpk($bp, $proj);
+                $this->latestSpkResult = $spkRes;
+                $spkDocId = $spkRes['document_id'] ?? null;
+            }
+        }
+
+        $this->codesignDualKeyState = [
+            'is_locked' => true,
+            'locked_v1_readonly' => true,
+            'architect_signed_by' => $archSigner,
+            'architect_signed_at' => $nowIso,
+            'client_signed_by' => $clientSigner,
+            'client_signed_at' => $nowIso,
+            'master_scope_hash_sha256' => $quot['scope_hash_full'],
+            'spk_document_id' => $spkDocId,
+        ];
+
+        $this->persistCoDesignStateToProject('dual_key_scope_lock_sealed', $this->codesignDualKeyState);
+        $this->codesignStatusNotice = '🔒 Dual-Key Scope Lock v1.0 Resmi Disegel! Master SHA-256: ' . substr((string) $quot['scope_hash_full'], 0, 18) . '...';
+    }
+
+    /**
+     * @param  array<string, mixed>  $auditPayload
+     */
+    protected function persistCoDesignStateToProject(string $action, array $auditPayload): void
+    {
+        $proj = $this->posProjectId ? PosProject::query()->find($this->posProjectId) : null;
+        if ($proj) {
+            $updates = [];
+            if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'codesign_modules_json')) {
+                $updates['codesign_modules_json'] = $this->codesignModulesState;
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'codesign_dual_key_json') && ! empty($this->codesignDualKeyState)) {
+                $updates['codesign_dual_key_json'] = $this->codesignDualKeyState;
+            }
+            if (! empty($this->codesignDualKeyState['master_scope_hash_sha256']) && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'scope_hash_sha256')) {
+                $updates['scope_hash_sha256'] = $this->codesignDualKeyState['master_scope_hash_sha256'];
+            }
+            if (! empty($updates)) {
+                $proj->forceFill($updates)->saveQuietly();
+            }
+        }
+
+        AuditLog::record(
+            action: $action,
+            model: $proj,
+            newValues: $auditPayload,
+            description: "Co-Design Alignment Room [{$this->projectName}]: {$action}",
+            eventCategory: 'codesign_alignment',
+            sectorCode: $this->sectorCode,
+            primitiveCode: 'PRIMITIVE_CODESIGN_ROOM',
+            executionChannel: 'WEB_UI'
+        );
     }
 
     public function switchEngagementMode(string $mode): void

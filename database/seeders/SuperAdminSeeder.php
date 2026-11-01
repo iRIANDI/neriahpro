@@ -58,6 +58,11 @@ class SuperAdminSeeder extends Seeder
         $verifyCanaryWatermarksPerm = Permission::firstOrCreate(['name' => 'verify_canary_ip_watermarks', 'guard_name' => 'web']);
         $broadcastLivingCvePerm = Permission::firstOrCreate(['name' => 'broadcast_living_cve_security_alerts', 'guard_name' => 'web']);
         $manageCommunityMarketplacePerm = Permission::firstOrCreate(['name' => 'manage_community_primitives_marketplace', 'guard_name' => 'web']);
+        $manageAgentShieldPerm = Permission::firstOrCreate(['name' => 'manage_agentshield_security', 'guard_name' => 'web']);
+        $participateCoDesignPerm = Permission::firstOrCreate(['name' => 'participate_codesign_alignment', 'guard_name' => 'web']);
+        $executeDualKeyLockPerm = Permission::firstOrCreate(['name' => 'execute_dual_key_scope_lock', 'guard_name' => 'web']);
+        $verifyCryptoAuditPerm = Permission::firstOrCreate(['name' => 'verify_crypto_audit_chain', 'guard_name' => 'web']);
+        $export3SheetAuditPerm = Permission::firstOrCreate(['name' => 'export_3sheet_audit_xlsx', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
@@ -94,6 +99,11 @@ class SuperAdminSeeder extends Seeder
             $verifyCanaryWatermarksPerm,
             $broadcastLivingCvePerm,
             $manageCommunityMarketplacePerm,
+            $manageAgentShieldPerm,
+            $participateCoDesignPerm,
+            $executeDualKeyLockPerm,
+            $verifyCryptoAuditPerm,
+            $export3SheetAuditPerm,
         ]);
 
         $developerRole->givePermissionTo([
@@ -121,6 +131,11 @@ class SuperAdminSeeder extends Seeder
             $generateClientSopPerm,
             $verifyCanaryWatermarksPerm,
             $broadcastLivingCvePerm,
+            $manageAgentShieldPerm,
+            $participateCoDesignPerm,
+            $executeDualKeyLockPerm,
+            $verifyCryptoAuditPerm,
+            $export3SheetAuditPerm,
         ]);
 
         // Grant Due Diligence Read-Only permissions to Investor & Superadmin
@@ -134,6 +149,9 @@ class SuperAdminSeeder extends Seeder
             $validateEnvPerm,
             $compileSymbolDagPerm,
             $generateClientSopPerm,
+            $verifyCryptoAuditPerm,
+            $export3SheetAuditPerm,
+            $participateCoDesignPerm,
         ]);
 
         // Retail & Partner Clients can export CLI bootstrapper, print/ops specs, connect MCP bridge, & manage iterative Delta CRs for their own licensed blueprints
@@ -147,6 +165,7 @@ class SuperAdminSeeder extends Seeder
             $manageEnterpriseMenuPerm,
             $compileSymbolDagPerm,
             $generateClientSopPerm,
+            $participateCoDesignPerm,
         ]);
         $clientPartnerRole->givePermissionTo([
             $cliBootstrapPerm,
@@ -164,6 +183,8 @@ class SuperAdminSeeder extends Seeder
             $compileSymbolDagPerm,
             $configureHardwareWsPerm,
             $generateClientSopPerm,
+            $participateCoDesignPerm,
+            $executeDualKeyLockPerm,
         ]);
 
         // 1. Primary Superadmin (Founder & Chief Architect - Yoseph Iriandi Tambunan)

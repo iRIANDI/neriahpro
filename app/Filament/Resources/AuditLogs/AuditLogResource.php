@@ -71,6 +71,21 @@ class AuditLogResource extends Resource
                         TextInput::make('integrity_hash')
                             ->label('Stempel Integritas SHA-256')
                             ->disabled(),
+                        TextInput::make('prev_hash')
+                            ->label('Prev Hash (SHA-256 Chain)')
+                            ->disabled(),
+                        TextInput::make('current_hash')
+                            ->label('Current Hash (SHA-256 Chain)')
+                            ->disabled(),
+                        TextInput::make('sector_code')
+                            ->label('Kode Sektor (12 Sektor)')
+                            ->disabled(),
+                        TextInput::make('execution_channel')
+                            ->label('Kanal Eksekusi (WEB_UI / AI_COPILOT)')
+                            ->disabled(),
+                        TextInput::make('idempotency_key')
+                            ->label('Idempotency Key')
+                            ->disabled(),
                         TextInput::make('actor_name')
                             ->label('Pelaku / Eksekutor')
                             ->disabled(),
@@ -118,10 +133,10 @@ class AuditLogResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => strtoupper($state ?: 'system'))
                     ->color(fn (?string $state): string => match ($state) {
-                        'project_os', 'cli_bootstrap', 'day2_ops', 'delta_evolution', 'commercial_contract', 'uat_bast', 'enterprise_glue', 'project_isolation', 'pillars_freeze_100', 'client_sop_onboarding', 'dual_persona_ux', 'visual_ui_contract', 'whitelabel_agency' => 'success',
+                        'project_os', 'cli_bootstrap', 'day2_ops', 'delta_evolution', 'commercial_contract', 'uat_bast', 'enterprise_glue', 'project_isolation', 'pillars_freeze_100', 'client_sop_onboarding', 'dual_persona_ux', 'visual_ui_contract', 'whitelabel_agency', 'codesign_alignment' => 'success',
                         'ai_agent', 'blueprint_doctor', 'mcp_bridge', 'env_vault', 'symbol_manifest', 'dag_chunker', 'hardware_iot_bridge', 'websocket_zero_poll', 'syntax_lock_2026', 'jurisdiction_tier1' => 'info',
                         'brownfield_import', 'slop_audit', 'paid_addendum', 'living_cve_alert' => 'warning',
-                        'security', 'rbac', 'redteam_security', 'ip_canary_security' => 'danger',
+                        'security', 'rbac', 'redteam_security', 'ip_canary_security', 'agentshield_security' => 'danger',
                         'billing' => 'primary',
                         default => 'gray',
                     }),
@@ -150,11 +165,16 @@ class AuditLogResource extends Resource
                     ->label('Entitas')
                     ->formatStateUsing(fn ($state) => $state ? class_basename($state) : '-')
                     ->searchable(),
+                TextColumn::make('execution_channel')
+                    ->label('Kanal')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state ?: 'WEB_UI')
+                    ->toggleable(),
                 TextColumn::make('integrity_hash')
-                    ->label('SHA-256')
+                    ->label('SHA-256 Chain')
                     ->fontFamily('mono')
-                    ->formatStateUsing(fn (?string $state): string => $state ? substr($state, 0, 12) . '…' : 'LEGACY')
-                    ->tooltip(fn (?string $state): ?string => $state)
+                    ->formatStateUsing(fn (?string $state, AuditLog $record): string => ($record->verifyRowIntegrity() ? '✓ ' : '🚨 ') . substr((string) ($record->current_hash ?: $state ?: 'LEGACY'), 0, 10) . '…')
+                    ->tooltip(fn (?string $state, AuditLog $record): ?string => $record->current_hash ?: $state)
                     ->copyable()
                     ->copyMessage('SHA-256 Integrity Hash disalin'),
                 TextColumn::make('ip_address')
@@ -166,6 +186,8 @@ class AuditLogResource extends Resource
                 SelectFilter::make('event_category')
                     ->label('Kategori Domain')
                     ->options([
+                        'agentshield_security' => 'AgentShield 5-Layer AI Defense (v9.0)',
+                        'codesign_alignment' => 'Co-Design Room & Dual-Key Scope Lock (v9.0)',
                         'project_os' => 'Project OS & Blueprint',
                         'dual_persona_ux' => 'Dual-Persona Storyboard & Studio UX (v8.0)',
                         'visual_ui_contract' => '36 Visual Sector Frontend UI Blueprints (v8.0)',

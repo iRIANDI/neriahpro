@@ -217,11 +217,11 @@ SQL;
             );
         }
 
-        // Verify 30 valid Gemini & OpenAI Tool Declarations (Project OS v7.0)
+        // Verify 36 valid Gemini & OpenAI Tool Declarations (Project OS v9.0)
         $geminiTools = GeminiToolRegistry::getDeclarations();
         $openAiTools = GeminiToolRegistry::getOpenAiTools();
-        $this->assertCount(33, $geminiTools);
-        $this->assertCount(33, $openAiTools);
+        $this->assertCount(36, $geminiTools);
+        $this->assertCount(36, $openAiTools);
 
         $engine = app(AgenticActionExecutionEngine::class);
 

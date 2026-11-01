@@ -4,6 +4,8 @@ namespace App\Services\Ai;
 
 use App\Models\AiKnowledgeVector;
 use App\Models\CmsGlobalSetting;
+use App\Services\Security\DocumentThreatSanitizerService;
+use App\Support\PosAgentShieldAndCoDesignCatalog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -191,6 +193,22 @@ class VectorEmbeddingService
      */
     public function indexDocument(string $title, string $fullText, string $sourceType = 'system_guide', ?string $sourceId = null, array $metadata = [], int $maxChunks = 20): int
     {
+        // AgentShield Layer 1: Sanitize untrusted/client documents before chunking & embedding into RAG
+        $isTrustedInternal = in_array($sourceType, [
+            'system_guide',
+            'fifteen_pillars_freeze_v7',
+            'inclusive_visual_ui_v8',
+            'inclusive_security_pricing_v8',
+            'agentshield_codesign_audit_v9',
+        ], true);
+
+        if (! $isTrustedInternal) {
+            $scan = app(DocumentThreatSanitizerService::class)->sanitizeDocumentText($fullText, $title);
+            $fullText = $scan['sanitized_text'];
+            $metadata['agentshield_clean'] = $scan['is_clean'];
+            $metadata['agentshield_threats'] = $scan['detected_threats'];
+        }
+
         $chunks = $this->chunkText($fullText, 950, 120);
         if (empty($chunks)) {
             return 0;
@@ -345,8 +363,16 @@ class VectorEmbeddingService
 
         foreach ($relevantChunks as $idx => $chunk) {
             $num = $idx + 1;
-            $out .= "--- [Kutipan #{$num}: {$chunk['title']} (Sumber: {$chunk['source_type']} | Relevansi: {$chunk['similarity_score']}%) ] ---\n";
-            $out .= trim($chunk['content']) . "\n\n";
+            $srcType = (string) ($chunk['source_type'] ?? 'system_guide');
+            $out .= "--- [Kutipan #{$num}: {$chunk['title']} (Sumber: {$srcType} | Relevansi: {$chunk['similarity_score']}%) ] ---\n";
+            $isUntrustedClientChunk = str_contains(strtolower($srcType), 'client')
+                || str_contains(strtolower($srcType), 'upload')
+                || str_contains(strtolower($srcType), 'untrusted');
+            if ($isUntrustedClientChunk) {
+                $out .= DocumentThreatSanitizerService::wrapUntrustedClientDocument((string) $chunk['content'], (string) ($chunk['title'] ?? 'CLIENT_RAG_CHUNK')) . "\n\n";
+            } else {
+                $out .= trim((string) $chunk['content']) . "\n\n";
+            }
         }
 
         $out .= "--- AKHIR BASIS PENGETAHUAN TERVERIFIKASI ---\n";
@@ -366,6 +392,7 @@ class VectorEmbeddingService
                 ->orWhere('source_id', 'LIKE', 'stack-preset-%')
                 ->orWhere('source_id', 'LIKE', 'killer-engine-%')
                 ->orWhere('source_id', 'LIKE', 'inclusive-v8-%')
+                ->orWhere('source_id', 'LIKE', 'agentshield-v9-%')
                 ->delete();
         }
 
@@ -943,13 +970,65 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 13. Indeks Project OS v9.0: NeriahPro AgentShield (5-Layer Defense), Co-Design Alignment Room & 3-Sheet Cryptographic Audit Explorer (12 Sector Presets)
+        $v9AgentShieldSourceId = 'agentshield-v9-5-layers-and-3sheet-crypto-audit';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v9AgentShieldSourceId)->exists()) {
+            $presetLines = [];
+            foreach (PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets('id') as $p) {
+                $presetLines[] = "- {$p['sector_code']}: {$p['localized_title']} (Standar: " . implode(', ', $p['compliance_standards'] ?? []) . ')';
+            }
+            $v9SecurityContent = "Project OS v9.0 — NeriahPro AgentShield (5-Layer Defense against AI Malware & Poisoned Agent Attacks) & Filterable 3-Sheet Cryptographic Audit Explorer:\n"
+                . "1. Layer 1 Anti-Indirect Prompt Injection (`DocumentThreatSanitizerService`): Membersihkan hidden metadata, zero-width Unicode (`U+200B..U+200F`, `U+E0000..U+E007F`), macro/JS PDF, dan membungkus seluruh teks dokumen klien di dalam `<UNTRUSTED_CLIENT_DOCUMENT_DATA>`.\n"
+                . "2. Layer 2 Anti-Slopquatting (`APPROVED_DEPENDENCY_MANIFEST`): Melarang keras AI agent menginstal package Composer/NPM/Go di luar daftar putih resmi terverifikasi.\n"
+                . "3. Layer 3 Execution Sandbox (`.claude/settings.json` & `.cursorrules` Deny-List): Memblokir akses AI ke `.env*`, `.git/hooks/*`, `auth.json`, `~/.ssh/*` dan memblokir `curl`/`wget`/`nc`/`Invoke-WebRequest`.\n"
+                . "4. Layer 4 Zero-Execution Binary Quarantine: Verifikasi Magic Bytes `finfo_buffer`, penghapusan metadata EXIF gambar, dan disk `private` `noexec`.\n"
+                . "5. Layer 5 Cryptographic Tool-Call Verification: Spatie RBAC ketat tanpa bypass root + `idempotency_key` deterministik + rantai hash SHA-256 append-only (`prev_hash -> current_hash`).\n"
+                . "6. Ekspor Audit 3-Sheet `.xlsx` (`ExportFilteredAuditExcelAction`): Sheet 1 Sertifikat Integritas SHA-256, Sheet 2 Jejak Audit Transaksi, Sheet 3 Log AI Copilot & Idempotency, serta `.csv` streaming O(1) dengan 12 Preset Audit Industri:\n"
+                . implode("\n", $presetLines);
+
+            $embedding = $this->generateEmbedding("Project OS v9.0 AgentShield 5-Layer Defense & 3-Sheet Cryptographic Audit Trail 12 Sector Presets\n{$v9SecurityContent}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v9.0: NeriahPro AgentShield (5-Layer AI Defense) & 3-Sheet Cryptographic Audit Explorer',
+                'source_type' => 'agentshield_codesign_audit_v9',
+                'source_id' => $v9AgentShieldSourceId,
+                'content' => "### Project OS v9.0: AgentShield & Cryptographic Audit Explorer\n\n{$v9SecurityContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'Project OS v9.0 AgentShield & Crypto Audit',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        $v9CoDesignSourceId = 'agentshield-v9-codesign-dual-key-and-worldclass-tasks';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v9CoDesignSourceId)->exists()) {
+            $v9CoDesignContent = "Project OS v9.0 — The Co-Design Alignment & Sign-Off Room (Kolaborasi Developer Neriah <-> Klien Mitra) & Auto Visual UI -> World-Class 5-Sprint Task Synthesis:\n"
+                . "1. Dual-Mirror Screen ('Satu Data, Dua Kacamata'): Panel 1 Daftar Modul Bisnis L1–L4 + `+ Tambah Kebutuhan Klien`; Panel 2 toggle *Client Business Lens* (Visual Wireframe Mockup + Estimasi Biaya/Hari) <-> *Architect Technical Lens* (Tabel ULID 26-char, State Machine, Pessimistic Lock) + tombol `[ ☑️ Klien Setuju Modul Ini ]` yang mencatat Timestamp & IP ke `audit_logs`; Panel 3 Anotasi Kontekstual, Kalkulator Dampak RAB & Hari Kerja Real-Time, serta **Dual-Key Cryptographic Scope Lock Ceremony** (aktif saat 100% modul `APPROVED`, membekukan `v1.0` Read-Only dengan Master Scope Hash SHA-256 + SPK & Invoice DP).\n"
+                . "2. Kausalitas Penuh Ide/Sektor -> Visual UI -> World-Class Tasks: Begitu klien memasukkan ide atau memilih 1 dari 12 Sektor Fungsional, sistem otomatis mencocokkan Varian Visual Frontend (`UI_01A..UI_12C`) + Navigation Shell + 25 Menu L1–L4 + 5-Sprint World-Class Engineering Task Matrix (`TSK-101` s/d `TSK-502`).";
+
+            $embedding = $this->generateEmbedding("Project OS v9.0 Co-Design Alignment Room Dual-Key Lock & World-Class 5-Sprint Tasks\n{$v9CoDesignContent}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v9.0: Co-Design Alignment & Sign-Off Room (Dual-Key Lock) & World-Class 5-Sprint Tasks',
+                'source_type' => 'agentshield_codesign_audit_v9',
+                'source_id' => $v9CoDesignSourceId,
+                'content' => "### Project OS v9.0: Co-Design Alignment Room & World-Class Tasks\n\n{$v9CoDesignContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'Project OS v9.0 Co-Design & World-Class Tasks',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
             'status' => 'success',
             'synced_sections' => $syncedSections,
             'total_chunks' => $totalChunks,
-            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (Project OS v8.0 36 Visual UI & 5-Layer IP Canary, 15 Pilar Master Architectural Freeze v7.0, 5 Elemen Dunia Nyata, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 5 Day-30+ Lifecycle Engines, 5 Mitra Bridges & 5 Deterministic Guarantees) ke basis pengetahuan RAG pgvector.",
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (Project OS v9.0 AgentShield 5-Layer + Co-Design Room + 3-Sheet Crypto Audit, v8.0 36 Visual UI & 5-Layer IP Canary, 15 Pilar Master Architectural Freeze v7.0, 5 Elemen Dunia Nyata, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 5 Day-30+ Lifecycle Engines, 5 Mitra Bridges & 5 Deterministic Guarantees) ke basis pengetahuan RAG pgvector.",
         ];
     }
 }

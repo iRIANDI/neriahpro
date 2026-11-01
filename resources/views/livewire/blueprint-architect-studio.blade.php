@@ -45,7 +45,7 @@
     <header class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 z-30">
         <div class="flex flex-wrap items-center gap-2">
             <a href="/blueprint?tier=retail_spark&amp;new=1" class="px-2 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[11px] font-black uppercase tracking-wider rounded-none hover:opacity-90 transition">
-                [NeriahPro OS v8.0 • 100% FREEZE]
+                [NeriahPro OS v9.0 • 100% FREEZE]
             </a>
             <div class="flex items-center gap-1.5 font-mono text-xs">
                 <input
@@ -362,7 +362,8 @@
                 <div class="text-emerald-900 dark:text-emerald-300">✓ 25 Sub-Menu L1–L4 + 5 Enterprise Glue</div>
                 <div class="text-emerald-900 dark:text-emerald-300">✓ &lt;30ms HW Wedge + Zero-Poll WS + 0% N+1</div>
                 <div class="text-emerald-900 dark:text-emerald-300">✓ SYNTAX_LOCK_2026 + Role SOP BAST</div>
-                <div class="text-zinc-700 dark:text-zinc-300">RAG pgvector + CAG + KAG + 30 Tools + SHA-256 Audit</div>
+                <div class="text-emerald-900 dark:text-emerald-300">✓ AgentShield 5-Layer + Dual-Key Co-Design</div>
+                <div class="text-zinc-700 dark:text-zinc-300">RAG pgvector + CAG + KAG + 36 Tools + 3-Sheet SHA-256 Audit</div>
             </div>
         </aside>
 
@@ -382,6 +383,8 @@
                     'menus_glue' => '7. L1–L4 Menu (25) & 5 Glue',
                     'runtime_sop_v7' => '8. ⚡ 5 Runtime, SOP & 15 Pilar',
                     'inclusive_security_v8' => '9. 🛡️ CVE, White-Label & IP',
+                    'codesign_room' => '10. 🤝 Co-Design & Sign-Off',
+                    'agentshield_tasks' => '11. 🧱 AgentShield & 5-Sprint',
                 ] as $tabKey => $tabLabel)
                     <button
                         type="button"
@@ -1328,6 +1331,362 @@
                         </div>
                     </div>
                 @endif
+
+                <!-- =============================================================== -->
+                <!-- TAB 10: v9.0 THE CO-DESIGN ALIGNMENT & SIGN-OFF ROOM            -->
+                <!-- ("SATU DATA, DUA KACAMATA" — DEVELOPER NERIAH <-> KLIEN MITRA)  -->
+                <!-- =============================================================== -->
+                @if($centerTab === 'codesign_room')
+                    @php
+                        $cdModules = $codesignContract['modules'] ?? [];
+                        $activeCdMod = collect($cdModules)->firstWhere('module_code', $selectedCoDesignModuleCode) ?? ($cdModules[0] ?? []);
+                        $cdCeremony = $codesignContract['dual_key_ceremony'] ?? [];
+                        $isDualKeySealed = !empty($cdCeremony['is_locked']);
+                        $cdPercent = (int) ($codesignContract['approval_progress_percent'] ?? 0);
+                        $isEnLoc = $outputLocale === 'en';
+                    @endphp
+                    <div class="space-y-3">
+                        <div class="p-3 bg-white dark:bg-zinc-900 border-2 border-emerald-600 dark:border-emerald-500 rounded-none space-y-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <span class="px-2 py-0.5 bg-zinc-950 text-emerald-400 font-mono text-[10px] font-black uppercase">
+                                        🤝 {{ $isEnLoc ? 'CO-DESIGN ALIGNMENT & DUAL-KEY SIGN-OFF ROOM v9.0' : 'RUANG KOLABORASI CO-DESIGN & SIGN-OFF DUAL-KEY v9.0' }}
+                                    </span>
+                                    <div class="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1">
+                                        {{ $isEnLoc ? 'One Data, Two Lenses: Live Client Business Wireframe <-> Architect Technical Contract' : 'Satu Data, Dua Kacamata: Sinkronisasi Visual Bisnis Klien <-> Skema Teknis Arsitek' }}
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 font-mono text-[10px] tabular-nums">
+                                    <span class="px-2 py-1 border font-black {{ $cdPercent === 100 ? 'bg-emerald-100 text-emerald-950 border-emerald-500 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-600' : 'bg-amber-100 text-amber-950 border-amber-500 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-600' }}">
+                                        {{ $codesignContract['approved_modules_count'] ?? 0 }}/{{ $codesignContract['total_modules_count'] ?? 0 }} APPROVED ({{ $cdPercent }}%)
+                                    </span>
+                                    @if(!$isDualKeySealed)
+                                        <button
+                                            type="button"
+                                            wire:click="signCoDesignModule('ALL', 'APPROVED')"
+                                            class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black rounded-none cursor-pointer"
+                                        >
+                                            ☑️ {{ $isEnLoc ? 'Approve All' : 'Setujui Semua' }}
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+
+                            @if($codesignStatusNotice !== '')
+                                <div class="p-2 bg-zinc-100 dark:bg-zinc-950 border border-zinc-400 dark:border-zinc-700 font-mono text-[10px] font-bold text-zinc-950 dark:text-emerald-300">
+                                    {{ $codesignStatusNotice }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- PANEL 1: BUSINESS MODULES EXPLORER + ADD CLIENT REQUIREMENT -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2.5">
+                            <div class="flex items-center justify-between font-mono text-[10px]">
+                                <span class="font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                    PANEL 1 // {{ $isEnLoc ? 'BUSINESS MODULES (L1–L4 & CUSTOM CLIENT ADDITIONS)' : 'DAFTAR MODUL BISNIS (DIVISI L1–L4 & KEBUTUHAN TAMBAHAN KLIEN)' }}
+                                </span>
+                                <span class="text-zinc-600 dark:text-zinc-400 tabular-nums">
+                                    Extra Hours: +{{ number_format((int) ($codesignContract['extra_codesign_man_hours'] ?? 0)) }}h
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 font-mono text-[10px]">
+                                @foreach($cdModules as $cdMod)
+                                    @php
+                                        $mCode = (string) ($cdMod['module_code'] ?? '');
+                                        $mStatus = (string) ($cdMod['status'] ?? 'PENDING');
+                                        $isSelMod = ($activeCdMod['module_code'] ?? '') === $mCode;
+                                    @endphp
+                                    <button
+                                        type="button"
+                                        wire:click="selectCoDesignModule('{{ $mCode }}')"
+                                        class="p-2 text-left border rounded-none cursor-pointer transition flex items-start justify-between gap-2 {{ $isSelMod ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950 dark:text-white dark:border-emerald-400' : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-950 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-800' }}"
+                                    >
+                                        <div class="min-w-0">
+                                            <div class="font-black truncate">
+                                                0{{ $cdMod['module_number'] ?? 1 }}. {{ $cdMod['localized_title'] ?? $mCode }}
+                                            </div>
+                                            <div class="text-[9px] mt-0.5 {{ $isSelMod ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-400' }}">
+                                                {{ $cdMod['client_business_lens']['formatted_cost_idr'] ?? 'Rp 0' }} &bull; {{ $cdMod['client_business_lens']['estimated_days'] ?? 1 }}d
+                                            </div>
+                                        </div>
+                                        <span class="px-1.5 py-0.5 text-[9px] font-black border shrink-0 {{ $mStatus === 'APPROVED' ? 'bg-emerald-200 text-emerald-950 border-emerald-500 dark:bg-emerald-900 dark:text-emerald-100 dark:border-emerald-600' : ($mStatus === 'DISCUSSION' ? 'bg-amber-200 text-amber-950 border-amber-500 dark:bg-amber-900 dark:text-amber-100 dark:border-amber-600' : 'bg-zinc-200 text-zinc-900 border-zinc-400 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700') }}">
+                                            {{ $mStatus }}
+                                        </span>
+                                    </button>
+                                @endforeach
+                            </div>
+
+                            @if(!$isDualKeySealed)
+                                <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                                    <input
+                                        type="text"
+                                        wire:model="newCustomModuleTitle"
+                                        placeholder="{{ $isEnLoc ? '+ Add Custom Client Requirement (auto-recalculates RAB)...' : '+ Tambah Kebutuhan Klien (otomatis hitung ulang RAB & Scope Hash)...' }}"
+                                        class="flex-1 min-w-44 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 rounded-none"
+                                    />
+                                    <input
+                                        type="number"
+                                        min="4"
+                                        max="240"
+                                        wire:model="newCustomModuleHours"
+                                        aria-label="Estimasi Jam Kerja"
+                                        class="w-16 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 tabular-nums rounded-none"
+                                    />
+                                    <button
+                                        type="button"
+                                        wire:click="addCustomCoDesignModule"
+                                        class="px-2.5 py-1.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black rounded-none cursor-pointer"
+                                    >
+                                        + {{ $isEnLoc ? 'Add Module' : 'Tambah Modul' }}
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- PANEL 2: DUAL-MIRROR SCREEN (CLIENT BUSINESS LENS <-> ARCHITECT TECHNICAL LENS) + PER-MODULE SIGN-OFF -->
+                        @if(!empty($activeCdMod))
+                            <div class="p-3 bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none space-y-2.5">
+                                <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                                    <div class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100">
+                                        PANEL 2 // [{{ $activeCdMod['module_code'] }}] {{ $activeCdMod['localized_title'] ?? '' }}
+                                    </div>
+                                    <div class="inline-flex p-0.5 bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-mono text-[10px]">
+                                        <button
+                                            type="button"
+                                            wire:click="toggleCoDesignLens('CLIENT_BUSINESS')"
+                                            class="px-2 py-0.5 rounded-none cursor-pointer {{ $codesignLensMode === 'CLIENT_BUSINESS' ? 'bg-emerald-600 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black' : 'text-zinc-800 dark:text-zinc-300 font-bold' }}"
+                                        >
+                                            👔 {{ $isEnLoc ? 'Client Business Lens' : 'Kacamata Bisnis Klien' }}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            wire:click="toggleCoDesignLens('ARCHITECT_TECHNICAL')"
+                                            class="px-2 py-0.5 rounded-none cursor-pointer {{ $codesignLensMode === 'ARCHITECT_TECHNICAL' ? 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black' : 'text-zinc-800 dark:text-zinc-300 font-bold' }}"
+                                        >
+                                            ⚙️ {{ $isEnLoc ? 'Architect Technical Lens' : 'Kacamata Teknis Arsitek' }}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                @if($codesignLensMode === 'CLIENT_BUSINESS')
+                                    <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 font-mono text-[10px] space-y-2">
+                                        <div class="flex flex-wrap items-center justify-between gap-2">
+                                            <span class="font-black text-emerald-950 dark:text-emerald-300">
+                                                UI WIREFRAME: [{{ $activeCdMod['client_business_lens']['wireframe_pane_label'] ?? 'PRIMARY SCREEN' }}] ({{ $activeCdMod['client_business_lens']['visual_ui_variant'] ?? '' }})
+                                            </span>
+                                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black tabular-nums">
+                                                {{ $activeCdMod['client_business_lens']['formatted_cost_idr'] ?? 'Rp 0' }} &bull; {{ $activeCdMod['client_business_lens']['estimated_days'] ?? 1 }} {{ $isEnLoc ? 'Working Days' : 'Hari Kerja' }}
+                                            </span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-1">
+                                            @foreach(($activeCdMod['client_business_lens']['included_menus'] ?? []) as $incMenu)
+                                                <span class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-bold">
+                                                    ▣ {{ $incMenu }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="p-2.5 bg-zinc-950 text-zinc-100 border border-zinc-800 font-mono text-[10px] space-y-1.5">
+                                        <div><span class="text-emerald-400 font-black">ULID Tables:</span> {{ implode(', ', $activeCdMod['architect_technical_lens']['ulid_tables'] ?? []) }}</div>
+                                        <div><span class="text-emerald-400 font-black">State Machines:</span> {{ implode(' | ', $activeCdMod['architect_technical_lens']['state_machines'] ?? []) }}</div>
+                                        <div><span class="text-amber-400 font-black">Concurrency Locks:</span> {{ implode(' | ', $activeCdMod['architect_technical_lens']['concurrency_locks'] ?? []) }}</div>
+                                        <div><span class="text-cyan-300 font-black">Private Reverb WS:</span> {{ $activeCdMod['architect_technical_lens']['websocket_channel'] ?? '' }}</div>
+                                    </div>
+                                @endif
+
+                                <!-- Per-Module Clause Sign-Off Controls -->
+                                <div class="flex flex-wrap items-center justify-between gap-2 pt-1 font-mono text-[10px]">
+                                    <div class="text-zinc-700 dark:text-zinc-300">
+                                        @if(!empty($activeCdMod['approved_at']))
+                                            <span class="font-bold text-emerald-900 dark:text-emerald-300">
+                                                ✓ Signed by {{ $activeCdMod['approved_by_name'] }} (IP: {{ $activeCdMod['approved_by_ip'] }}) @ {{ $activeCdMod['approved_at'] }}
+                                            </span>
+                                        @else
+                                            <span>{{ $isEnLoc ? 'Sign off this module to lock scope & prevent disputes.' : 'Klik persetujuan klausa per modul (tercatat di Audit Log SHA-256).' }}</span>
+                                        @endif
+                                    </div>
+                                    @if(!$isDualKeySealed)
+                                        <div class="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                wire:click="signCoDesignModule('{{ $activeCdMod['module_code'] }}', 'DISCUSSION')"
+                                                class="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-500 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-600 font-black rounded-none cursor-pointer"
+                                            >
+                                                💬 {{ $isEnLoc ? 'Needs Discussion' : 'Perlu Diskusi' }}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                wire:click="signCoDesignModule('{{ $activeCdMod['module_code'] }}', 'APPROVED')"
+                                                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black rounded-none cursor-pointer"
+                                            >
+                                                ☑️ {{ $isEnLoc ? 'Client Approves This Module' : 'Klien Setuju Modul Ini' }}
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- PANEL 3: ANNOTATIONS, LIVE RAB IMPACT & DUAL-KEY CRYPTOGRAPHIC SCOPE LOCK CEREMONY -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-3 font-mono text-[10px]">
+                            <div class="font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                PANEL 3 // {{ $isEnLoc ? 'CONTEXTUAL ANNOTATIONS, LIVE RAB & DUAL-KEY SCOPE LOCK CEREMONY' : 'ANOTASI KONTEKSTUAL, DAMPAK RAB LIVE & UPACARA KUNCI GANDA DUAL-KEY' }}
+                            </div>
+
+                            @if(!empty($activeCdMod['annotations']))
+                                <div class="space-y-1 max-h-28 overflow-y-auto studio-scroll">
+                                    @foreach($activeCdMod['annotations'] as $ann)
+                                        <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                            <span class="font-black text-emerald-900 dark:text-emerald-300">[{{ $ann['role'] ?? 'PARTICIPANT' }} • {{ $ann['author'] ?? '' }}]:</span>
+                                            <span class="text-zinc-900 dark:text-zinc-100 font-sans">{{ $ann['note'] ?? '' }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <select wire:model="newCoDesignAuthorRole" class="px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-bold rounded-none">
+                                    <option value="KLIEN_MITRA">👔 PIC Klien Mitra</option>
+                                    <option value="ARSITEK_NERIAH">⚙️ Arsitek NeriahPro</option>
+                                </select>
+                                <input
+                                    type="text"
+                                    wire:model="newCoDesignNote"
+                                    placeholder="{{ $isEnLoc ? 'Write contextual note on this module...' : 'Tulis catatan kesepakatan pada modul ini...' }}"
+                                    class="flex-1 min-w-44 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 rounded-none"
+                                />
+                                <button
+                                    type="button"
+                                    wire:click="addCoDesignAnnotation"
+                                    class="px-2.5 py-1.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black rounded-none cursor-pointer"
+                                >
+                                    💬 {{ $isEnLoc ? 'Send Note' : 'Kirim Catatan' }}
+                                </button>
+                            </div>
+
+                            <div class="p-2.5 bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-400 dark:border-emerald-800 space-y-2">
+                                <div class="flex flex-wrap items-center justify-between gap-2 tabular-nums">
+                                    <span class="font-black text-emerald-950 dark:text-emerald-200">
+                                        LIVE RAB: {{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }} ({{ $commercialQuotation['timeline_days'] ?? 0 }} Hari)
+                                    </span>
+                                    <span class="font-black text-zinc-950 dark:text-emerald-300">
+                                        SHA-256: {{ $commercialQuotation['scope_hash_short'] ?? '-' }}
+                                    </span>
+                                </div>
+
+                                @if($isDualKeySealed)
+                                    <div class="p-2 bg-zinc-950 text-emerald-300 border border-emerald-500 font-bold space-y-0.5 tabular-nums">
+                                        <div>🔒 SCOPE v1.0 SEALED READ-ONLY (DUAL-KEY CRYPTOGRAPHIC LOCK)</div>
+                                        <div>Architect Key: {{ $cdCeremony['architect_signed_by'] ?? '-' }} | Client Key: {{ $cdCeremony['client_signed_by'] ?? '-' }}</div>
+                                        <div class="truncate">Master SHA-256: {{ $cdCeremony['master_scope_hash_sha256'] ?? '' }}</div>
+                                    </div>
+                                @else
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                        <input
+                                            type="text"
+                                            wire:model="codesignArchitectSignerName"
+                                            placeholder="Nama Lead Architect NeriahPro"
+                                            class="px-2 py-1.5 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 rounded-none"
+                                        />
+                                        <input
+                                            type="text"
+                                            wire:model="codesignClientSignerName"
+                                            placeholder="Nama PIC Klien Mitra Resmi"
+                                            class="px-2 py-1.5 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 rounded-none"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        wire:click="executeDualKeyScopeLock"
+                                        @disabled(empty($codesignContract['can_execute_dual_key_lock']))
+                                        class="w-full py-2 px-3 font-black uppercase rounded-none transition {{ !empty($codesignContract['can_execute_dual_key_lock']) ? 'bg-zinc-950 hover:bg-zinc-800 text-emerald-400 dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 cursor-pointer' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 cursor-not-allowed' }}"
+                                    >
+                                        🔐 {{ $isEnLoc ? 'EXECUTE DUAL-KEY SCOPE LOCK v1.0 & ISSUE SPK SHA-256' : 'KUNCI BERSAMA SCOPE v1.0 (DUAL-KEY CEREMONY) & TERBITKAN SPK SHA-256' }}
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- =============================================================== -->
+                <!-- TAB 11: v9.0 AGENTSHIELD 5-LAYER, 12-SECTOR AUDIT & 5-SPRINT    -->
+                <!-- =============================================================== -->
+                @if($centerTab === 'agentshield_tasks')
+                    @php
+                        $asLayers = $agentShieldContract['layers'] ?? [];
+                        $sprintList = $worldClassTaskMatrix['sprints'] ?? [];
+                        $secAuditPreset = $cryptoAuditContract['sector_audit_preset'] ?? [];
+                    @endphp
+                    <div class="space-y-3 font-mono text-[10px]">
+                        <div class="p-3 bg-white dark:bg-zinc-900 border-2 border-emerald-600 dark:border-emerald-500 rounded-none space-y-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="font-black uppercase text-emerald-950 dark:text-emerald-300 text-xs">
+                                    🧱 NERIAHPRO AGENTSHIELD v9.0 (5-LAYER AI DEFENSE) &amp; 3-SHEET CRYPTO AUDIT
+                                </span>
+                                <div class="flex gap-1">
+                                    <button type="button" wire:click="$set('rightDockMode', 'claude_settings_json')" class="px-2 py-0.5 bg-zinc-950 text-emerald-400 font-black rounded-none cursor-pointer">
+                                        .claude/settings.json &rarr;
+                                    </button>
+                                    <button type="button" wire:click="$set('rightDockMode', 'dependency_manifest')" class="px-2 py-0.5 bg-emerald-600 text-zinc-950 font-black rounded-none cursor-pointer">
+                                        APPROVED_DEPS.json &rarr;
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 gap-1.5">
+                                @foreach($asLayers as $lyr)
+                                    @php
+                                        $lyrGuarantee = is_array($lyr['guarantee'] ?? null)
+                                            ? ($lyr['guarantee'][$outputLocale === 'en' ? 'en' : 'id'] ?? $lyr['guarantee']['id'] ?? '')
+                                            : ($lyr['guarantee'] ?? '');
+                                    @endphp
+                                    <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800">
+                                        <div class="font-black text-zinc-950 dark:text-zinc-100">
+                                            L{{ $lyr['layer'] ?? '' }} // {{ $lyr['code'] ?? '' }} — {{ $lyr['service'] ?? ($lyr['name'] ?? '') }}
+                                        </div>
+                                        <div class="text-zinc-700 dark:text-zinc-300 font-sans text-[11px] mt-0.5">{{ $lyrGuarantee }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-1.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                    🔍 PRIMITIVE_CRYPTO_AUDIT_EXPLORER (3-SHEET .XLSX + STREAMING .CSV)
+                                </span>
+                                <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black">
+                                    {{ $secAuditPreset['badge'] ?? 'SHA-256 CHAIN' }}
+                                </span>
+                            </div>
+                            <div class="text-zinc-800 dark:text-zinc-200 font-sans text-xs font-bold">
+                                {{ $secAuditPreset['localized_title'] ?? '' }}
+                            </div>
+                            <div class="text-zinc-600 dark:text-zinc-400">
+                                Watched Actions: {{ implode(' • ', $secAuditPreset['watched_actions'] ?? []) }}
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
+                            <div class="font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                🚀 WORLD-CLASS 5-SPRINT ENGINEERING TASK MATRIX ({{ $worldClassTaskMatrix['total_world_class_tasks'] ?? 13 }} TASKS • UI {{ $worldClassTaskMatrix['locked_visual_ui_variant'] ?? '' }})
+                            </div>
+                            @foreach($sprintList as $spRow)
+                                <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-1">
+                                    <div class="font-black text-emerald-950 dark:text-emerald-300">{{ $spRow['title'] ?? '' }}</div>
+                                    @foreach(($spRow['tasks'] ?? []) as $tkRow)
+                                        <div class="pl-2 border-l-2 border-emerald-500 text-zinc-900 dark:text-zinc-200">
+                                            <strong>{{ $tkRow['task_code'] ?? '' }}</strong> [{{ $tkRow['role'] ?? '' }}]: {{ $tkRow['title'] ?? '' }}
+                                            <span class="text-zinc-600 dark:text-zinc-400">(&rarr; {{ $tkRow['deliverable'] ?? '' }})</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
         </section>
 
@@ -1359,6 +1718,8 @@
                         'graph_json' => 'graph.json',
                         'mcp_json' => '.mcp.json',
                         'env_blueprint' => '.env.blueprint',
+                        'claude_settings_json' => '.claude/settings.json',
+                        'dependency_manifest' => 'APPROVED_DEPS.json',
                     ] as $mKey => $mLabel)
                         <button
                             type="button"

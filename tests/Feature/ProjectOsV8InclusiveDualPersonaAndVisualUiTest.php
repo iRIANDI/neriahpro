@@ -269,8 +269,8 @@ class ProjectOsV8InclusiveDualPersonaAndVisualUiTest extends TestCase
     public function test_33_native_ai_tools_rbac_isolation_rag_sync_matrix_and_smartguide_v8(): void
     {
         $declarations = GeminiToolRegistry::getDeclarations();
-        $this->assertCount(33, $declarations);
-        $this->assertCount(33, GeminiToolRegistry::getOpenAiTools());
+        $this->assertCount(36, $declarations);
+        $this->assertCount(36, GeminiToolRegistry::getOpenAiTools());
 
         // Ensure zero empty list [] properties that could trigger Gemini HTTP 400
         foreach ($declarations as $decl) {

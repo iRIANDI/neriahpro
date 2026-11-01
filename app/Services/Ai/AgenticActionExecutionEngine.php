@@ -2,15 +2,21 @@
 
 namespace App\Services\Ai;
 
+use App\Actions\Audit\ExportFilteredAuditExcelAction;
 use App\Models\AuditLog;
 use App\Models\Document;
 use App\Models\DomainHostingAsset;
 use App\Models\LeadContact;
+use App\Models\PosProject;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\VisionBlueprint;
-use App\Services\Ai\VectorEmbeddingService;
 use App\Services\Ai\AiWorkflowTracer;
+use App\Services\Ai\VectorEmbeddingService;
+use App\Services\PosCommercialBridgeService;
+use App\Services\ProjectOsBlueprintCompilerService;
+use App\Services\Security\DocumentThreatSanitizerService;
+use App\Support\PosAgentShieldAndCoDesignCatalog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -32,6 +38,12 @@ class AgenticActionExecutionEngine
     {
         $startTime = microtime(true);
         $user = Auth::user();
+        $idempotencyKey = DocumentThreatSanitizerService::computeToolIdempotencyKey(
+            $toolName,
+            $args,
+            $user?->id ? (string) $user->id : null,
+            $sessionId
+        );
 
         $trace = AiWorkflowTracer::startTrace(
             stage: 'execution',
@@ -77,18 +89,18 @@ class AgenticActionExecutionEngine
                 'configure_visual_ui_and_jurisdiction_locale' => (! empty($args['project_ulid']) ? $this->guardMutation($user, $toolName) : null) ?? $this->configureVisualUiAndJurisdictionLocale($args),
                 'audit_living_cve_alerts_and_autopatch' => (! empty($args['project_ulid']) && ! empty($args['acknowledge_all']) ? $this->guardMutation($user, $toolName) : null) ?? $this->auditLivingCveAlertsAndAutopatch($args),
                 'manage_ip_canary_watermark_and_vault_security' => (strtolower(trim((string) ($args['action'] ?? 'inspect_layers'))) === 'revoke_mcp_token' ? $this->guardMutation($user, $toolName) : null) ?? $this->manageIpCanaryWatermarkAndVaultSecurity($args),
+                'sanitize_and_audit_agentshield' => $this->guardMutation($user, $toolName) ?? $this->sanitizeAndAuditAgentshield($args),
+                'manage_codesign_alignment_room' => (in_array(strtolower(trim((string) ($args['action'] ?? 'inspect_room'))), ['sign_module', 'add_custom_module', 'dual_key_lock'], true) ? $this->guardMutation($user, $toolName) : null) ?? $this->manageCodesignAlignmentRoom($args, $user),
+                'verify_and_export_crypto_audit_trail' => $this->guardMutation($user, $toolName) ?? $this->verifyAndExportCryptoAuditTrail($args),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
+            if (is_array($result) && ! isset($result['error']) && $toolName !== 'get_system_stats') {
+                $result['idempotency_key'] = $idempotencyKey;
+            }
+
             $execTimeMs = (int) round((microtime(true) - $startTime) * 1000);
 
-            AiWorkflowTracer::completeTrace(
-                trace: $trace,
-                status: isset($result['error']) ? 'failed' : 'success',
-                output: $result,
-                summary: "Eksekusi {$toolName} selesai dalam {$execTimeMs}ms.",
-                executionTimeMs: $execTimeMs
-            );
             if ($trace) {
                 AiWorkflowTracer::completeTrace(
                     trace: $trace,
@@ -469,9 +481,16 @@ class AgenticActionExecutionEngine
                 'id' => $l->id,
                 'action' => $l->action,
                 'event_category' => $l->event_category ?? 'system',
+                'sector_code' => $l->sector_code ?? null,
+                'primitive_code' => $l->primitive_code ?? null,
+                'execution_channel' => $l->execution_channel ?? 'WEB_UI',
+                'idempotency_key' => $l->idempotency_key ?? null,
                 'actor' => $l->user?->name ?? 'System',
                 'description' => $l->description,
                 'integrity_hash' => $l->integrity_hash,
+                'prev_hash' => $l->prev_hash ?? null,
+                'current_hash' => $l->current_hash ?? null,
+                'chain_status' => $l->verifyRowIntegrity()['status'] ?? 'VERIFIED_INTACT',
                 'ip_address' => $l->ip_address,
                 'created_at' => $l->created_at?->format('Y-m-d H:i:s'),
             ])->toArray(),
@@ -530,6 +549,9 @@ class AgenticActionExecutionEngine
             'navigation_shells_count' => count(\App\Support\PosInclusiveCommercialCatalog::navigationShellOptions()),
             'tier1_jurisdictions_count' => 7,
             'inclusive_plg_skus_count' => count(\App\Support\PricingRegistry::getInclusiveValueMetricCatalog()),
+            'agentshield_layers_count' => 5,
+            'sector_audit_presets_count' => count(PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets()),
+            'world_class_sprints_count' => 5,
             'native_tools_count' => count(GeminiToolRegistry::getDeclarations()),
         ];
     }
@@ -1517,7 +1539,298 @@ class AgenticActionExecutionEngine
     }
 
     /**
-     * RBAC Guard for state-mutating AI Native Tools.
+     * 34. NeriahPro AgentShield 5-Layer Defense (Anti-Prompt Injection, Anti-Slopquatting, File-Path Jail)
+     */
+    protected function sanitizeAndAuditAgentshield(array $args): array
+    {
+        $operation = strtolower(trim((string) ($args['operation'] ?? 'inspect_sandbox')));
+        $stackPreset = (string) ($args['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH');
+        $sectorCode = (string) ($args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL');
+        $sanitizer = app(DocumentThreatSanitizerService::class);
+
+        if ($operation === 'sanitize_document') {
+            $rawText = (string) ($args['document_text'] ?? '');
+            $scan = $sanitizer->sanitizeDocumentText($rawText, 'ai_copilot_scan');
+
+            return [
+                'success' => true,
+                'operation' => 'sanitize_document',
+                'is_clean' => $scan['is_clean'],
+                'detected_threats' => $scan['detected_threats'],
+                'zero_width_removed_count' => $scan['zero_width_removed_count'],
+                'sanitized_text' => $scan['sanitized_text'],
+                'isolated_block' => $scan['isolated_block'],
+                'sanitized_sha256' => $scan['sanitized_sha256'],
+            ];
+        }
+
+        if ($operation === 'audit_packages') {
+            $packages = is_array($args['packages'] ?? null) ? $args['packages'] : [];
+            $audit = $sanitizer->auditPackageSlopquatting($packages, $stackPreset, $sectorCode);
+
+            AuditLog::record(
+                action: $audit['all_approved'] ? 'AGENTSHIELD_PACKAGES_VERIFIED' : 'SLOPQUATTING_PACKAGE_BLOCKED',
+                newValues: [
+                    'approved_packages' => $audit['approved_packages'],
+                    'blocked_packages' => $audit['blocked_packages'],
+                ],
+                description: 'AgentShield memeriksa ' . count($packages) . ' package terhadap APPROVED_DEPENDENCY_MANIFEST (' . count($audit['blocked_packages']) . ' diblokir).',
+                eventCategory: 'agentshield_security',
+                sectorCode: $sectorCode,
+                primitiveCode: 'PRIMITIVE_AGENTSHIELD_ALLOWLIST',
+                executionChannel: 'AI_COPILOT_TOOL'
+            );
+
+            return array_merge(['success' => true, 'operation' => 'audit_packages'], $audit);
+        }
+
+        return [
+            'success' => true,
+            'operation' => 'inspect_sandbox',
+            'contract' => DocumentThreatSanitizerService::fiveLayersBlueprintContract('NeriahPro Enterprise App', $stackPreset, $sectorCode),
+            'claude_settings_json' => json_decode(DocumentThreatSanitizerService::renderClaudeSettingsJson([
+                'project_metadata' => ['name' => 'NeriahPro Enterprise App'],
+            ]), true),
+        ];
+    }
+
+    /**
+     * 35. The Co-Design Alignment & Sign-Off Room (Dual-Mirror + Per-Module Sign-Off + Dual-Key Lock)
+     */
+    protected function manageCodesignAlignmentRoom(array $args, ?User $user): array
+    {
+        $action = strtolower(trim((string) ($args['action'] ?? 'inspect_room')));
+        $bpId = trim((string) ($args['blueprint_id'] ?? ''));
+
+        if ($bpId === '') {
+            return ['error' => 'Parameter blueprint_id (ULID atau slug) wajib diisi untuk Co-Design Alignment Room.'];
+        }
+
+        $blueprint = VisionBlueprint::where('id', $bpId)->orWhere('slug', $bpId)->first();
+        if (! $blueprint) {
+            return ['error' => "VisionBlueprint '{$bpId}' tidak ditemukan."];
+        }
+
+        $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first()
+            ?? app(ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+
+        $bridge = app(PosCommercialBridgeService::class);
+        $dualKey = is_array($posProject->codesign_dual_key_json) ? $posProject->codesign_dual_key_json : [];
+
+        if ($action === 'sign_module') {
+            if (! empty($dualKey['locked_v1_readonly'])) {
+                return ['error' => 'Blueprint v1.0 sudah terkunci Read-Only melalui Dual-Key Scope Lock.'];
+            }
+            $modCode = trim((string) ($args['module_code'] ?? ''));
+            $status = strtoupper(trim((string) ($args['status'] ?? 'APPROVED')));
+            if (! in_array($status, ['APPROVED', 'DISCUSSION', 'PENDING'], true)) {
+                $status = 'APPROVED';
+            }
+            $signer = trim((string) ($args['signer_name'] ?? ($user?->name ?? 'Authorized Signer')));
+            $schema = json_decode((string) $posProject->compiled_schema_json, true) ?: ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+            $modules = is_array($posProject->codesign_modules_json) && ! empty($posProject->codesign_modules_json)
+                ? $posProject->codesign_modules_json
+                : ($schema['codesign_alignment_contract']['modules'] ?? []);
+
+            foreach ($modules as &$m) {
+                if (($m['module_code'] ?? '') === $modCode || $modCode === 'ALL') {
+                    $m['status'] = $status;
+                    $m['approved_by_name'] = $status === 'APPROVED' ? $signer : null;
+                    $m['approved_at'] = $status === 'APPROVED' ? now()->toIso8601String() : null;
+                }
+            }
+            unset($m);
+
+            $recompiled = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
+                'persist_project' => true,
+                'codesign_modules' => $modules,
+                'codesign_dual_key' => $dualKey,
+            ]);
+            $quotation = $bridge->calculateScopeQuotation($recompiled);
+
+            AuditLog::record(
+                action: 'CODESIGN_MODULE_SIGN_OFF',
+                model: $blueprint,
+                newValues: ['module_code' => $modCode, 'status' => $status, 'signer' => $signer],
+                description: "AI Copilot Co-Design Sign-Off [{$modCode}] -> {$status} oleh {$signer}",
+                eventCategory: 'codesign_alignment',
+                sectorCode: (string) ($recompiled['project_metadata']['primary_sector'] ?? null),
+                primitiveCode: 'PRIMITIVE_CODESIGN_ROOM',
+                executionChannel: 'AI_COPILOT_TOOL'
+            );
+
+            return [
+                'success' => true,
+                'action' => 'sign_module',
+                'codesign' => $recompiled['codesign_alignment_contract'] ?? [],
+                'quotation_idr' => $quotation['quotation_idr'] ?? 0,
+                'formatted_quotation_idr' => $quotation['formatted_quotation_idr'] ?? 'Rp 0',
+            ];
+        }
+
+        if ($action === 'add_custom_module') {
+            if (! empty($dualKey['locked_v1_readonly'])) {
+                return ['error' => 'Blueprint v1.0 sudah terkunci Read-Only. Gunakan generate_delta_change_request untuk fitur tambahan v1.1.'];
+            }
+            $title = trim((string) ($args['module_title'] ?? 'Modul Kustom Klien'));
+            $extraHours = max(4, (int) ($args['extra_man_hours'] ?? 12));
+            $schema = json_decode((string) $posProject->compiled_schema_json, true) ?: ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+            $modules = is_array($posProject->codesign_modules_json) && ! empty($posProject->codesign_modules_json)
+                ? $posProject->codesign_modules_json
+                : ($schema['codesign_alignment_contract']['modules'] ?? []);
+
+            $customCode = 'MOD_CUSTOM_' . strtoupper(substr(md5($title . microtime()), 0, 6));
+            $modules[] = [
+                'module_code' => $customCode,
+                'is_custom_client_addition' => true,
+                'title' => ['id' => $title, 'en' => $title],
+                'localized_title' => $title,
+                'status' => 'DISCUSSION',
+                'extra_man_hours' => $extraHours,
+            ];
+
+            $recompiled = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
+                'persist_project' => true,
+                'codesign_modules' => $modules,
+                'codesign_dual_key' => $dualKey,
+            ]);
+            $quotation = $bridge->calculateScopeQuotation($recompiled);
+
+            AuditLog::record(
+                action: 'CODESIGN_CUSTOM_MODULE_ADDED',
+                model: $blueprint,
+                newValues: ['module_code' => $customCode, 'title' => $title, 'extra_man_hours' => $extraHours],
+                description: "AI Copilot menambahkan modul Co-Design '{$title}' (+{$extraHours} jam).",
+                eventCategory: 'codesign_alignment',
+                sectorCode: (string) ($recompiled['project_metadata']['primary_sector'] ?? null),
+                primitiveCode: 'PRIMITIVE_CODESIGN_ROOM',
+                executionChannel: 'AI_COPILOT_TOOL'
+            );
+
+            return [
+                'success' => true,
+                'action' => 'add_custom_module',
+                'added_module_code' => $customCode,
+                'codesign' => $recompiled['codesign_alignment_contract'] ?? [],
+                'quotation_idr' => $quotation['quotation_idr'] ?? 0,
+                'formatted_quotation_idr' => $quotation['formatted_quotation_idr'] ?? 'Rp 0',
+            ];
+        }
+
+        if ($action === 'dual_key_lock') {
+            $schema = json_decode((string) $posProject->compiled_schema_json, true) ?: ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
+            if (empty($schema['codesign_alignment_contract']['can_execute_dual_key_lock'])) {
+                return ['error' => 'Dual-Key Lock gagal: seluruh modul wajib berstatus APPROVED (100%) terlebih dahulu.'];
+            }
+            $lockResult = $bridge->lockScopeAndGenerateSpk($blueprint, $posProject);
+            $masterHash = (string) ($lockResult['scope_hash_full'] ?? hash('sha256', json_encode($schema)));
+            $dualKeyPayload = [
+                'locked_v1_readonly' => true,
+                'architect_signed_by' => $user?->name ?? 'Lead Architect NeriahPro',
+                'architect_signed_at' => now()->toIso8601String(),
+                'client_signed_by' => trim((string) ($args['signer_name'] ?? ($blueprint->client_name ?: 'Client Representative'))),
+                'client_signed_at' => now()->toIso8601String(),
+                'master_scope_hash_sha256' => $masterHash,
+                'spk_document_id' => $lockResult['document_id'] ?? null,
+            ];
+            $recompiled = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
+                'persist_project' => true,
+                'codesign_modules' => $posProject->codesign_modules_json,
+                'codesign_dual_key' => $dualKeyPayload,
+            ]);
+
+            AuditLog::record(
+                action: 'DUAL_KEY_SCOPE_LOCK',
+                model: $blueprint,
+                newValues: $dualKeyPayload,
+                description: 'AI Copilot mengeksekusi seremoni Dual-Key Cryptographic Scope Lock v1.0.',
+                eventCategory: 'codesign_alignment',
+                sectorCode: (string) ($recompiled['project_metadata']['primary_sector'] ?? null),
+                primitiveCode: 'PRIMITIVE_CODESIGN_ROOM',
+                executionChannel: 'AI_COPILOT_TOOL'
+            );
+
+            return [
+                'success' => true,
+                'action' => 'dual_key_lock',
+                'master_scope_hash_sha256' => $masterHash,
+                'codesign' => $recompiled['codesign_alignment_contract'] ?? [],
+            ];
+        }
+
+        $schema = json_decode((string) $posProject->compiled_schema_json, true)
+            ?: ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
+
+        return [
+            'success' => true,
+            'action' => 'inspect_room',
+            'blueprint_slug' => $blueprint->slug,
+            'codesign' => $schema['codesign_alignment_contract'] ?? [],
+            'world_class_task_matrix' => $schema['world_class_task_matrix'] ?? [],
+        ];
+    }
+
+    /**
+     * 36. Filterable Cryptographic Audit Trail Verifier & 12-Sector Preset Explorer
+     */
+    protected function verifyAndExportCryptoAuditTrail(array $args): array
+    {
+        $operation = strtolower(trim((string) ($args['operation'] ?? 'verify_chain')));
+        $sectorPreset = trim((string) ($args['sector_preset'] ?? ''));
+
+        if ($operation === 'list_presets') {
+            $presets = PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets();
+            if ($sectorPreset !== '' && isset($presets[$sectorPreset])) {
+                return [
+                    'success' => true,
+                    'operation' => 'list_presets',
+                    'preset' => $presets[$sectorPreset],
+                ];
+            }
+
+            return [
+                'success' => true,
+                'operation' => 'list_presets',
+                'total_presets' => count($presets),
+                'presets' => array_values($presets),
+            ];
+        }
+
+        if ($operation === 'prepare_export_summary') {
+            $filters = array_filter([
+                'sector_preset' => $sectorPreset !== '' ? $sectorPreset : null,
+                'execution_channel' => $args['execution_channel'] ?? null,
+            ]);
+            $exporter = app(ExportFilteredAuditExcelAction::class);
+            $matchedCount = $exporter->buildFilteredQuery($filters)->count();
+            $chain = AuditLog::verifyChainSummary((int) ($args['limit'] ?? 200));
+
+            return [
+                'success' => true,
+                'operation' => 'prepare_export_summary',
+                'matched_rows' => $matchedCount,
+                'sheets_structure' => [
+                    '1_Ringkasan_Sertifikat (Executive Summary & SHA-256 Integrity Certificate)',
+                    '2_Jejak_Audit_Transaksi (Transaction Audit Trail)',
+                    '3_Log_AI_Copilot_Idemp (AI Copilot & Idempotency Log)',
+                ],
+                'admin_explorer_url' => url('/admin/crypto-audit-explorer'),
+                'chain_summary' => $chain,
+            ];
+        }
+
+        $limit = min(max((int) ($args['limit'] ?? 200), 10), 1000);
+        $chain = AuditLog::verifyChainSummary($limit);
+
+        return [
+            'success' => true,
+            'operation' => 'verify_chain',
+            'chain_summary' => $chain,
+        ];
+    }
+
+    /**
+     * RBAC Guard for state-mutating AI Native Tools (Pure Spatie RBAC — Zero Hardcoded Email Bypass).
      */
     protected function guardMutation(?User $user, string $toolName): ?array
     {
@@ -1526,15 +1839,16 @@ class AgenticActionExecutionEngine
         }
 
         $allowed = $user->hasAnyRole(['super_admin', 'developer'])
-            || $user->can('execute_ai_native_tools')
-            || $user->email === 'yoseph.iriandi.tambunan@gmail.com';
+            || $user->can('execute_ai_native_tools');
 
         if (! $allowed) {
             AuditLog::record(
                 action: 'rbac_tool_denied',
                 newValues: ['tool' => $toolName, 'user_id' => $user->id],
-                description: "RBAC menolak eksekusi mutating AI Native Tool '{$toolName}' oleh {$user->email}.",
-                eventCategory: 'security'
+                description: "RBAC menolak eksekusi mutating AI Native Tool '{$toolName}' oleh user ID {$user->id}.",
+                eventCategory: 'security',
+                primitiveCode: 'PRIMITIVE_AGENTSHIELD_RBAC_GUARD',
+                executionChannel: 'AI_COPILOT_TOOL'
             );
 
             return [

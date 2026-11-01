@@ -288,12 +288,14 @@ class PosCommercialBridgeService
 
         // Each active v1.0 ERP screen contributes 2h UI/SOP wiring, each active hardware peripheral bridge 4h, each WS channel 2h
         $menuAndRuntimeHours = ($v1MenusCount * 2) + ($hardwareActiveCount * 4) + ($wsChannelsCount * 2);
+        $extraCoDesignHours = (int) ($options['extra_codesign_man_hours'] ?? $schema['codesign_alignment_contract']['extra_codesign_man_hours'] ?? 0);
 
         $rawHours = ($tablesCount * $hoursPerTable)
             + ($statesCount * $hoursPerState)
             + ($locksCount * $hoursPerLock)
             + ($integrationsCount * $hoursPerIntegration)
             + $menuAndRuntimeHours
+            + $extraCoDesignHours
             + $baseSetupHours;
 
         $effectiveManHours = (int) ceil($rawHours * $stackMultiplier);
@@ -336,6 +338,9 @@ class PosCommercialBridgeService
             'decisions_count' => count($decisions),
         ];
         sort($canonicalPayload['primitives']);
+        if ($extraCoDesignHours > 0) {
+            $canonicalPayload['extra_codesign_man_hours'] = $extraCoDesignHours;
+        }
         $scopeHashFull = hash('sha256', (string) json_encode($canonicalPayload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         $scopeHashShort = substr($scopeHashFull, 0, 16);
 
@@ -456,6 +461,7 @@ class PosCommercialBridgeService
                 'v1_menus' => $v1MenusCount,
                 'hardware_bridges' => $hardwareActiveCount,
                 'websocket_channels' => $wsChannelsCount,
+                'extra_codesign_man_hours' => $extraCoDesignHours,
             ],
             'metrics' => [
                 'tables_count' => $tablesCount,

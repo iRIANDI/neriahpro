@@ -15,11 +15,15 @@ class AuditLog extends Model
     protected $table = 'audit_logs';
 
     protected $fillable = [
+        'organization_id',
         'user_id',
         'actor_name',
         'actor_type',
+        'execution_channel',
         'action',
         'event_category',
+        'sector_code',
+        'primitive_code',
         'description',
         'model_type',
         'model_id',
@@ -28,7 +32,10 @@ class AuditLog extends Model
         'ip_address',
         'user_agent',
         'context_url',
+        'idempotency_key',
         'integrity_hash',
+        'prev_hash',
+        'current_hash',
     ];
 
     protected function casts(): array
@@ -70,7 +77,12 @@ class AuditLog extends Model
         ?string $actorType = null,
         ?string $contextUrl = null,
         ?string $description = null,
-        ?string $eventCategory = null
+        ?string $eventCategory = null,
+        ?string $organizationId = null,
+        ?string $sectorCode = null,
+        ?string $primitiveCode = null,
+        ?string $executionChannel = null,
+        ?string $idempotencyKey = null
     ): ?self {
         if (app()->runningInConsole()) {
             $argv = $_SERVER['argv'] ?? [];
@@ -109,19 +121,30 @@ class AuditLog extends Model
             $resolvedUrl = $contextUrl ?: substr((string) Request::fullUrl(), 0, 500);
 
             $resolvedCategory = $eventCategory ?: static::inferCategory($action, $resolvedActorType, $modelClass, $description);
+            $resolvedChannel = $executionChannel ?: ($resolvedActorType === 'ai_agent'
+                ? 'AI_COPILOT_TOOL'
+                : (app()->runningInConsole() ? 'CLI' : 'WEB_UI'));
 
-            $canonicalPayload = json_encode([
-                'user_id' => $userId,
-                'actor_name' => $resolvedActorName,
-                'actor_type' => $resolvedActorType,
-                'action' => $action,
-                'event_category' => $resolvedCategory,
-                'model_type' => $modelClass,
-                'model_id' => $modelKey,
-                'old_values' => $oldValues,
-                'new_values' => $newValues,
-                'ip_address' => $resolvedIp,
-            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $resolvedSector = $sectorCode;
+            if (! $resolvedSector && $model instanceof PosProject) {
+                $resolvedSector = $model->sector_code;
+            } elseif (! $resolvedSector && is_array($newValues) && ! empty($newValues['sector_code'])) {
+                $resolvedSector = (string) $newValues['sector_code'];
+            }
+
+            $resolvedOrgId = $organizationId ?: ($model instanceof PosProject ? (string) $model->id : null);
+            $integrityHash = static::computeCanonicalPayloadHash(
+                userId: $userId ? (string) $userId : null,
+                actorName: $resolvedActorName,
+                actorType: $resolvedActorType,
+                action: $action,
+                eventCategory: $resolvedCategory,
+                modelType: $modelClass,
+                modelId: $modelKey,
+                oldValues: $oldValues,
+                newValues: $newValues,
+                ipAddress: $resolvedIp
+            );
 
             $payload = [
                 'user_id' => $userId,
@@ -142,7 +165,35 @@ class AuditLog extends Model
                 $payload['event_category'] = $resolvedCategory;
             }
             if (\Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'integrity_hash')) {
-                $payload['integrity_hash'] = hash('sha256', (string) $canonicalPayload);
+                $payload['integrity_hash'] = $integrityHash;
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'organization_id') && $resolvedOrgId) {
+                $payload['organization_id'] = substr($resolvedOrgId, 0, 26);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'sector_code') && $resolvedSector) {
+                $payload['sector_code'] = substr($resolvedSector, 0, 64);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'primitive_code') && $primitiveCode) {
+                $payload['primitive_code'] = substr($primitiveCode, 0, 64);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'execution_channel')) {
+                $payload['execution_channel'] = substr($resolvedChannel, 0, 32);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'idempotency_key') && $idempotencyKey) {
+                $payload['idempotency_key'] = substr($idempotencyKey, 0, 96);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'prev_hash') && \Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'current_hash')) {
+                $latest = static::query()->orderByDesc('id')->select(['current_hash', 'integrity_hash'])->first();
+                $prevHash = $latest?->current_hash ?: ($latest?->integrity_hash ?: 'GENESIS');
+                $payload['prev_hash'] = $prevHash;
+                $payload['current_hash'] = static::computeChainHash(
+                    prevHash: $prevHash,
+                    organizationId: $resolvedOrgId,
+                    actorIdentifier: $userId ? (string) $userId : $resolvedActorName,
+                    actionName: $action,
+                    targetId: $modelKey,
+                    integrityDigest: $integrityHash
+                );
             }
 
             return static::create($payload);
@@ -151,9 +202,204 @@ class AuditLog extends Model
         }
     }
 
+    /**
+     * Normalize nested array keys recursively so JSONB column storage in PostgreSQL never drifts SHA-256 verification.
+     */
+    public static function normalizeRecursive(mixed $value): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        $isAssoc = array_keys($value) !== range(0, count($value) - 1);
+        if ($isAssoc) {
+            ksort($value);
+        }
+
+        foreach ($value as $k => $v) {
+            $value[$k] = static::normalizeRecursive($v);
+        }
+
+        return $value;
+    }
+
+    public static function computeCanonicalPayloadHash(
+        ?string $userId,
+        ?string $actorName,
+        ?string $actorType,
+        string $action,
+        ?string $eventCategory,
+        ?string $modelType,
+        ?string $modelId,
+        ?array $oldValues,
+        ?array $newValues,
+        ?string $ipAddress
+    ): string {
+        $canonicalPayload = json_encode([
+            'user_id' => $userId,
+            'actor_name' => $actorName,
+            'actor_type' => $actorType,
+            'action' => $action,
+            'event_category' => $eventCategory,
+            'model_type' => $modelType,
+            'model_id' => $modelId,
+            'old_values' => static::normalizeRecursive($oldValues),
+            'new_values' => static::normalizeRecursive($newValues),
+            'ip_address' => $ipAddress,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        return hash('sha256', (string) $canonicalPayload);
+    }
+
+    public static function computeChainHash(
+        ?string $prevHash,
+        ?string $organizationId,
+        ?string $actorIdentifier,
+        string $actionName,
+        ?string $targetId,
+        string $integrityDigest
+    ): string {
+        return hash(
+            'sha256',
+            ($prevHash ?: 'GENESIS') . '|' .
+            ($organizationId ?: 'NERIAHPRO_CORE') . '|' .
+            ($actorIdentifier ?: 'SYSTEM') . '|' .
+            $actionName . '|' .
+            ($targetId ?: '-') . '|' .
+            $integrityDigest
+        );
+    }
+
+    /**
+     * Verify both row payload hash and SHA-256 cryptographic chain link (`VERIFIED_INTACT` vs `TAMPER_ALERT_MISMATCH`).
+     */
+    public function verifyRowIntegrity(?string $expectedPrevHash = null): string
+    {
+        if (empty($this->integrity_hash) && empty($this->current_hash)) {
+            return 'LEGACY_UNSEALED';
+        }
+
+        $recomputedPayloadHash = static::computeCanonicalPayloadHash(
+            userId: $this->user_id ? (string) $this->user_id : null,
+            actorName: $this->actor_name,
+            actorType: $this->actor_type,
+            action: (string) $this->action,
+            eventCategory: $this->event_category,
+            modelType: $this->model_type,
+            modelId: $this->model_id ? (string) $this->model_id : null,
+            oldValues: is_array($this->old_values) ? $this->old_values : null,
+            newValues: is_array($this->new_values) ? $this->new_values : null,
+            ipAddress: $this->ip_address
+        );
+
+        if (! empty($this->integrity_hash) && ! hash_equals((string) $this->integrity_hash, $recomputedPayloadHash)) {
+            return 'TAMPER_ALERT_MISMATCH';
+        }
+
+        if (! empty($this->current_hash)) {
+            if ($expectedPrevHash !== null && ! empty($this->prev_hash) && ! hash_equals($expectedPrevHash, (string) $this->prev_hash)) {
+                return 'TAMPER_ALERT_MISMATCH';
+            }
+
+            $expectedChain = static::computeChainHash(
+                prevHash: $this->prev_hash ?: 'GENESIS',
+                organizationId: $this->organization_id,
+                actorIdentifier: $this->user_id ? (string) $this->user_id : $this->actor_name,
+                actionName: (string) $this->action,
+                targetId: $this->model_id ? (string) $this->model_id : null,
+                integrityDigest: $recomputedPayloadHash
+            );
+
+            if (! hash_equals($expectedChain, (string) $this->current_hash)) {
+                return 'TAMPER_ALERT_MISMATCH';
+            }
+        }
+
+        return 'VERIFIED_INTACT';
+    }
+
+    /**
+     * Verify chronological cryptographic chain across filtered or recent audit logs in O(1) cursor memory.
+     *
+     * @param  array<string, mixed>|int  $filters
+     * @return array<string, mixed>
+     */
+    public static function verifyChainSummary(array|int $filters = [], int $maxScan = 2500): array
+    {
+        if (is_int($filters)) {
+            $maxScan = max(1, $filters);
+            $filters = [];
+        }
+
+        $query = static::query()->orderBy('id', 'asc');
+        if (! empty($filters['organization_id'])) {
+            $query->where('organization_id', (string) $filters['organization_id']);
+        }
+        if (! empty($filters['sector_code'])) {
+            $query->where('sector_code', (string) $filters['sector_code']);
+        }
+        if (! empty($filters['execution_channel'])) {
+            $query->where('execution_channel', (string) $filters['execution_channel']);
+        }
+
+        $totalScanned = 0;
+        $verifiedCount = 0;
+        $tamperedCount = 0;
+        $legacyCount = 0;
+        $tamperedIds = [];
+        $runningPrevHash = null;
+        $isUnfilteredChain = empty($filters['sector_code']) && empty($filters['execution_channel']) && empty($filters['organization_id']);
+
+        foreach ($query->limit($maxScan)->cursor() as $row) {
+            $totalScanned++;
+            $status = $row->verifyRowIntegrity($isUnfilteredChain ? $runningPrevHash : null);
+            if ($status === 'VERIFIED_INTACT') {
+                $verifiedCount++;
+            } elseif ($status === 'TAMPER_ALERT_MISMATCH') {
+                $tamperedCount++;
+                if (count($tamperedIds) < 10) {
+                    $tamperedIds[] = $row->id;
+                }
+            } else {
+                $legacyCount++;
+            }
+            $runningPrevHash = $row->current_hash ?: $row->integrity_hash;
+        }
+
+        $isIntact = $tamperedCount === 0;
+        $headHash = $runningPrevHash ?: 'GENESIS';
+
+        return [
+            'status' => $isIntact ? 'VERIFIED_INTACT' : 'TAMPER_ALERT_DETECTED',
+            'is_intact' => $isIntact,
+            'is_chain_valid' => $isIntact,
+            'total_scanned' => $totalScanned,
+            'checked_rows' => $totalScanned,
+            'verified_intact_count' => $verifiedCount,
+            'verified_chained_rows' => $verifiedCount,
+            'tampered_count' => $tamperedCount,
+            'tampered_rows_count' => $tamperedCount,
+            'legacy_unsealed_count' => $legacyCount,
+            'tampered_audit_ulids' => $tamperedIds,
+            'head_chain_hash' => $headHash,
+            'latest_head_hash' => $headHash,
+            'verified_at_utc' => now('UTC')->toIso8601String(),
+        ];
+    }
+
     public static function inferCategory(string $action, ?string $actorType, ?string $modelClass, ?string $description): string
     {
         $haystack = strtolower($action . ' ' . ($modelClass ?? '') . ' ' . ($description ?? ''));
+
+        if (str_contains($haystack, 'agentshield') || str_contains($haystack, 'slopquatting') || str_contains($haystack, 'prompt_injection') || str_contains($haystack, 'rag_document_threat') || str_contains($haystack, 'dependency_manifest')) {
+            return 'agentshield_security';
+        }
+        if (str_contains($haystack, 'codesign') || str_contains($haystack, 'co_design') || str_contains($haystack, 'approval_sign_off') || str_contains($haystack, 'dual_key')) {
+            return 'codesign_alignment';
+        }
+        if (str_contains($haystack, 'crypto_audit') || str_contains($haystack, '3sheet') || str_contains($haystack, 'audit_chain_verified')) {
+            return 'crypto_audit_explorer';
+        }
 
         if (str_contains($haystack, 'canary_watermark') || str_contains($haystack, 'mcp_token_revoked') || str_contains($haystack, 'encrypted_vault') || str_contains($haystack, 'ip_canary')) {
             return 'ip_canary_security';

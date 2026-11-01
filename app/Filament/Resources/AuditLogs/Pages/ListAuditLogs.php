@@ -2,21 +2,66 @@
 
 namespace App\Filament\Resources\AuditLogs\Pages;
 
+use App\Actions\Audit\ExportFilteredAuditExcelAction;
+use App\Filament\Pages\CryptoAuditExplorerPage;
 use App\Filament\Resources\AuditLogs\AuditLogResource;
 use App\Models\AuditLog;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ListAuditLogs extends ListRecords
 {
     protected static string $resource = AuditLogResource::class;
 
-    protected static ?string $title = 'Jejak Audit & Akuntabilitas Sistem (SHA-256 Tamper-Evident)';
+    protected static ?string $title = 'Jejak Audit & Akuntabilitas Sistem (SHA-256 Hash Chain)';
 
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('open_crypto_explorer')
+                ->label(fn (): string => app()->getLocale() === 'en' ? 'Open Crypto Audit Explorer (12 Presets)' : 'Buka Crypto Audit Explorer (12 Preset)')
+                ->icon('heroicon-o-shield-check')
+                ->color('primary')
+                ->url(fn (): string => CryptoAuditExplorerPage::getUrl())
+                ->visible(function (): bool {
+                    $user = auth()->user();
+                    if (! $user || $user->hasRole('midtrans_reviewer')) {
+                        return false;
+                    }
+
+                    return $user->hasAnyRole(['super_admin', 'developer', 'investor'])
+                        || $user->can('verify_crypto_audit_chain')
+                        || $user->can('view_audit_logs');
+                }),
+
+            Action::make('export_3sheet_xlsx')
+                ->label(fn (): string => app()->getLocale() === 'en' ? 'Export 3-Sheet .XLSX (KAP/ISO)' : 'Ekspor 3-Sheet .XLSX (KAP/ISO)')
+                ->icon('heroicon-o-table-cells')
+                ->color('success')
+                ->visible(function (): bool {
+                    $user = auth()->user();
+                    if (! $user || $user->hasRole('midtrans_reviewer')) {
+                        return false;
+                    }
+
+                    return $user->hasRole('super_admin')
+                        || $user->can('export_3sheet_audit_xlsx')
+                        || $user->can('export_audit_logs');
+                })
+                ->action(function (ExportFilteredAuditExcelAction $exporter): BinaryFileResponse {
+                    AuditLog::record(
+                        action: 'crypto_audit_xlsx_3sheet_exported',
+                        description: 'Ekspor 3-Sheet .XLSX jejak audit dijalankan dari ListAuditLogs.',
+                        eventCategory: 'security',
+                        primitiveCode: 'PRIMITIVE_CRYPTO_AUDIT_EXPLORER',
+                        executionChannel: 'WEB_UI'
+                    );
+
+                    return $exporter->exportThreeSheetXlsx([], 'NERIAHPRO_CORE');
+                }),
+
             Action::make('export_csv')
                 ->label('Ekspor CSV Forensik (O(1) Stream)')
                 ->icon('heroicon-o-arrow-down-tray')

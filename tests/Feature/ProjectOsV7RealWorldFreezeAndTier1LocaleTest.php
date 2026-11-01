@@ -166,7 +166,7 @@ class ProjectOsV7RealWorldFreezeAndTier1LocaleTest extends TestCase
         // Verify CLI /init/{id} & artifact download endpoints + Printable A4 SOP BAST
         $this->get("/init/{$blueprint->id}")
             ->assertOk()
-            ->assertHeader('X-Project-OS-Version', '7.0.0')
+            ->assertHeader('X-Project-OS-Version', '9.0.0')
             ->assertSee('SYNTAX_LOCK_2026.md', false)
             ->assertSee('CLIENT_SOP_AND_TRAINING_MANUAL.md', false)
             ->assertSee('pg16_range_partitioning.sql', false)
@@ -293,8 +293,8 @@ class ProjectOsV7RealWorldFreezeAndTier1LocaleTest extends TestCase
 
         // Subsystem #3: 30 Native Tools & valid JSON object map for every Gemini tool declaration (zero HTTP 400 list-to-map bug)
         $declarations = GeminiToolRegistry::getDeclarations();
-        $this->assertCount(33, $declarations);
-        $this->assertCount(33, GeminiToolRegistry::getOpenAiTools());
+        $this->assertCount(36, $declarations);
+        $this->assertCount(36, GeminiToolRegistry::getOpenAiTools());
 
         foreach ($declarations as $idx => $decl) {
             $encoded = json_encode($decl['parameters']);

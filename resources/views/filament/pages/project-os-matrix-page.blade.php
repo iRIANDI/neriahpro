@@ -70,6 +70,7 @@
                         'guarantees_v6' => ['label' => '5 Guarantee Engines & DAG', 'count' => 'v6.0'],
                         'freeze_15_pillars' => ['label' => '15 Pilar Freeze & 5 Runtime', 'count' => 'v7.0'],
                         'inclusive_v8' => ['label' => '36 Visual UI, RTL & Canary', 'count' => 'v8.0'],
+                        'agentshield_v9' => ['label' => 'AgentShield, Co-Design & Audit', 'count' => 'v9.0'],
                         'lab' => ['label' => 'Brownfield & Slop Lab', 'count' => 'LAB'],
                     ] as $tabKey => $tabMeta)
                         <button
@@ -86,8 +87,14 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ url('/admin/pos-sectors') }}" class="px-3 py-1.5 text-xs font-mono font-black bg-emerald-100 hover:bg-emerald-200 text-emerald-950 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 rounded-xs transition">
+                        🗂️ CRUD 12 Sektor (ID/EN)
+                    </a>
                     <a href="{{ url('/admin/pos-architecture-pillars') }}" class="px-3 py-1.5 text-xs font-mono font-black bg-emerald-100 hover:bg-emerald-200 text-emerald-950 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 rounded-xs transition">
                         🏛️ CRUD 15 Pilar (ID/EN)
+                    </a>
+                    <a href="{{ url('/admin/crypto-audit-explorer') }}" class="px-3 py-1.5 text-xs font-mono font-black bg-amber-100 hover:bg-amber-200 text-amber-950 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 border border-amber-400 dark:border-amber-700 rounded-xs transition">
+                        🔍 Crypto Audit Explorer
                     </a>
                     <a href="{{ route('blueprint.studio') }}" target="_blank" class="px-3 py-1.5 text-xs font-mono font-black bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 border border-zinc-800 dark:border-zinc-300 rounded-xs transition">
                         🖥️ Buka 3-Pane Studio
@@ -879,6 +886,158 @@
                             @endif
                         </div>
                     @endif
+                </div>
+            </div>
+        @elseif($this->activeTab === 'agentshield_v9')
+            @php
+                $v9Loc = app()->getLocale() === 'en' ? 'en' : 'id';
+                $v9Shield = \App\Services\Security\DocumentThreatSanitizerService::fiveLayersBlueprintContract(
+                    'NeriahPro Enterprise Project OS',
+                    $this->mitraPreviewStack,
+                    $this->decisionPreviewSector
+                );
+                $v9SectorPresets = \App\Support\PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets($v9Loc);
+            @endphp
+            <div class="space-y-4">
+                <!-- 1. 5-Layer NeriahPro AgentShield Defense Architecture -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">
+                                PROJECT OS v9.0 ULTIMATE // NERIAHPRO AGENTSHIELD + CO-DESIGN ROOM + CRYPTO AUDIT EXPLORER
+                            </div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
+                                {{ $v9Loc === 'en' ? '5-Layer Defense Against AI Malware, Poisoned RAG Documents & Package Slopquatting' : '5 Lapis Pertahanan terhadap Malware AI, Dokumen RAG Beracun & Slopquatting Paket' }}
+                            </h3>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ url('/blueprint/studio') }}" target="_blank" class="px-3 py-1.5 text-xs font-mono font-black bg-emerald-600 hover:bg-emerald-500 text-black border border-emerald-700 rounded-xs">
+                                🤝 {{ $v9Loc === 'en' ? 'Open Co-Design Sign-Off Room' : 'Buka Co-Design & Sign-Off Room' }}
+                            </a>
+                            <a href="{{ url('/admin/crypto-audit-explorer') }}" class="px-3 py-1.5 text-xs font-mono font-black bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 border border-zinc-800 dark:border-zinc-300 rounded-xs">
+                                🔍 {{ $v9Loc === 'en' ? 'Open Crypto Audit Explorer (3-Sheet XLSX)' : 'Buka Crypto Audit Explorer (3-Sheet XLSX)' }}
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+                        @foreach(($v9Shield['layers'] ?? []) as $layer)
+                            <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 rounded-xs space-y-1.5">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">
+                                        LAYER 0{{ $layer['layer'] }}
+                                    </span>
+                                    <span class="font-mono text-[10px] font-bold text-zinc-700 dark:text-zinc-400">{{ $layer['service'] }}</span>
+                                </div>
+                                <div class="text-xs font-mono font-black text-zinc-950 dark:text-zinc-100">{{ $layer['code'] }}</div>
+                                <p class="text-[11px] text-zinc-800 dark:text-zinc-300 leading-relaxed">
+                                    {{ is_array($layer['guarantee'] ?? null) ? ($layer['guarantee'][$v9Loc] ?? $layer['guarantee']['id'] ?? '') : ($layer['guarantee'] ?? '') }}
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- 2. Interactive AgentShield Labs: Slopquatting Allowlist Auditor + RAG Prompt-Injection Sanitizer -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                        <div class="border-b border-zinc-200 dark:border-zinc-800 pb-2.5">
+                            <div class="text-[10px] font-mono font-black uppercase text-amber-900 dark:text-amber-300">LAYER 02 LAB // ANTI-SLOPQUATTING DEPENDENCY LOCK</div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
+                                {{ $v9Loc === 'en' ? 'APPROVED_DEPENDENCY_MANIFEST & Levenshtein Typosquat Blocker' : 'Auditor Allowlist Paket Resmi & Pemblokir Typosquatting AI' }}
+                            </h3>
+                        </div>
+
+                        <textarea
+                            rows="4"
+                            wire:model="slopquattingInput"
+                            class="w-full p-2.5 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        ></textarea>
+
+                        <button type="button" wire:click="runSlopquattingAudit" class="w-full py-2 text-xs font-mono font-black bg-emerald-600 hover:bg-emerald-500 text-black border border-emerald-700 rounded-xs cursor-pointer">
+                            🛡️ {{ $v9Loc === 'en' ? 'AUDIT PACKAGES AGAINST VERIFIED ALLOWLIST' : 'AUDIT PAKET TERHADAP ALLOWLIST RESMI' }}
+                        </button>
+
+                        @if(!empty($this->slopquattingResult))
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xs font-mono text-xs space-y-2">
+                                <div class="font-black {{ !empty($this->slopquattingResult['all_approved']) ? 'text-emerald-900 dark:text-emerald-300' : 'text-amber-950 dark:text-amber-200' }}">
+                                    Manifest {{ $this->slopquattingResult['manifest_version'] ?? 'v9.0' }} —
+                                    {{ count($this->slopquattingResult['approved_packages'] ?? []) }} APPROVED • {{ count($this->slopquattingResult['blocked_packages'] ?? []) }} BLOCKED
+                                </div>
+                                @foreach(($this->slopquattingResult['blocked_packages'] ?? []) as $blk)
+                                    <div class="p-2 bg-white dark:bg-zinc-950 border border-amber-400 dark:border-amber-700 rounded-xs text-[11px]">
+                                        <span class="font-black text-amber-950 dark:text-amber-200">[BLOCKED: {{ $blk['package'] }}]</span>
+                                        <span class="text-zinc-800 dark:text-zinc-300">{{ $blk['reason'] }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                        <div class="border-b border-zinc-200 dark:border-zinc-800 pb-2.5">
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">LAYER 01 LAB // INDIRECT PROMPT INJECTION FIREWALL</div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
+                                {{ $v9Loc === 'en' ? 'Zero-Width / Unicode Tag Stripper & <UNTRUSTED_CLIENT_DOCUMENT_DATA> Isolator' : 'Sanitasi Zero-Width / Tag Unicode & Isolasi <UNTRUSTED_CLIENT_DOCUMENT_DATA>' }}
+                            </h3>
+                        </div>
+
+                        <textarea
+                            rows="4"
+                            wire:model="sanitizerInputSample"
+                            class="w-full p-2.5 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        ></textarea>
+
+                        <button type="button" wire:click="runPromptSanitizerLab" class="w-full py-2 text-xs font-mono font-black bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 border border-zinc-800 dark:border-zinc-300 rounded-xs cursor-pointer">
+                            🧼 {{ $v9Loc === 'en' ? 'SANITIZE & ISOLATE UNTRUSTED CLIENT DOCUMENT' : 'SANITASI & ISOLASI DOKUMEN KLIEN TAK DIPERCAYA' }}
+                        </button>
+
+                        @if(!empty($this->sanitizerLabResult))
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xs font-mono text-xs space-y-2">
+                                <div class="font-black text-emerald-900 dark:text-emerald-300">
+                                    Zero-Width Removed: {{ $this->sanitizerLabResult['zero_width_removed_count'] ?? 0 }} • Threats Neutralized: {{ implode(', ', $this->sanitizerLabResult['detected_threats'] ?? []) ?: 'NONE' }}
+                                </div>
+                                <pre class="p-2 bg-zinc-950 text-emerald-300 border border-zinc-800 text-[11px] max-h-36 overflow-auto whitespace-pre-wrap">{{ $this->sanitizerLabResult['isolated_block'] ?? '' }}</pre>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- 3. 12 Sector-Specific Cryptographic Audit Filter Presets -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2.5">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">PRIMITIVE_CRYPTO_AUDIT_EXPLORER // 12 INDUSTRY PRESETS</div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
+                                {{ $v9Loc === 'en' ? '12 Sector-Specific Audit Filter Presets (PSAK 109, ISAK 35, PP 93/2010, RME Kemenkes, ISO 27001, SOC2)' : '12 Preset Filter Audit Spesifik Industri (PSAK 109, ISAK 35, PP 93/2010, RME Kemenkes, ISO 27001, SOC2)' }}
+                            </h3>
+                        </div>
+                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">
+                            SHA-256 HASH CHAIN + 3-SHEET XLSX
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                        @foreach($v9SectorPresets as $preset)
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-1.5">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black rounded-xs">
+                                        {{ $preset['badge'] }}
+                                    </span>
+                                    <span class="font-mono text-[10px] font-bold text-zinc-700 dark:text-zinc-400 tabular-nums">#{{ str_pad((string) ($preset['sector_number'] ?? 0), 2, '0', STR_PAD_LEFT) }}</span>
+                                </div>
+                                <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $preset['localized_title'] ?? '' }}</div>
+                                <div class="flex flex-wrap gap-1 pt-1">
+                                    @foreach(($preset['watched_actions'] ?? []) as $act)
+                                        <span class="px-1.5 py-0.5 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs">{{ $act }}</span>
+                                    @endforeach
+                                </div>
+                                <div class="text-[10px] font-mono text-emerald-900 dark:text-emerald-300 font-bold pt-1">
+                                    {{ implode(' • ', $preset['compliance_standards'] ?? []) }}
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         @elseif($this->activeTab === 'lab')

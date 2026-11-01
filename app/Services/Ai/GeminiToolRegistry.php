@@ -636,6 +636,98 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+            [
+                'name' => 'sanitize_and_audit_agentshield',
+                'description' => 'Jalankan NeriahPro AgentShield 5-Layer Defense: sanitasi teks dokumen klien dari Indirect Prompt Injection & zero-width Unicode (<UNTRUSTED_CLIENT_DOCUMENT_DATA>), periksa daftar package dari serangan Slopquatting terhadap APPROVED_DEPENDENCY_MANIFEST, atau inspeksi File-Path Jail .claude/settings.json.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'operation' => [
+                            'type' => 'STRING',
+                            'description' => 'Operasi AgentShield: sanitize_document, audit_packages, atau inspect_sandbox.',
+                        ],
+                        'document_text' => [
+                            'type' => 'STRING',
+                            'description' => 'Teks mentah dokumen klien untuk dipindai dan disanitasi (untuk sanitize_document).',
+                        ],
+                        'packages' => [
+                            'type' => 'ARRAY',
+                            'items' => ['type' => 'STRING'],
+                            'description' => 'Daftar nama package Composer/NPM/Go untuk diaudit terhadap APPROVED_DEPENDENCY_MANIFEST (untuk audit_packages).',
+                        ],
+                        'stack_preset' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode Stack Preset (misal STACK_M1_LARAVEL_MONOLITH, STACK_D1_LARAVEL_NEXTJS, STACK_S1_POLYGLOT_GO_LARAVEL).',
+                        ],
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode Sektor Fungsional (SECTOR_01 s/d SECTOR_12).',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'manage_codesign_alignment_room',
+                'description' => 'Kelola The Co-Design Alignment & Sign-Off Room (Dual-Mirror Client Wireframe <-> Architect ULID): inspeksi status persetujuan per modul & World-Class 5-Sprint Tasks (inspect_room), setujui klausa modul (sign_module), tambah kebutuhan klien baru + rekalkulasi RAB live (add_custom_module), atau eksekusi Dual-Key Cryptographic Scope Lock v1.0 (dual_key_lock).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => [
+                            'type' => 'STRING',
+                            'description' => 'Aksi: inspect_room, sign_module, add_custom_module, atau dual_key_lock.',
+                        ],
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID atau slug VisionBlueprint proyek.',
+                        ],
+                        'module_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode modul divisi untuk sign_module (misal DIV_01_CORE_POS).',
+                        ],
+                        'status' => [
+                            'type' => 'STRING',
+                            'description' => 'Status persetujuan modul: APPROVED, DISCUSSION, atau PENDING.',
+                        ],
+                        'module_title' => [
+                            'type' => 'STRING',
+                            'description' => 'Judul kebutuhan tambahan klien untuk add_custom_module.',
+                        ],
+                        'extra_man_hours' => [
+                            'type' => 'INTEGER',
+                            'description' => 'Tambahan jam kerja estimasi untuk modul tambahan klien.',
+                        ],
+                        'signer_name' => [
+                            'type' => 'STRING',
+                            'description' => 'Nama perwakilan penandatangan klien atau arsitek.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'verify_and_export_crypto_audit_trail',
+                'description' => 'Verifikasi keutuhan rantai hash SHA-256 append-only (prev_hash -> current_hash) pada tabel audit_logs (verify_chain), ambil 12 Sector-Specific Audit Filter Presets (list_presets), atau siapkan ringkasan ekspor 3-Sheet .xlsx / .csv sesuai kepatuhan PSAK 109 / ISAK 35 / ISO 27001 / RME Kemenkes (prepare_export_summary).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'operation' => [
+                            'type' => 'STRING',
+                            'description' => 'Operasi: verify_chain, list_presets, atau prepare_export_summary.',
+                        ],
+                        'sector_preset' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional kode sektor (SECTOR_01 s/d SECTOR_12) untuk memfilter preset industri.',
+                        ],
+                        'execution_channel' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional filter kanal eksekusi: WEB_UI, AI_COPILOT_TOOL, WEBHOOK, atau CLI.',
+                        ],
+                        'limit' => [
+                            'type' => 'INTEGER',
+                            'description' => 'Batas jumlah baris verifikasi rantai terbaru (default 200).',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

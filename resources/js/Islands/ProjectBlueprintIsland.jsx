@@ -2530,6 +2530,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       selectedPrimitives: [],
       selectedMenus: [],
       stackPreset: 'STACK_M1_LARAVEL_MONOLITH',
+      selectedUiVariant: '',
+      navigationShell: '',
+      worldClassTaskMatrix: null,
+      agentshieldReport: null,
     };
 
     try {
@@ -4331,9 +4335,31 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </div>
 
               {/* Token Reality & MarkItDown Notice */}
-              <div className="mt-2.5 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-600 dark:text-zinc-400 flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <div className="mt-2.5 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-700 dark:text-zinc-300 flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <span>{t.markitdownNotice}</span>
+              </div>
+
+              {/* v9.0 NeriahPro AgentShield 5-Layer Anti-Poisoning & Indirect Prompt Injection Firewall */}
+              <div className="mt-2 p-3 bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-400 dark:border-emerald-800 text-[11px] font-mono text-zinc-900 dark:text-zinc-100 space-y-1.5 rounded-none">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-black uppercase text-emerald-950 dark:text-emerald-300 flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                    {lang === 'en'
+                      ? 'NERIAHPRO AGENTSHIELD v9.0 — 5-LAYER AI MALWARE & PROMPT-INJECTION FIREWALL'
+                      : 'NERIAHPRO AGENTSHIELD v9.0 — PERTAHANAN 5 LAPIS ANTI-AI MALWARE & PROMPT INJECTION'}
+                  </span>
+                  <span className="px-1.5 py-0.5 bg-zinc-950 text-emerald-400 dark:bg-emerald-400 dark:text-zinc-950 font-black text-[9px] uppercase rounded-none">
+                    {(formData.agentshieldReport?.status || formData._meta?.agentshield_report?.status) === 'THREATS_NEUTRALIZED'
+                      ? `${Number(formData.agentshieldReport?.threats_neutralized_count || formData._meta?.agentshield_report?.threats_neutralized_count || 1).toLocaleString()} THREATS STRIPPED`
+                      : 'ACTIVE SANDBOX GUARD'}
+                  </span>
+                </div>
+                <p className="text-[10px] text-zinc-800 dark:text-zinc-300 leading-relaxed font-sans">
+                  {lang === 'en'
+                    ? 'Every uploaded PDF/DOCX/MD & idea text is sanitized before LLM ingestion: strips Zero-Width Unicode (U+200B..U+E007F), BiDi overrides, hidden 0.1px CSS, PDF /JS /OpenAction payloads, EXIF GPS/payloads, isolates untrusted text inside <UNTRUSTED_CLIENT_DOCUMENT_DATA>, and enforces APPROVED_DEPENDENCY_MANIFEST + .claude/settings.json jail.'
+                    : 'Setiap dokumen PDF/DOCX/MD & ide disanitasi otomatis sebelum masuk ke AI: melucuti karakter tak terlihat Zero-Width Unicode (U+200B..U+E007F), BiDi override, CSS 0.1px putih-di-atas-putih, payload PDF /JS /OpenAction, metadata EXIF gambar, mengisolasi teks di dalam <UNTRUSTED_CLIENT_DOCUMENT_DATA>, serta mengunci APPROVED_DEPENDENCY_MANIFEST & sandbox .claude/settings.json.'}
+                </p>
               </div>
 
               {/* Uploaded File Badges */}
@@ -4902,24 +4928,228 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       })}
                     </div>
 
-                    {activeVariant?.panes && activeVariant.panes.length > 0 && (
-                      <div className={`grid grid-cols-1 ${activeVariant.panes.length >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-2 p-2.5 bg-zinc-100 dark:bg-zinc-950 border border-dashed border-zinc-400 dark:border-zinc-700`}>
-                        {activeVariant.panes.map((pn, pIdx) => (
-                          <div key={pIdx} className="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 font-mono text-[10px]">
-                            <div className="font-black text-emerald-900 dark:text-emerald-300 uppercase">
-                              [{pn.label}] ({pn.span}/12 COL)
-                            </div>
-                            <div className="flex flex-wrap gap-1 mt-1.5">
-                              {(pn.widgets || []).map((wg, wIdx) => (
-                                <span key={wIdx} className="px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold">
-                                  {wg}
+                    {activeVariant?.panes && activeVariant.panes.length > 0 && (() => {
+                      const effectiveShell = formData.navigationShell || activeVariant?.default_shell || 'SIDEBAR_ERP_DENSE';
+                      const isRtlFrame = (formData.outputLocale || 'id') === 'ar';
+                      const taskMatrix = v7RuntimePreview?.world_class_task_matrix || formData.worldClassTaskMatrix || null;
+                      const sectorAuditPreset = v7RuntimePreview?.cryptographic_audit_explorer_contract?.active_sector_preset
+                        || matrixCatalog.sector_audit_presets?.[resolvedSectorKey]
+                        || null;
+                      const spanToColClass = (spanNum) => {
+                        const s = Number(spanNum) || 6;
+                        if (s <= 2) return 'md:col-span-2';
+                        if (s === 3) return 'md:col-span-3';
+                        if (s === 4) return 'md:col-span-4';
+                        if (s === 5) return 'md:col-span-5';
+                        if (s === 7) return 'md:col-span-7';
+                        if (s === 8) return 'md:col-span-8';
+                        if (s >= 9) return 'md:col-span-9';
+                        return 'md:col-span-6';
+                      };
+
+                      return (
+                        <div className="space-y-3">
+                          {/* VISUAL MINIATURE APPLICATION SCREEN MOCKUP (12 SECTORS x 3 VARIANTS x 5 NAVIGATION SHELLS) */}
+                          <div
+                            dir={isRtlFrame ? 'rtl' : 'ltr'}
+                            className="border-2 border-zinc-900 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-950 rounded-none overflow-hidden"
+                          >
+                            {/* Miniature Browser / OS Window Bar */}
+                            <div className="px-3 py-1.5 bg-zinc-950 text-white border-b border-zinc-800 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px]">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center gap-1">
+                                  <span className="w-2 h-2 bg-rose-500 inline-block"></span>
+                                  <span className="w-2 h-2 bg-amber-400 inline-block"></span>
+                                  <span className="w-2 h-2 bg-emerald-400 inline-block"></span>
                                 </span>
-                              ))}
+                                <span className="px-1.5 py-0.5 bg-emerald-500 text-zinc-950 font-black uppercase">
+                                  {lang === 'en' ? 'LIVE VISUAL UI WIREFRAME' : 'PRATINJAU VISUAL ANATOMI LAYAR'}
+                                </span>
+                                <span className="font-bold text-zinc-200 truncate">
+                                  {activeVariant.code} • {effectiveShell} • {isRtlFrame ? 'RTL' : 'LTR'}
+                                </span>
+                              </div>
+                              <a
+                                href={`/blueprint/studio?mode=${currentTrack === 'studio' ? 'mitra' : 'retail'}&sector=${resolvedSectorKey}&stack=${formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH'}&ui_variant=${activeVariant.code}&shell=${effectiveShell}&tab=codesign_room`}
+                                className="px-2 py-0.5 bg-amber-400 hover:bg-amber-300 text-zinc-950 font-black uppercase text-[9px] rounded-none"
+                              >
+                                🤝 {lang === 'en' ? 'Co-Design & Sign-Off Room →' : 'Ruang Co-Design & Sign-Off →'}
+                              </a>
                             </div>
+
+                            {/* Shell-Specific Top Header Bar (Kiosk / Topbar Executive Deck) */}
+                            {(effectiveShell === 'FULLSCREEN_OPERATIONAL_KIOSK' || effectiveShell === 'TOPBAR_EXECUTIVE_DECK') && (
+                              <div className="px-3 py-1.5 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 font-mono text-[9px]">
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span className="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black">
+                                    {effectiveShell === 'FULLSCREEN_OPERATIONAL_KIOSK' ? '[KIOSK ZERO-DISTRACTION BAR]' : '[EXECUTIVE KPI DECK]'}
+                                  </span>
+                                  {(effectiveSelectedMenus || []).slice(0, 4).map((mCode) => (
+                                    <span key={mCode} className="px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold">
+                                      {mCode}
+                                    </span>
+                                  ))}
+                                </div>
+                                <span className="text-emerald-900 dark:text-emerald-300 font-black tabular-nums">
+                                  WS ZERO-POLL • SUB-10MS O(1)
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Main Shell Frame Body */}
+                            <div className="grid grid-cols-12">
+                              {/* Left Collapsible Sidebar Shell */}
+                              {effectiveShell === 'SIDEBAR_ERP_DENSE' && (
+                                <div className="col-span-12 md:col-span-2 bg-zinc-900 text-zinc-100 border-b md:border-b-0 md:border-r border-zinc-800 p-2 font-mono text-[9px] space-y-1">
+                                  <div className="text-emerald-400 font-black uppercase pb-1 border-b border-zinc-800">
+                                    L1–L4 NAV ({effectiveSelectedMenus.length}/25)
+                                  </div>
+                                  {['L1. Master & Config', 'L2. Core Transaksi', 'L3. Approval & Ops', 'L4. Audit & Report'].map((navLbl, nIdx) => (
+                                    <div
+                                      key={nIdx}
+                                      className={`px-1.5 py-1 border ${nIdx === 1 ? 'bg-emerald-500 text-zinc-950 border-emerald-400 font-black' : 'bg-zinc-950/80 text-zinc-300 border-zinc-800 font-bold'}`}
+                                    >
+                                      {navLbl}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Proportional 12-Column Operational Canvas */}
+                              <div className={`col-span-12 ${effectiveShell === 'SIDEBAR_ERP_DENSE' ? 'md:col-span-10' : effectiveShell === 'SLIDEOVER_WORKBENCH' ? 'md:col-span-9' : 'md:col-span-12'} p-2.5 grid grid-cols-12 gap-2`}>
+                                {activeVariant.panes.map((pn, pIdx) => (
+                                  <div
+                                    key={pIdx}
+                                    className={`col-span-12 ${spanToColClass(pn.span)} p-2.5 bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 flex flex-col justify-between font-mono text-[10px]`}
+                                  >
+                                    <div>
+                                      <div className="flex items-center justify-between gap-1 pb-1.5 mb-2 border-b border-zinc-200 dark:border-zinc-800">
+                                        <span className="font-black text-emerald-950 dark:text-emerald-300 uppercase truncate">
+                                          [{pn.label}]
+                                        </span>
+                                        <span className="px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 text-[9px] font-black tabular-nums shrink-0">
+                                          {pn.span}/12 COL
+                                        </span>
+                                      </div>
+                                      {/* Visual Wireframe Skeleton Header Bars */}
+                                      <div className="grid grid-cols-3 gap-1 mb-2">
+                                        <div className="h-4 bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-800 px-1 flex items-center text-[8px] font-black text-emerald-950 dark:text-emerald-200">
+                                          KPI #{pIdx + 1}
+                                        </div>
+                                        <div className="h-4 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-1 flex items-center text-[8px] font-bold text-zinc-800 dark:text-zinc-300">
+                                          ULID O(1)
+                                        </div>
+                                        <div className="h-4 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-1 flex items-center text-[8px] font-bold text-zinc-800 dark:text-zinc-300">
+                                          SEARCH [X]
+                                        </div>
+                                      </div>
+                                      <div className="flex flex-wrap gap-1">
+                                        {(pn.widgets || []).map((wg, wIdx) => (
+                                          <span
+                                            key={wIdx}
+                                            className="px-1.5 py-0.5 bg-zinc-50 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-bold text-[9px]"
+                                          >
+                                            ▣ {wg}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div className="mt-2 pt-1.5 border-t border-dashed border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[9px] text-zinc-600 dark:text-zinc-400">
+                                      <span>Sticky Header • Freeze L/R</span>
+                                      <span className="font-bold text-zinc-900 dark:text-zinc-200">Zero-Capsule</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Slide-Over Workbench Inspector Drawer */}
+                              {effectiveShell === 'SLIDEOVER_WORKBENCH' && (
+                                <div className="col-span-12 md:col-span-3 bg-zinc-50 dark:bg-zinc-900 border-t md:border-t-0 md:border-l-2 border-emerald-500 p-2.5 font-mono text-[9px] space-y-1.5">
+                                  <div className="font-black uppercase text-emerald-950 dark:text-emerald-300">
+                                    [SLIDE-OVER INSPECTOR DRAWER]
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold">
+                                    ✓ Konteks Detail Tanpa Pindah Halaman
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold">
+                                    ✓ Sign-Off &amp; SHA-256 Audit Log
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Mobile / PWA Bottom Thumb Navigation Dock */}
+                            {effectiveShell === 'MOBILE_BOTTOM_THUMB_BAR' && (
+                              <div className="px-3 py-1.5 bg-zinc-950 text-white border-t border-zinc-800 grid grid-cols-4 gap-1.5 font-mono text-[9px] text-center">
+                                {['01. HOME', '02. SCAN QR', '03. TRANSAKSI', '04. AKUN RBAC'].map((tb, tIdx) => (
+                                  <div
+                                    key={tIdx}
+                                    className={`py-1 border ${tIdx === 0 ? 'bg-emerald-500 text-zinc-950 border-emerald-400 font-black' : 'bg-zinc-900 text-zinc-200 border-zinc-700 font-bold'}`}
+                                  >
+                                    {tb}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    )}
+
+                          {/* v9.0 WORLD-CLASS 5-SPRINT ENGINEERING TASK BACKLOG & CRYPTO AUDIT PRESET */}
+                          {taskMatrix?.sprints && taskMatrix.sprints.length > 0 && (() => {
+                            const activePresetObj = taskMatrix.sector_audit_preset || sectorAuditPreset || null;
+                            const presetLabel = activePresetObj
+                              ? (activePresetObj.title?.[lang] || activePresetObj.localized_title || activePresetObj.badge || resolvedSectorKey)
+                              : null;
+                            const totalTasksCount = Number(taskMatrix.total_world_class_tasks || taskMatrix.total_tasks_count || 13);
+
+                            return (
+                              <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="font-mono text-[10px] font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                    🚀 {lang === 'en'
+                                      ? `WORLD-CLASS ${taskMatrix.total_sprints || 5}-SPRINT EXECUTION BACKLOG (${totalTasksCount} DETERMINISTIC TASKS • LOCKED TO ${activeVariant.code})`
+                                      : `MATRIKS ${taskMatrix.total_sprints || 5}-SPRINT EKSEKUSI KELAS DUNIA (${totalTasksCount} TASK DETERMINISTIK • TERKUNCI KE ${activeVariant.code})`}
+                                  </div>
+                                  {presetLabel && (
+                                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black truncate max-w-md" title={presetLabel}>
+                                      AUDIT PRESET: {activePresetObj?.badge || presetLabel}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-5 gap-1.5 font-mono text-[9px]">
+                                  {taskMatrix.sprints.map((sp) => {
+                                    const spTitle = typeof sp.title === 'object' ? (sp.title?.[lang] || sp.title?.id || sp.code) : (sp.title || sp.code);
+                                    return (
+                                      <div key={sp.code || sp.sprint_code} className="p-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 flex flex-col justify-between">
+                                        <div>
+                                          <div className="font-black text-emerald-950 dark:text-emerald-300 leading-snug">
+                                            {spTitle}
+                                          </div>
+                                          <div className="mt-1 space-y-0.5 text-zinc-800 dark:text-zinc-300">
+                                            {(sp.tasks || []).map((tk) => {
+                                              const tCode = tk.task_code || tk.task_id;
+                                              const tTitle = typeof tk.title === 'object' ? (tk.title?.[lang] || tk.title?.id || tCode) : (tk.title || tCode);
+                                              return (
+                                                <div key={tCode} className="truncate" title={`${tCode} (${tk.role || 'Engineer'}): ${tTitle}`}>
+                                                  • <strong>{tCode}</strong>: {tTitle}
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                        <div className="mt-1.5 pt-1 border-t border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-400 font-bold tabular-nums flex items-center justify-between">
+                                          <span>{sp.phase_range || `Sprint ${sp.sprint || ''}`}</span>
+                                          <span>{(sp.tasks || []).length} Tasks</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })()}

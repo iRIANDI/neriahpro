@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Cpu, 
-  ShieldCheck, 
-  Zap, 
-  Users, 
-  CheckSquare, 
-  Layers, 
-  Clock, 
-  Sparkles, 
-  ArrowRight, 
-  CheckCircle2, 
+import {
+  Cpu,
+  ShieldCheck,
+  Zap,
+  Users,
+  CheckSquare,
+  Layers,
+  Clock,
+  Sparkles,
+  ArrowRight,
+  CheckCircle2,
   AlertCircle,
   FileText,
   Sun,
@@ -157,7 +157,7 @@ const TRANSLATIONS = {
     topBadge: "PROJECT OS // ARCHITECTURAL DISCOVERY WORKSPACE",
     headerTitle: "Blueprint Arsitektur & Kuesioner Spesifikasi Sistem",
     headerSubtitle: "Lengkapi 26 parameter arsitektur terstruktur di bawah ini untuk menghasilkan dokumen Ultimate PRD dan skema basis data PostgreSQL Strict ULID siap bangun. Anda dapat mengisi form secara langsung atau gunakan Ruang Ide Cepat & MarkItDown di bawah untuk mengisi otomatis.",
-    
+
     // Auto-save & Status
     autoSaveSaved: "Tersimpan Otomatis",
     autoSaveSaving: "Menyimpan ke Cloud...",
@@ -181,9 +181,9 @@ const TRANSLATIONS = {
     studioBadge: "AI ACCELERATOR // MICROSOFT MARKITDOWN REPLICA",
     studioTitle: "Ceritakan Visi Proyek atau Lampirkan Dokumen Spesifikasi",
     studioDesc: "Ketik ringkasan ide bisnis atau lampirkan dokumen (PDF, Word, Excel, PowerPoint, Catatan, Wireframe). Dokumen otomatis dikonversi ke format Markdown (.md) murni oleh MarkItDown secara lokal di server sebelum dibaca AI, memangkas >80% token ekstraksi biner dan otomatis mengisi 26 parameter di bawah ini.",
-    
+
     textareaPlaceholder: "Ceritakan ide, proses bisnis, atau kebutuhan aplikasi Anda di sini...\n\nContoh: 'Saya ingin membangun sistem ekspedisi dan armada logistik antar pulau. Ada 3 level pengguna: Superadmin di kantor pusat, Koordinator Lapangan, dan Driver truk. Driver bisa scan barcode resi dan update status kirim via foto. Klien bisa lacak posisi resi real-time. Ada integrasi Midtrans untuk pembayaran invoice tempo dan notifikasi otomatis ke WhatsApp...'",
-    
+
     charCount: "Karakter",
     sampleTemplates: "Contoh Templat Ide Cepat:",
     tplLogistics: "🚚 Manajemen Armada Truk & Pelacakan Resi Logistik",
@@ -215,7 +215,7 @@ const TRANSLATIONS = {
     // 6 Architectural Blocks
     blockA: "BLOK A: IDENTITAS PROYEK & TUJUAN BISNIS",
     blockADesc: "Fondasi domain bisnis, masalah utama yang dihadapi, dan tolak ukur keberhasilan.",
-    
+
     blockB: "BLOK B: TARGET PENGGUNA, RBAC & PLATFORM PERANGKAT",
     blockBDesc: "Pemetaan profil pengguna, hak akses RBAC, dan sasaran perangkat aksesibilitas.",
 
@@ -278,7 +278,7 @@ const TRANSLATIONS = {
     topBadge: "PROJECT OS // ARCHITECTURAL DISCOVERY WORKSPACE",
     headerTitle: "Architecture Blueprint & System Specification Form",
     headerSubtitle: "Complete the 26 structured architectural parameters below to generate the Ultimate PRD document and PostgreSQL Strict ULID schema. Fill directly or use the Quick Idea Studio & MarkItDown uploader below to auto-populate.",
-    
+
     // Auto-save & Status
     autoSaveSaved: "Auto-Saved",
     autoSaveSaving: "Saving to Cloud...",
@@ -302,9 +302,9 @@ const TRANSLATIONS = {
     studioBadge: "AI ACCELERATOR // MICROSOFT MARKITDOWN REPLICA",
     studioTitle: "Describe Project Vision or Attach Specification Documents",
     studioDesc: "Type your vision or attach documents (PDF, Word, Excel, PowerPoint, Wireframes). Documents are automatically converted into pure Markdown (.md) by MarkItDown locally on the server before AI ingestion, saving >80% tokens and auto-populating all 26 fields below.",
-    
+
     textareaPlaceholder: "Describe your project vision, workflow, or business requirements here...\n\nExample: 'We need an inter-island freight logistics & fleet management system. 3 user roles: Superadmin at HQ, Field Dispatcher, and Truck Drivers. Drivers scan barcode waybills and update delivery status via photo. Clients track consignments in real-time. Integrated Midtrans for invoice payments and automated WhatsApp alerts...'",
-    
+
     charCount: "Characters",
     sampleTemplates: "Quick Idea Templates:",
     tplLogistics: "🚚 Freight Logistics & Waybill Tracking Platform",
@@ -336,7 +336,7 @@ const TRANSLATIONS = {
     // 6 Architectural Blocks
     blockA: "BLOCK A: PROJECT IDENTITY & BUSINESS GOALS",
     blockADesc: "Business domain foundation, core problem statement, and primary KPIs.",
-    
+
     blockB: "BLOCK B: TARGET USERS, RBAC & DEVICE PLATFORMS",
     blockBDesc: "End-user demographics, access control matrix, and target client form factors.",
 
@@ -685,8 +685,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     const isEn = lang === 'en';
     const cleanTier = String(tier || requestedTier || '').toLowerCase();
     if (track === 'retail') {
-      let defaultBudget = isEn 
-        ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)' 
+      let defaultBudget = isEn
+        ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)'
         : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)';
       let defaultTermin = isEn
         ? 'Spark Package (Free): $0 / Free Instant Architectural Audit & Blueprint Access'
@@ -740,7 +740,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       if (qTier && ['advisory', 'starter_umkm', 'umkm_starter', 'mvp', 'full_mvp', 'blueprint_advisory'].includes(qTier.toLowerCase())) {
         return 'studio';
       }
-    } catch (e) {}
+    } catch (e) { }
     if (initialData?.selected_track === 'studio' || initialData?.track === 'studio') return 'studio';
     if (initialData?.selected_tier && ['spark', 'starter', 'pro', 'ultimate', 'lite'].includes(String(initialData.selected_tier).toLowerCase())) return 'retail';
     return 'retail';
@@ -752,7 +752,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       const url = new URL(window.location.href);
       url.searchParams.set('track', newTrack);
       window.history.replaceState({}, '', url.toString());
-    } catch (e) {}
+    } catch (e) { }
 
     // Auto-align fields 21, 22, 23 to match new track to prevent leaking Studio 50/50 into Retail and vice versa
     const trackDefs = getTrackDefaults(newTrack, requestedTier);
@@ -839,7 +839,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           setAiModels(data.models);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Derive list of strictly configured AI models (with active API keys from Admin Panel)
@@ -966,8 +966,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const isFreshWorkspace = Boolean(initialData?._meta?.is_fresh_workspace) || (!isExplicitSlugEdit && !initialData?._draft_id && !initialData?.namaBisnis);
   const draftIdRef = useRef(
     initialData?._meta?.draft_token
-      || initialData?._draft_id
-      || ('draft_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10))
+    || initialData?._draft_id
+    || ('draft_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10))
   );
   const getScopedStorageKey = useCallback(() => {
     if (isExplicitSlugEdit && initialData?._meta?.is_editing_slug) {
@@ -982,7 +982,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     namaBisnis: initialData.namaBisnis || '',
     masalahUtama: initialData.masalahUtama || '',
     tujuanUtama: initialData.tujuanUtama || '',
-    
+
     // BLOK B: Pengguna, RBAC & Platform (3)
     targetAudiens: initialData.targetAudiens || '',
     aktorSistem: initialData.aktorSistem || '',
@@ -1227,7 +1227,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           });
         }
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => { active = false; };
   }, []);
 
@@ -1392,7 +1392,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             setV7RuntimePreview(json);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }, 280);
     return () => {
       active = false;
@@ -1773,7 +1773,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       if (inputEl) {
         try {
           inputEl.focus({ preventScroll: true });
-        } catch (_) {}
+        } catch (_) { }
       }
     } else if (sectionId) {
       jumpToSection(sectionId);
@@ -2272,12 +2272,12 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const filteredIndexSections = useMemo(() => {
     if (!indexSearchQuery.trim()) return indexSections;
     const q = indexSearchQuery.toLowerCase();
-    return indexSections.filter(sec => 
-      sec.title.toLowerCase().includes(q) || 
+    return indexSections.filter(sec =>
+      sec.title.toLowerCase().includes(q) ||
       sec.subtitle.toLowerCase().includes(q) ||
       sec.badge.toLowerCase().includes(q) ||
-      (sec.subItems && sec.subItems.some(sub => 
-        sub.label.toLowerCase().includes(q) || 
+      (sec.subItems && sec.subItems.some(sub =>
+        sub.label.toLowerCase().includes(q) ||
         sub.code.toLowerCase().includes(q)
       ))
     );
@@ -2298,7 +2298,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     // Purge legacy un-namespaced global autosave key so old projects NEVER bleed into new projects
     try {
       localStorage.removeItem('neriah_blueprint_autosave');
-    } catch (e) {}
+    } catch (e) { }
 
     // Scoped Draft Restoration ONLY when resuming an explicit slug or explicit draft_id (never on fresh workspace)
     if (!isFreshWorkspace && !initialData.namaBisnis) {
@@ -2340,7 +2340,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     // 1. Immediate Scoped LocalStorage save
     try {
       localStorage.setItem(getScopedStorageKey(), JSON.stringify(updatedData));
-    } catch (e) {}
+    } catch (e) { }
 
     // 2. Debounced server save (never mutates existing VisionBlueprint unless is_explicit_slug_edit === true)
     setAutoSaveStatus('saving');
@@ -2478,10 +2478,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     });
 
     setIsAnalyzing(true);
-    setAnalysisStep(attachedFiles.length > 0 
-      ? (hasOnlyMdOrTxt 
-          ? (lang === 'en' ? 'Reading specification files & mapping architecture...' : 'Membaca berkas spesifikasi & memetakan arsitektur...') 
-          : t.step1) 
+    setAnalysisStep(attachedFiles.length > 0
+      ? (hasOnlyMdOrTxt
+        ? (lang === 'en' ? 'Reading specification files & mapping architecture...' : 'Membaca berkas spesifikasi & memetakan arsitektur...')
+        : t.step1)
       : t.step2);
 
     try {
@@ -2575,7 +2575,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       }
 
       setConvertedMarkdown(result.converted_markdown || synData._meta?.converted_markdown || '');
-      
+
       const blockAEl = document.getElementById('section-block-a');
       if (blockAEl) {
         blockAEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2583,8 +2583,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
       showLocalToast(
         'success',
-        lang === 'en' 
-          ? 'All 25 Blueprint parameters populated by AI! Review and fine-tune below.' 
+        lang === 'en'
+          ? 'All 25 Blueprint parameters populated by AI! Review and fine-tune below.'
           : '25 Parameter Blueprint berhasil diisi otomatis oleh AI! Silakan tinjau dan sesuaikan di bawah.',
         'SINTESIS SUKSES'
       );
@@ -2640,7 +2640,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     try {
       localStorage.removeItem(getScopedStorageKey());
       localStorage.removeItem('neriah_blueprint_autosave');
-    } catch (e) {}
+    } catch (e) { }
 
     const freshToken = 'draft_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
     draftIdRef.current = freshToken;
@@ -2670,7 +2670,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         },
         body: JSON.stringify({ draft_id: freshToken }),
       });
-    } catch (e) {}
+    } catch (e) { }
 
     if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -2955,7 +2955,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         try {
           localStorage.removeItem(getScopedStorageKey());
           localStorage.removeItem('neriah_blueprint_autosave');
-        } catch (e) {}
+        } catch (e) { }
         setSuccessData(result.data);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
@@ -2964,8 +2964,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           missingKeys = Object.keys(result.errors).map(k => FIELD_MAP[k] || k);
         }
 
-        const errorDetails = result.errors 
-          ? Object.values(result.errors).flat().join(', ') 
+        const errorDetails = result.errors
+          ? Object.values(result.errors).flat().join(', ')
           : (result.message || 'Terjadi kesalahan saat memproses data.');
         setErrorMessage(errorDetails);
 
@@ -3122,15 +3122,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`fixed top-4 right-4 z-50 p-4 border max-w-sm rounded-none font-mono text-xs shadow-lg flex items-start gap-3 ${
-              toast.type === 'error'
-                ? 'bg-red-950 border-red-500 text-red-200'
-                : toast.type === 'warning'
+            className={`fixed top-4 right-4 z-50 p-4 border max-w-sm rounded-none font-mono text-xs shadow-lg flex items-start gap-3 ${toast.type === 'error'
+              ? 'bg-red-950 border-red-500 text-red-200'
+              : toast.type === 'warning'
                 ? 'bg-amber-950 border-amber-500 text-amber-200'
                 : toast.type === 'info'
-                ? 'bg-blue-950 border-blue-500 text-blue-200'
-                : 'bg-zinc-900 border-emerald-500 text-emerald-400'
-            }`}
+                  ? 'bg-blue-950 border-blue-500 text-blue-200'
+                  : 'bg-zinc-900 border-emerald-500 text-emerald-400'
+              }`}
           >
             {toast.type === 'error' ? (
               <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
@@ -3153,13 +3152,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* =========================================================================
           FLOATING LEFT HUD INDEX: TABLE OF CONTENTS (DESKTOP RAIL & MOBILE DRAWER)
           ========================================================================= */}
 
       {/* 1. DESKTOP FLOATING LEFT SIDEBAR / RAIL (xl:flex) */}
-      <aside 
+      <aside
         aria-label="Blueprint Index Navigation"
         style={{
           top: `${indexTopOffset}px`,
@@ -3170,7 +3169,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       >
         {isIndexExpanded ? (
           /* EXPANDED DIRECTORY PANEL */
-          <div 
+          <div
             onWheel={(e) => {
               if (desktopScrollRef.current) {
                 const el = desktopScrollRef.current;
@@ -3195,11 +3194,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     <button
                       type="button"
                       onClick={() => setAutoSyncAccordion(!autoSyncAccordion)}
-                      className={`text-[9px] px-1.5 py-0.2 font-mono border font-bold transition rounded-none ${
-                        autoSyncAccordion
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'
-                      }`}
+                      className={`text-[9px] px-1.5 py-0.2 font-mono border font-bold transition rounded-none ${autoSyncAccordion
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'
+                        }`}
                       title={autoSyncAccordion ? 'Auto-Collapse SPY Active (Click to Pause)' : 'Auto-Collapse Paused (Click to Enable)'}
                     >
                       {autoSyncAccordion ? t.indexSpyActive : t.indexSpyManual}
@@ -3293,7 +3291,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {/* Accordion List Body with Custom Scrollbar & Contain Behavior */}
-            <div 
+            <div
               ref={desktopScrollRef}
               className="flex-1 min-h-0 overflow-y-auto px-2 py-2 space-y-2 text-xs divide-y divide-zinc-100 dark:divide-zinc-800/60 custom-prd-scrollbar select-none focus:outline-none"
               style={{ overscrollBehavior: 'contain' }}
@@ -3310,11 +3308,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     <button
                       type="button"
                       onClick={() => toggleAccordionGroup(grp.key)}
-                      className={`w-full flex items-center justify-between py-1 text-left hover:text-zinc-800 dark:hover:text-zinc-200 group font-bold tracking-wider text-[10px] uppercase transition ${
-                        isGroupActive
-                          ? 'text-emerald-600 dark:text-emerald-400 font-black'
-                          : 'text-zinc-500 dark:text-zinc-400'
-                      }`}
+                      className={`w-full flex items-center justify-between py-1 text-left hover:text-zinc-800 dark:hover:text-zinc-200 group font-bold tracking-wider text-[10px] uppercase transition ${isGroupActive
+                        ? 'text-emerald-600 dark:text-emerald-400 font-black'
+                        : 'text-zinc-500 dark:text-zinc-400'
+                        }`}
                     >
                       <span className="flex items-center gap-1.5 truncate">
                         {isOpen ? <ChevronDown className="w-3 h-3 shrink-0" /> : <ChevronRight className="w-3 h-3 shrink-0" />}
@@ -3323,11 +3320,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-none shrink-0" title="Active Group"></span>
                         )}
                       </span>
-                      <span className={`text-[9px] px-1 py-0.2 border shrink-0 font-normal ${
-                        isGroupActive
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold'
-                          : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400'
-                      }`}>
+                      <span className={`text-[9px] px-1 py-0.2 border shrink-0 font-normal ${isGroupActive
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold'
+                        : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400'
+                        }`}>
                         {groupSections.length}
                       </span>
                     </button>
@@ -3344,20 +3340,18 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                               <div
                                 data-nav-sec={sec.id}
                                 onClick={() => jumpToSection(sec.id)}
-                                className={`w-full text-left p-1.5 flex items-center justify-between gap-1.5 border transition-all cursor-pointer ${
-                                  isActive
-                                    ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-700 dark:text-emerald-300 font-bold shadow-xs'
-                                    : 'bg-transparent border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300'
-                                }`}
+                                className={`w-full text-left p-1.5 flex items-center justify-between gap-1.5 border transition-all cursor-pointer ${isActive
+                                  ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-700 dark:text-emerald-300 font-bold shadow-xs'
+                                  : 'bg-transparent border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300'
+                                  }`}
                               >
                                 <div className="flex items-center gap-2 truncate">
-                                  <span className={`w-5 h-5 flex items-center justify-center text-[10px] font-mono shrink-0 border ${
-                                    isActive
-                                      ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
-                                      : sec.isComplete
+                                  <span className={`w-5 h-5 flex items-center justify-center text-[10px] font-mono shrink-0 border ${isActive
+                                    ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                                    : sec.isComplete
                                       ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
                                       : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
-                                  }`}>
+                                    }`}>
                                     {sec.isComplete ? (
                                       <Check className="w-3 h-3 stroke-[3]" />
                                     ) : (
@@ -3373,11 +3367,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
                                 <div className="flex items-center gap-1 shrink-0">
                                   {sec.countLabel && (
-                                    <span className={`text-[9px] font-mono px-1 py-0.2 border ${
-                                      sec.isComplete
-                                        ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-bold'
-                                        : 'border-zinc-200 dark:border-zinc-700 text-zinc-500 bg-zinc-50 dark:bg-zinc-800'
-                                    }`}>
+                                    <span className={`text-[9px] font-mono px-1 py-0.2 border ${sec.isComplete
+                                      ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-bold'
+                                      : 'border-zinc-200 dark:border-zinc-700 text-zinc-500 bg-zinc-50 dark:bg-zinc-800'
+                                      }`}>
                                       {sec.countLabel}
                                     </span>
                                   )}
@@ -3420,13 +3413,12 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                           e.stopPropagation();
                                           jumpToField(sub.id, sec.id);
                                         }}
-                                        className={`w-full text-left py-1 px-1.5 flex items-center justify-between gap-1 text-[10px] transition ${
-                                          isFieldActive
-                                            ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold border-l-2 border-emerald-500'
-                                            : sub.isFilled
+                                        className={`w-full text-left py-1 px-1.5 flex items-center justify-between gap-1 text-[10px] transition ${isFieldActive
+                                          ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold border-l-2 border-emerald-500'
+                                          : sub.isFilled
                                             ? 'text-zinc-800 dark:text-zinc-200 hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300'
                                             : 'text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 hover:text-zinc-700 dark:hover:text-zinc-300'
-                                        }`}
+                                          }`}
                                       >
                                         <div className="flex items-center gap-1.5 truncate">
                                           {sub.isFilled ? (
@@ -3444,11 +3436,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                           </span>
                                         </div>
 
-                                        <span className={`text-[8px] font-mono shrink-0 px-1 py-0.2 border uppercase ${
-                                          sub.isFilled
-                                            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
-                                            : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400'
-                                        }`}>
+                                        <span className={`text-[8px] font-mono shrink-0 px-1 py-0.2 border uppercase ${sub.isFilled
+                                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
+                                          : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400'
+                                          }`}>
                                           {sub.isFilled ? (lang === 'en' ? '✓ Filled' : '✓ Terisi') : (lang === 'en' ? 'Empty' : 'Kosong')}
                                         </span>
                                       </button>
@@ -3509,13 +3500,12 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     type="button"
                     onClick={() => jumpToSection(sec.id)}
                     title={`${sec.badge} - ${sec.title}`}
-                    className={`w-full aspect-square flex items-center justify-center text-[11px] font-mono transition border ${
-                      isActive
-                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold shadow-xs scale-105'
-                        : sec.isComplete
+                    className={`w-full aspect-square flex items-center justify-center text-[11px] font-mono transition border ${isActive
+                      ? 'bg-emerald-500 text-black border-emerald-500 font-bold shadow-xs scale-105'
+                      : sec.isComplete
                         ? 'bg-emerald-500 text-black border-emerald-500 font-bold hover:bg-emerald-400'
                         : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50 hover:text-zinc-900 dark:hover:text-zinc-100'
-                    }`}
+                      }`}
                   >
                     {sec.isComplete ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : sec.badge}
                   </button>
@@ -3583,11 +3573,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     <button
                       type="button"
                       onClick={() => setAutoSyncAccordion(!autoSyncAccordion)}
-                      className={`text-[9px] px-1.5 py-0.2 font-mono border font-bold transition rounded-none ${
-                        autoSyncAccordion
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'
-                      }`}
+                      className={`text-[9px] px-1.5 py-0.2 font-mono border font-bold transition rounded-none ${autoSyncAccordion
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'
+                        }`}
                       title={autoSyncAccordion ? 'Auto-Collapse SPY Active' : 'Auto-Collapse Paused'}
                     >
                       {autoSyncAccordion ? t.indexSpyActive : t.indexSpyManual}
@@ -3659,11 +3648,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                         <button
                           type="button"
                           onClick={() => toggleAccordionGroup(grp.key)}
-                          className={`w-full flex items-center justify-between py-1 text-left font-bold uppercase text-[10px] tracking-wider transition ${
-                            isGroupActive
-                              ? 'text-emerald-600 dark:text-emerald-400 font-black'
-                              : 'text-zinc-500 dark:text-zinc-400'
-                          }`}
+                          className={`w-full flex items-center justify-between py-1 text-left font-bold uppercase text-[10px] tracking-wider transition ${isGroupActive
+                            ? 'text-emerald-600 dark:text-emerald-400 font-black'
+                            : 'text-zinc-500 dark:text-zinc-400'
+                            }`}
                         >
                           <span className="flex items-center gap-1.5 truncate">
                             {isOpen ? <ChevronDown className="w-3 h-3 shrink-0" /> : <ChevronRight className="w-3 h-3 shrink-0" />}
@@ -3672,11 +3660,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-none shrink-0" title="Active Group"></span>
                             )}
                           </span>
-                          <span className={`text-[9px] px-1 border shrink-0 ${
-                            isGroupActive
-                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold'
-                              : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400'
-                          }`}>
+                          <span className={`text-[9px] px-1 border shrink-0 ${isGroupActive
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold'
+                            : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400'
+                            }`}>
                             {groupSections.length}
                           </span>
                         </button>
@@ -3692,31 +3679,28 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                   <div
                                     data-nav-sec={sec.id}
                                     onClick={() => jumpToSection(sec.id)}
-                                    className={`w-full text-left p-2 flex items-center justify-between border transition cursor-pointer ${
-                                      isActive
-                                        ? 'bg-emerald-500/10 border-emerald-500/60 text-emerald-600 dark:text-emerald-400 font-bold'
-                                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200'
-                                    }`}
+                                    className={`w-full text-left p-2 flex items-center justify-between border transition cursor-pointer ${isActive
+                                      ? 'bg-emerald-500/10 border-emerald-500/60 text-emerald-600 dark:text-emerald-400 font-bold'
+                                      : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200'
+                                      }`}
                                   >
                                     <div className="flex items-center gap-2 truncate">
-                                      <span className={`w-5 h-5 flex items-center justify-center text-[10px] font-mono shrink-0 border ${
-                                        isActive
-                                          ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
-                                          : sec.isComplete
+                                      <span className={`w-5 h-5 flex items-center justify-center text-[10px] font-mono shrink-0 border ${isActive
+                                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                                        : sec.isComplete
                                           ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
                                           : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700'
-                                      }`}>
+                                        }`}>
                                         {sec.isComplete ? <Check className="w-3 h-3 stroke-[3]" /> : sec.badge}
                                       </span>
                                       <span className="truncate text-xs font-sans">{sec.title}</span>
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
                                       {sec.countLabel && (
-                                        <span className={`text-[10px] font-mono px-1 py-0.2 border ${
-                                          sec.isComplete
-                                            ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-bold'
-                                            : 'border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
-                                        }`}>
+                                        <span className={`text-[10px] font-mono px-1 py-0.2 border ${sec.isComplete
+                                          ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-bold'
+                                          : 'border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                                          }`}>
                                           {sec.countLabel}
                                         </span>
                                       )}
@@ -3746,13 +3730,12 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                               e.stopPropagation();
                                               jumpToField(sub.id, sec.id);
                                             }}
-                                            className={`w-full text-left py-1 px-1.5 flex items-center justify-between gap-1 text-[11px] transition ${
-                                              isFieldActive
-                                                ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border-l-2 border-emerald-500'
-                                                : sub.isFilled
+                                            className={`w-full text-left py-1 px-1.5 flex items-center justify-between gap-1 text-[11px] transition ${isFieldActive
+                                              ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border-l-2 border-emerald-500'
+                                              : sub.isFilled
                                                 ? 'text-zinc-800 dark:text-zinc-200 hover:text-emerald-500 font-medium'
                                                 : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
-                                            }`}
+                                              }`}
                                           >
                                             <div className="flex items-center gap-1.5 truncate">
                                               {sub.isFilled ? (
@@ -3767,11 +3750,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                               <span className="font-mono text-[10px] text-zinc-400 shrink-0">{sub.code}</span>
                                               <span className="truncate font-sans">{sub.label}</span>
                                             </div>
-                                            <span className={`text-[8px] font-mono shrink-0 px-1 py-0.2 border uppercase ${
-                                              sub.isFilled
-                                                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
-                                                : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-400'
-                                            }`}>
+                                            <span className={`text-[8px] font-mono shrink-0 px-1 py-0.2 border uppercase ${sub.isFilled
+                                              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
+                                              : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-400'
+                                              }`}>
                                               {sub.isFilled ? (lang === 'en' ? '✓' : '✓') : '—'}
                                             </span>
                                           </button>
@@ -3807,7 +3789,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           )}
         </AnimatePresence>
       </div>
-      
+
       {/* SATU PINTU 5-STEP END-TO-END GUIDED CLIENT WIZARD BAR (RETAIL & MITRA V6.0) */}
       <div className="mb-5 border-2 border-zinc-900 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-none shadow-xs">
         <div className="px-3.5 py-2 bg-zinc-950 text-white flex flex-wrap items-center justify-between gap-2 font-mono text-[11px]">
@@ -3852,22 +3834,20 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           ].map((st) => (
             <div
               key={st.num}
-              className={`px-3 py-2 flex items-center gap-2 ${
-                st.active
-                  ? 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200 font-black'
-                  : st.done
+              className={`px-3 py-2 flex items-center gap-2 ${st.active
+                ? 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200 font-black'
+                : st.done
                   ? 'text-emerald-900 dark:text-emerald-300 font-bold'
                   : 'text-zinc-600 dark:text-zinc-400 font-bold'
-              }`}
+                }`}
             >
               <span
-                className={`px-1.5 py-0.5 border ${
-                  st.active
-                    ? 'bg-zinc-950 text-emerald-400 border-zinc-950 dark:bg-emerald-400 dark:text-zinc-950 dark:border-emerald-400'
-                    : st.done
+                className={`px-1.5 py-0.5 border ${st.active
+                  ? 'bg-zinc-950 text-emerald-400 border-zinc-950 dark:bg-emerald-400 dark:text-zinc-950 dark:border-emerald-400'
+                  : st.done
                     ? 'bg-emerald-600 text-white border-emerald-600'
                     : 'bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700'
-                }`}
+                  }`}
               >
                 {st.done && !st.active ? '✓' : st.num}
               </span>
@@ -3913,22 +3893,20 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <button
               type="button"
               onClick={() => setLang('id')}
-              className={`px-2.5 py-1 font-bold transition ${
-                lang === 'id' 
-                  ? 'bg-zinc-900 text-white dark:bg-emerald-500 dark:text-black' 
-                  : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-              }`}
+              className={`px-2.5 py-1 font-bold transition ${lang === 'id'
+                ? 'bg-zinc-900 text-white dark:bg-emerald-500 dark:text-black'
+                : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+                }`}
             >
               ID
             </button>
             <button
               type="button"
               onClick={() => setLang('en')}
-              className={`px-2.5 py-1 font-bold transition ${
-                lang === 'en' 
-                  ? 'bg-zinc-900 text-white dark:bg-emerald-500 dark:text-black' 
-                  : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-              }`}
+              className={`px-2.5 py-1 font-bold transition ${lang === 'en'
+                ? 'bg-zinc-900 text-white dark:bg-emerald-500 dark:text-black'
+                : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+                }`}
             >
               EN
             </button>
@@ -3979,11 +3957,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           <button
             type="button"
             onClick={() => handleTrackChange('retail')}
-            className={`p-3.5 text-left border-2 transition rounded-none cursor-pointer flex flex-col justify-between ${
-              currentTrack === 'retail'
-                ? 'border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/10'
-                : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50 dark:bg-zinc-950'
-            }`}
+            className={`p-3.5 text-left border-2 transition rounded-none cursor-pointer flex flex-col justify-between ${currentTrack === 'retail'
+              ? 'border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/10'
+              : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50 dark:bg-zinc-950'
+              }`}
           >
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="flex items-center gap-2">
@@ -3992,11 +3969,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   {lang === 'en' ? '01 // Self-Service Track' : '01 // Jalur Mandiri (Retail)'}
                 </span>
               </div>
-              <span className={`text-[9px] font-mono px-1.5 py-0.5 border font-bold uppercase ${
-                currentTrack === 'retail'
-                  ? 'bg-emerald-500 text-black border-emerald-500'
-                  : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700'
-              }`}>
+              <span className={`text-[9px] font-mono px-1.5 py-0.5 border font-bold uppercase ${currentTrack === 'retail'
+                ? 'bg-emerald-500 text-black border-emerald-500'
+                : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700'
+                }`}>
                 {currentTrack === 'retail' ? (lang === 'en' ? 'ACTIVE' : 'AKTIF') : (lang === 'en' ? 'SELECT' : 'PILIH')}
               </span>
             </div>
@@ -4015,11 +3991,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           <button
             type="button"
             onClick={() => handleTrackChange('studio')}
-            className={`p-3.5 text-left border-2 transition rounded-none cursor-pointer flex flex-col justify-between ${
-              currentTrack === 'studio'
-                ? 'border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/10'
-                : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50 dark:bg-zinc-950'
-            }`}
+            className={`p-3.5 text-left border-2 transition rounded-none cursor-pointer flex flex-col justify-between ${currentTrack === 'studio'
+              ? 'border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/10'
+              : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50 dark:bg-zinc-950'
+              }`}
           >
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="flex items-center gap-2">
@@ -4028,11 +4003,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   {lang === 'en' ? '02 // Dedicated Studio Track' : '02 // Jalur Turnkey (Studio)'}
                 </span>
               </div>
-              <span className={`text-[9px] font-mono px-1.5 py-0.5 border font-bold uppercase ${
-                currentTrack === 'studio'
-                  ? 'bg-emerald-500 text-black border-emerald-500'
-                  : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700'
-              }`}>
+              <span className={`text-[9px] font-mono px-1.5 py-0.5 border font-bold uppercase ${currentTrack === 'studio'
+                ? 'bg-emerald-500 text-black border-emerald-500'
+                : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700'
+                }`}>
                 {currentTrack === 'studio' ? (lang === 'en' ? 'ACTIVE' : 'AKTIF') : (lang === 'en' ? 'SELECT' : 'PILIH')}
               </span>
             </div>
@@ -4049,15 +4023,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         </div>
 
         {/* Active Track Status Banner */}
-        <div className={`p-3 border text-xs font-mono rounded-none ${
-          currentTrack === 'studio'
-            ? 'bg-blue-500/5 dark:bg-blue-500/[0.05] border-blue-500/30 text-zinc-800 dark:text-zinc-200'
-            : 'bg-emerald-500/5 dark:bg-emerald-500/[0.05] border-emerald-500/30 text-zinc-800 dark:text-zinc-200'
-        }`}>
+        <div className={`p-3 border text-xs font-mono rounded-none ${currentTrack === 'studio'
+          ? 'bg-blue-500/5 dark:bg-blue-500/[0.05] border-blue-500/30 text-zinc-800 dark:text-zinc-200'
+          : 'bg-emerald-500/5 dark:bg-emerald-500/[0.05] border-emerald-500/30 text-zinc-800 dark:text-zinc-200'
+          }`}>
           <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-            <span className={`font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5 ${
-              currentTrack === 'studio' ? 'text-blue-600 dark:text-blue-400' : 'text-emerald-600 dark:text-emerald-400'
-            }`}>
+            <span className={`font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5 ${currentTrack === 'studio' ? 'text-blue-600 dark:text-blue-400' : 'text-emerald-600 dark:text-emerald-400'
+              }`}>
               {currentTrack === 'studio' ? (
                 <>
                   <ShieldCheck className="w-4 h-4 text-blue-500" />
@@ -4080,11 +4052,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           <p className="font-sans text-[11px] leading-relaxed text-zinc-600 dark:text-zinc-400">
             {currentTrack === 'studio'
               ? (lang === 'en'
-                  ? 'All 26 parameters will form your official Turnkey Master Blueprint. Our Senior Architect will code, run Pest ApiContractTest, configure Docker, deploy to VPS, and transfer 100% intellectual property.'
-                  : 'Seluruh 26 parameter ini akan menjadi acuan resmi Master WBS Sprint. Senior Architect Neriah Pro yang akan mengoding, menguji Pest ApiContractTest, menyusun Docker, deploy live ke VPS, dan serah terima hak cipta 100%.')
+                ? 'All 26 parameters will form your official Turnkey Master Blueprint. Our Senior Architect will code, run Pest ApiContractTest, configure Docker, deploy to VPS, and transfer 100% intellectual property.'
+                : 'Seluruh 26 parameter ini akan menjadi acuan resmi Master WBS Sprint. Senior Architect Neriah Pro yang akan mengoding, menguji Pest ApiContractTest, menyusun Docker, deploy live ke VPS, dan serah terima hak cipta 100%.')
               : (lang === 'en'
-                  ? 'All 26 parameters will generate an instant Fortune 500 architecture bundle: PRD document, PostgreSQL Strict ULID schema, Docker configs, and AI rules for your in-house engineering team.'
-                  : 'Seluruh 26 parameter ini akan menghasilkan bundel arsitektur siap unduh: Dokumen PRD Fortune 500, skema DDL PostgreSQL Strict ULID, konfigurasi Docker, dan aturan AI coding (.cursorrules & AGENTS.md) untuk tim koding Anda.')}
+                ? 'All 26 parameters will generate an instant Fortune 500 architecture bundle: PRD document, PostgreSQL Strict ULID schema, Docker configs, and AI rules for your in-house engineering team.'
+                : 'Seluruh 26 parameter ini akan menghasilkan bundel arsitektur siap unduh: Dokumen PRD Fortune 500, skema DDL PostgreSQL Strict ULID, konfigurasi Docker, dan aturan AI coding (.cursorrules & AGENTS.md) untuk tim koding Anda.')}
           </p>
 
           {currentTrack === 'studio' && (
@@ -4112,7 +4084,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <span className="font-black text-emerald-600 dark:text-emerald-400">{completeness.score}% ({completeness.status})</span>
           </div>
           <div className="w-full bg-zinc-200 dark:bg-zinc-800 h-2 rounded-none overflow-hidden">
-            <div 
+            <div
               className="bg-emerald-500 h-full transition-all duration-300"
               style={{ width: `${completeness.score}%` }}
             ></div>
@@ -4140,7 +4112,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           SECTION 1: QUICK IDEA STUDIO & MARKITDOWN DROPZONE (TOP ACCELERATOR)
           ========================================================================= */}
       <section id="section-ide-studio" className="scroll-mt-24 mb-8 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-none transition-all">
-        
+
         {/* Studio Accordion Header */}
         <button
           type="button"
@@ -4160,7 +4132,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </h3>
             </div>
           </div>
-          
+
           <span className="text-xs font-mono font-bold text-zinc-500 flex items-center gap-1.5 shrink-0">
             {isStudioOpen ? t.studioToggleOpen : t.studioToggleClosed}
             {isStudioOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -4244,11 +4216,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 <button
                   type="button"
                   onClick={() => setSelectedAiModel('auto')}
-                  className={`p-2.5 text-left border rounded-none transition flex flex-col justify-between cursor-pointer ${
-                    selectedAiModel === 'auto'
-                      ? 'bg-emerald-500/15 border-emerald-500 text-zinc-900 dark:text-zinc-100 font-bold shadow-xs'
-                      : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600'
-                  }`}
+                  className={`p-2.5 text-left border rounded-none transition flex flex-col justify-between cursor-pointer ${selectedAiModel === 'auto'
+                    ? 'bg-emerald-500/15 border-emerald-500 text-zinc-900 dark:text-zinc-100 font-bold shadow-xs'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600'
+                    }`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-1 mb-1">
@@ -4263,11 +4234,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight">
                       {configuredAiList.length > 0
                         ? (lang === 'en'
-                            ? `Cascades automatically through ${configuredAiList.map(m => m.name).join(' -> ')} if token runs out.`
-                            : `Mengalir otomatis ke ${configuredAiList.map(m => m.name).join(' -> ')} jika salah satu limit habis.`)
+                          ? `Cascades automatically through ${configuredAiList.map(m => m.name).join(' -> ')} if token runs out.`
+                          : `Mengalir otomatis ke ${configuredAiList.map(m => m.name).join(' -> ')} jika salah satu limit habis.`)
                         : (lang === 'en'
-                            ? 'Deterministic Architecture Engine active (Configure AI keys in Admin Panel).'
-                            : 'Deterministic Architecture Engine aktif (Input API Key di Admin Panel untuk mengaktifkan AI).')
+                          ? 'Deterministic Architecture Engine active (Configure AI keys in Admin Panel).'
+                          : 'Deterministic Architecture Engine aktif (Input API Key di Admin Panel untuk mengaktifkan AI).')
                       }
                     </p>
                   </div>
@@ -4292,13 +4263,12 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       onClick={() => {
                         if (hasKey) setSelectedAiModel(key);
                       }}
-                      className={`p-2.5 text-left border rounded-none transition flex flex-col justify-between ${
-                        !hasKey
-                          ? 'opacity-40 bg-zinc-100 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed select-none'
-                          : isSelected
+                      className={`p-2.5 text-left border rounded-none transition flex flex-col justify-between ${!hasKey
+                        ? 'opacity-40 bg-zinc-100 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed select-none'
+                        : isSelected
                           ? 'bg-emerald-500/15 border-emerald-500 text-zinc-900 dark:text-zinc-100 font-bold shadow-xs cursor-pointer'
                           : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600 cursor-pointer'
-                      }`}
+                        }`}
                     >
                       <div>
                         <div className="flex items-center justify-between gap-1 mb-1">
@@ -4312,27 +4282,26 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                               </span>
                             )}
                             <span
-                              className={`text-[9px] font-mono font-bold px-1.5 py-0.2 border ${
-                                !hasKey
-                                  ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-300 dark:border-zinc-700'
-                                  : isHealthy
+                              className={`text-[9px] font-mono font-bold px-1.5 py-0.2 border ${!hasKey
+                                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-300 dark:border-zinc-700'
+                                : isHealthy
                                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                                   : isWarning
-                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                                  : isExhausted
-                                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
-                                  : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'
-                              }`}
+                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                                    : isExhausted
+                                      ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                                      : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'
+                                }`}
                             >
                               {!hasKey
                                 ? (lang === 'en' ? '⚪ NO API KEY' : '⚪ BELUM ADA KEY')
                                 : isHealthy
-                                ? '🟢 SEHAT'
-                                : isWarning
-                                ? '🟡 MENIPIS'
-                                : isExhausted
-                                ? '🔴 HABIS'
-                                : '⚪ READY'}
+                                  ? '🟢 SEHAT'
+                                  : isWarning
+                                    ? '🟡 MENIPIS'
+                                    : isExhausted
+                                      ? '🔴 HABIS'
+                                      : '⚪ READY'}
                             </span>
                           </div>
                         </div>
@@ -4566,11 +4535,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   type="button"
                   onClick={() => handleApplySuggestion(sug)}
                   disabled={isApplied}
-                  className={`p-3 text-left border rounded-none transition flex flex-col justify-between ${
-                    isApplied
-                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 opacity-80 cursor-default'
-                      : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200'
-                  }`}
+                  className={`p-3 text-left border rounded-none transition flex flex-col justify-between ${isApplied
+                    ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 opacity-80 cursor-default'
+                    : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200'
+                    }`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-1 mb-1">
@@ -4656,8 +4624,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           const canOneClickFix = !!(doctorReport?.one_click_auto_fix?.has_fixes || doctorReport?.one_click_auto_fix?.available || livePreFlightHints.addPrims.length > 0 || livePreFlightHints.recommendedStack);
           const doctorSummaryText = doctorReport
             ? (typeof doctorReport.summary_banner === 'object'
-                ? (doctorReport.summary_banner?.[lang] || doctorReport.summary_banner?.id || '')
-                : doctorReport.summary_banner)
+              ? (doctorReport.summary_banner?.[lang] || doctorReport.summary_banner?.id || '')
+              : doctorReport.summary_banner)
             : '';
 
           return (
@@ -4691,22 +4659,20 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   <button
                     type="button"
                     onClick={() => setMatrixMode('express')}
-                    className={`px-3 py-1.5 rounded-xs border font-mono text-[10px] font-black uppercase transition-colors cursor-pointer ${
-                      matrixMode === 'express'
-                        ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
-                        : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xs border font-mono text-[10px] font-black uppercase transition-colors cursor-pointer ${matrixMode === 'express'
+                      ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
+                      : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+                      }`}
                   >
                     {lang === 'en' ? '⚡ Guided Auto Mode' : '⚡ Mode Ringkas AI'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setMatrixMode('workbench')}
-                    className={`px-3 py-1.5 rounded-xs border font-mono text-[10px] font-black uppercase transition-colors cursor-pointer ${
-                      matrixMode === 'workbench'
-                        ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
-                        : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xs border font-mono text-[10px] font-black uppercase transition-colors cursor-pointer ${matrixMode === 'workbench'
+                      ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
+                      : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+                      }`}
                   >
                     {lang === 'en' ? '🛠️ Architect Workbench (6 Tabs)' : '🛠️ Workbench Arsitek (6 Tab)'}
                   </button>
@@ -4810,18 +4776,16 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </div>
 
               {/* Pre-Flight Blueprint Doctor Instant Readiness Strip */}
-              <div className={`p-3 rounded-xs border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
-                hasDoctorIssues
-                  ? 'bg-amber-50 border-amber-400 text-amber-950 dark:bg-amber-950/50 dark:border-amber-700 dark:text-amber-100'
-                  : 'bg-emerald-50/90 border-emerald-400 text-emerald-950 dark:bg-emerald-950/40 dark:border-emerald-700 dark:text-emerald-100'
-              }`}>
+              <div className={`p-3 rounded-xs border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${hasDoctorIssues
+                ? 'bg-amber-50 border-amber-400 text-amber-950 dark:bg-amber-950/50 dark:border-amber-700 dark:text-amber-100'
+                : 'bg-emerald-50/90 border-emerald-400 text-emerald-950 dark:bg-emerald-950/40 dark:border-emerald-700 dark:text-emerald-100'
+                }`}>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] font-black uppercase">
-                    <span className={`px-1.5 py-0.5 rounded-xs ${
-                      hasDoctorIssues
-                        ? 'bg-amber-900 text-white dark:bg-amber-400 dark:text-zinc-950'
-                        : 'bg-emerald-700 text-white dark:bg-emerald-400 dark:text-zinc-950'
-                    }`}>
+                    <span className={`px-1.5 py-0.5 rounded-xs ${hasDoctorIssues
+                      ? 'bg-amber-900 text-white dark:bg-amber-400 dark:text-zinc-950'
+                      : 'bg-emerald-700 text-white dark:bg-emerald-400 dark:text-zinc-950'
+                      }`}>
                       {hasDoctorIssues ? '🩺 PERLU PENYELARASAN MODUL' : '🩺 BLUEPRINT DOCTOR: READY'}
                     </span>
                     <span className="tabular-nums">
@@ -4834,8 +4798,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     {doctorReport
                       ? doctorSummaryText
                       : (livePreFlightHints.hints[0]?.title || (lang === 'en'
-                          ? 'Thermal/A4 print contracts, immutable *_snapshot columns, staged CSV importer & 4-lane Redis queues are automatically compiled.'
-                          : 'Kontrak cetak Thermal/A4, kolom *_snapshot anti-rusak historis, Staged CSV Importer & 4 jalur Queue otomatis dikompilasi.'))}
+                        ? 'Thermal/A4 print contracts, immutable *_snapshot columns, staged CSV importer & 4-lane Redis queues are automatically compiled.'
+                        : 'Kontrak cetak Thermal/A4, kolom *_snapshot anti-rusak historis, Staged CSV Importer & 4 jalur Queue otomatis dikompilasi.'))}
                   </div>
                 </div>
 
@@ -5236,11 +5200,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                             return next;
                                           });
                                         }}
-                                        className={`p-2.5 text-left border rounded-none transition cursor-pointer flex flex-col justify-between ${
-                                          isPubPicked
-                                            ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950/90 dark:text-white dark:border-emerald-400'
-                                            : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-800'
-                                        }`}
+                                        className={`p-2.5 text-left border rounded-none transition cursor-pointer flex flex-col justify-between ${isPubPicked
+                                          ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950/90 dark:text-white dark:border-emerald-400'
+                                          : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-800'
+                                          }`}
                                       >
                                         <div>
                                           <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase">
@@ -5365,11 +5328,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                             setActiveWorkbenchTab(wbTab.id);
                             if (wbTab.id === 'brownfield') setShowBrownfieldLab(true);
                           }}
-                          className={`px-3 py-2 rounded-xs border font-mono text-[11px] font-black transition-colors cursor-pointer ${
-                            isTabActive
-                              ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
-                              : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-800'
-                          }`}
+                          className={`px-3 py-2 rounded-xs border font-mono text-[11px] font-black transition-colors cursor-pointer ${isTabActive
+                            ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
+                            : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-800'
+                            }`}
                         >
                           {wbTab.label}
                         </button>
@@ -5393,11 +5355,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                               key={sec.code}
                               type="button"
                               onClick={() => selectMatrixSector(sec.code)}
-                              className={`text-left p-3 rounded-sm border transition-colors cursor-pointer ${
-                                isSelected
-                                  ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-emerald-950/70 dark:text-zinc-50 dark:border-emerald-500'
-                                  : 'bg-zinc-50 hover:bg-zinc-100/90 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-600'
-                              }`}
+                              className={`text-left p-3 rounded-sm border transition-colors cursor-pointer ${isSelected
+                                ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-emerald-950/70 dark:text-zinc-50 dark:border-emerald-500'
+                                : 'bg-zinc-50 hover:bg-zinc-100/90 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-600'
+                                }`}
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <span className="text-xs font-bold leading-snug">{title}</span>
@@ -5524,17 +5485,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                               key={prim.code}
                               type="button"
                               onClick={() => toggleMatrixPrimitive(prim.code)}
-                              className={`text-left p-2.5 rounded-sm border transition-colors flex items-start gap-2.5 cursor-pointer ${
-                                isChecked
-                                  ? 'bg-emerald-50/90 border-emerald-500 text-zinc-950 dark:bg-emerald-950/40 dark:border-emerald-600 dark:text-zinc-100'
-                                  : 'bg-white hover:bg-zinc-50 border-zinc-200 hover:border-zinc-400 text-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300'
-                              }`}
+                              className={`text-left p-2.5 rounded-sm border transition-colors flex items-start gap-2.5 cursor-pointer ${isChecked
+                                ? 'bg-emerald-50/90 border-emerald-500 text-zinc-950 dark:bg-emerald-950/40 dark:border-emerald-600 dark:text-zinc-100'
+                                : 'bg-white hover:bg-zinc-50 border-zinc-200 hover:border-zinc-400 text-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300'
+                                }`}
                             >
-                              <span className={`mt-0.5 w-4 h-4 rounded-xs border flex items-center justify-center shrink-0 font-mono text-[10px] font-black ${
-                                isChecked
-                                  ? 'bg-emerald-600 border-emerald-600 text-white dark:bg-emerald-500 dark:border-emerald-500 dark:text-zinc-950'
-                                  : 'bg-white dark:bg-zinc-900 border-zinc-400 dark:border-zinc-600 text-transparent'
-                              }`}>
+                              <span className={`mt-0.5 w-4 h-4 rounded-xs border flex items-center justify-center shrink-0 font-mono text-[10px] font-black ${isChecked
+                                ? 'bg-emerald-600 border-emerald-600 text-white dark:bg-emerald-500 dark:border-emerald-500 dark:text-zinc-950'
+                                : 'bg-white dark:bg-zinc-900 border-zinc-400 dark:border-zinc-600 text-transparent'
+                                }`}>
                                 ✓
                               </span>
                               <div className="min-w-0 flex-1">
@@ -5588,11 +5547,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                 key={tab.id}
                                 type="button"
                                 onClick={() => setActiveTopologyFilter(tab.id)}
-                                className={`px-2.5 py-1 rounded-xs border font-mono text-[10px] font-black transition-colors cursor-pointer ${
-                                  active
-                                    ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100'
-                                    : 'bg-zinc-100 hover:bg-zinc-200/80 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
-                                }`}
+                                className={`px-2.5 py-1 rounded-xs border font-mono text-[10px] font-black transition-colors cursor-pointer ${active
+                                  ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100'
+                                  : 'bg-zinc-100 hover:bg-zinc-200/80 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+                                  }`}
                               >
                                 {tab.label}
                               </button>
@@ -5645,11 +5603,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                       <button
                                         type="button"
                                         onClick={() => selectStackPreset(presetCode)}
-                                        className={`px-2 py-1 rounded-xs font-mono text-[10px] font-black border cursor-pointer ${
-                                          isRowSelected
-                                            ? 'bg-emerald-600 text-white border-emerald-700 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
-                                            : 'bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100'
-                                        }`}
+                                        className={`px-2 py-1 rounded-xs font-mono text-[10px] font-black border cursor-pointer ${isRowSelected
+                                          ? 'bg-emerald-600 text-white border-emerald-700 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
+                                          : 'bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100'
+                                          }`}
                                       >
                                         {isRowSelected ? 'AKTIF' : (lang === 'en' ? 'Select' : 'Gunakan')}
                                       </button>
@@ -5674,53 +5631,47 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                               key={preset.code}
                               type="button"
                               onClick={() => selectStackPreset(preset.code)}
-                              className={`text-left p-3 rounded-sm border transition-colors flex flex-col justify-between cursor-pointer ${
-                                isSelected
-                                  ? 'bg-zinc-900 text-white border-zinc-900 ring-1 ring-emerald-500 dark:bg-emerald-950/75 dark:text-zinc-50 dark:border-emerald-500'
-                                  : 'bg-white hover:bg-zinc-50 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-600'
-                              }`}
+                              className={`text-left p-3 rounded-sm border transition-colors flex flex-col justify-between cursor-pointer ${isSelected
+                                ? 'bg-zinc-900 text-white border-zinc-900 ring-1 ring-emerald-500 dark:bg-emerald-950/75 dark:text-zinc-50 dark:border-emerald-500'
+                                : 'bg-white hover:bg-zinc-50 text-zinc-900 border-zinc-200 hover:border-zinc-400 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-600'
+                                }`}
                             >
                               <div>
                                 <div className="flex items-center justify-between gap-1.5 mb-1.5">
                                   <div className="flex items-center gap-1.5">
-                                    <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[10px] font-black ${
-                                      isSelected
-                                        ? 'bg-emerald-500 text-zinc-950'
-                                        : 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
-                                    }`}>
+                                    <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[10px] font-black ${isSelected
+                                      ? 'bg-emerald-500 text-zinc-950'
+                                      : 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
+                                      }`}>
                                       {preset.short_code}
                                     </span>
-                                    <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[9px] font-black border ${
-                                      isSelected
-                                        ? 'bg-black text-white border-zinc-700'
-                                        : 'bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700'
-                                    }`}>
+                                    <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[9px] font-black border ${isSelected
+                                      ? 'bg-black text-white border-zinc-700'
+                                      : 'bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700'
+                                      }`}>
                                       {preset.topology}
                                     </span>
                                   </div>
                                   {preset.is_default && (
-                                    <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[8px] font-black uppercase ${
-                                      isSelected
-                                        ? 'bg-white text-zinc-950'
-                                        : 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
-                                    }`}>
+                                    <span className={`px-1.5 py-0.5 rounded-xs font-mono text-[8px] font-black uppercase ${isSelected
+                                      ? 'bg-white text-zinc-950'
+                                      : 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
+                                      }`}>
                                       DEFAULT
                                     </span>
                                   )}
                                 </div>
                                 <div className="text-xs font-black leading-snug">{pName}</div>
-                                <p className={`mt-1 text-[11px] leading-relaxed line-clamp-2 ${
-                                  isSelected ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'
-                                }`}>
+                                <p className={`mt-1 text-[11px] leading-relaxed line-clamp-2 ${isSelected ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'
+                                  }`}>
                                   {pBest}
                                 </p>
                               </div>
                               {contractMech && (
-                                <div className={`mt-2.5 pt-2 border-t font-mono text-[10px] truncate ${
-                                  isSelected
-                                    ? 'border-zinc-700 text-emerald-300'
-                                    : 'border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'
-                                }`}>
+                                <div className={`mt-2.5 pt-2 border-t font-mono text-[10px] truncate ${isSelected
+                                  ? 'border-zinc-700 text-emerald-300'
+                                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'
+                                  }`}>
                                   Contract: {contractMech}
                                 </div>
                               )}
@@ -5820,11 +5771,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                 {brownfieldReport.recommended_sector?.name} ({brownfieldReport.recommended_sector?.primary_ui_archetype})
                               </span>
                             </div>
-                            <span className={`px-2 py-0.5 rounded-xs font-mono text-[10px] font-black border tabular-nums ${
-                              brownfieldReport.readiness_score >= 85
-                                ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
-                                : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700'
-                            }`}>
+                            <span className={`px-2 py-0.5 rounded-xs font-mono text-[10px] font-black border tabular-nums ${brownfieldReport.readiness_score >= 85
+                              ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
+                              : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700'
+                              }`}>
                               SCORE: {brownfieldReport.readiness_score}/100 &bull; {brownfieldReport.grade}
                             </span>
                           </div>
@@ -6022,17 +5972,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                         key={menu.code}
                                         type="button"
                                         onClick={() => toggleEnterpriseMenuCode(menu.code)}
-                                        className={`w-full text-left p-2 rounded-xs border flex items-start gap-2 transition-colors cursor-pointer ${
-                                          isMenuChecked
-                                            ? 'bg-emerald-50/70 border-emerald-400 text-zinc-950 dark:bg-emerald-950/35 dark:border-emerald-700 dark:text-zinc-100'
-                                            : 'bg-zinc-50 border-zinc-200 text-zinc-600 dark:bg-zinc-950 dark:border-zinc-800 dark:text-zinc-400'
-                                        }`}
+                                        className={`w-full text-left p-2 rounded-xs border flex items-start gap-2 transition-colors cursor-pointer ${isMenuChecked
+                                          ? 'bg-emerald-50/70 border-emerald-400 text-zinc-950 dark:bg-emerald-950/35 dark:border-emerald-700 dark:text-zinc-100'
+                                          : 'bg-zinc-50 border-zinc-200 text-zinc-600 dark:bg-zinc-950 dark:border-zinc-800 dark:text-zinc-400'
+                                          }`}
                                       >
-                                        <span className={`mt-0.5 w-3.5 h-3.5 rounded-none border flex items-center justify-center shrink-0 font-mono text-[9px] font-black ${
-                                          isMenuChecked
-                                            ? 'bg-emerald-600 border-emerald-700 text-white dark:bg-emerald-400 dark:border-emerald-400 dark:text-zinc-950'
-                                            : 'bg-white dark:bg-zinc-900 border-zinc-400 dark:border-zinc-700 text-transparent'
-                                        }`}>
+                                        <span className={`mt-0.5 w-3.5 h-3.5 rounded-none border flex items-center justify-center shrink-0 font-mono text-[9px] font-black ${isMenuChecked
+                                          ? 'bg-emerald-600 border-emerald-700 text-white dark:bg-emerald-400 dark:border-emerald-400 dark:text-zinc-950'
+                                          : 'bg-white dark:bg-zinc-900 border-zinc-400 dark:border-zinc-700 text-transparent'
+                                          }`}>
                                           ✓
                                         </span>
                                         <div className="min-w-0 flex-1">
@@ -6040,11 +5988,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                                             <span className="font-mono text-[9px] font-black text-emerald-900 dark:text-emerald-300">
                                               {menu.code}
                                             </span>
-                                            <span className={`px-1 py-0.2 font-mono text-[8px] font-black border ${
-                                              isMenuChecked
-                                                ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-400 dark:text-zinc-950 dark:border-emerald-400'
-                                                : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-700'
-                                            }`}>
+                                            <span className={`px-1 py-0.2 font-mono text-[8px] font-black border ${isMenuChecked
+                                              ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-400 dark:text-zinc-950 dark:border-emerald-400'
+                                              : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-700'
+                                              }`}>
                                               {isMenuChecked ? 'v1.0 MVP' : 'v1.1 BACKLOG'}
                                             </span>
                                           </div>
@@ -6460,11 +6407,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     key={idx}
                     type="button"
                     onClick={() => updateField('targetPlatform', plat)}
-                    className={`px-3 py-1.5 text-xs font-mono border transition ${
-                      formData.targetPlatform === plat
-                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
-                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
-                    }`}
+                    className={`px-3 py-1.5 text-xs font-mono border transition ${formData.targetPlatform === plat
+                      ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                      : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
+                      }`}
                   >
                     {plat}
                   </button>
@@ -6636,11 +6582,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     key={idx}
                     type="button"
                     onClick={() => updateField('migrasiData', mig)}
-                    className={`px-3 py-1.5 text-xs font-mono border transition ${
-                      formData.migrasiData === mig
-                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
-                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
-                    }`}
+                    className={`px-3 py-1.5 text-xs font-mono border transition ${formData.migrasiData === mig
+                      ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                      : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
+                      }`}
                   >
                     {mig}
                   </button>
@@ -6804,11 +6749,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     key={idx}
                     type="button"
                     onClick={() => updateField('preferensiHosting', host)}
-                    className={`px-3 py-1.5 text-xs font-mono border transition ${
-                      formData.preferensiHosting === host
-                        ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
-                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
-                    }`}
+                    className={`px-3 py-1.5 text-xs font-mono border transition ${formData.preferensiHosting === host
+                      ? 'bg-emerald-500 text-black border-emerald-500 font-bold'
+                      : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
+                      }`}
                   >
                     {host}
                   </button>
@@ -6854,11 +6798,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                         updateField('durasiHari', d);
                         updateField('targetWaktu', `${d} ${lang === 'en' ? 'Working Days (Phase 1 MVP)' : 'Hari Kerja (Fase 1 MVP)'}`);
                       }}
-                      className={`flex-1 py-1.5 text-xs font-mono font-bold border transition cursor-pointer ${
-                        formData.durasiHari === d
-                          ? 'bg-emerald-500 text-black border-emerald-500'
-                          : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
-                      }`}
+                      className={`flex-1 py-1.5 text-xs font-mono font-bold border transition cursor-pointer ${formData.durasiHari === d
+                        ? 'bg-emerald-500 text-black border-emerald-500'
+                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'
+                        }`}
                     >
                       {d} {lang === 'en' ? 'Days' : 'Hari'}
                     </button>
@@ -7006,11 +6949,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     ? (lang === 'en' ? '21. Software Factory OS License Allocation *' : '21. Alokasi Lisensi Digital Retail (Software Factory OS) *')
                     : (lang === 'en' ? '21. Dedicated Studio Investment Budget *' : '21. Alokasi Kisaran Budget Investasi Turnkey Studio *')}
                 </label>
-                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${
-                  currentTrack === 'retail'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
-                    : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
-                }`}>
+                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${currentTrack === 'retail'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
+                  : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
+                  }`}>
                   {currentTrack === 'retail'
                     ? (lang === 'en' ? 'Self-Service (In-House Team)' : 'Jalur Mandiri (Programmer Sendiri)')
                     : (lang === 'en' ? 'Dedicated Studio (Turnkey)' : 'Jalur Turnkey (Dedicated Studio)')}
@@ -7021,7 +6963,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   ? (lang === 'en' ? 'Choose your Software Factory OS architectural blueprint bundle for internal coding (zero development agency markup).' : 'Pilih paket lisensi bundel cetak biru arsitektur Fortune 500 untuk dikoding tim internal Anda.')
                   : (lang === 'en' ? 'Turnkey end-to-end development by Neriah Pro Senior Architect with bug warranty & managed sprint.' : 'Estimasi alokasi investasi pengerjaan penuh turnkey oleh tim Neriah Pro bergaransi SLA.')}
               </p>
-              
+
               {/* Presets */}
               <div className="flex flex-wrap gap-2 mb-2">
                 {(currentTrack === 'retail' ? [
@@ -7039,11 +6981,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     key={idx}
                     type="button"
                     onClick={() => updateField('kisaranBudget', tierOpt)}
-                    className={`px-3 py-1.5 text-xs font-mono border transition ${
-                      formData.kisaranBudget === tierOpt
-                        ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
-                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
-                    }`}
+                    className={`px-3 py-1.5 text-xs font-mono border transition ${formData.kisaranBudget === tierOpt
+                      ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
+                      : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
+                      }`}
                   >
                     {tierOpt}
                   </button>
@@ -7066,11 +7007,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     ? (lang === 'en' ? '22. Deliverable Model & Technical Support *' : '22. Model Serah Terima Berkas & Dukungan Teknis Lisensi Retail *')
                     : (lang === 'en' ? '22. Post-Launch Bug Warranty, SLA & Git Repo Handover *' : '22. Skema Garansi Pascameluncur, SLA & Serah Terima Repo Git *')}
                 </label>
-                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${
-                  currentTrack === 'retail'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
-                    : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
-                }`}>
+                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${currentTrack === 'retail'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
+                  : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
+                  }`}>
                   {currentTrack === 'retail'
                     ? (lang === 'en' ? 'Self-Service Assets Handover' : 'Serah Terima Artefak Siap Pakai')
                     : (lang === 'en' ? 'Studio Bug Warranty & SLA' : 'Garansi Pengerjaan Kode Studio')}
@@ -7095,11 +7035,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     key={idx}
                     type="button"
                     onClick={() => updateField('garansiSla', sla)}
-                    className={`px-3 py-1.5 text-xs font-mono border transition ${
-                      formData.garansiSla === sla
-                        ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
-                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
-                    }`}
+                    className={`px-3 py-1.5 text-xs font-mono border transition ${formData.garansiSla === sla
+                      ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
+                      : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
+                      }`}
                   >
                     {sla}
                   </button>
@@ -7121,11 +7060,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     ? (lang === 'en' ? '23. Retail License Transaction & Access Scheme *' : '23. Skema Transaksi & Akses Lisensi Retail *')
                     : (lang === 'en' ? '23. Payment Milestone Terms & Schedule *' : '23. Integrasi Skema Termin Pembayaran & Jadwal Milestone *')}
                 </label>
-                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${
-                  currentTrack === 'retail'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
-                    : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
-                }`}>
+                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${currentTrack === 'retail'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
+                  : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
+                  }`}>
                   {currentTrack === 'retail'
                     ? (lang === 'en' ? 'Instant Access (No 50/50 DP)' : 'Akses Instan (Tanpa Termin DP 50/50)')
                     : (lang === 'en' ? 'Milestone DP 50% Contract' : 'Kontrak Termin Bertahap DP 50%')}
@@ -7150,11 +7088,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     key={idx}
                     type="button"
                     onClick={() => updateField('terminPembayaran', termin)}
-                    className={`px-3 py-1.5 text-xs font-mono border transition ${
-                      formData.terminPembayaran === termin
-                        ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
-                        : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
-                    }`}
+                    className={`px-3 py-1.5 text-xs font-mono border transition ${formData.terminPembayaran === termin
+                      ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
+                      : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
+                      }`}
                   >
                     {termin}
                   </button>
@@ -7169,7 +7106,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </div>
 
             {errorMessage && (
-              <div 
+              <div
                 id="blueprint-validation-banner"
                 className="p-5 bg-rose-50 dark:bg-rose-950/40 border-2 border-rose-500 text-zinc-900 dark:text-zinc-100 rounded-none shadow-sm transition-all duration-300"
               >
@@ -7182,8 +7119,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400">
                         {invalidFields.length > 0
                           ? (lang === 'en'
-                              ? `Action Required: ${invalidFields.length} Mandatory Parameter(s) Incomplete`
-                              : `Perhatian: ${invalidFields.length} Parameter Wajib Belum Diisi`)
+                            ? `Action Required: ${invalidFields.length} Mandatory Parameter(s) Incomplete`
+                            : `Perhatian: ${invalidFields.length} Parameter Wajib Belum Diisi`)
                           : (lang === 'en' ? 'Submission Incomplete' : 'Validasi Belum Lengkap')}
                       </h4>
                       {invalidFields.length > 0 && (
@@ -7306,8 +7243,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   />
                 </div>
                 <span className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 block font-mono">
-                  {lang === 'en' 
-                    ? 'Type digits without leading 0 (E.164 international standard).' 
+                  {lang === 'en'
+                    ? 'Type digits without leading 0 (E.164 international standard).'
                     : 'Ketik digit tanpa angka 0 di depan (E.164 compliant).'}
                 </span>
               </div>
@@ -7320,11 +7257,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               id="section-submit"
               type="submit"
               disabled={isSubmitting}
-              className={`w-full font-black uppercase tracking-wider py-4 px-6 rounded-none text-center flex items-center justify-center gap-2 transition disabled:opacity-50 text-sm font-mono cursor-pointer shadow-lg ${
-                currentTrack === 'studio'
-                  ? 'bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black border-2 border-emerald-500'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-black'
-              }`}
+              className={`w-full font-black uppercase tracking-wider py-4 px-6 rounded-none text-center flex items-center justify-center gap-2 transition disabled:opacity-50 text-sm font-mono cursor-pointer shadow-lg ${currentTrack === 'studio'
+                ? 'bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black border-2 border-emerald-500'
+                : 'bg-emerald-600 hover:bg-emerald-500 text-black'
+                }`}
             >
               {isSubmitting ? (
                 <>

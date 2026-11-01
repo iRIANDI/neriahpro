@@ -1090,18 +1090,18 @@ export default function ArchitecturePricingIsland({
               const formatIdrPlain = (num) => new Intl.NumberFormat('id-ID').format(Math.round(num));
 
               const sectorComplexityMap = [
-                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 8, states: 6, locks: 3, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 12, states: 9, locks: 4, integrations: 3, recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
-                { tables: 11, states: 8, locks: 5, integrations: 3, recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
-                { tables: 11, states: 8, locks: 3, integrations: 2, recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
-                { tables: 10, states: 9, locks: 3, integrations: 3, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 8, states: 6, locks: 2, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 8, states: 6, locks: 2, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 9, states: 7, locks: 2, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
-                { tables: 10, states: 8, locks: 3, integrations: 3, recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
-                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 8, states: 6, locks: 3, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 12, states: 9, locks: 4, integrations: 3, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
+                { tables: 11, states: 8, locks: 5, integrations: 3, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
+                { tables: 11, states: 8, locks: 3, integrations: 2, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
+                { tables: 10, states: 9, locks: 3, integrations: 3, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 8, states: 6, locks: 2, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 8, states: 6, locks: 2, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 9, states: 7, locks: 2, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
+                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
+                { tables: 10, states: 8, locks: 3, integrations: 3, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
+                { tables: 10, states: 8, locks: 3, integrations: 2, recommendedTierKey: 'impact_nonprofit_grant', recommendedRetail: 'grant', retailLabel: isEn ? 'CSR Non-Profit Grant (Rp 0 Subsidized)' : 'Hibah CSR Yayasan / NGO (Rp 0 Terverifikasi)' },
               ];
 
               const wizardSector = SECTORAL_ARCHETYPES_SHOWCASE[selectedSectorIdx] || SECTORAL_ARCHETYPES_SHOWCASE[0];
@@ -1133,6 +1133,81 @@ export default function ArchitecturePricingIsland({
               const milestone50 = terminScheme === '50_50' ? 0 : Math.round(estimatedRabIdr * 0.5);
               const finalBast = estimatedRabIdr - dp30 - milestone50;
               const blueprintQueryTail = `&sector=${encodeURIComponent(wizardSector.code)}&stack=${encodeURIComponent(wizardStackCode)}&ui_variant=${encodeURIComponent(activeVisualUi.code)}&shell=${encodeURIComponent(activeVisualUi.shell)}&persona=${encodeURIComponent(wizardPersonaMode)}&output_locale=${encodeURIComponent(wizardOutputLocale)}`;
+
+              const retailPackageCatalog = {
+                retail_pro: {
+                  key: 'retail_pro',
+                  shortName: 'Pro Agentic Blueprint',
+                  priceStr: `Rp ${pricingSettings.retail_pro_price || '399.000'}`,
+                  priceSub: isEn ? 'One-time official SaaS license' : 'Sekali bayar lisensi SaaS resmi',
+                  badge: isEn ? 'POPULAR CHOICE' : 'PILIHAN UTAMA',
+                  desc: isEn
+                    ? 'Full PRD 26 Parameters, PostgreSQL 16 Strict ULID DDL, 7-Phase AI Prompts, WBS 5-Sprint Gantt & Canary IP Seal.'
+                    : 'PRD 26 Parameter utuh, DDL PostgreSQL 16 Strict ULID, 7-Fase Prompt AI, WBS 5-Sprint Gantt & Segel Canary IP.',
+                },
+                retail_ultimate: {
+                  key: 'retail_ultimate',
+                  shortName: 'Ultimate Architecture OS',
+                  priceStr: `Rp ${pricingSettings.retail_ultimate_price || '1.490.000'}`,
+                  priceSub: isEn ? 'Includes 1-on-1 Architect Call' : 'Termasuk Telepon Arsitek 1-on-1',
+                  badge: isEn ? 'ENTERPRISE ARCHITECT' : 'ARSITEKTUR LENGKAP',
+                  desc: isEn
+                    ? 'Everything in Pro + Live 1-on-1 Technical Scoping Call (60 min) with Principal Architect, Living CVE Autopatch & AgentShield Vault.'
+                    : 'Semua fitur Pro + Sesi Telepon Teknis 1-on-1 (60 menit) bersama Principal Architect, Living CVE Autopatch & Brankas AgentShield.',
+                },
+                single_app_umkm_pass: {
+                  key: 'single_app_umkm_pass',
+                  shortName: 'Single-App UMKM Pass',
+                  priceStr: `Rp ${pricingSettings.single_app_pass_price || '299.000'}`,
+                  priceSub: isEn ? 'Pay-per-project (1 app lifetime)' : 'Sekali bayar 1 aplikasi selamanya',
+                  badge: isEn ? 'PAY-PER-APP' : '1 APLIKASI PENUH',
+                  desc: isEn
+                    ? 'Pay once for 1 complete app launch: locked 36 Visual UI Sektor, production DB schema, 7-Phase Prompts, & Zero-Slop Certified.'
+                    : 'Bayar sekali untuk peluncuran 1 aplikasi penuh: terkunci 36 UI Visual Sektoral, skema DB produksi, 7-Fase Prompt & Bersertifikat Zero-Slop.',
+                },
+                retail_lite: {
+                  key: 'retail_lite',
+                  shortName: 'Starter AI Architect',
+                  priceStr: `Rp ${pricingSettings.retail_lite_price || '99.000'}`,
+                  priceSub: isEn ? 'Fast concept sanity check' : 'Uji konsep arsitektur cepat',
+                  badge: isEn ? 'BUDGET STARTER' : 'STARTER EKONOMIS',
+                  desc: isEn
+                    ? 'Essential architecture starter: Phase 1–3 Discovery & Concept Audit, core ULID tables, and initial blueprint scaffolding.'
+                    : 'Paket dasar arsitektur: Audit Discovery & Konsep Fase 1–3, tabel ULID utama, dan scaffolding cetak biru perdana.',
+                },
+                agency_whitelabel_partner: {
+                  key: 'agency_whitelabel_partner',
+                  shortName: 'Agency Partner White-Label',
+                  priceStr: `Rp ${pricingSettings.agency_whitelabel_price || '990.000'}`,
+                  priceSub: isEn ? '5 seats studio pack' : 'Paket studio agensi 5 kursi',
+                  badge: isEn ? 'AGENCY B2B2C' : 'MULTI-KLIEN AGENSI',
+                  desc: isEn
+                    ? 'Multi-seat agency studio: White-Label PDF proposal, custom branding, client viewer role, & multi-client project isolation.'
+                    : 'Studio agensi multi-seat: Proposal PDF White-Label merek sendiri, peran peninjau klien, & isolasi proyek multi-klien.',
+                },
+                impact_nonprofit_grant: {
+                  key: 'impact_nonprofit_grant',
+                  shortName: isEn ? 'Impact & Non-Profit Grant' : 'Hibah Yayasan, NGO & Rumah Ibadah',
+                  priceStr: 'Rp 0',
+                  priceSub: isEn ? '100% CSR Subsidized (Real Value Rp 1.490.000)' : 'Subsidi Penuh CSR 100% (Nilai Riil Rp 1.490.000)',
+                  badge: isEn ? 'CSR GRANT' : 'HIBAH SOSIAL CSR',
+                  desc: isEn
+                    ? 'Real value Rp 1.490.000 fully subsidized to Rp 0 for registered NGOs, religious houses, social schools & academic research (Requires legal doc verification).'
+                    : 'Nilai riil Rp 1.490.000 disubsidi 100% menjadi Rp 0 khusus Yayasan, Rumah Ibadah, Sekolah Sosial & Riset Kampus (Wajib verifikasi akta/SK Kemenkumham).',
+                },
+                retail_spark: {
+                  key: 'retail_spark',
+                  shortName: 'Spark Guest Idea Audit',
+                  priceStr: 'Rp 0',
+                  priceSub: isEn ? 'Free Guest Mode (2x/month)' : 'Mode Tamu Gratis (Kuota 2x/bulan)',
+                  badge: isEn ? 'GUEST EXPLORER' : 'KUOTA TAMU',
+                  desc: isEn
+                    ? 'Free guest quota: Idea exploration and Phase 1–2 readiness audit. Code exports & full blueprints require paid SaaS license.'
+                    : 'Kuota tamu gratis: Eksplorasi ide dan audit kelayakan Fase 1–2. Ekspor kode dan cetak biru penuh memerlukan lisensi berbayar.',
+                },
+              };
+
+              const activeRetailPkg = retailPackageCatalog[wizardRetailTier] || retailPackageCatalog['retail_pro'];
 
               const retailWizardPackages = [
                 { key: 'retail_pro', label: `Pro Agentic Blueprint — Rp ${pricingSettings.retail_pro_price || '399.000'} (${isEn ? 'Recommended' : 'Rekomendasi Utama'})` },
@@ -1273,7 +1348,7 @@ export default function ArchitecturePricingIsland({
                                   const nextComp = sectorComplexityMap[nextIdx] || sectorComplexityMap[0];
                                   setSelectedSectorIdx(nextIdx);
                                   setSelectedUiVariantIdx(0);
-                                  setWizardRetailTier(nextComp.recommendedRetail === 'ultimate' ? 'retail_ultimate' : 'retail_pro');
+                                  setWizardRetailTier(nextComp.recommendedTierKey || (nextComp.recommendedRetail === 'ultimate' ? 'retail_ultimate' : 'retail_pro'));
                                 }}
                                 className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-xs font-bold rounded-none focus:border-emerald-500 outline-none"
                               >
@@ -1428,18 +1503,89 @@ export default function ArchitecturePricingIsland({
                                   {isEn ? 'SaaS Entitlement Gate' : 'Gerbang Resmi Paket SaaS'}
                                 </span>
                               </div>
-                              <div>
-                                <div className="text-[11px] font-mono text-zinc-700 dark:text-zinc-300 uppercase font-bold">
-                                  {isEn ? 'Recommended SaaS Tier for Sector:' : 'Rekomendasi Paket SaaS Sesuai Kompleksitas Sektor:'}
+                              {/* 1. KOTAK STATUS PAKET TERPILIH (SEKETIKA BEREAKSI TERHADAP DROPDOWN LANGKAH F) */}
+                              <div className="p-3 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-emerald-500 space-y-1 rounded-none shadow-xs">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300 tracking-wider">
+                                    {isEn ? 'CURRENTLY SELECTED PACKAGE:' : 'PAKET LISENSI YANG ANDA PILIH:'}
+                                  </span>
+                                  <span className="px-1.5 py-0.5 bg-emerald-600 text-white font-mono text-[9px] font-black uppercase">
+                                    {activeRetailPkg.badge}
+                                  </span>
                                 </div>
-                                <div className="text-lg sm:text-xl font-black font-mono text-zinc-950 dark:text-white mt-0.5 tabular-nums">
-                                  {comp.retailLabel}
+                                <div className="flex items-baseline justify-between gap-2">
+                                  <div className="text-lg sm:text-xl font-black font-mono text-zinc-950 dark:text-white tabular-nums">
+                                    {activeRetailPkg.shortName}
+                                  </div>
+                                  <div className="text-lg sm:text-xl font-black font-mono text-emerald-800 dark:text-emerald-400 tabular-nums">
+                                    {activeRetailPkg.priceStr}
+                                  </div>
                                 </div>
-                                <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1 leading-relaxed">
-                                  {isEn
-                                    ? `Locks Visual UI ${activeVisualUi.code} (${activeVisualUi.title}), Jurisdiction ${activeJurisdiction.code.toUpperCase()}, 20 Paripurna Pillars (SEO/GEO llms.txt, Offline Outbox PWA, UU PDP Blind Index) & Canary IP Seal.`
-                                    : `Mengunci Frontend Visual ${activeVisualUi.code} (${activeVisualUi.title}), Regulasi ${activeJurisdiction.code.toUpperCase()}, 20 Pilar Paripurna (SEO/GEO llms.txt, Offline PWA, Blind Index UU PDP) & Canary IP Seal.`}
+                                <div className="text-[11px] font-mono text-zinc-600 dark:text-zinc-400 pt-0.5">
+                                  {activeRetailPkg.priceSub}
+                                </div>
+                                <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                                  {activeRetailPkg.desc}
                                 </p>
+                              </div>
+
+                              {/* 2. REKOMENDASI PINTAR KOMPLEKSITAS SEKTOR */}
+                              <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-[11px] font-mono">
+                                <div className="text-zinc-800 dark:text-zinc-200">
+                                  {wizardRetailTier === comp.recommendedTierKey ? (
+                                    <span className="text-emerald-900 dark:text-emerald-300 font-bold">
+                                      ✅ {isEn ? 'Matches complexity recommendation for ' : 'Pilihan Anda sesuai rekomendasi '} <strong>{wizardSector.title}</strong>
+                                    </span>
+                                  ) : (
+                                    <span>
+                                      💡 {isEn ? 'Sector recommendation: ' : 'Rekomendasi sektor: '}
+                                      <strong className="text-zinc-950 dark:text-white">{comp.retailLabel}</strong>
+                                    </span>
+                                  )}
+                                </div>
+                                {wizardRetailTier !== comp.recommendedTierKey && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setWizardRetailTier(comp.recommendedTierKey)}
+                                    className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-950 text-[10px] font-black uppercase tracking-wider rounded-none cursor-pointer shrink-0 transition"
+                                  >
+                                    {isEn ? 'Apply Recommended Tier' : 'Terapkan Rekomendasi'}
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* 3. RINGKASAN SPESIFIKASI LIVE REAKTIF (SEKETIKA BEREAKSI SAAT MEMILIH MENU SEBELAH KIRI) */}
+                              <div className="p-2.5 bg-zinc-100/90 dark:bg-zinc-900/90 border border-zinc-300 dark:border-zinc-800 font-mono text-[10px] space-y-1.5">
+                                <div className="text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
+                                  <span>{isEn ? 'LIVE SPECIFICATION SYNC (FROM LEFT PANEL):' : 'SPESIFIKASI AKTIF (DARI PILIHAN SEBELAH KIRI):'}</span>
+                                  <span className="text-emerald-800 dark:text-emerald-400 font-black">● TERKUNCI REAL-TIME</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-1.5 text-zinc-900 dark:text-zinc-100">
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Sector' : 'Sektor Bisnis (Langkah B)'}</span>
+                                    <strong className="truncate block font-black text-emerald-950 dark:text-emerald-300">{wizardSector.code.slice(7, 9)} &bull; {wizardSector.title}</strong>
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Architecture Topology' : 'Topologi Stack (Langkah C)'}</span>
+                                    <strong className="truncate block font-black">{activeStack.short}</strong>
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Frontend Visual UI' : 'Frontend Visual UI (Langkah D)'}</span>
+                                    <strong className="truncate block font-black text-cyan-900 dark:text-cyan-300">{activeVisualUi.code}</strong>
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Database & Scale' : 'Skema Database & Pilar'}</span>
+                                    <strong className="truncate block font-black">{comp.tables + 5} Tabel ULID &bull; 20 Pilar</strong>
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Studio Interface' : 'Mode Antarmuka (Langkah E1)'}</span>
+                                    <strong className="truncate block font-black">{wizardPersonaMode === 'ARCHITECT_PRO' ? 'Mode Arsitek 3-Pane' : 'Mode Bisnis / Awam'}</strong>
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Jurisdiction & Locale' : 'Regulasi & Bahasa (Langkah E2)'}</span>
+                                    <strong className="truncate block font-black">{activeJurisdiction.flag} {activeJurisdiction.code.toUpperCase()} ({activeJurisdiction.dir.toUpperCase()})</strong>
+                                  </div>
+                                </div>
                               </div>
 
                               <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 space-y-2.5">
@@ -1461,7 +1607,25 @@ export default function ArchitecturePricingIsland({
                                   </select>
                                 </div>
 
-                                {wizardRetailTier === 'retail_spark' ? (
+                                {wizardRetailTier === 'impact_nonprofit_grant' ? (
+                                  <div className="p-2.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] leading-snug space-y-1">
+                                    <div className="font-black uppercase flex items-center gap-1 text-amber-950 dark:text-amber-200">
+                                      <span>🕊️ {isEn ? 'CSR NON-PROFIT GRANT NOTICE (RP 0):' : 'KETENTUAN HIBAH SOSIAL CSR (RP 0):'}</span>
+                                    </div>
+                                    <p>
+                                      {isEn
+                                        ? 'Real value Rp 1.490.000 fully subsidized to Rp 0 for registered non-profit foundations, places of worship, social schools, and academic research (ISAK 35 / PSAK 109). Legal document verification (Akta / SK Kemenkumham) is required post-submission.'
+                                        : 'Nilai riil Rp 1.490.000 disubsidi 100% menjadi Rp 0 KHUSUS untuk Yayasan Sosial, Rumah Ibadah, Sekolah Non-Profit, dan Riset Akademik (ISAK 35 / PSAK 109). Wajib verifikasi Akta / SK Kemenkumham pasca pengajuan.'}
+                                    </p>
+                                    {selectedSectorIdx !== 11 && selectedSectorIdx !== 6 && (
+                                      <div className="font-bold text-[9px] text-amber-950 dark:text-amber-200 pt-1 border-t border-amber-300 dark:border-amber-800">
+                                        {isEn
+                                          ? `⚠️ Note: You selected commercial sector ${wizardSector.title}. Commercial entities should select Single-App Pass, Pro Agentic, or Ultimate OS.`
+                                          : `⚠️ Catatan: Anda memilih sektor bisnis komersial (${wizardSector.title}). Usaha komersial wajib menggunakan Single-App Pass, Pro Agentic, atau Ultimate OS.`}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : wizardRetailTier === 'retail_spark' ? (
                                   <div className="p-2 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] leading-snug">
                                     {isEn
                                       ? 'Guest Spark Quota (2x/month): Unlocks Phase 1–2 Idea Audit only. Phases 3–7, Full SQL/Docker ZIP & Live MCP require upgrading to a paid SaaS license.'
@@ -1485,8 +1649,8 @@ export default function ArchitecturePricingIsland({
                                     {wizardRetailTier === 'retail_spark'
                                       ? (isEn ? '🧪 Claim Free Spark Audit Quota (Phase 1–2) →' : '🧪 Klaim Kuota Audit Gratis Spark (Fase 1–2) →')
                                       : wizardRetailTier === 'impact_nonprofit_grant'
-                                        ? (isEn ? '🕊️ Apply CSR Grant Verification & Lock Spec →' : '🕊️ Ajukan Verifikasi Hibah CSR & Kunci Spek →')
-                                        : (isEn ? '💳 Activate SaaS License & Lock Blueprint →' : '💳 Aktifkan Lisensi SaaS & Kunci Blueprint →')}
+                                        ? (isEn ? '🕊️ Apply CSR Grant Verification (Rp 0) →' : '🕊️ Ajukan Verifikasi Hibah CSR (Rp 0) →')
+                                        : (isEn ? `💳 Activate ${activeRetailPkg.shortName} (${activeRetailPkg.priceStr}) →` : `💳 Aktifkan Lisensi ${activeRetailPkg.shortName} (${activeRetailPkg.priceStr}) →`)}
                                   </span>
                                 </button>
 
@@ -2047,20 +2211,35 @@ export default function ArchitecturePricingIsland({
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between gap-2 font-mono text-[10px] font-black uppercase">
                           <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700">
-                            SUBSIDI CSR 70%–100%
+                            {isEn ? '100% CSR SUBSIDY' : 'SUBSIDI CSR 100%'}
                           </span>
-                          <span className="text-emerald-900 dark:text-emerald-300">ISAK 35 / ASC 958</span>
+                          <span className="text-emerald-900 dark:text-emerald-300 font-bold">ISAK 35 / ASC 958</span>
                         </div>
                         <div className="font-black text-sm text-zinc-950 dark:text-white">
                           {isEn ? 'Impact, NGO & Non-Profit Grant' : 'Hibah Yayasan, NGO, Rumah Ibadah & Riset'}
                         </div>
-                        <div className="text-xl font-black font-mono text-zinc-950 dark:text-white tabular-nums">
-                          Rp {pricingSettings.impact_grant_price || '0'} <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400">{isEn ? '(Verified Entity)' : '(Terverifikasi CSR)'}</span>
+                        <div className="space-y-1">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xs line-through text-zinc-500 font-mono font-bold">
+                              Rp 1.490.000
+                            </span>
+                            <span className="text-xl font-black font-mono text-emerald-900 dark:text-emerald-300 tabular-nums">
+                              Rp {pricingSettings.impact_grant_price || '0'}
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-400">
+                              {isEn ? '(Subsidized to Rp 0)' : '(Disubsidi Rp 0 Penuh)'}
+                            </span>
+                          </div>
+                          <div className="p-1.5 bg-emerald-100/60 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-[10px] font-mono text-emerald-950 dark:text-emerald-200 font-bold">
+                            {isEn
+                              ? '📋 Legal Document Required: Akta Notaris / SK Kemenkumham / NGO Decree'
+                              : '📋 Syarat Wajib: Verifikasi Akta Notaris / SK Kemenkumham Lembaga Sosial'}
+                          </div>
                         </div>
                         <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
                           {isEn
-                            ? 'Full Restricted vs Unrestricted Fund Accounting blueprint, donor SHA-256 verification portal, and audit-ready statements for registered charities, churches/mosques, schools, & academic research.'
-                            : 'Blueprint lengkap Buku Besar Pemisah Dana Terikat vs Operasional (ISAK 35), portal transparansi donatur SHA-256, dan audit dana hibah untuk yayasan sosial, rumah ibadah, sekolah, & riset kampus.'}
+                            ? 'Special CSR allocation from Neriah Pro for non-commercial social institutions, mosques/churches, orphanages, and campus research: Full Restricted vs Unrestricted Fund Accounting blueprint (ISAK 35/PSAK 109), donor SHA-256 transparency ledger, and statutory reporting.'
+                            : 'Alokasi khusus program CSR Neriah Pro untuk lembaga sosial non-komersial, rumah ibadah, panti asuhan, dan riset kampus: Blueprint Buku Besar Dana Terikat vs Bebas (ISAK 35/PSAK 109), portal transparansi donatur SHA-256, dan pelaporan akuntansi nirlaba.'}
                         </p>
                       </div>
                       <button
@@ -2068,7 +2247,7 @@ export default function ArchitecturePricingIsland({
                         onClick={() => openBookingModal('impact_nonprofit_grant', 'CSR-IMPACT-100')}
                         className="mt-4 w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-black uppercase tracking-wider rounded-none transition cursor-pointer"
                       >
-                        {isEn ? 'Apply CSR Grant Access →' : 'Ajukan Hibah CSR Non-Profit →'}
+                        {isEn ? 'Apply CSR Grant Access (Rp 0) →' : 'Ajukan Hibah CSR Non-Profit (Rp 0) →'}
                       </button>
                     </div>
 

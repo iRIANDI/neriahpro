@@ -83,16 +83,16 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
         window.showToast({
           type: 'warning',
           title: isEn ? 'CONSENT REQUIRED' : 'PERSETUJUAN DIBUTUHKAN',
-          message: isEn 
+          message: isEn
             ? 'Please agree to the confidentiality and privacy protocol before proceeding.'
             : 'Harap setujui komitmen kerahasiaan dan privasi data sebelum melanjutkan.'
         });
       }
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const response = await fetch(submitUrl || '/api/onboarding', {
         method: 'POST',
@@ -102,14 +102,14 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
         },
         body: JSON.stringify(formData)
       });
-      
+
       if (response.ok) {
         setIsSuccess(true);
         if (window.showToast) {
           window.showToast({
             type: 'success',
             title: isEn ? 'DATA RECEIVED' : 'DATA TERKIRIM',
-            message: isEn 
+            message: isEn
               ? 'Your onboarding brief has been securely encrypted and stored.'
               : 'Informasi onboarding Anda telah berhasil disimpan.'
           });
@@ -120,7 +120,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
           window.showToast({
             type: 'error',
             title: isEn ? 'SUBMISSION FAILED' : 'PENGIRIMAN GAGAL',
-            message: isEn 
+            message: isEn
               ? 'Failed to send data. Please retry or contact via WhatsApp.'
               : 'Gagal mengirim data. Silakan coba lagi atau hubungi via WhatsApp.'
           });
@@ -132,7 +132,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
         window.showToast({
           type: 'error',
           title: isEn ? 'NETWORK ERROR' : 'KENDALA JARINGAN',
-          message: isEn 
+          message: isEn
             ? 'Network disruption detected while connecting to server.'
             : 'Terjadi kendala jaringan saat menghubungi server.'
         });
@@ -156,7 +156,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
             {isEn ? 'Project Vision & Brief Successfully Received.' : 'Ide & Kebutuhan Berhasil Diterima.'}
           </h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed mb-8 font-sans">
-            {isEn 
+            {isEn
               ? 'Your brief has been secured with enterprise encryption and distributed database architecture. Neriah Pro engineering team will formulate the initial architecture draft within 1 business day.'
               : 'Data Anda telah diamankan dengan enkripsi enterprise dan arsitektur database terdistribusi. Tim teknis Neriah Pro akan menyusun draf proposal arsitektur awal dalam 1x24 jam kerja.'}
           </p>
@@ -182,7 +182,7 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
   return (
     <section className="py-20 px-4 sm:px-6 max-w-4xl mx-auto font-sans">
       <div className="bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 p-6 sm:p-10 rounded-none shadow-none text-zinc-900 dark:text-zinc-100 transition-colors">
-        
+
         {/* Header Bar */}
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-8">
           <div>
@@ -206,13 +206,12 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
         {/* Sharp Step Indicators */}
         <div className="grid grid-cols-4 gap-2 mb-10">
           {steps.map((step, idx) => (
-            <div 
-              key={step.id} 
-              className={`h-2 rounded-none transition-all duration-300 ${
-                idx <= currentStep 
-                  ? 'bg-emerald-500' 
-                  : 'bg-zinc-200 dark:bg-zinc-800'
-              }`} 
+            <div
+              key={step.id}
+              className={`h-2 rounded-none transition-all duration-300 ${idx <= currentStep
+                ? 'bg-emerald-500'
+                : 'bg-zinc-200 dark:bg-zinc-800'
+                }`}
             />
           ))}
         </div>
@@ -233,28 +232,28 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
                   <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
                     {isEn ? 'Full Name of PIC *' : 'Nama Lengkap PIC *'}
                   </label>
-                  <input 
-                    type="text" 
-                    name="name" 
-                    value={formData.name} 
-                    onChange={handleChange} 
-                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none" 
-                    placeholder={isEn ? "e.g. Alexander Wijaya" : "Contoh: Alexander Wijaya"} 
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none"
+                    placeholder={isEn ? "e.g. Alexander Wijaya" : "Contoh: Alexander Wijaya"}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
                     {isEn ? 'Work Email Address *' : 'Alamat Email Kerja *'}
                   </label>
-                  <input 
-                    type="email" 
-                    name="email" 
-                    value={formData.email} 
-                    onChange={handleChange} 
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     inputMode="email"
                     autoComplete="email"
-                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none" 
-                    placeholder="alexander@company.com" 
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none"
+                    placeholder="alexander@company.com"
                   />
                 </div>
                 <div>
@@ -292,13 +291,13 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
                   <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
                     {isEn ? 'Company Name / Brand (Optional)' : 'Nama Badan Usaha / Brand (Opsional)'}
                   </label>
-                  <input 
-                    type="text" 
-                    name="company_name" 
-                    value={formData.company_name} 
-                    onChange={handleChange} 
-                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none" 
-                    placeholder={isEn ? "e.g. Apex Global Solutions Inc." : "PT. Inovasi Solusi Bersama"} 
+                  <input
+                    type="text"
+                    name="company_name"
+                    value={formData.company_name}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none"
+                    placeholder={isEn ? "e.g. Apex Global Solutions Inc." : "PT. Inovasi Solusi Bersama"}
                   />
                 </div>
               </div>
@@ -310,13 +309,13 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
                   <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
                     {isEn ? 'Describe the Problem or Software Idea You Want to Build *' : 'Uraikan Masalah atau Ide Aplikasi yang Ingin Dibuat *'}
                   </label>
-                  <textarea 
-                    name="vision" 
-                    value={visionText} 
-                    onChange={handleChange} 
-                    rows="6" 
-                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none resize-none leading-relaxed" 
-                    placeholder={isEn ? "Describe your requirements: e.g. We need a multi-branch logistics platform with real-time fleet tracking, automated invoicing, and role-based permissions..." : "Jelaskan kebutuhan Anda: Misal kami membutuhkan platform logistik multi-cabang dengan tracking armada real-time, invoice otomatis, dan hak akses bertingkat..."} 
+                  <textarea
+                    name="vision"
+                    value={visionText}
+                    onChange={handleChange}
+                    rows="6"
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none resize-none leading-relaxed"
+                    placeholder={isEn ? "Describe your requirements: e.g. We need a multi-branch logistics platform with real-time fleet tracking, automated invoicing, and role-based permissions..." : "Jelaskan kebutuhan Anda: Misal kami membutuhkan platform logistik multi-cabang dengan tracking armada real-time, invoice otomatis, dan hak akses bertingkat..."}
                   />
                   <p className="text-xs font-mono text-zinc-500 mt-2">
                     &bull; {isEn ? 'Note: Never include passwords or confidential API credentials.' : 'Catatan: Jangan sertakan kata sandi atau data kredensial rahasia.'}
@@ -342,15 +341,14 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
                     { id: 'Rp 50 - 150 Juta', desc: 'Enterprise Monolith Skala Penuh' },
                     { id: '> Rp 150 Juta', desc: 'Custom Distributed / High Throughput' }
                   ]).map(range => (
-                    <button 
-                      key={range.id} 
+                    <button
+                      key={range.id}
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, budget_range: range.id }))}
-                      className={`p-4 border text-left rounded-none font-mono transition-all ${
-                        formData.budget_range === range.id 
-                          ? 'border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 text-zinc-900 dark:text-white' 
-                          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300'
-                      }`}
+                      className={`p-4 border text-left rounded-none font-mono transition-all ${formData.budget_range === range.id
+                        ? 'border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 text-zinc-900 dark:text-white'
+                        : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300'
+                        }`}
                     >
                       <div className="text-sm font-bold">{range.id}</div>
                       <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{range.desc}</div>
@@ -382,21 +380,21 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
                     <span>{isEn ? 'CONFIDENTIALITY COMMITMENT & DATA PRIVACY' : 'KOMITMEN KERAHASIAAN & DATA PRIVACY'}</span>
                   </div>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6 font-sans">
-                    {isEn 
+                    {isEn
                       ? 'All concepts, business process outlines, and architectural details you share are protected by strict non-disclosure standards. Neriah Pro never shares or sells client data to third parties.'
                       : 'Seluruh ide, deskripsi proses bisnis, dan rincian arsitektur yang Anda bagikan dilindungi dengan standar kerahasiaan ketat. Neriah Pro tidak akan pernah membagikan atau menjual data Anda kepada pihak ketiga.'}
                   </p>
-                  
+
                   <label className="flex items-start gap-3 cursor-pointer select-none">
-                    <input 
-                      type="checkbox" 
-                      name="privacy_consent_agreed" 
-                      checked={formData.privacy_consent_agreed} 
-                      onChange={handleChange} 
-                      className="w-4 h-4 mt-0.5 accent-emerald-500 rounded-none cursor-pointer" 
+                    <input
+                      type="checkbox"
+                      name="privacy_consent_agreed"
+                      checked={formData.privacy_consent_agreed}
+                      onChange={handleChange}
+                      className="w-4 h-4 mt-0.5 accent-emerald-500 rounded-none cursor-pointer"
                     />
                     <span className="text-xs font-sans text-zinc-700 dark:text-zinc-300">
-                      {isEn 
+                      {isEn
                         ? 'I authorize the processing of this project brief and technical specs for Neriah Pro architecture blueprint generation.'
                         : 'Saya menyetujui pemrosesan data ide dan spesifikasi teknis ini untuk keperluan penyusunan blueprint Neriah Pro.'}
                     </span>
@@ -409,22 +407,21 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
 
         {/* Footer Navigation */}
         <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center font-mono text-xs uppercase font-bold">
-          <button 
+          <button
             type="button"
-            onClick={prevStep} 
+            onClick={prevStep}
             disabled={currentStep === 0}
-            className={`px-4 py-2.5 rounded-none border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 flex items-center gap-2 transition ${
-              currentStep === 0 
-                ? 'opacity-20 cursor-not-allowed' 
-                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
-            }`}
+            className={`px-4 py-2.5 rounded-none border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 flex items-center gap-2 transition ${currentStep === 0
+              ? 'opacity-20 cursor-not-allowed'
+              : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
+              }`}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>{isEn ? 'Back' : 'Kembali'}</span>
           </button>
-          
+
           {currentStep < steps.length - 1 ? (
-            <button 
+            <button
               type="button"
               onClick={nextStep}
               className="bg-zinc-900 hover:bg-black dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-black px-6 py-2.5 rounded-none transition flex items-center gap-2"
@@ -433,15 +430,14 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <button 
+            <button
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting || !formData.privacy_consent_agreed}
-              className={`px-6 py-2.5 rounded-none transition flex items-center gap-2 ${
-                isSubmitting || !formData.privacy_consent_agreed
-                  ? 'bg-zinc-300 dark:bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-black font-black'
-              }`}
+              className={`px-6 py-2.5 rounded-none transition flex items-center gap-2 ${isSubmitting || !formData.privacy_consent_agreed
+                ? 'bg-zinc-300 dark:bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                : 'bg-emerald-600 hover:bg-emerald-500 text-black font-black'
+                }`}
             >
               <span>{isSubmitting ? (isEn ? 'Securing...' : 'Mengamankan...') : (isEn ? 'Submit Brief' : 'Kirim Kebutuhan')}</span>
               <ArrowRight className="w-3.5 h-3.5" />

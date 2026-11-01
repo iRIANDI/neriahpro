@@ -121,6 +121,10 @@ class BlueprintController extends Controller
                     'primarySector' => $existingBp->user_metadata['primary_sector'] ?? ($existingBp->prd_content['composable_matrix']['primary_sector'] ?? ''),
                     'selectedPrimitives' => $existingBp->user_metadata['selected_primitives'] ?? ($existingBp->prd_content['composable_matrix']['injected_primitives'] ?? []),
                     'selectedMenus' => $existingBp->user_metadata['selected_menus'] ?? [],
+                    'selectedUiVariant' => $existingBp->user_metadata['selected_ui_variant'] ?? null,
+                    'navigationShell' => $existingBp->user_metadata['navigation_shell'] ?? null,
+                    'outputLocale' => $existingBp->user_metadata['output_locale'] ?? 'id',
+                    'personaMode' => $existingBp->user_metadata['persona_mode'] ?? 'BUSINESS_WIZARD',
                     'stackPreset' => \App\Support\PosStackPresetCatalog::normalizePresetCode(
                         $existingBp->user_metadata['stack_preset']
                         ?? ($existingBp->prd_content['universal_blueprint_schema']['project_metadata']['stack_preset'] ?? null)
@@ -517,6 +521,18 @@ class BlueprintController extends Controller
                     }
                     if (! empty($blueprint['stackPreset'])) {
                         $meta['stack_preset'] = \App\Support\PosStackPresetCatalog::normalizePresetCode($blueprint['stackPreset']);
+                    }
+                    if (! empty($blueprint['selectedUiVariant'])) {
+                        $meta['selected_ui_variant'] = (string) $blueprint['selectedUiVariant'];
+                    }
+                    if (! empty($blueprint['navigationShell'])) {
+                        $meta['navigation_shell'] = (string) $blueprint['navigationShell'];
+                    }
+                    if (! empty($blueprint['outputLocale'])) {
+                        $meta['output_locale'] = \App\Support\PosInclusiveCommercialCatalog::normalizeOutputLocale((string) $blueprint['outputLocale']);
+                    }
+                    if (! empty($blueprint['personaMode'])) {
+                        $meta['persona_mode'] = \App\Support\PosInclusiveCommercialCatalog::normalizePersonaMode((string) $blueprint['personaMode']);
                     }
                     $meta['last_autosaved_at'] = now()->toIso8601String();
 
@@ -1126,40 +1142,88 @@ class BlueprintController extends Controller
     }
 
     /**
-     * Download PRD as Markdown
+     * Download PRD as Markdown (with Invisible Zero-Width Canary Watermark & Viral/White-Label Seal v8.0)
      */
     public function downloadMd(string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
-        
+
+        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $wl = is_array($posProject?->white_label_branding_json) ? $posProject->white_label_branding_json : null;
+        $actorSeed = (string) (auth()->id() ?: ($blueprint->email ?: request()->ip()));
+        $canarySig = \App\Support\PosInclusiveCommercialCatalog::computeCanaryFingerprint($actorSeed);
+
         $md = \App\Services\PrdGeneratorService::toMarkdown($blueprint, $prd);
-        
+        $md .= \App\Support\PosInclusiveCommercialCatalog::renderViralCertifiedBadgeMarkdown($wl);
+        $md = \App\Support\PosInclusiveCommercialCatalog::injectCanaryWatermark($md, $actorSeed);
+
+        if ($posProject && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'canary_watermark_sig')) {
+            $posProject->forceFill(['canary_watermark_sig' => $canarySig])->saveQuietly();
+        }
+
+        if (class_exists(\App\Models\AuditLog::class)) {
+            \App\Models\AuditLog::record(
+                action: 'canary_watermark_embedded',
+                model: $blueprint,
+                newValues: [
+                    'slug' => $blueprint->slug,
+                    'canary_sig' => $canarySig,
+                ],
+                description: "Zero-Width Canary Watermark embedded into downloaded PRD Markdown [{$blueprint->slug}]",
+                eventCategory: 'ip_canary_security'
+            );
+        }
+
         return response($md, 200, [
             'Content-Type' => 'text/markdown; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="PRD_' . $blueprint->slug . '.md"'
+            'Content-Disposition' => 'attachment; filename="PRD_' . $blueprint->slug . '.md"',
         ]);
     }
 
     /**
-     * Get Raw PRD Markdown for AI Code Agent clipboard copy
+     * Get Raw PRD Markdown for AI Code Agent clipboard copy (with Invisible Zero-Width Canary Watermark v8.0)
      */
     public function rawMd(string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
-        
+
+        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $wl = is_array($posProject?->white_label_branding_json) ? $posProject->white_label_branding_json : null;
+        $actorSeed = (string) (auth()->id() ?: ($blueprint->email ?: request()->ip()));
+        $canarySig = \App\Support\PosInclusiveCommercialCatalog::computeCanaryFingerprint($actorSeed);
+
         $md = \App\Services\PrdGeneratorService::toMarkdown($blueprint, $prd);
-        
+        $md .= \App\Support\PosInclusiveCommercialCatalog::renderViralCertifiedBadgeMarkdown($wl);
+        $md = \App\Support\PosInclusiveCommercialCatalog::injectCanaryWatermark($md, $actorSeed);
+
+        if ($posProject && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'canary_watermark_sig')) {
+            $posProject->forceFill(['canary_watermark_sig' => $canarySig])->saveQuietly();
+        }
+
+        if (class_exists(\App\Models\AuditLog::class)) {
+            \App\Models\AuditLog::record(
+                action: 'canary_watermark_embedded',
+                model: $blueprint,
+                newValues: [
+                    'slug' => $blueprint->slug,
+                    'canary_sig' => $canarySig,
+                ],
+                description: "Zero-Width Canary Watermark embedded into raw PRD Markdown [{$blueprint->slug}]",
+                eventCategory: 'ip_canary_security'
+            );
+        }
+
         return response($md, 200, [
             'Content-Type' => 'text/plain; charset=UTF-8',
         ]);
     }
 
     /**
-     * Return O(1) cached 12-Sector + 12-Primitive + Rule Pack Composable Matrix catalog.
+     * Return O(1) cached 12-Sector + 12-Primitive + Rule Pack Composable Matrix catalog + v8.0 Inclusive Catalog.
      */
     public function matrixCatalog(): JsonResponse
     {
@@ -1168,6 +1232,12 @@ class BlueprintController extends Controller
             'schema_uri' => \App\Services\ProjectOsBlueprintCompilerService::SCHEMA_URI,
             'catalog' => \App\Services\ProjectOsBlueprintCompilerService::getCachedCatalog(),
             'satu_pintu_packages' => \App\Support\PricingRegistry::getSatuPintuCatalog(),
+            'inclusive_value_metric_packages' => \App\Support\PricingRegistry::getInclusiveValueMetricCatalog(),
+            'storyboard_wizard' => \App\Support\PosInclusiveCommercialCatalog::storyboardWizardCatalog(),
+            'sector_visual_ui_catalog' => \App\Support\PosInclusiveCommercialCatalog::allSectorVisualUiCatalog(),
+            'navigation_shell_options' => \App\Support\PosInclusiveCommercialCatalog::navigationShellOptions(),
+            'retention_and_security_matrix' => \App\Support\PosInclusiveCommercialCatalog::retentionAndSecurityMatrix(),
+            'community_primitives_marketplace' => \App\Support\PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
             'commercial_estimator_config' => \App\Support\PricingRegistry::getCommercialEstimatorConfig(),
             'commercial_bridge_features' => \App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures(),
             'guided_client_journey' => \App\Services\PosCommercialBridgeService::guidedClientJourneySteps(),
@@ -1839,8 +1909,9 @@ class BlueprintController extends Controller
             'phone' => 'required|string|max:50',
             'company' => 'nullable|string|max:255',
             'company_name' => 'nullable|string|max:255',
-            'package_tier' => 'required_without:package|nullable|string|max:255',
-            'package' => 'required_without:package_tier|nullable|string|max:255',
+            'package_tier' => 'required_without_all:package,selected_package|nullable|string|max:255',
+            'package' => 'required_without_all:package_tier,selected_package|nullable|string|max:255',
+            'selected_package' => 'required_without_all:package_tier,package|nullable|string|max:255',
             'country_code' => 'nullable|string|max:10',
             'budget_range' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:2000',
@@ -1852,7 +1923,7 @@ class BlueprintController extends Controller
             'umkm_category' => 'nullable|string|max:100',
         ]);
 
-        $packageName = $request->input('package_tier') ?: $request->input('package');
+        $packageName = $request->input('package_tier') ?: ($request->input('package') ?: $request->input('selected_package'));
         $packageMeta = \App\Support\PricingRegistry::get((string)$packageName);
         $isRetail = \App\Support\PricingRegistry::isSelfService((string)$packageName);
         $company = $request->input('company') ?: $request->input('company_name') ?: ($isRetail ? ($validated['name'] . ' (Personal License)') : ($validated['name'] . ' Project'));
@@ -2277,6 +2348,10 @@ class BlueprintController extends Controller
             'stack_preset' => 'nullable|string|max:120',
             'selected_menus' => 'nullable|array',
             'selected_menus.*' => 'string|max:40',
+            'selected_ui_variant' => 'nullable|string|max:80',
+            'navigation_shell' => 'nullable|string|max:48',
+            'output_locale' => 'nullable|string|max:16',
+            'persona_mode' => 'nullable|string|max:32',
             'app_name' => 'nullable|string|max:160',
             'locale' => 'nullable|string|in:id,en',
         ]);
@@ -2294,17 +2369,27 @@ class BlueprintController extends Controller
             'primitive_codes' => $validated['primitive_codes'] ?? [],
             'stack_preset_code' => $stackCode,
             'selected_menus' => $validated['selected_menus'] ?? null,
+            'selected_ui_variant' => $validated['selected_ui_variant'] ?? null,
+            'navigation_shell' => $validated['navigation_shell'] ?? null,
+            'output_locale' => $validated['output_locale'] ?? ($validated['locale'] ?? 'id'),
+            'persona_mode' => $validated['persona_mode'] ?? null,
         ]);
 
         $quotation = app(\App\Services\PosCommercialBridgeService::class)->calculateScopeQuotation($schema, [
             'stack_preset' => $stackCode,
+            'selected_ui_variant' => $validated['selected_ui_variant'] ?? null,
+            'navigation_shell' => $validated['navigation_shell'] ?? null,
+            'output_locale' => $validated['output_locale'] ?? ($validated['locale'] ?? 'id'),
         ]);
 
         return response()->json([
             'success' => true,
-            'guarantees_release' => $schema['guarantees_release'] ?? '7.0.0',
+            'guarantees_release' => $schema['guarantees_release'] ?? '8.0.0',
             'architectural_freeze' => $schema['architectural_freeze'] ?? [],
             'project_isolation_id' => $schema['project_metadata']['project_isolation_id'] ?? null,
+            'visual_frontend_ui_contract' => $schema['visual_frontend_ui_contract'] ?? [],
+            'jurisdiction_compliance_profile' => $schema['jurisdiction_compliance_profile'] ?? [],
+            'living_cve_security_alerts' => $schema['living_cve_security_alerts'] ?? [],
             'five_deterministic_guarantees' => $schema['five_deterministic_guarantees'] ?? [],
             'five_enterprise_glue_primitives' => $schema['five_enterprise_glue_primitives'] ?? [],
             'five_real_world_elements' => \App\Support\PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview($validated['locale'] ?? app()->getLocale()),
@@ -2470,6 +2555,9 @@ class BlueprintController extends Controller
             'stack_preset' => 'nullable|string|max:120',
             'selected_menus' => 'nullable|array',
             'selected_menus.*' => 'string|max:40',
+            'selected_ui_variant' => 'nullable|string|max:80',
+            'navigation_shell' => 'nullable|string|max:48',
+            'output_locale' => 'nullable|string|max:16',
             'termin_scheme' => 'nullable|string|in:30_50_20,50_50',
         ]);
 
@@ -2488,6 +2576,9 @@ class BlueprintController extends Controller
                 'selected_primitives' => $validated['primitive_codes'] ?? [],
                 'stack_preset' => $stackCode,
                 'selected_menus' => $validated['selected_menus'] ?? null,
+                'selected_ui_variant' => $validated['selected_ui_variant'] ?? null,
+                'navigation_shell' => $validated['navigation_shell'] ?? null,
+                'output_locale' => $validated['output_locale'] ?? 'id',
             ],
         ]);
 
@@ -2496,11 +2587,17 @@ class BlueprintController extends Controller
             'primitive_codes' => $validated['primitive_codes'] ?? [],
             'stack_preset' => $stackCode,
             'selected_menus' => $validated['selected_menus'] ?? null,
+            'selected_ui_variant' => $validated['selected_ui_variant'] ?? null,
+            'navigation_shell' => $validated['navigation_shell'] ?? null,
+            'output_locale' => $validated['output_locale'] ?? 'id',
             'persist_project' => false,
         ]);
 
         $quotation = $bridge->calculateScopeQuotation($schema, [
             'stack_preset' => $validated['stack_preset'] ?? $stackCode,
+            'selected_ui_variant' => $validated['selected_ui_variant'] ?? null,
+            'navigation_shell' => $validated['navigation_shell'] ?? null,
+            'output_locale' => $validated['output_locale'] ?? 'id',
             'termin_scheme' => $validated['termin_scheme'] ?? null,
         ]);
 
@@ -2658,6 +2755,20 @@ class BlueprintController extends Controller
             ? \App\Models\PosChangeRequest::query()->where('vision_blueprint_id', $blueprint->id)->orderBy('id', 'asc')->limit(20)->get()
             : collect();
 
+        $whiteLabel = is_array($posProject?->white_label_branding_json) ? $posProject->white_label_branding_json : [];
+        if ($request->filled('agency_name')) {
+            $whiteLabel = [
+                'enabled' => true,
+                'agency_name' => trim((string) $request->query('agency_name')),
+                'agency_email' => trim((string) $request->query('agency_email', '')),
+                'pic_name' => trim((string) $request->query('pic_name', '')),
+                'pic_title' => trim((string) $request->query('pic_title', '')),
+            ];
+            if ($posProject && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'white_label_branding_json')) {
+                $posProject->forceFill(['white_label_branding_json' => $whiteLabel])->saveQuietly();
+            }
+        }
+
         $viewData = [
             'docType' => $docType,
             'blueprint' => $blueprint,
@@ -2668,6 +2779,7 @@ class BlueprintController extends Controller
             'uat' => $uat,
             'changeRequests' => $changeRequests,
             'devInfo' => \App\Support\ContractLegalHelper::getDeveloperInfo(),
+            'whiteLabel' => $whiteLabel,
             'isPdfStream' => $request->query('download') === 'pdf',
         ];
 

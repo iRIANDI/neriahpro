@@ -54,6 +54,10 @@ class SuperAdminSeeder extends Seeder
         $manage15PillarsPerm = Permission::firstOrCreate(['name' => 'manage_15_architecture_pillars', 'guard_name' => 'web']);
         $configureHardwareWsPerm = Permission::firstOrCreate(['name' => 'configure_hardware_and_websocket_contracts', 'guard_name' => 'web']);
         $generateClientSopPerm = Permission::firstOrCreate(['name' => 'generate_client_sop_and_onboarding_pack', 'guard_name' => 'web']);
+        $manageInclusiveGrantsPerm = Permission::firstOrCreate(['name' => 'manage_inclusive_grants_and_whitelabel', 'guard_name' => 'web']);
+        $verifyCanaryWatermarksPerm = Permission::firstOrCreate(['name' => 'verify_canary_ip_watermarks', 'guard_name' => 'web']);
+        $broadcastLivingCvePerm = Permission::firstOrCreate(['name' => 'broadcast_living_cve_security_alerts', 'guard_name' => 'web']);
+        $manageCommunityMarketplacePerm = Permission::firstOrCreate(['name' => 'manage_community_primitives_marketplace', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
@@ -86,6 +90,10 @@ class SuperAdminSeeder extends Seeder
             $manage15PillarsPerm,
             $configureHardwareWsPerm,
             $generateClientSopPerm,
+            $manageInclusiveGrantsPerm,
+            $verifyCanaryWatermarksPerm,
+            $broadcastLivingCvePerm,
+            $manageCommunityMarketplacePerm,
         ]);
 
         $developerRole->givePermissionTo([
@@ -111,6 +119,8 @@ class SuperAdminSeeder extends Seeder
             $compileSymbolDagPerm,
             $configureHardwareWsPerm,
             $generateClientSopPerm,
+            $verifyCanaryWatermarksPerm,
+            $broadcastLivingCvePerm,
         ]);
 
         // Grant Due Diligence Read-Only permissions to Investor & Superadmin

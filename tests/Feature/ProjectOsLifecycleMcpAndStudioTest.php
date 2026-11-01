@@ -308,7 +308,7 @@ PHP;
             ->assertSet('driftBadges.database_ulid_strict_pgsql', '100% Pass');
 
         // Verify 30 Native AI Tools & Prompt-Injection RBAC Mutation Guard on Tool #19
-        $this->assertCount(30, GeminiToolRegistry::getDeclarations());
+        $this->assertCount(33, GeminiToolRegistry::getDeclarations());
         $engine = app(AgenticActionExecutionEngine::class);
 
         $this->actingAs($reviewer);

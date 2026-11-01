@@ -293,8 +293,8 @@ class ProjectOsV7RealWorldFreezeAndTier1LocaleTest extends TestCase
 
         // Subsystem #3: 30 Native Tools & valid JSON object map for every Gemini tool declaration (zero HTTP 400 list-to-map bug)
         $declarations = GeminiToolRegistry::getDeclarations();
-        $this->assertCount(30, $declarations);
-        $this->assertCount(30, GeminiToolRegistry::getOpenAiTools());
+        $this->assertCount(33, $declarations);
+        $this->assertCount(33, GeminiToolRegistry::getOpenAiTools());
 
         foreach ($declarations as $idx => $decl) {
             $encoded = json_encode($decl['parameters']);

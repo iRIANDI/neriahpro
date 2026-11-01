@@ -220,8 +220,8 @@ SQL;
         // Verify 30 valid Gemini & OpenAI Tool Declarations (Project OS v7.0)
         $geminiTools = GeminiToolRegistry::getDeclarations();
         $openAiTools = GeminiToolRegistry::getOpenAiTools();
-        $this->assertCount(30, $geminiTools);
-        $this->assertCount(30, $openAiTools);
+        $this->assertCount(33, $geminiTools);
+        $this->assertCount(33, $openAiTools);
 
         $engine = app(AgenticActionExecutionEngine::class);
 

@@ -14,6 +14,7 @@ use App\Services\ProjectOsBlueprintCompilerService;
 use App\Services\ScaffoldGeneratorService;
 use App\Services\TopologicalPromptChunker;
 use App\Support\PosEnterpriseGuaranteeCatalog;
+use App\Support\PosInclusiveCommercialCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
 use App\Support\PosRealWorldRuntimeCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
@@ -49,6 +50,17 @@ class BlueprintArchitectStudio extends Component
 
     // Dual-Mode Satu Pintu: 'RETAIL_SELF_DEV' vs 'MITRA_TURNKEY_PROJECT'
     public string $engagementMode = PosCommercialBridgeService::MODE_RETAIL;
+
+    // v8.0 Inclusive Dual-Persona UX + 36 Visual UI Blueprints + Tier-1 Jurisdiction + White-Label Security
+    public string $personaMode = PosInclusiveCommercialCatalog::PERSONA_ARCHITECT_PRO;
+    public int $storyboardStep = 1;
+    public string $selectedUiVariant = '';
+    public string $navigationShell = '';
+    public string $outputLocale = 'id';
+    public bool $whiteLabelEnabled = false;
+    public string $whiteLabelAgencyName = '';
+    public string $whiteLabelLegalEntity = '';
+    public string $mcpRevokeNotice = '';
 
     // 3-Pane Studio UI State
     public string $centerTab = 'schema'; // schema | states | ui_print | decisions | delta_verify | commercial_mitra | menus_glue
@@ -135,6 +147,32 @@ class BlueprintArchitectStudio extends Component
         if ($queryStack !== '') {
             $this->selectStack($queryStack);
         }
+
+        $queryPersona = (string) request()->query('persona', '');
+        if ($queryPersona !== '') {
+            $this->personaMode = PosInclusiveCommercialCatalog::normalizePersonaMode($queryPersona);
+        }
+
+        $queryUiVariant = (string) request()->query('ui_variant', '');
+        if ($queryUiVariant !== '') {
+            $this->selectedUiVariant = strtoupper(trim($queryUiVariant));
+        }
+
+        $queryShell = (string) request()->query('shell', '');
+        if ($queryShell !== '') {
+            $this->navigationShell = strtoupper(trim($queryShell));
+        }
+
+        $queryLocale = (string) request()->query('output_locale', '');
+        if ($queryLocale !== '') {
+            $this->outputLocale = PosInclusiveCommercialCatalog::normalizeOutputLocale($queryLocale);
+        }
+
+        if ($this->selectedUiVariant === '') {
+            $uiDefault = PosInclusiveCommercialCatalog::visualUiContractForSector($this->sectorCode, null, null, $this->outputLocale);
+            $this->selectedUiVariant = (string) ($uiDefault['selected_variant_code'] ?? 'UI_01A_POS_SPLIT_TERMINAL');
+            $this->navigationShell = (string) ($uiDefault['navigation_shell']['code'] ?? 'FULLSCREEN_OPERATIONAL_KIOSK');
+        }
     }
 
     protected function hydrateFromBlueprint(VisionBlueprint $blueprint): void
@@ -166,9 +204,35 @@ class BlueprintArchitectStudio extends Component
             if (is_array($posProject->bast_signoff_json)) {
                 $this->bastSignoffState = $posProject->bast_signoff_json;
             }
+            if (! empty($posProject->persona_mode)) {
+                $this->personaMode = PosInclusiveCommercialCatalog::normalizePersonaMode((string) $posProject->persona_mode);
+            }
+            if (! empty($posProject->selected_ui_variant)) {
+                $this->selectedUiVariant = (string) $posProject->selected_ui_variant;
+            }
+            if (! empty($posProject->navigation_shell)) {
+                $this->navigationShell = (string) $posProject->navigation_shell;
+            }
+            if (! empty($posProject->output_locale)) {
+                $this->outputLocale = PosInclusiveCommercialCatalog::normalizeOutputLocale((string) $posProject->output_locale);
+            }
+            if (is_array($posProject->white_label_branding_json)) {
+                $this->whiteLabelEnabled = ! empty($posProject->white_label_branding_json['enabled']);
+                $this->whiteLabelAgencyName = (string) ($posProject->white_label_branding_json['agency_name'] ?? '');
+                $this->whiteLabelLegalEntity = (string) ($posProject->white_label_branding_json['legal_entity'] ?? '');
+            }
         }
 
         $meta = is_array($blueprint->user_metadata) ? $blueprint->user_metadata : [];
+        if ($this->selectedUiVariant === '' && ! empty($meta['selected_ui_variant'])) {
+            $this->selectedUiVariant = (string) $meta['selected_ui_variant'];
+        }
+        if ($this->navigationShell === '' && ! empty($meta['navigation_shell'])) {
+            $this->navigationShell = (string) $meta['navigation_shell'];
+        }
+        if (! empty($meta['output_locale']) && $this->outputLocale === 'id') {
+            $this->outputLocale = PosInclusiveCommercialCatalog::normalizeOutputLocale((string) $meta['output_locale']);
+        }
         $tier = (string) ($meta['package_tier'] ?? $meta['retail_tier'] ?? '');
         if ($tier !== '' && \App\Support\PricingRegistry::isStudioContract($tier) && empty($posProject?->engagement_mode)) {
             $this->engagementMode = PosCommercialBridgeService::MODE_MITRA;
@@ -193,6 +257,12 @@ class BlueprintArchitectStudio extends Component
             $this->selectedMenus = array_values(array_unique(array_map('strval', $savedMenus)));
         } else {
             $this->syncDefaultEnterpriseMenusForSector($this->sectorCode);
+        }
+
+        if ($this->selectedUiVariant === '') {
+            $uiDefault = PosInclusiveCommercialCatalog::visualUiContractForSector($this->sectorCode, null, null, $this->outputLocale);
+            $this->selectedUiVariant = (string) ($uiDefault['selected_variant_code'] ?? '');
+            $this->navigationShell = (string) ($uiDefault['navigation_shell']['code'] ?? '');
         }
     }
 
@@ -266,6 +336,163 @@ class BlueprintArchitectStudio extends Component
         }
 
         $this->syncDefaultEnterpriseMenusForSector($normalized);
+
+        $uiDefault = PosInclusiveCommercialCatalog::visualUiContractForSector($normalized, null, null, $this->outputLocale);
+        $this->selectedUiVariant = (string) ($uiDefault['selected_variant_code'] ?? '');
+        $this->navigationShell = (string) ($uiDefault['navigation_shell']['code'] ?? '');
+    }
+
+    public function switchPersonaMode(string $mode): void
+    {
+        $this->personaMode = PosInclusiveCommercialCatalog::normalizePersonaMode($mode);
+        if ($this->posProjectId) {
+            $proj = PosProject::query()->find($this->posProjectId);
+            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'persona_mode')) {
+                $proj->forceFill(['persona_mode' => $this->personaMode])->saveQuietly();
+            }
+        }
+    }
+
+    public function selectUiVariant(string $variantCode, ?string $shell = null): void
+    {
+        $resolved = PosInclusiveCommercialCatalog::visualUiContractForSector(
+            $this->sectorCode,
+            $variantCode,
+            $shell,
+            $this->outputLocale
+        );
+        $this->selectedUiVariant = (string) ($resolved['selected_variant_code'] ?? $variantCode);
+        $this->navigationShell = (string) ($resolved['navigation_shell']['code'] ?? ($shell ?: 'SIDEBAR_ERP_DENSE'));
+
+        if ($this->posProjectId) {
+            $proj = PosProject::query()->find($this->posProjectId);
+            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'selected_ui_variant')) {
+                $proj->forceFill([
+                    'selected_ui_variant' => $this->selectedUiVariant,
+                    'navigation_shell' => $this->navigationShell,
+                ])->saveQuietly();
+            }
+        }
+    }
+
+    public function selectOutputLocale(string $locale): void
+    {
+        $this->outputLocale = PosInclusiveCommercialCatalog::normalizeOutputLocale($locale);
+        $jurisdiction = PosInclusiveCommercialCatalog::jurisdictionComplianceProfile($this->outputLocale);
+
+        if ($this->posProjectId) {
+            $proj = PosProject::query()->find($this->posProjectId);
+            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'output_locale')) {
+                $proj->forceFill([
+                    'output_locale' => $this->outputLocale,
+                    'jurisdiction_profile' => (string) ($jurisdiction['jurisdiction_code'] ?? 'ID_UU_PDP_PSAK'),
+                ])->saveQuietly();
+            }
+        }
+    }
+
+    public function setStoryboardStep(int $step): void
+    {
+        $this->storyboardStep = max(1, min(5, $step));
+    }
+
+    public function selectVisualUiVariant(string $variantCode, ?string $shell = null): void
+    {
+        $this->selectUiVariant($variantCode, $shell);
+    }
+
+    public function switchOutputLocale(string $locale): void
+    {
+        $this->selectOutputLocale($locale);
+    }
+
+    public function persistStudioBlueprint(): void
+    {
+        $bp = $this->blueprintId ? VisionBlueprint::query()->find($this->blueprintId) : null;
+        if (! $bp) {
+            $baseSlug = Str::slug($this->projectName ?: 'proyek-enterprise') ?: 'proyek-enterprise';
+            $user = auth()->user();
+            $bp = VisionBlueprint::query()->create([
+                'user_id' => $user?->id,
+                'nama_bisnis' => $this->projectName ?: 'Proyek Enterprise Baru',
+                'slug' => $baseSlug . '-' . strtolower(substr((string) Str::ulid(), -6)),
+                'client_name' => $user?->name ?: 'Studio Principal Architect',
+                'email' => $user?->email ?: 'studio@neriahpro.com',
+                'phone' => '+628110000000',
+                'project_status' => 'Draft',
+                'prd_content' => ['ringkasan_eksekutif' => $this->projectName],
+                'user_metadata' => [
+                    'isolation_token' => $this->workspaceIsolationId,
+                    'primary_sector' => $this->sectorCode,
+                    'selected_primitives' => $this->selectedPrimitives,
+                    'selected_menus' => $this->selectedMenus,
+                    'stack_preset' => $this->stackCode,
+                    'persona_mode' => $this->personaMode,
+                    'selected_ui_variant' => $this->selectedUiVariant ?: null,
+                    'navigation_shell' => $this->navigationShell ?: null,
+                    'output_locale' => $this->outputLocale,
+                ],
+            ]);
+            $this->blueprintId = $bp->id;
+            $this->slug = $bp->slug;
+        }
+
+        $savedProject = app(ProjectOsBlueprintCompilerService::class)->compileAndPersist($bp, [
+            'app_name' => $this->projectName,
+            'sector_code' => $this->sectorCode,
+            'primitive_codes' => $this->selectedPrimitives,
+            'selected_menus' => $this->selectedMenus,
+            'stack_preset' => $this->stackCode,
+            'persona_mode' => $this->personaMode,
+            'selected_ui_variant' => $this->selectedUiVariant ?: null,
+            'navigation_shell' => $this->navigationShell ?: null,
+            'output_locale' => $this->outputLocale,
+            'isolation_token' => $this->workspaceIsolationId,
+            'pos_project_id' => $this->posProjectId,
+        ]);
+
+        if ($savedProject->exists) {
+            $this->posProjectId = $savedProject->id;
+        }
+    }
+
+    public function saveStudioWhiteLabelBranding(): void
+    {
+        $payload = [
+            'enabled' => $this->whiteLabelEnabled,
+            'agency_name' => trim($this->whiteLabelAgencyName),
+            'legal_entity' => trim($this->whiteLabelLegalEntity),
+            'updated_at' => now()->toIso8601String(),
+        ];
+
+        if ($this->posProjectId) {
+            $proj = PosProject::query()->find($this->posProjectId);
+            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'white_label_branding_json')) {
+                $proj->forceFill(['white_label_branding_json' => $payload])->saveQuietly();
+                \App\Models\AuditLog::record(
+                    action: 'whitelabel_branding_updated',
+                    model: $proj,
+                    newValues: $payload,
+                    description: "White-Label Agency branding updated for PosProject [{$proj->id}]: " . ($payload['agency_name'] ?: 'Disabled'),
+                    eventCategory: 'whitelabel_agency'
+                );
+            }
+        }
+    }
+
+    public function revokeStudioMcpToken(): void
+    {
+        if ($this->posProjectId) {
+            $proj = PosProject::query()->find($this->posProjectId);
+            if ($proj) {
+                $newToken = $proj->revokeMcpToken(auth()->id() ? (string) auth()->id() : null);
+                $this->mcpRevokeNotice = 'Token MCP lama dicabut instan! Token baru: ' . substr($newToken, 0, 18) . '...';
+
+                return;
+            }
+        }
+
+        $this->mcpRevokeNotice = 'Token MCP simulasi berhasil dirotasi (npro_mcp_' . substr(strtolower((string) Str::ulid()), -10) . '...).';
     }
 
     public function selectStack(string $code): void
@@ -443,6 +670,15 @@ class BlueprintArchitectStudio extends Component
             'isolation_token' => $this->workspaceIsolationId ?: ('ws_' . strtolower((string) Str::ulid())),
             'stack_preset' => $this->stackCode,
             'custom_decision_rules' => $this->customDecisionRules,
+            'persona_mode' => $this->personaMode,
+            'selected_ui_variant' => $this->selectedUiVariant ?: null,
+            'navigation_shell' => $this->navigationShell ?: null,
+            'output_locale' => $this->outputLocale,
+            'white_label_branding' => [
+                'enabled' => $this->whiteLabelEnabled,
+                'agency_name' => $this->whiteLabelAgencyName,
+                'legal_entity' => $this->whiteLabelLegalEntity,
+            ],
             'persist_project' => false,
         ]);
 
@@ -549,8 +785,13 @@ class BlueprintArchitectStudio extends Component
             'uatChecklist' => $uatChecklist,
             'milestoneGantt' => $milestoneGantt,
             'guidedJourneySteps' => PosCommercialBridgeService::guidedClientJourneySteps(),
+            'storyboardWizard' => PosInclusiveCommercialCatalog::businessStoryboardWizard($this->outputLocale),
+            'cveAlerts' => $schema['living_cve_security_alerts'] ?? PosInclusiveCommercialCatalog::livingCveSecurityAlerts($this->stackCode, $this->sectorCode),
+            'communityMarketplace' => PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
+            'visualUiContract' => $schema['visual_frontend_ui_contract'] ?? [],
+            'jurisdictionProfile' => $schema['jurisdiction_compliance_profile'] ?? [],
         ])->layout('components.layouts.studio', [
-            'title' => 'Project OS Architect Studio v7.0 (15-Pillar Freeze & 5 Real-World Runtime Contracts)',
+            'title' => 'Project OS Architect Studio v7.0 / v8.0 (Dual-Persona, 36 Visual UI & 15-Pillar Freeze)',
         ]);
     }
 

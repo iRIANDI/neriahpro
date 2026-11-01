@@ -45,14 +45,14 @@
     <header class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 z-30">
         <div class="flex flex-wrap items-center gap-2">
             <a href="/blueprint?tier=retail_spark&amp;new=1" class="px-2 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[11px] font-black uppercase tracking-wider rounded-none hover:opacity-90 transition">
-                [NeriahPro OS v7.0 • 100% FREEZE]
+                [NeriahPro OS v8.0 • 100% FREEZE]
             </a>
             <div class="flex items-center gap-1.5 font-mono text-xs">
                 <input
                     type="text"
                     wire:model.live.debounce.400ms="projectName"
                     aria-label="Nama Proyek"
-                    class="px-2 py-0.5 w-44 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-black text-zinc-950 dark:text-zinc-100 rounded-xs text-xs"
+                    class="px-2 py-0.5 w-40 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-black text-zinc-950 dark:text-zinc-100 rounded-xs text-xs"
                 />
                 <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 text-[10px] font-black rounded-xs tabular-nums">
                     {{ $currentVersion }}
@@ -84,6 +84,43 @@
                     Mode Mitra Proyek (Kontrak &amp; BAST)
                 </button>
             </div>
+
+            <!-- v8.0 Adaptive Dual-Persona UX Toggle (Business Storyboard vs Architect Pro) -->
+            <div class="inline-flex p-0.5 bg-zinc-100 dark:bg-zinc-950 border border-emerald-500/70 dark:border-emerald-700 rounded-xs font-mono text-[10px]">
+                <button
+                    type="button"
+                    wire:click="switchPersonaMode('BUSINESS_WIZARD')"
+                    class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $personaMode === 'BUSINESS_WIZARD' ? 'bg-emerald-600 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black' : 'text-zinc-800 dark:text-zinc-300 font-bold' }}"
+                >
+                    🧭 Mode Bisnis / Awam
+                </button>
+                <button
+                    type="button"
+                    wire:click="switchPersonaMode('ARCHITECT_PRO')"
+                    class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $personaMode === 'ARCHITECT_PRO' ? 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black' : 'text-zinc-800 dark:text-zinc-300 font-bold' }}"
+                >
+                    ⚡ Mode Arsitek Pro
+                </button>
+            </div>
+
+            <!-- v8.0 Tier-1 Jurisdiction & RTL Output Locale Selector -->
+            <select
+                wire:change="selectOutputLocale($event.target.value)"
+                aria-label="Bahasa & Regulasi Output Blueprint"
+                class="px-2 py-1 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-[10px] font-black rounded-none"
+            >
+                @foreach([
+                    'id' => '🇮🇩 ID • UU PDP / PSAK',
+                    'en' => '🇺🇸 EN • SOC2 / ASC 958',
+                    'ar' => '🇸🇦 AR • RTL / ZATCA',
+                    'ja' => '🇯🇵 JA • APPI / JCT',
+                    'zh-CN' => '🇨🇳 ZH • PIPL / Fapiao',
+                    'de' => '🇩🇪 DE • GDPR / GoBD',
+                    'es' => '🇪🇸 ES • GDPR / CFDI',
+                ] as $locCode => $locLabel)
+                    <option value="{{ $locCode }}" @selected($outputLocale === $locCode)>{{ $locLabel }}</option>
+                @endforeach
+            </select>
         </div>
 
         <!-- Screen 3: Blueprint Doctor + Scope Hash + Mitra RAB Badge -->
@@ -332,18 +369,19 @@
         <!-- =============================================================== -->
         <!-- CENTER CANVAS (col-span-5): INTERACTIVE BLUEPRINT WORKBENCH     -->
         <!-- =============================================================== -->
-        <section class="lg:col-span-5 bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:overflow-hidden">
+        <section class="lg:col-span-5 bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:overflow-hidden" @if(($jurisdictionProfile['direction'] ?? 'ltr') === 'rtl') dir="rtl" @endif>
             <!-- Center Tabs -->
             <div class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-2.5 py-2 flex flex-wrap gap-1 font-mono text-[11px]">
                 @foreach([
                     'schema' => '1. Schema & Locks',
                     'states' => '2. State Machine',
-                    'ui_print' => '3. UI & Print',
+                    'ui_print' => '3. 36 Visual UI & Print',
                     'decisions' => '4. Decision Matrix',
                     'delta_verify' => '5. Delta v1.1 & Verify',
                     'commercial_mitra' => '6. Kontrak, RAB & BAST',
                     'menus_glue' => '7. L1–L4 Menu (25) & 5 Glue',
                     'runtime_sop_v7' => '8. ⚡ 5 Runtime, SOP & 15 Pilar',
+                    'inclusive_security_v8' => '9. 🛡️ CVE, White-Label & IP',
                 ] as $tabKey => $tabLabel)
                     <button
                         type="button"
@@ -357,6 +395,91 @@
 
             <!-- Scrollable Canvas Body -->
             <div class="flex-1 lg:overflow-y-auto studio-scroll p-3 space-y-3">
+
+                <!-- v8.0 ADAPTIVE DUAL-PERSONA UX: 5-STEP ZERO-JARGON BUSINESS STORYBOARD WIZARD -->
+                @if($personaMode === 'BUSINESS_WIZARD')
+                    <div class="p-3.5 bg-white dark:bg-zinc-900 border-2 border-emerald-600 dark:border-emerald-500 rounded-none space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                            <div>
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
+                                    🧭 MODE BISNIS / AWAM (ZERO-JARGON 5-STEP STORYBOARD)
+                                </span>
+                                <div class="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1">
+                                    {{ $storyboardWizard['headline'] ?? 'Rancang Sistem Bisnis Anda dalam 5 Langkah Bahasa Manusia' }}
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                wire:click="switchPersonaMode('ARCHITECT_PRO')"
+                                class="px-2 py-1 bg-zinc-950 text-white dark:bg-zinc-800 dark:text-emerald-300 font-mono text-[10px] font-black rounded-none cursor-pointer"
+                            >
+                                Beralih ke Mode Arsitek Teknis &rarr;
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-5 gap-1 font-mono text-[10px]">
+                            @foreach(($storyboardWizard['steps'] ?? []) as $sbStep)
+                                @php $stepNum = (int) ($sbStep['step'] ?? 1); @endphp
+                                <button
+                                    type="button"
+                                    wire:click="$set('storyboardStep', {{ $stepNum }})"
+                                    class="p-1.5 border text-left rounded-none cursor-pointer {{ $storyboardStep === $stepNum ? 'bg-zinc-950 text-emerald-400 border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black' : 'bg-zinc-50 text-zinc-800 border-zinc-300 dark:bg-zinc-950 dark:text-zinc-300 dark:border-zinc-800 font-bold' }}"
+                                >
+                                    0{{ $stepNum }}. {{ $sbStep['short_label'] ?? $sbStep['title'] ?? '' }}
+                                </button>
+                            @endforeach
+                        </div>
+
+                        @php
+                            $currentSb = collect($storyboardWizard['steps'] ?? [])->firstWhere('step', $storyboardStep) ?? ($storyboardWizard['steps'][0] ?? []);
+                            $availVariants = $visualUiContract['available_variants'] ?? [];
+                        @endphp
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-2">
+                            <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $currentSb['question'] ?? '' }}</div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300">{{ $currentSb['helper'] ?? '' }}</p>
+
+                            @if($storyboardStep === 1)
+                                <select wire:change="selectSector($event.target.value)" class="w-full px-2.5 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold font-mono rounded-none">
+                                    @foreach(($catalog['sectors'] ?? []) as $secItem)
+                                        <option value="{{ $secItem['code'] }}" @selected($sectorCode === $secItem['code'])>
+                                            {{ $secItem['name']['id'] ?? $secItem['code'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            @elseif($storyboardStep === 2)
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    @foreach($availVariants as $vrItem)
+                                        <button
+                                            type="button"
+                                            wire:click="selectUiVariant('{{ $vrItem['code'] }}', '{{ $vrItem['default_shell'] ?? '' }}')"
+                                            class="p-2 text-left border rounded-none cursor-pointer {{ $selectedUiVariant === $vrItem['code'] ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950 dark:text-white dark:border-emerald-400 font-black' : 'bg-white text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-bold' }}"
+                                        >
+                                            <div class="font-mono text-[9px] text-emerald-500">{{ $vrItem['badge'] ?? '' }}</div>
+                                            <div class="text-[11px] mt-0.5 leading-snug">{{ $vrItem['name']['id'] ?? $vrItem['code'] }}</div>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @elseif($storyboardStep === 3)
+                                <div class="text-[11px] font-mono text-emerald-900 dark:text-emerald-300 font-bold">
+                                    ✓ {{ count($selectedMenus) }}/25 Menu Operasional L1–L4 &amp; {{ count($selectedPrimitives) }} Modul Anti-Selisih Aktif (Bisa dikustom di Tab 7).
+                                </div>
+                            @elseif($storyboardStep === 4)
+                                <div class="text-[11px] font-mono text-zinc-900 dark:text-zinc-100 font-bold">
+                                    Regulasi Aktif: <strong>{{ $jurisdictionProfile['jurisdiction_code'] ?? 'ID_UU_PDP_PSAK' }}</strong> ({{ implode(' • ', $jurisdictionProfile['accounting_standards'] ?? []) }}) • Arah Layar: <strong>{{ strtoupper($jurisdictionProfile['direction'] ?? 'ltr') }}</strong>
+                                </div>
+                            @else
+                                <div class="flex flex-wrap gap-2 font-mono text-[10px]">
+                                    <button type="button" wire:click="switchEngagementMode('RETAIL_SELF_DEV')" class="px-2.5 py-1.5 bg-zinc-950 text-white font-black rounded-none cursor-pointer">
+                                        ⚡ Unduh Blueprint Mandiri (Retail)
+                                    </button>
+                                    <button type="button" wire:click="switchEngagementMode('MITRA_TURNKEY_PROJECT')" class="px-2.5 py-1.5 bg-emerald-600 text-white font-black rounded-none cursor-pointer">
+                                        🤝 Terima Beres Dikodingkan Tim ({{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }})
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
 
                 <!-- TAB 1: SCHEMA & LOCKS -->
                 @if($centerTab === 'schema')
@@ -463,8 +586,65 @@
                     </div>
                 @endif
 
-                <!-- TAB 3: UI ARCHETYPE & PRINT -->
+                <!-- TAB 3: 36 VISUAL SECTOR FRONTEND UI BLUEPRINTS & PRINT -->
                 @if($centerTab === 'ui_print')
+                    @php
+                        $availUiVariants = $visualUiContract['available_variants'] ?? [];
+                        $pickedUiObj = $visualUiContract['selected_variant'] ?? ($availUiVariants[0] ?? []);
+                    @endphp
+                    <div class="p-3 bg-white dark:bg-zinc-900 border-2 border-emerald-600 dark:border-emerald-500 rounded-xs space-y-2.5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <div class="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                                    V8.0 VISUAL FRONTEND UI/UX BLUEPRINT (3 VARIANTS PER SECTOR = 36 BLUEPRINTS)
+                                </div>
+                                <div class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100">
+                                    Terkunci: {{ $pickedUiObj['code'] ?? $selectedUiVariant }} &bull; Shell: {{ $visualUiContract['navigation_shell']['code'] ?? $navigationShell }}
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 bg-zinc-950 text-emerald-400 font-mono text-[10px] font-black">
+                                DIR={{ strtoupper($jurisdictionProfile['direction'] ?? 'ltr') }}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            @foreach($availUiVariants as $vOpt)
+                                @php $isVarSelected = ($pickedUiObj['code'] ?? '') === ($vOpt['code'] ?? ''); @endphp
+                                <button
+                                    type="button"
+                                    wire:click="selectUiVariant('{{ $vOpt['code'] }}', '{{ $vOpt['default_shell'] ?? '' }}')"
+                                    class="p-2.5 text-left border rounded-none cursor-pointer transition {{ $isVarSelected ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950 dark:text-white dark:border-emerald-400 font-black' : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:text-zinc-200 dark:border-zinc-800 font-bold' }}"
+                                >
+                                    <div class="font-mono text-[9px] uppercase {{ $isVarSelected ? 'text-emerald-400' : 'text-emerald-900 dark:text-emerald-300' }}">{{ $vOpt['badge'] ?? '' }}</div>
+                                    <div class="text-[11px] leading-snug mt-0.5">{{ $vOpt['name']['id'] ?? $vOpt['code'] }}</div>
+                                </button>
+                            @endforeach
+                        </div>
+
+                        @if(!empty($pickedUiObj['panes']))
+                            <div class="grid grid-cols-12 gap-2 pt-1">
+                                @foreach($pickedUiObj['panes'] as $vp)
+                                    @php
+                                        $vpSpan = (int) ($vp['span'] ?? 6);
+                                        $vpCol = match ($vpSpan) {
+                                            2 => 'md:col-span-2', 3 => 'md:col-span-3', 4 => 'md:col-span-4',
+                                            5 => 'md:col-span-5', 7 => 'md:col-span-7', 8 => 'md:col-span-8',
+                                            9 => 'md:col-span-9', default => 'md:col-span-6',
+                                        };
+                                    @endphp
+                                    <div class="col-span-12 {{ $vpCol }} p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-dashed border-zinc-400 dark:border-zinc-700 font-mono text-[10px]">
+                                        <div class="font-black text-emerald-900 dark:text-emerald-300">[{{ $vp['label'] ?? 'PANE' }}]</div>
+                                        <div class="mt-1 space-y-0.5 text-zinc-800 dark:text-zinc-200 font-bold">
+                                            @foreach(($vp['widgets'] ?? []) as $wg)
+                                                <div>• {{ $wg }}</div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+
                     <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-2.5">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div>
@@ -1013,6 +1193,135 @@
                                         </div>
                                         <div class="text-[11px] font-black text-zinc-950 dark:text-zinc-100 mt-0.5 leading-snug">{{ $fp['name']['id'] ?? $fp['code'] }}</div>
                                         <div class="font-mono text-[9px] text-zinc-600 dark:text-zinc-400 truncate mt-0.5">{{ $fp['artifact_contract'] ?? '' }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- TAB 9: V8.0 LIVING CVE SECURITY ALERTS, AGENCY WHITE-LABEL, CANARY IP & 70:30 MARKETPLACE -->
+                @if($centerTab === 'inclusive_security_v8')
+                    <div class="space-y-3">
+                        <!-- 1. Living Architecture CVE Security Alerts + 1-Click Auto-Patch Prompt -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border-2 border-amber-500 dark:border-amber-600 rounded-none space-y-2.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black uppercase">
+                                    🛡️ LIVING ARCHITECTURE CVE WATCHER ({{ count($cveAlerts ?? []) }} ACTIVE ADVISORIES)
+                                </span>
+                                <span class="font-mono text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
+                                    Stack: {{ $stackCode }}
+                                </span>
+                            </div>
+                            @foreach(($cveAlerts ?? []) as $idxCve => $cve)
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-1.5 font-mono text-[10px]">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="font-black text-rose-900 dark:text-rose-300">{{ $cve['cve_id'] ?? '' }} • {{ $cve['severity'] ?? 'HIGH' }}</span>
+                                        <button
+                                            type="button"
+                                            x-on:click="navigator.clipboard.writeText($el.nextElementSibling.innerText); window.showToast({ type: &apos;success&apos;, title: &apos;AUTO-PATCH PROMPT COPIED&apos;, message: &apos;Tempel prompt patch keamanan ini langsung ke AI IDE Anda.&apos; })"
+                                            class="px-2 py-0.5 bg-zinc-950 text-emerald-400 font-black rounded-none cursor-pointer"
+                                        >
+                                            📋 Salin Prompt Auto-Patch 1-Klik
+                                        </button>
+                                        <pre class="hidden">{{ $cve['one_click_autopatch_prompt'] ?? '' }}</pre>
+                                    </div>
+                                    <div class="font-bold text-zinc-950 dark:text-zinc-100 font-sans text-xs">{{ $cve['title']['id'] ?? ($cve['cve_id'] ?? '') }}</div>
+                                    <div class="text-zinc-700 dark:text-zinc-300 font-sans text-[11px]">{{ $cve['remediation_summary']['id'] ?? '' }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <!-- 2. Agency Partner White-Label Branding & PDF Export -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2.5">
+                            <div class="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                                🏢 AGENCY PARTNER WHITE-LABEL BRANDING (A4 PROPOSAL, RAB, SPK &amp; BAST)
+                            </div>
+                            <label class="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-zinc-100 cursor-pointer">
+                                <input type="checkbox" wire:model.live="whiteLabelEnabled" class="rounded-none" />
+                                <span>Aktifkan Mode White-Label (Sembunyikan merek Neriah Pro pada PDF Klien)</span>
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <input
+                                    type="text"
+                                    wire:model.live.debounce.400ms="whiteLabelAgencyName"
+                                    placeholder="Nama Software House Anda (mis: Nusantara Digital Studio)"
+                                    class="px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs font-mono rounded-none"
+                                />
+                                <input
+                                    type="text"
+                                    wire:model.live.debounce.400ms="whiteLabelLegalEntity"
+                                    placeholder="Entitas Hukum (mis: PT Nusantara Rekayasa Sistem)"
+                                    class="px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-xs font-mono rounded-none"
+                                />
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 font-mono text-[10px]">
+                                <button
+                                    type="button"
+                                    wire:click="saveStudioWhiteLabelBranding"
+                                    class="px-2.5 py-1.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black rounded-none cursor-pointer"
+                                >
+                                    Simpan Branding White-Label
+                                </button>
+                                @if($slug && $whiteLabelAgencyName !== '')
+                                    <a
+                                        href="{{ route('blueprint.mitra-document', ['slug' => $slug, 'docType' => 'boq-rab', 'agency_name' => $whiteLabelAgencyName, 'agency_entity' => $whiteLabelLegalEntity]) }}"
+                                        target="_blank"
+                                        class="px-2.5 py-1.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-700 font-black rounded-none"
+                                    >
+                                        🖨️ Cetak RAB A4 Ber-Logo {{ $whiteLabelAgencyName }}
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- 3. 5-Layer Banking-Grade IP Security: MCP Token Revoke + Canary Watermark -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2 font-mono text-[10px]">
+                            <div class="font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                🔐 5-LAYER BANKING-GRADE IP &amp; PLATFORM SECURITY
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <div class="font-black text-emerald-900 dark:text-emerald-300">Zero-Width Canary Signature</div>
+                                    <div class="text-zinc-900 dark:text-zinc-100 font-bold mt-0.5 tabular-nums">{{ $schema['canary_watermark_sig'] ?? 'ACTIVE_ON_EXPORT' }}</div>
+                                    <div class="text-zinc-600 dark:text-zinc-400 mt-0.5">Melacak kebocoran dokumen tanpa mengubah tampilan kode.</div>
+                                </div>
+                                <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                                    <div>
+                                        <div class="font-black text-rose-900 dark:text-rose-300">Scoped MCP Token Control</div>
+                                        <div class="text-zinc-700 dark:text-zinc-300 mt-0.5">Cabut akses IDE freelancer secara instan saat kontrak selesai.</div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        wire:click="revokeStudioMcpToken"
+                                        class="mt-1.5 px-2 py-1 bg-rose-700 hover:bg-rose-600 text-white font-black rounded-none cursor-pointer"
+                                    >
+                                        🔒 Cabut &amp; Rotasi Token MCP 1-Klik
+                                    </button>
+                                </div>
+                            </div>
+                            @if($mcpRevokeNotice !== '')
+                                <div class="p-2 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black">
+                                    {{ $mcpRevokeNotice }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- 4. 70:30 Verified Community Primitives Marketplace -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
+                            <div class="flex items-center justify-between font-mono text-[10px]">
+                                <span class="font-black uppercase text-zinc-950 dark:text-zinc-100">🧩 COMMUNITY PRIMITIVES MARKETPLACE (70:30 CREATOR REVENUE SHARE)</span>
+                                <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black">100% DOCTOR VERIFIED</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-[10px]">
+                                @foreach(($communityMarketplace ?? []) as $mp)
+                                    <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                        <div class="flex items-center justify-between font-black text-emerald-900 dark:text-emerald-300">
+                                            <span>{{ $mp['code'] ?? '' }}</span>
+                                            <span>Rp {{ number_format((int) ($mp['price_idr'] ?? 0), 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="font-bold text-zinc-950 dark:text-zinc-100 font-sans text-xs mt-0.5">{{ $mp['name']['id'] ?? '' }}</div>
+                                        <div class="text-zinc-600 dark:text-zinc-400 mt-0.5">Oleh {{ $mp['author'] ?? 'Verified Partner' }} &bull; Bagi Hasil {{ $mp['revenue_split'] ?? '70:30' }}</div>
                                     </div>
                                 @endforeach
                             </div>

@@ -557,6 +557,85 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+            [
+                'name' => 'configure_visual_ui_and_jurisdiction_locale',
+                'description' => 'Inspeksi atau simpan konfigurasi Visual Frontend UI/UX dari 36 varian terkurasi (12 Sektor × 3 Varian UI + 5 Navigation Shells), mode Dual-Persona (BUSINESS_WIZARD / ARCHITECT_PRO), dan Yurisdiksi Global Tier-1 (id, en, zh-CN, ja, ar dengan dir=rtl otomatis, es, de) beserta kalkulasi kausalitas RAB & SHA-256.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor fungsional (SECTOR_01_COMMERCE_OMNICHANNEL s/d SECTOR_12_GOVTECH_NONPROFIT).',
+                        ],
+                        'selected_ui_variant' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional kode varian UI visual (misal UI_01A_POS_SPLIT_TERMINAL, UI_03A_CLINICAL_3PANE_SOAP, UI_12B_PUBLIC_DONOR_TRUST_PORTAL).',
+                        ],
+                        'navigation_shell' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional kerangka navigasi: SIDEBAR_ERP_DENSE, FULLSCREEN_OPERATIONAL_KIOSK, DUAL_PANE_SPLIT_WORKBENCH, MOBILE_FIRST_THUMB_PWA, atau TOPBAR_EXECUTIVE_DECK.',
+                        ],
+                        'output_locale' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode yurisdiksi output Tier-1: id, en, zh-CN, ja, ar (otomatis RTL), es, atau de.',
+                        ],
+                        'persona_mode' => [
+                            'type' => 'STRING',
+                            'description' => 'Mode pengalaman pengguna: BUSINESS_WIZARD (Awam 5 langkah) atau ARCHITECT_PRO (3-Pane Studio).',
+                        ],
+                        'project_ulid' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID PosProject untuk menyimpan perubahan secara persisten (memerlukan izin mutasi RBAC).',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'audit_living_cve_alerts_and_autopatch',
+                'description' => 'Audit peringatan keamanan aktif Living Architecture (CVE-2026-109618, GHSA-NEXT-MW-2026, SYNTAX-LOCK-2026.07), hasilkan 1-Click Auto-Patch Prompt siap tempel ke IDE, dan tampilkan katalog Verified Community Primitives Marketplace (bagi hasil 70:30).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'stack_preset' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode preset stack (misal STACK_M1_LARAVEL_MONOLITH, STACK_D1_NEXTJS_LARAVEL_API, STACK_S1_GO_POLYGLOT_FINTECH).',
+                        ],
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor fungsional untuk konteks Active Vault.',
+                        ],
+                        'project_ulid' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID PosProject untuk mencatat status acknowledge CVE (memerlukan izin RBAC jika mutasi).',
+                        ],
+                        'acknowledge_all' => [
+                            'type' => 'BOOLEAN',
+                            'description' => 'Jika true dan project_ulid diberikan, menandai CVE telah di-acknowledge pada proyek tersebut.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'manage_ip_canary_watermark_and_vault_security',
+                'description' => 'Kelola 5-Layer Banking-Grade IP & Platform Security: dekode sidik jari forensik Zero-Width Unicode Canary Watermark 64-bit dari teks Markdown bocor (verify_canary), cabut/rotasi token MCP 1-klik (revoke_mcp_token), atau inspeksi matriks keamanan AES-256 Vault & Escrow (inspect_layers).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => [
+                            'type' => 'STRING',
+                            'description' => 'Operasi keamanan: inspect_layers, verify_canary, atau revoke_mcp_token.',
+                        ],
+                        'leaked_markdown_sample' => [
+                            'type' => 'STRING',
+                            'description' => 'Teks Markdown yang ingin didekode watermark Zero-Width Canary-nya (untuk verify_canary).',
+                        ],
+                        'project_ulid' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID PosProject untuk pencabutan token MCP 1-klik (wajib izin mutasi RBAC).',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

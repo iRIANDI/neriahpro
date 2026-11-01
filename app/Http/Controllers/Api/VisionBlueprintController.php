@@ -46,6 +46,10 @@ class VisionBlueprintController extends Controller
             'selected_primitives' => 'selectedPrimitives',
             'selected_menus' => 'selectedMenus',
             'stack_preset' => 'stackPreset',
+            'selected_ui_variant' => 'selectedUiVariant',
+            'navigation_shell' => 'navigationShell',
+            'output_locale' => 'outputLocale',
+            'persona_mode' => 'personaMode',
         ];
         foreach ($camelToSnakeMap as $snakeKey => $camelKey) {
             if (! $request->filled($snakeKey) && $request->has($camelKey)) {
@@ -94,6 +98,14 @@ class VisionBlueprintController extends Controller
             'selectedMenus' => 'nullable|array',
             'stack_preset' => 'nullable|string|max:120',
             'stackPreset' => 'nullable|string|max:120',
+            'selected_ui_variant' => 'nullable|string|max:120',
+            'selectedUiVariant' => 'nullable|string|max:120',
+            'navigation_shell' => 'nullable|string|max:80',
+            'navigationShell' => 'nullable|string|max:80',
+            'output_locale' => 'nullable|string|max:20',
+            'outputLocale' => 'nullable|string|max:20',
+            'persona_mode' => 'nullable|string|max:40',
+            'personaMode' => 'nullable|string|max:40',
         ]);
 
         if ($validator->fails()) {
@@ -125,6 +137,14 @@ class VisionBlueprintController extends Controller
             'primary_sector' => $request->input('primary_sector') ?: $request->input('primarySector'),
             'selected_primitives' => $request->input('selected_primitives') ?: $request->input('selectedPrimitives', []),
             'selected_menus' => $request->input('selected_menus') ?: $request->input('selectedMenus', []),
+            'selected_ui_variant' => $request->input('selected_ui_variant') ?: $request->input('selectedUiVariant'),
+            'navigation_shell' => $request->input('navigation_shell') ?: $request->input('navigationShell'),
+            'output_locale' => \App\Support\PosInclusiveCommercialCatalog::normalizeOutputLocale(
+                $request->input('output_locale') ?: $request->input('outputLocale') ?: $request->input('locale')
+            ),
+            'persona_mode' => \App\Support\PosInclusiveCommercialCatalog::normalizePersonaMode(
+                $request->input('persona_mode') ?: $request->input('personaMode')
+            ),
             'isolation_token' => 'iso_' . strtolower((string) \Illuminate\Support\Str::ulid()),
             'stack_preset' => \App\Support\PosStackPresetCatalog::normalizePresetCode(
                 $request->input('stack_preset') ?: $request->input('stackPreset')

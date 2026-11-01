@@ -141,6 +141,9 @@ class ManageSettings extends Page implements HasForms
             'pricing_retail_lite_price' => '99.000',
             'pricing_retail_pro_price' => '399.000',
             'pricing_retail_ultimate_price' => '1.490.000',
+            'pricing_impact_grant_price' => '0',
+            'pricing_single_app_pass_price' => '299.000',
+            'pricing_agency_whitelabel_price' => '990.000',
             'pricing_retail_spark_limit' => '2x Audit Ide / Bulan (Reset tiap tanggal 1)',
             'pricing_retail_lite_limit' => '1 Proyek PRD (Revisi Form 30 Hari & Unduh Selamanya)',
             'pricing_retail_pro_limit' => '1 Proyek PRD (Unlimited AI Regen & Revisi 6 Bulan)',
@@ -1175,6 +1178,30 @@ class ManageSettings extends Page implements HasForms
                                             ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
                                             ->stripCharacters([',', '.'])
                                             ->default('1.490.000')
+                                            ->required(),
+                                        TextInput::make('pricing_impact_grant_price')
+                                            ->label('Tarif Impact & Non-Profit CSR Grant (Rp)')
+                                            ->helperText('Subsidi 70%–100% untuk Yayasan Sosial, Rumah Ibadah, Sekolah & Riset Kampus.')
+                                            ->prefix('Rp')
+                                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                            ->stripCharacters([',', '.'])
+                                            ->default('0')
+                                            ->required(),
+                                        TextInput::make('pricing_single_app_pass_price')
+                                            ->label('Tarif Single-App UMKM Pass (Rp)')
+                                            ->helperText('1 Aplikasi Operasional Tunggal UMKM + Visual UI Sectoral + Thermal/QRIS.')
+                                            ->prefix('Rp')
+                                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                            ->stripCharacters([',', '.'])
+                                            ->default('299.000')
+                                            ->required(),
+                                        TextInput::make('pricing_agency_whitelabel_price')
+                                            ->label('Tarif Agency Partner White-Label (Rp)')
+                                            ->helperText('Multi-seat konsultan/software house + Proposal RAB & SPK PDF White-Label.')
+                                            ->prefix('Rp')
+                                            ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                            ->stripCharacters([',', '.'])
+                                            ->default('990.000')
                                             ->required(),
 
                                         TextInput::make('pricing_retail_spark_limit')

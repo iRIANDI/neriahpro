@@ -46,6 +46,11 @@ class PosProject extends Model
         'drift_verification_json',
         'last_mcp_synced_at',
         'engagement_mode',
+        'persona_mode',
+        'selected_ui_variant',
+        'navigation_shell',
+        'output_locale',
+        'jurisdiction_profile',
         'scope_hash_sha256',
         'scope_locked_at',
         'commercial_quotation_json',
@@ -56,6 +61,10 @@ class PosProject extends Model
         'query_partition_contract_json',
         'syntax_lock_version',
         'client_sop_onboarding_json',
+        'white_label_branding_json',
+        'encrypted_custom_vault',
+        'canary_watermark_sig',
+        'cve_alerts_ack_json',
         'architectural_freeze_score',
     ];
 
@@ -82,6 +91,9 @@ class PosProject extends Model
             'websocket_contract_json' => 'array',
             'query_partition_contract_json' => 'array',
             'client_sop_onboarding_json' => 'array',
+            'white_label_branding_json' => 'array',
+            'encrypted_custom_vault' => 'encrypted:array',
+            'cve_alerts_ack_json' => 'array',
             'architectural_freeze_score' => 'integer',
         ];
     }
@@ -155,6 +167,68 @@ class PosProject extends Model
         );
 
         return hash_equals($deterministic, $clean);
+    }
+
+    public function getSectorCodeAttribute(): ?string
+    {
+        return $this->primarySector?->code;
+    }
+
+    /**
+     * Banking-Grade Security Layer #3 (v8.0): 1-Click Scoped MCP Token Revocation & Rotation.
+     * Immediately invalidates any prior token hash in DB and emits a chained SHA-256 AuditLog record.
+     */
+    public function revokeMcpToken(?string $actorUserId = null): string
+    {
+        $newPlainToken = $this->issueMcpToken(true);
+
+        if (class_exists(AuditLog::class)) {
+            AuditLog::record(
+                action: 'mcp_scoped_token_revoked',
+                model: $this,
+                newValues: [
+                    'pos_project_id' => $this->id,
+                    'new_prefix' => $this->mcp_token_prefix,
+                    'actor_user_id' => $actorUserId,
+                ],
+                actorType: $actorUserId ? 'user' : 'system',
+                description: "Scoped MCP token revoked & rotated for PosProject [{$this->app_name}] (New prefix: {$this->mcp_token_prefix})",
+                eventCategory: 'ip_canary_security'
+            );
+        }
+
+        return $newPlainToken;
+    }
+
+    /**
+     * Banking-Grade Security Layer #1 (v8.0): Store custom business secrets in AES-256 encrypted column vault.
+     *
+     * @param  array<string, mixed>  $secrets
+     */
+    public function storeEncryptedVault(array $secrets): void
+    {
+        if (! Schema::hasColumn('pos_projects', 'encrypted_custom_vault')) {
+            return;
+        }
+
+        $this->encrypted_custom_vault = $secrets;
+        $this->saveQuietly();
+    }
+
+    /**
+     * Read decrypted custom business secrets from AES-256 envelope vault.
+     *
+     * @return array<string, mixed>
+     */
+    public function readEncryptedVault(): array
+    {
+        if (! Schema::hasColumn('pos_projects', 'encrypted_custom_vault')) {
+            return [];
+        }
+
+        $val = $this->encrypted_custom_vault;
+
+        return is_array($val) ? $val : [];
     }
 }
 

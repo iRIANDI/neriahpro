@@ -11,6 +11,7 @@ use App\Models\PosStackPreset;
 use App\Models\VisionBlueprint;
 use App\Support\PosDayTwoProductionCatalog;
 use App\Support\PosEnterpriseGuaranteeCatalog;
+use App\Support\PosInclusiveCommercialCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
 use App\Support\PosRealWorldRuntimeCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
@@ -199,6 +200,7 @@ class ProjectOsBlueprintCompilerService
                     'enterprise_menu_matrix' => PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector($s->code),
                     'hardware_iot_peripheral_contract' => PosRealWorldRuntimeCatalog::hardwarePeripheralContractForSector($s->code),
                     'realtime_websocket_contract' => PosRealWorldRuntimeCatalog::websocketBroadcastContract($s->code),
+                    'visual_ui_options' => PosInclusiveCommercialCatalog::visualUiContractForSector($s->code),
                 ])->values()->all(),
                 'primitives' => $mem['primitives']->values()->map(fn (PosPrimitive $p) => [
                     'id' => $p->id,
@@ -227,6 +229,11 @@ class ProjectOsBlueprintCompilerService
                 'fifteen_architecture_pillars' => PosArchitecturePillar::getCachedMatrix(),
                 'stack_server_sizing' => PosLifecycleAndStudioCatalog::stackServerSizingProfiles(),
                 'slop_diff_pairs' => PosLifecycleAndStudioCatalog::slopVsProjectOsDiffPairs(),
+                'storyboard_wizard' => PosInclusiveCommercialCatalog::storyboardWizardCatalog(),
+                'sector_visual_ui_catalog' => PosInclusiveCommercialCatalog::allSectorVisualUiCatalog(),
+                'navigation_shell_options' => PosInclusiveCommercialCatalog::navigationShellOptions(),
+                'retention_and_security_matrix' => PosInclusiveCommercialCatalog::retentionAndSecurityMatrix(),
+                'community_primitives_marketplace' => PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
             ];
         }
 
@@ -265,6 +272,7 @@ class ProjectOsBlueprintCompilerService
                         'enterprise_menu_matrix' => PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector($s->code),
                         'hardware_iot_peripheral_contract' => PosRealWorldRuntimeCatalog::hardwarePeripheralContractForSector($s->code, $mandatory),
                         'realtime_websocket_contract' => PosRealWorldRuntimeCatalog::websocketBroadcastContract($s->code),
+                        'visual_ui_options' => PosInclusiveCommercialCatalog::visualUiContractForSector($s->code),
                     ];
                 })
                 ->values()
@@ -348,6 +356,11 @@ class ProjectOsBlueprintCompilerService
                 'fifteen_architecture_pillars' => PosArchitecturePillar::getCachedMatrix(),
                 'stack_server_sizing' => PosLifecycleAndStudioCatalog::stackServerSizingProfiles(),
                 'slop_diff_pairs' => PosLifecycleAndStudioCatalog::slopVsProjectOsDiffPairs(),
+                'storyboard_wizard' => PosInclusiveCommercialCatalog::storyboardWizardCatalog(),
+                'sector_visual_ui_catalog' => PosInclusiveCommercialCatalog::allSectorVisualUiCatalog(),
+                'navigation_shell_options' => PosInclusiveCommercialCatalog::navigationShellOptions(),
+                'retention_and_security_matrix' => PosInclusiveCommercialCatalog::retentionAndSecurityMatrix(),
+                'community_primitives_marketplace' => PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
             ];
         });
     }
@@ -516,6 +529,11 @@ class ProjectOsBlueprintCompilerService
                 'selected_primitives' => $primitives,
                 'stack_preset' => $stackPreset,
                 'selected_menus' => is_array($payload['selected_menus'] ?? null) ? $payload['selected_menus'] : null,
+                'selected_ui_variant' => $payload['selected_ui_variant'] ?? null,
+                'navigation_shell' => $payload['navigation_shell'] ?? null,
+                'output_locale' => $payload['output_locale'] ?? 'id',
+                'persona_mode' => $payload['persona_mode'] ?? null,
+                'white_label_branding' => is_array($payload['white_label_branding'] ?? null) ? $payload['white_label_branding'] : null,
             ],
         ]);
 
@@ -524,6 +542,11 @@ class ProjectOsBlueprintCompilerService
             'primary_sector' => $sectorCode,
             'selected_primitives' => $primitives,
             'selected_menus' => is_array($payload['selected_menus'] ?? null) ? $payload['selected_menus'] : null,
+            'selected_ui_variant' => $payload['selected_ui_variant'] ?? null,
+            'navigation_shell' => $payload['navigation_shell'] ?? null,
+            'output_locale' => $payload['output_locale'] ?? 'id',
+            'persona_mode' => $payload['persona_mode'] ?? null,
+            'white_label_branding' => is_array($payload['white_label_branding'] ?? null) ? $payload['white_label_branding'] : null,
             'isolation_token' => (string) ($payload['isolation_token'] ?? ('sim_' . strtolower((string) Str::ulid()))),
             'stack_preset' => $stackPreset,
             'corpus' => (string) ($payload['corpus'] ?? ''),
@@ -817,6 +840,44 @@ class ProjectOsBlueprintCompilerService
             is_array($selectedMenus) ? $selectedMenus : null
         );
 
+        // === PROJECT OS v8.0: DUAL-PERSONA UX, 36 VISUAL SECTOR UI BLUEPRINTS, TIER-1 JURISDICTION & RTL, CVE ALERTS & IP SECURITY ===
+        $personaMode = PosInclusiveCommercialCatalog::normalizePersonaMode(
+            (string) ($options['persona_mode'] ?? ($meta['persona_mode'] ?? PosInclusiveCommercialCatalog::PERSONA_ARCHITECT_PRO))
+        );
+        $outputLocale = PosInclusiveCommercialCatalog::normalizeOutputLocale(
+            (string) ($options['output_locale'] ?? ($meta['output_locale'] ?? 'id'))
+        );
+        $requestedUiVariant = $options['selected_ui_variant'] ?? ($meta['selected_ui_variant'] ?? null);
+        $requestedNavShell = $options['navigation_shell'] ?? ($meta['navigation_shell'] ?? null);
+        $visualUiContract = PosInclusiveCommercialCatalog::visualUiContractForSector(
+            $resolvedSectorCode,
+            is_string($requestedUiVariant) ? $requestedUiVariant : null,
+            is_string($requestedNavShell) ? $requestedNavShell : null,
+            $outputLocale
+        );
+        $jurisdictionProfile = PosInclusiveCommercialCatalog::jurisdictionComplianceProfile($outputLocale, $resolvedSectorCode);
+        $livingCveAlerts = PosInclusiveCommercialCatalog::livingCveSecurityAlerts($stackPreset, $resolvedSectorCode);
+        $whiteLabelBranding = is_array($options['white_label_branding'] ?? null)
+            ? $options['white_label_branding']
+            : (is_array($meta['white_label_branding'] ?? null) ? $meta['white_label_branding'] : []);
+        $canaryActorSeed = (string) ($options['user_id'] ?? auth()->id() ?? ($blueprint?->email ?? $isolationToken));
+        $canaryWatermarkSig = PosInclusiveCommercialCatalog::computeCanaryFingerprint($canaryActorSeed);
+
+        $mergedCompliance = array_values(array_unique(array_merge(
+            (array) ($sector?->default_compliance_standards ?? ['UU PDP No. 27/2022', 'OWASP ASVS L2']),
+            (array) ($jurisdictionProfile['accounting_standards'] ?? []),
+            (array) ($jurisdictionProfile['tax_and_invoicing_rules'] ?? []),
+            (array) ($jurisdictionProfile['privacy_and_sector_mandates'] ?? [])
+        )));
+        $defaultCurrencyCode = match ($outputLocale) {
+            'en' => 'USD',
+            'zh-CN' => 'CNY',
+            'ja' => 'JPY',
+            'ar' => 'SAR',
+            'es', 'de' => 'EUR',
+            default => 'IDR',
+        };
+
         $schema = [
             '$schema' => self::SCHEMA_URI,
             'schema_version' => '2.0.0',
@@ -824,11 +885,17 @@ class ProjectOsBlueprintCompilerService
                 'name' => $appName,
                 'blueprint_id' => $blueprint?->id,
                 'project_isolation_id' => $isolationToken,
+                'persona_mode' => $personaMode,
+                'selected_ui_variant' => $visualUiContract['selected_variant_code'],
+                'navigation_shell' => $visualUiContract['navigation_shell_code'],
+                'output_locale' => $outputLocale,
+                'text_direction' => $visualUiContract['text_direction'],
+                'jurisdiction_code' => $jurisdictionProfile['jurisdiction_code'],
                 'architecture_archetype' => $resolved['architecture_archetype'],
                 'primary_sector' => $sector?->code ?? 'SECTOR_08_PROFESSIONAL_PSA',
                 'primary_sector_name' => $sector?->name ?? ['id' => 'Jasa Profesional & SaaS', 'en' => 'Professional Services & SaaS'],
                 'domain_terminology' => $sector?->domain_terminology ?? [],
-                'compliance_standards' => $sector?->default_compliance_standards ?? ['UU PDP No. 27/2022', 'OWASP ASVS L2'],
+                'compliance_standards' => $mergedCompliance,
                 'injected_primitives' => $primitives->pluck('code')->values()->all(),
                 'active_rule_packs' => $rulePacks->pluck('slug')->values()->all(),
                 'tenancy_model' => $tenancyModel,
@@ -871,7 +938,7 @@ class ProjectOsBlueprintCompilerService
                     'type' => 'DECIMAL(19,4)',
                     'rounding_mode' => 'HALF_UP',
                     'penny_allocation_strategy' => 'LARGEST_REMAINDER_OR_FINAL_INSTALLMENT_ABSORPTION (0.0000 drift guaranteed)',
-                    'default_currency' => 'IDR',
+                    'default_currency' => $defaultCurrencyCode,
                 ],
                 'timezone_strategy' => [
                     'storage' => 'UTC',
@@ -953,15 +1020,25 @@ class ProjectOsBlueprintCompilerService
                 ],
             ],
             'five_lifecycle_features' => PosLifecycleAndStudioCatalog::fiveLifecycleFeaturesSummary(),
-            // === PROJECT OS v6.0 & v7.0: 5 DETERMINISTIC GUARANTEES + 5 REAL-WORLD ELEMENTS + 15 PILLARS 100% FREEZE ===
+            // === PROJECT OS v6.0, v7.0 & v8.0: 15 PILLARS FREEZE + 36 VISUAL SECTOR UI BLUEPRINTS + TIER-1 JURISDICTION & RTL + IP SECURITY ===
             'guarantees_release' => '7.0.0-architectural-freeze-15-pillars',
+            'inclusive_release' => '8.0.0-inclusive-dual-persona-visual-ui',
             'architectural_freeze' => [
                 'version' => PosRealWorldRuntimeCatalog::FREEZE_VERSION,
+                'inclusive_version' => PosInclusiveCommercialCatalog::VERSION,
                 'syntax_lock_version' => PosRealWorldRuntimeCatalog::SYNTAX_LOCK_VERSION,
                 'score' => 100,
                 'is_locked_100_percent' => true,
                 'pillars_count' => 15,
             ],
+            'visual_frontend_ui_contract' => $visualUiContract,
+            'jurisdiction_compliance_profile' => $jurisdictionProfile,
+            'living_cve_security_alerts' => $livingCveAlerts,
+            'white_label_branding' => $whiteLabelBranding,
+            'viral_certified_badge_md' => PosInclusiveCommercialCatalog::renderViralCertifiedBadgeMarkdown($whiteLabelBranding),
+            'canary_watermark_sig' => $canaryWatermarkSig,
+            'inclusive_retention_and_security' => PosInclusiveCommercialCatalog::retentionAndSecurityMatrix(),
+            'community_primitives_marketplace' => PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
             'five_deterministic_guarantees' => PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees(),
             'five_enterprise_glue_primitives' => PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives(),
             'five_real_world_elements' => PosRealWorldRuntimeCatalog::fiveRealWorldElements(),
@@ -1086,6 +1163,27 @@ class ProjectOsBlueprintCompilerService
             }
             if (Schema::hasColumn('pos_projects', 'client_sop_onboarding_json')) {
                 $projectPayload['client_sop_onboarding_json'] = $schema['client_sop_and_onboarding'] ?? [];
+            }
+            if (Schema::hasColumn('pos_projects', 'persona_mode')) {
+                $projectPayload['persona_mode'] = $personaMode;
+            }
+            if (Schema::hasColumn('pos_projects', 'selected_ui_variant')) {
+                $projectPayload['selected_ui_variant'] = $visualUiContract['selected_variant_code'];
+            }
+            if (Schema::hasColumn('pos_projects', 'navigation_shell')) {
+                $projectPayload['navigation_shell'] = $visualUiContract['navigation_shell_code'];
+            }
+            if (Schema::hasColumn('pos_projects', 'output_locale')) {
+                $projectPayload['output_locale'] = $outputLocale;
+            }
+            if (Schema::hasColumn('pos_projects', 'jurisdiction_profile')) {
+                $projectPayload['jurisdiction_profile'] = $jurisdictionProfile['jurisdiction_code'];
+            }
+            if (Schema::hasColumn('pos_projects', 'white_label_branding_json') && ! empty($whiteLabelBranding)) {
+                $projectPayload['white_label_branding_json'] = $whiteLabelBranding;
+            }
+            if (Schema::hasColumn('pos_projects', 'canary_watermark_sig')) {
+                $projectPayload['canary_watermark_sig'] = $canaryWatermarkSig;
             }
             if (Schema::hasColumn('pos_projects', 'architectural_freeze_score')) {
                 $projectPayload['architectural_freeze_score'] = 100;
@@ -1406,6 +1504,40 @@ class ProjectOsBlueprintCompilerService
             $md .= "\n";
         }
 
+        if (! empty($schema['visual_frontend_ui_contract']) && is_array($schema['visual_frontend_ui_contract'])) {
+            $vUi = $schema['visual_frontend_ui_contract'];
+            $vCode = $vUi['selected_variant_code'] ?? 'SECTOR_DEFAULT_UI';
+            $vName = $vUi['selected_variant_name']['id'] ?? ($vUi['selected_variant_name']['en'] ?? $vCode);
+            $shellCode = $vUi['navigation_shell_code'] ?? 'SIDEBAR_ERP_DENSE';
+            $shellName = $vUi['navigation_shell']['name']['id'] ?? $shellCode;
+            $htmlDir = $vUi['html_dir_attribute'] ?? 'dir="ltr"';
+            $rtlRule = $vUi['rtl_logical_css_mandate'] ?? '';
+            $md .= "### Selected Concrete Visual Frontend UI/UX Layout (`{$vCode}` + `{$shellCode}`)\n";
+            $md .= "- **Client-Selected Visual Layout:** **{$vName}** (`{$vCode}`)\n";
+            $md .= "- **Navigation Shell:** `{$shellCode}` — {$shellName}\n";
+            $md .= "- **HTML Direction & Logical CSS:** `{$htmlDir}` — {$rtlRule}\n";
+            foreach (($vUi['selected_variant_panes'] ?? []) as $pane) {
+                $widgetsStr = implode(' | ', $pane['widgets'] ?? []);
+                $md .= "- **Viewport Pane (`col-span-{$pane['span']}` — `{$pane['label']}`):** {$widgetsStr}\n";
+            }
+            $md .= "\n";
+        }
+
+        if (! empty($schema['jurisdiction_compliance_profile']) && is_array($schema['jurisdiction_compliance_profile'])) {
+            $jp = $schema['jurisdiction_compliance_profile'];
+            $jCode = $jp['jurisdiction_code'] ?? 'ID_NKRI_STATUTORY';
+            $jLabel = $jp['language_label'] ?? 'id';
+            $jAcct = implode(' | ', $jp['accounting_standards'] ?? []);
+            $jTax = implode(' | ', $jp['tax_and_invoicing_rules'] ?? []);
+            $jPriv = implode(' | ', $jp['privacy_and_sector_mandates'] ?? []);
+            $md .= "### Tier-1 Output Locale & Jurisdiction Compliance Contract (`{$jCode}`)\n";
+            $md .= "- **Output Language & Direction:** {$jLabel} (`" . ($jp['direction'] ?? 'ltr') . "`)\n";
+            $md .= "- **Number & Currency Format:** `{$jp['currency']}` — `{$jp['thousand_decimal_format']}` (`tabular-nums`)\n";
+            $md .= "- **Statutory Accounting Standards:** {$jAcct}\n";
+            $md .= "- **Tax & E-Invoicing Rules:** {$jTax}\n";
+            $md .= "- **Privacy & Sector Mandates:** {$jPriv}\n\n";
+        }
+
         if (! empty($schema['realistic_domain_seeder'])) {
             $seederSpec = $schema['realistic_domain_seeder'];
             $md .= "### Realistic Domain Seeder & Stress-Test Factory (`" . ($seederSpec['seeder_class'] ?? 'RealisticSectorSeeder') . "`)\n";
@@ -1439,6 +1571,10 @@ class ProjectOsBlueprintCompilerService
 
         if (! empty($schema['enterprise_menu_matrix']) && is_array($schema['enterprise_menu_matrix'])) {
             $md .= PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown($schema['enterprise_menu_matrix']) . "\n";
+        }
+
+        if (! empty($schema['viral_certified_badge_md'])) {
+            $md .= (string) $schema['viral_certified_badge_md'];
         }
 
         return $md;
@@ -1861,6 +1997,24 @@ MD;
         $secondaryArch = $secUi['secondary_archetype'] ?? 'DENSE_SKU_MATRIX';
         $ergonomicsBullets = implode("\n", array_map(fn ($e) => "- {$e}", $secUi['ergonomics_and_layout'] ?? []));
         $seederBullets = implode("\n", array_map(fn ($f) => "- {$f}", $seeder['realistic_fixtures'] ?? []));
+        $vUi = is_array($schema['visual_frontend_ui_contract'] ?? null) ? $schema['visual_frontend_ui_contract'] : [];
+        $vUiCode = $vUi['selected_variant_code'] ?? $primaryArch;
+        $vUiLabel = $vUi['selected_variant_name']['id'] ?? ($vUi['selected_variant_name']['en'] ?? $vUiCode);
+        $vShellCode = $vUi['navigation_shell_code'] ?? 'SIDEBAR_ERP_DENSE';
+        $vHtmlDir = $vUi['html_dir_attribute'] ?? 'dir="ltr"';
+        $vRtlRule = $vUi['rtl_logical_css_mandate'] ?? 'Standard LTR layout.';
+        $vPanesBullets = implode("\n", array_map(
+            fn (array $p): string => "- **Pane `col-span-{$p['span']}` ({$p['label']})**: " . implode(', ', $p['widgets'] ?? []),
+            $vUi['selected_variant_panes'] ?? []
+        ));
+        $jProf = is_array($schema['jurisdiction_compliance_profile'] ?? null) ? $schema['jurisdiction_compliance_profile'] : [];
+        $jCode = $jProf['jurisdiction_code'] ?? 'ID_NKRI_STATUTORY';
+        $jOutputLocale = $meta['output_locale'] ?? 'id';
+        $jStatutoryRules = implode(' • ', array_merge(
+            (array) ($jProf['accounting_standards'] ?? []),
+            (array) ($jProf['tax_and_invoicing_rules'] ?? []),
+            (array) ($jProf['privacy_and_sector_mandates'] ?? [])
+        ));
 
         $gateP1 = TopologicalPromptChunker::buildMandatoryVerificationGate('1.0', 'Phase1FoundationTest');
         $gateP2 = TopologicalPromptChunker::buildMandatoryVerificationGate('2.0', 'Phase2DatabaseTopologicalTest');
@@ -1961,14 +2115,21 @@ PROMPT,
             [
                 'phase' => 5,
                 'filename' => '05-sectoral-ui-ux.md',
-                'title' => "Fase 5: L1–L4 Enterprise Menu Divisions (25 Layar) & Archetypes ({$primaryArch})",
-                'objective' => 'Membangun 5 Divisi Menu L1–L4 sesuai ENTERPRISE_MENU_MATRIX.md & ergonomi industri tanpa merusak signature SYMBOL_MANIFEST.json.',
+                'title' => "Fase 5: L1–L4 Enterprise Menu Divisions (25 Layar), Visual UI ({$vUiCode}) & Archetypes ({$primaryArch})",
+                'objective' => 'Membangun 5 Divisi Menu L1–L4 sesuai ENTERPRISE_MENU_MATRIX.md, tata letak Visual UI terpilih, & ergonomi industri tanpa merusak signature SYMBOL_MANIFEST.json.',
                 'prompt' => <<<PROMPT
-# PROJECT OS EXECUTION — FASE 5/7: L1–L4 ENTERPRISE MENU & SECTORAL UI/UX ({$appName})
+# PROJECT OS EXECUTION — FASE 5/7: L1–L4 ENTERPRISE MENU, VISUAL FRONTEND UI & SECTORAL UX ({$appName})
 Baca `.agents/ENTERPRISE_MENU_MATRIX.md`, `.agents/SYMBOL_MANIFEST.json`, dan `.agents/UI_UX_CONTRACT.md`.
 *(Catatan Anti-Truncation: Bangun layar per Divisi `05.1` s/d `05.5` di `.agents/prompts/subparts/`!)*
 
 **Archetype Wajib Industri:** `{$primaryArch}` & `{$secondaryArch}`
+**Desain Visual Frontend Pilihan Klien:** `{$vUiCode}` ({$vUiLabel}) | **Navigation Shell:** `{$vShellCode}`
+**Bahasa Output & Yurisdiksi:** `{$jOutputLocale}` (`{$vHtmlDir}` — `{$jCode}`)
+**Standar Akuntansi, Pajak & Privasi Yurisdiksi:** {$jStatutoryRules}
+**Kontrak Arah Teks / RTL:** {$vRtlRule}
+
+## Komposisi Panel Layar Visual Terpilih (`{$vUiCode}`):
+{$vPanesBullets}
 
 ## Ergonomi & Layout Spesifik Industri yang WAJIB Dibangun:
 {$ergonomicsBullets}

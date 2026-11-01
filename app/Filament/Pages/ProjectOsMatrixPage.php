@@ -53,6 +53,11 @@ class ProjectOsMatrixPage extends Page
     public array $doctorSelectedPrimitives = ['PRIMITIVE_CLINICAL_EMR_AUDIT'];
     public array $doctorResult = [];
 
+    // Project OS v8.0 — 36 Visual UI Blueprints & Forensic Canary Watermark Verifier
+    public string $inclusivePreviewSector = 'SECTOR_01_COMMERCE_OMNICHANNEL';
+    public string $canaryInputSample = '';
+    public array $canaryVerificationResult = [];
+
     public function getMaxContentWidth(): Width | string | null
     {
         return Width::Full;
@@ -87,12 +92,12 @@ class ProjectOsMatrixPage extends Page
 
     public function getSubheading(): string | Htmlable | null
     {
-        return 'Project OS v7.0 — 100% Architectural Freeze: 15 Master Architecture Pillars, 5 Real-World Field Runtime Contracts (<30ms Hardware Bridge, Zero-Polling WebSocket, 0% N+1 + PG16 Partitioning, SYNTAX_LOCK_2026.md, Role SmartGuide & BAST SOP), 12 Sektor × 25 Sub-Menu L1–L4, Kahn DAG Chunker & Hermetic Isolation.';
+        return 'Project OS v8.0 — Inclusive Dual-Persona Storyboard, 36 Visual Sector Frontend UI Blueprints (12×3 + 5 Shells), 7 Tier-1 Global Jurisdictions & RTL, Inclusive Hybrid Pricing, 5 Retention Hooks, 5-Layer Banking-Grade IP Canary Security & 15 Master Pillars (100% Freeze).';
     }
 
     public function setTab(string $tab): void
     {
-        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lifecycle', 'mitra', 'guarantees_v6', 'freeze_15_pillars', 'lab'], true)) {
+        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lifecycle', 'mitra', 'guarantees_v6', 'freeze_15_pillars', 'inclusive_v8', 'lab'], true)) {
             $this->activeTab = $tab;
             $this->cursor = null;
             $this->selectedIds = [];
@@ -699,6 +704,56 @@ SQL;
             $this->doctorStackCode = (string) $fix['recommended_stack_preset_code'];
         }
         $this->runBlueprintDoctorLab();
+    }
+
+    public function loadSampleWatermarkedMd(): void
+    {
+        $sampleMd = "# EXECUTION BLUEPRINT — NERIAH PRO PROJECT OS V8.0\n\nDokumen ini memiliki sidik jari steganografi Zero-Width Unicode 64-bit tersembunyi untuk proteksi HKI.";
+        $this->canaryInputSample = \App\Support\PosInclusiveCommercialCatalog::injectCanaryWatermark(
+            $sampleMd,
+            'audit-demo-buyer@neriahpro.com'
+        );
+    }
+
+    public function verifyCanarySample(): void
+    {
+        $user = auth()->user();
+        if ($user && ! $user->hasAnyRole(['super_admin', 'developer']) && ! $user->can('verify_canary_ip_watermarks')) {
+            Notification::make()->danger()->title('Akses Ditolak RBAC')->body('Akun Anda tidak memiliki izin verify_canary_ip_watermarks.')->send();
+            return;
+        }
+
+        if (trim($this->canaryInputSample) === '') {
+            Notification::make()->warning()->title('Sampel Kosong')->body('Tempelkan dokumen Markdown untuk didekode sidik jari Canary-nya.')->send();
+            return;
+        }
+
+        $hex = \App\Support\PosInclusiveCommercialCatalog::extractCanaryWatermark($this->canaryInputSample);
+        $matchedProject = null;
+        if ($hex && Schema::hasTable('pos_projects') && Schema::hasColumn('pos_projects', 'canary_watermark_sig')) {
+            $matchedProject = PosProject::where('canary_watermark_sig', $hex)->first();
+        }
+
+        $this->canaryVerificationResult = [
+            'detected' => $hex !== null,
+            'fingerprint_hex' => $hex,
+            'matched_project_ulid' => $matchedProject?->id,
+            'matched_app_name' => $matchedProject?->app_name,
+        ];
+
+        \App\Models\AuditLog::record(
+            action: 'canary_watermark_verified',
+            model: $matchedProject,
+            newValues: $this->canaryVerificationResult,
+            description: 'Verifikasi forensik Zero-Width Unicode Canary Watermark dijalankan dari Matrix Page.',
+            eventCategory: 'ip_canary_security'
+        );
+
+        Notification::make()
+            ->success()
+            ->title($hex ? "Canary Terdeteksi ({$hex})" : 'Tidak Ada Watermark Terdeteksi')
+            ->body($matchedProject ? "Cocok dengan proyek ULID {$matchedProject->id}" : 'Dekode forensik 64-bit selesai.')
+            ->send();
     }
 }
 

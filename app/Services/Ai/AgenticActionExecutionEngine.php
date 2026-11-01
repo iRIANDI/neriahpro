@@ -74,6 +74,9 @@ class AgenticActionExecutionEngine
                 'inspect_hardware_and_websocket_runtime_contracts' => $this->inspectHardwareAndWebsocketRuntimeContracts($args),
                 'generate_syntax_lock_and_client_sop_pack' => $this->generateSyntaxLockAndClientSopPack($args),
                 'audit_fifteen_pillars_architectural_freeze' => (! empty($args['persist_sync']) ? $this->guardMutation($user, $toolName) : null) ?? $this->auditFifteenPillarsArchitecturalFreeze($args),
+                'configure_visual_ui_and_jurisdiction_locale' => (! empty($args['project_ulid']) ? $this->guardMutation($user, $toolName) : null) ?? $this->configureVisualUiAndJurisdictionLocale($args),
+                'audit_living_cve_alerts_and_autopatch' => (! empty($args['project_ulid']) && ! empty($args['acknowledge_all']) ? $this->guardMutation($user, $toolName) : null) ?? $this->auditLivingCveAlertsAndAutopatch($args),
+                'manage_ip_canary_watermark_and_vault_security' => (strtolower(trim((string) ($args['action'] ?? 'inspect_layers'))) === 'revoke_mcp_token' ? $this->guardMutation($user, $toolName) : null) ?? $this->manageIpCanaryWatermarkAndVaultSecurity($args),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
@@ -523,6 +526,10 @@ class AgenticActionExecutionEngine
             'architecture_pillars_count' => count(\App\Models\PosArchitecturePillar::getCachedMatrix()),
             'architectural_freeze_score' => 100,
             'l1_l4_sector_submenus_count' => 300,
+            'visual_ui_blueprints_count' => 36,
+            'navigation_shells_count' => count(\App\Support\PosInclusiveCommercialCatalog::navigationShellOptions()),
+            'tier1_jurisdictions_count' => 7,
+            'inclusive_plg_skus_count' => count(\App\Support\PricingRegistry::getInclusiveValueMetricCatalog()),
             'native_tools_count' => count(GeminiToolRegistry::getDeclarations()),
         ];
     }
@@ -1283,6 +1290,229 @@ class AgenticActionExecutionEngine
             'persist_sync_executed' => $persistSync,
             'pillars' => $pillars,
             'cross_stage_causality_graph' => $causality,
+        ];
+    }
+
+    /**
+     * 31. Configure Visual Frontend UI/UX (36 Blueprints + 5 Shells), Dual-Persona Mode & Tier-1 Jurisdiction/RTL (v8.0)
+     */
+    protected function configureVisualUiAndJurisdictionLocale(array $args): array
+    {
+        $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+            (string) ($args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
+        );
+        $outputLocale = \App\Support\PosInclusiveCommercialCatalog::normalizeOutputLocale(
+            (string) ($args['output_locale'] ?? 'id')
+        );
+        $personaMode = \App\Support\PosInclusiveCommercialCatalog::normalizePersonaMode(
+            (string) ($args['persona_mode'] ?? 'ARCHITECT_PRO')
+        );
+        $selectedUiVariant = trim((string) ($args['selected_ui_variant'] ?? '')) ?: null;
+        $navShell = trim((string) ($args['navigation_shell'] ?? '')) ?: null;
+
+        $visualContract = \App\Support\PosInclusiveCommercialCatalog::visualUiContractForSector(
+            $sectorCode,
+            $selectedUiVariant,
+            $navShell,
+            $outputLocale
+        );
+        $jurisdiction = \App\Support\PosInclusiveCommercialCatalog::jurisdictionComplianceProfile(
+            $outputLocale,
+            $sectorCode
+        );
+
+        $projectUlid = trim((string) ($args['project_ulid'] ?? ''));
+        $posProject = null;
+        if ($projectUlid !== '' && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')) {
+            $posProject = \App\Models\PosProject::where('id', $projectUlid)->first();
+            if ($posProject) {
+                $updates = [];
+                if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'selected_ui_variant')) {
+                    $updates['selected_ui_variant'] = $visualContract['selected_variant_code'];
+                }
+                if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'navigation_shell')) {
+                    $updates['navigation_shell'] = $visualContract['navigation_shell_code'];
+                }
+                if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'output_locale')) {
+                    $updates['output_locale'] = $outputLocale;
+                }
+                if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'persona_mode')) {
+                    $updates['persona_mode'] = $personaMode;
+                }
+                if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'jurisdiction_profile')) {
+                    $updates['jurisdiction_profile'] = $jurisdiction['jurisdiction_code'] ?? null;
+                }
+                if (! empty($updates)) {
+                    $posProject->update($updates);
+                }
+            }
+        }
+
+        $schema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+            'app_name' => $posProject?->app_name ?? 'Visual UI & Jurisdiction Preview',
+            'sector_code' => $sectorCode,
+            'selected_ui_variant' => $visualContract['selected_variant_code'],
+            'navigation_shell' => $visualContract['navigation_shell_code'],
+            'output_locale' => $outputLocale,
+            'persona_mode' => $personaMode,
+        ]);
+
+        AuditLog::record(
+            action: 'visual_ui_and_jurisdiction_configured',
+            model: $posProject,
+            newValues: [
+                'sector_code' => $sectorCode,
+                'selected_ui_variant' => $visualContract['selected_variant_code'],
+                'navigation_shell' => $visualContract['navigation_shell_code'],
+                'output_locale' => $outputLocale,
+                'text_direction' => $visualContract['text_direction'],
+                'persona_mode' => $personaMode,
+                'persisted_project_ulid' => $posProject?->id,
+            ],
+            description: "AI Agent mengonfigurasi Visual UI ({$visualContract['selected_variant_code']}) & Yurisdiksi Tier-1 ({$outputLocale}, dir={$visualContract['text_direction']}).",
+            eventCategory: 'visual_ui_contract'
+        );
+
+        return [
+            'success' => true,
+            'persisted_project_ulid' => $posProject?->id,
+            'persona_mode' => $personaMode,
+            'visual_ui_contract' => $visualContract,
+            'jurisdiction_compliance_profile' => $jurisdiction,
+            'causality_scope_hash' => $schema['cross_stage_causality_graph']['causality_fingerprint_sha256'] ?? null,
+            'estimated_rab_idr' => $schema['commercial_mitra_contract']['estimated_contract_idr'] ?? null,
+        ];
+    }
+
+    /**
+     * 32. Audit Living Architecture CVE Alerts, 1-Click Auto-Patch Prompts & 70:30 Marketplace (v8.0)
+     */
+    protected function auditLivingCveAlertsAndAutopatch(array $args): array
+    {
+        $stackPreset = \App\Support\PosStackPresetCatalog::normalizePresetCode(
+            (string) ($args['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH')
+        );
+        $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+            (string) ($args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
+        );
+
+        $alerts = \App\Support\PosInclusiveCommercialCatalog::livingCveSecurityAlerts($stackPreset, $sectorCode);
+        $marketplace = \App\Support\PosInclusiveCommercialCatalog::communityPrimitivesMarketplace();
+
+        $projectUlid = trim((string) ($args['project_ulid'] ?? ''));
+        $posProject = null;
+        if ($projectUlid !== '' && ! empty($args['acknowledge_all']) && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')) {
+            $posProject = \App\Models\PosProject::where('id', $projectUlid)->first();
+            if ($posProject && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'cve_alerts_ack_json')) {
+                $ackIds = array_map(static fn (array $a): string => (string) ($a['advisory_id'] ?? $a['cve_code']), $alerts);
+                $posProject->update([
+                    'cve_alerts_ack_json' => [
+                        'acknowledged_ids' => $ackIds,
+                        'acknowledged_at' => now()->toIso8601String(),
+                    ],
+                ]);
+            }
+        }
+
+        AuditLog::record(
+            action: 'living_cve_audited',
+            model: $posProject,
+            newValues: [
+                'stack_preset' => $stackPreset,
+                'sector_code' => $sectorCode,
+                'alerts_count' => count($alerts),
+                'acknowledged' => ! empty($args['acknowledge_all']),
+            ],
+            description: "Audit Living Architecture CVE Alerts & Auto-Patch dijalankan untuk stack {$stackPreset}.",
+            eventCategory: 'living_cve_alert'
+        );
+
+        return [
+            'success' => true,
+            'stack_preset' => $stackPreset,
+            'sector_code' => $sectorCode,
+            'alerts_count' => count($alerts),
+            'living_cve_alerts' => $alerts,
+            'verified_community_marketplace' => $marketplace,
+        ];
+    }
+
+    /**
+     * 33. Manage 5-Layer Banking-Grade IP Security: Zero-Width Canary Watermark & 1-Click MCP Token Revocation (v8.0)
+     */
+    protected function manageIpCanaryWatermarkAndVaultSecurity(array $args): array
+    {
+        $action = strtolower(trim((string) ($args['action'] ?? 'inspect_layers')));
+        $projectUlid = trim((string) ($args['project_ulid'] ?? ''));
+        $posProject = ($projectUlid !== '' && \Illuminate\Support\Facades\Schema::hasTable('pos_projects'))
+            ? \App\Models\PosProject::where('id', $projectUlid)->first()
+            : null;
+
+        if ($action === 'revoke_mcp_token') {
+            if (! $posProject) {
+                return ['error' => 'PosProject dengan ULID tersebut tidak ditemukan untuk rotasi/pencabutan token MCP.'];
+            }
+            $previousHash = $posProject->mcp_token_hash;
+            $posProject->revokeMcpToken(auth()->id() ? (string) auth()->id() : null);
+            $refreshed = $posProject->fresh();
+
+            AuditLog::record(
+                action: 'mcp_token_revoked',
+                model: $posProject,
+                newValues: [
+                    'project_ulid' => $posProject->id,
+                    'new_prefix' => $refreshed?->mcp_token_prefix,
+                ],
+                description: "Token akses Live MCP dicabut & dirotasi secara instan (1-Click Revoke) untuk proyek {$posProject->id}.",
+                eventCategory: 'ip_canary_security'
+            );
+
+            return [
+                'success' => true,
+                'action' => 'revoke_mcp_token',
+                'project_ulid' => $posProject->id,
+                'mcp_token_rotated' => $previousHash !== $refreshed?->mcp_token_hash,
+                'new_token_prefix' => $refreshed?->mcp_token_prefix,
+            ];
+        }
+
+        if ($action === 'verify_canary') {
+            $sample = (string) ($args['leaked_markdown_sample'] ?? '');
+            $extractedHex = \App\Support\PosInclusiveCommercialCatalog::extractCanaryWatermark($sample);
+            $matched = null;
+            if ($extractedHex && \Illuminate\Support\Facades\Schema::hasTable('pos_projects') && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'canary_watermark_sig')) {
+                $matched = \App\Models\PosProject::where('canary_watermark_sig', $extractedHex)->first();
+            }
+
+            AuditLog::record(
+                action: 'canary_watermark_verified',
+                model: $matched,
+                newValues: [
+                    'detected' => $extractedHex !== null,
+                    'fingerprint_hex' => $extractedHex,
+                    'matched_project_ulid' => $matched?->id,
+                ],
+                description: 'Dekode forensik steganografi Zero-Width Canary Watermark dijalankan oleh AI Agent.',
+                eventCategory: 'ip_canary_security'
+            );
+
+            return [
+                'success' => true,
+                'action' => 'verify_canary',
+                'detected' => $extractedHex !== null,
+                'fingerprint_hex' => $extractedHex,
+                'matched_project_ulid' => $matched?->id,
+                'matched_app_name' => $matched?->app_name,
+            ];
+        }
+
+        $matrix = \App\Support\PosInclusiveCommercialCatalog::retentionAndSecurityMatrix();
+
+        return [
+            'success' => true,
+            'action' => 'inspect_layers',
+            'five_security_layers' => $matrix['five_security_layers'] ?? [],
+            'five_retention_hooks' => $matrix['five_retention_hooks'] ?? [],
         ];
     }
 

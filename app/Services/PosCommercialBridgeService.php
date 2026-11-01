@@ -300,11 +300,28 @@ class PosCommercialBridgeService
         $timelineDays = (int) max(7, ceil($effectiveManHours / 8));
         $quotationIdr = $effectiveManHours * $ratePerHour;
 
-        // Deterministic Cryptographic Scope Hash (SHA-256 — Cross-Stage Synchronized)
+        // Deterministic Cryptographic Scope Hash (SHA-256 — Cross-Stage Synchronized incl. Visual UI & Jurisdiction v8.0)
+        $selectedUiVariant = (string) ($options['selected_ui_variant']
+            ?? $schema['visual_frontend_ui_contract']['selected_variant_code']
+            ?? $schema['project_metadata']['selected_ui_variant']
+            ?? 'DEFAULT_SECTOR_UI');
+        $navShellCode = (string) ($options['navigation_shell']
+            ?? $schema['visual_frontend_ui_contract']['navigation_shell_code']
+            ?? $schema['project_metadata']['navigation_shell']
+            ?? 'SIDEBAR_ERP_DENSE');
+        $outputLocale = (string) ($options['output_locale']
+            ?? $schema['jurisdiction_compliance_profile']['locale_code']
+            ?? $schema['project_metadata']['output_locale']
+            ?? 'id');
+        $jurisdictionCode = (string) ($schema['jurisdiction_compliance_profile']['jurisdiction_code'] ?? 'ID_NKRI_STATUTORY');
+
         $canonicalPayload = [
             'sector' => $sectorCode,
             'stack' => $normalizedStack,
             'primitives' => $primitives,
+            'selected_ui_variant' => $selectedUiVariant,
+            'navigation_shell' => $navShellCode,
+            'output_locale' => $outputLocale,
             'active_v1_menus' => $activeMenuCodes,
             'active_hardware_peripherals' => $hardwareActiveCount,
             'websocket_channels_count' => $wsChannelsCount,
@@ -465,10 +482,22 @@ class PosCommercialBridgeService
             'termin_scheme' => $terminScheme,
             'termin_schedule' => $terminSchedule,
             'wbs_7_milestones' => $wbsBreakdown,
+            'selected_ui_variant' => $selectedUiVariant,
+            'navigation_shell' => $navShellCode,
+            'output_locale' => $outputLocale,
+            'jurisdiction_code' => $jurisdictionCode,
+            'milestone_escrow_policy' => [
+                'enabled' => true,
+                'gate_rule' => 'Each Termin disbursement is cryptographically locked to Phase Verification Gate (Exit Code 0) & SHA-256 Scope Hash.',
+                'escrow_splits' => $terminScheme === '50_50' ? '50% Kickoff / 50% UAT+BAST' : '30% Kickoff / 50% Staging Milestone / 20% UAT+BAST',
+            ],
             'recommended_packages' => [
                 'retail_tier_id' => $recommendedRetailTier,
                 'mitra_tier_id' => $recommendedMitraTier,
                 'advisory_entry_tier_id' => PricingRegistry::TIER_BLUEPRINT_ADVISORY,
+                'single_app_umkm_pass_id' => PricingRegistry::TIER_SINGLE_APP_UMKM_PASS,
+                'impact_grant_tier_id' => $sectorCode === 'SECTOR_12_GOVTECH_NONPROFIT' ? PricingRegistry::TIER_IMPACT_NONPROFIT_GRANT : null,
+                'agency_whitelabel_tier_id' => PricingRegistry::TIER_AGENCY_WHITELABEL_PARTNER,
             ],
         ];
     }

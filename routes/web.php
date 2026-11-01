@@ -69,10 +69,10 @@ Route::post('/blueprint/{slug}/pelunasan-snap-token', [BlueprintController::clas
 Route::post('/blueprint/{slug}/voucher/validate', [BlueprintController::class, 'validateVoucher'])->name('blueprint.voucher.validate');
 Route::post('/blueprint/{slug}/voucher/claim', [BlueprintController::class, 'claimVoucher'])->name('blueprint.voucher.claim');
 Route::get('/blueprint/{slug}/download/pdf', [BlueprintController::class, 'downloadPdf'])->name('blueprint.download-pdf');
-Route::get('/blueprint/{slug}/download/md', [BlueprintController::class, 'downloadMd'])->name('blueprint.download-md');
-Route::get('/blueprint/{slug}/download/cursorrules', [BlueprintController::class, 'downloadCursorrules'])->name('blueprint.download-cursorrules');
-Route::get('/blueprint/{slug}/download/schema-json', [BlueprintController::class, 'downloadSchemaJson'])->name('blueprint.download-schema-json');
-Route::get('/blueprint/{slug}/raw-md', [BlueprintController::class, 'rawMd'])->name('blueprint.raw-md');
+Route::get('/blueprint/{slug}/download/md', [BlueprintController::class, 'downloadMd'])->name('blueprint.download-md')->middleware('throttle:30,1');
+Route::get('/blueprint/{slug}/download/cursorrules', [BlueprintController::class, 'downloadCursorrules'])->name('blueprint.download-cursorrules')->middleware('throttle:30,1');
+Route::get('/blueprint/{slug}/download/schema-json', [BlueprintController::class, 'downloadSchemaJson'])->name('blueprint.download-schema-json')->middleware('throttle:30,1');
+Route::get('/blueprint/{slug}/raw-md', [BlueprintController::class, 'rawMd'])->name('blueprint.raw-md')->middleware('throttle:30,1');
 Route::get('/blueprint/{slug}/export/scaffold', [BlueprintController::class, 'exportScaffold'])->name('blueprint.export-scaffold');
 Route::get('/blueprint/{slug}/scaffold/preview', [BlueprintController::class, 'previewScaffold'])->name('blueprint.scaffold.preview');
 Route::get('/blueprint/{slug}/scaffold-preview', [BlueprintController::class, 'previewScaffold'])->name('blueprint.scaffold-preview');

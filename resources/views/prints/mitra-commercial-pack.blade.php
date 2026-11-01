@@ -1,8 +1,21 @@
+@php
+    $wl = is_array($whiteLabel ?? null) ? $whiteLabel : (is_array($posProject?->white_label_branding_json ?? null) ? $posProject->white_label_branding_json : []);
+    $isWhiteLabel = !empty($wl['enabled']) && !empty($wl['agency_name']);
+    $partnerEntityName = $isWhiteLabel ? $wl['agency_name'] : ($devInfo['entity_name'] ?? 'Neriah Pro Engineering Studio');
+    $partnerEmail = $isWhiteLabel ? ($wl['agency_email'] ?? ($devInfo['email'] ?? 'hello@agency.partner')) : ($devInfo['email'] ?? 'support@neriahpro.com');
+    $partnerPicName = $isWhiteLabel ? ($wl['pic_name'] ?? 'Lead Principal Architect') : ($devInfo['pic_name'] ?? 'Yoseph Iriandi');
+    $partnerPicTitle = $isWhiteLabel ? ($wl['pic_title'] ?? 'Principal Engineering Partner') : ($devInfo['pic_title'] ?? 'Lead Software Architect');
+    $partnerSealText = $isWhiteLabel ? (strtoupper($wl['agency_name']) . ' VERIFIED DIGITAL SEAL') : ($devInfo['seal_text'] ?? 'NERIAH PRO DIGITAL SEAL');
+    $docLocale = (string) ($posProject?->output_locale ?? ($schema['project_metadata']['output_locale'] ?? 'id'));
+    $isRtlDoc = $docLocale === 'ar';
+    $visualUi = is_array($schema['visual_frontend_ui_contract'] ?? null) ? $schema['visual_frontend_ui_contract'] : [];
+    $jurisdiction = is_array($schema['jurisdiction_compliance_profile'] ?? null) ? $schema['jurisdiction_compliance_profile'] : [];
+@endphp
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ $docLocale }}" dir="{{ $isRtlDoc ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
-    <title>neriahpro.com - {{ strtoupper($docType) }} Resmi {{ $projectName }}</title>
+    <title>{{ $isWhiteLabel ? strtolower(preg_replace('/[^a-zA-Z0-9]+/', '', $partnerEntityName)) . ' - ' : 'neriahpro.com - ' }}{{ strtoupper($docType) }} Resmi {{ $projectName }}</title>
     <style>
         @page { size: A4 portrait; margin: 14mm 15mm 15mm 15mm; }
         body {
@@ -98,7 +111,7 @@
     @if(empty($isPdfStream))
     <div class="screen-bar">
         <div>
-            <strong>NERIAH PRO — MITRA COMMERCIAL &amp; LEGAL PACK</strong>
+            <strong>{{ strtoupper($partnerEntityName) }} — MITRA COMMERCIAL &amp; LEGAL PACK</strong>
             <span class="mono" style="margin-left: 8px; color: #a1a1aa;">[{{ strtoupper($docType) }}]</span>
         </div>
         <div>
@@ -137,13 +150,19 @@
                 <th style="width: 22%;">Klien / Pemesan</th>
                 <td style="width: 28%;"><strong>{{ $blueprint->client_name ?: $projectName }}</strong><br><span style="color:#52525b;">{{ $blueprint->email ?: '-' }}</span></td>
                 <th style="width: 22%;">Mitra Pelaksana</th>
-                <td style="width: 28%;"><strong>{{ $devInfo['entity_name'] ?? 'Neriah Pro Engineering Studio' }}</strong><br><span style="color:#52525b;">{{ $devInfo['email'] ?? 'support@neriahpro.com' }}</span></td>
+                <td style="width: 28%;"><strong>{{ $partnerEntityName }}</strong><br><span style="color:#52525b;">{{ $partnerEmail }}</span></td>
             </tr>
             <tr>
                 <th>Sektor Fungsional</th>
                 <td class="mono">{{ $quotation['sector_code'] }}</td>
                 <th>Arsitektur Stack</th>
                 <td class="mono">{{ $quotation['stack_preset'] }} ({{ $quotation['stack_multiplier'] }}x Multiplier)</td>
+            </tr>
+            <tr>
+                <th>Visual Frontend UI/UX</th>
+                <td class="mono">{{ $visualUi['selected_variant_code'] ?? ($quotation['selected_ui_variant'] ?? 'SECTOR_DEFAULT') }} ({{ $visualUi['navigation_shell_code'] ?? ($quotation['navigation_shell'] ?? 'SIDEBAR_ERP_DENSE') }})</td>
+                <th>Yurisdiksi &amp; Bahasa</th>
+                <td class="mono">{{ strtoupper($docLocale) }} ({{ $isRtlDoc ? 'RTL' : 'LTR' }}) &bull; {{ $jurisdiction['jurisdiction_code'] ?? ($quotation['jurisdiction_code'] ?? 'ID_NKRI_STATUTORY') }}</td>
             </tr>
             <tr>
                 <th>Estimasi Beban Kerja</th>
@@ -371,12 +390,12 @@
             <tr>
                 <td>
                     <strong>PIHAK KEDUA (MITRA REKAYASA SISTEM)</strong><br>
-                    <span>{{ $devInfo['entity_name'] ?? 'Neriah Pro' }}</span>
+                    <span>{{ $partnerEntityName }}</span>
                     <div style="height: 52px; padding-top: 12px;" class="mono">
-                        <strong style="color:#047857;">[ {{ $devInfo['seal_text'] ?? 'NERIAH PRO DIGITAL SEAL' }} ]</strong>
+                        <strong style="color:#047857;">[ {{ $partnerSealText }} ]</strong>
                     </div>
-                    <strong>{{ $devInfo['pic_name'] ?? 'Yoseph Iriandi' }}</strong><br>
-                    <span style="font-size: 9.5px; color:#52525b;">{{ $devInfo['pic_title'] ?? 'Lead Software Architect' }}</span>
+                    <strong>{{ $partnerPicName }}</strong><br>
+                    <span style="font-size: 9.5px; color:#52525b;">{{ $partnerPicTitle }}</span>
                 </td>
                 <td>
                     <strong>PIHAK PERTAMA (PERWAKILAN KLIEN RESMI)</strong><br>
@@ -395,7 +414,11 @@
         </table>
 
         <div class="footer-note">
-            Dokumen Resmi Project OS v5.0 Commercial-to-Code Bridge &bull; Dilindungi Hash Kriptografis SHA-256 &bull; neriahpro.com
+            @if($isWhiteLabel)
+                Architecture Engineered &amp; Scope-Verified by {{ $partnerEntityName }} &bull; 100% Zero-Slop Enterprise Standard &bull; Dilindungi Hash SHA-256
+            @else
+                Architecture Verified by NeriahPro Project OS v8.0 — 100% Zero-Slop Certified &bull; Dilindungi Hash Kriptografis SHA-256 &bull; neriahpro.com
+            @endif
         </div>
     </div>
 </body>

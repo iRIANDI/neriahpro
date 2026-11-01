@@ -118,10 +118,10 @@ class AuditLogResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => strtoupper($state ?: 'system'))
                     ->color(fn (?string $state): string => match ($state) {
-                        'project_os', 'cli_bootstrap', 'day2_ops', 'delta_evolution', 'commercial_contract', 'uat_bast', 'enterprise_glue', 'project_isolation', 'pillars_freeze_100', 'client_sop_onboarding' => 'success',
-                        'ai_agent', 'blueprint_doctor', 'mcp_bridge', 'env_vault', 'symbol_manifest', 'dag_chunker', 'hardware_iot_bridge', 'websocket_zero_poll', 'syntax_lock_2026' => 'info',
-                        'brownfield_import', 'slop_audit', 'paid_addendum' => 'warning',
-                        'security', 'rbac', 'redteam_security' => 'danger',
+                        'project_os', 'cli_bootstrap', 'day2_ops', 'delta_evolution', 'commercial_contract', 'uat_bast', 'enterprise_glue', 'project_isolation', 'pillars_freeze_100', 'client_sop_onboarding', 'dual_persona_ux', 'visual_ui_contract', 'whitelabel_agency' => 'success',
+                        'ai_agent', 'blueprint_doctor', 'mcp_bridge', 'env_vault', 'symbol_manifest', 'dag_chunker', 'hardware_iot_bridge', 'websocket_zero_poll', 'syntax_lock_2026', 'jurisdiction_tier1' => 'info',
+                        'brownfield_import', 'slop_audit', 'paid_addendum', 'living_cve_alert' => 'warning',
+                        'security', 'rbac', 'redteam_security', 'ip_canary_security' => 'danger',
                         'billing' => 'primary',
                         default => 'gray',
                     }),
@@ -129,9 +129,9 @@ class AuditLogResource extends Resource
                     ->label('Aksi')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'created', 'create', 'cli_bootstrap_pulled', 'delta_cr_created', 'mcp_phase_verified', 'env_vault_checked', 'scope_locked_spk', 'bast_issued', 'symbol_manifest_compiled', 'project_isolation_verified', 'fifteen_pillars_freeze_audited' => 'success',
-                        'updated', 'update', 'blueprint_slop_scanned', 'brownfield_schema_audited', 'blueprint_doctor_diagnosed', 'mcp_config_exported', 'mcp_drift_verified', 'addendum_approved', 'uat_scenario_toggled', 'enterprise_menu_expanded', 'hardware_and_websocket_inspected', 'syntax_lock_and_client_sop_generated' => 'info',
-                        'deleted', 'force_deleted', 'rbac_tool_denied', 'mcp_auth_denied' => 'danger',
+                        'created', 'create', 'cli_bootstrap_pulled', 'delta_cr_created', 'mcp_phase_verified', 'env_vault_checked', 'scope_locked_spk', 'bast_issued', 'symbol_manifest_compiled', 'project_isolation_verified', 'fifteen_pillars_freeze_audited', 'canary_watermark_embedded', 'canary_watermark_verified' => 'success',
+                        'updated', 'update', 'blueprint_slop_scanned', 'brownfield_schema_audited', 'blueprint_doctor_diagnosed', 'mcp_config_exported', 'mcp_drift_verified', 'addendum_approved', 'uat_scenario_toggled', 'enterprise_menu_expanded', 'hardware_and_websocket_inspected', 'syntax_lock_and_client_sop_generated', 'visual_ui_and_jurisdiction_configured', 'living_cve_audited' => 'info',
+                        'deleted', 'force_deleted', 'rbac_tool_denied', 'mcp_auth_denied', 'mcp_token_revoked' => 'danger',
                         'login' => 'primary',
                         default => 'gray',
                     })
@@ -167,6 +167,12 @@ class AuditLogResource extends Resource
                     ->label('Kategori Domain')
                     ->options([
                         'project_os' => 'Project OS & Blueprint',
+                        'dual_persona_ux' => 'Dual-Persona Storyboard & Studio UX (v8.0)',
+                        'visual_ui_contract' => '36 Visual Sector Frontend UI Blueprints (v8.0)',
+                        'jurisdiction_tier1' => '7 Tier-1 Global Jurisdictions & RTL (v8.0)',
+                        'living_cve_alert' => 'Living Architecture CVE & Auto-Patch (v8.0)',
+                        'ip_canary_security' => '5-Layer IP Canary Watermark & Vault (v8.0)',
+                        'whitelabel_agency' => 'Agency White-Label Proposal & SPK (v8.0)',
                         'pillars_freeze_100' => '15 Master Pillars Architectural Freeze (100%)',
                         'hardware_iot_bridge' => 'Hardware, Barcode Wedge & Dual-Screen QRIS',
                         'websocket_zero_poll' => 'WebSocket Zero-Polling (Reverb/Soketi)',
@@ -212,6 +218,11 @@ class AuditLogResource extends Resource
                         'hardware_and_websocket_inspected' => 'Hardware & WebSocket Contracts Inspected',
                         'syntax_lock_and_client_sop_generated' => 'SYNTAX_LOCK_2026 & Client SOP Generated',
                         'fifteen_pillars_freeze_audited' => '15 Master Pillars Freeze Audited',
+                        'visual_ui_and_jurisdiction_configured' => '36 Visual UI & Tier-1 Jurisdiction Configured',
+                        'living_cve_audited' => 'Living Architecture CVE & Auto-Patch Audited',
+                        'canary_watermark_embedded' => 'Zero-Width Canary Watermark Embedded',
+                        'canary_watermark_verified' => 'Forensic Canary Watermark Verified',
+                        'mcp_token_revoked' => 'Scoped MCP Token Revoked (1-Click)',
                         'delta_cr_created' => 'Delta Change Request Created',
                         'mcp_phase_verified' => 'MCP Phase Verified (Green)',
                         'mcp_config_exported' => 'MCP .mcp.json Exported',

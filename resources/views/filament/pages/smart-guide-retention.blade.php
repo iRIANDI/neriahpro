@@ -324,6 +324,9 @@
             <a href="#sec-v7-realworld-freeze" @click.prevent="scrollTo('sec-v7-realworld-freeze')" :class="activeSection === 'sec-v7-realworld-freeze' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 14. <span x-text="t[lang].nav_v7_freeze"></span>
             </a>
+            <a href="#sec-v8-inclusive-security" @click.prevent="scrollTo('sec-v8-inclusive-security')" :class="activeSection === 'sec-v8-inclusive-security' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                15. <span x-text="t[lang].nav_v8_inclusive"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -1472,6 +1475,88 @@
         </div>
     </div>
 
+    <!-- 15. Project OS v8.0: Adaptive Dual-Persona Storyboard, 36 Visual Sector UI Blueprints, Global Tier-1 RTL, Inclusive Hybrid Pricing & 5-Layer IP Canary Security -->
+    <div id="sec-v8-inclusive-security" class="sg-card" x-show="matchesSearch(t[lang].sec15_title + ' ' + t[lang].sec15_desc + ' inklusif dual persona awam storyboard 36 visual ui rtl zatca canary watermark cve whitelabel grant umkm')">
+        <div style="border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #059669; text-transform: uppercase; font-weight: 800;">
+                    15 // PROJECT OS V8.0 — INCLUSIVE DUAL-PERSONA, 36 VISUAL UI, GLOBAL TIER-1 RTL &amp; 5-LAYER IP SECURITY
+                </span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec15_title"></h3>
+                <p style="font-size: 12px; color: var(--sg-text-muted); margin: 4px 0 0 0;" x-text="t[lang].sec15_desc"></p>
+            </div>
+            <span style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #059669; background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.45); padding: 4px 10px; border-radius: 2px;">
+                36 VISUAL UI • 7 TIER-1 + RTL • 64-BIT CANARY
+            </span>
+        </div>
+
+        <div class="sg-grid-3" style="margin-bottom: 16px;">
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; color: #059669; margin-bottom: 4px;">PILLAR 1 &amp; 2 // DUAL-PERSONA + 36 VISUAL UI</div>
+                <strong style="font-size: 12.5px; color: var(--sg-text-title);">
+                    <span x-show="lang === 'id'">Mode Bisnis/Awam (5 Langkah) ↔ Mode Arsitek Pro + 36 UI Visual</span>
+                    <span x-show="lang === 'en'" x-cloak>5-Step Zero-Jargon Business Wizard ↔ 3-Pane Studio + 36 Visual UIs</span>
+                </strong>
+                <p style="font-size: 11.5px; color: var(--sg-text-muted); margin: 6px 0 0 0; line-height: 1.5;">
+                    <span x-show="lang === 'id'">Founder non-teknis cukup menjawab 5 pertanyaan keseharian sambil memilih 1 dari <strong>36 Varian Visual Frontend UI/UX</strong> (3 opsi per 12 Sektor + 5 Navigation Shells) dengan wireframe multi-panel hidup.</span>
+                    <span x-show="lang === 'en'" x-cloak>Non-technical founders answer 5 everyday questions and visually pick 1 of <strong>36 Sector Frontend UI Variants</strong> (3 per sector + 5 Navigation Shells) manipulating the exact same canonical state.</span>
+                </p>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; color: #0284c7; margin-bottom: 4px;">PILLAR 3 // 7 TIER-1 JURISDICTIONS &amp; RTL</div>
+                <strong style="font-size: 12.5px; color: var(--sg-text-title);">
+                    <span x-show="lang === 'id'">Lokalisasi Kepatuhan Hukum Global &amp; Layout RTL Arab Otomatis</span>
+                    <span x-show="lang === 'en'" x-cloak>Jurisdiction-Aware Compliance Switching &amp; Native Arabic RTL</span>
+                </strong>
+                <p style="font-size: 11.5px; color: var(--sg-text-muted); margin: 6px 0 0 0; line-height: 1.5;">
+                    <span x-show="lang === 'id'">Mendukung 7 bahasa output blueprint (<code>id</code>, <code>en</code>, <code>zh-CN</code>, <code>ja</code>, <code>ar</code> otomatis <code>dir="rtl"</code> + <code>ms-*/me-*</code>, <code>es</code>, <code>de</code>) yang mengganti standar akuntansi/pajak (ISAK 35/PSAK 109 vs FASB ASC 958/HIPAA/ZATCA Fatoora/GoBD).</span>
+                    <span x-show="lang === 'en'" x-cloak>Supports 7 output locales (<code>id</code>, <code>en</code>, <code>zh-CN</code>, <code>ja</code>, <code>ar</code> auto <code>dir="rtl"</code> + logical CSS, <code>es</code>, <code>de</code>) dynamically swapping statutory accounting &amp; privacy mandates.</span>
+                </p>
+            </div>
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; color: #d97706; margin-bottom: 4px;">PILLAR 4 // INCLUSIVE PLG VALUE LADDER</div>
+                <strong style="font-size: 12.5px; color: var(--sg-text-title);">
+                    <span x-show="lang === 'id'">Subsidi CSR Non-Profit, Single-App UMKM Rp 299rb &amp; Agency White-Label</span>
+                    <span x-show="lang === 'en'" x-cloak>Impact CSR Grant, Single-App UMKM Pass &amp; Agency White-Label</span>
+                </strong>
+                <p style="font-size: 11.5px; color: var(--sg-text-muted); margin: 6px 0 0 0; line-height: 1.5;">
+                    <span x-show="lang === 'id'">Menjangkau seluruh segmen tanpa merusak margin Studio: <code>impact_nonprofit_grant</code> (Subsidi CSR 70–100%), <code>single_app_umkm_pass</code> (Rp 299.000), dan <code>agency_whitelabel_partner</code> (Rp 990.000 + PDF RAB/SPK berlogo agensi).</span>
+                    <span x-show="lang === 'en'" x-cloak>Captures every market tier cleanly: <code>impact_nonprofit_grant</code> (70–100% subsidy), <code>single_app_umkm_pass</code> (Rp 299k), and <code>agency_whitelabel_partner</code> (Rp 990k + White-Label A4 Proposal/SPK).</span>
+                </p>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; color: #059669; margin-bottom: 6px;">5 HIGH-RETENTION FLYWHEEL HOOKS</div>
+                @foreach(($v8RetentionAndSecurity['five_retention_hooks'] ?? []) as $rh)
+                    <div style="padding: 6px 0; border-bottom: 1px solid var(--sg-border-subtle); font-size: 11.5px;">
+                        <strong style="color: var(--sg-text-title);">
+                            #{{ $rh['number'] }} <span x-show="lang === 'id'">{{ $rh['title']['id'] ?? '' }}</span><span x-show="lang === 'en'" x-cloak>{{ $rh['title']['en'] ?? '' }}</span>
+                        </strong>
+                        <div style="color: var(--sg-text-muted); margin-top: 2px;">
+                            <span x-show="lang === 'id'">{{ $rh['desc']['id'] ?? '' }}</span><span x-show="lang === 'en'" x-cloak>{{ $rh['desc']['en'] ?? '' }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; color: #ef4444; margin-bottom: 6px;">5 BANKING-GRADE IP &amp; PLATFORM SECURITY LAYERS</div>
+                @foreach(($v8RetentionAndSecurity['five_security_layers'] ?? []) as $sl)
+                    <div style="padding: 6px 0; border-bottom: 1px solid var(--sg-border-subtle); font-size: 11.5px;">
+                        <strong style="color: var(--sg-text-title);">
+                            #{{ $sl['number'] }} <span x-show="lang === 'id'">{{ $sl['title']['id'] ?? '' }}</span><span x-show="lang === 'en'" x-cloak>{{ $sl['title']['en'] ?? '' }}</span>
+                        </strong>
+                        <div style="color: var(--sg-text-muted); margin-top: 2px;">
+                            <span x-show="lang === 'id'">{{ $sl['desc']['id'] ?? '' }}</span><span x-show="lang === 'en'" x-cloak>{{ $sl['desc']['en'] ?? '' }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1498,6 +1583,7 @@ function smartGuideApp() {
                 nav_mitra_bridge: 'Mitra Bridge & Satu Pintu',
                 nav_v6_guarantees: '5 Jaminan v6.0 & Isolasi',
                 nav_v7_freeze: '5 Elemen Nyata & 15 Pilar (100% Freeze)',
+                nav_v8_inclusive: '36 UI Visual, Tier-1 RTL & IP Canary (v8.0)',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -1602,7 +1688,9 @@ function smartGuideApp() {
                 sec13_title: '5 Mesin Penjamin Deterministik (L1–L4 Menu, 5 Glue, Symbol Lock, DAG Chunker, Verification Gate) & Isolasi Hermetik (v6.0)',
                 sec13_desc: 'Menutup 5 celah terakhir saat AI membangun sistem berskala 20–35+ tabel: mekar otomatis 25 sub-menu L1–L4 dari 5 kata ide (300 menu terkurasi lintas 12 sektor), 5 perekat korporat (penomoran atomik, tutup buku akuntansi, Maker-Checker, Reason+Evidence, Outbox Replay), SYMBOL_MANIFEST.json anti-amnesia, Kahn Topological Sub-Chunker, <MANDATORY_VERIFICATION_GATE>, dan isolasi proyek 100% bebas sisa draf lama.',
                 sec14_title: '5 Elemen Dunia Nyata & Rekapitulasi Final 15 Pilar "Project OS Ultimate 100%" (100% Architectural Freeze)',
-                sec14_desc: 'Menutup 2% terakhir kesenjangan lapangan & runtime: Jembatan Perangkat Keras Fisik (Keyboard Wedge <30ms, Dual-Screen QRIS Lokal tanpa CDN, ZKTeco/Turnstile), WebSocket Zero-Polling (larangan mutlak wire:poll <30s), Strict 0% N+1 + Composite Index + Partisi PG16, Kamus Self-Healing SYNTAX_LOCK_2026.md, serta In-App SmartGuide.php & Buku SOP Training Staf otomatis untuk BAST.'
+                sec14_desc: 'Menutup 2% terakhir kesenjangan lapangan & runtime: Jembatan Perangkat Keras Fisik (Keyboard Wedge <30ms, Dual-Screen QRIS Lokal tanpa CDN, ZKTeco/Turnstile), WebSocket Zero-Polling (larangan mutlak wire:poll <30s), Strict 0% N+1 + Composite Index + Partisi PG16, Kamus Self-Healing SYNTAX_LOCK_2026.md, serta In-App SmartGuide.php & Buku SOP Training Staf otomatis untuk BAST.',
+                sec15_title: 'Project OS v8.0: Adaptive Dual-Persona Storyboard, 36 Varian Visual UI/UX, 7 Yurisdiksi Tier-1 (+RTL), Pricing Inklusif & 5-Layer Canary Security',
+                sec15_desc: 'Menjembatani founder awam & arsitek senior dalam satu kanvas: 5-Step Storyboard Wizard, pemilih visual pasti 36 UI Frontend (12 Sektor × 3 Opsi + 5 Shells), perpindahan kepatuhan hukum 7 bahasa Tier-1 (termasuk Arab dir="rtl" + ZATCA), paket CSR Non-Profit / Single-App UMKM Rp 299rb / Agency White-Label Rp 990rb, peringatan CVE + Auto-Patch, brankas AES-256, dan steganografi Zero-Width Canary 64-bit.'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -1619,6 +1707,7 @@ function smartGuideApp() {
                 nav_mitra_bridge: 'Mitra Bridge & One-Stop',
                 nav_v6_guarantees: '5 v6.0 Guarantees & Isolation',
                 nav_v7_freeze: '5 Real-World & 15 Pillars (100% Freeze)',
+                nav_v8_inclusive: '36 Visual UI, Tier-1 RTL & IP Canary (v8.0)',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -1723,7 +1812,9 @@ function smartGuideApp() {
                 sec13_title: '5 Deterministic Guarantee Engines (L1–L4 Menu, 5 Glue, Symbol Lock, DAG Chunker, Exit Gate) & Hermetic Isolation (v6.0)',
                 sec13_desc: 'Eliminates output truncation, cross-part naming drift, FK migration crashes, shallow apps, and cross-project draft bleed via 300 L1–L4 sector sub-menus, 5 SAP/Odoo-grade Enterprise Glue tables, frozen SYMBOL_MANIFEST.json, Kahn topological sub-chunking, <MANDATORY_VERIFICATION_GATE>, and strict ULID workspace isolation.',
                 sec14_title: 'The Final 5 Real-World Runtime Elements & Master 15 Pillars (100% Architectural Freeze)',
-                sec14_desc: 'Closes the final 2% field & runtime gap: Hardware/IoT/Dual-Screen QRIS Bridge (<30ms Keyboard Wedge, BroadcastChannel local QRIS, ZKTeco/Turnstile), Event-Driven WebSocket Zero-Polling (strict ban on wire:poll <30s), Strict 0% N+1 + Composite Tenant Indexes + PG16 Quarterly Range Partitioning, SYNTAX_LOCK_2026.md self-healing dictionary, and auto-generated Role SmartGuide.php + BAST Client SOP Manual.'
+                sec14_desc: 'Closes the final 2% field & runtime gap: Hardware/IoT/Dual-Screen QRIS Bridge (<30ms Keyboard Wedge, BroadcastChannel local QRIS, ZKTeco/Turnstile), Event-Driven WebSocket Zero-Polling (strict ban on wire:poll <30s), Strict 0% N+1 + Composite Tenant Indexes + PG16 Quarterly Range Partitioning, SYNTAX_LOCK_2026.md self-healing dictionary, and auto-generated Role SmartGuide.php + BAST Client SOP Manual.',
+                sec15_title: 'Project OS v8.0: Adaptive Dual-Persona Storyboard, 36 Visual Sector UI Blueprints, 7 Tier-1 Jurisdictions (+RTL), Inclusive Pricing & 5-Layer Canary Security',
+                sec15_desc: 'Bridges non-technical founders & principal architects on one shared state: 5-Step Storyboard Wizard, deterministic 36 Visual Frontend UI Picker (12 Sectors × 3 Variants + 5 Shells), 7 Tier-1 statutory jurisdictions (including Arabic dir="rtl" + ZATCA), Impact CSR Grant / Single-App UMKM Pass / Agency White-Label PDF, Living CVE Auto-Patch, AES-256 Vault, and 64-bit Zero-Width Canary Watermarking.'
             }
         },
 
@@ -1751,7 +1842,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze', 'sec-v8-inclusive-security'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

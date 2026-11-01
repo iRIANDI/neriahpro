@@ -155,6 +155,24 @@ class AuditLog extends Model
     {
         $haystack = strtolower($action . ' ' . ($modelClass ?? '') . ' ' . ($description ?? ''));
 
+        if (str_contains($haystack, 'canary_watermark') || str_contains($haystack, 'mcp_token_revoked') || str_contains($haystack, 'encrypted_vault') || str_contains($haystack, 'ip_canary')) {
+            return 'ip_canary_security';
+        }
+        if (str_contains($haystack, 'living_cve') || str_contains($haystack, 'cve_alert') || str_contains($haystack, 'autopatch')) {
+            return 'living_cve_alert';
+        }
+        if (str_contains($haystack, 'whitelabel') || str_contains($haystack, 'white_label') || str_contains($haystack, 'agency_partner')) {
+            return 'whitelabel_agency';
+        }
+        if (str_contains($haystack, 'visual_ui') || str_contains($haystack, 'navigation_shell') || str_contains($haystack, '36_visual')) {
+            return 'visual_ui_contract';
+        }
+        if (str_contains($haystack, 'jurisdiction') || str_contains($haystack, 'output_locale') || str_contains($haystack, 'rtl_layout')) {
+            return 'jurisdiction_tier1';
+        }
+        if (str_contains($haystack, 'dual_persona') || str_contains($haystack, 'business_wizard') || str_contains($haystack, 'storyboard_wizard')) {
+            return 'dual_persona_ux';
+        }
         if (str_contains($haystack, 'pillars_freeze') || str_contains($haystack, 'fifteen_pillars') || str_contains($haystack, 'posarchitecturepillar') || str_contains($haystack, 'architectural_freeze')) {
             return 'pillars_freeze_100';
         }

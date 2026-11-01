@@ -1399,8 +1399,12 @@ PHP;
             + count((array) ($schema['realtime_websocket_contract']['linked_realtime_v1_menus'] ?? []));
         $compositeIdx = (int) ($schema['strict_query_and_partition_contract']['total_composite_indexes_compiled'] ?? 0);
         $sopSteps = (int) ($schema['client_sop_and_onboarding']['total_interactive_tour_steps'] ?? $v1Menus);
+        $visualVariant = (string) ($schema['visual_frontend_ui_contract']['selected_variant_code'] ?? $schema['project_metadata']['selected_ui_variant'] ?? 'DEFAULT_SECTOR_UI');
+        $navShell = (string) ($schema['visual_frontend_ui_contract']['navigation_shell_code'] ?? $schema['project_metadata']['navigation_shell'] ?? 'SIDEBAR_ERP_DENSE');
+        $outputLocale = (string) ($schema['jurisdiction_compliance_profile']['locale_code'] ?? $schema['project_metadata']['output_locale'] ?? 'id');
+        $jurisdictionCode = (string) ($schema['jurisdiction_compliance_profile']['jurisdiction_code'] ?? 'ID_NKRI_STATUTORY');
 
-        $causalityHash = substr(hash('sha256', implode('|', [
+        $fullSha256 = hash('sha256', implode('|', [
             $sector,
             $stack,
             $v1Menus,
@@ -1409,16 +1413,25 @@ PHP;
             $wsChannels,
             $compositeIdx,
             $sopSteps,
-        ])), 0, 16);
+            $visualVariant,
+            $navShell,
+            $outputLocale,
+        ]));
+        $causalityHash = substr($fullSha256, 0, 16);
 
         return [
             'freeze_version' => self::FREEZE_VERSION,
             'architectural_freeze_score' => 100,
             'pillars_locked_count' => 15,
             'causality_signature' => 'pos_sync_' . $causalityHash,
+            'causality_fingerprint_sha256' => $fullSha256,
             'live_metrics' => [
                 'sector_code' => $sector,
                 'stack_preset' => $stack,
+                'selected_ui_variant' => $visualVariant,
+                'navigation_shell' => $navShell,
+                'output_locale' => $outputLocale,
+                'jurisdiction_code' => $jurisdictionCode,
                 'v1_enterprise_menus' => $v1Menus,
                 'ulid_tables_compiled' => $tablesCount,
                 'active_hardware_bridges' => $hwActive,

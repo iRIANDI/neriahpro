@@ -69,6 +69,7 @@
                         'mitra' => ['label' => 'Mitra Bridge & Satu Pintu', 'count' => 'v5.0'],
                         'guarantees_v6' => ['label' => '5 Guarantee Engines & DAG', 'count' => 'v6.0'],
                         'freeze_15_pillars' => ['label' => '15 Pilar Freeze & 5 Runtime', 'count' => 'v7.0'],
+                        'inclusive_v8' => ['label' => '36 Visual UI, RTL & Canary', 'count' => 'v8.0'],
                         'lab' => ['label' => 'Brownfield & Slop Lab', 'count' => 'LAB'],
                     ] as $tabKey => $tabMeta)
                         <button
@@ -711,6 +712,173 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        @elseif($this->activeTab === 'inclusive_v8')
+            @php
+                $v8Contract = \App\Support\PosInclusiveCommercialCatalog::visualUiContractForSector($this->inclusivePreviewSector, null, null, 'id');
+                $v8VisualVariants = $v8Contract['available_variants'] ?? [];
+                $v8NavShells = \App\Support\PosInclusiveCommercialCatalog::navigationShellOptions();
+                $v8SupportedLocales = ['id', 'en', 'zh-CN', 'ja', 'ar', 'es', 'de'];
+                $v8CveAlerts = \App\Support\PosInclusiveCommercialCatalog::livingCveSecurityAlerts('STACK_M1_LARAVEL_MONOLITH', $this->inclusivePreviewSector);
+                $v8Marketplace = \App\Support\PosInclusiveCommercialCatalog::communityPrimitivesMarketplace();
+                $v8InclusiveSkus = \App\Support\PricingRegistry::getInclusiveValueMetricCatalog();
+                $allSectorsList = \App\Support\ProjectOsMatrixCatalog::sectors();
+            @endphp
+            <div class="space-y-4">
+                <!-- Header Banner v8.0 -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <div class="text-[11px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">PROJECT OS V8.0 // INCLUSIVE DUAL-PERSONA, 36 VISUAL UI BLUEPRINTS, TIER-1 RTL &amp; 5-LAYER IP CANARY</div>
+                        <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100 mt-0.5">Katalog 36 Varian Visual Frontend (12 Sektor × 3 UI + 5 Navigation Shells), 7 Yurisdiksi Global &amp; Forensik Canary Watermark</h3>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">36 VISUAL UI BLUEPRINTS</span>
+                        <span class="px-2.5 py-1 bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-mono text-[10px] font-black rounded-xs">7 TIER-1 JURISDICTIONS + RTL</span>
+                        <span class="px-2.5 py-1 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black rounded-xs">64-BIT ZERO-WIDTH CANARY</span>
+                    </div>
+                </div>
+
+                <!-- 1. Interactive 12-Sector × 3 Visual Frontend UI Blueprints Explorer -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">DETERMINISTIC FRONTEND UI/UX SELECTOR</div>
+                            <div class="text-xs font-bold text-zinc-900 dark:text-zinc-100">Pilih Sektor Fungsional untuk melihat 3 Varian Visual Frontend UI/UX terkurasi:</div>
+                        </div>
+                        <select wire:model.live="inclusivePreviewSector" class="px-3 py-1.5 text-xs font-mono font-bold bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs">
+                            @foreach($allSectorsList as $secOpt)
+                                <option value="{{ $secOpt['code'] }}">#{{ str_pad((string) ($secOpt['sector_number'] ?? 0), 2, '0', STR_PAD_LEFT) }} — {{ $secOpt['name']['id'] ?? $secOpt['code'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                        @foreach($v8VisualVariants as $vv)
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xs space-y-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-xs">
+                                        {{ $vv['code'] }}
+                                    </span>
+                                    <span class="px-2 py-0.5 bg-zinc-200 text-zinc-950 border border-zinc-400 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-600 font-mono text-[10px] font-bold rounded-xs">
+                                        {{ $vv['badge'] ?? 'VISUAL UI' }}
+                                    </span>
+                                </div>
+                                <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $vv['name']['id'] ?? $vv['code'] }}</div>
+                                <div class="text-[11px] text-zinc-700 dark:text-zinc-300">{{ $vv['summary']['id'] ?? '' }}</div>
+                                <div class="text-[10px] font-mono text-zinc-800 dark:text-zinc-300">Default Shell: <strong>{{ $vv['default_shell'] }}</strong></div>
+                                <div class="grid grid-cols-1 gap-1 pt-1">
+                                    @foreach(($vv['panes'] ?? []) as $paneItem)
+                                        <div class="px-2 py-1 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-mono text-[10px] text-zinc-950 dark:text-zinc-200">
+                                            <strong>[{{ $paneItem['span'] ?? 6 }}-COL {{ $paneItem['label'] ?? '' }}]</strong> {{ implode(' • ', $paneItem['widgets'] ?? []) }}
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                        <div class="text-[10px] font-mono font-black uppercase text-zinc-700 dark:text-zinc-300 mb-2">5 Navigation Shells Standar (Terinjeksi ke Prompt Fase 5):</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+                            @foreach($v8NavShells as $shKey => $shMeta)
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs">
+                                    <div class="font-mono text-[10px] font-black text-emerald-900 dark:text-emerald-300">{{ $shKey }}</div>
+                                    <div class="text-xs font-bold text-zinc-950 dark:text-zinc-100 mt-0.5">{{ $shMeta['name']['id'] ?? $shKey }}</div>
+                                    <div class="text-[10px] font-mono text-zinc-700 dark:text-zinc-400 mt-1">{{ implode(', ', array_slice($shMeta['best_for'] ?? [], 0, 3)) }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 7 Tier-1 Global Native Jurisdictions & Inclusive Hybrid Pricing -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-2.5">
+                        <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">7 TIER-1 GLOBAL JURISDICTIONS &amp; LOGICAL CSS RTL</div>
+                        <div class="space-y-1.5">
+                            @foreach($v8SupportedLocales as $locKey)
+                                @php $jur = \App\Support\PosInclusiveCommercialCatalog::jurisdictionComplianceProfile($locKey, $this->inclusivePreviewSector); @endphp
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <span class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $jur['language_label'] ?? $locKey }}</span>
+                                        <div class="text-[11px] font-mono text-zinc-700 dark:text-zinc-300">{{ implode(' • ', array_slice($jur['accounting_standards'] ?? [], 0, 2)) }}</div>
+                                    </div>
+                                    <span class="px-2 py-0.5 {{ ($jur['direction'] ?? 'ltr') === 'rtl' ? 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700' : 'bg-zinc-200 text-zinc-950 border-zinc-400 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700' }} border font-mono text-[10px] font-black rounded-xs">
+                                        dir="{{ $jur['direction'] ?? 'ltr' }}" • {{ $jur['currency'] ?? '' }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                        <div class="text-[10px] font-mono font-black uppercase text-amber-900 dark:text-amber-300">INCLUSIVE HYBRID VALUE-METRIC SKUS &amp; LIVING CVE ALERTS</div>
+                        <div class="space-y-1.5">
+                            @foreach($v8InclusiveSkus as $skuKey => $skuMeta)
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs flex items-center justify-between gap-2">
+                                    <div>
+                                        <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ is_array($skuMeta['name'] ?? null) ? ($skuMeta['name']['id'] ?? $skuKey) : ($skuMeta['name'] ?? $skuKey) }}</div>
+                                        <div class="text-[10px] font-mono text-zinc-700 dark:text-zinc-400">{{ $skuKey }} • {{ $skuMeta['quota_summary'] ?? ($skuMeta['target_segment'] ?? '') }}</div>
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-xs font-black rounded-xs tabular-nums">
+                                        {{ $skuMeta['formatted_price'] ?? 'Rp 0' }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                            <div class="text-[10px] font-mono font-black uppercase text-zinc-800 dark:text-zinc-300">Living Architecture Security Advisories &amp; 70:30 Marketplace:</div>
+                            @foreach($v8CveAlerts as $cve)
+                                <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xs text-[11px]">
+                                    <span class="font-mono font-black text-amber-950 dark:text-amber-300">[{{ $cve['cve_code'] }} • {{ $cve['severity'] }}]</span>
+                                    <span class="font-bold text-zinc-950 dark:text-zinc-100">{{ $cve['headline']['id'] ?? '' }}</span>
+                                </div>
+                            @endforeach
+                            <div class="text-[11px] font-mono text-zinc-700 dark:text-zinc-300">
+                                Terdaftar {{ count($v8Marketplace) }} Verified Community Primitives (Skema Bagi Hasil Kreator 70% : Platform 30%).
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Interactive Forensic Zero-Width Canary Watermark Verifier -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2.5">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">BANKING-GRADE IP SECURITY LAYER #2 // FORENSIC WATERMARK DECODER</div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">Verifikator Steganografi Zero-Width Unicode Canary (64-Bit Buyer Fingerprint)</h3>
+                        </div>
+                        <button type="button" wire:click="loadSampleWatermarkedMd" class="px-3 py-1 text-xs font-mono font-bold bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xs cursor-pointer">
+                            Muat Contoh Dokumen Ber-Watermark
+                        </button>
+                    </div>
+
+                    <textarea
+                        rows="5"
+                        wire:model="canaryInputSample"
+                        placeholder="Tempelkan teks EXECUTION_BLUEPRINT.md yang bocor di internet untuk mengekstrak sidik jari kriptografi 64-bit Zero-Width Unicode (\u200B/\u200C/\u200D)..."
+                        class="w-full p-3 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    ></textarea>
+
+                    <button type="button" wire:click="verifyCanarySample" class="px-4 py-2 text-xs font-mono font-black bg-emerald-600 hover:bg-emerald-500 text-black border border-emerald-700 rounded-xs cursor-pointer">
+                        DEKODE SIDIK JARI FORENSIK ZERO-WIDTH CANARY
+                    </button>
+
+                    @if(!empty($this->canaryVerificationResult))
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xs font-mono text-xs space-y-1">
+                            <div class="font-black {{ !empty($this->canaryVerificationResult['detected']) ? 'text-emerald-900 dark:text-emerald-300' : 'text-amber-900 dark:text-amber-300' }}">
+                                Status Deteksi: {{ !empty($this->canaryVerificationResult['detected']) ? 'TERDETEKSI — WATERMARK KRIPTOGRAFI VALID (64-BIT)' : 'TIDAK DITEMUKAN WATERMARK VALID' }}
+                            </div>
+                            @if(!empty($this->canaryVerificationResult['fingerprint_hex']))
+                                <div class="text-zinc-950 dark:text-zinc-100">Extracted 64-Bit Hex Signature: <strong>{{ $this->canaryVerificationResult['fingerprint_hex'] }}</strong></div>
+                            @endif
+                            @if(!empty($this->canaryVerificationResult['matched_project_ulid']))
+                                <div class="text-emerald-900 dark:text-emerald-300">Matched PosProject ULID: <strong>{{ $this->canaryVerificationResult['matched_project_ulid'] }}</strong> ({{ $this->canaryVerificationResult['matched_app_name'] ?? '-' }})</div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             </div>
         @elseif($this->activeTab === 'lab')

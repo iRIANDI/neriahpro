@@ -18,6 +18,87 @@ class PricingRegistry
     public const TIER_UMKM_STARTER = 'umkm_starter';
     public const TIER_BLUEPRINT_ADVISORY = 'blueprint_advisory';
 
+    // Inclusive Hybrid Value-Metric Tiers (v8.0 — inklusif.md)
+    public const TIER_IMPACT_NONPROFIT_GRANT = 'impact_nonprofit_grant';
+    public const TIER_SINGLE_APP_UMKM_PASS = 'single_app_umkm_pass';
+    public const TIER_AGENCY_WHITELABEL_PARTNER = 'agency_whitelabel_partner';
+
+    /**
+     * Inclusive Hybrid Value-Metric PLG & CSR SKUs (v8.0).
+     */
+    public const INCLUSIVE_PLG_PACKAGES = [
+        self::TIER_IMPACT_NONPROFIT_GRANT => [
+            'id' => self::TIER_IMPACT_NONPROFIT_GRANT,
+            'name' => 'Impact & Non-Profit Grant (Subsidi CSR 70%–100%)',
+            'name_en' => 'Impact & Non-Profit Grant (70%–100% CSR Subsidy)',
+            'track_mode' => 'RETAIL_SELF_DEV',
+            'category' => 'blueprint_self_service',
+            'execution_model' => 'self_service',
+            'is_paid' => false,
+            'requires_login' => false,
+            'requires_sprint_batch' => false,
+            'requires_kickoff_slot' => false,
+            'default_price' => 0,
+            'subsidized_commercial_price' => 75000,
+            'setting_key' => 'pricing_impact_grant_price',
+            'sector_scope' => 'Khusus Sektor 12 (Yayasan/Masjid/Gereja/Zakat/NGO) & Sektor 07 (Sekolah Non-Komersial)',
+            'sector_scope_en' => 'Dedicated to Sector 12 (Non-Profit/Worship/Zakat/NGO) & Sector 07 (Non-Commercial Schools)',
+            'stack_scope' => ['STACK_M1_LARAVEL_MONOLITH', 'STACK_M2_INERTIA_REACT', 'STACK_M4_DJANGO_HTMX'],
+            'included_v5_engines' => [
+                'Subsidi CSR NeriahPro 70%–100% (Rp 0 dgn Verifikasi Lembaga / Voucher CSR)',
+                'ISAK 35 / PSAK 109 / FASB ASC 958 Pemisah Dana Terikat vs Operasional',
+                'Portal Transparansi Donatur Publik & Kwitansi QR SHA-256',
+                '5-Step Zero-Jargon Business Wizard untuk Pengurus Yayasan Awam',
+            ],
+        ],
+        self::TIER_SINGLE_APP_UMKM_PASS => [
+            'id' => self::TIER_SINGLE_APP_UMKM_PASS,
+            'name' => 'Single-App UMKM Pass (Beli Putus 1 Proyek)',
+            'name_en' => 'Single-App SME Pass (Pay-Per-Project Lifetime)',
+            'track_mode' => 'RETAIL_SELF_DEV',
+            'category' => 'blueprint_self_service',
+            'execution_model' => 'self_service',
+            'is_paid' => true,
+            'requires_login' => true,
+            'requires_sprint_batch' => false,
+            'requires_kickoff_slot' => false,
+            'default_price' => 299000,
+            'setting_key' => 'pricing_single_app_pass_price',
+            'sector_scope' => '1 Proyek Aktif Pilihan (Bebas Pilih 1 dari 36 Visual UI Sektor)',
+            'sector_scope_en' => '1 Active Project Pass (Pick Any 1 of 36 Sector Visual UIs)',
+            'stack_scope' => ['M1..M4 Monolith', 'D1..D3 Decoupled Headless'],
+            'included_v5_engines' => [
+                'Tanpa Langganan Bulanan (Sekali Bayar untuk 1 Aplikasi UMKM/Klinik/Toko)',
+                'PRD 26 Parameter + PostgreSQL 16 Strict ULID + 36 Visual UI Blueprint',
+                '7-Fase Prompt AI Berurutan + One-Command CLI /init/{ulid}',
+                'Active Maintenance Vault & Peringatan Keamanan CVE Otomatis',
+            ],
+        ],
+        self::TIER_AGENCY_WHITELABEL_PARTNER => [
+            'id' => self::TIER_AGENCY_WHITELABEL_PARTNER,
+            'name' => 'Agency Partner & White-Label Studio (Multi-Seat)',
+            'name_en' => 'Agency Partner & White-Label Studio (Multi-Seat)',
+            'track_mode' => 'RETAIL_SELF_DEV',
+            'category' => 'blueprint_self_service',
+            'execution_model' => 'self_service',
+            'is_paid' => true,
+            'requires_login' => true,
+            'requires_sprint_batch' => false,
+            'requires_kickoff_slot' => false,
+            'default_price' => 990000,
+            'setting_key' => 'pricing_agency_whitelabel_price',
+            'sector_scope' => 'Unlimited Proyek Klien Agensi across 12 Sektor + Multi-Seat Tim',
+            'sector_scope_en' => 'Unlimited Client Projects across 12 Sectors + Multi-Seat Team',
+            'stack_scope' => ['All 9 Curated Stacks (M1–S2) + Multi-Jurisdiction Tier-1 (ID/EN/AR-RTL/JP/DE)'],
+            'included_v5_engines' => [
+                'White-Label PDF Generator (RAB, WBS, SPK, SOP, BAST memakai Logo & Nama Agensi Anda!)',
+                'Multi-Seat Kolaborasi Tim Developer + Live MCP Server Bridge (neriahpro-mcp)',
+                '7 Bahasa Tier-1 Yurisdiksi Global (PSAK/ISAK35 <-> GAAP/ASC958/HIPAA/ZATCA RTL)',
+                'Akses Marketplace Primitif Komunitas & Prioritas Escala Keamanan CVE',
+            ],
+        ],
+    ];
+
     /**
      * Complete immutable specification of all application packages.
      */
@@ -156,21 +237,38 @@ class PricingRegistry
     ];
 
     /**
-     * Retrieve package details by exact ID.
+     * Retrieve all canonical + inclusive PLG packages (10 SKUs total).
+     *
+     * @return array<string, array<string, mixed>>
      */
-    public static function get(string $id): ?array
+    public static function allPackages(): array
     {
-        return self::PACKAGES[$id] ?? null;
+        return array_merge(self::PACKAGES, self::INCLUSIVE_PLG_PACKAGES);
     }
 
     /**
-     * Resolve live base price in IDR for a package ID from Satu Pintu Catalog (`CmsGlobalSetting` -> default).
+     * Retrieve package details by exact ID (searches both canonical 7 & inclusive PLG tiers).
+     */
+    public static function get(string $id): ?array
+    {
+        $all = self::allPackages();
+
+        return $all[$id] ?? null;
+    }
+
+    /**
+     * Resolve live base price in IDR for a package ID from Satu Pintu / Inclusive Catalog (`CmsGlobalSetting` -> default).
      */
     public static function getBaseAmount(string $id): float
     {
         $catalog = self::getSatuPintuCatalog();
         if (isset($catalog[$id])) {
             return (float) ($catalog[$id]['resolved_price_idr'] ?? $catalog[$id]['default_price'] ?? 0);
+        }
+
+        $inclusive = self::getInclusiveValueMetricCatalog();
+        if (isset($inclusive[$id])) {
+            return (float) ($inclusive[$id]['resolved_price_idr'] ?? $inclusive[$id]['default_price'] ?? 0);
         }
 
         return 0.0;
@@ -181,7 +279,9 @@ class PricingRegistry
      */
     public static function isSelfService(string $id): bool
     {
-        return (self::PACKAGES[$id]['execution_model'] ?? null) === 'self_service';
+        $all = self::allPackages();
+
+        return ($all[$id]['execution_model'] ?? null) === 'self_service';
     }
 
     /**
@@ -189,7 +289,9 @@ class PricingRegistry
      */
     public static function isStudioContract(string $id): bool
     {
-        return (self::PACKAGES[$id]['execution_model'] ?? null) === 'studio_contract';
+        $all = self::allPackages();
+
+        return ($all[$id]['execution_model'] ?? null) === 'studio_contract';
     }
 
     /**
@@ -197,7 +299,7 @@ class PricingRegistry
      */
     public static function getSelfServiceIds(): array
     {
-        return array_keys(array_filter(self::PACKAGES, fn($p) => $p['execution_model'] === 'self_service'));
+        return array_keys(array_filter(self::allPackages(), fn($p) => $p['execution_model'] === 'self_service'));
     }
 
     /**
@@ -205,7 +307,7 @@ class PricingRegistry
      */
     public static function getStudioContractIds(): array
     {
-        return array_keys(array_filter(self::PACKAGES, fn($p) => $p['execution_model'] === 'studio_contract'));
+        return array_keys(array_filter(self::allPackages(), fn($p) => $p['execution_model'] === 'studio_contract'));
     }
 
     /**
@@ -279,6 +381,59 @@ class PricingRegistry
                     }
                 } catch (\Throwable) {
                     // Fallback to defaults gracefully when DB not yet migrated
+                }
+            }
+
+            $pkg['name_id'] = $pkg['name_id'] ?? $pkg['name'] ?? $id;
+            $pkg['name_en'] = $pkg['name_en'] ?? $pkg['name'] ?? $id;
+            $pkg['localized_name'] = [
+                'id' => $pkg['name_id'],
+                'en' => $pkg['name_en'],
+            ];
+            $pkg['localized_sector_scope'] = [
+                'id' => (string) ($pkg['sector_scope'] ?? ''),
+                'en' => (string) ($pkg['sector_scope_en'] ?? $pkg['sector_scope'] ?? ''),
+            ];
+            $pkg['stack_scope_label'] = is_array($pkg['stack_scope'] ?? null)
+                ? implode(', ', $pkg['stack_scope'])
+                : (string) ($pkg['stack_scope'] ?? 'M1–S2');
+            $pkg['resolved_price_idr'] = $price;
+            $pkg['formatted_price'] = $displayPrice;
+            $resolved[$id] = $pkg;
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * Resolve Inclusive Hybrid Value-Metric PLG & CSR SKUs (v8.0 — Impact Grant, Single-App UMKM Pass, Agency White-Label).
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public static function getInclusiveValueMetricCatalog(): array
+    {
+        $resolved = [];
+        foreach (self::INCLUSIVE_PLG_PACKAGES as $id => $pkg) {
+            $price = (int) ($pkg['default_price'] ?? 0);
+            $settingKey = $pkg['setting_key'] ?? null;
+            $displayPrice = $price === 0
+                ? 'Rp 0 (Subsidi CSR 70%–100%)'
+                : ('Rp ' . number_format($price, 0, ',', '.'));
+
+            if ($settingKey) {
+                try {
+                    $raw = \App\Models\CmsGlobalSetting::getVal($settingKey, null);
+                    if ($raw !== null && $raw !== '') {
+                        $cleaned = (int) preg_replace('/[^\d]/', '', (string) $raw);
+                        if ($cleaned >= 0 && ($cleaned > 0 || $id === self::TIER_IMPACT_NONPROFIT_GRANT)) {
+                            $price = $cleaned;
+                            $displayPrice = $price === 0
+                                ? 'Rp 0 (Subsidi CSR 100%)'
+                                : ('Rp ' . number_format($price, 0, ',', '.'));
+                        }
+                    }
+                } catch (\Throwable) {
+                    // Fallback gracefully
                 }
             }
 

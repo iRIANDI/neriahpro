@@ -954,9 +954,37 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         return 'STACK_M1_LARAVEL_MONOLITH';
       }
     })(),
+    selectedUiVariant: initialData.selectedUiVariant || (() => {
+      try {
+        return new URLSearchParams(window.location.search).get('ui_variant') || '';
+      } catch {
+        return '';
+      }
+    })(),
+    navigationShell: initialData.navigationShell || (() => {
+      try {
+        return new URLSearchParams(window.location.search).get('shell') || '';
+      } catch {
+        return '';
+      }
+    })(),
+    outputLocale: initialData.outputLocale || (() => {
+      try {
+        return new URLSearchParams(window.location.search).get('output_locale') || 'id';
+      } catch {
+        return 'id';
+      }
+    })(),
+    personaMode: initialData.personaMode || (() => {
+      try {
+        return new URLSearchParams(window.location.search).get('persona') || 'BUSINESS_WIZARD';
+      } catch {
+        return 'BUSINESS_WIZARD';
+      }
+    })(),
   });
 
-  // 12-Sector, 12 Core Primitives, 9 Curated Tech Stack Presets, 8 Day-2 Layers, 5 Guarantee Engines & 15 Master Pillars (v7.0)
+  // 12-Sector, 36 Visual UI Blueprints, 12 Core Primitives, 9 Curated Tech Stack Presets & 15 Master Pillars (v8.0)
   const [matrixCatalog, setMatrixCatalog] = useState({
     sectors: [],
     primitives: [],
@@ -970,6 +998,12 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     five_enterprise_glue_primitives: [],
     fifteen_architecture_pillars: [],
     five_real_world_elements: [],
+    sector_visual_ui_catalog: {},
+    navigation_shell_options: {},
+    storyboard_wizard: {},
+    retention_and_security_matrix: {},
+    community_primitives_marketplace: [],
+    inclusive_value_metric_packages: {},
     stack_server_sizing: {},
     slop_diff_pairs: [],
   });
@@ -1137,6 +1171,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     const sec = matrixCatalog.sectors.find((s) => s.code === sectorCode);
     const mandatory = sec?.mandatory_primitives || [];
     const defaultMenuCodes = (sec?.enterprise_menu_matrix?.all_menus_flat || []).map((m) => m.code);
+    const defaultVariant = (matrixCatalog.sector_visual_ui_catalog?.[sectorCode]?.[0]) || null;
     setFormData((prev) => {
       const existing = Array.isArray(prev.selectedPrimitives) ? prev.selectedPrimitives : [];
       const mergedPrims = Array.from(new Set([...mandatory, ...existing]));
@@ -1145,11 +1180,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         primarySector: sectorCode,
         selectedPrimitives: mergedPrims,
         selectedMenus: defaultMenuCodes,
+        selectedUiVariant: defaultVariant?.code || '',
+        navigationShell: defaultVariant?.default_shell || '',
       };
       triggerAutoSave(next);
       return next;
     });
-  }, [matrixCatalog.sectors]);
+  }, [matrixCatalog.sectors, matrixCatalog.sector_visual_ui_catalog]);
 
   const activeEnterpriseMenuMatrix = useMemo(() => {
     const secObj = activeMatrixSectorObj || matrixCatalog.sectors?.[0] || null;
@@ -1251,6 +1288,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           stack_preset: formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH',
           selected_menus: effectiveSelectedMenus,
           project_name: formData.namaBisnis || '',
+          selected_ui_variant: formData.selectedUiVariant || null,
+          navigation_shell: formData.navigationShell || null,
+          output_locale: formData.outputLocale || 'id',
+          persona_mode: formData.personaMode || 'BUSINESS_WIZARD',
         }),
       })
         .then((res) => (res.ok ? res.json() : null))
@@ -1265,7 +1306,17 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       active = false;
       clearTimeout(timer);
     };
-  }, [formData.primarySector, effectivePrimitiveCodes, formData.stackPreset, effectiveSelectedMenus, formData.namaBisnis]);
+  }, [
+    formData.primarySector,
+    effectivePrimitiveCodes,
+    formData.stackPreset,
+    effectiveSelectedMenus,
+    formData.namaBisnis,
+    formData.selectedUiVariant,
+    formData.navigationShell,
+    formData.outputLocale,
+    formData.personaMode,
+  ]);
 
   const estimatedTimelineDays = useMemo(() => {
     const raw = String(formData.targetWaktu || '').toLowerCase();
@@ -4694,16 +4745,16 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 </div>
               </div>
 
-              {/* v7.0 Cross-Stage Live Causality Ribbon (100% Architectural Freeze — Every Stage Mutates Downstream Stages) */}
+              {/* v8.0 Cross-Stage Live Causality Ribbon (100% Architectural Freeze — Every Stage Mutates Downstream Stages) */}
               <div className="mt-2.5 p-3 rounded-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5">
                 <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
                   <span className="px-2 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black uppercase">
-                    v7.0 • 15 PILAR FREEZE (100%)
+                    v8.0 • 15 PILAR FREEZE + 36 VISUAL UI
                   </span>
                   <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black tabular-nums">
                     {lang === 'en'
-                      ? `HW Bridge: ${v7RuntimePreview?.hardware_iot_peripheral_contract?.active_bridges_count ?? 1} • WS Zero-Poll: ${v7RuntimePreview?.realtime_websocket_contract?.channels?.length ?? 3}ch`
-                      : `HW Bridge: ${v7RuntimePreview?.hardware_iot_peripheral_contract?.active_bridges_count ?? 1} • WS Zero-Poll: ${v7RuntimePreview?.realtime_websocket_contract?.channels?.length ?? 3} Kanal`}
+                      ? `UI: ${v7RuntimePreview?.visual_frontend_ui_contract?.selected_variant_code || formData.selectedUiVariant || 'AUTO'} • Locale: ${String(formData.outputLocale || 'id').toUpperCase()}`
+                      : `UI: ${v7RuntimePreview?.visual_frontend_ui_contract?.selected_variant_code || formData.selectedUiVariant || 'AUTO'} • Regulasi: ${String(formData.outputLocale || 'id').toUpperCase()}`}
                   </span>
                   <span className="px-2 py-0.5 bg-white text-zinc-950 border border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-bold tabular-nums">
                     {lang === 'en'
@@ -4724,6 +4775,154 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   {lang === 'en' ? '⚡ Inspect 5 Runtime & 15 Pillars' : '⚡ Lihat 5 Runtime & 15 Pilar'}
                 </button>
               </div>
+
+              {/* v8.0 DETERMINISTIC VISUAL FRONTEND UI/UX SELECTOR (12 SECTORS x 3 VARIANTS = 36 BLUEPRINTS) + TIER-1 JURISDICTION */}
+              {(() => {
+                const resolvedSectorKey = activeMatrixSectorObj?.code
+                  || formData.primarySector
+                  || Object.keys(matrixCatalog.sector_visual_ui_catalog || {})[0]
+                  || 'SECTOR_01_COMMERCE_OMNICHANNEL';
+                const visualVariants = matrixCatalog.sector_visual_ui_catalog?.[resolvedSectorKey]
+                  || v7RuntimePreview?.visual_frontend_ui_contract?.available_variants
+                  || [];
+                const activeVariant = visualVariants.find((v) => v.code === formData.selectedUiVariant)
+                  || visualVariants[0]
+                  || null;
+                const shells = Object.values(matrixCatalog.navigation_shell_options || {});
+                const jurisdictionOptions = [
+                  { code: 'id', label: '🇮🇩 ID — Indonesia (UU PDP • PSAK 109 / ISAK 35 • PPh 21 TER)' },
+                  { code: 'en', label: '🇺🇸 EN — International (SOC2 • FASB ASC 958 • HIPAA)' },
+                  { code: 'ar', label: '🇸🇦 AR — العربية MENA [dir="rtl"] (ZATCA Fatoora • AAOIFI)' },
+                  { code: 'ja', label: '🇯🇵 JA — 日本語 Japan (APPI • Qualified Invoice JCT)' },
+                  { code: 'zh-CN', label: '🇨🇳 ZH — 简体中文 APAC (PIPL • Golden Tax Fapiao)' },
+                  { code: 'de', label: '🇩🇪 DE — Deutsch EU (GDPR • GoBD • XRechnung)' },
+                  { code: 'es', label: '🇪🇸 ES — Español LATAM/EU (GDPR • CFDI / FacturaE)' },
+                ];
+
+                if (visualVariants.length === 0) return null;
+
+                return (
+                  <div className="mt-2.5 p-3.5 rounded-xs bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 space-y-3">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 pb-2.5 border-b border-zinc-200 dark:border-zinc-800">
+                      <div>
+                        <span className="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">
+                          {lang === 'en'
+                            ? '🎨 VISUAL FRONTEND UI/UX BLUEPRINT PICKER (LOCKED INTO PHASE 5 & SHA-256 SCOPE)'
+                            : '🎨 PEMILIH VISUAL FRONTEND UI/UX PROYEK (DIKUNCI KE PROMPT FASE 5 & SCOPE SHA-256)'}
+                        </span>
+                        <p className="text-[11px] text-zinc-700 dark:text-zinc-300 mt-0.5">
+                          {lang === 'en'
+                            ? 'Pick your exact multi-pane operational frontend layout so AI coders and Studio engineers build the exact screen topology you want.'
+                            : 'Pilih tata letak visual layar depan proyek Anda secara pasti (Opsi A / B / C) agar hasil koding AI maupun tim Studio 100% sesuai ekspektasi tanpa tebak-tebakan.'}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          value={formData.outputLocale || 'id'}
+                          onChange={(e) => {
+                            const nextLoc = e.target.value;
+                            setFormData((prev) => {
+                              const next = { ...prev, outputLocale: nextLoc };
+                              triggerAutoSave(next);
+                              return next;
+                            });
+                          }}
+                          className="px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-[10px] font-bold rounded-none"
+                        >
+                          {jurisdictionOptions.map((jo) => (
+                            <option key={jo.code} value={jo.code}>{jo.label}</option>
+                          ))}
+                        </select>
+                        {shells.length > 0 && (
+                          <select
+                            value={formData.navigationShell || activeVariant?.default_shell || 'SIDEBAR_ERP_DENSE'}
+                            onChange={(e) => {
+                              const nextShell = e.target.value;
+                              setFormData((prev) => {
+                                const next = { ...prev, navigationShell: nextShell };
+                                triggerAutoSave(next);
+                                return next;
+                              });
+                            }}
+                            className="px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-[10px] font-bold rounded-none"
+                          >
+                            {shells.map((sh) => (
+                              <option key={sh.code} value={sh.code}>
+                                {lang === 'en' ? sh.name?.en : sh.name?.id}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                      {visualVariants.map((vr) => {
+                        const isPicked = activeVariant?.code === vr.code;
+                        const vrTitle = lang === 'en' ? (vr.name?.en || vr.code) : (vr.name?.id || vr.code);
+                        const vrDesc = lang === 'en' ? (vr.summary?.en || '') : (vr.summary?.id || '');
+                        return (
+                          <button
+                            key={vr.code}
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => {
+                                const designNote = `[UI TERKUNCI: ${vr.code} | ${vr.default_shell}] ${vrTitle}`;
+                                const next = {
+                                  ...prev,
+                                  selectedUiVariant: vr.code,
+                                  navigationShell: vr.default_shell || prev.navigationShell,
+                                  referensiDesain: prev.referensiDesain && !prev.referensiDesain.startsWith('[UI TERKUNCI:')
+                                    ? prev.referensiDesain
+                                    : designNote,
+                                };
+                                triggerAutoSave(next);
+                                return next;
+                              });
+                            }}
+                            className={`p-3 text-left border transition rounded-none cursor-pointer flex flex-col justify-between ${isPicked
+                              ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950/90 dark:text-white dark:border-emerald-400'
+                              : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-800'
+                              }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-1.5 font-mono text-[9px] font-black uppercase">
+                                <span className={isPicked ? 'text-emerald-400' : 'text-emerald-900 dark:text-emerald-300'}>
+                                  {vr.badge}
+                                </span>
+                                <span>{isPicked ? '✓ LOCKED' : vr.default_shell}</span>
+                              </div>
+                              <div className="text-xs font-black mt-1 leading-snug">{vrTitle}</div>
+                              <p className={`text-[11px] mt-1 leading-relaxed ${isPicked ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                                {vrDesc}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {activeVariant?.panes && activeVariant.panes.length > 0 && (
+                      <div className={`grid grid-cols-1 ${activeVariant.panes.length >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-2 p-2.5 bg-zinc-100 dark:bg-zinc-950 border border-dashed border-zinc-400 dark:border-zinc-700`}>
+                        {activeVariant.panes.map((pn, pIdx) => (
+                          <div key={pIdx} className="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 font-mono text-[10px]">
+                            <div className="font-black text-emerald-900 dark:text-emerald-300 uppercase">
+                              [{pn.label}] ({pn.span}/12 COL)
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {(pn.widgets || []).map((wg, wIdx) => (
+                                <span key={wIdx} className="px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold">
+                                  {wg}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* =================================================================
                   7-TAB SENIOR ARCHITECT WORKBENCH (VISIBLE WHEN matrixMode === 'workbench')

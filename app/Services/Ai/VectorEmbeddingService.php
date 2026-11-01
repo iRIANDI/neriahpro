@@ -365,6 +365,7 @@ class VectorEmbeddingService
                 ->orWhere('source_id', 'LIKE', 'sectoral-ui-%')
                 ->orWhere('source_id', 'LIKE', 'stack-preset-%')
                 ->orWhere('source_id', 'LIKE', 'killer-engine-%')
+                ->orWhere('source_id', 'LIKE', 'inclusive-v8-%')
                 ->delete();
         }
 
@@ -890,13 +891,65 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 12. Indeks Project OS v8.0: Adaptive Dual-Persona Storyboard, 36 Visual Sector UI Blueprints, 7 Tier-1 Jurisdictions & RTL, Inclusive Hybrid Pricing & 5-Layer IP Canary Security
+        $v8VisualSourceId = 'inclusive-v8-36-visual-ui-and-dual-persona';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v8VisualSourceId)->exists()) {
+            $uiCatalog = \App\Support\PosInclusiveCommercialCatalog::allSectorVisualUiCatalog();
+            $uiLines = [];
+            foreach ($uiCatalog as $secCode => $variants) {
+                $codes = array_map(static fn (array $v): string => $v['code'] . ' (' . ($v['name']['id'] ?? '') . ')', $variants);
+                $uiLines[] = "- {$secCode}: " . implode(' | ', $codes);
+            }
+            $shells = array_keys(\App\Support\PosInclusiveCommercialCatalog::navigationShellOptions());
+            $v8VisualContent = "Project OS v8.0 — Adaptive Dual-Persona UX (`BUSINESS_WIZARD` 5 Langkah Bahasa Manusia vs `ARCHITECT_PRO` 3-Pane Studio) & 36 Varian Visual Frontend UI/UX (12 Sektor × 3 Opsi Visual):\n"
+                . implode("\n", $uiLines)
+                . "\n\n5 Navigation Shells: " . implode(', ', $shells)
+                . "\nSetiap perubahan varian visual UI atau kerangka navigasi langsung merambat ke BLUEPRINT_SCHEMA.json, Prompt Fase 5, EXECUTION_BLUEPRINT.md, nilai RAB IDR, dan Scope Hash SHA-256.";
+
+            $embedding = $this->generateEmbedding("Project OS v8.0 36 Visual Sector Frontend UI Blueprints & Dual-Persona Storyboard\n{$v8VisualContent}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v8.0: 36 Visual Sector Frontend UI Blueprints, 5 Navigation Shells & Dual-Persona Storyboard',
+                'source_type' => 'inclusive_visual_ui_v8',
+                'source_id' => $v8VisualSourceId,
+                'content' => "### Project OS v8.0: 36 Visual Sector UI Blueprints & Dual-Persona UX\n\n{$v8VisualContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'Project OS v8.0 Inclusive UX & 36 Visual UIs',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        $v8SecurityPricingSourceId = 'inclusive-v8-jurisdictions-pricing-and-5layer-security';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v8SecurityPricingSourceId)->exists()) {
+            $v8SecContent = "Project OS v8.0 — 7 Tier-1 Global Native Jurisdictions & RTL, Inclusive Hybrid Pricing & 5-Layer Banking-Grade IP Security:\n"
+                . "1. 7 Yurisdiksi Tier-1 Output Blueprint: `id` (SAK/ISAK 35/PSAK 109/PPh 21 TER/UU PDP), `en` (US GAAP/FASB ASC 958/HIPAA/SOC 2), `zh-CN` (CAS/PIPL/Fapiao), `ja` (J-GAAP/APPI/Qualified Invoice), `ar` (Otomatis `dir=\"rtl\"` + Logical CSS `ms-*/me-*` + ZATCA Fatoora QR + AAOIFI), `es` (NIIF/Veri*factu/RGPD), `de` (HGB/GoBD/DSGVO).\n"
+                . "2. Inclusive Hybrid Value-Metric Pricing: `impact_nonprofit_grant` (Subsidi CSR 70–100% Rp 0 untuk Yayasan/Rumah Ibadah/Sekolah/Riset), `single_app_umkm_pass` (Rp 299.000 1 Aplikasi UMKM), `agency_whitelabel_partner` (Rp 990.000 Multi-Seat Agensi + Proposal RAB & SPK PDF White-Label).\n"
+                . "3. 5 Retention Hooks & 5 Security Layers: Living CVE Security Alerts (`CVE-2026-109618`) + 1-Click Auto-Patch Prompt, 70:30 Verified Community Marketplace, AES-256 Envelope Vault (`encrypted_custom_vault`), 64-Bit Steganographic Zero-Width Unicode Canary Watermark (`\\u200B`/`\\u200C`/`\\u200D`), dan 1-Click Scoped MCP Token Revocation.";
+
+            $embedding = $this->generateEmbedding("Project OS v8.0 Tier-1 RTL Jurisdictions, Inclusive Pricing & 5-Layer Canary Security\n{$v8SecContent}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v8.0: 7 Tier-1 Jurisdictions & RTL, Inclusive Hybrid Pricing & 5-Layer Canary IP Security',
+                'source_type' => 'inclusive_security_pricing_v8',
+                'source_id' => $v8SecurityPricingSourceId,
+                'content' => "### Project OS v8.0: Global Tier-1 RTL, Inclusive Pricing & 5-Layer IP Security\n\n{$v8SecContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'Project OS v8.0 Security, RTL & Inclusive Pricing',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
             'status' => 'success',
             'synced_sections' => $syncedSections,
             'total_chunks' => $totalChunks,
-            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (15 Pilar Master Architectural Freeze v7.0, 5 Elemen Dunia Nyata, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 5 Day-30+ Lifecycle Engines, 5 Mitra Bridges & 5 Deterministic Guarantees) ke basis pengetahuan RAG pgvector.",
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (Project OS v8.0 36 Visual UI & 5-Layer IP Canary, 15 Pilar Master Architectural Freeze v7.0, 5 Elemen Dunia Nyata, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 5 Day-30+ Lifecycle Engines, 5 Mitra Bridges & 5 Deterministic Guarantees) ke basis pengetahuan RAG pgvector.",
         ];
     }
 }

@@ -508,9 +508,9 @@ class ProjectOsV10DualZoneAniwallAndSaasEngineTest extends TestCase
 
     public function test_40_ai_native_tools_rbac_isolation_smart_guide_v10_bilingual_and_sha256_audit_chain(): void
     {
-        // 1. 40 Native AI Tool Declarations + RAG/CAG/KAG v10.0 Knowledge Sync
+        // 1. 44 Native AI Tool Declarations + RAG/CAG/KAG v11.0 Knowledge Sync
         $declarations = GeminiToolRegistry::getDeclarations();
-        $this->assertCount(40, $declarations);
+        $this->assertCount(44, $declarations);
 
         $syncRes = app(VectorEmbeddingService::class)->syncSystemKnowledgeBase(false);
         $this->assertSame('success', $syncRes['status']);

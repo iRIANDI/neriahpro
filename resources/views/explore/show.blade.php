@@ -127,6 +127,25 @@
                         <div class="text-sm font-mono font-black text-zinc-950 dark:text-white mt-2">{{ $receipt['stack_code'] ?? 'M1_LARAVEL_FILAMENT_MODULAR' }}</div>
                     </div>
                 </div>
+
+                <!-- GEO Mechanism #3: Sector-Specific Answer Capsule & Statutory Standards -->
+                <div class="mt-6 p-4 bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-300 dark:border-zinc-800 rounded-none space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="font-mono text-xs font-black uppercase text-emerald-950 dark:text-emerald-300">
+                            {{ $locale === 'en' ? 'TL;DR SECTOR EXECUTIVE DEFINITION (GEO CITATION CAPSULE)' : 'TL;DR DEFINISI EKSEKUTIF SEKTORAL (KAPSUL KUTIPAN AI & GEO)' }}
+                        </span>
+                        <div class="flex flex-wrap gap-1.5 font-mono text-[10px]">
+                            @foreach(($answerCapsule['schema_types'] ?? []) as $stType)
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black">
+                                    Schema.org/{{ $stType }}
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
+                    <p class="text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 leading-relaxed font-medium">
+                        {{ $answerCapsule['tldr_text'] ?? '' }}
+                    </p>
+                </div>
             </div>
 
             <!-- 20% Public Anonymized Blueprint Preview (Zero Proprietary Business Secrets Leaked) -->
@@ -211,9 +230,9 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-3 shrink-0">
-                    <a href="{{ url('/blueprint?tier=spark&track=retail&sector=' . urlencode($item['sector_code'] ?? 'SECTOR_01_RETAIL_FNB')) }}"
+                    <a href="{{ url('/pricing?sector=' . urlencode($item['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL') . '#retail') }}"
                        class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-xs font-black uppercase tracking-wider rounded-none transition-colors">
-                        {{ $locale === 'en' ? 'Clone Sector in Studio ->' : 'Kloning Sektor di Studio ->' }}
+                        {{ $locale === 'en' ? 'Configure in Satu Pintu & Choose SaaS Tier ->' : 'Konfigurasi Satu Pintu & Pilih Paket SaaS ->' }}
                     </a>
                     <a href="{{ route('explore.index') }}"
                        class="px-4 py-3 bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 font-mono text-xs font-bold uppercase tracking-wider rounded-none transition-colors">

@@ -7,19 +7,43 @@ use App\Models\AuditLog;
 use App\Models\Document;
 use App\Models\DomainHostingAsset;
 use App\Models\LeadContact;
+use App\Models\PosAffiliateReferral;
+use App\Models\PosArchitecturePillar;
+use App\Models\PosImpactGrantApplication;
+use App\Models\PosOrganizationWorkspace;
+use App\Models\PosPrivacyErasureRequest;
 use App\Models\PosProject;
+use App\Models\PosSlaMaintenanceTicket;
+use App\Models\Role;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\VisionBlueprint;
-use App\Services\Ai\AiWorkflowTracer;
-use App\Services\Ai\VectorEmbeddingService;
+use App\Services\BlueprintDeltaEvolutionService;
+use App\Services\BlueprintDoctorService;
+use App\Services\BlueprintSlopScannerService;
+use App\Services\BrownfieldMigrationAuditorService;
 use App\Services\PosCommercialBridgeService;
 use App\Services\ProjectOsBlueprintCompilerService;
+use App\Services\Saas\PosSaasCommercialEngineService;
 use App\Services\Security\DocumentThreatSanitizerService;
+use App\Services\SeoGeo\GeoAuthorityGeneratorService;
+use App\Services\Sla\PosSlaAndSandboxEngineService;
 use App\Support\PosAgentShieldAndCoDesignCatalog;
+use App\Support\PosDayTwoProductionCatalog;
+use App\Support\PosDualZoneFrontendAndSaasCatalog;
+use App\Support\PosEnterpriseGuaranteeCatalog;
+use App\Support\PosInclusiveCommercialCatalog;
+use App\Support\PosLifecycleAndStudioCatalog;
+use App\Support\PosRealWorldRuntimeCatalog;
+use App\Support\PosSectorUiArchetypeCatalog;
+use App\Support\PosSeoGeoAndZeroFailureCatalog;
+use App\Support\PosStackPresetCatalog;
+use App\Support\PricingRegistry;
+use App\Support\ProjectOsMatrixCatalog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class AgenticActionExecutionEngine
@@ -96,6 +120,10 @@ class AgenticActionExecutionEngine
                 'manage_verified_testimonials_aniwall' => (strtolower(trim((string) ($args['action'] ?? 'list_aniwall'))) === 'issue_receipt' ? $this->guardMutation($user, $toolName) : null) ?? $this->manageVerifiedTestimonialsAniwall($args),
                 'manage_affiliate_and_impact_grants' => (strtolower(trim((string) ($args['action'] ?? 'summary'))) === 'approve_grant' ? $this->guardMutation($user, $toolName) : null) ?? $this->manageAffiliateAndImpactGrants($args, $user),
                 'inspect_saas_system_health_and_billing_gate' => $this->inspectSaasSystemHealthAndBillingGate($args, $user),
+                'generate_seo_geo_authority_pack' => (! empty($args['ping_indexnow']) ? $this->guardMutation($user, $toolName) : null) ?? $this->generateSeoGeoAuthorityPack($args),
+                'audit_uu_pdp_blind_index_and_privacy' => $this->auditUuPdpBlindIndexAndPrivacy($args),
+                'triage_post_bast_sla_maintenance_ticket' => (strtolower(trim((string) ($args['action'] ?? 'list_tickets'))) === 'submit_ticket' ? $this->guardMutation($user, $toolName) : null) ?? $this->triagePostBastSlaMaintenanceTicket($args, $user),
+                'simulate_sandbox_webhook_and_holding_rollup' => (strtolower(trim((string) ($args['action'] ?? 'holding_rollup'))) === 'simulate_webhook' ? $this->guardMutation($user, $toolName) : null) ?? $this->simulateSandboxWebhookAndHoldingRollup($args, $user),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
@@ -118,14 +146,14 @@ class AgenticActionExecutionEngine
             return $result;
         } catch (\Throwable $e) {
             $execTimeMs = (int) round((microtime(true) - $startTime) * 1000);
-            Log::error("AgenticActionExecutionEngine::execute error ({$toolName}): " . $e->getMessage());
+            Log::error("AgenticActionExecutionEngine::execute error ({$toolName}): ".$e->getMessage());
 
             if ($trace) {
                 AiWorkflowTracer::failTrace($trace, $e->getMessage(), $execTimeMs);
             }
 
             return [
-                'error' => "Gagal mengeksekusi aksi {$toolName}: " . $e->getMessage(),
+                'error' => "Gagal mengeksekusi aksi {$toolName}: ".$e->getMessage(),
             ];
         }
     }
@@ -137,16 +165,16 @@ class AgenticActionExecutionEngine
     {
         $query = VisionBlueprint::query();
 
-        if (!empty($args['query'])) {
-            $term = '%' . trim($args['query']) . '%';
+        if (! empty($args['query'])) {
+            $term = '%'.trim($args['query']).'%';
             $query->where(function ($q) use ($term) {
                 $q->where('nama_bisnis', 'LIKE', $term)
-                  ->orWhere('client_name', 'LIKE', $term)
-                  ->orWhere('slug', 'LIKE', $term);
+                    ->orWhere('client_name', 'LIKE', $term)
+                    ->orWhere('slug', 'LIKE', $term);
             });
         }
 
-        if (!empty($args['status'])) {
+        if (! empty($args['status'])) {
             $query->where('project_status', $args['status']);
         }
 
@@ -174,12 +202,12 @@ class AgenticActionExecutionEngine
     protected function getBlueprintDetails(array $args): array
     {
         $id = $args['blueprint_id'] ?? null;
-        if (!$id) {
+        if (! $id) {
             return ['error' => 'Parameter blueprint_id wajib diisi.'];
         }
 
         $b = VisionBlueprint::where('id', $id)->orWhere('slug', $id)->first();
-        if (!$b) {
+        if (! $b) {
             return ['error' => "Blueprint dengan ID atau Slug '{$id}' tidak ditemukan."];
         }
 
@@ -195,7 +223,7 @@ class AgenticActionExecutionEngine
             'signed_at' => $b->signed_at?->format('Y-m-d H:i'),
             'sha256_hash' => $b->document_sha256,
             'masalah_utama' => $b->masalah_utama,
-            'has_prd' => !empty($b->prd_content),
+            'has_prd' => ! empty($b->prd_content),
             'staging_url' => $b->staging_url,
         ];
     }
@@ -212,7 +240,7 @@ class AgenticActionExecutionEngine
             return ['error' => 'Judul proyek dan nama klien wajib diisi.'];
         }
 
-        $slug = Str::slug($title) . '-' . strtolower(Str::random(5));
+        $slug = Str::slug($title).'-'.strtolower(Str::random(5));
 
         $blueprint = VisionBlueprint::create([
             'nama_bisnis' => $title,
@@ -250,7 +278,7 @@ class AgenticActionExecutionEngine
         $status = $args['status'] ?? null;
 
         $blueprint = VisionBlueprint::where('id', $id)->orWhere('slug', $id)->first();
-        if (!$blueprint) {
+        if (! $blueprint) {
             return ['error' => "Blueprint '{$id}' tidak ditemukan."];
         }
 
@@ -283,7 +311,7 @@ class AgenticActionExecutionEngine
     {
         $id = $args['blueprint_id'] ?? null;
         $blueprint = VisionBlueprint::where('id', $id)->orWhere('slug', $id)->first();
-        if (!$blueprint) {
+        if (! $blueprint) {
             return ['error' => "Blueprint '{$id}' tidak ditemukan."];
         }
 
@@ -323,7 +351,7 @@ class AgenticActionExecutionEngine
 
         return [
             'success' => true,
-            'message' => "Kontrak legal berstempel SHA-256 berhasil diterbitkan.",
+            'message' => 'Kontrak legal berstempel SHA-256 berhasil diterbitkan.',
             'document_id' => $document->id,
             'sha256_seal' => $sealHash,
             'status' => $document->status,
@@ -337,15 +365,15 @@ class AgenticActionExecutionEngine
     {
         $query = Transaction::query();
 
-        if (!empty($args['query'])) {
-            $term = '%' . trim($args['query']) . '%';
+        if (! empty($args['query'])) {
+            $term = '%'.trim($args['query']).'%';
             $query->where(function ($q) use ($term) {
                 $q->where('midtrans_order_id', 'LIKE', $term)
-                  ->orWhere('midtrans_transaction_id', 'LIKE', $term);
+                    ->orWhere('midtrans_transaction_id', 'LIKE', $term);
             });
         }
 
-        if (!empty($args['status'])) {
+        if (! empty($args['status'])) {
             $query->where('status', $args['status']);
         }
 
@@ -402,7 +430,7 @@ class AgenticActionExecutionEngine
                 'asset_type' => $args['asset_type'] ?? 'domain',
                 'provider' => 'Cloud Provider',
                 'registration_date' => now(),
-                'expiry_date' => !empty($args['expires_at']) ? $args['expires_at'] : now()->addYear(),
+                'expiry_date' => ! empty($args['expires_at']) ? $args['expires_at'] : now()->addYear(),
                 'cost_price' => $args['cost_price'] ?? 0,
                 'client_price' => $args['client_price'] ?? 0,
                 'subscription_status' => 'active',
@@ -458,6 +486,7 @@ class AgenticActionExecutionEngine
     protected function syncKnowledgeBase(array $args): array
     {
         $force = (bool) ($args['force_refresh'] ?? true);
+
         return $this->vectorService->syncSystemKnowledgeBase($force);
     }
 
@@ -468,11 +497,11 @@ class AgenticActionExecutionEngine
     {
         $query = AuditLog::with('user:id,name,email');
 
-        if (!empty($args['action'])) {
+        if (! empty($args['action'])) {
             $query->where('action', $args['action']);
         }
 
-        if (!empty($args['event_category']) && \Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'event_category')) {
+        if (! empty($args['event_category']) && Schema::hasColumn('audit_logs', 'event_category')) {
             $query->where('event_category', $args['event_category']);
         }
 
@@ -511,16 +540,16 @@ class AgenticActionExecutionEngine
         $scopeLocked = VisionBlueprint::where('signed_agreement', true)->count();
         $revenue = (float) Transaction::where('status', 'settlement')->sum('total_idr');
         $expiringAssets = DomainHostingAsset::where('expiry_date', '<=', now()->addDays(30))->count();
-        $totalKnowledge = \Illuminate\Support\Facades\Schema::hasTable('ai_knowledge_vectors')
+        $totalKnowledge = Schema::hasTable('ai_knowledge_vectors')
             ? DB::table('ai_knowledge_vectors')->count()
             : 0;
-        $changeRequestsCount = \Illuminate\Support\Facades\Schema::hasTable('pos_change_requests')
+        $changeRequestsCount = Schema::hasTable('pos_change_requests')
             ? DB::table('pos_change_requests')->count()
             : 0;
-        $mitraProjectsCount = (\Illuminate\Support\Facades\Schema::hasTable('pos_projects') && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'engagement_mode'))
+        $mitraProjectsCount = (Schema::hasTable('pos_projects') && Schema::hasColumn('pos_projects', 'engagement_mode'))
             ? DB::table('pos_projects')->where('engagement_mode', 'MITRA_TURNKEY_PROJECT')->count()
             : 0;
-        $bastIssuedCount = (\Illuminate\Support\Facades\Schema::hasTable('pos_projects') && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'bast_signoff_json'))
+        $bastIssuedCount = (Schema::hasTable('pos_projects') && Schema::hasColumn('pos_projects', 'bast_signoff_json'))
             ? DB::table('pos_projects')->whereNotNull('bast_signoff_json')->count()
             : 0;
 
@@ -537,28 +566,44 @@ class AgenticActionExecutionEngine
             'expiring_assets_30_days' => $expiringAssets,
             'total_knowledge_chunks' => $totalKnowledge,
             'change_requests_count' => $changeRequestsCount,
-            'sectors_count' => count(\App\Support\ProjectOsMatrixCatalog::sectors()),
-            'primitives_count' => count(\App\Support\ProjectOsMatrixCatalog::primitives()),
-            'stack_presets_count' => count(\App\Support\PosStackPresetCatalog::stackPresets()),
-            'day_two_layers_count' => count(\App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary()),
-            'lifecycle_features_count' => count(\App\Support\PosLifecycleAndStudioCatalog::fiveLifecycleFeatures()),
-            'commercial_bridge_features_count' => count(\App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures()),
-            'deterministic_guarantees_count' => count(\App\Support\PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees()),
-            'enterprise_glue_tables_count' => count(\App\Support\PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives()),
-            'real_world_elements_count' => count(\App\Support\PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview()),
-            'architecture_pillars_count' => count(\App\Models\PosArchitecturePillar::getCachedMatrix()),
+            'sectors_count' => count(ProjectOsMatrixCatalog::sectors()),
+            'primitives_count' => count(ProjectOsMatrixCatalog::primitives()),
+            'stack_presets_count' => count(PosStackPresetCatalog::stackPresets()),
+            'day_two_layers_count' => count(PosDayTwoProductionCatalog::finalEightLayersSummary()),
+            'lifecycle_features_count' => count(PosLifecycleAndStudioCatalog::fiveLifecycleFeatures()),
+            'commercial_bridge_features_count' => count(PosCommercialBridgeService::fiveCommercialBridgeFeatures()),
+            'deterministic_guarantees_count' => count(PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees()),
+            'enterprise_glue_tables_count' => count(PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives()),
+            'real_world_elements_count' => count(PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview()),
+            'architecture_pillars_count' => count(PosArchitecturePillar::getCachedMatrix()),
             'architectural_freeze_score' => 100,
             'l1_l4_sector_submenus_count' => 300,
             'visual_ui_blueprints_count' => 36,
-            'navigation_shells_count' => count(\App\Support\PosInclusiveCommercialCatalog::navigationShellOptions()),
+            'navigation_shells_count' => count(PosInclusiveCommercialCatalog::navigationShellOptions()),
             'tier1_jurisdictions_count' => 7,
-            'inclusive_plg_skus_count' => count(\App\Support\PricingRegistry::getInclusiveValueMetricCatalog()),
+            'inclusive_plg_skus_count' => count(PricingRegistry::getInclusiveValueMetricCatalog()),
             'agentshield_layers_count' => 5,
             'sector_audit_presets_count' => count(PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets()),
-            'public_ux_presets_count' => count(\App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets()),
-            'saas_commercial_modules_count' => count(\App\Support\PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules()),
-            'verified_testimonials_count' => count(\App\Support\PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog()),
+            'public_ux_presets_count' => count(PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets()),
+            'saas_commercial_modules_count' => count(PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules()),
+            'verified_testimonials_count' => count(PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog()),
             'world_class_sprints_count' => 5,
+            'twenty_pillars_paripurna_count' => count(PosSeoGeoAndZeroFailureCatalog::twentyPillarsParipurnaMatrix()),
+            'zero_failure_v11_modules_count' => count(PosSeoGeoAndZeroFailureCatalog::sixFinalZeroFailureModules()),
+            'sla_warranty_tickets_count' => Schema::hasTable('pos_sla_maintenance_tickets')
+                ? PosSlaMaintenanceTicket::query()->count()
+                : 0,
+            'privacy_erasure_requests_count' => Schema::hasTable('pos_privacy_erasure_requests')
+                ? PosPrivacyErasureRequest::query()->count()
+                : 0,
+            'twenty_pillars_paripurna_count' => count(PosSeoGeoAndZeroFailureCatalog::twentyPillarsParipurnaMatrix()),
+            'zero_failure_v11_modules_count' => count(PosSeoGeoAndZeroFailureCatalog::sixFinalZeroFailureModules()),
+            'sla_warranty_tickets_count' => Schema::hasTable('pos_sla_maintenance_tickets')
+                ? PosSlaMaintenanceTicket::query()->count()
+                : 0,
+            'privacy_erasure_requests_count' => Schema::hasTable('pos_privacy_erasure_requests')
+                ? PosPrivacyErasureRequest::query()->count()
+                : 0,
             'native_tools_count' => count(GeminiToolRegistry::getDeclarations()),
         ];
     }
@@ -590,13 +635,14 @@ class AgenticActionExecutionEngine
     protected function getSectorUiArchetype(array $args): array
     {
         $input = trim((string) ($args['sector_code'] ?? ''));
-        $allArchetypes = \App\Support\PosSectorUiArchetypeCatalog::sectorUiArchetypes();
+        $allArchetypes = PosSectorUiArchetypeCatalog::sectorUiArchetypes();
 
         if ($input === '') {
             return [
                 'total_sectors' => count($allArchetypes),
-                'sectors' => collect(\App\Support\ProjectOsMatrixCatalog::sectors())->map(function (array $s) use ($allArchetypes) {
+                'sectors' => collect(ProjectOsMatrixCatalog::sectors())->map(function (array $s) use ($allArchetypes) {
                     $arch = $allArchetypes[$s['code']] ?? [];
+
                     return [
                         'code' => $s['code'],
                         'name' => $s['name']['id'] ?? $s['code'],
@@ -608,18 +654,18 @@ class AgenticActionExecutionEngine
             ];
         }
 
-        $normalized = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode($input);
+        $normalized = PosSectorUiArchetypeCatalog::normalizeSectorCode($input);
         if (isset($allArchetypes[$normalized])) {
             $code = $normalized;
         } else {
-            $resolved = \App\Services\ProjectOsBlueprintCompilerService::resolveSectorAndPrimitives($input);
+            $resolved = ProjectOsBlueprintCompilerService::resolveSectorAndPrimitives($input);
             $code = (string) ($resolved['sector']->code ?? 'SECTOR_01_COMMERCE_OMNICHANNEL');
         }
 
         return [
             'sector_code' => $code,
-            'ui_ux_archetype' => \App\Support\PosSectorUiArchetypeCatalog::forSector($code),
-            'realistic_domain_seeder' => \App\Support\PosSectorUiArchetypeCatalog::seederForSector($code),
+            'ui_ux_archetype' => PosSectorUiArchetypeCatalog::forSector($code),
+            'realistic_domain_seeder' => PosSectorUiArchetypeCatalog::seederForSector($code),
         ];
     }
 
@@ -638,11 +684,11 @@ class AgenticActionExecutionEngine
             return ['error' => "Blueprint '{$id}' tidak ditemukan."];
         }
 
-        $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
+        $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
         $phases = $schema['phased_prompt_sequencer']
-            ?? \App\Services\ProjectOsBlueprintCompilerService::compilePhasedPrompts($schema);
+            ?? ProjectOsBlueprintCompilerService::compilePhasedPrompts($schema);
 
-        $cliCommand = 'curl -sL ' . url('/init/' . $blueprint->id) . ' | bash';
+        $cliCommand = 'curl -sL '.url('/init/'.$blueprint->id).' | bash';
         $phaseNum = isset($args['phase_number']) ? (int) $args['phase_number'] : null;
 
         if ($phaseNum && $phaseNum >= 1 && $phaseNum <= 7) {
@@ -671,7 +717,7 @@ class AgenticActionExecutionEngine
         $schemaText = (string) ($args['schema_text'] ?? '');
         $hint = isset($args['project_hint']) ? (string) $args['project_hint'] : null;
 
-        return app(\App\Services\BrownfieldMigrationAuditorService::class)->auditSchema($schemaText, $hint, true);
+        return app(BrownfieldMigrationAuditorService::class)->auditSchema($schemaText, $hint, true);
     }
 
     /**
@@ -679,7 +725,7 @@ class AgenticActionExecutionEngine
      */
     protected function runBlueprintSlopScanner(array $args): array
     {
-        $scanner = app(\App\Services\BlueprintSlopScannerService::class);
+        $scanner = app(BlueprintSlopScannerService::class);
 
         $bpLookup = trim((string) ($args['blueprint_id'] ?? $args['blueprint_identifier'] ?? ''));
         if ($bpLookup !== '') {
@@ -687,6 +733,7 @@ class AgenticActionExecutionEngine
             if (! $blueprint) {
                 return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
             }
+
             return $scanner->auditBlueprint($blueprint, true);
         }
 
@@ -702,7 +749,7 @@ class AgenticActionExecutionEngine
      */
     protected function runBlueprintDoctor(array $args): array
     {
-        $doctor = app(\App\Services\BlueprintDoctorService::class);
+        $doctor = app(BlueprintDoctorService::class);
 
         $bpLookup = trim((string) ($args['blueprint_id'] ?? $args['blueprint_identifier'] ?? ''));
         if ($bpLookup !== '') {
@@ -733,11 +780,11 @@ class AgenticActionExecutionEngine
         if ($input === '') {
             $code = 'SECTOR_01_COMMERCE_OMNICHANNEL';
         } else {
-            $normalized = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode($input);
+            $normalized = PosSectorUiArchetypeCatalog::normalizeSectorCode($input);
             if ($normalized !== 'SECTOR_01_COMMERCE_OMNICHANNEL' || str_contains(strtoupper($input), 'COMMERCE') || str_contains(strtoupper($input), 'SECTOR_01')) {
                 $code = $normalized;
             } else {
-                $resolved = \App\Services\ProjectOsBlueprintCompilerService::resolveSectorAndPrimitives($input);
+                $resolved = ProjectOsBlueprintCompilerService::resolveSectorAndPrimitives($input);
                 $code = (string) ($resolved['sector']->code ?? 'SECTOR_01_COMMERCE_OMNICHANNEL');
             }
         }
@@ -745,9 +792,9 @@ class AgenticActionExecutionEngine
         return [
             'success' => true,
             'sector_code' => $code,
-            'day_two_bundle' => \App\Support\PosDayTwoProductionCatalog::bundleForSector($code),
-            'final_eight_layers' => \App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary(),
-            'ten_perfection_pillars' => \App\Support\PosDayTwoProductionCatalog::tenPerfectionPillars(),
+            'day_two_bundle' => PosDayTwoProductionCatalog::bundleForSector($code),
+            'final_eight_layers' => PosDayTwoProductionCatalog::finalEightLayersSummary(),
+            'ten_perfection_pillars' => PosDayTwoProductionCatalog::tenPerfectionPillars(),
         ];
     }
 
@@ -768,10 +815,10 @@ class AgenticActionExecutionEngine
             return ['error' => "Blueprint '{$id}' tidak ditemukan."];
         }
 
-        $posProject = app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+        $posProject = app(ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
         $title = trim((string) ($args['title'] ?? 'Penambahan Fitur Evolusi Bisnis'));
 
-        return app(\App\Services\BlueprintDeltaEvolutionService::class)->createChangeRequest(
+        return app(BlueprintDeltaEvolutionService::class)->createChangeRequest(
             $blueprint,
             $posProject,
             [
@@ -797,24 +844,24 @@ class AgenticActionExecutionEngine
             if (! $blueprint) {
                 return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
             }
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+            $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
             $code = (string) ($schema['project_metadata']['primary_sector'] ?? $code);
             $appName = (string) ($schema['project_metadata']['name'] ?? $blueprint->nama_bisnis);
-            $posProject = \App\Models\PosProject::where('vision_blueprint_id', $blueprint->id)->first();
+            $posProject = PosProject::where('vision_blueprint_id', $blueprint->id)->first();
             if ($posProject && is_array($posProject->decision_tables_json) && ! empty($posProject->decision_tables_json)) {
                 $customRules = $posProject->decision_tables_json;
             }
         } elseif (! empty($args['sector_code'])) {
-            $code = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode((string) $args['sector_code']);
+            $code = PosSectorUiArchetypeCatalog::normalizeSectorCode((string) $args['sector_code']);
         }
 
-        $matrix = \App\Support\PosLifecycleAndStudioCatalog::decisionTablesForSector($code, $customRules);
+        $matrix = PosLifecycleAndStudioCatalog::decisionTablesForSector($code, $customRules);
 
         return [
             'success' => true,
             'sector_code' => $code,
             'decision_matrix' => $matrix,
-            'compiled_php_class' => \App\Support\PosLifecycleAndStudioCatalog::compileDecisionTablesToPhpClass($matrix, $appName),
+            'compiled_php_class' => PosLifecycleAndStudioCatalog::compileDecisionTablesToPhpClass($matrix, $appName),
         ];
     }
 
@@ -835,23 +882,23 @@ class AgenticActionExecutionEngine
                 return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
             }
             $blueprintSlug = $blueprint->slug;
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+            $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
             $code = (string) ($schema['project_metadata']['primary_sector'] ?? $code);
             $primitives = array_values((array) ($schema['project_metadata']['injected_primitives'] ?? $primitives));
             $stackPreset = (string) ($schema['project_metadata']['stack_preset'] ?? $stackPreset);
         } elseif (! empty($args['sector_code'])) {
-            $code = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode((string) $args['sector_code']);
+            $code = PosSectorUiArchetypeCatalog::normalizeSectorCode((string) $args['sector_code']);
         }
 
-        $envVault = \App\Support\PosLifecycleAndStudioCatalog::environmentVaultBlueprint($code, $primitives, $stackPreset);
-        $redTeam = \App\Support\PosLifecycleAndStudioCatalog::redTeamSecuritySuiteContract($code, $primitives);
+        $envVault = PosLifecycleAndStudioCatalog::environmentVaultBlueprint($code, $primitives, $stackPreset);
+        $redTeam = PosLifecycleAndStudioCatalog::redTeamSecuritySuiteContract($code, $primitives);
 
         return [
             'success' => true,
             'sector_code' => $code,
             'stack_preset' => $stackPreset,
             'environment_secret_vault' => $envVault,
-            'env_blueprint_preview' => \App\Support\PosLifecycleAndStudioCatalog::renderEnvBlueprintFile($envVault, $blueprintSlug ?? 'neriahpro-app'),
+            'env_blueprint_preview' => PosLifecycleAndStudioCatalog::renderEnvBlueprintFile($envVault, $blueprintSlug ?? 'neriahpro-app'),
             'phase_7_security_redteam_suite' => $redTeam,
             'mcp_server_bridge' => [
                 'endpoint' => url('/api/mcp/project-os'),
@@ -866,7 +913,7 @@ class AgenticActionExecutionEngine
      */
     protected function calculateMitraQuotationAndWbs(array $args): array
     {
-        $bridge = app(\App\Services\PosCommercialBridgeService::class);
+        $bridge = app(PosCommercialBridgeService::class);
         $terminScheme = in_array(($args['termin_scheme'] ?? ''), ['30_50_20', '50_50'], true)
             ? (string) $args['termin_scheme']
             : null;
@@ -877,17 +924,17 @@ class AgenticActionExecutionEngine
             if (! $blueprint) {
                 return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
             }
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+            $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
         } else {
             $sectorCode = ! empty($args['sector_code'])
-                ? \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode((string) $args['sector_code'])
+                ? PosSectorUiArchetypeCatalog::normalizeSectorCode((string) $args['sector_code'])
                 : 'SECTOR_01_COMMERCE_OMNICHANNEL';
             $stackPreset = trim((string) ($args['stack_preset_code'] ?? 'STACK_M1_LARAVEL_FILAMENT_LIVEWIRE'));
-            $sectorMeta = collect(\App\Support\ProjectOsMatrixCatalog::sectors())->firstWhere('code', $sectorCode)
-                ?: \App\Support\ProjectOsMatrixCatalog::sectors()[0];
+            $sectorMeta = collect(ProjectOsMatrixCatalog::sectors())->firstWhere('code', $sectorCode)
+                ?: ProjectOsMatrixCatalog::sectors()[0];
             $primitives = array_values((array) ($sectorMeta['mandatory_primitives'] ?? ['PRIM_IAM_MULTI_TENANT', 'PRIM_AUDIT_SECURITY_LEDGER']));
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
-                'name' => 'Simulasi Mitra Proyek (' . ($sectorMeta['name']['id'] ?? $sectorCode) . ')',
+            $schema = ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+                'name' => 'Simulasi Mitra Proyek ('.($sectorMeta['name']['id'] ?? $sectorCode).')',
                 'sector_code' => $sectorCode,
                 'primitive_codes' => $primitives,
                 'stack_preset_code' => $stackPreset,
@@ -899,8 +946,8 @@ class AgenticActionExecutionEngine
         return [
             'success' => true,
             'quotation' => $quotation,
-            'satu_pintu_packages' => \App\Support\PricingRegistry::getSatuPintuCatalog(),
-            'guided_wizard_steps' => \App\Services\PosCommercialBridgeService::guidedClientJourneySteps(),
+            'satu_pintu_packages' => PricingRegistry::getSatuPintuCatalog(),
+            'guided_wizard_steps' => PosCommercialBridgeService::guidedClientJourneySteps(),
         ];
     }
 
@@ -919,12 +966,12 @@ class AgenticActionExecutionEngine
             return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
         }
 
-        $posProject = app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+        $posProject = app(ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
         $terminScheme = in_array(($args['termin_scheme'] ?? ''), ['30_50_20', '50_50'], true)
             ? (string) $args['termin_scheme']
             : null;
 
-        return app(\App\Services\PosCommercialBridgeService::class)->lockScopeAndGenerateSpk(
+        return app(PosCommercialBridgeService::class)->lockScopeAndGenerateSpk(
             $blueprint,
             $posProject,
             ['termin_scheme' => $terminScheme]
@@ -946,17 +993,18 @@ class AgenticActionExecutionEngine
             return ['error' => "Blueprint '{$bpLookup}' tidak ditemukan."];
         }
 
-        $posProject = app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
-        $bridge = app(\App\Services\PosCommercialBridgeService::class);
+        $posProject = app(ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+        $bridge = app(PosCommercialBridgeService::class);
         $action = strtolower(trim((string) ($args['action'] ?? $args['operation'] ?? 'inspect')));
 
         if ($action === 'verify_all_uat' || $action === 'sign_bast') {
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+            $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
             $checklist = $bridge->buildUatChecklist($schema, is_array($posProject->uat_checklist_json) ? $posProject->uat_checklist_json : []);
             $allPassed = array_map(static function (array $item): array {
                 $item['passed'] = true;
                 $item['checked_at'] = now()->toIso8601String();
                 $item['checked_by'] = auth()->user()?->name ?: 'Neriah Pro AI Agent';
+
                 return $item;
             }, $checklist['scenarios'] ?? []);
             $rebuiltChecklist = $bridge->buildUatChecklist($schema, ['scenarios' => $allPassed]);
@@ -976,7 +1024,8 @@ class AgenticActionExecutionEngine
             ]);
         }
 
-        $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+        $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+
         return [
             'success' => true,
             'action' => $action,
@@ -1009,11 +1058,11 @@ class AgenticActionExecutionEngine
             }
         }
 
-        $normalizedSector = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+        $normalizedSector = PosSectorUiArchetypeCatalog::normalizeSectorCode(
             $sectorCode !== '' ? $sectorCode : 'SECTOR_01_COMMERCE_OMNICHANNEL'
         );
-        $matrix = \App\Support\PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector($normalizedSector, $selectedMenus);
-        $glue = \App\Support\PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives();
+        $matrix = PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector($normalizedSector, $selectedMenus);
+        $glue = PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives();
 
         AuditLog::record(
             action: 'enterprise_menu_expanded',
@@ -1049,9 +1098,9 @@ class AgenticActionExecutionEngine
             : null;
 
         if ($blueprint) {
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
+            $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
         } else {
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+            $schema = ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
                 'sector_code' => $args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL',
                 'stack_preset_code' => $args['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH',
             ]);
@@ -1106,10 +1155,10 @@ class AgenticActionExecutionEngine
         $distinctSlugs = VisionBlueprint::distinct('slug')->count('slug');
         $duplicateSlugsCount = max(0, $totalBlueprints - $distinctSlugs);
 
-        $posProjectsCount = \Illuminate\Support\Facades\Schema::hasTable('pos_projects')
+        $posProjectsCount = Schema::hasTable('pos_projects')
             ? DB::table('pos_projects')->count()
             : 0;
-        $distinctTokens = (\Illuminate\Support\Facades\Schema::hasTable('pos_projects') && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'isolation_token'))
+        $distinctTokens = (Schema::hasTable('pos_projects') && Schema::hasColumn('pos_projects', 'isolation_token'))
             ? DB::table('pos_projects')->whereNotNull('isolation_token')->distinct('isolation_token')->count('isolation_token')
             : 0;
 
@@ -1118,8 +1167,8 @@ class AgenticActionExecutionEngine
         if ($bpLookup !== '') {
             $bp = VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first();
             if ($bp) {
-                $linkedPos = \Illuminate\Support\Facades\Schema::hasTable('pos_projects')
-                    ? \App\Models\PosProject::query()->where('vision_blueprint_id', $bp->id)->first()
+                $linkedPos = Schema::hasTable('pos_projects')
+                    ? PosProject::query()->where('vision_blueprint_id', $bp->id)->first()
                     : null;
                 $targetInspection = [
                     'blueprint_ulid' => $bp->id,
@@ -1142,7 +1191,7 @@ class AgenticActionExecutionEngine
                 'pos_projects_count' => $posProjectsCount,
                 'distinct_isolation_tokens' => $distinctTokens,
             ],
-            description: "Audit Hermetic Project Isolation dijalankan (status bersih: " . ($isHermeticallyClean ? 'YA' : 'PERLU TINDAKAN') . ").",
+            description: 'Audit Hermetic Project Isolation dijalankan (status bersih: '.($isHermeticallyClean ? 'YA' : 'PERLU TINDAKAN').').',
             eventCategory: 'project_isolation'
         );
 
@@ -1172,17 +1221,17 @@ class AgenticActionExecutionEngine
             : null;
 
         if ($blueprint) {
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
+            $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
                 'persist_project' => false,
             ]);
         } else {
-            $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+            $sectorCode = PosSectorUiArchetypeCatalog::normalizeSectorCode(
                 (string) ($args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
             );
-            $stackCode = \App\Support\PosStackPresetCatalog::normalizePresetCode(
+            $stackCode = PosStackPresetCatalog::normalizePresetCode(
                 (string) ($args['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH')
             );
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+            $schema = ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
                 'app_name' => 'Runtime Contract Simulation',
                 'sector_code' => $sectorCode,
                 'stack_preset_code' => $stackCode,
@@ -1228,26 +1277,26 @@ class AgenticActionExecutionEngine
             : null;
 
         if ($blueprint) {
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
+            $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
                 'persist_project' => false,
             ]);
         } else {
-            $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+            $sectorCode = PosSectorUiArchetypeCatalog::normalizeSectorCode(
                 (string) ($args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
             );
-            $stackCode = \App\Support\PosStackPresetCatalog::normalizePresetCode(
+            $stackCode = PosStackPresetCatalog::normalizePresetCode(
                 (string) ($args['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH')
             );
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+            $schema = ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
                 'app_name' => 'Client SOP & Syntax Lock Pack',
                 'sector_code' => $sectorCode,
                 'stack_preset_code' => $stackCode,
             ]);
         }
 
-        $sop = \App\Support\PosRealWorldRuntimeCatalog::buildRoleBasedClientSopAndOnboarding($schema, $locale);
-        $syntaxMd = \App\Support\PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($schema);
-        $sopMd = \App\Support\PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($schema, $locale);
+        $sop = PosRealWorldRuntimeCatalog::buildRoleBasedClientSopAndOnboarding($schema, $locale);
+        $syntaxMd = PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($schema);
+        $sopMd = PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($schema, $locale);
 
         AuditLog::record(
             action: 'syntax_lock_and_client_sop_generated',
@@ -1256,7 +1305,7 @@ class AgenticActionExecutionEngine
                 'locale' => $locale,
                 'roles_covered' => $sop['total_roles_covered'] ?? 5,
                 'tour_steps' => $sop['total_interactive_tour_steps'] ?? 25,
-                'syntax_lock_version' => \App\Support\PosRealWorldRuntimeCatalog::SYNTAX_LOCK_VERSION,
+                'syntax_lock_version' => PosRealWorldRuntimeCatalog::SYNTAX_LOCK_VERSION,
             ],
             description: "AI Agent menyusun paket SYNTAX_LOCK_2026.md & Buku SOP Training Staf ({$locale}).",
             eventCategory: 'client_sop_onboarding'
@@ -1265,7 +1314,7 @@ class AgenticActionExecutionEngine
         return [
             'success' => true,
             'locale' => $locale,
-            'syntax_lock_version' => \App\Support\PosRealWorldRuntimeCatalog::SYNTAX_LOCK_VERSION,
+            'syntax_lock_version' => PosRealWorldRuntimeCatalog::SYNTAX_LOCK_VERSION,
             'client_sop_summary' => $sop,
             'syntax_lock_markdown_preview' => Str::limit($syntaxMd, 1600),
             'client_sop_markdown_preview' => Str::limit($sopMd, 1600),
@@ -1282,10 +1331,10 @@ class AgenticActionExecutionEngine
         $persistSync = ! empty($args['persist_sync']);
 
         if ($persistSync) {
-            \App\Support\PosRealWorldRuntimeCatalog::seedFifteenArchitecturePillars();
+            PosRealWorldRuntimeCatalog::seedFifteenArchitecturePillars();
         }
 
-        $pillars = \App\Models\PosArchitecturePillar::getCachedMatrix($locale);
+        $pillars = PosArchitecturePillar::getCachedMatrix($locale);
         $bpLookup = trim((string) ($args['blueprint_id'] ?? ''));
         $blueprint = $bpLookup !== ''
             ? VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first()
@@ -1293,7 +1342,7 @@ class AgenticActionExecutionEngine
 
         $causality = null;
         if ($blueprint) {
-            $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
+            $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
                 'persist_project' => $persistSync,
             ]);
             $causality = $schema['cross_stage_causality_graph'] ?? null;
@@ -1313,7 +1362,7 @@ class AgenticActionExecutionEngine
 
         return [
             'success' => true,
-            'freeze_version' => \App\Support\PosRealWorldRuntimeCatalog::FREEZE_VERSION,
+            'freeze_version' => PosRealWorldRuntimeCatalog::FREEZE_VERSION,
             'architectural_freeze_score' => count($pillars) === 15 ? 100 : 0,
             'pillars_count' => count($pillars),
             'persist_sync_executed' => $persistSync,
@@ -1327,48 +1376,48 @@ class AgenticActionExecutionEngine
      */
     protected function configureVisualUiAndJurisdictionLocale(array $args): array
     {
-        $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+        $sectorCode = PosSectorUiArchetypeCatalog::normalizeSectorCode(
             (string) ($args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
         );
-        $outputLocale = \App\Support\PosInclusiveCommercialCatalog::normalizeOutputLocale(
+        $outputLocale = PosInclusiveCommercialCatalog::normalizeOutputLocale(
             (string) ($args['output_locale'] ?? 'id')
         );
-        $personaMode = \App\Support\PosInclusiveCommercialCatalog::normalizePersonaMode(
+        $personaMode = PosInclusiveCommercialCatalog::normalizePersonaMode(
             (string) ($args['persona_mode'] ?? 'ARCHITECT_PRO')
         );
         $selectedUiVariant = trim((string) ($args['selected_ui_variant'] ?? '')) ?: null;
         $navShell = trim((string) ($args['navigation_shell'] ?? '')) ?: null;
 
-        $visualContract = \App\Support\PosInclusiveCommercialCatalog::visualUiContractForSector(
+        $visualContract = PosInclusiveCommercialCatalog::visualUiContractForSector(
             $sectorCode,
             $selectedUiVariant,
             $navShell,
             $outputLocale
         );
-        $jurisdiction = \App\Support\PosInclusiveCommercialCatalog::jurisdictionComplianceProfile(
+        $jurisdiction = PosInclusiveCommercialCatalog::jurisdictionComplianceProfile(
             $outputLocale,
             $sectorCode
         );
 
         $projectUlid = trim((string) ($args['project_ulid'] ?? ''));
         $posProject = null;
-        if ($projectUlid !== '' && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')) {
-            $posProject = \App\Models\PosProject::where('id', $projectUlid)->first();
+        if ($projectUlid !== '' && Schema::hasTable('pos_projects')) {
+            $posProject = PosProject::where('id', $projectUlid)->first();
             if ($posProject) {
                 $updates = [];
-                if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'selected_ui_variant')) {
+                if (Schema::hasColumn('pos_projects', 'selected_ui_variant')) {
                     $updates['selected_ui_variant'] = $visualContract['selected_variant_code'];
                 }
-                if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'navigation_shell')) {
+                if (Schema::hasColumn('pos_projects', 'navigation_shell')) {
                     $updates['navigation_shell'] = $visualContract['navigation_shell_code'];
                 }
-                if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'output_locale')) {
+                if (Schema::hasColumn('pos_projects', 'output_locale')) {
                     $updates['output_locale'] = $outputLocale;
                 }
-                if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'persona_mode')) {
+                if (Schema::hasColumn('pos_projects', 'persona_mode')) {
                     $updates['persona_mode'] = $personaMode;
                 }
-                if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'jurisdiction_profile')) {
+                if (Schema::hasColumn('pos_projects', 'jurisdiction_profile')) {
                     $updates['jurisdiction_profile'] = $jurisdiction['jurisdiction_code'] ?? null;
                 }
                 if (! empty($updates)) {
@@ -1377,7 +1426,7 @@ class AgenticActionExecutionEngine
             }
         }
 
-        $schema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+        $schema = ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
             'app_name' => $posProject?->app_name ?? 'Visual UI & Jurisdiction Preview',
             'sector_code' => $sectorCode,
             'selected_ui_variant' => $visualContract['selected_variant_code'],
@@ -1418,21 +1467,21 @@ class AgenticActionExecutionEngine
      */
     protected function auditLivingCveAlertsAndAutopatch(array $args): array
     {
-        $stackPreset = \App\Support\PosStackPresetCatalog::normalizePresetCode(
+        $stackPreset = PosStackPresetCatalog::normalizePresetCode(
             (string) ($args['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH')
         );
-        $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+        $sectorCode = PosSectorUiArchetypeCatalog::normalizeSectorCode(
             (string) ($args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
         );
 
-        $alerts = \App\Support\PosInclusiveCommercialCatalog::livingCveSecurityAlerts($stackPreset, $sectorCode);
-        $marketplace = \App\Support\PosInclusiveCommercialCatalog::communityPrimitivesMarketplace();
+        $alerts = PosInclusiveCommercialCatalog::livingCveSecurityAlerts($stackPreset, $sectorCode);
+        $marketplace = PosInclusiveCommercialCatalog::communityPrimitivesMarketplace();
 
         $projectUlid = trim((string) ($args['project_ulid'] ?? ''));
         $posProject = null;
-        if ($projectUlid !== '' && ! empty($args['acknowledge_all']) && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')) {
-            $posProject = \App\Models\PosProject::where('id', $projectUlid)->first();
-            if ($posProject && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'cve_alerts_ack_json')) {
+        if ($projectUlid !== '' && ! empty($args['acknowledge_all']) && Schema::hasTable('pos_projects')) {
+            $posProject = PosProject::where('id', $projectUlid)->first();
+            if ($posProject && Schema::hasColumn('pos_projects', 'cve_alerts_ack_json')) {
                 $ackIds = array_map(static fn (array $a): string => (string) ($a['advisory_id'] ?? $a['cve_code']), $alerts);
                 $posProject->update([
                     'cve_alerts_ack_json' => [
@@ -1473,8 +1522,8 @@ class AgenticActionExecutionEngine
     {
         $action = strtolower(trim((string) ($args['action'] ?? 'inspect_layers')));
         $projectUlid = trim((string) ($args['project_ulid'] ?? ''));
-        $posProject = ($projectUlid !== '' && \Illuminate\Support\Facades\Schema::hasTable('pos_projects'))
-            ? \App\Models\PosProject::where('id', $projectUlid)->first()
+        $posProject = ($projectUlid !== '' && Schema::hasTable('pos_projects'))
+            ? PosProject::where('id', $projectUlid)->first()
             : null;
 
         if ($action === 'revoke_mcp_token') {
@@ -1507,10 +1556,10 @@ class AgenticActionExecutionEngine
 
         if ($action === 'verify_canary') {
             $sample = (string) ($args['leaked_markdown_sample'] ?? '');
-            $extractedHex = \App\Support\PosInclusiveCommercialCatalog::extractCanaryWatermark($sample);
+            $extractedHex = PosInclusiveCommercialCatalog::extractCanaryWatermark($sample);
             $matched = null;
-            if ($extractedHex && \Illuminate\Support\Facades\Schema::hasTable('pos_projects') && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'canary_watermark_sig')) {
-                $matched = \App\Models\PosProject::where('canary_watermark_sig', $extractedHex)->first();
+            if ($extractedHex && Schema::hasTable('pos_projects') && Schema::hasColumn('pos_projects', 'canary_watermark_sig')) {
+                $matched = PosProject::where('canary_watermark_sig', $extractedHex)->first();
             }
 
             AuditLog::record(
@@ -1535,7 +1584,7 @@ class AgenticActionExecutionEngine
             ];
         }
 
-        $matrix = \App\Support\PosInclusiveCommercialCatalog::retentionAndSecurityMatrix();
+        $matrix = PosInclusiveCommercialCatalog::retentionAndSecurityMatrix();
 
         return [
             'success' => true,
@@ -1581,7 +1630,7 @@ class AgenticActionExecutionEngine
                     'approved_packages' => $audit['approved_packages'],
                     'blocked_packages' => $audit['blocked_packages'],
                 ],
-                description: 'AgentShield memeriksa ' . count($packages) . ' package terhadap APPROVED_DEPENDENCY_MANIFEST (' . count($audit['blocked_packages']) . ' diblokir).',
+                description: 'AgentShield memeriksa '.count($packages).' package terhadap APPROVED_DEPENDENCY_MANIFEST ('.count($audit['blocked_packages']).' diblokir).',
                 eventCategory: 'agentshield_security',
                 sectorCode: $sectorCode,
                 primitiveCode: 'PRIMITIVE_AGENTSHIELD_ALLOWLIST',
@@ -1686,7 +1735,7 @@ class AgenticActionExecutionEngine
                 ? $posProject->codesign_modules_json
                 : ($schema['codesign_alignment_contract']['modules'] ?? []);
 
-            $customCode = 'MOD_CUSTOM_' . strtoupper(substr(md5($title . microtime()), 0, 6));
+            $customCode = 'MOD_CUSTOM_'.strtoupper(substr(md5($title.microtime()), 0, 6));
             $modules[] = [
                 'module_code' => $customCode,
                 'is_custom_client_addition' => true,
@@ -1841,28 +1890,28 @@ class AgenticActionExecutionEngine
      */
     protected function configureDualZonePublicUxPreset(array $args): array
     {
-        $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+        $sectorCode = PosSectorUiArchetypeCatalog::normalizeSectorCode(
             (string) ($args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
         );
         $ideaText = trim((string) ($args['idea_text'] ?? ''));
         $explicitUx = trim((string) ($args['public_ux_preset'] ?? ''));
 
         $matchedUx = $explicitUx !== ''
-            ? (\App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets()[\App\Support\PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset($explicitUx)] ?? null)
-            : \App\Support\PosDualZoneFrontendAndSaasCatalog::autoMatchPublicUxPresetForSectorAndIdea($sectorCode, $ideaText);
+            ? (PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets()[PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset($explicitUx)] ?? null)
+            : PosDualZoneFrontendAndSaasCatalog::autoMatchPublicUxPresetForSectorAndIdea($sectorCode, $ideaText);
 
-        $uxCode = (string) ($matchedUx['code'] ?? \App\Support\PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($sectorCode));
-        $dualContract = \App\Support\PosDualZoneFrontendAndSaasCatalog::compileDualZoneUiContract($sectorCode, null, null, $uxCode);
+        $uxCode = (string) ($matchedUx['code'] ?? PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($sectorCode));
+        $dualContract = PosDualZoneFrontendAndSaasCatalog::compileDualZoneUiContract($sectorCode, null, null, $uxCode);
 
         $persistedProject = null;
-        if (! empty($args['project_ulid']) && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')) {
-            $proj = \App\Models\PosProject::query()->where('id', (string) $args['project_ulid'])->first();
+        if (! empty($args['project_ulid']) && Schema::hasTable('pos_projects')) {
+            $proj = PosProject::query()->where('id', (string) $args['project_ulid'])->first();
             if ($proj && $proj->visionBlueprint) {
-                $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($proj->visionBlueprint, [
+                $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($proj->visionBlueprint, [
                     'public_ux_preset' => $uxCode,
                     'persist_project' => true,
                 ]);
-                $quotation = app(\App\Services\PosCommercialBridgeService::class)->calculateScopeQuotation($schema, [
+                $quotation = app(PosCommercialBridgeService::class)->calculateScopeQuotation($schema, [
                     'public_ux_preset' => $uxCode,
                 ]);
                 $persistedProject = [
@@ -1879,8 +1928,8 @@ class AgenticActionExecutionEngine
             'sector_code' => $sectorCode,
             'selected_public_ux_preset' => $uxCode,
             'dual_zone_ui_contract' => $dualContract,
-            'five_iron_animation_laws' => \App\Support\PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws(),
-            'input_hygiene_contract' => \App\Support\PosDualZoneFrontendAndSaasCatalog::inputHygieneContract(),
+            'five_iron_animation_laws' => PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws(),
+            'input_hygiene_contract' => PosDualZoneFrontendAndSaasCatalog::inputHygieneContract(),
             'persisted_project' => $persistedProject,
         ];
     }
@@ -1895,14 +1944,14 @@ class AgenticActionExecutionEngine
 
         if ($action === 'issue_receipt') {
             $projId = trim((string) ($args['project_ulid'] ?? ''));
-            $proj = $projId !== '' && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')
-                ? \App\Models\PosProject::query()->where('id', $projId)->first()
+            $proj = $projId !== '' && Schema::hasTable('pos_projects')
+                ? PosProject::query()->where('id', $projId)->first()
                 : null;
             if (! $proj) {
                 return ['error' => 'PosProject tidak ditemukan untuk penerbitan Architecture Receipt.'];
             }
             $trigger = strtoupper(trim((string) ($args['verification_trigger'] ?? 'MITRA_BAST_SIGNED')));
-            $issued = \App\Services\Saas\PosSaasCommercialEngineService::issueVerifiedArchitectureReceiptTestimonial($proj, $trigger);
+            $issued = PosSaasCommercialEngineService::issueVerifiedArchitectureReceiptTestimonial($proj, $trigger);
 
             return [
                 'success' => true,
@@ -1913,9 +1962,9 @@ class AgenticActionExecutionEngine
             ];
         }
 
-        $catalog = \App\Support\PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog();
+        $catalog = PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog();
         if ($sectorFilter !== '') {
-            $normalized = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode($sectorFilter);
+            $normalized = PosSectorUiArchetypeCatalog::normalizeSectorCode($sectorFilter);
             $catalog = array_values(array_filter($catalog, static fn (array $row): bool => ($row['sector_code'] ?? '') === $normalized));
         }
 
@@ -1937,8 +1986,8 @@ class AgenticActionExecutionEngine
 
         if ($action === 'approve_grant') {
             $appId = trim((string) ($args['application_id'] ?? ''));
-            $grantApp = $appId !== '' && \Illuminate\Support\Facades\Schema::hasTable('pos_impact_grant_applications')
-                ? \App\Models\PosImpactGrantApplication::query()->where('id', $appId)->first()
+            $grantApp = $appId !== '' && Schema::hasTable('pos_impact_grant_applications')
+                ? PosImpactGrantApplication::query()->where('id', $appId)->first()
                 : null;
             if (! $grantApp) {
                 return ['error' => 'Permohonan Impact Grant tidak ditemukan.'];
@@ -1946,7 +1995,7 @@ class AgenticActionExecutionEngine
             if (! $user) {
                 return ['error' => 'Operator autentikasi diperlukan untuk menyetujui Impact Grant.'];
             }
-            $res = \App\Services\Saas\PosSaasCommercialEngineService::approveImpactGrantOneClick(
+            $res = PosSaasCommercialEngineService::approveImpactGrantOneClick(
                 $grantApp,
                 $user,
                 (string) ($args['review_notes'] ?? 'Approved via AI Native Tool')
@@ -1955,8 +2004,8 @@ class AgenticActionExecutionEngine
             return array_merge(['action' => 'approve_grant'], $res);
         }
 
-        $pendingGrants = \Illuminate\Support\Facades\Schema::hasTable('pos_impact_grant_applications')
-            ? \App\Models\PosImpactGrantApplication::query()
+        $pendingGrants = Schema::hasTable('pos_impact_grant_applications')
+            ? PosImpactGrantApplication::query()
                 ->where('status', 'PENDING_REVIEW')
                 ->orderBy('id', 'desc')
                 ->limit(15)
@@ -1964,15 +2013,15 @@ class AgenticActionExecutionEngine
                 ->toArray()
             : [];
 
-        $affiliateTotalIdr = \Illuminate\Support\Facades\Schema::hasTable('pos_affiliate_referrals')
-            ? (int) \App\Models\PosAffiliateReferral::query()->sum('commission_amount_idr')
+        $affiliateTotalIdr = Schema::hasTable('pos_affiliate_referrals')
+            ? (int) PosAffiliateReferral::query()->sum('commission_amount_idr')
             : 0;
 
         return [
             'success' => true,
             'action' => $action,
-            'retail_affiliate_rate_percent' => \App\Services\Saas\PosSaasCommercialEngineService::RETAIL_AFFILIATE_RATE_PERCENT,
-            'mitra_finders_fee_rate_percent' => \App\Services\Saas\PosSaasCommercialEngineService::MITRA_FINDERS_FEE_RATE_PERCENT,
+            'retail_affiliate_rate_percent' => PosSaasCommercialEngineService::RETAIL_AFFILIATE_RATE_PERCENT,
+            'mitra_finders_fee_rate_percent' => PosSaasCommercialEngineService::MITRA_FINDERS_FEE_RATE_PERCENT,
             'reserved_affiliate_commissions_idr' => $affiliateTotalIdr,
             'pending_impact_grants_count' => count($pendingGrants),
             'pending_impact_grants' => $pendingGrants,
@@ -1985,15 +2034,179 @@ class AgenticActionExecutionEngine
     protected function inspectSaasSystemHealthAndBillingGate(array $args, ?User $user): array
     {
         $feature = (string) ($args['feature'] ?? 'copy_phase_3_6');
-        $proj = ! empty($args['project_ulid']) && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')
-            ? \App\Models\PosProject::query()->where('id', (string) $args['project_ulid'])->first()
+        $proj = ! empty($args['project_ulid']) && Schema::hasTable('pos_projects')
+            ? PosProject::query()->where('id', (string) $args['project_ulid'])->first()
             : null;
 
         return [
             'success' => true,
-            'feature_gate' => \App\Services\Saas\PosSaasCommercialEngineService::checkFeatureAccess($user, $proj, $feature),
-            'system_health_pulse' => \App\Services\Saas\PosSaasCommercialEngineService::collectSystemHealthPulse(),
+            'feature_gate' => PosSaasCommercialEngineService::checkFeatureAccess($user, $proj, $feature),
+            'system_health_pulse' => PosSaasCommercialEngineService::collectSystemHealthPulse(),
             'admin_dashboard_url' => url('/admin/saas-system-health-pulse'),
+        ];
+    }
+
+    /**
+     * 41. Generate SEO (Multi-Graph Schema.org 12-Sector) & GEO Authority Pack + IndexNow Ping (v11.0)
+     */
+    protected function generateSeoGeoAuthorityPack(array $args): array
+    {
+        $rawSector = trim((string) ($args['sector_code'] ?? 'ALL'));
+        $sectorCode = strtoupper($rawSector) === 'ALL'
+            ? 'ALL'
+            : PosSectorUiArchetypeCatalog::normalizeSectorCode($rawSector);
+        $locale = ($args['locale'] ?? 'id') === 'en' ? 'en' : 'id';
+
+        $capsule = PosSeoGeoAndZeroFailureCatalog::sectorCapsule($sectorCode, $locale);
+        $graphJson = GeoAuthorityGeneratorService::generateSchemaGraph([
+            'sector_code' => $sectorCode,
+            'locale' => $locale,
+        ]);
+        $llmsPreview = mb_substr(GeoAuthorityGeneratorService::generateLlmsTxt(), 0, 900);
+
+        $indexNowResult = null;
+        if (! empty($args['ping_indexnow'])) {
+            $indexNowResult = GeoAuthorityGeneratorService::pingIndexNow([
+                url('/explore'),
+                url('/llms.txt'),
+                url('/llms-full.txt'),
+            ]);
+        }
+
+        AuditLog::record(
+            action: 'seo_geo_authority_pack_generated',
+            newValues: [
+                'sector_code' => $sectorCode,
+                'locale' => $locale,
+                'ping_indexnow' => ! empty($args['ping_indexnow']),
+            ],
+            description: "AI Agent mengkompilasi paket SEO/GEO Authority untuk sektor {$sectorCode}.",
+            eventCategory: 'seo_geo_authority',
+            primitiveCode: PosSeoGeoAndZeroFailureCatalog::PRIMITIVE_SEO_GEO_AUTHORITY,
+            executionChannel: 'AI_COPILOT_TOOL'
+        );
+
+        return [
+            'success' => true,
+            'sector_code' => $sectorCode,
+            'locale' => $locale,
+            'answer_capsule' => $capsule,
+            'comparison_matrix' => PosSeoGeoAndZeroFailureCatalog::comparisonMatrixRows($locale),
+            'schema_org_json_ld' => json_decode($graphJson, true),
+            'llms_txt_preview' => $llmsPreview,
+            'endpoints' => [
+                'llms_txt' => url('/llms.txt'),
+                'llms_full_txt' => url('/llms-full.txt'),
+                'indexnow_key' => url('/indexnow-key.txt'),
+            ],
+            'indexnow_ping' => $indexNowResult,
+        ];
+    }
+
+    /**
+     * 42. Audit UU PDP No. 27/2022 Blind Index & Ledger-Safe Privacy Vault (v11.0)
+     */
+    protected function auditUuPdpBlindIndexAndPrivacy(array $args): array
+    {
+        $sample = trim((string) ($args['sample_identifier'] ?? 'sample-nik-pdp-check'));
+        $blindHash = PosPrivacyErasureRequest::computeBlindIndex($sample);
+        $recentRequests = Schema::hasTable('pos_privacy_erasure_requests')
+            ? PosPrivacyErasureRequest::query()
+                ->orderByDesc('id')
+                ->limit(10)
+                ->get(['id', 'request_type', 'status', 'redaction_token', 'redacted_fields_summary_json', 'processed_at'])
+                ->toArray()
+            : [];
+
+        return [
+            'success' => true,
+            'primitive_code' => PosSeoGeoAndZeroFailureCatalog::PRIMITIVE_UU_PDP_VAULT,
+            'blind_index_algorithm' => 'HMAC-SHA256 (64-char hex, O(1) B-Tree exact lookup)',
+            'deterministic_blind_hash_length' => strlen($blindHash),
+            'deterministic_blind_hash_preview' => substr($blindHash, 0, 16).'...'.substr($blindHash, -8),
+            'right_to_erasure_policy' => 'Ledger-Safe PII Anonymization ([REDACTED_UU_PDP_<ULID>]) preserving financial Transaction rows',
+            'recent_privacy_requests_count' => count($recentRequests),
+            'recent_privacy_requests' => $recentRequests,
+        ];
+    }
+
+    /**
+     * 43. Triage Post-BAST Contractual SLA Warranty vs Paid Delta v1.1 Ticket (v11.0)
+     */
+    protected function triagePostBastSlaMaintenanceTicket(array $args, ?User $user): array
+    {
+        $action = strtolower(trim((string) ($args['action'] ?? 'list_tickets')));
+        $slaService = app(PosSlaAndSandboxEngineService::class);
+
+        if ($action === 'submit_ticket') {
+            $title = trim((string) ($args['issue_title'] ?? 'Regression check on locked contract module'));
+            $desc = trim((string) ($args['issue_description'] ?? 'Error 500 encountered during locked scope workflow execution.'));
+
+            return $slaService->submitAndTriageSlaTicket([
+                'pos_project_id' => $args['project_ulid'] ?? null,
+                'issue_title' => $title,
+                'issue_description' => $desc,
+                'reporter_email' => $user?->email ?? 'architect@neriahpro.com',
+            ], $user);
+        }
+
+        $tickets = Schema::hasTable('pos_sla_maintenance_tickets')
+            ? PosSlaMaintenanceTicket::query()
+                ->orderByDesc('id')
+                ->limit(15)
+                ->get(['id', 'pos_project_id', 'ticket_number', 'issue_title', 'classification', 'warranty_expires_at', 'estimated_delta_idr', 'status'])
+                ->toArray()
+            : [];
+
+        return [
+            'success' => true,
+            'action' => 'list_tickets',
+            'tickets_count' => count($tickets),
+            'tickets' => $tickets,
+        ];
+    }
+
+    /**
+     * 44. Multi-Entity Holding Consolidation Roll-Up & Non-Production Sandbox Webhook Simulator (v11.0)
+     */
+    protected function simulateSandboxWebhookAndHoldingRollup(array $args, ?User $user): array
+    {
+        $action = strtolower(trim((string) ($args['action'] ?? 'holding_rollup')));
+
+        if ($action === 'simulate_webhook') {
+            if (app()->isProduction()) {
+                return ['error' => 'Sandbox Webhook Simulator dinonaktifkan secara ketat di environment production (HTTP 403).'];
+            }
+            $scenario = (string) ($args['scenario'] ?? 'duplicate_webhook_attack');
+
+            return app(PosSlaAndSandboxEngineService::class)->simulateSandboxWebhookEvent($scenario, [
+                'plan_tier' => 'retail_pro',
+                'amount_idr' => 399000,
+            ], $user);
+        }
+
+        $wsId = trim((string) ($args['workspace_ulid'] ?? ''));
+        $workspace = null;
+        if (Schema::hasTable('pos_organization_workspaces')) {
+            $workspace = $wsId !== ''
+                ? PosOrganizationWorkspace::query()->find($wsId)
+                : PosOrganizationWorkspace::query()->whereNull('parent_organization_id')->first();
+        }
+
+        if (! $workspace) {
+            return [
+                'success' => true,
+                'action' => 'holding_rollup',
+                'holding_configured' => false,
+                'twenty_pillars_paripurna_count' => count(PosSeoGeoAndZeroFailureCatalog::twentyPillarsParipurnaMatrix()),
+            ];
+        }
+
+        return [
+            'success' => true,
+            'action' => 'holding_rollup',
+            'holding_configured' => true,
+            'report' => $workspace->buildHoldingConsolidationReport(),
         ];
     }
 
@@ -2002,7 +2215,7 @@ class AgenticActionExecutionEngine
      */
     protected function guardMutation(?User $user, string $toolName): ?array
     {
-        if (! $user || \App\Models\Role::query()->count() === 0) {
+        if (! $user || Role::query()->count() === 0) {
             return null;
         }
 
@@ -2027,4 +2240,3 @@ class AgenticActionExecutionEngine
         return null;
     }
 }
-

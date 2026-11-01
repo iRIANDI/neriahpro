@@ -17,6 +17,7 @@ use Database\Seeders\PosStackPresetSeeder;
 use Database\Seeders\ProjectOsMatrixSeeder;
 use Database\Seeders\SuperAdminSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class ProjectOsSectoralUiAndKillerFeaturesTest extends TestCase
@@ -27,8 +28,8 @@ class ProjectOsSectoralUiAndKillerFeaturesTest extends TestCase
     {
         parent::setUp();
 
-        \Illuminate\Support\Facades\Http::fake([
-            '*' => \Illuminate\Support\Facades\Http::response([
+        Http::fake([
+            '*' => Http::response([
                 'embedding' => ['values' => array_fill(0, 768, 0.0125)],
                 'candidates' => [
                     [
@@ -114,7 +115,7 @@ class ProjectOsSectoralUiAndKillerFeaturesTest extends TestCase
         $this->assertStringNotContainsString('Lorem ipsum', $previewFiles['database/seeders/RealisticSectorSeeder.php']);
 
         // Killer #6: One-Command CLI Workspace Bootstrapper (/init/{ULID})
-        $initResponse = $this->get('/init/' . $blueprint->id);
+        $initResponse = $this->get('/init/'.$blueprint->id);
         $initResponse->assertOk();
         $this->assertStringContainsString('text/x-shellscript', (string) $initResponse->headers->get('Content-Type'));
         $scriptBody = $initResponse->getContent();
@@ -220,8 +221,8 @@ SQL;
         // Verify 36 valid Gemini & OpenAI Tool Declarations (Project OS v9.0)
         $geminiTools = GeminiToolRegistry::getDeclarations();
         $openAiTools = GeminiToolRegistry::getOpenAiTools();
-        $this->assertCount(40, $geminiTools);
-        $this->assertCount(40, $openAiTools);
+        $this->assertCount(44, $geminiTools);
+        $this->assertCount(44, $openAiTools);
 
         $engine = app(AgenticActionExecutionEngine::class);
 
@@ -269,8 +270,8 @@ SQL;
         $this->assertSame('PASS', $slopCheck['status']);
 
         // RAG v2.5 sync indexes 10 Pillars + 12 Sectoral UI + 9 Stacks + 6 Killer Engines
-        \Illuminate\Support\Facades\Http::fake([
-            '*' => \Illuminate\Support\Facades\Http::response([
+        Http::fake([
+            '*' => Http::response([
                 'embedding' => ['values' => array_fill(0, 768, 0.0125)],
             ], 200),
         ]);
@@ -279,4 +280,3 @@ SQL;
         $this->assertGreaterThanOrEqual(35, $syncResult['synced_sections']);
     }
 }
-

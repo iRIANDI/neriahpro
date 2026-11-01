@@ -73,6 +73,10 @@ class PosProject extends Model
         'dual_zone_ui_contract_json',
         'organization_workspace_id',
         'architectural_freeze_score',
+        'sla_warranty_days',
+        'sla_warranty_expires_at',
+        'sla_maintenance_active',
+        'seo_geo_contract_json',
     ];
 
     protected function casts(): array
@@ -107,6 +111,10 @@ class PosProject extends Model
             'agentshield_policy_json' => 'array',
             'dual_zone_ui_contract_json' => 'array',
             'architectural_freeze_score' => 'integer',
+            'sla_warranty_days' => 'integer',
+            'sla_warranty_expires_at' => 'datetime',
+            'sla_maintenance_active' => 'boolean',
+            'seo_geo_contract_json' => 'array',
         ];
     }
 
@@ -135,6 +143,11 @@ class PosProject extends Model
         return $this->hasMany(PosChangeRequest::class, 'pos_project_id')->orderByDesc('id');
     }
 
+    public function slaMaintenanceTickets(): HasMany
+    {
+        return $this->hasMany(PosSlaMaintenanceTicket::class, 'pos_project_id')->orderByDesc('id');
+    }
+
     /**
      * Issue or deterministically derive an MCP token for IDE bridges (Cursor, Claude Code, Antigravity)
      * while storing ONLY its SHA-256 hash in the database.
@@ -143,9 +156,9 @@ class PosProject extends Model
     {
         $seed = $rotate
             ? bin2hex(random_bytes(16))
-            : hash_hmac('sha256', 'neriahpro-mcp-v4:' . $this->id, (string) config('app.key', 'neriahpro-pos-v4'));
+            : hash_hmac('sha256', 'neriahpro-mcp-v4:'.$this->id, (string) config('app.key', 'neriahpro-pos-v4'));
 
-        $plainToken = 'npro_mcp_' . substr($seed, 0, 32);
+        $plainToken = 'npro_mcp_'.substr($seed, 0, 32);
         $hash = hash('sha256', $plainToken);
         $prefix = substr($plainToken, 0, 14);
 
@@ -172,8 +185,8 @@ class PosProject extends Model
             return hash_equals((string) $this->mcp_token_hash, hash('sha256', $clean));
         }
 
-        $deterministic = 'npro_mcp_' . substr(
-            hash_hmac('sha256', 'neriahpro-mcp-v4:' . $this->id, (string) config('app.key', 'neriahpro-pos-v4')),
+        $deterministic = 'npro_mcp_'.substr(
+            hash_hmac('sha256', 'neriahpro-mcp-v4:'.$this->id, (string) config('app.key', 'neriahpro-pos-v4')),
             0,
             32
         );
@@ -243,4 +256,3 @@ class PosProject extends Model
         return is_array($val) ? $val : [];
     }
 }
-

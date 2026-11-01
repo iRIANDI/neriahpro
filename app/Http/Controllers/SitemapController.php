@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Response;
 use App\Models\CmsGlobalSetting;
 use App\Models\CmsPage;
 use App\Models\VisionBlueprint;
+use App\Support\PosDualZoneFrontendAndSaasCatalog;
+use App\Support\PosSeoGeoAndZeroFailureCatalog;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 
 class SitemapController extends Controller
@@ -36,23 +38,43 @@ class SitemapController extends Controller
         // 2. Project OS Blueprint (Only if enabled)
         if ($isBlueprintEnabled) {
             $urls[] = [
-                'loc' => $baseUrl . '/blueprint',
+                'loc' => $baseUrl.'/blueprint',
                 'lastmod' => Carbon::now()->toDateString(),
                 'changefreq' => 'weekly',
                 'priority' => '0.9',
             ];
 
-            // Project OS v10.0 Programmatic SEO Architecture Library (/explore & /explore/{sector}/{slug})
+            // Project OS v10.0 & v11.0 Programmatic SEO/GEO Architecture Library (/explore, /llms.txt & 12 Sectors)
             $urls[] = [
-                'loc' => $baseUrl . '/explore',
+                'loc' => $baseUrl.'/llms.txt',
+                'lastmod' => Carbon::now()->toDateString(),
+                'changefreq' => 'weekly',
+                'priority' => '0.95',
+            ];
+            $urls[] = [
+                'loc' => $baseUrl.'/llms-full.txt',
+                'lastmod' => Carbon::now()->toDateString(),
+                'changefreq' => 'weekly',
+                'priority' => '0.90',
+            ];
+            $urls[] = [
+                'loc' => $baseUrl.'/explore',
                 'lastmod' => Carbon::now()->toDateString(),
                 'changefreq' => 'daily',
                 'priority' => '0.9',
             ];
-            foreach (\App\Support\PosDualZoneFrontendAndSaasCatalog::baselineTwelveSectorReceipts('id') as $item) {
+            foreach (array_keys(PosSeoGeoAndZeroFailureCatalog::sectorSeoGeoAuthorityMatrix()) as $sectorCode) {
+                $urls[] = [
+                    'loc' => $baseUrl.'/explore/'.strtolower($sectorCode),
+                    'lastmod' => Carbon::now()->toDateString(),
+                    'changefreq' => 'weekly',
+                    'priority' => '0.88',
+                ];
+            }
+            foreach (PosDualZoneFrontendAndSaasCatalog::baselineTwelveSectorReceipts('id') as $item) {
                 if (! empty($item['seo_slug']) && ! empty($item['sector_code'])) {
                     $urls[] = [
-                        'loc' => $baseUrl . '/explore/' . strtolower($item['sector_code']) . '/' . $item['seo_slug'],
+                        'loc' => $baseUrl.'/explore/'.strtolower($item['sector_code']).'/'.$item['seo_slug'],
                         'lastmod' => Carbon::now()->toDateString(),
                         'changefreq' => 'weekly',
                         'priority' => '0.85',
@@ -69,7 +91,7 @@ class SitemapController extends Controller
 
                 foreach ($blueprints as $bp) {
                     $urls[] = [
-                        'loc' => $baseUrl . '/blueprint/' . $bp->slug,
+                        'loc' => $baseUrl.'/blueprint/'.$bp->slug,
                         'lastmod' => ($bp->updated_at ?? Carbon::now())->toDateString(),
                         'changefreq' => 'weekly',
                         'priority' => '0.8',
@@ -83,7 +105,7 @@ class SitemapController extends Controller
         // 3. CV Pro Studio & Pricing (STRICTLY OMITTED IF DISABLED IN ADMIN)
         if ($isCvProEnabled && ! $isMidtransStrict) {
             $urls[] = [
-                'loc' => $baseUrl . '/cv-pro',
+                'loc' => $baseUrl.'/cv-pro',
                 'lastmod' => Carbon::now()->toDateString(),
                 'changefreq' => 'weekly',
                 'priority' => '0.8',
@@ -91,7 +113,7 @@ class SitemapController extends Controller
 
             if ($isCvPricingEnabled) {
                 $urls[] = [
-                    'loc' => $baseUrl . '/pricing',
+                    'loc' => $baseUrl.'/pricing',
                     'lastmod' => Carbon::now()->toDateString(),
                     'changefreq' => 'weekly',
                     'priority' => '0.7',
@@ -113,7 +135,7 @@ class SitemapController extends Controller
                 }
 
                 $urls[] = [
-                    'loc' => $baseUrl . '/' . $p->slug,
+                    'loc' => $baseUrl.'/'.$p->slug,
                     'lastmod' => ($p->updated_at ?? Carbon::now())->toDateString(),
                     'changefreq' => 'monthly',
                     'priority' => '0.6',
@@ -124,15 +146,15 @@ class SitemapController extends Controller
         }
 
         // Build XML string
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
         foreach ($urls as $item) {
             $xml .= "  <url>\n";
-            $xml .= "    <loc>" . htmlspecialchars($item['loc'], ENT_XML1, 'UTF-8') . "</loc>\n";
-            $xml .= "    <lastmod>" . $item['lastmod'] . "</lastmod>\n";
-            $xml .= "    <changefreq>" . $item['changefreq'] . "</changefreq>\n";
-            $xml .= "    <priority>" . $item['priority'] . "</priority>\n";
+            $xml .= '    <loc>'.htmlspecialchars($item['loc'], ENT_XML1, 'UTF-8')."</loc>\n";
+            $xml .= '    <lastmod>'.$item['lastmod']."</lastmod>\n";
+            $xml .= '    <changefreq>'.$item['changefreq']."</changefreq>\n";
+            $xml .= '    <priority>'.$item['priority']."</priority>\n";
             $xml .= "  </url>\n";
         }
 
@@ -170,8 +192,12 @@ class SitemapController extends Controller
         $adminSegment = trim(config('app.admin_path', env('FILAMENT_ADMIN_PATH', 'admin')), '/');
         $lines = [
             'User-agent: *',
-            'Disallow: /' . $adminSegment . '/',
+            'Allow: /explore/',
+            'Allow: /llms.txt',
+            'Allow: /llms-full.txt',
+            'Disallow: /'.$adminSegment.'/',
             'Disallow: /admin/',
+            'Disallow: /customer/',
             'Disallow: /cart',
             'Disallow: /invite/',
             'Disallow: /api/',
@@ -184,8 +210,23 @@ class SitemapController extends Controller
             $lines[] = 'Disallow: /pricing';
         }
 
+        // Project OS v11.0 GEO AI Search & Citation Bot Explicit Allowlist
+        $geoAiBots = ['OAI-SearchBot', 'GPTBot', 'ClaudeBot', 'Claude-Web', 'PerplexityBot', 'Google-Extended'];
+        foreach ($geoAiBots as $botName) {
+            $lines[] = '';
+            $lines[] = 'User-agent: '.$botName;
+            $lines[] = 'Allow: /';
+            $lines[] = 'Allow: /explore/';
+            $lines[] = 'Allow: /llms.txt';
+            $lines[] = 'Allow: /llms-full.txt';
+            $lines[] = 'Disallow: /'.$adminSegment.'/';
+            $lines[] = 'Disallow: /admin/';
+            $lines[] = 'Disallow: /customer/';
+            $lines[] = 'Disallow: /api/';
+        }
+
         $lines[] = '';
-        $lines[] = 'Sitemap: ' . $baseUrl . '/sitemap.xml';
+        $lines[] = 'Sitemap: '.$baseUrl.'/sitemap.xml';
         $lines[] = '';
 
         return implode("\n", $lines);

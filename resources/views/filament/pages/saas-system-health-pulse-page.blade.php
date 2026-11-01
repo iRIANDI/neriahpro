@@ -158,6 +158,115 @@
                 </table>
             </div>
         </div>
+
+        <!-- v11.0 SEO/GEO IndexNow Authority Bar & Non-Production Webhook Chaos Console -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-3">
+                <div class="font-mono text-xs font-black uppercase text-emerald-900 dark:text-emerald-300">
+                    PRIMITIVE_SEO_GEO_AUTHORITY_ENGINE // /LLMS.TXT &amp; INDEXNOW PING
+                </div>
+                <p class="text-xs text-zinc-700 dark:text-zinc-300">
+                    {{ $isEn
+                        ? 'Flush Forever-Cached 12-Sector Multi-Graph Schema.org JSON-LD, /llms.txt & /llms-full.txt and push instant IndexNow notification to Bing / ChatGPT Search / Perplexity.'
+                        : 'Reset cache permanen Multi-Graph Schema.org JSON-LD 12 Sektor, /llms.txt & /llms-full.txt lalu kirim ping instan IndexNow ke indeks Bing / ChatGPT Search / Perplexity.' }}
+                </p>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button
+                        type="button"
+                        wire:click="triggerIndexNowPing"
+                        class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-xs font-black uppercase rounded-none cursor-pointer"
+                    >
+                        🚀 {{ $isEn ? 'Flush Cache & Ping IndexNow' : 'Reset Cache & Ping IndexNow 1-Klik' }}
+                    </button>
+                    <a href="{{ url('/llms.txt') }}" target="_blank" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-mono text-xs font-black rounded-none">
+                        ↗ /llms.txt
+                    </a>
+                    <a href="{{ url('/llms-full.txt') }}" target="_blank" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-mono text-xs font-black rounded-none">
+                        ↗ /llms-full.txt
+                    </a>
+                </div>
+            </div>
+
+            @if(!app()->isProduction())
+                <div class="p-5 bg-white dark:bg-zinc-900 border border-amber-400 dark:border-amber-700 rounded-none space-y-3">
+                    <div class="font-mono text-xs font-black uppercase text-amber-950 dark:text-amber-300">
+                        SANDBOX CHAOS CONSOLE ({{ strtoupper(app()->environment()) }} ONLY — LOCKED 403 IN PROD)
+                    </div>
+                    <p class="text-xs text-zinc-700 dark:text-zinc-300">
+                        {{ $isEn
+                            ? 'Simulate payment gateway webhook edge-cases locally without live credentials to verify idempotency and state transitions.'
+                            : 'Uji skenario ekstrem webhook pembayaran secara lokal tanpa kredensial bank asli untuk memverifikasi idempotensi dan transisi status.' }}
+                    </p>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" wire:click="runAdminSandboxWebhook('qris_payment_success')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-xs font-black rounded-none cursor-pointer">
+                            ⚡ QRIS Success
+                        </button>
+                        <button type="button" wire:click="runAdminSandboxWebhook('payment_expired')" class="px-3 py-1.5 bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 font-mono text-xs font-black rounded-none cursor-pointer">
+                            ⏱️ Expired Payment
+                        </button>
+                        <button type="button" wire:click="runAdminSandboxWebhook('duplicate_webhook_attack')" class="px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-zinc-950 font-mono text-xs font-black rounded-none cursor-pointer">
+                            🔄 2x Duplicate Attack
+                        </button>
+                    </div>
+                </div>
+            @endif
+        </div>
+
+        <!-- v11.0 Post-BAST 90-Day SLA Bug-Warranty vs Paid Delta Triage Queue -->
+        <div class="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <div class="font-mono text-xs font-black uppercase text-emerald-900 dark:text-emerald-300">
+                        V11_ZERO_FAILURE_03 // POST-BAST 90-DAY CONTRACTUAL SLA BUG-WARRANTY VS PAID DELTA V1.1
+                    </div>
+                    <h3 class="text-lg font-black text-zinc-950 dark:text-white">
+                        {{ $isEn ? 'Post-BAST SLA Maintenance & Scope-Lock Triage Queue' : 'Antrean Triase Garansi Bug SLA Pasca-BAST vs Addendum Fitur Baru' }}
+                    </h3>
+                </div>
+                <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-mono text-xs font-black tabular-nums">
+                    UU PDP Logs: {{ count($recentPrivacyRequests ?? []) }}
+                </span>
+            </div>
+
+            <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800">
+                <table class="w-full text-left font-mono text-xs tabular-nums">
+                    <thead class="bg-zinc-100 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800">
+                        <tr>
+                            <th class="px-3 py-2">Ticket #</th>
+                            <th class="px-3 py-2">Judul Laporan</th>
+                            <th class="px-3 py-2">Pelapor (E.164)</th>
+                            <th class="px-3 py-2">Klasifikasi AI Scope</th>
+                            <th class="px-3 py-2 text-right">Estimasi Biaya (IDR)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse(($recentSlaTickets ?? []) as $tkt)
+                            <tr class="odd:bg-white dark:odd:bg-zinc-900 even:bg-zinc-50 dark:even:bg-zinc-950/60 border-b border-zinc-200 dark:border-zinc-800">
+                                <td class="px-3 py-2 font-black text-zinc-950 dark:text-white">{{ $tkt->ticket_number }}</td>
+                                <td class="px-3 py-2 font-sans font-bold text-zinc-950 dark:text-zinc-100">{{ $tkt->issue_title }}</td>
+                                <td class="px-3 py-2">{{ $tkt->reporter_email }} · {{ $tkt->reporter_phone_country_code }}{{ $tkt->reporter_phone }}</td>
+                                <td class="px-3 py-2">
+                                    @if($tkt->classification === 'BUG_WARRANTY_COVERED')
+                                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black">GARANSI BUG RP 0</span>
+                                    @else
+                                        <span class="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-700 font-black">PAID DELTA V1.1</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 text-right font-black text-zinc-950 dark:text-white">
+                                    Rp {{ number_format((int) ($tkt->estimated_delta_idr ?? 0), 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-3 py-4 text-center text-zinc-600 dark:text-zinc-400">
+                                    {{ $isEn ? 'No Post-BAST SLA tickets submitted yet.' : 'Belum ada tiket SLA Pasca-BAST yang diajukan.' }}
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </x-filament-panels::page>
 

@@ -10,6 +10,8 @@ use App\Models\PosChangeRequest;
 use App\Models\PosProject;
 use App\Models\Transaction;
 use App\Models\VisionBlueprint;
+use App\Services\Saas\PosSaasCommercialEngineService;
+use App\Services\Sla\PosSlaAndSandboxEngineService;
 use App\Support\PosStackPresetCatalog;
 use App\Support\PricingRegistry;
 use Illuminate\Support\Facades\Schema;
@@ -28,6 +30,7 @@ use Illuminate\Support\Str;
 class PosCommercialBridgeService
 {
     public const MODE_RETAIL = 'RETAIL_SELF_DEV';
+
     public const MODE_MITRA = 'MITRA_TURNKEY_PROJECT';
 
     /**
@@ -364,7 +367,7 @@ class PosCommercialBridgeService
                     'label' => 'Termin 1 (DP 50%): Kickoff, Lock Blueprint SHA-256 & Skema Database (Fase 1–3)',
                     'percentage' => 50,
                     'amount_idr' => $t1,
-                    'formatted_amount' => 'Rp ' . number_format($t1, 0, ',', '.'),
+                    'formatted_amount' => 'Rp '.number_format($t1, 0, ',', '.'),
                     'linked_phases' => [1, 2, 3],
                 ],
                 [
@@ -373,7 +376,7 @@ class PosCommercialBridgeService
                     'label' => 'Termin 2 (Pelunasan 50%): Pengujian Pest, UI Sektoral, Red-Team & BAST Sign-Off (Fase 4–7)',
                     'percentage' => 50,
                     'amount_idr' => $t2,
-                    'formatted_amount' => 'Rp ' . number_format($t2, 0, ',', '.'),
+                    'formatted_amount' => 'Rp '.number_format($t2, 0, ',', '.'),
                     'linked_phases' => [4, 5, 6, 7],
                 ],
             ];
@@ -388,7 +391,7 @@ class PosCommercialBridgeService
                     'label' => 'Termin 1 (DP 30%): Kickoff, Cryptographic Scope Freeze & ULID Database Schema (Fase 1–2)',
                     'percentage' => 30,
                     'amount_idr' => $t1,
-                    'formatted_amount' => 'Rp ' . number_format($t1, 0, ',', '.'),
+                    'formatted_amount' => 'Rp '.number_format($t1, 0, ',', '.'),
                     'linked_phases' => [1, 2],
                 ],
                 [
@@ -397,7 +400,7 @@ class PosCommercialBridgeService
                     'label' => 'Termin 2 (Milestone 50%): Domain Actions Lock, Pest Verification & Sectoral UI/Print (Fase 3–5)',
                     'percentage' => 50,
                     'amount_idr' => $t2,
-                    'formatted_amount' => 'Rp ' . number_format($t2, 0, ',', '.'),
+                    'formatted_amount' => 'Rp '.number_format($t2, 0, ',', '.'),
                     'linked_phases' => [3, 4, 5],
                 ],
                 [
@@ -406,7 +409,7 @@ class PosCommercialBridgeService
                     'label' => 'Termin 3 (Pelunasan BAST 20%): 4-Pillar AI Sync, Security Red-Team, UAT 100% & BAST Resmi (Fase 6–7)',
                     'percentage' => 20,
                     'amount_idr' => $t3,
-                    'formatted_amount' => 'Rp ' . number_format($t3, 0, ',', '.'),
+                    'formatted_amount' => 'Rp '.number_format($t3, 0, ',', '.'),
                     'linked_phases' => [6, 7],
                 ],
             ];
@@ -438,7 +441,7 @@ class PosCommercialBridgeService
                 'man_hours' => $pHours,
                 'working_days' => (int) max(1, ceil($pHours / 8)),
                 'cost_idr' => $pCost,
-                'formatted_cost' => 'Rp ' . number_format($pCost, 0, ',', '.'),
+                'formatted_cost' => 'Rp '.number_format($pCost, 0, ',', '.'),
                 'termin_gate' => $pNum <= 2 ? 'Termin 1 (DP)' : ($pNum <= 5 ? 'Termin 2 (Milestone)' : 'Termin 3 (BAST)'),
             ];
         }
@@ -452,14 +455,14 @@ class PosCommercialBridgeService
             ? PricingRegistry::TIER_UMKM_STARTER
             : PricingRegistry::TIER_FULL_MVP;
 
-        $formattedTotal = 'Rp ' . number_format($quotationIdr, 0, ',', '.');
+        $formattedTotal = 'Rp '.number_format($quotationIdr, 0, ',', '.');
 
         return [
             'sector_code' => $sectorCode,
             'stack_preset' => $normalizedStack,
             'stack_multiplier' => $stackMultiplier,
             'man_hour_rate_idr' => $ratePerHour,
-            'formatted_man_hour_rate' => 'Rp ' . number_format($ratePerHour, 0, ',', '.') . '/jam',
+            'formatted_man_hour_rate' => 'Rp '.number_format($ratePerHour, 0, ',', '.').'/jam',
             'counts' => [
                 'tables' => $tablesCount,
                 'states' => $statesCount,
@@ -584,22 +587,22 @@ class PosCommercialBridgeService
         }
 
         $terminLines = array_map(
-            fn ($t) => $t['label'] . ' = ' . $t['formatted_amount'],
+            fn ($t) => $t['label'].' = '.$t['formatted_amount'],
             $quotation['termin_schedule']
         );
 
         $clauses = [
             'pasal_1_ruang_lingkup_kriptografis' => [
                 'title' => 'Pasal 1: Ruang Lingkup Kriptografis Blueprint v1.0 (Cryptographic Scope Freeze)',
-                'description' => 'Pihak Kedua mengerjakan sistem "' . ($blueprint->nama_bisnis ?: $blueprint->client_name) . '" secara presisi berdasarkan Blueprint v' . ($posProject?->current_version ?: '1.0') . ' dengan Kunci Hash Kriptografis SHA-256: ' . $quotation['scope_hash_full'] . '. Sektor Utama: ' . $quotation['sector_code'] . ' | Stack: ' . $quotation['stack_preset'] . '.',
+                'description' => 'Pihak Kedua mengerjakan sistem "'.($blueprint->nama_bisnis ?: $blueprint->client_name).'" secara presisi berdasarkan Blueprint v'.($posProject?->current_version ?: '1.0').' dengan Kunci Hash Kriptografis SHA-256: '.$quotation['scope_hash_full'].'. Sektor Utama: '.$quotation['sector_code'].' | Stack: '.$quotation['stack_preset'].'.',
             ],
             'pasal_2_lampiran_tabel_dan_state_machine' => [
                 'title' => 'Pasal 2: Lampiran Teknis Tabel ULID & State Machine Resmi',
-                'description' => 'Batas hukum ruang lingkup mencakup ' . count($tableNames) . ' Tabel Strict ULID (' . implode(', ', array_slice($tableNames, 0, 12)) . ') serta ' . count($stateEntities) . ' State Machine Terkunci (' . implode(', ', array_slice($stateEntities, 0, 10)) . ') dengan beban terukur ' . $quotation['man_hours'] . ' Jam Kerja (' . $quotation['timeline_days'] . ' Hari Kerja).',
+                'description' => 'Batas hukum ruang lingkup mencakup '.count($tableNames).' Tabel Strict ULID ('.implode(', ', array_slice($tableNames, 0, 12)).') serta '.count($stateEntities).' State Machine Terkunci ('.implode(', ', array_slice($stateEntities, 0, 10)).') dengan beban terukur '.$quotation['man_hours'].' Jam Kerja ('.$quotation['timeline_days'].' Hari Kerja).',
             ],
             'pasal_3_nilai_rab_dan_termin' => [
                 'title' => 'Pasal 3: Nilai Kontrak RAB & Jadwal Termin Pembayaran',
-                'description' => 'Total nilai kontrak disepakati sebesar Rp ' . number_format($contractAmount, 0, ',', '.') . ' dengan rincian tahapan pembayaran: ' . implode(' | ', $terminLines) . '.',
+                'description' => 'Total nilai kontrak disepakati sebesar Rp '.number_format($contractAmount, 0, ',', '.').' dengan rincian tahapan pembayaran: '.implode(' | ', $terminLines).'.',
             ],
             'pasal_4_anti_scope_creep_addendum' => [
                 'title' => 'Pasal 4: Perlindungan Anti-Scope Creep & Paid Change-Order Delta (v1.1+)',
@@ -607,7 +610,7 @@ class PosCommercialBridgeService
             ],
             'pasal_5_uat_given_when_then_dan_bast' => [
                 'title' => 'Pasal 5: Pengujian UAT Terukur (Given-When-Then) & Serah Terima BAST Digital',
-                'description' => 'Serah terima sistem mengacu pada ' . count($uatChecklist['scenarios'] ?? []) . ' skenario penerimaan objektif (Given-When-Then) di server Staging. Setelah 100% skenario lolos uji dan ditandatangani secara elektronik, sistem menerbitkan BAST Resmi berstempel SHA-256.',
+                'description' => 'Serah terima sistem mengacu pada '.count($uatChecklist['scenarios'] ?? []).' skenario penerimaan objektif (Given-When-Then) di server Staging. Setelah 100% skenario lolos uji dan ditandatangani secara elektronik, sistem menerbitkan BAST Resmi berstempel SHA-256.',
             ],
         ];
 
@@ -619,7 +622,7 @@ class PosCommercialBridgeService
 
         if ($existingDoc) {
             $existingDoc->update([
-                'title' => 'SPK & Lampiran Scope SHA-256 - ' . ($blueprint->nama_bisnis ?: $blueprint->client_name),
+                'title' => 'SPK & Lampiran Scope SHA-256 - '.($blueprint->nama_bisnis ?: $blueprint->client_name),
                 'scope_locked' => true,
                 'contract_amount' => $contractAmount,
                 'dp_amount' => $dpAmount,
@@ -629,7 +632,7 @@ class PosCommercialBridgeService
             $doc = $existingDoc;
         } else {
             $doc = Document::create([
-                'title' => 'SPK & Lampiran Scope SHA-256 - ' . ($blueprint->nama_bisnis ?: $blueprint->client_name),
+                'title' => 'SPK & Lampiran Scope SHA-256 - '.($blueprint->nama_bisnis ?: $blueprint->client_name),
                 'document_type' => 'contract',
                 'related_id' => $blueprint->id,
                 'related_type' => VisionBlueprint::class,
@@ -637,7 +640,7 @@ class PosCommercialBridgeService
                 'scope_locked' => true,
                 'contract_amount' => $contractAmount,
                 'dp_amount' => $dpAmount,
-                'midtrans_order_id' => 'NPRO-SPK-' . strtoupper(Str::random(8)),
+                'midtrans_order_id' => 'NPRO-SPK-'.strtoupper(Str::random(8)),
                 'content_clauses' => $clauses,
                 'document_hash' => $quotation['scope_hash_full'],
             ]);
@@ -717,7 +720,7 @@ class PosCommercialBridgeService
             'delta_man_hours' => $effectiveDeltaHours,
             'delta_working_days' => $deltaWorkingDays,
             'delta_quotation_idr' => $deltaQuotationIdr,
-            'formatted_delta_quotation' => 'Rp ' . number_format($deltaQuotationIdr, 0, ',', '.'),
+            'formatted_delta_quotation' => 'Rp '.number_format($deltaQuotationIdr, 0, ',', '.'),
             'man_hour_rate_idr' => $ratePerHour,
             'stack_multiplier' => $multiplier,
             'addendum_status' => 'PENDING_CLIENT_APPROVAL',
@@ -746,7 +749,7 @@ class PosCommercialBridgeService
             $cr->delta_quotation_idr = $amount;
         }
 
-        $orderId = $cr->midtrans_addendum_order_id ?: ('NPRO-ADD-' . substr($cr->id, -10) . '-' . time());
+        $orderId = $cr->midtrans_addendum_order_id ?: ('NPRO-ADD-'.substr($cr->id, -10).'-'.time());
         $snapToken = null;
         $redirectUrl = null;
 
@@ -764,7 +767,7 @@ class PosCommercialBridgeService
                     ],
                     'item_details' => [
                         [
-                            'id' => 'ADDENDUM-' . strtoupper(str_replace('.', '_', (string) $cr->to_version)),
+                            'id' => 'ADDENDUM-'.strtoupper(str_replace('.', '_', (string) $cr->to_version)),
                             'price' => $amount,
                             'quantity' => 1,
                             'name' => substr("Addendum {$cr->to_version}: {$cr->title}", 0, 50),
@@ -821,7 +824,7 @@ class PosCommercialBridgeService
                 'delta_working_days' => $cr->delta_working_days,
                 'midtrans_order_id' => $orderId,
             ],
-            description: "Addendum Change-Order {$cr->from_version} -> {$cr->to_version} disetujui klien dengan nilai Rp " . number_format($amount, 0, ',', '.') . ".",
+            description: "Addendum Change-Order {$cr->from_version} -> {$cr->to_version} disetujui klien dengan nilai Rp ".number_format($amount, 0, ',', '.').'.',
             eventCategory: 'paid_addendum'
         );
 
@@ -832,7 +835,7 @@ class PosCommercialBridgeService
             'addendum_status' => 'APPROVED_AWAITING_PAYMENT',
             'midtrans_order_id' => $orderId,
             'delta_quotation_idr' => $amount,
-            'formatted_delta_quotation' => 'Rp ' . number_format($amount, 0, ',', '.'),
+            'formatted_delta_quotation' => 'Rp '.number_format($amount, 0, ',', '.'),
             'delta_man_hours' => (int) $cr->delta_man_hours,
             'delta_working_days' => (int) $cr->delta_working_days,
             'snap_token' => $snapToken,
@@ -865,7 +868,7 @@ class PosCommercialBridgeService
 
         foreach (($quotation['wbs_7_milestones'] ?? []) as $item) {
             $pNum = (int) ($item['phase'] ?? 1);
-            $key = 'phase_' . $pNum;
+            $key = 'phase_'.$pNum;
             $isVerified = (($phaseProgress[$key]['status'] ?? '') === 'VERIFIED') || ! empty($devCheckpoints[$key]);
             if ($isVerified) {
                 $verifiedCount++;
@@ -886,7 +889,7 @@ class PosCommercialBridgeService
         }
 
         $stagingUrl = $blueprint?->staging_url
-            ?: ('https://staging-' . Str::slug((string) ($blueprint?->slug ?: $posProject?->app_name ?: 'project')) . '.neriahpro.app');
+            ?: ('https://staging-'.Str::slug((string) ($blueprint?->slug ?: $posProject?->app_name ?: 'project')).'.neriahpro.app');
 
         return [
             'verified_count' => $verifiedCount,
@@ -924,7 +927,7 @@ class PosCommercialBridgeService
             $scenarios[] = [
                 'id' => $id,
                 'primitive' => (string) ($sc['primitive'] ?? 'CORE_DOMAIN'),
-                'title' => (string) ($sc['title'] ?? $sc['scenario'] ?? ("Skenario UAT #" . ($idx + 1))),
+                'title' => (string) ($sc['title'] ?? $sc['scenario'] ?? ('Skenario UAT #'.($idx + 1))),
                 'given' => (string) ($sc['given'] ?? 'Data organisasi & aktor terautentikasi tersedia di Staging.'),
                 'when' => (string) ($sc['when'] ?? 'Pengguna mengeksekusi transaksi utama pada antarmuka aplikasi.'),
                 'then' => (string) ($sc['then'] ?? 'State berubah secara atomik sesuai kontrak tanpa race-condition dan tercatat di AuditLog.'),
@@ -1127,7 +1130,7 @@ class PosCommercialBridgeService
             $signedAt->toIso8601String(),
         ]));
 
-        $finalOrderId = 'NPRO-BAST-' . substr($blueprint->id, -10) . '-' . time();
+        $finalOrderId = 'NPRO-BAST-'.substr($blueprint->id, -10).'-'.time();
 
         $bastRecord = [
             'bast_number' => $bastNumber,
@@ -1141,7 +1144,7 @@ class PosCommercialBridgeService
             'uat_passed_scenarios' => $uat['passed_scenarios'],
             'final_termin_percentage' => $finalTermin['percentage'] ?? 20,
             'final_termin_amount_idr' => $finalInvoiceAmount,
-            'formatted_final_termin' => 'Rp ' . number_format($finalInvoiceAmount, 0, ',', '.'),
+            'formatted_final_termin' => 'Rp '.number_format($finalInvoiceAmount, 0, ',', '.'),
             'final_midtrans_order_id' => $finalOrderId,
             'bast_print_url' => url("/blueprint/{$blueprint->slug}/mitra-document/bast"),
         ];
@@ -1176,11 +1179,11 @@ class PosCommercialBridgeService
                 'content_clauses' => [
                     'pasal_1_pengujian_uat_100' => [
                         'title' => 'Pernyataan Kelulusan Uji Terima (UAT 100% Given-When-Then)',
-                        'description' => "Pihak Pertama ({$signerName}) menyatakan telah menguji secara langsung seluruh {$uat['passed_scenarios']}/{$uat['total_scenarios']} skenario penerimaan fungsional, konkurensi, dan keamanan di lingkungan Staging sesuai Scope Hash SHA-256: " . ($quotation['scope_hash_short'] ?? '-') . '.',
+                        'description' => "Pihak Pertama ({$signerName}) menyatakan telah menguji secara langsung seluruh {$uat['passed_scenarios']}/{$uat['total_scenarios']} skenario penerimaan fungsional, konkurensi, dan keamanan di lingkungan Staging sesuai Scope Hash SHA-256: ".($quotation['scope_hash_short'] ?? '-').'.',
                     ],
                     'pasal_2_serah_terima_dan_garansi' => [
                         'title' => 'Serah Terima Sistem & Aktivasi Masa Garansi Bug 30 Hari',
-                        'description' => 'Dengan diterbitkannya BAST Digital Nomor ' . $bastNumber . ', pekerjaan pengembangan dinyatakan diterima dengan baik dan memicu pencairan Termin Pelunasan Akhir sebesar Rp ' . number_format($finalInvoiceAmount, 0, ',', '.') . ' serta aktivasi masa garansi bug 30 hari kalender.',
+                        'description' => 'Dengan diterbitkannya BAST Digital Nomor '.$bastNumber.', pekerjaan pengembangan dinyatakan diterima dengan baik dan memicu pencairan Termin Pelunasan Akhir sebesar Rp '.number_format($finalInvoiceAmount, 0, ',', '.').' serta aktivasi masa garansi bug 30 hari kalender.',
                     ],
                 ],
             ]
@@ -1215,9 +1218,11 @@ class PosCommercialBridgeService
         ])->saveQuietly();
 
         // Bagian 1 (v10.0): Auto-issue Telemetry-Backed Verified Architecture Receipt Testimonial upon BAST Sign-Off!
+        // Bagian 2 (v11.0): Auto-activate 90-Day Contractual Post-BAST SLA Bug-Warranty Window!
         $verifiedTestimonial = null;
         if ($posProject && $posProject->exists) {
-            $verifiedTestimonial = \App\Services\Saas\PosSaasCommercialEngineService::issueVerifiedArchitectureReceiptTestimonial(
+            PosSlaAndSandboxEngineService::activatePostBastSlaWarranty($posProject, 90);
+            $verifiedTestimonial = PosSaasCommercialEngineService::issueVerifiedArchitectureReceiptTestimonial(
                 $posProject,
                 'MITRA_BAST_SIGNED'
             );

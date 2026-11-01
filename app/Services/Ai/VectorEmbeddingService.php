@@ -3,9 +3,21 @@
 namespace App\Services\Ai;
 
 use App\Models\AiKnowledgeVector;
-use App\Models\CmsGlobalSetting;
+use App\Models\PosArchitecturePillar;
+use App\Services\PosCommercialBridgeService;
 use App\Services\Security\DocumentThreatSanitizerService;
 use App\Support\PosAgentShieldAndCoDesignCatalog;
+use App\Support\PosDayTwoProductionCatalog;
+use App\Support\PosDualZoneFrontendAndSaasCatalog;
+use App\Support\PosEnterpriseGuaranteeCatalog;
+use App\Support\PosInclusiveCommercialCatalog;
+use App\Support\PosLifecycleAndStudioCatalog;
+use App\Support\PosRealWorldRuntimeCatalog;
+use App\Support\PosSectorUiArchetypeCatalog;
+use App\Support\PosSeoGeoAndZeroFailureCatalog;
+use App\Support\PosStackPresetCatalog;
+use App\Support\PricingRegistry;
+use App\Support\ProjectOsMatrixCatalog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -16,8 +28,11 @@ class VectorEmbeddingService
     protected string $model = 'text-embedding-004';
 
     protected static bool $rateLimitExceeded = false;
+
     protected static ?int $rateLimitResetTime = null;
+
     protected static bool $rateLimitWarned = false;
+
     protected static ?string $workingEmbeddingModel = null;
 
     /**
@@ -34,7 +49,6 @@ class VectorEmbeddingService
      * Jika terjadi HTTP 429 atau API key tidak disetel, otomatis mengaktifkan sirkuit pengaman
      * fallback deterministik 768 dimensi berbasis hash.
      *
-     * @param string $text
      * @return float[]
      */
     public function generateEmbedding(string $text): array
@@ -72,9 +86,9 @@ class VectorEmbeddingService
                     'model' => "models/{$candidateModel}",
                     'content' => [
                         'parts' => [
-                            ['text' => $safeText]
-                        ]
-                    ]
+                            ['text' => $safeText],
+                        ],
+                    ],
                 ];
 
                 if (str_contains($candidateModel, 'gemini-embedding') || str_contains($candidateModel, 'text-embedding-005')) {
@@ -88,6 +102,7 @@ class VectorEmbeddingService
                     $values = $data['embedding']['values'] ?? null;
                     if (is_array($values) && count($values) === 768) {
                         self::$workingEmbeddingModel = $candidateModel;
+
                         return $values;
                     }
                 }
@@ -97,14 +112,14 @@ class VectorEmbeddingService
                 if (in_array($status, [400, 401, 403, 404, 429])) {
                     self::$rateLimitExceeded = true;
                     self::$rateLimitResetTime = time() + 300;
-                    if (!self::$rateLimitWarned) {
+                    if (! self::$rateLimitWarned) {
                         Log::warning("VectorEmbeddingService: Gemini API embedding gagal/ditolak (HTTP {$status}). Mengaktifkan fallback deterministik 768 dimensi.");
                         self::$rateLimitWarned = true;
                     }
                     break;
                 }
             } catch (\Throwable $e) {
-                Log::warning("VectorEmbeddingService Exception ({$candidateModel}): " . $e->getMessage());
+                Log::warning("VectorEmbeddingService Exception ({$candidateModel}): ".$e->getMessage());
                 self::$rateLimitExceeded = true;
                 self::$rateLimitResetTime = time() + 300;
                 break;
@@ -119,22 +134,20 @@ class VectorEmbeddingService
      */
     public function generateDeterministicEmbedding(string $text): array
     {
-        $hash = hash('sha512', $text . 'neriahpro_salt_vector_seed_2026');
+        $hash = hash('sha512', $text.'neriahpro_salt_vector_seed_2026');
         $vector = [];
         for ($i = 0; $i < 768; $i++) {
             $charIndex = ($i * 7) % strlen($hash);
             $val = (ord($hash[$charIndex]) - 48) / 80.0;
             $vector[] = round(sin($val * ($i + 1)) * 0.1, 6);
         }
+
         return $vector;
     }
 
     /**
      * Pemecah teks cerdas (Smart Chunking) berbasis paragraf dan kalimat dengan sliding window overlap.
      *
-     * @param string $text
-     * @param int $chunkSize
-     * @param int $overlap
      * @return string[]
      */
     public function chunkText(string $text, int $chunkSize = 1000, int $overlap = 150): array
@@ -154,23 +167,27 @@ class VectorEmbeddingService
 
         foreach ($paragraphs as $para) {
             $para = trim($para);
-            if (empty($para)) continue;
+            if (empty($para)) {
+                continue;
+            }
 
             if (mb_strlen($currentChunk) + mb_strlen($para) + 2 <= $chunkSize) {
-                $currentChunk .= ($currentChunk !== '' ? "\n\n" : '') . $para;
+                $currentChunk .= ($currentChunk !== '' ? "\n\n" : '').$para;
             } else {
                 if ($currentChunk !== '') {
                     $chunks[] = $currentChunk;
                     $tail = mb_substr($currentChunk, max(0, mb_strlen($currentChunk) - $overlap));
-                    $currentChunk = $tail . "\n\n" . $para;
+                    $currentChunk = $tail."\n\n".$para;
                 } else {
                     $sentences = preg_split('/(?<=[.?!])\s+/', $para);
                     $subChunk = '';
                     foreach ($sentences as $sentence) {
                         if (mb_strlen($subChunk) + mb_strlen($sentence) + 1 <= $chunkSize) {
-                            $subChunk .= ($subChunk !== '' ? ' ' : '') . $sentence;
+                            $subChunk .= ($subChunk !== '' ? ' ' : '').$sentence;
                         } else {
-                            if ($subChunk !== '') $chunks[] = $subChunk;
+                            if ($subChunk !== '') {
+                                $chunks[] = $subChunk;
+                            }
                             $subChunk = $sentence;
                         }
                     }
@@ -240,7 +257,7 @@ class VectorEmbeddingService
             ]);
 
             AiKnowledgeVector::create([
-                'title' => $title . ($totalChunks > 1 ? " (Bagian " . ($index + 1) . "/{$totalChunks})" : ''),
+                'title' => $title.($totalChunks > 1 ? ' (Bagian '.($index + 1)."/{$totalChunks})" : ''),
                 'source_type' => $sourceType,
                 'source_id' => $sourceId ?: Str::slug($title),
                 'content' => $chunk,
@@ -258,9 +275,8 @@ class VectorEmbeddingService
      * Ambil konteks potongan dokumen paling relevan menggunakan Arsitektur Hybrid RAG mutakhir
      * (Dense Vector Similarity via pgvector + Sparse Lexical Token Search dengan Reciprocal Rank Fusion / RRF).
      *
-     * @param string $query Pertanyaan atau konteks yang dicari
-     * @param int $limit Jumlah dokumen teratas
-     * @return array
+     * @param  string  $query  Pertanyaan atau konteks yang dicari
+     * @param  int  $limit  Jumlah dokumen teratas
      */
     public function retrieveRelevantContext(string $query, int $limit = 4): array
     {
@@ -274,20 +290,20 @@ class VectorEmbeddingService
 
         // 1. DENSE VECTOR RETRIEVAL (Pencarian Semantik Makna via Cosine Distance)
         $queryVector = $this->generateEmbedding($cleanQuery);
-        if (!empty($queryVector)) {
+        if (! empty($queryVector)) {
             try {
                 $denseResults = AiKnowledgeVector::searchSimilar($queryVector, $limit * 2)->get();
             } catch (\Throwable $e) {
-                Log::warning("Vector similarity search failed: " . $e->getMessage());
+                Log::warning('Vector similarity search failed: '.$e->getMessage());
             }
         }
 
         // 2. SPARSE LEXICAL RETRIEVAL (Pencarian Eksak Kata Kunci)
         $words = array_filter(
             explode(' ', strtolower(preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $cleanQuery))),
-            fn($w) => mb_strlen($w) >= 3
+            fn ($w) => mb_strlen($w) >= 3
         );
-        if (!empty($words)) {
+        if (! empty($words)) {
             try {
                 $likeOp = DB::getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
                 $queryBuilder = AiKnowledgeVector::query();
@@ -299,7 +315,7 @@ class VectorEmbeddingService
                 });
                 $sparseResults = $queryBuilder->limit($limit * 2)->get();
             } catch (\Throwable $e) {
-                Log::warning("Sparse lexical search failed: " . $e->getMessage());
+                Log::warning('Sparse lexical search failed: '.$e->getMessage());
             }
         }
 
@@ -323,7 +339,7 @@ class VectorEmbeddingService
         arsort($rrfScores);
         $topIds = array_slice(array_keys($rrfScores), 0, $limit);
 
-        $finalItems = collect($topIds)->map(fn($id) => $itemsById[$id])->filter();
+        $finalItems = collect($topIds)->map(fn ($id) => $itemsById[$id])->filter();
 
         return $finalItems->map(function ($item) {
             $sim = isset($item->similarity_score) ? (float) $item->similarity_score : 0.90;
@@ -370,9 +386,9 @@ class VectorEmbeddingService
                 || str_contains(strtolower($srcType), 'upload')
                 || str_contains(strtolower($srcType), 'untrusted');
             if ($isUntrustedClientChunk) {
-                $out .= DocumentThreatSanitizerService::wrapUntrustedClientDocument((string) $chunk['content'], (string) ($chunk['title'] ?? 'CLIENT_RAG_CHUNK')) . "\n\n";
+                $out .= DocumentThreatSanitizerService::wrapUntrustedClientDocument((string) $chunk['content'], (string) ($chunk['title'] ?? 'CLIENT_RAG_CHUNK'))."\n\n";
             } else {
-                $out .= trim((string) $chunk['content']) . "\n\n";
+                $out .= trim((string) $chunk['content'])."\n\n";
             }
         }
 
@@ -405,7 +421,7 @@ class VectorEmbeddingService
             [
                 'id' => 'pilar-1-prd-26',
                 'title' => 'Pilar 1: Dokumen PRD 26 Parameter & Problem-Solution Fit',
-                'content' => "Dokumen PRD 26 Parameter Neriah Pro Software Factory OS mencakup analisis komprehensif: Executive Summary, Target Persona, Problem-Solution Fit, RBAC Matrix, Kepatuhan Regulasi UU PDP No. 27/2022 & UU ITE, Threat Modeling OWASP Top 10, Skema PostgreSQL 16 DDL Strict ULID, Diagram WBS 5 Sprint Mermaid Gantt, Kontrak API RESTful/JSON, dan SLA Maintenance 3 Bulan.",
+                'content' => 'Dokumen PRD 26 Parameter Neriah Pro Software Factory OS mencakup analisis komprehensif: Executive Summary, Target Persona, Problem-Solution Fit, RBAC Matrix, Kepatuhan Regulasi UU PDP No. 27/2022 & UU ITE, Threat Modeling OWASP Top 10, Skema PostgreSQL 16 DDL Strict ULID, Diagram WBS 5 Sprint Mermaid Gantt, Kontrak API RESTful/JSON, dan SLA Maintenance 3 Bulan.',
                 'category' => '10 Pilar Software Factory OS',
             ],
             [
@@ -417,60 +433,60 @@ class VectorEmbeddingService
             [
                 'id' => 'pilar-3-docker-env',
                 'title' => 'Pilar 3: Containerized Docker Environment (PHP 8.5+, PG 16, Redis 7)',
-                'content' => "Lingkungan deployment production terisolasi menggunakan Docker Compose multi-container: PHP 8.5+ FPM dengan ekstensi OPcache/APCu, PostgreSQL 16 dengan pgvector extension, Redis 7 untuk event-driven caching (Cache::rememberForever) dan high-throughput queue, serta Nginx reverse proxy dengan TLS/SSL dan Brotli compression.",
+                'content' => 'Lingkungan deployment production terisolasi menggunakan Docker Compose multi-container: PHP 8.5+ FPM dengan ekstensi OPcache/APCu, PostgreSQL 16 dengan pgvector extension, Redis 7 untuk event-driven caching (Cache::rememberForever) dan high-throughput queue, serta Nginx reverse proxy dengan TLS/SSL dan Brotli compression.',
                 'category' => '10 Pilar Software Factory OS',
             ],
             [
                 'id' => 'pilar-4-synthetic-seeder',
                 'title' => 'Pilar 4: Synthetic Seeder 100+ Baris & Factory Resilience',
-                'content' => "Database seeder sintetis menghasilkan minimal 100+ baris data realistis untuk stress-testing performa, validasi Keyset Cursor Pagination O(1), verifikasi pencarian berindeks, dan pengujian boundary edge-case sebelum aplikasi dilepas ke staging.",
+                'content' => 'Database seeder sintetis menghasilkan minimal 100+ baris data realistis untuk stress-testing performa, validasi Keyset Cursor Pagination O(1), verifikasi pencarian berindeks, dan pengujian boundary edge-case sebelum aplikasi dilepas ke staging.',
                 'category' => '10 Pilar Software Factory OS',
             ],
             [
                 'id' => 'pilar-5-agent-rules',
                 'title' => 'Pilar 5: AI Agent Rules & Engineering Governance (.cursorrules & AGENTS.md)',
-                'content' => "Standar kepatuhan AI Agent mutlak (.cursorrules, AGENTS.md, Graphify Knowledge Graph): Penolakan keras terhadap hardcoded magic strings (Zero Tolerance Dosa Hardcode), pelarangan dialog JavaScript bawaan (Strict Ban window.alert/confirm), border radius subtle (rounded-none s/d rounded-md, ban rounded-full capsule), dan tema sharp brutalism monochrome.",
+                'content' => 'Standar kepatuhan AI Agent mutlak (.cursorrules, AGENTS.md, Graphify Knowledge Graph): Penolakan keras terhadap hardcoded magic strings (Zero Tolerance Dosa Hardcode), pelarangan dialog JavaScript bawaan (Strict Ban window.alert/confirm), border radius subtle (rounded-none s/d rounded-md, ban rounded-full capsule), dan tema sharp brutalism monochrome.',
                 'category' => '10 Pilar Software Factory OS',
             ],
             [
                 'id' => 'pilar-6-pest-tests',
                 'title' => 'Pilar 6: Pest ApiContractTest & Security Defense Suite',
-                'content' => "Suite pengujian otomatis berbasis Pest PHP menguji seluruh endpoint API, validasi contract JSON, otentikasi role RBAC, proteksi CSRF/Honeypot, dan simulasi skenario kegagalan webhook Midtrans dengan Dead Letter Queue (DLQ).",
+                'content' => 'Suite pengujian otomatis berbasis Pest PHP menguji seluruh endpoint API, validasi contract JSON, otentikasi role RBAC, proteksi CSRF/Honeypot, dan simulasi skenario kegagalan webhook Midtrans dengan Dead Letter Queue (DLQ).',
                 'category' => '10 Pilar Software Factory OS',
             ],
             [
                 'id' => 'pilar-7-cicd-deploy',
                 'title' => 'Pilar 7: CI/CD Pipeline & 6 Skenario Script deploy.sh',
-                'content' => "Automasi deployment zero-downtime berbasis 6 skenario: 1 (Skenario Ringan Blade/PHP), 2 (Migrasi Aman kolom/tabel baru), 3 (Hancur & Bangun DB Staging Only), 4 (Install Plugin/Package Composer/Filament), 5 (Dump Autoload restrukturisasi class), dan 6 (Build Assets Frontend Vite/Tailwind).",
+                'content' => 'Automasi deployment zero-downtime berbasis 6 skenario: 1 (Skenario Ringan Blade/PHP), 2 (Migrasi Aman kolom/tabel baru), 3 (Hancur & Bangun DB Staging Only), 4 (Install Plugin/Package Composer/Filament), 5 (Dump Autoload restrukturisasi class), dan 6 (Build Assets Frontend Vite/Tailwind).',
                 'category' => '10 Pilar Software Factory OS',
             ],
             [
                 'id' => 'pilar-8-commercialization-scopelock',
                 'title' => 'Pilar 8: Commercialization, Escrow Termin (DP 50%) & SHA-256 Scope Lock',
-                'content' => "Pencegahan scope creep melalui Scope Lock digital berstempel SHA-256 dan tanda tangan Canvas Signature Pad. Sistem pembayaran escrow termin Midtrans Snap (DP 50% untuk memulai sprint, Pelunasan 50% setelah lolos UAT) terhubung ke webhook idempoten.",
+                'content' => 'Pencegahan scope creep melalui Scope Lock digital berstempel SHA-256 dan tanda tangan Canvas Signature Pad. Sistem pembayaran escrow termin Midtrans Snap (DP 50% untuk memulai sprint, Pelunasan 50% setelah lolos UAT) terhubung ke webhook idempoten.',
                 'category' => '10 Pilar Software Factory OS',
             ],
             [
                 'id' => 'pilar-9-sprint-capacity',
                 'title' => 'Pilar 9: Managed Sprint Capacity & Anti-Collision Engine',
-                'content' => "Filosofi managed capacity: Membatasi pengerjaan maksimal 2-3 proyek paralel per batch demi menjaga standar rekayasa enterprise anti-burnout dan anti-AI-slop. Jadwal sprint terkunci di Sprint Timeline Page dan widget Gantt real-time.",
+                'content' => 'Filosofi managed capacity: Membatasi pengerjaan maksimal 2-3 proyek paralel per batch demi menjaga standar rekayasa enterprise anti-burnout dan anti-AI-slop. Jadwal sprint terkunci di Sprint Timeline Page dan widget Gantt real-time.',
                 'category' => '10 Pilar Software Factory OS',
             ],
             [
                 'id' => 'pilar-10-asset-governance',
                 'title' => 'Pilar 10: Customer Portal Transparency & Asset Lifecycle Governance',
-                'content' => "Portal klien real-time (/customer/dashboard) menampilkan timeline Gantt pengerjaan, dokumen PRD terkunci, dan URL staging preview. Manajemen siklus hidup domain, hosting, dan server dengan notifikasi otomatis H-30/H-7 menjelang jatuh tempo.",
+                'content' => 'Portal klien real-time (/customer/dashboard) menampilkan timeline Gantt pengerjaan, dokumen PRD terkunci, dan URL staging preview. Manajemen siklus hidup domain, hosting, dan server dengan notifikasi otomatis H-30/H-7 menjelang jatuh tempo.',
                 'category' => '10 Pilar Software Factory OS',
             ],
         ];
 
         foreach ($pillars as $pilar) {
             $sourceId = "pilar-{$pilar['id']}";
-            if (!$forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+            if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
                 continue;
             }
 
-            $embedding = $this->generateEmbedding($pilar['title'] . "\n\n" . $pilar['content']);
+            $embedding = $this->generateEmbedding($pilar['title']."\n\n".$pilar['content']);
             AiKnowledgeVector::create([
                 'title' => $pilar['title'],
                 'source_type' => 'architecture_pillar',
@@ -487,17 +503,17 @@ class VectorEmbeddingService
         }
 
         // 2. Indeks Pricing & Unit Economics
-        $pricingOverview = "Unit Economics Neriah Pro:
+        $pricingOverview = 'Unit Economics Neriah Pro:
 - Lisensi Retail Spark: Rp 0 (2x AI PRD Audit per bulan, public access).
 - Lisensi Retail Lite: Rp 99.000 (1 Proyek PRD lengkap, 30 hari jendela revisi).
 - Lisensi Retail Pro: Rp 399.000 (1 Proyek, 6 bulan unlimited AI re-prompt, export scaffold).
 - Lisensi Retail Ultimate: Rp 1.490.000 (1 Proyek enterprise, 1 tahun prioritas update, PostgreSQL DDL).
 - Studio Turnkey Advisory Tier: Rp 2.500.000 (Dokumen PRD 26 parameter, PostgreSQL DDL, WBS Mermaid Gantt, 100% potongan biaya jika lanjut ke Full MVP).
 - Studio Full Monolith MVP: Rp 50.000.000 (DP 50% Rp 25.000.000, 100% turnkey dikerjakan langsung oleh Senior Architect mencakup seluruh 7 pilar factory OS, staging VPS hardened, garansi SLA 3 bulan).
-- UMKM Digital Starter Tier: Rp 3.750.000 (Mesin transaksi web, kasir, database PostgreSQL terpusat, admin Filament v5, pembayaran QRIS otomatis, domain cloud 1 bulan).";
+- UMKM Digital Starter Tier: Rp 3.750.000 (Mesin transaksi web, kasir, database PostgreSQL terpusat, admin Filament v5, pembayaran QRIS otomatis, domain cloud 1 bulan).';
 
         $sourceId = 'smartguide-unit-economics';
-        if ($forceRefresh || !AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
             $embedding = $this->generateEmbedding($pricingOverview);
             AiKnowledgeVector::create([
                 'title' => 'Unit Economics, Pricing Tier & Studio Turnkey Contracts',
@@ -512,23 +528,23 @@ class VectorEmbeddingService
         }
 
         // 3. Indeks 12 Sectoral Industrial UI/UX Archetypes & Realistic Seeders (Project OS v2.5)
-        $sectorCatalog = \App\Support\ProjectOsMatrixCatalog::sectors();
+        $sectorCatalog = ProjectOsMatrixCatalog::sectors();
         foreach ($sectorCatalog as $sec) {
             $code = $sec['code'];
-            $sourceId = 'sectoral-ui-' . strtolower($code);
+            $sourceId = 'sectoral-ui-'.strtolower($code);
             if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
                 continue;
             }
 
-            $uiArch = $sec['ui_ux_archetypes'] ?? \App\Support\PosSectorUiArchetypeCatalog::forSector($code);
-            $seeder = $sec['realistic_seeder_contract'] ?? \App\Support\PosSectorUiArchetypeCatalog::seederForSector($code);
+            $uiArch = $sec['ui_ux_archetypes'] ?? PosSectorUiArchetypeCatalog::forSector($code);
+            $seeder = $sec['realistic_seeder_contract'] ?? PosSectorUiArchetypeCatalog::seederForSector($code);
             $nameId = $sec['name']['id'] ?? $code;
             $ergonomics = implode("\n- ", array_map(
                 fn ($item) => is_array($item) ? json_encode($item, JSON_UNESCAPED_UNICODE) : (string) $item,
                 $uiArch['ergonomics_and_layout'] ?? []
             ));
             $shortcuts = implode(', ', array_map(
-                fn ($s) => is_array($s) ? (($s['key'] ?? '') . ': ' . ($s['action'] ?? '')) : (string) $s,
+                fn ($s) => is_array($s) ? (($s['key'] ?? '').': '.($s['action'] ?? '')) : (string) $s,
                 $uiArch['keyboard_shortcuts'] ?? []
             ));
             $forbidden = implode('; ', array_map(
@@ -541,13 +557,13 @@ class VectorEmbeddingService
             ));
 
             $secContent = "Sektor: {$code} — {$nameId}\n"
-                . "Primary UI Archetype: " . ($uiArch['primary_archetype'] ?? '-') . "\n"
-                . "Secondary UI Archetype: " . ($uiArch['secondary_archetype'] ?? '-') . "\n"
-                . "Headline Ergonomi: " . ($uiArch['headline']['id'] ?? '') . "\n"
-                . "Aturan Layout & Ergonomi Industri:\n- {$ergonomics}\n"
-                . "Pintasan Keyboard Operasional: {$shortcuts}\n"
-                . "Pola UX Terlarang: {$forbidden}\n"
-                . "Realistic Domain Seeder ({$seeder['seeder_class']}):\n- {$fixtures}";
+                .'Primary UI Archetype: '.($uiArch['primary_archetype'] ?? '-')."\n"
+                .'Secondary UI Archetype: '.($uiArch['secondary_archetype'] ?? '-')."\n"
+                .'Headline Ergonomi: '.($uiArch['headline']['id'] ?? '')."\n"
+                ."Aturan Layout & Ergonomi Industri:\n- {$ergonomics}\n"
+                ."Pintasan Keyboard Operasional: {$shortcuts}\n"
+                ."Pola UX Terlarang: {$forbidden}\n"
+                ."Realistic Domain Seeder ({$seeder['seeder_class']}):\n- {$fixtures}";
 
             $embedding = $this->generateEmbedding("{$nameId}\n{$secContent}");
             AiKnowledgeVector::create([
@@ -567,9 +583,9 @@ class VectorEmbeddingService
         }
 
         // 4. Indeks 9 Curated Tech Stack & Topology Adapters (M1-M4, D1-D3, S1-S2)
-        foreach (\App\Support\PosStackPresetCatalog::stackPresets() as $preset) {
+        foreach (PosStackPresetCatalog::stackPresets() as $preset) {
             $pCode = $preset['code'];
-            $sourceId = 'stack-preset-' . strtolower($preset['short_code']);
+            $sourceId = 'stack-preset-'.strtolower($preset['short_code']);
             if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
                 continue;
             }
@@ -584,9 +600,9 @@ class VectorEmbeddingService
                 : (string) ($preset['stack_specific_anti_slop_rules'] ?? '');
 
             $pContent = "Preset Kode: [{$preset['short_code']}] {$pCode} ({$preset['topology']})\n"
-                . "Nama Stack: {$pName}\n"
-                . "Backend: {$backendStack} | Frontend: {$frontendStack} | Admin: {$adminStack}\n"
-                . "Anti-Slop Spesifik Stack: {$antiSlopRules}";
+                ."Nama Stack: {$pName}\n"
+                ."Backend: {$backendStack} | Frontend: {$frontendStack} | Admin: {$adminStack}\n"
+                ."Anti-Slop Spesifik Stack: {$antiSlopRules}";
 
             $embedding = $this->generateEmbedding("{$pName}\n{$pContent}");
             AiKnowledgeVector::create([
@@ -606,9 +622,9 @@ class VectorEmbeddingService
         }
 
         // 5. Indeks 6 Killer Zero-to-Production Orchestration Engines
-        foreach (\App\Support\PosSectorUiArchetypeCatalog::killerFeaturesSummary() as $killer) {
+        foreach (PosSectorUiArchetypeCatalog::killerFeaturesSummary() as $killer) {
             $kCode = $killer['code'];
-            $sourceId = 'killer-engine-' . strtolower($kCode);
+            $sourceId = 'killer-engine-'.strtolower($kCode);
             if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
                 continue;
             }
@@ -634,9 +650,9 @@ class VectorEmbeddingService
         }
 
         // 6. Indeks 8 Final Day-2 Production Layers (Project OS v3.0)
-        foreach (\App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary() as $layer) {
+        foreach (PosDayTwoProductionCatalog::finalEightLayersSummary() as $layer) {
             $lCode = (string) ($layer['code'] ?? 'LAYER');
-            $sourceId = 'day2-layer-' . strtolower($lCode);
+            $sourceId = 'day2-layer-'.strtolower($lCode);
             if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
                 continue;
             }
@@ -665,7 +681,7 @@ class VectorEmbeddingService
         $perfectionSourceId = 'project-os-v3-ten-perfection-pillars';
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $perfectionSourceId)->exists()) {
             $tenLines = [];
-            foreach (\App\Support\PosDayTwoProductionCatalog::tenPerfectionPillars() as $tp) {
+            foreach (PosDayTwoProductionCatalog::tenPerfectionPillars() as $tp) {
                 $pNum = $tp['number'] ?? '';
                 $pLabel = $tp['title']['id'] ?? ($tp['code'] ?? '');
                 $pSummary = $tp['summary']['id'] ?? ($tp['desc']['id'] ?? '');
@@ -688,9 +704,9 @@ class VectorEmbeddingService
         }
 
         // 8. Indeks 5 Day-30+ Lifecycle Retention Engines & 3-Pane Architect Studio (Project OS v4.0)
-        foreach (\App\Support\PosLifecycleAndStudioCatalog::fiveLifecycleFeatures() as $lf) {
+        foreach (PosLifecycleAndStudioCatalog::fiveLifecycleFeatures() as $lf) {
             $lfCode = (string) ($lf['code'] ?? 'LIFECYCLE');
-            $sourceId = 'day30-lifecycle-' . strtolower($lfCode);
+            $sourceId = 'day30-lifecycle-'.strtolower($lfCode);
             if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
                 continue;
             }
@@ -718,12 +734,12 @@ class VectorEmbeddingService
 
         $studioSourceId = 'project-os-v4-architect-studio-5-screens';
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $studioSourceId)->exists()) {
-            $studioContent = "The Architect Studio v4.0 (/blueprint/studio):
+            $studioContent = 'The Architect Studio v4.0 (/blueprint/studio):
 1. Screen 1 — The 60-Second Architecture Wizard: 3-step split-screen wizard (12 Sectoral Archetypes, 9 Stack Adapters M1–S2 dengan estimasi Coolify RAM/CPU sizing, Anti-Slop Shield toggles).
 2. Screen 2 — The 3-Pane Blueprint Studio (100vh Zero-Scroll IDE): Pane Kiri col-span-3 Architecture Explorer Tree, Pane Tengah col-span-5 Visual Blueprint Canvas (Schema & Locks, State Machine, UI & Print, Decision Matrix Builder match(), Delta v1.1 & Verify), Pane Kanan col-span-4 Live Compiler & 7-Phase Prompt Dock (Ctrl+Shift+C copy & Verified toggle), Bottom Status Bar (Est. Token Saved: 64%).
 3. Screen 3 — Blueprint Doctor & Determinism Score: Skor determinisme tabular-nums hingga 100.0% Zero-Assumption Ready dengan deteksi kolom status tanpa State Machine Enum dan tombol [+ Buat Otomatis].
 4. Screen 4 — Side-by-Side Slop Diff Previewer: Perbandingan Raw AI Prompt Slop vs NeriahPro Project OS v4.0 (Database, UI/UX, Bisnis & Pajak).
-5. Screen 5 — Execution Tracker & Drift Audit Terminal: 4 badge kepatuhan 100% Pass & sinkronisasi real-time via Live MCP Server Bridge (neriahpro-mcp).";
+5. Screen 5 — Execution Tracker & Drift Audit Terminal: 4 badge kepatuhan 100% Pass & sinkronisasi real-time via Live MCP Server Bridge (neriahpro-mcp).';
 
             $embedding = $this->generateEmbedding("The Architect Studio v4.0 3-Pane IDE\n{$studioContent}");
             AiKnowledgeVector::create([
@@ -741,9 +757,9 @@ class VectorEmbeddingService
         }
 
         // 9. Indeks 5 Commercial-to-Code Bridge Engines & Satu Pintu Retail vs Mitra (Project OS v5.0)
-        foreach (\App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures() as $cf) {
+        foreach (PosCommercialBridgeService::fiveCommercialBridgeFeatures() as $cf) {
             $cfCode = (string) ($cf['code'] ?? 'MITRA_BRIDGE');
-            $sourceId = 'mitra-bridge-v5-' . strtolower($cfCode);
+            $sourceId = 'mitra-bridge-v5-'.strtolower($cfCode);
             if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
                 continue;
             }
@@ -772,7 +788,7 @@ class VectorEmbeddingService
         $satuPintuSourceId = 'project-os-v5-satu-pintu-retail-vs-mitra';
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $satuPintuSourceId)->exists()) {
             $pkgLines = [];
-            foreach (\App\Support\PricingRegistry::getSatuPintuCatalog() as $pKey => $pMeta) {
+            foreach (PricingRegistry::getSatuPintuCatalog() as $pKey => $pMeta) {
                 $pName = $pMeta['name_id'] ?? $pMeta['name'] ?? $pKey;
                 $stackScope = is_array($pMeta['stack_scope'] ?? null)
                     ? implode(', ', $pMeta['stack_scope'])
@@ -780,13 +796,13 @@ class VectorEmbeddingService
                 $pkgLines[] = "- [{$pMeta['track_mode']}] {$pName} ({$pKey}): {$pMeta['formatted_price']} | Sektor: {$pMeta['sector_scope']} | Stack: {$stackScope}";
             }
             $journeyLines = [];
-            foreach (\App\Services\PosCommercialBridgeService::guidedClientJourneySteps() as $gStep) {
+            foreach (PosCommercialBridgeService::guidedClientJourneySteps() as $gStep) {
                 $journeyLines[] = "Tahap {$gStep['step']} ({$gStep['route']}): {$gStep['title']['id']} — {$gStep['desc']['id']}";
             }
             $satuPintuContent = "Katalog Satu Pintu Project OS v5.0 (Retail Mandiri vs Mitra Terima Beres untuk 12 Sektor Fungsional):\n"
-                . implode("\n", $pkgLines)
-                . "\n\nWizard Terpandu Klien Satu Pintu (5 Tahap End-to-End):\n"
-                . implode("\n", $journeyLines);
+                .implode("\n", $pkgLines)
+                ."\n\nWizard Terpandu Klien Satu Pintu (5 Tahap End-to-End):\n"
+                .implode("\n", $journeyLines);
 
             $embedding = $this->generateEmbedding("Satu Pintu Retail vs Mitra Project OS v5.0\n{$satuPintuContent}");
             AiKnowledgeVector::create([
@@ -804,9 +820,9 @@ class VectorEmbeddingService
         }
 
         // 10. Indeks 5 Deterministic Guarantee Engines, 5 Enterprise Glue & Hermetic Project Isolation (Project OS v6.0)
-        foreach (\App\Support\PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees() as $dg) {
+        foreach (PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees() as $dg) {
             $dgCode = (string) ($dg['code'] ?? 'GUARANTEE');
-            $sourceId = 'deterministic-guarantee-v6-' . strtolower($dgCode);
+            $sourceId = 'deterministic-guarantee-v6-'.strtolower($dgCode);
             if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
                 continue;
             }
@@ -834,13 +850,13 @@ class VectorEmbeddingService
         $glueIsolationSourceId = 'project-os-v6-enterprise-glue-and-hermetic-isolation';
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $glueIsolationSourceId)->exists()) {
             $glueLines = [];
-            foreach (\App\Support\PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives() as $gp) {
+            foreach (PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives() as $gp) {
                 $glueLines[] = "- [{$gp['code']}] {$gp['name']['id']} (Tabel `{$gp['table']}`, Action `{$gp['action_fqcn']}`): {$gp['invariant']}";
             }
             $v6Overview = "Project OS v6.0 — 5 Primitif Perekat Korporat (Enterprise Glue) & Protokol Hermetic Project Isolation:\n"
-                . implode("\n", $glueLines)
-                . "\n\nMatriks Menu L1–L4 (300 Sub-Menu Terkurasi): 12 Sektor × 5 Divisi Operasional × 5 Sub-Menu L3 = 25 layar korporat otomatis mekar walau user hanya mengetik 5 kata ide.\n"
-                . "Hermetic Project Isolation: Setiap proyek wajib memiliki ULID, slug, draft_token, isolation_token, dan staging_url unik tanpa kebocoran localStorage/session dan dilarang keras menimpa proyek lama berbasis nama bisnis.";
+                .implode("\n", $glueLines)
+                ."\n\nMatriks Menu L1–L4 (300 Sub-Menu Terkurasi): 12 Sektor × 5 Divisi Operasional × 5 Sub-Menu L3 = 25 layar korporat otomatis mekar walau user hanya mengetik 5 kata ide.\n"
+                .'Hermetic Project Isolation: Setiap proyek wajib memiliki ULID, slug, draft_token, isolation_token, dan staging_url unik tanpa kebocoran localStorage/session dan dilarang keras menimpa proyek lama berbasis nama bisnis.';
 
             $embedding = $this->generateEmbedding("5 Enterprise Glue & Hermetic Project Isolation v6.0\n{$v6Overview}");
             AiKnowledgeVector::create([
@@ -858,9 +874,9 @@ class VectorEmbeddingService
         }
 
         // 11. Indeks 5 Elemen Dunia Nyata & 15 Pilar Master "Project OS Ultimate 100%" (Project OS v7.0 Architectural Freeze)
-        foreach (\App\Support\PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview('id') as $rw) {
+        foreach (PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview('id') as $rw) {
             $rwCode = (string) ($rw['code'] ?? 'REALWORLD_ELEMENT');
-            $sourceId = 'realworld-element-v7-' . strtolower($rwCode);
+            $sourceId = 'realworld-element-v7-'.strtolower($rwCode);
             if (! $forceRefresh && AiKnowledgeVector::where('source_id', $sourceId)->exists()) {
                 continue;
             }
@@ -890,9 +906,9 @@ class VectorEmbeddingService
         $fifteenFreezeSourceId = 'project-os-v7-fifteen-master-pillars-architectural-freeze';
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $fifteenFreezeSourceId)->exists()) {
             $pLines = [];
-            foreach (\App\Models\PosArchitecturePillar::getCachedMatrix('id') as $mp) {
+            foreach (PosArchitecturePillar::getCachedMatrix('id') as $mp) {
                 $pLines[] = sprintf(
-                    "%d. [%s] %s — %s | Kontrak: %s",
+                    '%d. [%s] %s — %s | Kontrak: %s',
                     (int) ($mp['pillar_number'] ?? 0),
                     (string) ($mp['code'] ?? ''),
                     (string) ($mp['name']['id'] ?? ''),
@@ -901,8 +917,8 @@ class VectorEmbeddingService
                 );
             }
             $freezeOverview = "Rekapitulasi Final 15 Pilar Master 'Project OS Ultimate 100%' (100% Architectural Freeze):\n"
-                . implode("\n", $pLines)
-                . "\n\nSinkronisasi Kausalitas Lintas Tahap: Pemilihan Sektor -> Primitif -> Menu L1–L4 v1.0 -> Stack Adapter secara reaktif memperbarui Hardware Bridge, WebSocket Channel, Composite Index + Partisi PG16, SYNTAX_LOCK_2026.md, Buku SOP Training Staf (SmartGuide.php), Nilai RAB IDR, Hash SPK SHA-256, hingga Checklist UAT/BAST.";
+                .implode("\n", $pLines)
+                ."\n\nSinkronisasi Kausalitas Lintas Tahap: Pemilihan Sektor -> Primitif -> Menu L1–L4 v1.0 -> Stack Adapter secara reaktif memperbarui Hardware Bridge, WebSocket Channel, Composite Index + Partisi PG16, SYNTAX_LOCK_2026.md, Buku SOP Training Staf (SmartGuide.php), Nilai RAB IDR, Hash SPK SHA-256, hingga Checklist UAT/BAST.";
 
             $embedding = $this->generateEmbedding("15 Master Pillars Project OS v7.0 100% Architectural Freeze\n{$freezeOverview}");
             AiKnowledgeVector::create([
@@ -922,17 +938,17 @@ class VectorEmbeddingService
         // 12. Indeks Project OS v8.0: Adaptive Dual-Persona Storyboard, 36 Visual Sector UI Blueprints, 7 Tier-1 Jurisdictions & RTL, Inclusive Hybrid Pricing & 5-Layer IP Canary Security
         $v8VisualSourceId = 'inclusive-v8-36-visual-ui-and-dual-persona';
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v8VisualSourceId)->exists()) {
-            $uiCatalog = \App\Support\PosInclusiveCommercialCatalog::allSectorVisualUiCatalog();
+            $uiCatalog = PosInclusiveCommercialCatalog::allSectorVisualUiCatalog();
             $uiLines = [];
             foreach ($uiCatalog as $secCode => $variants) {
-                $codes = array_map(static fn (array $v): string => $v['code'] . ' (' . ($v['name']['id'] ?? '') . ')', $variants);
-                $uiLines[] = "- {$secCode}: " . implode(' | ', $codes);
+                $codes = array_map(static fn (array $v): string => $v['code'].' ('.($v['name']['id'] ?? '').')', $variants);
+                $uiLines[] = "- {$secCode}: ".implode(' | ', $codes);
             }
-            $shells = array_keys(\App\Support\PosInclusiveCommercialCatalog::navigationShellOptions());
+            $shells = array_keys(PosInclusiveCommercialCatalog::navigationShellOptions());
             $v8VisualContent = "Project OS v8.0 — Adaptive Dual-Persona UX (`BUSINESS_WIZARD` 5 Langkah Bahasa Manusia vs `ARCHITECT_PRO` 3-Pane Studio) & 36 Varian Visual Frontend UI/UX (12 Sektor × 3 Opsi Visual):\n"
-                . implode("\n", $uiLines)
-                . "\n\n5 Navigation Shells: " . implode(', ', $shells)
-                . "\nSetiap perubahan varian visual UI atau kerangka navigasi langsung merambat ke BLUEPRINT_SCHEMA.json, Prompt Fase 5, EXECUTION_BLUEPRINT.md, nilai RAB IDR, dan Scope Hash SHA-256.";
+                .implode("\n", $uiLines)
+                ."\n\n5 Navigation Shells: ".implode(', ', $shells)
+                ."\nSetiap perubahan varian visual UI atau kerangka navigasi langsung merambat ke BLUEPRINT_SCHEMA.json, Prompt Fase 5, EXECUTION_BLUEPRINT.md, nilai RAB IDR, dan Scope Hash SHA-256.";
 
             $embedding = $this->generateEmbedding("Project OS v8.0 36 Visual Sector Frontend UI Blueprints & Dual-Persona Storyboard\n{$v8VisualContent}");
             AiKnowledgeVector::create([
@@ -952,9 +968,9 @@ class VectorEmbeddingService
         $v8SecurityPricingSourceId = 'inclusive-v8-jurisdictions-pricing-and-5layer-security';
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v8SecurityPricingSourceId)->exists()) {
             $v8SecContent = "Project OS v8.0 — 7 Tier-1 Global Native Jurisdictions & RTL, Inclusive Hybrid Pricing & 5-Layer Banking-Grade IP Security:\n"
-                . "1. 7 Yurisdiksi Tier-1 Output Blueprint: `id` (SAK/ISAK 35/PSAK 109/PPh 21 TER/UU PDP), `en` (US GAAP/FASB ASC 958/HIPAA/SOC 2), `zh-CN` (CAS/PIPL/Fapiao), `ja` (J-GAAP/APPI/Qualified Invoice), `ar` (Otomatis `dir=\"rtl\"` + Logical CSS `ms-*/me-*` + ZATCA Fatoora QR + AAOIFI), `es` (NIIF/Veri*factu/RGPD), `de` (HGB/GoBD/DSGVO).\n"
-                . "2. Inclusive Hybrid Value-Metric Pricing: `impact_nonprofit_grant` (Subsidi CSR 70–100% Rp 0 untuk Yayasan/Rumah Ibadah/Sekolah/Riset), `single_app_umkm_pass` (Rp 299.000 1 Aplikasi UMKM), `agency_whitelabel_partner` (Rp 990.000 Multi-Seat Agensi + Proposal RAB & SPK PDF White-Label).\n"
-                . "3. 5 Retention Hooks & 5 Security Layers: Living CVE Security Alerts (`CVE-2026-109618`) + 1-Click Auto-Patch Prompt, 70:30 Verified Community Marketplace, AES-256 Envelope Vault (`encrypted_custom_vault`), 64-Bit Steganographic Zero-Width Unicode Canary Watermark (`\\u200B`/`\\u200C`/`\\u200D`), dan 1-Click Scoped MCP Token Revocation.";
+                ."1. 7 Yurisdiksi Tier-1 Output Blueprint: `id` (SAK/ISAK 35/PSAK 109/PPh 21 TER/UU PDP), `en` (US GAAP/FASB ASC 958/HIPAA/SOC 2), `zh-CN` (CAS/PIPL/Fapiao), `ja` (J-GAAP/APPI/Qualified Invoice), `ar` (Otomatis `dir=\"rtl\"` + Logical CSS `ms-*/me-*` + ZATCA Fatoora QR + AAOIFI), `es` (NIIF/Veri*factu/RGPD), `de` (HGB/GoBD/DSGVO).\n"
+                ."2. Inclusive Hybrid Value-Metric Pricing: `impact_nonprofit_grant` (Subsidi CSR 70–100% Rp 0 untuk Yayasan/Rumah Ibadah/Sekolah/Riset), `single_app_umkm_pass` (Rp 299.000 1 Aplikasi UMKM), `agency_whitelabel_partner` (Rp 990.000 Multi-Seat Agensi + Proposal RAB & SPK PDF White-Label).\n"
+                .'3. 5 Retention Hooks & 5 Security Layers: Living CVE Security Alerts (`CVE-2026-109618`) + 1-Click Auto-Patch Prompt, 70:30 Verified Community Marketplace, AES-256 Envelope Vault (`encrypted_custom_vault`), 64-Bit Steganographic Zero-Width Unicode Canary Watermark (`\\u200B`/`\\u200C`/`\\u200D`), dan 1-Click Scoped MCP Token Revocation.';
 
             $embedding = $this->generateEmbedding("Project OS v8.0 Tier-1 RTL Jurisdictions, Inclusive Pricing & 5-Layer Canary Security\n{$v8SecContent}");
             AiKnowledgeVector::create([
@@ -976,16 +992,16 @@ class VectorEmbeddingService
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v9AgentShieldSourceId)->exists()) {
             $presetLines = [];
             foreach (PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets('id') as $p) {
-                $presetLines[] = "- {$p['sector_code']}: {$p['localized_title']} (Standar: " . implode(', ', $p['compliance_standards'] ?? []) . ')';
+                $presetLines[] = "- {$p['sector_code']}: {$p['localized_title']} (Standar: ".implode(', ', $p['compliance_standards'] ?? []).')';
             }
             $v9SecurityContent = "Project OS v9.0 — NeriahPro AgentShield (5-Layer Defense against AI Malware & Poisoned Agent Attacks) & Filterable 3-Sheet Cryptographic Audit Explorer:\n"
-                . "1. Layer 1 Anti-Indirect Prompt Injection (`DocumentThreatSanitizerService`): Membersihkan hidden metadata, zero-width Unicode (`U+200B..U+200F`, `U+E0000..U+E007F`), macro/JS PDF, dan membungkus seluruh teks dokumen klien di dalam `<UNTRUSTED_CLIENT_DOCUMENT_DATA>`.\n"
-                . "2. Layer 2 Anti-Slopquatting (`APPROVED_DEPENDENCY_MANIFEST`): Melarang keras AI agent menginstal package Composer/NPM/Go di luar daftar putih resmi terverifikasi.\n"
-                . "3. Layer 3 Execution Sandbox (`.claude/settings.json` & `.cursorrules` Deny-List): Memblokir akses AI ke `.env*`, `.git/hooks/*`, `auth.json`, `~/.ssh/*` dan memblokir `curl`/`wget`/`nc`/`Invoke-WebRequest`.\n"
-                . "4. Layer 4 Zero-Execution Binary Quarantine: Verifikasi Magic Bytes `finfo_buffer`, penghapusan metadata EXIF gambar, dan disk `private` `noexec`.\n"
-                . "5. Layer 5 Cryptographic Tool-Call Verification: Spatie RBAC ketat tanpa bypass root + `idempotency_key` deterministik + rantai hash SHA-256 append-only (`prev_hash -> current_hash`).\n"
-                . "6. Ekspor Audit 3-Sheet `.xlsx` (`ExportFilteredAuditExcelAction`): Sheet 1 Sertifikat Integritas SHA-256, Sheet 2 Jejak Audit Transaksi, Sheet 3 Log AI Copilot & Idempotency, serta `.csv` streaming O(1) dengan 12 Preset Audit Industri:\n"
-                . implode("\n", $presetLines);
+                ."1. Layer 1 Anti-Indirect Prompt Injection (`DocumentThreatSanitizerService`): Membersihkan hidden metadata, zero-width Unicode (`U+200B..U+200F`, `U+E0000..U+E007F`), macro/JS PDF, dan membungkus seluruh teks dokumen klien di dalam `<UNTRUSTED_CLIENT_DOCUMENT_DATA>`.\n"
+                ."2. Layer 2 Anti-Slopquatting (`APPROVED_DEPENDENCY_MANIFEST`): Melarang keras AI agent menginstal package Composer/NPM/Go di luar daftar putih resmi terverifikasi.\n"
+                ."3. Layer 3 Execution Sandbox (`.claude/settings.json` & `.cursorrules` Deny-List): Memblokir akses AI ke `.env*`, `.git/hooks/*`, `auth.json`, `~/.ssh/*` dan memblokir `curl`/`wget`/`nc`/`Invoke-WebRequest`.\n"
+                ."4. Layer 4 Zero-Execution Binary Quarantine: Verifikasi Magic Bytes `finfo_buffer`, penghapusan metadata EXIF gambar, dan disk `private` `noexec`.\n"
+                ."5. Layer 5 Cryptographic Tool-Call Verification: Spatie RBAC ketat tanpa bypass root + `idempotency_key` deterministik + rantai hash SHA-256 append-only (`prev_hash -> current_hash`).\n"
+                ."6. Ekspor Audit 3-Sheet `.xlsx` (`ExportFilteredAuditExcelAction`): Sheet 1 Sertifikat Integritas SHA-256, Sheet 2 Jejak Audit Transaksi, Sheet 3 Log AI Copilot & Idempotency, serta `.csv` streaming O(1) dengan 12 Preset Audit Industri:\n"
+                .implode("\n", $presetLines);
 
             $embedding = $this->generateEmbedding("Project OS v9.0 AgentShield 5-Layer Defense & 3-Sheet Cryptographic Audit Trail 12 Sector Presets\n{$v9SecurityContent}");
             AiKnowledgeVector::create([
@@ -1005,8 +1021,8 @@ class VectorEmbeddingService
         $v9CoDesignSourceId = 'agentshield-v9-codesign-dual-key-and-worldclass-tasks';
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v9CoDesignSourceId)->exists()) {
             $v9CoDesignContent = "Project OS v9.0 — The Co-Design Alignment & Sign-Off Room (Kolaborasi Developer Neriah <-> Klien Mitra) & Auto Visual UI -> World-Class 5-Sprint Task Synthesis:\n"
-                . "1. Dual-Mirror Screen ('Satu Data, Dua Kacamata'): Panel 1 Daftar Modul Bisnis L1–L4 + `+ Tambah Kebutuhan Klien`; Panel 2 toggle *Client Business Lens* (Visual Wireframe Mockup + Estimasi Biaya/Hari) <-> *Architect Technical Lens* (Tabel ULID 26-char, State Machine, Pessimistic Lock) + tombol `[ ☑️ Klien Setuju Modul Ini ]` yang mencatat Timestamp & IP ke `audit_logs`; Panel 3 Anotasi Kontekstual, Kalkulator Dampak RAB & Hari Kerja Real-Time, serta **Dual-Key Cryptographic Scope Lock Ceremony** (aktif saat 100% modul `APPROVED`, membekukan `v1.0` Read-Only dengan Master Scope Hash SHA-256 + SPK & Invoice DP).\n"
-                . "2. Kausalitas Penuh Ide/Sektor -> Visual UI -> World-Class Tasks: Begitu klien memasukkan ide atau memilih 1 dari 12 Sektor Fungsional, sistem otomatis mencocokkan Varian Visual Frontend (`UI_01A..UI_12C`) + Navigation Shell + 25 Menu L1–L4 + 5-Sprint World-Class Engineering Task Matrix (`TSK-101` s/d `TSK-502`).";
+                ."1. Dual-Mirror Screen ('Satu Data, Dua Kacamata'): Panel 1 Daftar Modul Bisnis L1–L4 + `+ Tambah Kebutuhan Klien`; Panel 2 toggle *Client Business Lens* (Visual Wireframe Mockup + Estimasi Biaya/Hari) <-> *Architect Technical Lens* (Tabel ULID 26-char, State Machine, Pessimistic Lock) + tombol `[ ☑️ Klien Setuju Modul Ini ]` yang mencatat Timestamp & IP ke `audit_logs`; Panel 3 Anotasi Kontekstual, Kalkulator Dampak RAB & Hari Kerja Real-Time, serta **Dual-Key Cryptographic Scope Lock Ceremony** (aktif saat 100% modul `APPROVED`, membekukan `v1.0` Read-Only dengan Master Scope Hash SHA-256 + SPK & Invoice DP).\n"
+                .'2. Kausalitas Penuh Ide/Sektor -> Visual UI -> World-Class Tasks: Begitu klien memasukkan ide atau memilih 1 dari 12 Sektor Fungsional, sistem otomatis mencocokkan Varian Visual Frontend (`UI_01A..UI_12C`) + Navigation Shell + 25 Menu L1–L4 + 5-Sprint World-Class Engineering Task Matrix (`TSK-101` s/d `TSK-502`).';
 
             $embedding = $this->generateEmbedding("Project OS v9.0 Co-Design Alignment Room Dual-Key Lock & World-Class 5-Sprint Tasks\n{$v9CoDesignContent}");
             AiKnowledgeVector::create([
@@ -1027,15 +1043,15 @@ class VectorEmbeddingService
         $v10DualZoneSourceId = 'dual-zone-v10-aniwall-scrollytelling-and-input-hygiene';
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v10DualZoneSourceId)->exists()) {
             $uxLines = [];
-            foreach (\App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets('id') as $ux) {
+            foreach (PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets('id') as $ux) {
                 $uxLines[] = "- {$ux['code']} ({$ux['localized_name']}): {$ux['localized_summary']}";
             }
             $v10Content = "Project OS v10.0 Ultimate — Dual-Zone UI Architecture, Cryptographically Verified Testimonial Aniwall (`PRIMITIVE_VERIFIED_SOCIAL_PROOF`), 5 Hukum Besi Animasi Anti-Slop & Universal Input Hygiene:\n"
-                . "1. Dual-Zone UI Policy: Zone A Operational Back-Stage (Dashboard Admin, Kasir POS, RME Klinik, Buku Besar) WAJIB 100% Linear/Stripe Crisp (`UI_01A..UI_12C`) dengan 0% parallax/scrollytelling; Zone B Public Front-Stage (Landing Page, Katalog, Kampanye Donasi, Microsite Event) menggunakan 6 Preset Advanced UX lintas 12 Sektor:\n"
-                . implode("\n", $uxLines) . "\n"
-                . "2. 5 Hukum Besi Animasi Enterprise Anti-Slop: (1) 100% Local Bundled Libraries via `@vite` (0% CDN eksternal), (2) GPU Compositor Only (`translate3d()`, `scale()`, `opacity` — haram menganimasikan `top/left/width/height/margin`), (3) `CLS = 0.00` aspect-ratio eksplisit, (4) Wajib `@media (prefers-reduced-motion: reduce)`, (5) Lazy-Hydration via `IntersectionObserver` (`FCP < 0.8s`).\n"
-                . "3. BAST-Linked & Phase-6 Telemetry-Backed Testimonials (`PRIMITIVE_VERIFIED_SOCIAL_PROOF`): Terbit otomatis saat BAST Mitra ditandatangani atau Fase 6 Retail lolos verifikasi lengkap struk telemetri (`ULID Tables | Concurrency Locks | Token Saved % | SHA-256 Scope Seal`) dan modal `[ 🔍 Inspect Anonymized Blueprint Architecture ]`.\n"
-                . "4. Standar Wajib Universal Input Hygiene: Email hanya karakter resmi `[a-zA-Z0-9._%+\\-@]`; nominal angka memakai pemisah ribuan regional (`1.500.000` ID vs `1,500,000` EN); nomor telepon wajib dropdown Country Zone dari `config/country_zones.php` dan **otomatis menghapus angka `0` di awal ketikan pertama** (`0812...` -> `812...` -> `+62812...`).";
+                ."1. Dual-Zone UI Policy: Zone A Operational Back-Stage (Dashboard Admin, Kasir POS, RME Klinik, Buku Besar) WAJIB 100% Linear/Stripe Crisp (`UI_01A..UI_12C`) dengan 0% parallax/scrollytelling; Zone B Public Front-Stage (Landing Page, Katalog, Kampanye Donasi, Microsite Event) menggunakan 6 Preset Advanced UX lintas 12 Sektor:\n"
+                .implode("\n", $uxLines)."\n"
+                ."2. 5 Hukum Besi Animasi Enterprise Anti-Slop: (1) 100% Local Bundled Libraries via `@vite` (0% CDN eksternal), (2) GPU Compositor Only (`translate3d()`, `scale()`, `opacity` — haram menganimasikan `top/left/width/height/margin`), (3) `CLS = 0.00` aspect-ratio eksplisit, (4) Wajib `@media (prefers-reduced-motion: reduce)`, (5) Lazy-Hydration via `IntersectionObserver` (`FCP < 0.8s`).\n"
+                ."3. BAST-Linked & Phase-6 Telemetry-Backed Testimonials (`PRIMITIVE_VERIFIED_SOCIAL_PROOF`): Terbit otomatis saat BAST Mitra ditandatangani atau Fase 6 Retail lolos verifikasi lengkap struk telemetri (`ULID Tables | Concurrency Locks | Token Saved % | SHA-256 Scope Seal`) dan modal `[ 🔍 Inspect Anonymized Blueprint Architecture ]`.\n"
+                .'4. Standar Wajib Universal Input Hygiene: Email hanya karakter resmi `[a-zA-Z0-9._%+\\-@]`; nominal angka memakai pemisah ribuan regional (`1.500.000` ID vs `1,500,000` EN); nomor telepon wajib dropdown Country Zone dari `config/country_zones.php` dan **otomatis menghapus angka `0` di awal ketikan pertama** (`0812...` -> `812...` -> `+62812...`).';
 
             $embedding = $this->generateEmbedding("Project OS v10.0 Dual-Zone UI Scrollytelling Aniwall 5 Iron Animation Laws & Input Hygiene\n{$v10Content}");
             AiKnowledgeVector::create([
@@ -1056,11 +1072,11 @@ class VectorEmbeddingService
         $v10SaasSourceId = 'saas-v10-6-commercial-growth-modules';
         if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v10SaasSourceId)->exists()) {
             $saasLines = [];
-            foreach (\App\Support\PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules('id') as $m) {
+            foreach (PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules('id') as $m) {
                 $saasLines[] = "{$m['number']}. [{$m['code']}] {$m['localized_title']}: {$m['localized_summary']}";
             }
             $v10SaasContent = "Project OS v10.0 — 6 Modul Bisnis, Monetisasi & Pertumbuhan SaaS NeriahPro (`PosSaasCommercialEngineService`):\n"
-                . implode("\n", $saasLines);
+                .implode("\n", $saasLines);
 
             $embedding = $this->generateEmbedding("Project OS v10.0 6 Critical SaaS Commercial Modules Billing Affiliate Multi-Seat Impact Grant SEO Explore Health Pulse\n{$v10SaasContent}");
             AiKnowledgeVector::create([
@@ -1077,6 +1093,34 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 16. Indeks Project OS v11.0 Paripurna: SEO (Schema.org 12 Sektor) & GEO (/llms.txt + IndexNow), Satu Pintu SaaS Gate & 6 Zero-Failure Layers (20 Pilar Locked)
+        $v11ParipurnaSourceId = 'seo-geo-v11-uu-pdp-offline-pwa-sla-holding-20-pillars';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v11ParipurnaSourceId)->exists()) {
+            $zfLines = [];
+            foreach (PosSeoGeoAndZeroFailureCatalog::sixFinalZeroFailureModules('id') as $zf) {
+                $zfLines[] = "{$zf['number']}. [{$zf['code']}] {$zf['title']}: {$zf['summary']}";
+            }
+            $v11Content = "Project OS v11.0 Paripurna Edition — SEO (Multi-Graph Schema.org 12 Sektor) & GEO (Generative Engine Optimization Top-3 AI Citation), Satu Pintu Commercial SaaS Gate & 6 Final Zero-Failure Production Features (20 Pilar 100% Locked):\n"
+                ."1. Satu Pintu Commercial SaaS Gate: Satu Pintu Wizard (Retail & Mitra) terkunci langsung ke Langkah F Pemilih Paket Lisensi SaaS Retail (7 Tier) & Kontrak Mitra Turnkey (3 Tier) tanpa celah tombol bypass gratis ke `/blueprint/studio`; `/blueprint?track=retail` atau `?track=mitra` tanpa `tier` resmi otomatis diarahkan ke daftar paket SaaS `/pricing`.\n"
+                ."2. `PRIMITIVE_SEO_GEO_AUTHORITY_ENGINE`: Multi-Graph JSON-LD `@graph` spesifik 12 Sektor Fungsional + `/llms.txt` & `/llms-full.txt` native + 50-Word Answer-First GEO Capsule + Semantic HTML Comparison Table + IndexNow Instant Ping (`/indexnow-key.txt`) + allowlist crawler AI (`OAI-SearchBot`, `GPTBot`, `ClaudeBot`, `PerplexityBot`, `Google-Extended`) + Kartu OG Sitasi Lokal `1200x630` PNG/SVG ber-QR matriks lokal tanpa CDN.\n"
+                ."3. 6 Final Enterprise & Statutory Zero-Failure Modules:\n"
+                .implode("\n", $zfLines);
+
+            $embedding = $this->generateEmbedding("Project OS v11.0 Paripurna SEO GEO llms.txt IndexNow UU PDP Blind Index Offline Outbox PWA SLA Warranty Holding 20 Pillars\n{$v11Content}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v11.0 Paripurna: SEO/GEO AI Citation (/llms.txt & 12-Sector Schema.org), Satu Pintu SaaS Gate & 6 Zero-Failure Layers (20 Pillars)',
+                'source_type' => 'seo_geo_and_zero_failure_v11',
+                'source_id' => $v11ParipurnaSourceId,
+                'content' => "### Project OS v11.0 Paripurna: SEO/GEO Authority, Satu Pintu Gate & 6 Zero-Failure Layers\n\n{$v11Content}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'Project OS v11.0 Paripurna SEO/GEO & Zero-Failure',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
@@ -1087,4 +1131,3 @@ class VectorEmbeddingService
         ];
     }
 }
-

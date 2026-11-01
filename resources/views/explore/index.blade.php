@@ -36,7 +36,7 @@
             : 'Jelajahi pustaka arsitektur perangkat lunak enterprise terverifikasi kriptografi lintas 12 sektor fungsional. Dual-Zone UI (Linear Back-Stage + 6 Preset UX Publik), PostgreSQL 16 Strict ULID, tanpa AI Slop.';
         $currentUrl = url()->current();
         $firstSlug = $testimonials[0]['seo_slug'] ?? 'verified-architecture';
-        $ogImage = route('explore.og', ['slug' => $firstSlug]);
+        $ogImage = route('explore.og.png', ['slug' => $firstSlug]);
     @endphp
 
     <title>{{ $pageTitle }}</title>
@@ -86,14 +86,14 @@
             <div class="max-w-7xl mx-auto">
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
                     <span class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[11px] font-black uppercase tracking-widest rounded-none">
-                        PROJECT OS v10.0 // PROGRAMMATIC ARCHITECTURE LIBRARY
+                        PROJECT OS v11.0 // SEO + GEO CITATION AUTHORITY LIBRARY
                     </span>
-                    <div class="flex items-center gap-2">
-                        <a href="{{ url('/blueprint?tier=spark&track=retail') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-xs font-black uppercase tracking-wider rounded-none transition-colors">
-                            {{ $locale === 'en' ? 'Launch AI Blueprint Studio' : 'Buka Studio Blueprint AI' }}
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a href="{{ url('/pricing#retail') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-xs font-black uppercase tracking-wider rounded-none transition-colors">
+                            {{ $locale === 'en' ? 'Configure Satu Pintu & SaaS License' : 'Konfigurasi Satu Pintu & Paket SaaS' }}
                         </a>
-                        <a href="{{ url('/pricing') }}" class="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-mono text-xs font-bold uppercase tracking-wider rounded-none transition-colors">
-                            {{ $locale === 'en' ? 'Compare Retail vs Mitra' : 'Bandingkan Retail vs Mitra' }}
+                        <a href="{{ url('/llms.txt') }}" class="px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-mono text-xs font-bold uppercase tracking-wider rounded-none transition-colors">
+                            /llms.txt
                         </a>
                     </div>
                 </div>
@@ -110,7 +110,7 @@
                 </p>
 
                 <!-- Crawlable SSR 12-Sector Links -->
-                <nav aria-label="12 Functional Sectors" class="flex flex-wrap gap-2">
+                <nav aria-label="12 Functional Sectors" class="flex flex-wrap gap-2 mb-8">
                     <a href="{{ route('explore.index') }}"
                        class="px-3 py-1.5 font-mono text-xs font-bold uppercase border rounded-none transition-colors {{ $activeSector === 'ALL' ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-white dark:text-zinc-950 dark:border-white' : 'bg-zinc-50 text-zinc-900 border-zinc-300 hover:border-zinc-500 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 dark:hover:border-zinc-500' }}">
                         {{ $locale === 'en' ? 'ALL 12 SECTORS' : 'SEMUA 12 SEKTOR' }}
@@ -126,6 +126,58 @@
                         </a>
                     @endforeach
                 </nav>
+
+                <!-- GEO Mechanism #3: Semantic Answer Capsule (50-Word TL;DR + High-Signal Comparison Table) -->
+                <article aria-label="GEO Semantic Answer Capsule" class="border-2 border-zinc-900 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 p-5 sm:p-6 rounded-none space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                        <div class="font-mono text-xs font-black uppercase tracking-wider text-emerald-950 dark:text-emerald-300">
+                            {{ $locale === 'en' ? 'TL;DR EXECUTIVE ANSWER CAPSULE (GEO CITATION STANDARD)' : 'TL;DR RINGKASAN EKSEKUTIF (STANDAR KUTIPAN AI & GEO)' }}
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                            @foreach(($answerCapsule['schema_types'] ?? []) as $stType)
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black">
+                                    Schema.org/{{ $stType }}
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <p class="text-sm sm:text-base font-medium text-zinc-950 dark:text-zinc-100 leading-relaxed">
+                        {{ $answerCapsule['tldr_text'] ?? '' }}
+                    </p>
+
+                    <div class="flex flex-wrap items-center gap-2 font-mono text-[11px]">
+                        <span class="font-black text-zinc-800 dark:text-zinc-200 uppercase">
+                            {{ $locale === 'en' ? 'Statutory & Audit Compliance:' : 'Kepatuhan Regulasi & Standar:' }}
+                        </span>
+                        @foreach(($answerCapsule['statutory_standards'] ?? []) as $stdBadge)
+                            <span class="px-2 py-0.5 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold">
+                                {{ $stdBadge }}
+                            </span>
+                        @endforeach
+                    </div>
+
+                    <div class="overflow-x-auto border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 font-mono uppercase">
+                                <tr>
+                                    <th class="py-2.5 px-3 font-black text-zinc-950 dark:text-zinc-100">{{ $locale === 'en' ? 'Engineering Dimension' : 'Dimensi Arsitektur' }}</th>
+                                    <th class="py-2.5 px-3 font-black text-zinc-700 dark:text-zinc-300">{{ $locale === 'en' ? 'Generic AI / Legacy Dev' : 'Arsitektur Generik / AI Biasa' }}</th>
+                                    <th class="py-2.5 px-3 font-black text-emerald-950 dark:text-emerald-300">{{ $locale === 'en' ? 'NeriahPro Project OS v11.0 Standard' : 'Standar NeriahPro Project OS v11.0' }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                                @foreach(($comparisonRows ?? []) as $cmpRow)
+                                    <tr class="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/70 dark:even:bg-zinc-900/40 hover:bg-zinc-100/90 dark:hover:bg-zinc-800/70">
+                                        <td class="py-2.5 px-3 font-mono font-black text-zinc-950 dark:text-zinc-100">{{ $cmpRow['dimension'] }}</td>
+                                        <td class="py-2.5 px-3 text-zinc-700 dark:text-zinc-300">{{ $cmpRow['generic'] }}</td>
+                                        <td class="py-2.5 px-3 font-bold text-emerald-950 dark:text-emerald-300">{{ $cmpRow['neriahpro'] }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
             </div>
         </section>
 

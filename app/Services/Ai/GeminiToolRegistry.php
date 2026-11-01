@@ -816,16 +816,97 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+            [
+                'name' => 'generate_seo_geo_authority_pack',
+                'description' => 'Kompilasi paket otoritas SEO (Multi-Graph Schema.org @graph 12 Sektor) & GEO (Generative Engine Optimization: 50-word Answer Capsule TL;DR, Comparison Table, /llms.txt, /llms-full.txt, Local 1200x630 OG Citation Card) atau picu IndexNow Instant Ping (ping_indexnow=true wajib izin mutasi RBAC).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor fungsional (SECTOR_01_COMMERCE_OMNICHANNEL s/d SECTOR_12_GOVTECH_NONPROFIT atau ALL).',
+                        ],
+                        'locale' => [
+                            'type' => 'STRING',
+                            'description' => 'Bahasa output Tier-1: id atau en.',
+                        ],
+                        'ping_indexnow' => [
+                            'type' => 'BOOLEAN',
+                            'description' => 'Jika true, kirim IndexNow instant ping untuk URL katalog /explore & /llms.txt (wajib RBAC).',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'audit_uu_pdp_blind_index_and_privacy',
+                'description' => 'Audit kepatuhan UU PDP No. 27/2022 (`PRIMITIVE_UU_PDP_PRIVACY_VAULT`): uji komputasi deterministik HMAC-SHA256 Blind Index O(1) (`HasEncryptedPiiWithBlindIndex`), tinjau log permohonan Portabilitas/Redaksi PII (`PosPrivacyErasureRequest`), serta verifikasi kebijakan Ledger-Safe Right-to-Erasure.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'sample_identifier' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional contoh NIK/email/telepon untuk simulasi verifikasi hash 64-char HMAC-SHA256 Blind Index tanpa menyimpan plaintext.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'triage_post_bast_sla_maintenance_ticket',
+                'description' => 'Inspeksi status Garansi Bug SLA 90-Hari Pasca-BAST Digital atau lakukan triase otomatis tiket laporan klien terhadap Kunci Scope SHA-256 v1.0 menjadi `BUG_WARRANTY_COVERED` (Rp 0 + Surgical Developer Bugfix Prompt) vs `NEW_SCOPE_PAID_DELTA` (terhubung ke Addendum Delta v1.1).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => [
+                            'type' => 'STRING',
+                            'description' => 'Aksi: list_tickets (daftar tiket SLA terbaru) atau submit_ticket (triase & simpan tiket baru, wajib RBAC).',
+                        ],
+                        'project_ulid' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID PosProject yang diaudit.',
+                        ],
+                        'issue_title' => [
+                            'type' => 'STRING',
+                            'description' => 'Judul laporan bug atau permintaan fitur baru bila action = submit_ticket.',
+                        ],
+                        'issue_description' => [
+                            'type' => 'STRING',
+                            'description' => 'Deskripsi detail kronologi error atau spesifikasi fitur baru.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'simulate_sandbox_webhook_and_holding_rollup',
+                'description' => 'Jalankan laporan konsolidasi keuangan Multi-Entity Holding -> Anak Usaha -> Cabang beserta eliminasi transaksi antar-entitas (`action = holding_rollup`), atau jalankan Simulator Webhook Lokal Non-Production (`action = simulate_webhook`: qris_payment_success, payment_expired, duplicate_webhook_attack; diblokir di production).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => [
+                            'type' => 'STRING',
+                            'description' => 'Aksi: holding_rollup atau simulate_webhook.',
+                        ],
+                        'workspace_ulid' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID PosOrganizationWorkspace induk (Holding) untuk holding_rollup.',
+                        ],
+                        'scenario' => [
+                            'type' => 'STRING',
+                            'description' => 'Skenario simulator bila action = simulate_webhook: qris_payment_success, payment_expired, atau duplicate_webhook_attack.',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema
         // Mencegah konversi empty array [] menjadi JSON list yang memicu HTTP 400
         return array_map(function ($tool) {
             if (isset($tool['parameters'])) {
-                if (!isset($tool['parameters']['properties']) || empty($tool['parameters']['properties'])) {
-                    $tool['parameters']['properties'] = (object)[];
+                if (! isset($tool['parameters']['properties']) || empty($tool['parameters']['properties'])) {
+                    $tool['parameters']['properties'] = (object) [];
                 }
             }
+
             return $tool;
         }, $declarations);
     }
@@ -871,15 +952,14 @@ class GeminiToolRegistry
             }
         }
 
-        if (!isset($normalized['type'])) {
+        if (! isset($normalized['type'])) {
             $normalized['type'] = 'object';
         }
 
         if (isset($normalized['properties']) && empty($normalized['properties'])) {
-            $normalized['properties'] = (object)[];
+            $normalized['properties'] = (object) [];
         }
 
         return $normalized;
     }
 }
-

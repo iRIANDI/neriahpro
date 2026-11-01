@@ -1,18 +1,35 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DocumentController;
-
+use App\Http\Controllers\Api\CvProApiController;
 use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\VisionBlueprintController;
-use App\Http\Controllers\PageController;
-
 use App\Http\Controllers\BlueprintController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CustomerAuthController;
+use App\Http\Controllers\CustomerDashboardController;
+use App\Http\Controllers\CvProController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\HealthProbeController;
+use App\Http\Controllers\LegalPolicyController;
+use App\Http\Controllers\MidtransWebhookController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\ProjectOsMcpController;
+use App\Http\Controllers\ProjectThreadController;
+use App\Http\Controllers\PublicExploreArchitectureController;
+use App\Http\Controllers\SitemapController;
+use App\Livewire\BlueprintArchitectStudio;
+use App\Livewire\ClientInviteForm;
+use App\Livewire\DocumentSignature;
+use App\Services\Ai\MultiAiModelManager;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // Health Probes & SRE Telemetry Endpoints
-Route::get('/healthz', [\App\Http\Controllers\HealthProbeController::class, 'healthz'])->name('healthz');
-Route::get('/livez', [\App\Http\Controllers\HealthProbeController::class, 'livez'])->name('livez');
-Route::get('/readyz', [\App\Http\Controllers\HealthProbeController::class, 'readyz'])->name('readyz');
+Route::get('/healthz', [HealthProbeController::class, 'healthz'])->name('healthz');
+Route::get('/livez', [HealthProbeController::class, 'livez'])->name('livez');
+Route::get('/readyz', [HealthProbeController::class, 'readyz'])->name('readyz');
 
 Route::post('/api/onboarding', [OnboardingController::class, 'store']);
 Route::post('/api/vision-blueprint', [VisionBlueprintController::class, 'store'])->middleware('throttle:30,1');
@@ -21,7 +38,7 @@ Route::get('/document/{document}/preview', [DocumentController::class, 'preview'
     ->name('document.preview')
     ->middleware(['web']);
 
-Route::get('/document/{document}/sign', \App\Livewire\DocumentSignature::class)
+Route::get('/document/{document}/sign', DocumentSignature::class)
     ->name('document.sign')
     ->middleware(['web']);
 
@@ -29,7 +46,7 @@ Route::get('/document/{document}/sign', \App\Livewire\DocumentSignature::class)
 Route::get('/api/ai/models', function () {
     return response()->json([
         'success' => true,
-        'models' => \App\Services\Ai\MultiAiModelManager::getCatalog(),
+        'models' => MultiAiModelManager::getCatalog(),
     ]);
 })->name('api.ai.models');
 
@@ -58,13 +75,13 @@ Route::post('/api/blueprint/{slug}/codesign/dual-key-lock', [BlueprintController
 Route::post('/api/blueprint/{slug}/uat/toggle', [BlueprintController::class, 'toggleUatScenario'])->name('api.blueprint.uat.toggle')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/uat/sign-bast', [BlueprintController::class, 'signOffUatAndIssueBast'])->name('api.blueprint.uat.sign-bast')->middleware('throttle:20,1');
 Route::get('/blueprint/{slug}/mitra-document/{docType}', [BlueprintController::class, 'mitraDocument'])->name('blueprint.mitra-document');
-Route::get('/api/blueprint/{slug}/mcp-config', [\App\Http\Controllers\ProjectOsMcpController::class, 'mcpConfig'])->name('api.blueprint.mcp-config')->middleware('throttle:30,1');
-Route::post('/api/mcp/project-os', [\App\Http\Controllers\ProjectOsMcpController::class, 'handleRpc'])
-    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+Route::get('/api/blueprint/{slug}/mcp-config', [ProjectOsMcpController::class, 'mcpConfig'])->name('api.blueprint.mcp-config')->middleware('throttle:30,1');
+Route::post('/api/mcp/project-os', [ProjectOsMcpController::class, 'handleRpc'])
+    ->withoutMiddleware([ValidateCsrfToken::class])
     ->name('api.mcp.project-os')
     ->middleware('throttle:120,1');
 Route::get('/blueprint', [BlueprintController::class, 'create'])->name('blueprint.create');
-Route::get('/blueprint/studio/{slug?}', \App\Livewire\BlueprintArchitectStudio::class)->name('blueprint.studio');
+Route::get('/blueprint/studio/{slug?}', BlueprintArchitectStudio::class)->name('blueprint.studio');
 Route::get('/blueprint/{slug}', [BlueprintController::class, 'show'])->name('blueprint.show');
 Route::post('/blueprint/{slug}/generate-contract', [BlueprintController::class, 'generateContract'])->name('blueprint.generate-contract');
 Route::post('/blueprint/{slug}/snap-token', [BlueprintController::class, 'getSnapToken'])->name('blueprint.snap-token');
@@ -89,55 +106,59 @@ Route::post('/api/blueprint/{slug}/checkpoint', [BlueprintController::class, 'up
 Route::post('/api/pricing/inquiry', [BlueprintController::class, 'pricingInquiry'])->name('api.pricing.inquiry')->middleware('throttle:30,1');
 
 // Project Thread / UAT Ticketing Routes
-Route::post('/blueprint/{slug}/issues', [App\Http\Controllers\ProjectThreadController::class, 'storeIssue'])->name('blueprint.issues.store');
-Route::post('/blueprint/{slug}/issues/{issueId}/comments', [App\Http\Controllers\ProjectThreadController::class, 'storeComment'])->name('blueprint.issues.comments.store');
+Route::post('/blueprint/{slug}/issues', [ProjectThreadController::class, 'storeIssue'])->name('blueprint.issues.store');
+Route::post('/blueprint/{slug}/issues/{issueId}/comments', [ProjectThreadController::class, 'storeComment'])->name('blueprint.issues.comments.store');
 // Payment Gateway Webhooks (Midtrans DLQ Handler & Notification Aliases)
-Route::match(['get', 'post'], '/api/webhook/midtrans', function (\Illuminate\Http\Request $request) {
+Route::match(['get', 'post'], '/api/webhook/midtrans', function (Request $request) {
     if ($request->isMethod('get')) {
-        return app(\App\Http\Controllers\MidtransWebhookController::class)->status();
+        return app(MidtransWebhookController::class)->status();
     }
-    return app(\App\Http\Controllers\MidtransWebhookController::class)->handle($request);
+
+    return app(MidtransWebhookController::class)->handle($request);
 })->name('webhook.midtrans');
 
-Route::match(['get', 'post'], '/webhook/midtrans', function (\Illuminate\Http\Request $request) {
+Route::match(['get', 'post'], '/webhook/midtrans', function (Request $request) {
     if ($request->isMethod('get')) {
-        return app(\App\Http\Controllers\MidtransWebhookController::class)->status();
+        return app(MidtransWebhookController::class)->status();
     }
-    return app(\App\Http\Controllers\MidtransWebhookController::class)->handle($request);
+
+    return app(MidtransWebhookController::class)->handle($request);
 });
 
-Route::match(['get', 'post'], '/api/midtrans/notification', function (\Illuminate\Http\Request $request) {
+Route::match(['get', 'post'], '/api/midtrans/notification', function (Request $request) {
     if ($request->isMethod('get')) {
-        return app(\App\Http\Controllers\MidtransWebhookController::class)->status();
+        return app(MidtransWebhookController::class)->status();
     }
-    return app(\App\Http\Controllers\MidtransWebhookController::class)->handle($request);
+
+    return app(MidtransWebhookController::class)->handle($request);
 });
 
-Route::match(['get', 'post'], '/api/midtrans/webhook', function (\Illuminate\Http\Request $request) {
+Route::match(['get', 'post'], '/api/midtrans/webhook', function (Request $request) {
     if ($request->isMethod('get')) {
-        return app(\App\Http\Controllers\MidtransWebhookController::class)->status();
+        return app(MidtransWebhookController::class)->status();
     }
-    return app(\App\Http\Controllers\MidtransWebhookController::class)->handle($request);
+
+    return app(MidtransWebhookController::class)->handle($request);
 });
 
 // Cart & Project Checkout Routes
-Route::get('/cart', [\App\Http\Controllers\CartController::class, 'index'])->name('cart.index');
-Route::get('/api/cart', [\App\Http\Controllers\CartController::class, 'apiCart'])->name('api.cart');
-Route::post('/cart/add/{slug}', [\App\Http\Controllers\CartController::class, 'add'])->name('cart.add');
-Route::post('/cart/remove/{slug}', [\App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove');
-Route::post('/cart/clear', [\App\Http\Controllers\CartController::class, 'clear'])->name('cart.clear');
-Route::post('/cart/snap-token', [\App\Http\Controllers\CartController::class, 'getSnapToken'])->name('cart.snap-token');
-Route::post('/cart/voucher/apply', [\App\Http\Controllers\CartController::class, 'applyVoucher'])->name('cart.voucher.apply');
-Route::post('/cart/voucher/remove', [\App\Http\Controllers\CartController::class, 'removeVoucher'])->name('cart.voucher.remove');
-Route::post('/cart/claim-free-grant', [\App\Http\Controllers\CartController::class, 'claimFreeGrant'])->name('cart.claim-free');
-Route::post('/cart/reset-pending', [\App\Http\Controllers\CartController::class, 'resetPendingOrder'])->name('cart.reset-pending');
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::get('/api/cart', [CartController::class, 'apiCart'])->name('api.cart');
+Route::post('/cart/add/{slug}', [CartController::class, 'add'])->name('cart.add');
+Route::post('/cart/remove/{slug}', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+Route::post('/cart/snap-token', [CartController::class, 'getSnapToken'])->name('cart.snap-token');
+Route::post('/cart/voucher/apply', [CartController::class, 'applyVoucher'])->name('cart.voucher.apply');
+Route::post('/cart/voucher/remove', [CartController::class, 'removeVoucher'])->name('cart.voucher.remove');
+Route::post('/cart/claim-free-grant', [CartController::class, 'claimFreeGrant'])->name('cart.claim-free');
+Route::post('/cart/reset-pending', [CartController::class, 'resetPendingOrder'])->name('cart.reset-pending');
 
-Route::get('/invite/{slug}', \App\Livewire\ClientInviteForm::class)->name('invite');
+Route::get('/invite/{slug}', ClientInviteForm::class)->name('invite');
 
 // Customer & Client Dashboard Portal
-Route::get('/customer/dashboard', [\App\Http\Controllers\CustomerDashboardController::class, 'index'])->name('customer.dashboard');
-Route::get('/customer/transaction/{id}/invoice', [\App\Http\Controllers\CustomerDashboardController::class, 'invoice'])->name('customer.transaction.invoice');
-Route::post('/customer/transaction/{id}/sync', [\App\Http\Controllers\CustomerDashboardController::class, 'syncTransaction'])->name('customer.transaction.sync')->middleware('auth');
+Route::get('/customer/dashboard', [CustomerDashboardController::class, 'index'])->name('customer.dashboard');
+Route::get('/customer/transaction/{id}/invoice', [CustomerDashboardController::class, 'invoice'])->name('customer.transaction.invoice');
+Route::post('/customer/transaction/{id}/sync', [CustomerDashboardController::class, 'syncTransaction'])->name('customer.transaction.sync')->middleware('auth');
 Route::get('/portal', fn () => redirect()->route('customer.dashboard'))->name('portal');
 
 // Customer Passwordless OTP Authentication Routes
@@ -145,15 +166,16 @@ Route::get('/customer/login', function () {
     if (auth()->check()) {
         return redirect()->route('customer.dashboard');
     }
+
     return view('auth.customer-login');
 })->name('customer.login');
 
 Route::prefix('api/customer')->group(function () {
-    Route::post('/otp/request', [\App\Http\Controllers\CustomerAuthController::class, 'requestOtp'])->middleware('throttle:10,1');
-    Route::post('/otp/verify', [\App\Http\Controllers\CustomerAuthController::class, 'verifyOtp'])->middleware('throttle:15,1');
-    Route::get('/status', [\App\Http\Controllers\CustomerAuthController::class, 'status']);
-    Route::post('/logout', [\App\Http\Controllers\CustomerAuthController::class, 'logout'])->name('customer.logout');
-    Route::post('/profile', [\App\Http\Controllers\CustomerDashboardController::class, 'updateProfile'])->middleware('auth')->name('customer.profile.update');
+    Route::post('/otp/request', [CustomerAuthController::class, 'requestOtp'])->middleware('throttle:10,1');
+    Route::post('/otp/verify', [CustomerAuthController::class, 'verifyOtp'])->middleware('throttle:15,1');
+    Route::get('/status', [CustomerAuthController::class, 'status']);
+    Route::post('/logout', [CustomerAuthController::class, 'logout'])->name('customer.logout');
+    Route::post('/profile', [CustomerDashboardController::class, 'updateProfile'])->middleware('auth')->name('customer.profile.update');
 });
 
 // Authentication Aliases for Standard Web Routes
@@ -161,10 +183,11 @@ Route::get('/login', function () {
     return redirect()->to('/admin/login');
 })->name('login');
 
-Route::post('/logout', function (\Illuminate\Http\Request $request) {
-    \Illuminate\Support\Facades\Auth::logout();
+Route::post('/logout', function (Request $request) {
+    Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
+
     return redirect()->to('/');
 })->name('logout');
 
@@ -175,92 +198,112 @@ Route::get('/lang/{locale}', function (string $locale) {
         cookie()->queue(cookie('neriah_locale_manual', '1', 60 * 24 * 365, '/', null, false, false));
         cookie()->queue(cookie()->forget('googtrans'));
     }
+
     return redirect()->back();
 })->name('lang.switch');
 
 // CV Pro Enterprise SaaS Studio & Public Routes
-Route::get('/cv-pro', [\App\Http\Controllers\CvProController::class, 'index'])->name('cv-pro.index');
-Route::get('/cv/{slug}', [\App\Http\Controllers\CvProController::class, 'show'])->name('cv-pro.show');
+Route::get('/cv-pro', [CvProController::class, 'index'])->name('cv-pro.index');
+Route::get('/cv/{slug}', [CvProController::class, 'show'])->name('cv-pro.show');
 
 // CV Pro APIs
 Route::prefix('api/cv-pro')->group(function () {
-    Route::post('/save', [\App\Http\Controllers\Api\CvProApiController::class, 'save'])->middleware('throttle:60,1');
-    Route::post('/lint', [\App\Http\Controllers\Api\CvProApiController::class, 'lint'])->middleware('throttle:60,1');
-    Route::post('/interview/generate', [\App\Http\Controllers\Api\CvProApiController::class, 'generateInterview'])->middleware('throttle:30,1');
-    Route::post('/interview/evaluate', [\App\Http\Controllers\Api\CvProApiController::class, 'evaluateAnswer'])->middleware('throttle:30,1');
-    Route::post('/outreach/generate', [\App\Http\Controllers\Api\CvProApiController::class, 'generateOutreach'])->middleware('throttle:30,1');
-    Route::post('/upload-cv', [\App\Http\Controllers\Api\CvProApiController::class, 'uploadCv'])->middleware('throttle:30,1');
-    Route::post('/tailor', [\App\Http\Controllers\Api\CvProApiController::class, 'tailor'])->middleware('throttle:30,1');
-    Route::post('/linkedin', [\App\Http\Controllers\Api\CvProApiController::class, 'generateLinkedIn'])->middleware('throttle:30,1');
-    Route::post('/ai-helper', [\App\Http\Controllers\Api\CvProApiController::class, 'aiHelper'])->middleware('throttle:60,1');
-    Route::post('/realtime-copilot', [\App\Http\Controllers\Api\CvProApiController::class, 'realtimeCopilot'])->middleware('throttle:30,1');
-    Route::post('/portfolio/generate', [\App\Http\Controllers\Api\CvProApiController::class, 'generatePortfolio'])->middleware('throttle:30,1');
-    Route::post('/sosmed/generate', [\App\Http\Controllers\Api\CvProApiController::class, 'generateSosmed'])->middleware('throttle:30,1');
-    Route::post('/transcript/analyze', [\App\Http\Controllers\Api\CvProApiController::class, 'analyzeTranscript'])->middleware('throttle:30,1');
-    Route::get('/pricing', [\App\Http\Controllers\Api\CvProApiController::class, 'pricing'])->middleware('throttle:60,1');
-    Route::get('/quota', [\App\Http\Controllers\Api\CvProApiController::class, 'quota'])->middleware('throttle:60,1');
-    Route::post('/topup', [\App\Http\Controllers\Api\CvProApiController::class, 'topup'])->middleware('throttle:30,1');
+    Route::post('/save', [CvProApiController::class, 'save'])->middleware('throttle:60,1');
+    Route::post('/lint', [CvProApiController::class, 'lint'])->middleware('throttle:60,1');
+    Route::post('/interview/generate', [CvProApiController::class, 'generateInterview'])->middleware('throttle:30,1');
+    Route::post('/interview/evaluate', [CvProApiController::class, 'evaluateAnswer'])->middleware('throttle:30,1');
+    Route::post('/outreach/generate', [CvProApiController::class, 'generateOutreach'])->middleware('throttle:30,1');
+    Route::post('/upload-cv', [CvProApiController::class, 'uploadCv'])->middleware('throttle:30,1');
+    Route::post('/tailor', [CvProApiController::class, 'tailor'])->middleware('throttle:30,1');
+    Route::post('/linkedin', [CvProApiController::class, 'generateLinkedIn'])->middleware('throttle:30,1');
+    Route::post('/ai-helper', [CvProApiController::class, 'aiHelper'])->middleware('throttle:60,1');
+    Route::post('/realtime-copilot', [CvProApiController::class, 'realtimeCopilot'])->middleware('throttle:30,1');
+    Route::post('/portfolio/generate', [CvProApiController::class, 'generatePortfolio'])->middleware('throttle:30,1');
+    Route::post('/sosmed/generate', [CvProApiController::class, 'generateSosmed'])->middleware('throttle:30,1');
+    Route::post('/transcript/analyze', [CvProApiController::class, 'analyzeTranscript'])->middleware('throttle:30,1');
+    Route::get('/pricing', [CvProApiController::class, 'pricing'])->middleware('throttle:60,1');
+    Route::get('/quota', [CvProApiController::class, 'quota'])->middleware('throttle:60,1');
+    Route::post('/topup', [CvProApiController::class, 'topup'])->middleware('throttle:30,1');
 });
 
-// Dynamic Search Engine Architecture: Sitemap.xml & Robots.txt
-Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
-Route::get('/robots.txt', [\App\Http\Controllers\SitemapController::class, 'robots'])->name('robots');
+// Dynamic Search Engine & GEO AI Citation Architecture: Sitemap.xml, Robots.txt, llms.txt & IndexNow
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
+Route::get('/llms.txt', [PublicExploreArchitectureController::class, 'llmsTxt'])->name('geo.llms');
+Route::get('/llms-full.txt', [PublicExploreArchitectureController::class, 'llmsFullTxt'])->name('geo.llms-full');
+Route::get('/indexnow-key.txt', [PublicExploreArchitectureController::class, 'indexNowKeyTxt'])->name('geo.indexnow-key');
 
 // Legal Policies (Terms of Service, Privacy Policy, Refund & Warranty Policy)
-Route::get('/terms', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'terms')->name('legal.terms');
-Route::get('/terms-and-conditions', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'terms');
-Route::get('/syarat-ketentuan', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'terms');
+Route::get('/terms', [LegalPolicyController::class, 'show'])->defaults('type', 'terms')->name('legal.terms');
+Route::get('/terms-and-conditions', [LegalPolicyController::class, 'show'])->defaults('type', 'terms');
+Route::get('/syarat-ketentuan', [LegalPolicyController::class, 'show'])->defaults('type', 'terms');
 
-Route::get('/privacy-policy', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'privacy-policy')->name('legal.privacy');
-Route::get('/privacy', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'privacy-policy');
-Route::get('/kebijakan-privasi', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'privacy-policy');
+Route::get('/privacy-policy', [LegalPolicyController::class, 'show'])->defaults('type', 'privacy-policy')->name('legal.privacy');
+Route::get('/privacy', [LegalPolicyController::class, 'show'])->defaults('type', 'privacy-policy');
+Route::get('/kebijakan-privasi', [LegalPolicyController::class, 'show'])->defaults('type', 'privacy-policy');
 
-Route::get('/refund-policy', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'refund-policy')->name('legal.refund');
-Route::get('/refund', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'refund-policy');
-Route::get('/kebijakan-pengembalian', [\App\Http\Controllers\LegalPolicyController::class, 'show'])->defaults('type', 'refund-policy');
+Route::get('/refund-policy', [LegalPolicyController::class, 'show'])->defaults('type', 'refund-policy')->name('legal.refund');
+Route::get('/refund', [LegalPolicyController::class, 'show'])->defaults('type', 'refund-policy');
+Route::get('/kebijakan-pengembalian', [LegalPolicyController::class, 'show'])->defaults('type', 'refund-policy');
 
 // High-Retention Customer Smart Guide (Rights & Obligations Matrix)
-Route::get('/smart-guide', [\App\Http\Controllers\LegalPolicyController::class, 'guide'])->name('legal.smart-guide');
-Route::get('/panduan-klien', [\App\Http\Controllers\LegalPolicyController::class, 'guide']);
-Route::get('/customer-guide', [\App\Http\Controllers\LegalPolicyController::class, 'guide']);
+Route::get('/smart-guide', [LegalPolicyController::class, 'guide'])->name('legal.smart-guide');
+Route::get('/panduan-klien', [LegalPolicyController::class, 'guide']);
+Route::get('/customer-guide', [LegalPolicyController::class, 'guide']);
 
-// Project OS v10.0 — Programmatic SEO Architecture Library & Verified Aniwall Showcase
-Route::get('/explore', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'index'])->name('explore.index');
-Route::get('/explore/og/{slug}.svg', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'openGraphSvg'])->name('explore.og');
-Route::get('/explore/{sector}', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'index'])->name('explore.sector');
-Route::get('/explore/{sector}/{slug}', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'show'])->name('explore.show');
+// Project OS v10.0 & v11.0 — Programmatic SEO/GEO Architecture Library & Verified Aniwall Showcase
+Route::get('/explore', [PublicExploreArchitectureController::class, 'index'])->name('explore.index');
+Route::get('/explore/og/{slug}.png', [PublicExploreArchitectureController::class, 'openGraphPng'])->name('explore.og.png');
+Route::get('/explore/og/{slug}.svg', [PublicExploreArchitectureController::class, 'openGraphSvg'])->name('explore.og');
+Route::get('/explore/{sector}', [PublicExploreArchitectureController::class, 'index'])->name('explore.sector');
+Route::get('/explore/{sector}/{slug}', [PublicExploreArchitectureController::class, 'show'])->name('explore.show');
 
 // Project OS v10.0 — SaaS Commercial, Billing Webhook, Multi-Seat Workspace & Impact Grant APIs
 Route::prefix('api/saas')->group(function () {
-    Route::get('/feature-gate/{slug?}', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'featureGate'])
+    Route::get('/feature-gate/{slug?}', [PublicExploreArchitectureController::class, 'featureGate'])
         ->middleware('throttle:60,1')
         ->name('api.saas.feature-gate');
-    Route::post('/billing/webhook', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'billingWebhook'])
-        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+    Route::post('/billing/webhook', [PublicExploreArchitectureController::class, 'billingWebhook'])
+        ->withoutMiddleware([ValidateCsrfToken::class])
         ->middleware('throttle:60,1')
         ->name('api.saas.billing.webhook');
     Route::middleware('auth')->group(function () {
-        Route::post('/workspace', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'upsertWorkspace'])
+        Route::post('/workspace', [PublicExploreArchitectureController::class, 'upsertWorkspace'])
             ->middleware('throttle:30,1')
             ->name('api.saas.workspace.upsert');
-        Route::post('/workspaces', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'upsertWorkspace'])
+        Route::post('/workspaces', [PublicExploreArchitectureController::class, 'upsertWorkspace'])
             ->middleware('throttle:30,1')
             ->name('api.saas.workspaces.upsert');
-        Route::post('/workspace/invite', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'inviteWorkspaceMember'])
+        Route::post('/workspace/invite', [PublicExploreArchitectureController::class, 'inviteWorkspaceMember'])
             ->middleware('throttle:20,1')
             ->name('api.saas.workspace.invite');
-        Route::post('/workspaces/{workspaceId}/members', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'inviteWorkspaceMember'])
+        Route::post('/workspaces/{workspaceId}/members', [PublicExploreArchitectureController::class, 'inviteWorkspaceMember'])
             ->middleware('throttle:20,1')
             ->name('api.saas.workspaces.members.invite');
-        Route::post('/impact-grant', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'submitImpactGrant'])
+        Route::post('/impact-grant', [PublicExploreArchitectureController::class, 'submitImpactGrant'])
             ->middleware('throttle:10,1')
             ->name('api.saas.impact-grant.submit');
-        Route::post('/impact-grants', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'submitImpactGrant'])
+        Route::post('/impact-grants', [PublicExploreArchitectureController::class, 'submitImpactGrant'])
             ->middleware('throttle:10,1')
             ->name('api.saas.impact-grants.submit');
-        Route::post('/testimonials/submit', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'updateTestimonialQuote'])
+        Route::post('/testimonials/submit', [PublicExploreArchitectureController::class, 'updateTestimonialQuote'])
             ->middleware('throttle:20,1')
             ->name('api.saas.testimonials.submit');
+        Route::post('/sla-tickets', [PublicExploreArchitectureController::class, 'submitSlaMaintenanceTicket'])
+            ->middleware('throttle:20,1')
+            ->name('api.saas.sla-tickets.submit');
+        Route::match(['get', 'post'], '/privacy/export', [PublicExploreArchitectureController::class, 'exportPrivacyPortability'])
+            ->middleware('throttle:10,1')
+            ->name('api.saas.privacy.export');
+        Route::post('/privacy/redact', [PublicExploreArchitectureController::class, 'redactPrivacyRightToErasure'])
+            ->middleware('throttle:5,1')
+            ->name('api.saas.privacy.redact');
+        Route::post('/sandbox/simulate-webhook', [PublicExploreArchitectureController::class, 'simulateSandboxWebhook'])
+            ->middleware('throttle:30,1')
+            ->name('api.saas.sandbox.simulate-webhook');
+        Route::get('/holding/{workspaceId}/consolidated', [PublicExploreArchitectureController::class, 'holdingConsolidationReport'])
+            ->middleware('throttle:30,1')
+            ->name('api.saas.holding.consolidated');
     });
 });
 

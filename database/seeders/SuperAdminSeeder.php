@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Role;
-use App\Models\Permission;
 
 class SuperAdminSeeder extends Seeder
 {
@@ -69,6 +69,10 @@ class SuperAdminSeeder extends Seeder
         $approveImpactGrantsPerm = Permission::firstOrCreate(['name' => 'approve_nonprofit_impact_grants', 'guard_name' => 'web']);
         $manageOrgWorkspacesPerm = Permission::firstOrCreate(['name' => 'manage_organization_workspaces', 'guard_name' => 'web']);
         $viewSaasHealthPulsePerm = Permission::firstOrCreate(['name' => 'view_saas_system_health_pulse', 'guard_name' => 'web']);
+        $manageSeoGeoAuthorityPerm = Permission::firstOrCreate(['name' => 'manage_seo_geo_authority', 'guard_name' => 'web']);
+        $manageUuPdpPrivacyPerm = Permission::firstOrCreate(['name' => 'manage_uu_pdp_privacy_vault', 'guard_name' => 'web']);
+        $manageSlaWarrantyPerm = Permission::firstOrCreate(['name' => 'manage_sla_warranty_tickets', 'guard_name' => 'web']);
+        $runSandboxWebhookPerm = Permission::firstOrCreate(['name' => 'run_sandbox_webhook_simulator', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
@@ -116,6 +120,10 @@ class SuperAdminSeeder extends Seeder
             $approveImpactGrantsPerm,
             $manageOrgWorkspacesPerm,
             $viewSaasHealthPulsePerm,
+            $manageSeoGeoAuthorityPerm,
+            $manageUuPdpPrivacyPerm,
+            $manageSlaWarrantyPerm,
+            $runSandboxWebhookPerm,
         ]);
 
         $developerRole->givePermissionTo([
@@ -151,6 +159,10 @@ class SuperAdminSeeder extends Seeder
             $manageVerifiedTestimonialsPerm,
             $configureDualZoneUxPerm,
             $viewSaasHealthPulsePerm,
+            $manageSeoGeoAuthorityPerm,
+            $manageUuPdpPrivacyPerm,
+            $manageSlaWarrantyPerm,
+            $runSandboxWebhookPerm,
         ]);
 
         // Grant Due Diligence Read-Only permissions to Investor & Superadmin
@@ -217,7 +229,7 @@ class SuperAdminSeeder extends Seeder
             ]
         );
 
-        if (!$admin->hasRole('super_admin')) {
+        if (! $admin->hasRole('super_admin')) {
             $admin->assignRole($superAdminRole);
         }
 
@@ -235,7 +247,7 @@ class SuperAdminSeeder extends Seeder
         if ($reviewer->hasRole('super_admin')) {
             $reviewer->removeRole('super_admin');
         }
-        if (!$reviewer->hasRole('midtrans_reviewer')) {
+        if (! $reviewer->hasRole('midtrans_reviewer')) {
             $reviewer->assignRole($reviewerRole);
         }
 
@@ -261,7 +273,7 @@ class SuperAdminSeeder extends Seeder
 
         foreach ($reviewerPermissions as $permName) {
             $perm = Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
-            if (!$reviewerRole->hasPermissionTo($perm)) {
+            if (! $reviewerRole->hasPermissionTo($perm)) {
                 $reviewerRole->givePermissionTo($perm);
             }
         }
@@ -290,7 +302,7 @@ class SuperAdminSeeder extends Seeder
 
         foreach ($developerPermissions as $permName) {
             $perm = Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
-            if (!$developerRole->hasPermissionTo($perm)) {
+            if (! $developerRole->hasPermissionTo($perm)) {
                 $developerRole->givePermissionTo($perm);
             }
         }
@@ -309,7 +321,7 @@ class SuperAdminSeeder extends Seeder
 
         foreach ($investorPermissions as $permName) {
             $perm = Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
-            if (!$investorRole->hasPermissionTo($perm)) {
+            if (! $investorRole->hasPermissionTo($perm)) {
                 $investorRole->givePermissionTo($perm);
             }
         }

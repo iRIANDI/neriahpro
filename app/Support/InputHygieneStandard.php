@@ -152,6 +152,14 @@ class InputHygieneStandard
     }
 
     /**
+     * Alias of sanitizePhoneLocalDigits for national subscriber number sanitization.
+     */
+    public static function sanitizePhoneNationalNumber(?string $rawPhone, ?string $dialCode = '+62'): string
+    {
+        return self::sanitizePhoneLocalDigits($rawPhone, $dialCode);
+    }
+
+    /**
      * Build clean E.164 phone number (+6281234567890) from country zone dial code and local input.
      */
     public static function toE164(string $dialCode, ?string $rawLocalPhone): string
@@ -160,6 +168,14 @@ class InputHygieneStandard
         $local = self::sanitizePhoneLocalDigits($rawLocalPhone, $normalizedDial);
 
         return $local === '' ? '' : ($normalizedDial.$local);
+    }
+
+    /**
+     * Alias of toE164 for E.164 phone composition.
+     */
+    public static function composeE164Phone(string $dialCode, ?string $rawLocalPhone): string
+    {
+        return self::toE164($dialCode, $rawLocalPhone);
     }
 
     /**

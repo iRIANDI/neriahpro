@@ -12,11 +12,12 @@ if [ -z "$1" ]; then
     echo ""
     echo "Daftar Skenario:"
     echo "  1 - Skenario Ringan (Hanya update tampilan/logika Blade & PHP)"
-    echo "  2 - Migrasi Aman (Menambah tabel/kolom tanpa hapus data)"
+    echo "  2 - Migrasi Aman + Pre-Migration Atomic pg_dump Snapshot (7-Day Retention)"
     echo "  3 - Hancur & Bangun DB (Migrate Fresh + Seed) ⚠️ STAGING ONLY"
     echo "  4 - Install Plugin Baru (Composer + Filament Upgrade)"
     echo "  5 - Dump Autoload (Update nama Class/Folder)"
     echo "  6 - Build Assets Frontend (Vite/Tailwind/NPM)"
+    echo "  7 / rollback - Zero-Downtime Atomic Database Rollback dari Snapshot Terakhir"
     echo "================================================="
     exit 1
 fi
@@ -73,7 +74,14 @@ case $1 in
         php -r "if (function_exists('opcache_reset')) { opcache_reset(); }" 2>/dev/null || true
         ;;
     2)
-        echo "--- Menjalankan Skenario 2: Migrate Safe (Railpack) ---"
+        echo "--- Menjalankan Skenario 2: Migrate Safe + Pre-Migration Atomic pg_dump Guard (Railpack) ---"
+        mkdir -p storage/backups
+        find storage/backups -name "pre_migrate_*.sql.gz" -mtime +7 -delete 2>/dev/null || true
+        if command -v pg_dump >/dev/null 2>&1 && [ -n "$DB_DATABASE" ]; then
+            SNAP_FILE="storage/backups/pre_migrate_$(date +%Y%m%d_%H%M%S).sql.gz"
+            echo "[Snapshot Guard] Mencadangkan PostgreSQL ke $SNAP_FILE sebelum migrasi..."
+            PGPASSWORD="${DB_PASSWORD:-}" pg_dump -h "${DB_HOST:-127.0.0.1}" -p "${DB_PORT:-5432}" -U "${DB_USERNAME:-postgres}" "$DB_DATABASE" 2>/dev/null | gzip > "$SNAP_FILE" || rm -f "$SNAP_FILE"
+        fi
         composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader
         php artisan migrate --force
         php artisan db:seed --class=SuperAdminSeeder --force
@@ -112,6 +120,18 @@ case $1 in
             echo "⚠️ Warning: NPM tidak ditemukan di container. Menggunakan build assets yang sudah di-commit di git."
         fi
         php artisan db:seed --class=LandingPageSeeder --force 2>/dev/null || true
+        php artisan optimize:clear
+        ;;
+    7|rollback)
+        echo "--- Menjalankan Skenario 7: Atomic Pre-Migration Rollback (Project OS v11.0) ---"
+        LATEST_SNAP=$(ls -1t storage/backups/pre_migrate_*.sql.gz 2>/dev/null | head -n 1)
+        if [ -n "$LATEST_SNAP" ] && command -v psql >/dev/null 2>&1 && [ -n "$DB_DATABASE" ]; then
+            echo "[Rollback Guard] Memulihkan snapshot PostgreSQL dari $LATEST_SNAP..."
+            gunzip -c "$LATEST_SNAP" | PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-127.0.0.1}" -p "${DB_PORT:-5432}" -U "${DB_USERNAME:-postgres}" "$DB_DATABASE"
+        else
+            echo "[Rollback Guard] Snapshot pg_dump tidak tersedia; menjalankan php artisan migrate:rollback --step=1 --force..."
+            php artisan migrate:rollback --step=1 --force
+        fi
         php artisan optimize:clear
         ;;
     *)

@@ -2,16 +2,36 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Pages\Page;
 use App\Models\CmsGlobalSetting;
+use App\Models\PosArchitecturePillar;
+use App\Services\Ai\GeminiToolRegistry;
+use App\Services\PosCommercialBridgeService;
+use App\Services\Security\DocumentThreatSanitizerService;
+use App\Support\PosAgentShieldAndCoDesignCatalog;
+use App\Support\PosDayTwoProductionCatalog;
+use App\Support\PosDualZoneFrontendAndSaasCatalog;
+use App\Support\PosEnterpriseGuaranteeCatalog;
+use App\Support\PosInclusiveCommercialCatalog;
+use App\Support\PosLifecycleAndStudioCatalog;
+use App\Support\PosRealWorldRuntimeCatalog;
+use App\Support\PosSectorUiArchetypeCatalog;
+use App\Support\PosSeoGeoAndZeroFailureCatalog;
+use App\Support\PosStackPresetCatalog;
+use App\Support\PricingRegistry;
+use App\Support\ProjectOsMatrixCatalog;
+use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 
 class SmartGuideRetentionPage extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-sparkles';
-    protected static string | \UnitEnum | null $navigationGroup = 'Project OS // Core';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-sparkles';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Project OS // Core';
+
     protected static ?string $navigationLabel = 'Smart Guide & Unit Economics';
+
     protected static ?string $title = 'Executive Smart Guide // Unit Economics & Retention';
+
     protected static ?int $navigationSort = 1;
 
     protected string $view = 'filament.pages.smart-guide-retention';
@@ -39,16 +59,16 @@ class SmartGuideRetentionPage extends Page
             || $user->hasAnyRole(['super_admin', 'investor']);
     }
 
-    public function getHeading(): string | Htmlable
+    public function getHeading(): string|Htmlable
     {
         return 'Executive Smart Guide // Unit Economics, Margin & High-Retention Playbook';
     }
 
-    public function getSubheading(): string | Htmlable | null
+    public function getSubheading(): string|Htmlable|null
     {
         return app()->getLocale() === 'en'
-            ? 'Executive Business & Engineering Playbook (Project OS v10.0 Ultimate): 98%+ Margin Unit Economics, Dual-Zone Enterprise UI (36 Back-Stage + 6 Front-Stage UX), Verified Aniwall, 6 SaaS Growth Modules, AgentShield & 40 Native AI Tools.'
-            : 'Dokumentasi Rahasia Bisnis & Operasional Neriah Pro (Project OS v10.0 Ultimate): Validasi Unit Economics 98%+ Margin, Dual-Zone Enterprise UI (36 UI Back-Stage + 6 UX Publik), Aniwall Terverifikasi, 6 Modul SaaS, AgentShield & 40 Native AI Tools.';
+            ? 'Executive Business & Engineering Playbook (Project OS v11.0 Paripurna Edition): Satu Pintu SaaS Commercial Gate, 12-Sector SEO/GEO Authority (/llms.txt + Multi-Graph Schema.org), UU PDP Privacy Vault, Offline Outbox PWA, Post-BAST SLA Warranty, Holding Consolidation & 44 Native AI Tools.'
+            : 'Dokumentasi Rahasia Bisnis & Operasional Neriah Pro (Project OS v11.0 Paripurna Edition): Gerbang Komersial Satu Pintu SaaS, Otoritas SEO/GEO 12 Sektor (/llms.txt + Multi-Graph Schema.org), Brankas Privasi UU PDP, Offline Outbox PWA, Garansi SLA Pasca-BAST, Konsolidasi Holding & 44 Native AI Tools.';
     }
 
     public function getViewData(): array
@@ -66,34 +86,37 @@ class SmartGuideRetentionPage extends Page
                 'login_policy' => CmsGlobalSetting::getVal('pricing_retail_login_policy', 'Spark Bebas Login // Paket Berbayar Wajib Login Akun'),
                 'disclaimer' => CmsGlobalSetting::getVal('pricing_retail_disclaimer', '100% Self-Service Blueprint // Zero Neriah Pro Coding'),
             ],
-            'sectorsCatalog' => \App\Support\ProjectOsMatrixCatalog::sectors(),
-            'killerFeatures' => \App\Support\PosSectorUiArchetypeCatalog::killerFeaturesSummary(),
-            'finalEightLayers' => \App\Support\PosDayTwoProductionCatalog::finalEightLayersSummary(),
-            'tenPerfectionPillars' => \App\Support\PosDayTwoProductionCatalog::tenPerfectionPillars(),
-            'fiveLifecycleFeatures' => \App\Support\PosLifecycleAndStudioCatalog::fiveLifecycleFeatures(),
-            'slopDiffPairs' => \App\Support\PosLifecycleAndStudioCatalog::slopVsProjectOsDiffPairs(),
-            'fiveCommercialFeatures' => \App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures(),
-            'fiveDeterministicGuarantees' => \App\Support\PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees(),
-            'fiveEnterpriseGluePrimitives' => \App\Support\PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives(),
-            'fiveRealWorldElements' => \App\Support\PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview(),
-            'fifteenMasterPillars' => \App\Models\PosArchitecturePillar::getCachedMatrix(),
-            'v8RetentionAndSecurity' => \App\Support\PosInclusiveCommercialCatalog::retentionAndSecurityMatrix(),
-            'v8InclusiveValueSkus' => \App\Support\PricingRegistry::getInclusiveValueMetricCatalog(),
+            'sectorsCatalog' => ProjectOsMatrixCatalog::sectors(),
+            'killerFeatures' => PosSectorUiArchetypeCatalog::killerFeaturesSummary(),
+            'finalEightLayers' => PosDayTwoProductionCatalog::finalEightLayersSummary(),
+            'tenPerfectionPillars' => PosDayTwoProductionCatalog::tenPerfectionPillars(),
+            'fiveLifecycleFeatures' => PosLifecycleAndStudioCatalog::fiveLifecycleFeatures(),
+            'slopDiffPairs' => PosLifecycleAndStudioCatalog::slopVsProjectOsDiffPairs(),
+            'fiveCommercialFeatures' => PosCommercialBridgeService::fiveCommercialBridgeFeatures(),
+            'fiveDeterministicGuarantees' => PosEnterpriseGuaranteeCatalog::fiveDeterministicGuarantees(),
+            'fiveEnterpriseGluePrimitives' => PosEnterpriseGuaranteeCatalog::fiveEnterpriseGluePrimitives(),
+            'fiveRealWorldElements' => PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview(),
+            'fifteenMasterPillars' => PosArchitecturePillar::getCachedMatrix(),
+            'v8RetentionAndSecurity' => PosInclusiveCommercialCatalog::retentionAndSecurityMatrix(),
+            'v8InclusiveValueSkus' => PricingRegistry::getInclusiveValueMetricCatalog(),
             'v8VisualUiTotalCount' => 36,
-            'v9AgentShieldContract' => \App\Services\Security\DocumentThreatSanitizerService::fiveLayersBlueprintContract(
+            'v9AgentShieldContract' => DocumentThreatSanitizerService::fiveLayersBlueprintContract(
                 'NeriahPro Project OS v9.0',
                 'STACK_M1_LARAVEL_MONOLITH',
                 'SECTOR_01_COMMERCE_OMNICHANNEL'
             ),
-            'v9SectorAuditPresets' => \App\Support\PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets(),
-            'v10PublicUxPresets' => \App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets('id'),
-            'v10FiveIronLaws' => \App\Support\PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws('id'),
-            'v10SixSaasModules' => \App\Support\PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules('id'),
-            'guidedJourneySteps' => \App\Services\PosCommercialBridgeService::guidedClientJourneySteps(),
-            'satuPintuPackages' => \App\Support\PricingRegistry::getSatuPintuCatalog(),
-            'estimatorConfig' => \App\Support\PricingRegistry::getCommercialEstimatorConfig(),
-            'stackPresetsCount' => count(\App\Support\PosStackPresetCatalog::stackPresets()),
-            'nativeToolsCount' => count(\App\Services\Ai\GeminiToolRegistry::getDeclarations()),
+            'v9SectorAuditPresets' => PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets(),
+            'v10PublicUxPresets' => PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets('id'),
+            'v10FiveIronLaws' => PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws('id'),
+            'v10SixSaasModules' => PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules('id'),
+            'v11ZeroFailureModulesId' => PosSeoGeoAndZeroFailureCatalog::sixFinalZeroFailureModules('id'),
+            'v11ZeroFailureModulesEn' => PosSeoGeoAndZeroFailureCatalog::sixFinalZeroFailureModules('en'),
+            'v11TwentyPillars' => PosSeoGeoAndZeroFailureCatalog::twentyPillarsParipurnaMatrix(),
+            'guidedJourneySteps' => PosCommercialBridgeService::guidedClientJourneySteps(),
+            'satuPintuPackages' => PricingRegistry::getSatuPintuCatalog(),
+            'estimatorConfig' => PricingRegistry::getCommercialEstimatorConfig(),
+            'stackPresetsCount' => count(PosStackPresetCatalog::stackPresets()),
+            'nativeToolsCount' => count(GeminiToolRegistry::getDeclarations()),
         ];
     }
 }

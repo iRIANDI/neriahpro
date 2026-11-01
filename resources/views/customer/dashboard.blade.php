@@ -243,7 +243,7 @@
                         message: 'Token Midtrans Snap tidak tersedia. Silakan hubungi tim kami atau gunakan tombol Cek Status.'
                     });
                 } else {
-                    alert('Token Midtrans Snap tidak ditemukan.');
+                    console.error('Token Midtrans Snap tidak ditemukan.');
                 }
                 return;
             }
@@ -717,6 +717,21 @@
                 <span>{{ $isEn ? 'Affiliate, Team & Grant' : 'Afiliasi, Tim & Hibah' }}</span>
                 <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 text-[10px] font-black">
                     v10.0
+                </span>
+            </button>
+            <!-- Tab 9: Post-BAST SLA Warranty, UU PDP Privacy Vault & Holding Consolidation (v11.0) -->
+            <button
+                type="button"
+                @click="setTab('sla_privacy_holding')"
+                :class="currentTab === 'sla_privacy_holding'
+                    ? 'bg-emerald-600 text-zinc-950 font-black shadow-xs'
+                    : 'bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white border border-zinc-200 dark:border-zinc-800'"
+                class="px-3.5 py-2 transition rounded-none uppercase flex items-center gap-2 whitespace-nowrap cursor-pointer"
+            >
+                <span>🛡️</span>
+                <span>{{ $isEn ? 'SLA Warranty, UU PDP & Holding' : 'Garansi SLA, UU PDP & Holding' }}</span>
+                <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-950 dark:text-emerald-200 border border-zinc-700 dark:border-emerald-700 text-[10px] font-black">
+                    v11.0
                 </span>
             </button>
         </nav>
@@ -2505,6 +2520,266 @@
                         {{ $isEn ? 'Submit Impact Grant Verification ->' : 'Ajukan Verifikasi Hibah Non-Profit ->' }}
                     </button>
                 </form>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- PANE 9: POST-BAST SLA WARRANTY, UU PDP PRIVACY VAULT & HOLDING v11  -->
+        <!-- =================================================================== -->
+        <div x-show="currentTab === 'sla_privacy_holding'" x-cloak class="space-y-6"
+             x-data="{
+                slaBlueprintId: @json($blueprints->first()?->id ?? ''),
+                slaTitle: '',
+                slaDescription: '',
+                slaEmail: @json($user->email ?? ''),
+                slaDial: @json($profileDefaults['phone_country_code'] ?? '+62'),
+                slaPhone: @json($profileDefaults['phone'] ?? ''),
+                slaEstUsersDisplay: '',
+                slaResult: null,
+                erasureModalOpen: false,
+                isSubmittingSla: false,
+                async submitSlaTicket() {
+                    this.isSubmittingSla = true;
+                    try {
+                        const res = await fetch('/api/saas/sla-tickets', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: JSON.stringify({
+                                vision_blueprint_id: this.slaBlueprintId || null,
+                                reporter_email: this.slaEmail,
+                                reporter_phone_country_code: this.slaDial,
+                                reporter_phone: this.slaPhone,
+                                issue_title: this.slaTitle,
+                                issue_description: this.slaDescription
+                            })
+                        });
+                        const data = await res.json();
+                        if (res.ok && data.success) {
+                            this.slaResult = data;
+                            this.slaTitle = '';
+                            this.slaDescription = '';
+                            if (window.showToast) window.showToast({ type: 'success', title: 'SLA TRIAGE COMPLETE', message: data.triage_classification || 'Ticket triaged.' });
+                        } else {
+                            if (window.showToast) window.showToast({ type: 'error', title: 'SLA VALIDATION', message: data.message || 'Check ticket fields.' });
+                        }
+                    } finally {
+                        this.isSubmittingSla = false;
+                    }
+                },
+                async exportPortabilityJson() {
+                    const res = await fetch('/api/saas/privacy/export', { headers: { 'Accept': 'application/json' } });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        const blob = new Blob([JSON.stringify(data.archive, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'uu-pdp-portability-' + Date.now() + '.json';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        if (window.showToast) window.showToast({ type: 'success', title: 'UU PDP EXPORT', message: 'JSON Data Portability archive downloaded.' });
+                    }
+                },
+                async confirmRightToErasure() {
+                    const res = await fetch('/api/saas/privacy/redact', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ confirm_erasure: true })
+                    });
+                    const data = await res.json();
+                    this.erasureModalOpen = false;
+                    if (window.showToast) {
+                        window.showToast({
+                            type: data.success ? 'success' : 'error',
+                            title: 'UU PDP RIGHT-TO-ERASURE',
+                            message: data.success ? ('PII Redacted (' + (data.redacted_token || 'Ledger Preserved') + ')') : (data.message || 'Failed')
+                        });
+                    }
+                }
+             }">
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 1. Post-BAST Contractual SLA Bug-Warranty vs Paid Delta v1.1 -->
+                <form @submit.prevent="submitSlaTicket()" class="p-6 bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 rounded-none space-y-3 text-xs font-mono">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 text-[10px] font-black uppercase">
+                            ZERO_FAILURE_03 // POST-BAST 90-DAY SLA TRIAGE
+                        </span>
+                        <span class="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">SHA-256 Scope Lock Guard</span>
+                    </div>
+                    <h3 class="text-base font-black font-sans text-zinc-950 dark:text-white">
+                        {{ $isEn ? 'Submit Post-BAST Bug Warranty or New Feature Request' : 'Lapor Garansi Bug Pasca-BAST atau Permintaan Fitur Baru' }}
+                    </h3>
+                    <p class="text-[11px] font-sans text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                        {{ $isEn
+                            ? 'AI audits your report against the signed SHA-256 Scope Lock v1.0: genuine regressions receive Rp 0 Free Warranty + Surgical Developer Prompt; out-of-scope features automatically route to Paid Delta v1.1.'
+                            : 'AI mengaudit laporan Anda terhadap Kunci Scope SHA-256 v1.0: bug pada fitur kontrak mendapat Garansi Rp 0 + Prompt Perbaikan; permintaan fitur baru otomatis diarahkan ke estimasi Addendum Delta v1.1.' }}
+                    </p>
+
+                    @if($blueprints->isNotEmpty())
+                        <div>
+                            <label class="block font-bold mb-1 text-zinc-900 dark:text-zinc-100">{{ $isEn ? 'Select Project / Blueprint' : 'Pilih Proyek / Blueprint' }}</label>
+                            <select x-model="slaBlueprintId" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 rounded-none">
+                                @foreach($blueprints as $bpOpt)
+                                    <option value="{{ $bpOpt->id }}">{{ $bpOpt->nama_bisnis ?: $bpOpt->slug }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block font-bold mb-1 text-zinc-900 dark:text-zinc-100">{{ $isEn ? 'Reporter Email (Strict RFC) *' : 'Email Pelapor (Karakter Email) *' }}</label>
+                            <input type="email" x-model="slaEmail" @input="slaEmail = String(slaEmail || '').replace(/[^a-zA-Z0-9._%+\-@]/g, '').toLowerCase()" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 rounded-none">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1 text-zinc-900 dark:text-zinc-100">{{ $isEn ? 'Impacted Records (Thousand Sep.)' : 'Estimasi Data Terdampak (Pemisah Ribuan)' }}</label>
+                            <input type="text" x-model="slaEstUsersDisplay" @input="let d = String(slaEstUsersDisplay || '').replace(/\D/g, ''); slaEstUsersDisplay = d ? d.replace(/\B(?=(\d{3})+(?!\d))/g, '{{ $isEn ? ',' : '.' }}') : '';" inputmode="numeric" placeholder="{{ $isEn ? '2,500' : '2.500' }}" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 tabular-nums rounded-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold mb-1 text-zinc-900 dark:text-zinc-100">{{ $isEn ? 'WhatsApp Contact (Country Zone + Auto Strip 0) *' : 'Kontak WhatsApp (Zona Negara + Hapus 0 Otomatis) *' }}</label>
+                        <div class="flex gap-1.5">
+                            <select x-model="slaDial" class="w-32 px-2 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 rounded-none">
+                                @foreach(($countryZones ?? []) as $cz)
+                                    <option value="{{ $cz['dial_code'] ?? '+62' }}">{{ $cz['flag'] ?? '🌐' }} {{ $cz['dial_code'] ?? '+62' }}</option>
+                                @endforeach
+                            </select>
+                            <input type="tel" x-model="slaPhone" @input="slaPhone = String(slaPhone || '').replace(/\D/g, '').replace(/^0+/, '')" inputmode="numeric" placeholder="81234567890" class="flex-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 tabular-nums rounded-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <input type="text" x-model="slaTitle" required minlength="5" placeholder="{{ $isEn ? 'Issue / Request Title *' : 'Judul Bug atau Permintaan Fitur *' }}" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 rounded-none">
+                    </div>
+                    <div>
+                        <textarea x-model="slaDescription" rows="3" required minlength="10" placeholder="{{ $isEn ? 'Describe steps to reproduce or desired new module...' : 'Jelaskan kronologi error atau detail modul tambahan yang diinginkan...' }}" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 rounded-none"></textarea>
+                    </div>
+
+                    <button type="submit" :disabled="isSubmittingSla" class="w-full py-2.5 bg-zinc-950 hover:bg-zinc-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white dark:text-zinc-950 font-black uppercase rounded-none cursor-pointer transition">
+                        {{ $isEn ? 'Run SHA-256 Scope Audit & Submit SLA Ticket ->' : 'Audit Kunci Scope SHA-256 & Kirim Tiket SLA ->' }}
+                    </button>
+
+                    <template x-if="slaResult">
+                        <div class="p-3 bg-zinc-100 dark:bg-zinc-950 border border-emerald-500 text-zinc-950 dark:text-zinc-100 space-y-1">
+                            <div class="font-black text-emerald-900 dark:text-emerald-300" x-text="slaResult.triage_classification"></div>
+                            <div class="text-[11px]" x-text="'Estimated Cost: Rp ' + Number(slaResult.estimated_delta_idr || 0).toLocaleString('{{ $isEn ? 'en-US' : 'id-ID' }}')"></div>
+                        </div>
+                    </template>
+                </form>
+
+                <!-- 2. UU PDP No. 27/2022 Privacy Vault & Multi-Entity Holding Consolidation -->
+                <div class="space-y-6">
+                    <div class="p-6 bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 rounded-none space-y-3 font-mono text-xs">
+                        <span class="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 text-[10px] font-black uppercase">
+                            ZERO_FAILURE_02 // UU PDP NO. 27/2022 PRIVACY VAULT
+                        </span>
+                        <h3 class="text-base font-black font-sans text-zinc-950 dark:text-white">
+                            {{ $isEn ? '1-Click Data Portability & Ledger-Safe Right to Erasure' : '1-Klik Portabilitas Data & Hak Untuk Dilupakan (Aman Buku Besar)' }}
+                        </h3>
+                        <p class="text-[11px] font-sans text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                            {{ $isEn
+                                ? 'Sensitive PII is encrypted via AES-256 with deterministic HMAC-SHA256 blind indexing O(1). Exercising Right-to-Erasure anonymizes personal identifiers ([REDACTED_UU_PDP_<ULID>]) while strictly preserving statutory tax & financial ledger rows.'
+                                : 'PII sensitif dienkripsi AES-256 dengan HMAC-SHA256 Blind Index O(1). Eksekusi Hak Hapus Data menganonimkan identitas pribadi ([REDACTED_UU_PDP_<ULID>]) tanpa merusak integritas jurnal keuangan & pajak.' }}
+                        </p>
+                        <div class="flex flex-wrap gap-2.5 pt-1">
+                            <button type="button" @click="exportPortabilityJson()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black uppercase rounded-none cursor-pointer transition">
+                                📥 {{ $isEn ? 'Export Portability JSON' : 'Unduh Arsip Data Pribadi (JSON)' }}
+                            </button>
+                            <button type="button" @click="erasureModalOpen = true" class="px-4 py-2.5 bg-zinc-100 hover:bg-rose-100 text-rose-950 border border-rose-400 dark:bg-rose-950/70 dark:hover:bg-rose-900 dark:text-rose-200 dark:border-rose-700 font-black uppercase rounded-none cursor-pointer transition">
+                                🛡️ {{ $isEn ? 'Request Ledger-Safe PII Redaction' : 'Redaksi PII (Right to Erasure)' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-6 bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 rounded-none space-y-3 font-mono text-xs">
+                        <span class="px-2 py-0.5 bg-cyan-100 text-cyan-950 border border-cyan-400 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-700 text-[10px] font-black uppercase">
+                            ZERO_FAILURE_06 // MULTI-ENTITY HOLDING CONSOLIDATION
+                        </span>
+                        <h3 class="text-base font-black font-sans text-zinc-950 dark:text-white">
+                            {{ $isEn ? 'Holding -> Subsidiary -> Branch Financial Roll-Up' : 'Konsolidasi Holding -> Anak Usaha -> Cabang' }}
+                        </h3>
+                        @if(!empty($holdingReport))
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <div class="text-[10px] text-zinc-600 dark:text-zinc-400 uppercase">{{ $isEn ? 'Entities' : 'Entitas' }}</div>
+                                    <div class="text-base font-black text-zinc-950 dark:text-white tabular-nums">{{ number_format((int) ($holdingReport['total_entities_in_scope'] ?? 1), 0, $isEn ? '.' : ',', $isEn ? ',' : '.') }}</div>
+                                </div>
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <div class="text-[10px] text-zinc-600 dark:text-zinc-400 uppercase">{{ $isEn ? 'Eliminations' : 'Eliminasi' }}</div>
+                                    <div class="text-base font-black text-amber-900 dark:text-amber-300 tabular-nums">Rp {{ number_format((int) ($holdingReport['inter_company_eliminated_idr'] ?? 0), 0, $isEn ? '.' : ',', $isEn ? ',' : '.') }}</div>
+                                </div>
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <div class="text-[10px] text-zinc-600 dark:text-zinc-400 uppercase">{{ $isEn ? 'Net Consolidated' : 'Konsolidasi Bersih' }}</div>
+                                    <div class="text-base font-black text-emerald-900 dark:text-emerald-300 tabular-nums">Rp {{ number_format((int) ($holdingReport['consolidated_net_idr'] ?? 0), 0, $isEn ? '.' : ',', $isEn ? ',' : '.') }}</div>
+                                </div>
+                            </div>
+                        @else
+                            <p class="text-[11px] font-sans text-zinc-700 dark:text-zinc-300">
+                                {{ $isEn
+                                    ? 'Configure your Agency/Holding Workspace in the Team tab to enable multi-branch ULID hierarchy and inter-company elimination.'
+                                    : 'Aktifkan Workspace Organisasi pada tab Tim untuk mengkonsolidasi hierarki Holding Multi-Cabang & eliminasi transaksi internal.' }}
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            @if(isset($slaTickets) && $slaTickets->isNotEmpty())
+                <div class="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                    <h4 class="font-mono text-xs font-black uppercase text-zinc-950 dark:text-white mb-3">
+                        {{ $isEn ? 'Recent Post-BAST SLA Triage Ledger' : 'Riwayat Triase Tiket Garansi SLA Pasca-BAST' }}
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left font-mono text-xs border border-zinc-200 dark:border-zinc-800">
+                            <thead class="bg-zinc-100 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 text-zinc-950 dark:text-zinc-100">
+                                <tr>
+                                    <th class="px-3 py-2">Title</th>
+                                    <th class="px-3 py-2">SHA-256 Triage</th>
+                                    <th class="px-3 py-2">Warranty Covered</th>
+                                    <th class="px-3 py-2">Delta Estimate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($slaTickets as $tRow)
+                                    <tr class="odd:bg-white dark:odd:bg-zinc-900 even:bg-zinc-50 dark:even:bg-zinc-950/60 border-b border-zinc-200 dark:border-zinc-800">
+                                        <td class="px-3 py-2 font-bold text-zinc-950 dark:text-zinc-100">{{ $tRow->issue_title }}</td>
+                                        <td class="px-3 py-2">
+                                            <span class="px-2 py-0.5 {{ $tRow->is_within_warranty ? 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700' : 'bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-700' }} font-black">
+                                                {{ $tRow->triage_classification }}
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-2">{{ $tRow->is_within_warranty ? 'YES (Rp 0)' : 'PAID DELTA v1.1' }}</td>
+                                        <td class="px-3 py-2 tabular-nums">Rp {{ number_format((int) $tRow->estimated_delta_idr, 0, $isEn ? '.' : ',', $isEn ? ',' : '.') }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Curated Solid Brutalist UU PDP Right-to-Erasure Modal (Zero Native confirm/alert) -->
+            <div x-show="erasureModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+                <div @click.outside="erasureModalOpen = false" class="w-full max-w-md bg-white dark:bg-zinc-900 border-2 border-rose-600 p-6 rounded-none shadow-2xl space-y-4 font-mono text-xs">
+                    <div class="text-rose-900 dark:text-rose-300 font-black uppercase tracking-wider">
+                        {{ $isEn ? 'CONFIRM UU PDP NO. 27/2022 PII REDACTION' : 'KONFIRMASI REDAKSI PII UU PDP NO. 27/2022' }}
+                    </div>
+                    <p class="font-sans text-zinc-800 dark:text-zinc-200 leading-relaxed">
+                        {{ $isEn
+                            ? 'Your personal phone, tax ID, and address fields will be irreversibly anonymized to [REDACTED_UU_PDP_<ULID>], while financial ledger records remain intact for statutory audit.'
+                            : 'Nomor telepon, NPWP, dan alamat pribadi Anda akan dianonimkan secara permanen menjadi [REDACTED_UU_PDP_<ULID>], sementara baris transaksi keuangan tetap utuh sesuai kewajiban hukum akuntansi.' }}
+                    </p>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" @click="erasureModalOpen = false" class="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 font-bold uppercase rounded-none cursor-pointer">
+                            {{ $isEn ? 'Cancel' : 'Batal' }}
+                        </button>
+                        <button type="button" @click="confirmRightToErasure()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-black uppercase rounded-none cursor-pointer">
+                            {{ $isEn ? 'Execute PII Redaction' : 'Eksekusi Redaksi PII' }}
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -333,6 +333,9 @@
             <a href="#sec-v10-dual-zone-aniwall-saas" @click.prevent="scrollTo('sec-v10-dual-zone-aniwall-saas')" :class="activeSection === 'sec-v10-dual-zone-aniwall-saas' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 17. <span x-text="t[lang].nav_v10_dual_zone"></span>
             </a>
+            <a href="#sec-v11-seo-geo-paripurna" @click.prevent="scrollTo('sec-v11-seo-geo-paripurna')" :class="activeSection === 'sec-v11-seo-geo-paripurna' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                18. <span x-text="t[lang].nav_v11_paripurna"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -1741,6 +1744,94 @@
         </div>
     </div>
 
+    <!-- Section 18: Project OS v11.0 Paripurna Edition — Satu Pintu SaaS Gate, 12-Sector SEO/GEO Authority (/llms.txt), 6 Zero-Failure Layers & 20 Locked Pillars -->
+    <div id="sec-v11-seo-geo-paripurna" class="sg-card" x-show="matchesSearch('v11 paripurna satu pintu saas gate seo geo llms.txt llms-full.txt indexnow schema.org uu pdp blind index right to erasure offline pwa indexeddb sla warranty bast holding consolidation rollback pg_dump sandbox webhook 20 pillars 44 tools')">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
+            <div>
+                <span class="sg-badge-confidential">18 // PROJECT OS v11.0 PARIPURNA EDITION — SATU PINTU SAAS GATE + 12-SECTOR SEO/GEO + 6 ZERO-FAILURE LAYERS ({{ $nativeToolsCount ?? 44 }} NATIVE AI TOOLS // 20/20 PILLARS LOCKED)</span>
+                <h2 style="font-size: 20px; font-weight: 800; color: var(--sg-text-title); margin: 8px 0 4px;" x-text="t[lang].sec18_title"></h2>
+                <p style="font-size: 13px; color: var(--sg-text-muted); margin: 0;" x-text="t[lang].sec18_desc"></p>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <a href="{{ url('/llms.txt') }}" target="_blank" style="text-decoration: none; padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; background: #10b981; color: #000000; border: 1px solid #047857; border-radius: 2px;">
+                    🤖 /llms.txt
+                </a>
+                <a href="{{ url('/llms-full.txt') }}" target="_blank" style="text-decoration: none; padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; background: var(--sg-subcard-bg); color: var(--sg-text-title); border: 1px solid var(--sg-border); border-radius: 2px;">
+                    📚 /llms-full.txt
+                </a>
+                <a href="{{ url('/admin/project-os-matrix') }}" style="text-decoration: none; padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; background: var(--sg-subcard-bg); color: var(--sg-text-title); border: 1px solid var(--sg-border); border-radius: 2px;">
+                    🏛️ <span x-show="lang === 'id'">Matriks 20 Pilar v11.0</span><span x-show="lang === 'en'" x-cloak>20-Pillar Matrix v11.0</span>
+                </a>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 14px;">
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #10b981;">
+                    SATU PINTU COMMERCIAL SAAS CONSISTENCY GATE
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: var(--sg-text-title); margin-top: 4px;">
+                    <span x-show="lang === 'id'">Nol Tombol Bypass Gratis ke `/blueprint` atau `/blueprint/studio`</span>
+                    <span x-show="lang === 'en'" x-cloak>Zero Unpaid Bypass Buttons to `/blueprint` or `/blueprint/studio`</span>
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 6px; line-height: 1.55;">
+                    <span x-show="lang === 'id'">Satu Pintu Wizard (`LANGKAH A..F`) kini terikat 100% ke pemilihan 7 Paket SaaS Retail &amp; 3 Kontrak Mitra di bawahnya via `launchSatuPintuCheckout()`, disertai gerbang backend `BlueprintController::create()` yang menolak `?track=retail|mitra` tanpa `tier` resmi.</span>
+                    <span x-show="lang === 'en'" x-cloak>Satu Pintu Wizard (`STEPS A..F`) is strictly bound to the 7 Retail SaaS Tiers &amp; 3 Mitra Contracts via `launchSatuPintuCheckout()`, backed by `BlueprintController::create()` rejecting `?track=retail|mitra` without an explicit `tier`.</span>
+                </div>
+            </div>
+
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #0ea5e9;">
+                    PRIMITIVE_SEO_GEO_AUTHORITY_ENGINE
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: var(--sg-text-title); margin-top: 4px;">
+                    <span x-show="lang === 'id'">12-Sector Multi-Graph `@@graph` + `/llms.txt` + IndexNow + Local `1200x630` OG</span>
+                    <span x-show="lang === 'en'" x-cloak>12-Sector Multi-Graph `@@graph` + `/llms.txt` + IndexNow + Local `1200x630` OG</span>
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 6px; line-height: 1.55;">
+                    <span x-show="lang === 'id'">Menjadikan NeriahPro sumber kutipan Top-3 di Google Rich Results, ChatGPT Search, Claude, Perplexity &amp; Gemini Overviews dengan Answer Capsule 50 kata, tabel komparasi HTML semantik, allowlist AI Search Bot di `robots.txt`, dan kartu OG lokal ber-QR 21×21 tanpa CDN.</span>
+                    <span x-show="lang === 'en'" x-cloak>Positions NeriahPro for Top-3 citations on Google Rich Results, ChatGPT Search, Claude, Perplexity &amp; Gemini Overviews via 50-word Answer Capsules, semantic HTML comparison tables, AI Search Bot `robots.txt` allowlist, and local 21×21 QR OG cards.</span>
+                </div>
+            </div>
+
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #f59e0b;">
+                    6 FINAL ZERO-FAILURE LAYERS &amp; 20 LOCKED PILLARS
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: var(--sg-text-title); margin-top: 4px;">
+                    <span x-show="lang === 'id'">UU PDP Blind Index + Offline PWA + Garansi SLA 90 Hari + Holding Multi-PT</span>
+                    <span x-show="lang === 'en'" x-cloak>UU PDP Blind Index + Offline PWA + 90-Day SLA Triage + Multi-Entity Holding</span>
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 6px; line-height: 1.55;">
+                    <span x-show="lang === 'id'">Enkripsi PII AES-256 + `HMAC-SHA256` Blind Index O(1) &amp; Right-to-Erasure aman jurnal, antrean lokal IndexedDB ULID Outbox, triase AI Bug Garansi Rp 0 vs Addendum `v1.1`, snapshot `pg_dump` pra-migrasi + `./deploy.sh rollback`, Sandbox Webhook Chaos, &amp; konsolidasi Holding.</span>
+                    <span x-show="lang === 'en'" x-cloak>AES-256 PII encryption + O(1) `HMAC-SHA256` Blind Index &amp; ledger-safe Right-to-Erasure, IndexedDB ULID Outbox PWA, AI Free Bugfix vs Paid Delta `v1.1` triage, pre-migration `pg_dump` + `./deploy.sh rollback`, Webhook Chaos Simulator, &amp; Holding consolidation.</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
+            @foreach(($v11ZeroFailureModulesId ?? []) as $idx => $modId)
+                @php
+                    $modEn = ($v11ZeroFailureModulesEn ?? [])[$idx] ?? $modId;
+                @endphp
+                <div class="sg-subcard" style="padding: 10px 12px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800;">
+                        <span style="color: var(--sg-text-title);">0{{ $modId['number'] }} // {{ $modId['code'] }}</span>
+                        <span style="padding: 2px 6px; background: rgba(16, 185, 129, 0.14); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);">{{ $modId['badge'] }}</span>
+                    </div>
+                    <div style="font-size: 12px; font-weight: 800; color: var(--sg-text-title); margin-top: 4px;">
+                        <span x-show="lang === 'id'">{{ $modId['title'] }}</span>
+                        <span x-show="lang === 'en'" x-cloak>{{ $modEn['title'] }}</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--sg-text-body); margin-top: 3px; line-height: 1.45;">
+                        <span x-show="lang === 'id'">{{ $modId['summary'] }}</span>
+                        <span x-show="lang === 'en'" x-cloak>{{ $modEn['summary'] }}</span>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1770,6 +1861,7 @@ function smartGuideApp() {
                 nav_v8_inclusive: '36 UI Visual, Tier-1 RTL & IP Canary (v8.0)',
                 nav_v9_agentshield: 'AgentShield, Co-Design & Audit (v9.0)',
                 nav_v10_dual_zone: 'Dual-Zone UX, Aniwall & 6 Modul SaaS (v10.0)',
+                nav_v11_paripurna: 'SEO/GEO /llms.txt, UU PDP & 20 Pilar (v11.0)',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -1880,7 +1972,9 @@ function smartGuideApp() {
                 sec16_title: 'Project OS v9.0 Ultimate: NeriahPro AgentShield (5-Layer AI Malware Defense), Co-Design Alignment & Dual-Key Scope Lock, dan Cryptographic Audit Explorer (3-Sheet XLSX + 12 Sektor)',
                 sec16_desc: 'Mengunci postur keamanan & kolaborasi enterprise: firewall sanitasi Indirect Prompt Injection (<UNTRUSTED_CLIENT_DOCUMENT_DATA>), pemblokir Slopquatting Allowlist, sandbox .claude/settings.json, Co-Design Sign-Off Room dua arah (Developer <-> Klien), serta rantai audit SHA-256 siap kantor akuntan publik (PSAK 109, ISAK 35, PP 93/2010, RME Kemenkes, SOC2).',
                 sec17_title: 'Project OS v10.0 Ultimate: Dual-Zone Enterprise UI (Zone A Back-Stage + Zone B 6 Public UX Presets), Cryptographic Aniwall, 6 Modul Komersial SaaS & Universal Input Hygiene',
-                sec17_desc: 'Menyatukan 36 UI Operasional Staf bebas jank dengan 6 Preset UX Halaman Publik 60fps (Scrollytelling, Kinetic Aniwall, Spatial Floorplan, Lookbook, Trust Simulator, Gamified Pathway), resi testimoni BAST/Fase-6 terverifikasi, komisi afiliasi 20%/7,5%, hibah NGO 1-klik, pustaka SEO /explore, 40 Native AI Tools, dan standar kebersihan input email/angka/telepon E.164.'
+                sec17_desc: 'Menyatukan 36 UI Operasional Staf bebas jank dengan 6 Preset UX Halaman Publik 60fps (Scrollytelling, Kinetic Aniwall, Spatial Floorplan, Lookbook, Trust Simulator, Gamified Pathway), resi testimoni BAST/Fase-6 terverifikasi, komisi afiliasi 20%/7,5%, hibah NGO 1-klik, pustaka SEO /explore, 40 Native AI Tools, dan standar kebersihan input email/angka/telepon E.164.',
+                sec18_title: 'Project OS v11.0 Paripurna Edition: Gerbang Komersial Satu Pintu SaaS, Otoritas SEO/GEO 12 Sektor (/llms.txt + Multi-Graph Schema.org), 6 Lapisan Zero-Failure & 20 Pilar Paripurna',
+                sec18_desc: 'Mengunci konsistensi komersial Satu Pintu tanpa bypass gratis ke Studio, mendominasi kutipan AI Search & Google Rich Results lintas 12 sektor (/llms.txt, /llms-full.txt, IndexNow, OG Lokal 1200x630), serta menambahkan Brankas Privasi UU PDP Blind Index O(1), Offline Outbox PWA, Triase Garansi Bug SLA 90 Hari Pasca-BAST, Rollback pg_dump Atomik, Simulator Webhook Lokal, Konsolidasi Holding Multi-PT, dan 44 Native AI Tools.'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -1900,6 +1994,7 @@ function smartGuideApp() {
                 nav_v8_inclusive: '36 Visual UI, Tier-1 RTL & IP Canary (v8.0)',
                 nav_v9_agentshield: 'AgentShield, Co-Design & Audit (v9.0)',
                 nav_v10_dual_zone: 'Dual-Zone UX, Aniwall & 6 SaaS Modules (v10.0)',
+                nav_v11_paripurna: 'SEO/GEO /llms.txt, UU PDP & 20 Pillars (v11.0)',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -2010,7 +2105,9 @@ function smartGuideApp() {
                 sec16_title: 'Project OS v9.0 Ultimate: NeriahPro AgentShield (5-Layer AI Malware Defense), Co-Design Alignment & Dual-Key Scope Lock, and Cryptographic Audit Explorer (3-Sheet XLSX + 12 Sectors)',
                 sec16_desc: 'Seals enterprise security & collaboration: Indirect Prompt Injection sanitization firewall (<UNTRUSTED_CLIENT_DOCUMENT_DATA>), Anti-Slopquatting package allowlist, .claude/settings.json sandbox jail, bidirectional Co-Design Sign-Off Room (Developer <-> Client), and CPA-ready SHA-256 chained audit trail (PSAK 109, ISAK 35, PP 93/2010, MoH EMR, SOC2).',
                 sec17_title: 'Project OS v10.0 Ultimate: Dual-Zone Enterprise UI (Zone A Back-Stage + Zone B 6 Public UX Presets), Cryptographic Aniwall, 6 SaaS Growth Modules & Universal Input Hygiene',
-                sec17_desc: 'Unifies 36 zero-jank staff operational UIs with 6 60fps Public Front-Stage UX Presets (Scrollytelling, Kinetic Aniwall, Spatial Floorplan, Lookbook, Trust Simulator, Gamified Pathway), cryptographically verified BAST/Phase-6 testimonial receipts, 20%/7.5% affiliate finder\'s fees, 1-click NGO impact grants, /explore Programmatic SEO, 40 Native AI Tools, and strict email/number/E.164 phone hygiene.'
+                sec17_desc: 'Unifies 36 zero-jank staff operational UIs with 6 60fps Public Front-Stage UX Presets (Scrollytelling, Kinetic Aniwall, Spatial Floorplan, Lookbook, Trust Simulator, Gamified Pathway), cryptographically verified BAST/Phase-6 testimonial receipts, 20%/7.5% affiliate finder\'s fees, 1-click NGO impact grants, /explore Programmatic SEO, 40 Native AI Tools, and strict email/number/E.164 phone hygiene.',
+                sec18_title: 'Project OS v11.0 Paripurna Edition: Unified Satu Pintu SaaS Commercial Gate, 12-Sector SEO/GEO Authority (/llms.txt + Multi-Graph Schema.org), 6 Zero-Failure Layers & 20 Locked Master Pillars',
+                sec18_desc: 'Seals commercial consistency on Satu Pintu with zero unpaid Studio bypasses, dominates Google Rich Results & AI Search citations across all 12 sectors (/llms.txt, /llms-full.txt, IndexNow, local 1200x630 QR OG), and delivers UU PDP AES-256 + O(1) Blind Index Privacy Vault, Offline Outbox PWA, Post-BAST 90-Day SLA Bug vs Paid Delta Triage, Atomic pg_dump Rollback, Webhook Chaos Console, Multi-Entity Holding Consolidation, and 44 Native AI Tools.'
             }
         },
 
@@ -2038,7 +2135,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze', 'sec-v8-inclusive-security', 'sec-v9-agentshield-codesign-audit', 'sec-v10-dual-zone-aniwall-saas'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze', 'sec-v8-inclusive-security', 'sec-v9-agentshield-codesign-audit', 'sec-v10-dual-zone-aniwall-saas', 'sec-v11-seo-geo-paripurna'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\SeoGeo\GeoAuthorityGeneratorService;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -62,6 +63,9 @@ class PosVerifiedTestimonial extends Model
             Cache::forget('project_os:verified_testimonials_aniwall:v10:en');
             Cache::forget('project_os:explore_seo_catalog:v10:id');
             Cache::forget('project_os:explore_seo_catalog:v10:en');
+            if (class_exists(GeoAuthorityGeneratorService::class)) {
+                GeoAuthorityGeneratorService::flushAllSeoGeoCaches();
+            }
         };
 
         static::saved($flush);

@@ -106,8 +106,16 @@
             $schemaList[] = \App\Services\Seo\SchemaOrgService::pricingServices();
             $schemaList[] = \App\Services\Seo\SchemaOrgService::pricingFaq();
         }
+        $geoAuthorityGraphJsonLd = \App\Services\SeoGeo\GeoAuthorityGeneratorService::generateSchemaGraph([
+            'locale' => app()->getLocale() === 'en' ? 'en' : 'id',
+            'sector_code' => 'ALL',
+            'slug' => (string) ($page->slug ?? 'home'),
+            'headline' => $fullTabTitle,
+            'url' => $currentUrl,
+        ]);
     @endphp
     {!! \App\Services\Seo\SchemaOrgService::render($schemaList) !!}
+    <script type="application/ld+json">{!! $geoAuthorityGraphJsonLd !!}</script>
 
     <!-- Local Fonts (Zero External Latency) -->
     <link rel="stylesheet" href="{{ asset('fonts/instrument-sans/instrument-sans.css') }}">

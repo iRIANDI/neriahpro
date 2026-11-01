@@ -10,6 +10,7 @@ use App\Livewire\BlueprintArchitectStudio;
 use App\Models\AuditLog;
 use App\Models\Permission;
 use App\Models\PosProject;
+use App\Models\PosSector;
 use App\Models\User;
 use App\Models\VisionBlueprint;
 use App\Services\Ai\AgenticActionExecutionEngine;
@@ -269,8 +270,8 @@ class ProjectOsV8InclusiveDualPersonaAndVisualUiTest extends TestCase
     public function test_33_native_ai_tools_rbac_isolation_rag_sync_matrix_and_smartguide_v8(): void
     {
         $declarations = GeminiToolRegistry::getDeclarations();
-        $this->assertCount(40, $declarations);
-        $this->assertCount(40, GeminiToolRegistry::getOpenAiTools());
+        $this->assertCount(44, $declarations);
+        $this->assertCount(44, GeminiToolRegistry::getOpenAiTools());
 
         // Ensure zero empty list [] properties that could trigger Gemini HTTP 400
         foreach ($declarations as $decl) {
@@ -287,7 +288,7 @@ class ProjectOsV8InclusiveDualPersonaAndVisualUiTest extends TestCase
         $this->assertTrue($admin->can('verify_canary_ip_watermarks'));
         $this->assertFalse($reviewer->can('verify_canary_ip_watermarks'));
 
-        $sectorId = \App\Models\PosSector::query()->where('code', 'SECTOR_01_COMMERCE_OMNICHANNEL')->value('id');
+        $sectorId = PosSector::query()->where('code', 'SECTOR_01_COMMERCE_OMNICHANNEL')->value('id');
         $posProject = PosProject::query()->create([
             'primary_sector_id' => $sectorId,
             'app_name' => 'RBAC Canary Test App',

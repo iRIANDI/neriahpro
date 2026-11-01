@@ -6,7 +6,11 @@ namespace App\Filament\Pages;
 
 use App\Models\PosAffiliateReferral;
 use App\Models\PosImpactGrantApplication;
+use App\Models\PosPrivacyErasureRequest;
+use App\Models\PosSlaMaintenanceTicket;
 use App\Services\Saas\PosSaasCommercialEngineService;
+use App\Services\SeoGeo\GeoAuthorityGeneratorService;
+use App\Services\Sla\PosSlaAndSandboxEngineService;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
@@ -53,8 +57,57 @@ class SaasSystemHealthPulsePage extends Page
     public function getHeading(): string|Htmlable
     {
         return app()->getLocale() === 'en'
-            ? 'SaaS System Health Pulse, Queue Telemetry & 1-Click Impact Grants (v10.0)'
-            : 'Kesehatan Sistem SaaS, Antrean Queue, Komisi Afiliasi & Hibah Non-Profit 1-Klik (v10.0)';
+            ? 'SaaS System Health Pulse, SEO/GEO IndexNow, SLA Warranty & Impact Grants (v11.0)'
+            : 'Kesehatan Sistem SaaS, Ping SEO/GEO IndexNow, Garansi SLA Pasca-BAST & Hibah Non-Profit 1-Klik (v11.0)';
+    }
+
+    public function triggerIndexNowPing(): void
+    {
+        $user = auth()->user();
+        if (! $user || (! $user->can('manage_seo_geo_authority') && ! $user->hasAnyRole(['super_admin', 'developer']))) {
+            Notification::make()->title('Akses ditolak (RBAC manage_seo_geo_authority).')->danger()->send();
+
+            return;
+        }
+
+        GeoAuthorityGeneratorService::flushAllSeoGeoCaches();
+        $ping = GeoAuthorityGeneratorService::pingIndexNow([
+            url('/explore'),
+            url('/llms.txt'),
+            url('/llms-full.txt'),
+        ]);
+
+        Notification::make()
+            ->title('SEO/GEO Cache Direset & IndexNow Ping Terkirim (HTTP '.($ping['http_status'] ?? 200).')')
+            ->success()
+            ->send();
+    }
+
+    public function runAdminSandboxWebhook(string $scenario): void
+    {
+        if (app()->isProduction()) {
+            Notification::make()->title('Sandbox Webhook Simulator dikunci di server production (HTTP 403).')->danger()->send();
+
+            return;
+        }
+
+        $user = auth()->user();
+        if (! $user || (! $user->can('run_sandbox_webhook_simulator') && ! $user->hasAnyRole(['super_admin', 'developer']))) {
+            Notification::make()->title('Akses ditolak (RBAC run_sandbox_webhook_simulator).')->danger()->send();
+
+            return;
+        }
+
+        $res = app(PosSlaAndSandboxEngineService::class)->simulateSandboxWebhookEvent(
+            $scenario,
+            ['plan_tier' => 'RETAIL_PRO', 'amount_idr' => 399000],
+            $user
+        );
+
+        Notification::make()
+            ->title('Sandbox Webhook ['.$scenario.'] Selesai — Order: '.($res['order_id'] ?? '-'))
+            ->success()
+            ->send();
     }
 
     public function approveImpactGrant(string $applicationId, PosSaasCommercialEngineService $engine): void
@@ -93,10 +146,20 @@ class SaasSystemHealthPulsePage extends Page
             ? PosAffiliateReferral::query()->orderByDesc('id')->limit(20)->get()
             : collect();
 
+        $recentSlaTickets = Schema::hasTable('pos_sla_maintenance_tickets')
+            ? PosSlaMaintenanceTicket::query()->orderByDesc('id')->limit(15)->get()
+            : collect();
+
+        $recentPrivacyRequests = Schema::hasTable('pos_privacy_erasure_requests')
+            ? PosPrivacyErasureRequest::query()->orderByDesc('id')->limit(10)->get()
+            : collect();
+
         return [
             'pulse' => $pulse,
             'pendingGrants' => $pendingGrants,
             'recentReferrals' => $recentReferrals,
+            'recentSlaTickets' => $recentSlaTickets,
+            'recentPrivacyRequests' => $recentPrivacyRequests,
             'locale' => app()->getLocale() === 'en' ? 'en' : 'id',
         ];
     }

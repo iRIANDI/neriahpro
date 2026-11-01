@@ -179,8 +179,6 @@ class PosDualZoneFrontendAndSaasCatalog
         foreach ($presets as &$item) {
             $item['localized_name'] = $item['name'][$loc] ?? $item['name']['id'];
             $item['localized_summary'] = $item['summary'][$loc] ?? $item['summary']['id'];
-            $item['animation_engine'] = $item['local_tech_stack'];
-            $item['complexity_hours'] = $item['extra_man_hours'];
         }
         unset($item);
 

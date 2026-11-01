@@ -1,11 +1,75 @@
 User-agent: *
+Allow: /explore/
+Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /admin/
 Disallow: /admin/
+Disallow: /customer/
 Disallow: /cart
 Disallow: /invite/
 Disallow: /api/
 Disallow: /cv-pro
 Disallow: /cv/
 Disallow: /pricing
+
+User-agent: OAI-SearchBot
+Allow: /
+Allow: /explore/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin/
+Disallow: /admin/
+Disallow: /customer/
+Disallow: /api/
+
+User-agent: GPTBot
+Allow: /
+Allow: /explore/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin/
+Disallow: /admin/
+Disallow: /customer/
+Disallow: /api/
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /explore/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin/
+Disallow: /admin/
+Disallow: /customer/
+Disallow: /api/
+
+User-agent: Claude-Web
+Allow: /
+Allow: /explore/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin/
+Disallow: /admin/
+Disallow: /customer/
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /explore/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin/
+Disallow: /admin/
+Disallow: /customer/
+Disallow: /api/
+
+User-agent: Google-Extended
+Allow: /
+Allow: /explore/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin/
+Disallow: /admin/
+Disallow: /customer/
+Disallow: /api/
 
 Sitemap: https://neriahpro.com/sitemap.xml

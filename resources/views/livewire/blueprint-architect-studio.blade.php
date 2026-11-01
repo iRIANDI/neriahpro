@@ -45,7 +45,7 @@
     <header class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 z-30">
         <div class="flex flex-wrap items-center gap-2">
             <a href="/blueprint?tier=retail_spark&amp;new=1" class="px-2 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[11px] font-black uppercase tracking-wider rounded-none hover:opacity-90 transition">
-                [NeriahPro OS v9.0 • 100% FREEZE]
+                [NeriahPro OS v11.0 • 20-PILLAR PARIPURNA]
             </a>
             <div class="flex items-center gap-1.5 font-mono text-xs">
                 <input
@@ -385,6 +385,7 @@
                     'inclusive_security_v8' => '9. 🛡️ CVE, White-Label & IP',
                     'codesign_room' => '10. 🤝 Co-Design & Sign-Off',
                     'agentshield_tasks' => '11. 🧱 AgentShield & 5-Sprint',
+                    'seo_geo_v11' => '12. 🌐 SEO/GEO, UU PDP & Sandbox',
                 ] as $tabKey => $tabLabel)
                     <button
                         type="button"
@@ -1712,6 +1713,120 @@
                         </div>
                     </div>
                 @endif
+
+                <!-- =============================================================== -->
+                <!-- TAB 12: v11.0 SEO/GEO AUTHORITY, 6 ZERO-FAILURE & 20 PILLARS    -->
+                <!-- =============================================================== -->
+                @if($centerTab === 'seo_geo_v11')
+                    <div class="space-y-3 font-mono text-[10px]">
+                        <!-- 1. Active Sector SEO (Schema.org @@graph) & GEO Answer Capsule -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border-2 border-emerald-600 dark:border-emerald-500 rounded-none space-y-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="font-black uppercase text-emerald-950 dark:text-emerald-300 text-xs">
+                                    🌐 PRIMITIVE_SEO_GEO_AUTHORITY_ENGINE ({{ $sectorCode }})
+                                </span>
+                                <div class="flex flex-wrap gap-1">
+                                    <button type="button" wire:click="$set('rightDockMode', 'seo_geo_md')" class="px-2 py-0.5 bg-zinc-950 text-emerald-400 font-black rounded-none cursor-pointer">
+                                        SEO_GEO_V11.md &rarr;
+                                    </button>
+                                    <a href="/llms.txt" target="_blank" class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black rounded-none">
+                                        /llms.txt &nearr;
+                                    </a>
+                                    <a href="/llms-full.txt" target="_blank" class="px-2 py-0.5 bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-black rounded-none">
+                                        /llms-full.txt &nearr;
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-1.5">
+                                <div class="font-black text-zinc-950 dark:text-zinc-100">
+                                    Answer-First GEO Capsule (50-Word Citation Magnet):
+                                </div>
+                                <p class="font-sans text-[11px] text-zinc-800 dark:text-zinc-200 leading-relaxed">
+                                    {{ $seoGeoContract['answer_capsule_tldr_50w'] ?? '' }}
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap gap-1">
+                                @foreach(($seoGeoContract['schema_org_graph_types'] ?? []) as $sType)
+                                    <span class="px-1.5 py-0.5 bg-zinc-950 text-emerald-300 font-black rounded-none">@@type: {{ $sType }}</span>
+                                @endforeach
+                                @foreach(($seoGeoContract['statutory_standards'] ?? []) as $stdItem)
+                                    <span class="px-1.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-700 font-black rounded-none">{{ $stdItem }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- 2. Non-Production Local Webhook & Gateway Chaos Simulator Console -->
+                        @if(!app()->isProduction())
+                            <div class="p-3 bg-white dark:bg-zinc-900 border-2 border-amber-500 rounded-none space-y-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="font-black uppercase text-amber-950 dark:text-amber-300">
+                                        ⚡ LOCAL WEBHOOK &amp; PAYMENT IDEMPOTENCY SIMULATOR (NON-PROD ONLY)
+                                    </span>
+                                    <span class="px-1.5 py-0.5 bg-zinc-950 text-amber-300 font-black">ENV: {{ strtoupper(app()->environment()) }}</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                                    <button type="button" wire:click="runStudioSandboxWebhook('qris_payment_success')" class="p-2 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black uppercase rounded-none cursor-pointer transition">
+                                        ⚡ Simulate QRIS Success
+                                    </button>
+                                    <button type="button" wire:click="runStudioSandboxWebhook('payment_expired')" class="p-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-950 dark:text-zinc-100 font-black uppercase rounded-none cursor-pointer transition">
+                                        ⏱️ Simulate Expired Payment
+                                    </button>
+                                    <button type="button" wire:click="runStudioSandboxWebhook('duplicate_webhook_attack')" class="p-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black uppercase rounded-none cursor-pointer transition">
+                                        🔄 Duplicate Webhook Attack
+                                    </button>
+                                </div>
+                                @if(!empty($sandboxSimResult))
+                                    <div class="p-2 bg-zinc-950 text-emerald-300 border border-zinc-800 space-y-0.5">
+                                        <div class="font-black">Scenario: {{ $sandboxSimResult['scenario'] ?? '-' }} | Order: {{ $sandboxSimResult['order_id'] ?? '-' }}</div>
+                                        <div class="text-zinc-300">Idempotent Duplicate Blocked: {{ !empty($sandboxSimResult['idempotent_duplicate_blocked']) ? 'YES (ZERO DOUBLE CREDIT ✅)' : 'N/A (Single Event)' }}</div>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        <!-- 3. 6 Final Enterprise & Statutory Zero-Failure Production Features -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
+                            <div class="font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                🛡️ 6 FINAL ZERO-FAILURE STATUTORY &amp; PRODUCTION MODULES (v11.0)
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                @foreach(($sixZeroFailureModules ?? []) as $zfMod)
+                                    <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-1">
+                                        <div class="flex items-center justify-between gap-1">
+                                            <span class="font-black text-emerald-900 dark:text-emerald-300">#{{ $zfMod['number'] ?? '' }} {{ $zfMod['badge'] ?? '' }}</span>
+                                            <code class="text-[9px] text-zinc-700 dark:text-zinc-400">{{ $zfMod['code'] ?? '' }}</code>
+                                        </div>
+                                        <div class="font-sans text-[11px] font-black text-zinc-950 dark:text-zinc-100">{{ $zfMod['title'] ?? '' }}</div>
+                                        <div class="font-sans text-[10px] text-zinc-700 dark:text-zinc-300 leading-snug">{{ $zfMod['summary'] ?? '' }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- 4. Master 20-Pillar Paripurna Verification Matrix (20/20 — 100% LOCKED) -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                    🏛️ MASTER 20-PILLAR PARIPURNA MATRIX ({{ count($twentyPillars ?? []) }}/20 LOCKED)
+                                </span>
+                                <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black">
+                                    100% ZERO-SLOP
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                @foreach(($twentyPillars ?? []) as $pRow)
+                                    <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-start justify-between gap-2">
+                                        <div>
+                                            <div class="font-black text-emerald-900 dark:text-emerald-300">{{ $pRow['pillar'] ?? '' }} • {{ $pRow['dimension'] ?? '' }}</div>
+                                            <div class="font-sans text-[11px] text-zinc-950 dark:text-zinc-100 font-bold leading-snug">{{ $pRow['title'] ?? '' }}</div>
+                                        </div>
+                                        <span class="shrink-0 px-1.5 py-0.5 bg-zinc-950 text-emerald-300 font-black text-[9px]">{{ $pRow['status'] ?? '100% LOCKED' }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </section>
 
@@ -1745,6 +1860,7 @@
                         'env_blueprint' => '.env.blueprint',
                         'claude_settings_json' => '.claude/settings.json',
                         'dependency_manifest' => 'APPROVED_DEPS.json',
+                        'seo_geo_md' => 'SEO_GEO_V11.md',
                     ] as $mKey => $mLabel)
                         <button
                             type="button"

@@ -3,6 +3,10 @@
 namespace App\Services;
 
 use App\Models\VisionBlueprint;
+use App\Support\PosDualZoneFrontendAndSaasCatalog;
+use App\Support\PosEnterpriseGuaranteeCatalog;
+use App\Support\PosLifecycleAndStudioCatalog;
+use App\Support\PosRealWorldRuntimeCatalog;
 use Illuminate\Support\Str;
 use ZipArchive;
 
@@ -16,15 +20,15 @@ class ScaffoldGeneratorService
         $projectName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'MyApplication');
         $slug = $blueprint->slug ?: Str::slug($projectName);
         $prd = $blueprint->prd_content ?? [];
-        $erdTables = $prd['erd_schema']['tables'] 
+        $erdTables = $prd['erd_schema']['tables']
             ?? ($prd['engineering_specs']['database_erd']['entities'] ?? []);
         if (empty($erdTables)) {
             $prd = PrdGeneratorService::generate($blueprint);
-            $erdTables = $prd['erd_schema']['tables'] 
+            $erdTables = $prd['erd_schema']['tables']
                 ?? ($prd['engineering_specs']['database_erd']['entities'] ?? []);
         }
 
-        $mvpEngineeringSpecs = $prd['engineering_specs']['mvp_specs'] 
+        $mvpEngineeringSpecs = $prd['engineering_specs']['mvp_specs']
             ?? ($prd['features']['mvp_phase1'] ?? []);
 
         $universalSchema = $prd['universal_blueprint_schema']
@@ -33,23 +37,23 @@ class ScaffoldGeneratorService
         $discoveryData = is_array($blueprint->discovery_data) ? $blueprint->discovery_data : (json_decode($blueprint->discovery_data ?? '[]', true) ?: []);
         $domainDetected = $discoveryData['meta']['detected_domain'] ?? '';
         $corpusText = strtolower(
-            ($blueprint->nama_bisnis ?? '') . ' ' . 
-            ($blueprint->tipe_aplikasi ?? '') . ' ' . 
-            ($blueprint->deskripsi_ide ?? '') . ' ' . 
-            ($blueprint->masalah_solusi ?? '') . ' ' . 
-            ($blueprint->masalah_utama ?? '') . ' ' . 
+            ($blueprint->nama_bisnis ?? '').' '.
+            ($blueprint->tipe_aplikasi ?? '').' '.
+            ($blueprint->deskripsi_ide ?? '').' '.
+            ($blueprint->masalah_solusi ?? '').' '.
+            ($blueprint->masalah_utama ?? '').' '.
             ($blueprint->solusi_diinginkan ?? '')
         );
 
-        $isGame3D = $domainDetected === 'game_3d_simulation' 
-            || str_contains($corpusText, 'pesawat') 
-            || str_contains($corpusText, 'game') 
-            || str_contains($corpusText, 'three.js') 
+        $isGame3D = $domainDetected === 'game_3d_simulation'
+            || str_contains($corpusText, 'pesawat')
+            || str_contains($corpusText, 'game')
+            || str_contains($corpusText, 'three.js')
             || str_contains($corpusText, 'simulator');
 
-        $isApiGateway = $domainDetected === 'api_gateway_messaging' 
-            || str_contains($corpusText, 'openwa') 
-            || str_contains($corpusText, 'baileys') 
+        $isApiGateway = $domainDetected === 'api_gateway_messaging'
+            || str_contains($corpusText, 'openwa')
+            || str_contains($corpusText, 'baileys')
             || (str_contains($corpusText, 'whatsapp') && (str_contains($corpusText, 'gateway') || str_contains($corpusText, 'api')));
 
         $isDecoupledRequested = $domainDetected === 'decoupled_saas'
@@ -99,8 +103,8 @@ class ScaffoldGeneratorService
                 $universalSchema['symbol_manifest'] ?? TopologicalPromptChunker::generateSymbolManifest($universalSchema),
                 JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
             ),
-            '.agents/ENTERPRISE_MENU_MATRIX.md' => \App\Support\PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown(
-                $universalSchema['enterprise_menu_matrix'] ?? \App\Support\PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector(
+            '.agents/ENTERPRISE_MENU_MATRIX.md' => PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown(
+                $universalSchema['enterprise_menu_matrix'] ?? PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector(
                     (string) ($universalSchema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
                 )
             ),
@@ -116,14 +120,17 @@ class ScaffoldGeneratorService
             '.agents/PRINT_THERMAL_AND_A4_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderPrintSpecMarkdown($universalSchema),
             '.agents/DAY2_OPERATIONS_AND_SECURITY.md' => ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($universalSchema),
             '.agents/DECISION_TABLES_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($universalSchema),
-            '.agents/SYNTAX_LOCK_2026.md' => \App\Support\PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($universalSchema),
-            '.agents/DUAL_ZONE_PUBLIC_UX_AND_INPUT_HYGIENE.md' => \App\Support\PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($universalSchema),
-            '.agents/TROUBLESHOOTING_INSTINCTS.md' => \App\Support\PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($universalSchema),
-            '.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md' => \App\Support\PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($universalSchema, 'id'),
-            '.agents/CLIENT_SOP_AND_TRAINING_MANUAL.en.md' => \App\Support\PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($universalSchema, 'en'),
-            'database/sql/pg16_range_partitioning.sql' => \App\Support\PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($universalSchema['data_dictionary'] ?? [], $projectName),
-            'resources/js/peripherals/barcode-wedge-and-dual-screen.js' => \App\Support\PosRealWorldRuntimeCatalog::renderHardwareBridgeJs($universalSchema),
-            'app/Filament/Pages/SmartGuide.php' => \App\Support\PosRealWorldRuntimeCatalog::renderClientSmartGuidePhp($universalSchema),
+            '.agents/SYNTAX_LOCK_2026.md' => PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($universalSchema),
+            '.agents/DUAL_ZONE_PUBLIC_UX_AND_INPUT_HYGIENE.md' => PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($universalSchema),
+            '.agents/SEO_GEO_UU_PDP_AND_OFFLINE_OUTBOX.md' => self::generateSeoGeoAndZeroFailureContractMarkdown($universalSchema, $projectName),
+            'app/Models/Concerns/HasEncryptedPiiWithBlindIndex.php' => self::generateEncryptedPiiBlindIndexTraitFile(),
+            'public/sw-offline-outbox.js' => self::generateOfflineOutboxServiceWorkerJs($slug),
+            '.agents/TROUBLESHOOTING_INSTINCTS.md' => PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($universalSchema),
+            '.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md' => PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($universalSchema, 'id'),
+            '.agents/CLIENT_SOP_AND_TRAINING_MANUAL.en.md' => PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($universalSchema, 'en'),
+            'database/sql/pg16_range_partitioning.sql' => PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($universalSchema['data_dictionary'] ?? [], $projectName),
+            'resources/js/peripherals/barcode-wedge-and-dual-screen.js' => PosRealWorldRuntimeCatalog::renderHardwareBridgeJs($universalSchema),
+            'app/Filament/Pages/SmartGuide.php' => PosRealWorldRuntimeCatalog::renderClientSmartGuidePhp($universalSchema),
             '.agents/rules/translatable-tabs-standard.md' => self::generateTranslatableTabsRule(),
             '.agents/rules/ecc-multi-agent-standard.md' => self::generateEccStandardRule(),
             '.agents/rules/living-docs-governance.md' => self::generateLivingDocsRule(),
@@ -167,7 +174,7 @@ class ScaffoldGeneratorService
             // Pillar 10: Interactive API Sandbox & Developer Portal
             'resources/views/api-docs.blade.php' => self::generateApiDocsBlade($blueprint),
             'resources/views/welcome.blade.php' => self::generateWelcomeBlade($blueprint, $erdTables, $mvpEngineeringSpecs),
-            'prd.md' => \App\Services\PrdGeneratorService::toMarkdown($blueprint, $prd),
+            'prd.md' => PrdGeneratorService::toMarkdown($blueprint, $prd),
         ];
 
         // Anti-Attention-Drift PRD Slices & Git Hook
@@ -189,8 +196,8 @@ class ScaffoldGeneratorService
         $subChunkedPrompts = $universalSchema['sub_chunked_prompts']
             ?? TopologicalPromptChunker::compileSubChunkedPrompts($universalSchema);
         foreach ($subChunkedPrompts as $spItem) {
-            $spFilename = $spItem['filename'] ?? ('part-' . ($spItem['part_code'] ?? '1.0') . '.md');
-            $files['.agents/prompts/subparts/' . $spFilename] = (string) ($spItem['prompt'] ?? '');
+            $spFilename = $spItem['filename'] ?? ('part-'.($spItem['part_code'] ?? '1.0').'.md');
+            $files['.agents/prompts/subparts/'.$spFilename] = (string) ($spItem['prompt'] ?? '');
         }
 
         // Celah 4: Individual Eloquent Migrations & Models (Strict ULID Standard)
@@ -213,7 +220,7 @@ class ScaffoldGeneratorService
 
         // Killer #1: Phased Prompt Sequencer (.agents/prompts/01-foundation.md .. 06-deployment.md)
         foreach (($universalSchema['phased_prompt_sequencer'] ?? []) as $phaseItem) {
-            $fname = $phaseItem['filename'] ?? ('0' . ($phaseItem['phase'] ?? 1) . '-phase.md');
+            $fname = $phaseItem['filename'] ?? ('0'.($phaseItem['phase'] ?? 1).'-phase.md');
             $files[".agents/prompts/{$fname}"] = (string) ($phaseItem['prompt'] ?? '');
         }
 
@@ -235,7 +242,7 @@ class ScaffoldGeneratorService
 
         // Apply any user-elaborated / customized scaffold files (persisted in user_metadata)
         $customizations = $blueprint->user_metadata['scaffold_customizations'] ?? [];
-        if (!empty($customizations) && is_array($customizations)) {
+        if (! empty($customizations) && is_array($customizations)) {
             foreach ($customizations as $file => $customContent) {
                 if (is_string($customContent) && isset($files[$file])) {
                     $files[$file] = $customContent;
@@ -520,7 +527,7 @@ NGINX;
             }
         }
 
-        if (!$hasUsers) {
+        if (! $hasUsers) {
             $sql .= "-- System Users Core Table\n";
             $sql .= "CREATE TABLE IF NOT EXISTS users (\n";
             $sql .= "    id VARCHAR(26) PRIMARY KEY,\n";
@@ -543,9 +550,9 @@ NGINX;
 
             $sql .= "-- Entity: {$tableName} ({$description})\n";
             $sql .= "CREATE TABLE IF NOT EXISTS {$tableName} (\n";
-            
+
             $columnLines = [];
-            $columnLines[] = "    id VARCHAR(26) PRIMARY KEY";
+            $columnLines[] = '    id VARCHAR(26) PRIMARY KEY';
 
             $columns = $table['columns'] ?? [];
             if (empty($columns)) {
@@ -558,7 +565,9 @@ NGINX;
 
             foreach ($columns as $col) {
                 $colName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? ''));
-                if ($colName === 'id' || empty($colName)) continue;
+                if ($colName === 'id' || empty($colName)) {
+                    continue;
+                }
 
                 $rawType = strtolower($col['type'] ?? 'string');
                 $sqlType = 'VARCHAR(255)';
@@ -582,10 +591,10 @@ NGINX;
                 $columnLines[] = "    {$colName} {$sqlType}";
             }
 
-            $columnLines[] = "    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP";
-            $columnLines[] = "    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP";
+            $columnLines[] = '    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP';
+            $columnLines[] = '    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP';
 
-            $sql .= implode(",\n", $columnLines) . "\n);\n";
+            $sql .= implode(",\n", $columnLines)."\n);\n";
 
             // Generate Indexes for foreign keys and status columns
             foreach ($columns as $col) {
@@ -655,8 +664,10 @@ NGINX;
 
         foreach ($erdTables as $table) {
             $tableName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $table['name'] ?? ''));
-            if ($tableName === 'users' || $tableName === 'security_threat_logs' || empty($tableName)) continue;
-            $controllerName = Str::studly(Str::singular($tableName)) . 'Controller';
+            if ($tableName === 'users' || $tableName === 'security_threat_logs' || empty($tableName)) {
+                continue;
+            }
+            $controllerName = Str::studly(Str::singular($tableName)).'Controller';
             $code .= "    // Domain CRUD: {$table['name']}\n";
             $code .= "    Route::resource('{$tableName}', \\App\\Http\\Controllers\\{$controllerName}::class);\n";
         }
@@ -685,8 +696,10 @@ NGINX;
 
         foreach ($erdTables as $table) {
             $tableName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $table['name'] ?? ''));
-            if ($tableName === 'users' || $tableName === 'security_threat_logs' || empty($tableName)) continue;
-            $controllerName = Str::studly(Str::singular($tableName)) . 'ApiController';
+            if ($tableName === 'users' || $tableName === 'security_threat_logs' || empty($tableName)) {
+                continue;
+            }
+            $controllerName = Str::studly(Str::singular($tableName)).'ApiController';
             $code .= "    // API Endpoints for {$tableName}\n";
             $code .= "    Route::apiResource('{$tableName}', \\App\\Http\\Controllers\\Api\\{$controllerName}::class);\n";
         }
@@ -704,7 +717,7 @@ NGINX;
         $domainName = 'items';
         foreach ($erdTables as $t) {
             $tname = strtolower($t['name'] ?? '');
-            if ($tname !== 'users' && $tname !== 'security_threat_logs' && !empty($tname)) {
+            if ($tname !== 'users' && $tname !== 'security_threat_logs' && ! empty($tname)) {
                 $domainName = $tname;
                 break;
             }
@@ -830,14 +843,14 @@ MARKDOWN;
     {
         $files = self::generateFiles($blueprint);
         $tempDir = storage_path('app/temp_scaffolds');
-        if (!is_dir($tempDir)) {
+        if (! is_dir($tempDir)) {
             mkdir($tempDir, 0777, true);
         }
 
         $slug = $blueprint->slug ?: 'project';
-        $zipPath = $tempDir . '/' . $slug . '-starter-kit.zip';
+        $zipPath = $tempDir.'/'.$slug.'-starter-kit.zip';
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
             foreach ($files as $relativePath => $content) {
                 $zip->addFromString($relativePath, $content);
@@ -881,7 +894,7 @@ MARKDOWN;
             ],
         ];
 
-        $tablesToProcess = !empty($erdTables) ? $erdTables : [
+        $tablesToProcess = ! empty($erdTables) ? $erdTables : [
             [
                 'name' => 'records',
                 'columns' => [
@@ -889,8 +902,8 @@ MARKDOWN;
                     ['name' => 'title', 'type' => 'string'],
                     ['name' => 'status', 'type' => 'string'],
                     ['name' => 'created_at', 'type' => 'timestamp'],
-                ]
-            ]
+                ],
+            ],
         ];
 
         foreach ($tablesToProcess as $table) {
@@ -925,11 +938,15 @@ MARKDOWN;
                 }
 
                 $prop = ['type' => $type, 'example' => $example];
-                if ($format) $prop['format'] = $format;
-                if (!empty($col['notes'])) $prop['description'] = $col['notes'];
+                if ($format) {
+                    $prop['format'] = $format;
+                }
+                if (! empty($col['notes'])) {
+                    $prop['description'] = $col['notes'];
+                }
 
                 $schemaProps[$cname] = $prop;
-                if (empty($col['nullable']) && $cname !== 'id' && !in_array($cname, ['created_at', 'updated_at', 'deleted_at'])) {
+                if (empty($col['nullable']) && $cname !== 'id' && ! in_array($cname, ['created_at', 'updated_at', 'deleted_at'])) {
                     $requiredProps[] = $cname;
                 }
             }
@@ -1004,7 +1021,7 @@ MARKDOWN;
                             'application/json' => [
                                 'schema' => [
                                     'type' => 'object',
-                                    'properties' => array_filter($schemaProps, fn($k) => !in_array($k, ['id', 'created_at', 'updated_at', 'deleted_at']), ARRAY_FILTER_USE_KEY),
+                                    'properties' => array_filter($schemaProps, fn ($k) => ! in_array($k, ['id', 'created_at', 'updated_at', 'deleted_at']), ARRAY_FILTER_USE_KEY),
                                     'required' => $requiredProps,
                                 ],
                             ],
@@ -1083,7 +1100,7 @@ MARKDOWN;
                             'application/json' => [
                                 'schema' => [
                                     'type' => 'object',
-                                    'properties' => array_filter($schemaProps, fn($k) => !in_array($k, ['id', 'created_at', 'updated_at', 'deleted_at']), ARRAY_FILTER_USE_KEY),
+                                    'properties' => array_filter($schemaProps, fn ($k) => ! in_array($k, ['id', 'created_at', 'updated_at', 'deleted_at']), ARRAY_FILTER_USE_KEY),
                                 ],
                             ],
                         ],
@@ -1227,7 +1244,7 @@ MARKDOWN;
             'openapi' => '3.0.3',
             'info' => [
                 'title' => "{$projectName} API Specification",
-                'description' => "Spesifikasi REST API OpenAPI 3.0 otomatis di-generate oleh Neriah Pro Project OS. Mengimplementasikan standar Bulletproof Scalability O(1) Keyset Cursor Pagination, Strict PostgreSQL ULID, Idempotency Guard, dan Anti-RCE Payload Shield.",
+                'description' => 'Spesifikasi REST API OpenAPI 3.0 otomatis di-generate oleh Neriah Pro Project OS. Mengimplementasikan standar Bulletproof Scalability O(1) Keyset Cursor Pagination, Strict PostgreSQL ULID, Idempotency Guard, dan Anti-RCE Payload Shield.',
                 'version' => '1.0.0',
                 'contact' => [
                     'name' => 'Neriah Pro Engineering Team',
@@ -1391,8 +1408,8 @@ MARKDOWN;
     public static function generateWireframeBlueprints(VisionBlueprint $blueprint, array $erdTables): string
     {
         $projectName = $blueprint->nama_bisnis ?: 'Application';
-        $entityNames = array_map(fn($t) => $t['name'] ?? ($t['table_name'] ?? 'Resource'), array_slice($erdTables, 0, 4));
-        $primaryEntity = !empty($entityNames) ? $entityNames[0] : 'Item';
+        $entityNames = array_map(fn ($t) => $t['name'] ?? ($t['table_name'] ?? 'Resource'), array_slice($erdTables, 0, 4));
+        $primaryEntity = ! empty($entityNames) ? $entityNames[0] : 'Item';
 
         return <<<MARKDOWN
 # UI/UX SCREEN WIREFRAME BLUEPRINTS & COMPONENT SPECIFICATION
@@ -1536,12 +1553,14 @@ MARKDOWN;
         $tablesToSeed = [];
         foreach ($erdTables as $table) {
             $tname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $table['name'] ?? ''));
-            if ($tname === 'users' || $tname === 'security_threat_logs' || empty($tname)) continue;
+            if ($tname === 'users' || $tname === 'security_threat_logs' || empty($tname)) {
+                continue;
+            }
             $tablesToSeed[] = $table;
         }
 
         $seederBlocks = [];
-        if (!empty($tablesToSeed)) {
+        if (! empty($tablesToSeed)) {
             foreach ($tablesToSeed as $tbl) {
                 $tname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $tbl['name'] ?? 'records'));
                 $tableLabel = Str::headline($tname);
@@ -1559,7 +1578,9 @@ MARKDOWN;
 
                 foreach ($columns as $c) {
                     $cname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $c['name'] ?? ''));
-                    if ($cname === 'id' || empty($cname) || in_array($cname, ['created_at', 'updated_at', 'deleted_at'])) continue;
+                    if ($cname === 'id' || empty($cname) || in_array($cname, ['created_at', 'updated_at', 'deleted_at'])) {
+                        continue;
+                    }
 
                     if ($cname === 'user_id' || str_ends_with($cname, '_user_id')) {
                         $colAssignments[] = "                    '{$cname}' => (\$i % 2 === 0 ? \$adminId : \$operatorId),";
@@ -1584,7 +1605,7 @@ MARKDOWN;
                     } elseif (in_array($cname, ['email', 'email_address'])) {
                         $colAssignments[] = "                    '{$cname}' => 'member' . \$padded . '@{$slug}.local',";
                     } elseif (in_array($cname, ['code', 'kode', 'sku', 'nisn', 'nim', 'invoice_number', 'reference'])) {
-                        $colAssignments[] = "                    '{$cname}' => '" . strtoupper(substr($tname, 0, 3)) . "-' . date('Y') . '-' . \$padded,";
+                        $colAssignments[] = "                    '{$cname}' => '".strtoupper(substr($tname, 0, 3))."-' . date('Y') . '-' . \$padded,";
                     } elseif (str_contains(strtolower($c['type'] ?? ''), 'json')) {
                         $colAssignments[] = "                    '{$cname}' => json_encode(['batch' => 'synthetic_v1', 'sequence' => \$i, 'system' => 'Project OS']),";
                     } elseif (str_contains(strtolower($c['type'] ?? ''), 'int')) {
@@ -1774,7 +1795,7 @@ PHP;
         $primaryEntity = 'records';
         foreach ($erdTables as $t) {
             $tname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $t['name'] ?? ''));
-            if ($tname !== 'users' && $tname !== 'security_threat_logs' && !empty($tname)) {
+            if ($tname !== 'users' && $tname !== 'security_threat_logs' && ! empty($tname)) {
                 $primaryEntity = $tname;
                 break;
             }
@@ -2061,9 +2082,17 @@ case "\${SCENARIO}" in
     echo ">>> Deployment Scenario 1 Complete! System Live."
     ;;
   2)
-    echo ">>> Scenario 2: Migrasi Aman (Menambah Kolom / Tabel Baru Tanpa Menghapus Data)..."
+    echo ">>> Scenario 2: Migrasi Aman + Pre-Migration Atomic pg_dump Snapshot Guard..."
     git pull origin main
     composer install --no-dev --optimize-autoloader
+    mkdir -p storage/backups
+    SNAP_TS=\$(date +%Y%m%d_%H%M%S)
+    SNAP_FILE="storage/backups/pre_migrate_\${SNAP_TS}.sql.gz"
+    if command -v pg_dump &> /dev/null && [ -n "\${DB_DATABASE:-}" ]; then
+      PGPASSWORD="\${DB_PASSWORD:-}" pg_dump -h "\${DB_HOST:-127.0.0.1}" -U "\${DB_USERNAME:-postgres}" "\${DB_DATABASE}" | gzip > "\${SNAP_FILE}" || true
+      find storage/backups -name "pre_migrate_*.sql.gz" -mtime +7 -delete || true
+      echo ">>> [SNAPSHOT GUARD] Captured pre-migration snapshot: \${SNAP_FILE}"
+    fi
     php artisan migrate --force
     php artisan optimize:clear
     php artisan config:cache
@@ -2123,14 +2152,32 @@ case "\${SCENARIO}" in
     chmod -R 777 storage bootstrap/cache
     echo ">>> Deployment Scenario 6 Complete! Frontend Assets Compiled."
     ;;
+  7|rollback)
+    echo ">>> Scenario 7: Atomic Zero-Downtime Rollback & Snapshot Restore..."
+    LATEST_SNAP=\$(ls -1t storage/backups/pre_migrate_*.sql.gz 2>/dev/null | head -n 1 || true)
+    git reset --hard HEAD~1
+    if [ -n "\${LATEST_SNAP}" ] && command -v gunzip &> /dev/null && command -v psql &> /dev/null && [ -n "\${DB_DATABASE:-}" ]; then
+      echo ">>> Restoring latest PostgreSQL snapshot: \${LATEST_SNAP}"
+      gunzip -c "\${LATEST_SNAP}" | PGPASSWORD="\${DB_PASSWORD:-}" psql -h "\${DB_HOST:-127.0.0.1}" -U "\${DB_USERNAME:-postgres}" "\${DB_DATABASE}"
+    else
+      php artisan migrate:rollback --step=1 --force || true
+    fi
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan queue:restart
+    echo ">>> Atomic Rollback Complete!"
+    ;;
   *)
-    echo ">>> Penggunaan: ./deploy.sh [1-6]"
+    echo ">>> Penggunaan: ./deploy.sh [1-7|rollback]"
     echo "    1: Skenario Ringan (UI / Blade / PHP)"
-    echo "    2: Migrasi Aman (Migrate Baru Tanpa Data Loss)"
+    echo "    2: Migrasi Aman + Pre-Migration pg_dump Snapshot"
     echo "    3: Hancur & Bangun DB (Staging Fresh & Seed)"
     echo "    4: Install Plugin / Package Baru (Composer & Filament)"
     echo "    5: Dump Autoload (Namespace & Classmap)"
     echo "    6: Build Assets Frontend (Vite & Tailwind)"
+    echo "    7|rollback: Atomic Rollback + Restore Snapshot Terakhir"
     exit 1
     ;;
 esac
@@ -2203,7 +2250,7 @@ MARKDOWN;
      */
     public static function generateEccStandardRule(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 # Everything Claude Code (ECC) Universal Multi-Agent Collaboration Standard
 
 Project ini dirancang untuk kompatibilitas native dengan Google Antigravity 2.0 dan Everything Claude Code (ECC).
@@ -2301,6 +2348,7 @@ MARKDOWN;
     public static function generateAdr001(VisionBlueprint $blueprint): string
     {
         $projectName = $blueprint->nama_bisnis ?: 'Application';
+
         return <<<MARKDOWN
 # ADR-001: Architectural Paradigm Selection (High-Concurrency Modular Monolith)
 **Status**: ACCEPTED  
@@ -2328,7 +2376,7 @@ MARKDOWN;
      */
     public static function generateAdr002(VisionBlueprint $blueprint): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 # ADR-002: Distributed Primary Keys (Strict ULID) & O(1) Keyset Cursor Pagination
 **Status**: ACCEPTED  
 **Deciders**: Database Architect, Backend Engineering Lead  
@@ -2356,7 +2404,7 @@ MARKDOWN;
      */
     public static function generateAdr003(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 # ADR-003: In-Place TranslatableTabs and Unified JSON Storage
 **Status**: ACCEPTED  
 **Deciders**: Lead Frontend Architect, Product Design Lead  
@@ -2471,7 +2519,7 @@ PHP;
      */
     public static function generateLivingDocsRule(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 # Living Documentation Governance Protocol
 
 Setiap perubahan pada arsitektur kode wajib menjaga dokumentasi selalu tersinkronisasi (*Single Source of Truth*):
@@ -2486,7 +2534,7 @@ MARKDOWN;
      */
     public static function generateDefectReproductionRule(): string
     {
-        return <<<MARKDOWN
+        return <<<'MARKDOWN'
 # Defect Reproduction & Failing-Test-First Protocol
 
 Saat memperbaiki bug atau regresi logika pada sistem:
@@ -2546,7 +2594,7 @@ PHP;
      */
     public static function generatePlaywrightConfig(string $slug): string
     {
-        return <<<TS
+        return <<<'TS'
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
@@ -2580,11 +2628,11 @@ TS;
         $discoveryData = is_array($blueprint->discovery_data) ? $blueprint->discovery_data : (json_decode($blueprint->discovery_data ?? '[]', true) ?: []);
         $domainDetected = $discoveryData['meta']['detected_domain'] ?? '';
         $corpusText = strtolower(
-            ($blueprint->nama_bisnis ?? '') . ' ' . 
-            ($blueprint->tipe_aplikasi ?? '') . ' ' . 
-            ($blueprint->deskripsi_ide ?? '') . ' ' . 
-            ($blueprint->masalah_solusi ?? '') . ' ' . 
-            ($blueprint->masalah_utama ?? '') . ' ' . 
+            ($blueprint->nama_bisnis ?? '').' '.
+            ($blueprint->tipe_aplikasi ?? '').' '.
+            ($blueprint->deskripsi_ide ?? '').' '.
+            ($blueprint->masalah_solusi ?? '').' '.
+            ($blueprint->masalah_utama ?? '').' '.
             ($blueprint->solusi_diinginkan ?? '')
         );
 
@@ -2666,7 +2714,7 @@ TS;
      */
     public static function generateTelemetryConfig(string $slug): string
     {
-        return <<<PHP
+        return <<<'PHP'
 <?php
 
 return [
@@ -2909,11 +2957,11 @@ BLADE;
         $taskIndex = 2;
         $activeSpecs = array_slice($mvpSpecs, 0, 5);
         foreach ($activeSpecs as $idx => $spec) {
-            $numStr = str_pad((string)$taskIndex, 2, '0', STR_PAD_LEFT);
-            $specTitle = $spec['title'] ?? ('Fitur ' . ($idx + 1));
-            $specSlug = Str::slug($specTitle) ?: ('feature-' . ($idx + 1));
+            $numStr = str_pad((string) $taskIndex, 2, '0', STR_PAD_LEFT);
+            $specTitle = $spec['title'] ?? ('Fitur '.($idx + 1));
+            $specSlug = Str::slug($specTitle) ?: ('feature-'.($idx + 1));
             $fileName = "{$numStr}_feature_{$specSlug}.md";
-            $readme .= ($idx + 2) . ". **[{$fileName}](file:///sprint-tasks/{$fileName})**: {$specTitle}\n";
+            $readme .= ($idx + 2).". **[{$fileName}](file:///sprint-tasks/{$fileName})**: {$specTitle}\n";
             $taskIndex++;
         }
 
@@ -2921,7 +2969,7 @@ BLADE;
         $files['sprint-tasks/README.md'] = $readme;
 
         // Task 01: Foundation
-        $files['sprint-tasks/01_foundation_database_and_core.md'] = <<<MD
+        $files['sprint-tasks/01_foundation_database_and_core.md'] = <<<'MD'
 # Sprint Task 01: Database Foundation, ULID Migrations & Core Models
 **Tahap**: Fase 0 & 1 - Fondasi Basis Data & Keamanan  
 **Bounded Context Files**:
@@ -2935,15 +2983,15 @@ Menginisialisasi seluruh skema basis data PostgreSQL dengan standar Strict ULID 
 
 ## 2. Kriteria Keberhasilan (Definition of Done)
 - [ ] Seluruh migrasi database di folder `database/migrations/` berhasil dijalankan tanpa error via `php artisan migrate:fresh`.
-- [ ] Seluruh Model di `app/Models/` menggunakan trait `Illuminate\\Database\\Eloquent\\Concerns\\HasUlids`.
-- [ ] Dilarang keras menggunakan auto-increment `\$table->id()`.
+- [ ] Seluruh Model di `app/Models/` menggunakan trait `Illuminate\Database\Eloquent\Concerns\HasUlids`.
+- [ ] Dilarang keras menggunakan auto-increment `$table->id()`.
 - [ ] Perintah verifikasi terminal: `php artisan migrate:fresh --seed` selesai dengan status 0.
 
 ## 3. Micro-Prompt Siap Eksekusi untuk AI Agent:
 ```text
 Halo AI, tolong implementasikan Task 01:
-1. Pastikan seluruh file migrasi di database/migrations/ menggunakan \$table->ulid('id')->primary() dan foreignUlid untuk relasi.
-2. Buat seluruh Model Eloquent di app/Models/ dengan trait HasUlids, \$guarded = [], dan casts metadata JSON ke array.
+1. Pastikan seluruh file migrasi di database/migrations/ menggunakan $table->ulid('id')->primary() dan foreignUlid untuk relasi.
+2. Buat seluruh Model Eloquent di app/Models/ dengan trait HasUlids, $guarded = [], dan casts metadata JSON ke array.
 3. Jalankan `php artisan migrate:fresh --seed` dan laporkan hasil verifikasinya.
 Dilarang menyentuh file frontend atau controller di luar bounded context di atas.
 ```
@@ -2952,10 +3000,10 @@ MD;
         // Vertical slice tasks for features
         $taskNum = 2;
         foreach ($activeSpecs as $idx => $spec) {
-            $numStr = str_pad((string)$taskNum, 2, '0', STR_PAD_LEFT);
-            $title = $spec['title'] ?? ('Fitur ' . ($idx + 1));
+            $numStr = str_pad((string) $taskNum, 2, '0', STR_PAD_LEFT);
+            $title = $spec['title'] ?? ('Fitur '.($idx + 1));
             $desc = $spec['desc'] ?? 'Implementasi spesifikasi fungsional fitur.';
-            $specSlug = Str::slug($title) ?: ('feature-' . ($idx + 1));
+            $specSlug = Str::slug($title) ?: ('feature-'.($idx + 1));
             $ac = $spec['acceptance_criteria'] ?? ['Given data valid, When disubmit, Then berhasil disimpan.'];
             $acLines = [];
             if (is_array($ac)) {
@@ -2964,16 +3012,16 @@ MD;
                         $parts = [];
                         foreach ($item as $k => $v) {
                             if (is_scalar($v)) {
-                                $parts[] = ucfirst((string)$k) . ': ' . $v;
+                                $parts[] = ucfirst((string) $k).': '.$v;
                             }
                         }
                         $acLines[] = implode(', ', $parts);
                     } elseif (is_scalar($item)) {
-                        $acLines[] = (string)$item;
+                        $acLines[] = (string) $item;
                     }
                 }
             } elseif (is_scalar($ac)) {
-                $acLines[] = (string)$ac;
+                $acLines[] = (string) $ac;
             }
             if (empty($acLines)) {
                 $acLines[] = 'Given data valid, When disubmit, Then berhasil disimpan.';
@@ -3016,7 +3064,7 @@ MD;
         }
 
         // Task 99: Quality Gate & Deploy
-        $files['sprint-tasks/99_quality_gate_and_deployment.md'] = <<<MD
+        $files['sprint-tasks/99_quality_gate_and_deployment.md'] = <<<'MD'
 # Sprint Task 99: Automated Quality Gate & Production Deployment
 **Tahap**: Final Verification & Production Go-Live  
 **Bounded Context**: Test Suite, Linting, Security Audit, CI/CD Pipeline.
@@ -3061,8 +3109,8 @@ MD;
             }
         }
 
-        if (!$hasUsers) {
-            $files["database/migrations/2026_01_01_000001_create_users_table.php"] = <<<PHP
+        if (! $hasUsers) {
+            $files['database/migrations/2026_01_01_000001_create_users_table.php'] = <<<PHP
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -3094,11 +3142,13 @@ PHP;
         }
 
         foreach ($erdTables as $idx => $table) {
-            $rawName = $table['name'] ?? ('table_' . ($idx + 1));
+            $rawName = $table['name'] ?? ('table_'.($idx + 1));
             $tableName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $rawName));
-            if ($tableName === 'users') continue;
+            if ($tableName === 'users') {
+                continue;
+            }
 
-            $migrationTime = "2026_01_01_" . str_pad((string)($idx + 2), 6, '0', STR_PAD_LEFT);
+            $migrationTime = '2026_01_01_'.str_pad((string) ($idx + 2), 6, '0', STR_PAD_LEFT);
             $fileName = "database/migrations/{$migrationTime}_create_{$tableName}_table.php";
 
             $columns = $table['columns'] ?? [];
@@ -3113,7 +3163,9 @@ PHP;
             $colCode = "            \$table->ulid('id')->primary();\n";
             foreach ($columns as $col) {
                 $cname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? ''));
-                if ($cname === 'id' || empty($cname)) continue;
+                if ($cname === 'id' || empty($cname)) {
+                    continue;
+                }
 
                 $rawType = strtolower($col['type'] ?? 'string');
 
@@ -3132,11 +3184,11 @@ PHP;
                 } elseif (str_contains($rawType, 'text') || str_contains($rawType, 'desc')) {
                     $colCode .= "            \$table->text('{$cname}')->nullable();\n";
                 } else {
-                    $indexStr = (($col['index'] ?? '') === 'INDEX' || $cname === 'status') ? "->index()" : "";
+                    $indexStr = (($col['index'] ?? '') === 'INDEX' || $cname === 'status') ? '->index()' : '';
                     $colCode .= "            \$table->string('{$cname}', 255)->nullable(){$indexStr};\n";
                 }
             }
-            $colCode .= "            \$table->timestampsTz();";
+            $colCode .= '            $table->timestampsTz();';
 
             $files[$fileName] = <<<PHP
 <?php
@@ -3173,12 +3225,16 @@ PHP;
         $files = [];
 
         foreach ($erdTables as $idx => $table) {
-            $rawName = $table['name'] ?? ('record_' . ($idx + 1));
+            $rawName = $table['name'] ?? ('record_'.($idx + 1));
             $tableName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $rawName));
-            if ($tableName === 'users') continue;
+            if ($tableName === 'users') {
+                continue;
+            }
 
             $modelName = Str::studly(Str::singular($tableName));
-            if (empty($modelName)) $modelName = 'Record' . ($idx + 1);
+            if (empty($modelName)) {
+                $modelName = 'Record'.($idx + 1);
+            }
 
             $columns = $table['columns'] ?? [];
             $casts = [];
@@ -3210,8 +3266,8 @@ PHP;
             foreach ($casts as $field => $castType) {
                 $castLines[] = "        '{$field}' => '{$castType}',";
             }
-            $castsCode = empty($castLines) ? "        // Default casts" : implode("\n", $castLines);
-            $relationsCode = empty($relations) ? "" : "\n\n" . implode("\n\n", $relations);
+            $castsCode = empty($castLines) ? '        // Default casts' : implode("\n", $castLines);
+            $relationsCode = empty($relations) ? '' : "\n\n".implode("\n\n", $relations);
 
             $files["app/Models/{$modelName}.php"] = <<<PHP
 <?php
@@ -3279,7 +3335,7 @@ PHP;
             ],
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-        $files['gateway/src/index.js'] = <<<JS
+        $files['gateway/src/index.js'] = <<<'JS'
 require('dotenv').config();
 const express = require('express');
 const { Queue, Worker } = require('bullmq');
@@ -3337,21 +3393,21 @@ app.post('/api/v1/messages/send', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`>>> [WA GATEWAY ENGINE] Listening on port \${PORT}`);
+  console.log(`>>> [WA GATEWAY ENGINE] Listening on port ${PORT}`);
 });
 JS;
 
-        $files['gateway/src/whatsapp-session.js'] = <<<JS
+        $files['gateway/src/whatsapp-session.js'] = <<<'JS'
 // WhatsApp Headless Session Manager Abstraction Layer
 module.exports = {
   async initSession(sessionId) {
-    console.log(`[WA SESSION] Initializing isolated socket session for: \${sessionId}`);
+    console.log(`[WA SESSION] Initializing isolated socket session for: ${sessionId}`);
     return { sessionId, status: 'authenticated' };
   }
 };
 JS;
 
-        $files['gateway/Dockerfile'] = <<<DOCKERFILE
+        $files['gateway/Dockerfile'] = <<<'DOCKERFILE'
 FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
@@ -3423,7 +3479,7 @@ DOCKERFILE;
 </html>
 HTML;
 
-        $files['game/src/flight-sim.js'] = <<<JS
+        $files['game/src/flight-sim.js'] = <<<'JS'
 import * as THREE from 'three';
 
 const canvas = document.getElementById('flight-canvas');
@@ -3501,7 +3557,7 @@ function animate() {
 animate();
 JS;
 
-        $files['game/Dockerfile'] = <<<DOCKERFILE
+        $files['game/Dockerfile'] = <<<'DOCKERFILE'
 FROM nginx:alpine
 COPY . /usr/share/nginx/html
 EXPOSE 80
@@ -3542,7 +3598,7 @@ DOCKERFILE;
             ],
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-        $files['frontend/src/lib/api-client.ts'] = <<<TS
+        $files['frontend/src/lib/api-client.ts'] = <<<'TS'
 // Enterprise Typed API Client with Strict ULID Idempotency & Keyset O(1) Cursor Pagination
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -3559,18 +3615,18 @@ export async function fetchCursorPage<T>(
   cursor?: string,
   token?: string
 ): Promise<CursorPaginatedResponse<T>> {
-  const url = new URL(`\${API_BASE_URL}\${endpoint}`);
+  const url = new URL(`${API_BASE_URL}${endpoint}`);
   if (cursor) url.searchParams.set('cursor', cursor);
 
   const headers: Record<string, string> = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   };
-  if (token) headers['Authorization'] = `Bearer \${token}`;
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(url.toString(), { headers, next: { revalidate: 60 } });
   if (!res.ok) {
-    throw new Error(`API Error: \${res.status} \${res.statusText}`);
+    throw new Error(`API Error: ${res.status} ${res.statusText}`);
   }
   return res.json();
 }
@@ -3612,16 +3668,18 @@ TSX;
         $files = [];
 
         foreach ($erdTables as $idx => $table) {
-            $rawName = $table['name'] ?? ('record_' . ($idx + 1));
+            $rawName = $table['name'] ?? ('record_'.($idx + 1));
             $tableName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $rawName));
-            if ($tableName === 'users' || $tableName === 'security_threat_logs' || empty($tableName)) continue;
+            if ($tableName === 'users' || $tableName === 'security_threat_logs' || empty($tableName)) {
+                continue;
+            }
 
-            $modelName = \Illuminate\Support\Str::studly(\Illuminate\Support\Str::singular($tableName));
-            $controllerName = $modelName . 'ApiController';
-            $storeRequest = $modelName . 'StoreRequest';
-            $updateRequest = $modelName . 'UpdateRequest';
-            $variableName = \Illuminate\Support\Str::camel($modelName);
-            $pluralVariable = \Illuminate\Support\Str::camel(\Illuminate\Support\Str::plural($tableName));
+            $modelName = Str::studly(Str::singular($tableName));
+            $controllerName = $modelName.'ApiController';
+            $storeRequest = $modelName.'StoreRequest';
+            $updateRequest = $modelName.'UpdateRequest';
+            $variableName = Str::camel($modelName);
+            $pluralVariable = Str::camel(Str::plural($tableName));
 
             $files["app/Http/Controllers/Api/{$controllerName}.php"] = <<<CTRL_PHP
 <?php
@@ -3730,13 +3788,15 @@ CTRL_PHP;
         $files = [];
 
         foreach ($erdTables as $idx => $table) {
-            $rawName = $table['name'] ?? ('record_' . ($idx + 1));
+            $rawName = $table['name'] ?? ('record_'.($idx + 1));
             $tableName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $rawName));
-            if ($tableName === 'users' || $tableName === 'security_threat_logs' || empty($tableName)) continue;
+            if ($tableName === 'users' || $tableName === 'security_threat_logs' || empty($tableName)) {
+                continue;
+            }
 
-            $modelName = \Illuminate\Support\Str::studly(\Illuminate\Support\Str::singular($tableName));
-            $storeRequest = $modelName . 'StoreRequest';
-            $updateRequest = $modelName . 'UpdateRequest';
+            $modelName = Str::studly(Str::singular($tableName));
+            $storeRequest = $modelName.'StoreRequest';
+            $updateRequest = $modelName.'UpdateRequest';
             $columns = $table['columns'] ?? [];
 
             $storeRules = [];
@@ -3744,7 +3804,9 @@ CTRL_PHP;
 
             foreach ($columns as $col) {
                 $cname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? ''));
-                if ($cname === 'id' || $cname === 'created_at' || $cname === 'updated_at' || $cname === 'deleted_at') continue;
+                if ($cname === 'id' || $cname === 'created_at' || $cname === 'updated_at' || $cname === 'deleted_at') {
+                    continue;
+                }
 
                 $rawType = strtolower($col['type'] ?? 'string');
                 $isNullable = (bool) ($col['nullable'] ?? false);
@@ -3774,10 +3836,10 @@ CTRL_PHP;
                     $rules[] = "'max:255'";
                 }
 
-                $storeRules[] = "            '{$cname}' => [" . implode(', ', $rules) . "],";
+                $storeRules[] = "            '{$cname}' => [".implode(', ', $rules).'],';
 
-                $uRules = array_map(fn($r) => $r === "'required'" ? "'sometimes', 'required'" : $r, $rules);
-                $updateRules[] = "            '{$cname}' => [" . implode(', ', $uRules) . "],";
+                $uRules = array_map(fn ($r) => $r === "'required'" ? "'sometimes', 'required'" : $r, $rules);
+                $updateRules[] = "            '{$cname}' => [".implode(', ', $uRules).'],';
             }
 
             if (empty($storeRules)) {
@@ -3854,10 +3916,10 @@ REQ_PHP;
      * Anti-Attention-Drift PRD Slices & Git Pre-Commit Hook.
      * Divides monolithic PRD into modular sprint-focused slices.
      */
-    public static function generatePrdSlices(\App\Models\VisionBlueprint $blueprint, array $prd): array
+    public static function generatePrdSlices(VisionBlueprint $blueprint, array $prd): array
     {
         $projectName = $blueprint->nama_bisnis ?: 'Enterprise Solution';
-        $slug = $blueprint->slug ?: \Illuminate\Support\Str::slug($projectName);
+        $slug = $blueprint->slug ?: Str::slug($projectName);
         $slices = [];
 
         // Slice 00: Architecture Overview & Product Decisions
@@ -3877,7 +3939,7 @@ REQ_PHP;
 MD;
 
         // Slice 01: Sprint 1 Foundation (DB & Health Probes)
-        $slices['docs/prd-slices/01_sprint_1_foundation.md'] = <<<MD
+        $slices['docs/prd-slices/01_sprint_1_foundation.md'] = <<<'MD'
 # Master PRD Slice 01: Sprint 1 Foundation & Database DDL
 **Target:** Sprint 1 / Days 1-7  
 **Scope:** PostgreSQL 16 Strict ULID Schema, Docker Compose & Health Probes
@@ -3890,7 +3952,7 @@ MD;
 MD;
 
         // Slice 02: Sprint 2 Core MVP Features & Keyset Cursor
-        $slices['docs/prd-slices/02_sprint_2_core_features.md'] = <<<MD
+        $slices['docs/prd-slices/02_sprint_2_core_features.md'] = <<<'MD'
 # Master PRD Slice 02: Sprint 2 Core MVP Features & Keyset API
 **Target:** Sprint 2 / Days 8-16  
 **Scope:** Transactional Business Entities, Keyset Cursor Pagination O(1), Concrete Controllers
@@ -3903,7 +3965,7 @@ MD;
 MD;
 
         // Slice 03: Sprint 3 Integrations & Workflow
-        $slices['docs/prd-slices/03_sprint_3_integrations_flow.md'] = <<<MD
+        $slices['docs/prd-slices/03_sprint_3_integrations_flow.md'] = <<<'MD'
 # Master PRD Slice 03: Sprint 3 Integrations & Operational Flow
 **Target:** Sprint 3 / Days 17-23  
 **Scope:** Payment Rails (Midtrans/Bank VA), Webhooks & Third-Party APIs
@@ -3915,7 +3977,7 @@ MD;
 MD;
 
         // Slice 04: Sprint 4 Security Hardening & Zero-Trust
-        $slices['docs/prd-slices/04_sprint_4_security_hardening.md'] = <<<MD
+        $slices['docs/prd-slices/04_sprint_4_security_hardening.md'] = <<<'MD'
 # Master PRD Slice 04: Sprint 4 Security Hardening & AI-ThreatShield
 **Target:** Sprint 4 / Days 24-28  
 **Scope:** OWASP Top 10, Honeypot Fields, Rate Limiting & mTLS
@@ -3927,7 +3989,7 @@ MD;
 MD;
 
         // Slice 05: Sprint 5 Deployment, Telemetry & Handover
-        $slices['docs/prd-slices/05_sprint_5_deployment_handover.md'] = <<<MD
+        $slices['docs/prd-slices/05_sprint_5_deployment_handover.md'] = <<<'MD'
 # Master PRD Slice 05: Sprint 5 Deployment & Client Handover
 **Target:** Sprint 5 / Days 29-30  
 **Scope:** Automated Deploy Scripts, SRE Telemetry & Private Repo Handover
@@ -3970,17 +4032,17 @@ HOOK;
     /**
      * Generate welcome.blade.php with exact data-testid matching Playwright E2E spec.
      */
-    public static function generateWelcomeBlade(\App\Models\VisionBlueprint $blueprint, array $erdTables, array $mvpSpecs): string
+    public static function generateWelcomeBlade(VisionBlueprint $blueprint, array $erdTables, array $mvpSpecs): string
     {
         $projectName = $blueprint->nama_bisnis ?: 'Enterprise Application';
-        $slug = $blueprint->slug ?: \Illuminate\Support\Str::slug($projectName);
+        $slug = $blueprint->slug ?: Str::slug($projectName);
         $firstFeature = $mvpSpecs[0]['title'] ?? 'Core Record Ingestion';
 
         $discoveryData = is_array($blueprint->discovery_data) ? $blueprint->discovery_data : (json_decode($blueprint->discovery_data ?? '[]', true) ?: []);
         $domainDetected = $discoveryData['meta']['detected_domain'] ?? '';
         $isGame = ($domainDetected === 'game_3d_simulation' || $domainDetected === 'game_engine_simulation');
 
-        $gameHud = $isGame ? <<<HTML
+        $gameHud = $isGame ? <<<'HTML'
         <!-- 3D Flight Simulation Canvas & Telemetry HUD -->
         <div class="relative w-full h-80 bg-zinc-900 border border-zinc-800 rounded-xs overflow-hidden mb-8 flex items-center justify-center">
             <canvas id="flight-canvas" data-testid="flight-canvas" class="w-full h-full"></canvas>
@@ -4130,7 +4192,7 @@ HTML;
      */
     public static function generateFrankenPhpCaddyfile(string $slug): string
     {
-        return <<<CADDY
+        return <<<'CADDY'
 {
     frankenphp
     order php_server before file_server
@@ -4160,7 +4222,7 @@ CADDY;
     {
         $files = [];
         foreach ($stateMachines as $sm) {
-            $fqcn = (string) ($sm['enum_class'] ?? ('App\\Enums\\' . ($sm['entity'] ?? 'Domain') . 'Status'));
+            $fqcn = (string) ($sm['enum_class'] ?? ('App\\Enums\\'.($sm['entity'] ?? 'Domain').'Status'));
             $shortClass = class_basename(str_replace('\\\\', '\\', $fqcn));
             $states = $sm['states'] ?? ['DRAFT', 'ACTIVE'];
             $transitions = $sm['transitions'] ?? [];
@@ -4181,7 +4243,7 @@ CADDY;
             }
             foreach ($grouped as $fromState => $targets) {
                 $targetsUnique = array_values(array_unique($targets));
-                $targetExpr = implode(', ', array_map(fn ($t) => "self::" . strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', $t)), $targetsUnique));
+                $targetExpr = implode(', ', array_map(fn ($t) => 'self::'.strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', $t)), $targetsUnique));
                 $fromConst = strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', (string) $fromState));
                 $mapLines[] = "            self::{$fromConst} => in_array(\$target, [{$targetExpr}], true),";
             }
@@ -4223,7 +4285,7 @@ PHP;
     {
         $files = [];
         foreach ($stateMachines as $sm) {
-            $fqcn = (string) ($sm['enum_class'] ?? ('App\\Enums\\' . ($sm['entity'] ?? 'Domain') . 'Status'));
+            $fqcn = (string) ($sm['enum_class'] ?? ('App\\Enums\\'.($sm['entity'] ?? 'Domain').'Status'));
             $enumClass = class_basename(str_replace('\\\\', '\\', $fqcn));
 
             foreach (($sm['transitions'] ?? []) as $tr) {
@@ -4339,7 +4401,7 @@ PHP;
 
         $scenarioBlocks = '';
         foreach ($scenarios as $idx => $sc) {
-            $id = addslashes((string) ($sc['id'] ?? ('AT-' . ($idx + 1))));
+            $id = addslashes((string) ($sc['id'] ?? ('AT-'.($idx + 1))));
             $given = addslashes((string) ($sc['given'] ?? 'valid precondition'));
             $when = addslashes((string) ($sc['when'] ?? 'domain command executes'));
             $then = addslashes((string) ($sc['then'] ?? 'deterministic invariant holds'));
@@ -4657,7 +4719,7 @@ TS,
             ]),
 
             'D2' => array_merge($files, [
-                'backend-go/sqlc.yaml' => <<<YAML
+                'backend-go/sqlc.yaml' => <<<'YAML'
 version: "2"
 sql:
   - engine: "postgresql"
@@ -4817,7 +4879,7 @@ func RunCompensationsReverse(executed []CompensatingStep) []error {
 	return errs
 }
 GO,
-                'deploy/docker-compose.polyglot-mesh.yml' => <<<YAML
+                'deploy/docker-compose.polyglot-mesh.yml' => <<<'YAML'
 services:
   api-gateway:
     image: traefik:v3.2
@@ -5123,9 +5185,9 @@ BLADE;
     {
         $sectorCode = (string) ($universalSchema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL');
         $matrix = $universalSchema['decision_tables_matrix']
-            ?? \App\Support\PosLifecycleAndStudioCatalog::decisionTablesForSector($sectorCode);
+            ?? PosLifecycleAndStudioCatalog::decisionTablesForSector($sectorCode);
 
-        return \App\Support\PosLifecycleAndStudioCatalog::compileDecisionTablesToPhpClass($matrix, $appName);
+        return PosLifecycleAndStudioCatalog::compileDecisionTablesToPhpClass($matrix, $appName);
     }
 
     /**
@@ -5202,9 +5264,9 @@ PHP;
         $stackCode = (string) ($universalSchema['project_metadata']['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH');
 
         $vault = $universalSchema['environment_secret_vault']
-            ?? \App\Support\PosLifecycleAndStudioCatalog::environmentVaultBlueprint($sectorCode, $primitives, $stackCode);
+            ?? PosLifecycleAndStudioCatalog::environmentVaultBlueprint($sectorCode, $primitives, $stackCode);
 
-        return \App\Support\PosLifecycleAndStudioCatalog::renderEnvBlueprintContent($vault, $appName);
+        return PosLifecycleAndStudioCatalog::renderEnvBlueprintContent($vault, $appName);
     }
 
     /**
@@ -5281,6 +5343,70 @@ PHP;
             ],
         ];
 
-        return (string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+        return (string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n";
+    }
+
+    /**
+     * Project OS v11.0 Paripurna: SEO/GEO Authority, UU PDP Blind Index & Offline Outbox Contract Markdown.
+     */
+    public static function generateSeoGeoAndZeroFailureContractMarkdown(array $schema, string $projectName): string
+    {
+        $sector = (string) ($schema['project_metadata']['primary_sector'] ?? 'SECTOR_08_PROFESSIONAL_PSA');
+        $seoGeo = $schema['seo_geo_authority_contract'] ?? [];
+        $schemaTypes = implode(', ', (array) ($seoGeo['schema_org_graph_types'] ?? ['Organization', 'SoftwareApplication']));
+        $standards = implode(', ', (array) ($seoGeo['statutory_standards'] ?? ['UU PDP No. 27/2022']));
+        $tldr = (string) ($seoGeo['answer_capsule_tldr_50w'] ?? '');
+
+        return <<<MD
+# Project OS v11.0 Paripurna Contract — {$projectName}
+
+- **Primary Sector**: `{$sector}`
+- **Schema.org `@graph` Types**: `{$schemaTypes}`
+- **Statutory Compliance**: `{$standards}`
+- **Answer-First GEO Capsule (50 Words)**: {$tldr}
+
+## Mandatory Zero-Failure Guarantees
+1. **SEO & GEO Authority (`PRIMITIVE_SEO_GEO_AUTHORITY_ENGINE`)**: Serve `/llms.txt`, `/llms-full.txt`, `/indexnow-key.txt`, local `1200x630` OG citation cards (zero external CDN), and explicit AI search crawler allowlists in `robots.txt`.
+2. **UU PDP Privacy Vault (`PRIMITIVE_UU_PDP_PRIVACY_VAULT`)**: Use `HasEncryptedPiiWithBlindIndex` for AES-256 PII at rest + 64-char `HMAC-SHA256` `*_blind_index` O(1) lookups + Ledger-Safe Right-to-Erasure (`[REDACTED_UU_PDP_<ULID>]`).
+3. **Offline-First PWA Outbox (`PRIMITIVE_OFFLINE_OUTBOX_PWA`)**: Persist mutations to IndexedDB with client-generated 26-char ULIDs and replay with `X-Idempotency-Key`.
+4. **Atomic Rollback & Sandbox**: `deploy.sh 2` captures timestamped `pg_dump` snapshots before migration; `./deploy.sh rollback` restores atomically.
+MD;
+    }
+
+    /**
+     * Project OS v11.0 Paripurna: Exported `HasEncryptedPiiWithBlindIndex` trait for client projects.
+     */
+    public static function generateEncryptedPiiBlindIndexTraitFile(): string
+    {
+        $sourcePath = app_path('Models/Concerns/HasEncryptedPiiWithBlindIndex.php');
+        if (is_file($sourcePath)) {
+            return (string) file_get_contents($sourcePath);
+        }
+
+        return "<?php\n\nnamespace App\\Models\\Concerns;\n\ntrait HasEncryptedPiiWithBlindIndex {}\n";
+    }
+
+    /**
+     * Project OS v11.0 Paripurna: Offline Outbox PWA Service Worker (`public/sw-offline-outbox.js`).
+     */
+    public static function generateOfflineOutboxServiceWorkerJs(string $slug): string
+    {
+        return <<<JS
+// Project OS v11.0 Paripurna — Offline Outbox Background Sync Worker ({$slug})
+const CACHE_NAME = 'project-os-offline-v11-{$slug}';
+
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+
+self.addEventListener('sync', (event) => {
+    if (event.tag === 'project-os-flush-outbox') {
+        event.waitUntil(
+            self.clients.matchAll().then((clients) => {
+                clients.forEach((client) => client.postMessage({ type: 'FLUSH_OFFLINE_OUTBOX_ULID' }));
+            })
+        );
+    }
+});
+JS;
     }
 }

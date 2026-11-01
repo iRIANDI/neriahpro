@@ -255,7 +255,8 @@ class ProjectOsV7RealWorldFreezeAndTier1LocaleTest extends TestCase
         }
 
         // Verify HasTranslatableTabs auto-populates missing EN from ID seamlessly
-        $harness = new class {
+        $harness = new class
+        {
             use HasTranslatableTabs;
 
             public function exposeAutoTranslate(array $data): array
@@ -293,8 +294,8 @@ class ProjectOsV7RealWorldFreezeAndTier1LocaleTest extends TestCase
 
         // Subsystem #3: 40 Native Tools & valid JSON object map for every Gemini tool declaration (zero HTTP 400 list-to-map bug)
         $declarations = GeminiToolRegistry::getDeclarations();
-        $this->assertCount(40, $declarations);
-        $this->assertCount(40, GeminiToolRegistry::getOpenAiTools());
+        $this->assertCount(44, $declarations);
+        $this->assertCount(44, GeminiToolRegistry::getOpenAiTools());
 
         foreach ($declarations as $idx => $decl) {
             $encoded = json_encode($decl['parameters']);

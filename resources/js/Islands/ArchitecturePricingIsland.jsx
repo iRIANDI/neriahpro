@@ -190,6 +190,9 @@ export default function ArchitecturePricingIsland({
     return 'RETAIL_SELF_DEV';
   }); // 'RETAIL_SELF_DEV' | 'MITRA_TURNKEY_PROJECT'
   const [wizardStackCode, setWizardStackCode] = useState('STACK_M1_LARAVEL_MONOLITH');
+  const [wizardRetailTier, setWizardRetailTier] = useState('retail_pro');
+  const [wizardMitraTier, setWizardMitraTier] = useState('full_mvp');
+  const [satuPintuReturnQuery, setSatuPintuReturnQuery] = useState('');
   const [showSatuPintuWizard, setShowSatuPintuWizard] = useState(true);
 
   useEffect(() => {
@@ -525,9 +528,9 @@ export default function ArchitecturePricingIsland({
           );
         }, 150);
       } else if (selectedPackage === 'retail_spark') {
-        // Free Spark tier guest mode: launch blueprint generator
+        // Free Spark tier guest mode: launch blueprint generator (Phase 1-2 Teaser Only, 2x/month quota)
         setTimeout(() => {
-          window.location.href = '/blueprint?tier=spark';
+          window.location.href = `/blueprint?tier=spark${satuPintuReturnQuery || ''}`;
         }, 600);
       }
     } catch (err) {
@@ -1129,7 +1132,45 @@ export default function ArchitecturePricingIsland({
               const dp30 = Math.round(estimatedRabIdr * (terminScheme === '50_50' ? 0.5 : 0.3));
               const milestone50 = terminScheme === '50_50' ? 0 : Math.round(estimatedRabIdr * 0.5);
               const finalBast = estimatedRabIdr - dp30 - milestone50;
-              const blueprintQueryTail = `&ui_variant=${encodeURIComponent(activeVisualUi.code)}&shell=${encodeURIComponent(activeVisualUi.shell)}&persona=${encodeURIComponent(wizardPersonaMode)}&output_locale=${encodeURIComponent(wizardOutputLocale)}`;
+              const blueprintQueryTail = `&sector=${encodeURIComponent(wizardSector.code)}&stack=${encodeURIComponent(wizardStackCode)}&ui_variant=${encodeURIComponent(activeVisualUi.code)}&shell=${encodeURIComponent(activeVisualUi.shell)}&persona=${encodeURIComponent(wizardPersonaMode)}&output_locale=${encodeURIComponent(wizardOutputLocale)}`;
+
+              const retailWizardPackages = [
+                { key: 'retail_pro', label: `Pro Agentic Blueprint — Rp ${pricingSettings.retail_pro_price || '399.000'} (${isEn ? 'Recommended' : 'Rekomendasi Utama'})` },
+                { key: 'retail_ultimate', label: `Ultimate Architecture OS + 1-on-1 Call — Rp ${pricingSettings.retail_ultimate_price || '1.490.000'}` },
+                { key: 'single_app_umkm_pass', label: `Single-App UMKM Pass — Rp ${pricingSettings.single_app_pass_price || '299.000'} (${isEn ? '1 App One-Time' : 'Sekali Bayar 1 Aplikasi'})` },
+                { key: 'retail_lite', label: `Starter AI Architect — Rp ${pricingSettings.retail_lite_price || '99.000'}` },
+                { key: 'agency_whitelabel_partner', label: `Agency Partner White-Label (5-Seat) — Rp ${pricingSettings.agency_whitelabel_price || '990.000'}` },
+                { key: 'impact_nonprofit_grant', label: `${isEn ? 'CSR Non-Profit / NGO Grant' : 'Hibah CSR Yayasan / NGO'} — Rp ${pricingSettings.impact_grant_price || '0'} (${isEn ? 'Doc Verification' : 'Verifikasi Akta'})` },
+                { key: 'retail_spark', label: `Spark Guest Idea Audit — Rp 0 (${isEn ? '2x/mo Quota • Phase 1–2 Only' : 'Kuota 2x/bln • Terbatas Fase 1–2'})` },
+              ];
+
+              const mitraWizardPackages = [
+                { key: 'full_mvp', label: `${isEn ? 'Custom Full Turnkey MVP (Escrow RAB)' : 'Custom Full Turnkey MVP (Escrow RAB Algoritmik)'} — Rp ${formatIdrPlain(estimatedRabIdr)}` },
+                { key: 'umkm_starter', label: `${isEn ? 'UMKM Digital Starter (50% Subsidy)' : 'UMKM Digital Starter (Subsidi 50%)'} — Rp ${pricingSettings.umkm_price || '3.750.000'}` },
+                { key: 'blueprint_advisory', label: `${isEn ? '1-on-1 Principal Architect Advisory (100% DP Credit)' : '1-on-1 Advisory Blueprint (Potong DP 100%)'} — Rp ${pricingSettings.advisory_price || '2.500.000'}` },
+              ];
+
+              const launchSatuPintuCheckout = (pkgKey) => {
+                const summaryLine = `[SATU PINTU v11.0 LOCKED] Sector=${wizardSector.code} | Stack=${wizardStackCode} | UI=${activeVisualUi.code} (${activeVisualUi.shell}) | Persona=${wizardPersonaMode} | Locale=${wizardOutputLocale.toUpperCase()}${wizardMode === 'MITRA_TURNKEY_PROJECT' ? ` | EstRAB=Rp ${formatIdrPlain(estimatedRabIdr)} (${totalHours}h)` : ''}`;
+                setSatuPintuReturnQuery(blueprintQueryTail);
+                openBookingModal(pkgKey);
+                setFormData((prev) => ({
+                  ...prev,
+                  notes: prev.notes && prev.notes.includes('[SATU PINTU')
+                    ? prev.notes.replace(/\[SATU PINTU[^\n]*/g, summaryLine)
+                    : (prev.notes ? `${summaryLine}\n${prev.notes}` : summaryLine),
+                }));
+              };
+
+              const scrollToCatalogSection = (tabId) => {
+                switchPricingTab(tabId);
+                if (typeof document !== 'undefined') {
+                  const anchorEl = document.getElementById(`tab-btn-${tabId}`);
+                  if (anchorEl) {
+                    anchorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }
+              };
 
               return (
                 <div className="max-w-7xl mx-auto mb-8 px-2 sm:px-4">
@@ -1137,8 +1178,8 @@ export default function ArchitecturePricingIsland({
                     {/* Top Satu Pintu Bar */}
                     <div className="px-4 sm:px-6 py-3 bg-zinc-950 text-white dark:bg-zinc-950 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] font-black uppercase tracking-wider">
-                        <span className="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black">SATU PINTU WIZARD v8.0</span>
-                        <span>{isEn ? 'DUAL-PERSONA + 36 VISUAL SECTOR UI BLUEPRINTS + TIER-1 GLOBAL COMPLIANCE' : 'PANDUAN KLIEN INKLUSIF: DUAL-PERSONA + 36 VISUAL UI SEKTORAL + KEPATUHAN GLOBAL'}</span>
+                        <span className="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black">SATU PINTU WIZARD v11.0</span>
+                        <span>{isEn ? 'UNIFIED SAAS & MITRA COMMERCIAL CONFIGURATOR • 12 SECTORS • 20 PILLARS LOCKED' : 'KONFIGURATOR TERPADU PAKET SAAS & MITRA • 12 SEKTOR • 20 PILAR PARIPURNA'}</span>
                       </div>
                       <button
                         type="button"
@@ -1228,8 +1269,11 @@ export default function ArchitecturePricingIsland({
                               <select
                                 value={selectedSectorIdx}
                                 onChange={(e) => {
-                                  setSelectedSectorIdx(Number(e.target.value));
+                                  const nextIdx = Number(e.target.value);
+                                  const nextComp = sectorComplexityMap[nextIdx] || sectorComplexityMap[0];
+                                  setSelectedSectorIdx(nextIdx);
                                   setSelectedUiVariantIdx(0);
+                                  setWizardRetailTier(nextComp.recommendedRetail === 'ultimate' ? 'retail_ultimate' : 'retail_pro');
                                 }}
                                 className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-xs font-bold rounded-none focus:border-emerald-500 outline-none"
                               >
@@ -1367,68 +1411,101 @@ export default function ArchitecturePricingIsland({
                               UI Terkunci: <strong className="text-emerald-900 dark:text-emerald-300">{activeVisualUi.code}</strong> &bull; <strong>{activeJurisdiction.dir === 'rtl' ? 'RTL Logical CSS' : 'LTR Logical CSS'}</strong>
                             </span>
                             <span className="px-2 py-0.5 bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200 font-black text-[10px] tabular-nums">
-                              {comp.tables + 5} ULID Tables &bull; 15 Pilar Freeze &bull; Canary IP Seal
+                              {comp.tables + 5} ULID Tables &bull; 20 Pilar Paripurna &bull; SEO/GEO + UU PDP
                             </span>
                           </div>
                         </div>
 
-                        {/* Right Column: Satu Pintu Live Recommendation & 1-Click Guided Launch */}
+                        {/* Right Column: Satu Pintu Unified Commercial Gate (Strictly Bound to SaaS & Mitra Tiers) */}
                         <div className="lg:col-span-5 border-2 border-emerald-500/80 dark:border-emerald-600 bg-zinc-50 dark:bg-zinc-950 p-4 flex flex-col justify-between">
                           {wizardMode === 'RETAIL_SELF_DEV' ? (
                             <div className="space-y-3">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
-                                  RETAIL SELF-DEV // SATU PINTU V8.0
+                                  RETAIL SAAS // SATU PINTU V11.0
                                 </span>
-                                <span className="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400">
-                                  100% {isEn ? 'Instant Digital License' : 'Lisensi Digital Instan'}
+                                <span className="font-mono text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
+                                  {isEn ? 'SaaS Entitlement Gate' : 'Gerbang Resmi Paket SaaS'}
                                 </span>
                               </div>
                               <div>
-                                <div className="text-[11px] font-mono text-zinc-600 dark:text-zinc-400 uppercase font-bold">
-                                  {isEn ? 'Recommended Competitive Retail Tier:' : 'Rekomendasi Paket Retail Paling Kompetitif:'}
+                                <div className="text-[11px] font-mono text-zinc-700 dark:text-zinc-300 uppercase font-bold">
+                                  {isEn ? 'Recommended SaaS Tier for Sector:' : 'Rekomendasi Paket SaaS Sesuai Kompleksitas Sektor:'}
                                 </div>
                                 <div className="text-lg sm:text-xl font-black font-mono text-zinc-950 dark:text-white mt-0.5 tabular-nums">
                                   {comp.retailLabel}
                                 </div>
                                 <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1 leading-relaxed">
                                   {isEn
-                                    ? `Locks Frontend UI ${activeVisualUi.code} (${activeVisualUi.title}), Jurisdiction ${activeJurisdiction.code.toUpperCase()} (${activeJurisdiction.dir.toUpperCase()}), 25 L1–L4 Sub-Menus, SYMBOL_MANIFEST.json & Canary IP Protection.`
-                                    : `Mengunci Frontend Visual ${activeVisualUi.code} (${activeVisualUi.title}), Regulasi ${activeJurisdiction.code.toUpperCase()} (${activeJurisdiction.dir.toUpperCase()}), 25 Sub-Menu L1–L4, SYMBOL_MANIFEST.json & Canary IP Seal.`}
+                                    ? `Locks Visual UI ${activeVisualUi.code} (${activeVisualUi.title}), Jurisdiction ${activeJurisdiction.code.toUpperCase()}, 20 Paripurna Pillars (SEO/GEO llms.txt, Offline Outbox PWA, UU PDP Blind Index) & Canary IP Seal.`
+                                    : `Mengunci Frontend Visual ${activeVisualUi.code} (${activeVisualUi.title}), Regulasi ${activeJurisdiction.code.toUpperCase()}, 20 Pilar Paripurna (SEO/GEO llms.txt, Offline PWA, Blind Index UU PDP) & Canary IP Seal.`}
                                 </p>
                               </div>
-                              <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                                <a
-                                  href={`/blueprint?track=retail&tier=${comp.recommendedRetail}&sector=${wizardSector.code}&stack=${wizardStackCode}&new=1${blueprintQueryTail}`}
-                                  className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 rounded-none transition text-center"
-                                >
-                                  <span>{isEn ? '1. Start Clean Guided Wizard →' : '1. Mulai Wizard Baru Bersih (UI & Regulasi Terkunci) →'}</span>
-                                </a>
-                                <div className="grid grid-cols-2 gap-2">
-                                  <a
-                                    href={`/blueprint/studio?mode=retail&sector=${wizardSector.code}&stack=${wizardStackCode}${blueprintQueryTail}`}
-                                    className="py-2 px-2.5 bg-zinc-950 hover:bg-zinc-800 text-emerald-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 font-mono text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 rounded-none border border-zinc-800 dark:border-zinc-700 text-center"
+
+                              <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 space-y-2.5">
+                                <div>
+                                  <label className="block font-mono text-[10px] font-black uppercase tracking-wider text-zinc-800 dark:text-zinc-200 mb-1">
+                                    {isEn ? 'STEP F — SELECT OFFICIAL RETAIL SAAS PACKAGE *' : 'LANGKAH F — PILIH PAKET LISENSI SAAS RETAIL *'}
+                                  </label>
+                                  <select
+                                    id="wizard-step-f-retail-package"
+                                    value={wizardRetailTier}
+                                    onChange={(e) => setWizardRetailTier(e.target.value)}
+                                    className="w-full px-2.5 py-2 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-emerald-500 text-zinc-950 dark:text-zinc-100 font-mono text-[11px] font-bold rounded-none focus:border-emerald-500 outline-none"
                                   >
-                                    <span>{wizardPersonaMode === 'BUSINESS_WIZARD' ? '🧭 Storyboard Studio' : '🖥️ 3-Pane Studio'}</span>
-                                  </a>
-                                  <button
-                                    type="button"
-                                    id="wizard-retail-buy-license-btn"
-                                    onClick={() => openBookingModal(comp.recommendedRetail === 'ultimate' ? 'retail_ultimate' : 'retail_pro')}
-                                    className="py-2 px-2.5 bg-white hover:bg-zinc-100 text-zinc-950 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 font-mono text-[10px] font-black uppercase tracking-wider border-2 border-zinc-900 dark:border-emerald-500 rounded-none cursor-pointer transition"
-                                  >
-                                    <span>💳 {isEn ? 'Buy License' : 'Beli Lisensi'}</span>
-                                  </button>
+                                    {retailWizardPackages.map((pkgOpt) => (
+                                      <option key={pkgOpt.key} value={pkgOpt.key}>
+                                        {pkgOpt.label}
+                                      </option>
+                                    ))}
+                                  </select>
                                 </div>
+
+                                {wizardRetailTier === 'retail_spark' ? (
+                                  <div className="p-2 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] leading-snug">
+                                    {isEn
+                                      ? 'Guest Spark Quota (2x/month): Unlocks Phase 1–2 Idea Audit only. Phases 3–7, Full SQL/Docker ZIP & Live MCP require upgrading to a paid SaaS license.'
+                                      : 'Kuota Tamu Spark (2x/bulan): Hanya membuka Audit Ide Fase 1–2. Fase 3–7, Ekspor Kode/Docker penuh & Live MCP wajib menggunakan lisensi SaaS berbayar.'}
+                                  </div>
+                                ) : (
+                                  <div className="p-2 bg-emerald-100/80 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/70 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] leading-snug">
+                                    {isEn
+                                      ? 'All Satu Pintu selections (Sector, Stack, Visual UI & Regulation) attach directly to your SaaS license checkout & Customer Portal.'
+                                      : 'Seluruh konfigurasi Satu Pintu (Sektor, Stack, Visual UI & Regulasi) otomatis dikunci ke Lisensi SaaS & Dashboard Akun Anda pasca-checkout.'}
+                                  </div>
+                                )}
+
+                                <button
+                                  type="button"
+                                  id="wizard-retail-buy-license-btn"
+                                  onClick={() => launchSatuPintuCheckout(wizardRetailTier)}
+                                  className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 rounded-none transition cursor-pointer text-center"
+                                >
+                                  <span>
+                                    {wizardRetailTier === 'retail_spark'
+                                      ? (isEn ? '🧪 Claim Free Spark Audit Quota (Phase 1–2) →' : '🧪 Klaim Kuota Audit Gratis Spark (Fase 1–2) →')
+                                      : wizardRetailTier === 'impact_nonprofit_grant'
+                                        ? (isEn ? '🕊️ Apply CSR Grant Verification & Lock Spec →' : '🕊️ Ajukan Verifikasi Hibah CSR & Kunci Spek →')
+                                        : (isEn ? '💳 Activate SaaS License & Lock Blueprint →' : '💳 Aktifkan Lisensi SaaS & Kunci Blueprint →')}
+                                  </span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => scrollToCatalogSection('retail')}
+                                  className="w-full py-2 px-2.5 bg-white hover:bg-zinc-100 text-zinc-950 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 font-mono text-[10px] font-black uppercase tracking-wider border border-zinc-400 dark:border-zinc-700 rounded-none cursor-pointer transition text-center"
+                                >
+                                  <span>{isEn ? '↓ Compare All 7 Retail SaaS Packages Below' : '↓ Bandingkan Rincian 7 Paket SaaS Retail di Bawah'}</span>
+                                </button>
                               </div>
                             </div>
                           ) : (
                             <div className="space-y-3">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black uppercase">
-                                  MITRA TURNKEY // ESCROW RAB V8.0
+                                  MITRA TURNKEY // ESCROW RAB V11.0
                                 </span>
-                                <span className="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400 tabular-nums">
+                                <span className="font-mono text-[10px] font-bold text-zinc-700 dark:text-zinc-300 tabular-nums">
                                   Rp {formatIdrPlain(hourlyRate)}/jam &bull; {activeStack.mult}x
                                 </span>
                               </div>
@@ -1442,7 +1519,7 @@ export default function ArchitecturePricingIsland({
                                   </span>
                                 </div>
                                 <div className="text-[11px] font-mono text-zinc-700 dark:text-zinc-300 mt-1">
-                                  UI Terpilih: <strong>{activeVisualUi.code}</strong> &bull; Milestone Escrow Gate
+                                  UI Terpilih: <strong>{activeVisualUi.code}</strong> &bull; SPK SHA-256 + Garansi SLA 90 Hari
                                 </div>
                                 <div className="mt-2 grid grid-cols-3 gap-1.5 font-mono text-[10px] tabular-nums">
                                   <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
@@ -1459,28 +1536,41 @@ export default function ArchitecturePricingIsland({
                                   </div>
                                 </div>
                               </div>
-                              <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                                <a
-                                  href={`/blueprint/studio?mode=mitra&sector=${wizardSector.code}&stack=${wizardStackCode}${blueprintQueryTail}`}
-                                  className="w-full py-2.5 px-3 bg-zinc-950 hover:bg-zinc-800 text-amber-300 dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 rounded-none transition text-center"
-                                >
-                                  <span>{isEn ? '1. Open Mitra Studio (RAB, SPK & UAT) →' : '1. Buka Studio Mitra (RAB, SPK & UAT) →'}</span>
-                                </a>
-                                <div className="grid grid-cols-2 gap-2">
-                                  <a
-                                    href={`/blueprint?track=mitra&sector=${wizardSector.code}&stack=${wizardStackCode}&new=1${blueprintQueryTail}`}
-                                    className="py-2 px-2.5 bg-white hover:bg-zinc-100 text-zinc-950 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 font-mono text-[10px] font-black uppercase tracking-wider border border-zinc-300 dark:border-zinc-700 rounded-none text-center"
+                              <div className="space-y-2.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                                <div>
+                                  <label className="block font-mono text-[10px] font-black uppercase tracking-wider text-zinc-800 dark:text-zinc-200 mb-1">
+                                    {isEn ? 'STEP F — SELECT MITRA STUDIO CONTRACT *' : 'LANGKAH F — PILIH KONTRAK REKAYASA MITRA STUDIO *'}
+                                  </label>
+                                  <select
+                                    id="wizard-step-f-mitra-package"
+                                    value={wizardMitraTier}
+                                    onChange={(e) => setWizardMitraTier(e.target.value)}
+                                    className="w-full px-2.5 py-2 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-amber-500 text-zinc-950 dark:text-zinc-100 font-mono text-[11px] font-bold rounded-none focus:border-amber-500 outline-none"
                                   >
-                                    <span>📐 Wizard Baru</span>
-                                  </a>
-                                  <button
-                                    type="button"
-                                    onClick={() => openBookingModal('full_mvp')}
-                                    className="py-2 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[10px] font-black uppercase tracking-wider rounded-none cursor-pointer"
-                                  >
-                                    <span>🗓️ Kunci Slot Sprint</span>
-                                  </button>
+                                    {mitraWizardPackages.map((mOpt) => (
+                                      <option key={mOpt.key} value={mOpt.key}>
+                                        {mOpt.label}
+                                      </option>
+                                    ))}
+                                  </select>
                                 </div>
+
+                                <button
+                                  type="button"
+                                  id="wizard-mitra-lock-contract-btn"
+                                  onClick={() => launchSatuPintuCheckout(wizardMitraTier)}
+                                  className="w-full py-2.5 px-3 bg-zinc-950 hover:bg-zinc-800 text-amber-300 dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 rounded-none transition cursor-pointer text-center"
+                                >
+                                  <span>{isEn ? '🗓️ Lock Sprint Slot & Mitra Contract →' : '🗓️ Kunci Slot Sprint & Kontrak Mitra →'}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => scrollToCatalogSection('project')}
+                                  className="w-full py-2 px-2.5 bg-white hover:bg-zinc-100 text-zinc-950 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100 font-mono text-[10px] font-black uppercase tracking-wider border border-zinc-400 dark:border-zinc-700 rounded-none cursor-pointer transition text-center"
+                                >
+                                  <span>{isEn ? '↓ Compare Mitra Studio Contracts Below' : '↓ Bandingkan Rincian Kontrak Mitra di Bawah'}</span>
+                                </button>
                               </div>
                             </div>
                           )}
@@ -2201,13 +2291,14 @@ export default function ArchitecturePricingIsland({
                           <ArrowRight className="w-3.5 h-3.5" />
                         </button>
 
-                        <a
-                          href="/blueprint"
-                          className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
+                        <button
+                          type="button"
+                          onClick={() => switchPricingTab('retail')}
+                          className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center cursor-pointer"
                         >
                           <Terminal className="w-3.5 h-3.5 text-emerald-500" />
-                          <span>{isEn ? 'TRY LIVE GENERATOR' : 'COBA GENERATOR BLUEPRINT'}</span>
-                        </a>
+                          <span>{isEn ? 'SEE SELF-SERVICE SAAS PACKAGES' : 'LIHAT PAKET SAAS MANDIRI'}</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -2447,12 +2538,13 @@ export default function ArchitecturePricingIsland({
                           : '5 Jembatan Komersial & Hukum: Anti-Underpricing, Anti-Scope-Creep & BAST Digital'}
                       </h3>
                     </div>
-                    <a
-                      href="/blueprint/studio?mode=mitra"
-                      className="px-3.5 py-2 bg-zinc-950 hover:bg-zinc-800 text-amber-300 dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider rounded-none transition shrink-0 text-center"
+                    <button
+                      type="button"
+                      onClick={() => openBookingModal('full_mvp')}
+                      className="px-3.5 py-2 bg-zinc-950 hover:bg-zinc-800 text-amber-300 dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider rounded-none transition shrink-0 text-center cursor-pointer"
                     >
-                      {isEn ? 'Try Mitra Mode in 3-Pane Studio →' : 'Coba Mode Mitra di 3-Pane Studio →'}
-                    </a>
+                      {isEn ? 'Lock Mitra Contract & Sprint →' : 'Kunci Kontrak Mitra & Sprint →'}
+                    </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
                     {[
@@ -2599,12 +2691,13 @@ export default function ArchitecturePricingIsland({
                         </div>
                         <div className="flex items-center justify-between gap-2 text-[10px] font-mono text-zinc-400">
                           <span>+ ./verify-blueprint.sh (CI Gate)</span>
-                          <a
-                            href="/blueprint"
-                            className="text-emerald-400 hover:text-emerald-300 font-black uppercase underline"
+                          <button
+                            type="button"
+                            onClick={() => openBookingModal('retail_pro')}
+                            className="text-emerald-400 hover:text-emerald-300 font-black uppercase underline cursor-pointer"
                           >
-                            {isEn ? 'Open Blueprint Studio →' : 'Buka Blueprint Studio →'}
-                          </a>
+                            {isEn ? 'Activate Studio License →' : 'Aktifkan Lisensi Studio →'}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -2797,18 +2890,32 @@ export default function ArchitecturePricingIsland({
                                   : `Mengunci ${activeTab3Ui.code} langsung ke Prompt Fase 5 & Segel Scope SHA-256.`}
                               </span>
                               <div className="flex flex-wrap items-center gap-2">
-                                <a
-                                  href={`/blueprint?sector=${activeSectorItem.code}&ui_variant=${encodeURIComponent(activeTab3Ui.code)}&shell=${encodeURIComponent(activeTab3Ui.shell)}&new=1`}
-                                  className="px-4 py-2 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider rounded-none transition"
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      notes: `[SECTORAL UI LOCKED] Sector=${activeSectorItem.code} | UI=${activeTab3Ui.code} (${activeTab3Ui.shell})`,
+                                    }));
+                                    openBookingModal('retail_pro');
+                                  }}
+                                  className="px-4 py-2 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider rounded-none transition cursor-pointer"
                                 >
-                                  {isEn ? 'Use This UI in Wizard →' : 'Pakai UI Ini di Wizard →'}
-                                </a>
-                                <a
-                                  href={`/blueprint/studio?sector=${activeSectorItem.code}&ui_variant=${encodeURIComponent(activeTab3Ui.code)}&shell=${encodeURIComponent(activeTab3Ui.shell)}`}
-                                  className="px-3.5 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-700 font-mono text-xs font-black uppercase rounded-none transition"
+                                  {isEn ? '💳 Activate Retail License with This UI →' : '💳 Aktifkan Lisensi Retail dengan UI Ini →'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      notes: `[MITRA UI LOCKED] Sector=${activeSectorItem.code} | UI=${activeTab3Ui.code} (${activeTab3Ui.shell})`,
+                                    }));
+                                    openBookingModal('full_mvp');
+                                  }}
+                                  className="px-3.5 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-700 font-mono text-xs font-black uppercase rounded-none transition cursor-pointer"
                                 >
-                                  {isEn ? '🖥️ Open Studio' : '🖥️ Buka Studio'}
-                                </a>
+                                  {isEn ? '🗓️ Lock Mitra Turnkey' : '🗓️ Kunci Kontrak Mitra'}
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => switchPricingTab('retail')}
@@ -2881,14 +2988,15 @@ export default function ArchitecturePricingIsland({
                           {isEn ? 'Raw AI Prompt Slop vs NeriahPro Deterministic Engineering' : 'Tanpa NeriahPro (Raw AI Prompt) vs Dengan Project OS v4.0'}
                         </h3>
                       </div>
-                      <a
-                        href="/blueprint/studio"
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-xs font-black uppercase border border-emerald-500 rounded-none transition shrink-0"
+                      <button
+                        type="button"
+                        onClick={() => openBookingModal('retail_pro')}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-xs font-black uppercase border border-emerald-500 rounded-none transition shrink-0 cursor-pointer"
                       >
                         <Terminal className="w-4 h-4" />
-                        <span>{isEn ? 'OPEN 3-PANE ARCHITECT STUDIO' : 'BUKA 3-PANE ARCHITECT STUDIO'}</span>
+                        <span>{isEn ? 'ACTIVATE PRO AGENTIC STUDIO LICENSE' : 'AKTIFKAN LISENSI PRO AGENTIC STUDIO'}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
-                      </a>
+                      </button>
                     </div>
 
                     {(() => {
@@ -3050,12 +3158,13 @@ return match (true) {
                               : 'JEMBATAN HARDWARE FISIK, WEBSOCKET TANPA POLLING, PARTISI PG16 0% N+1, SYNTAX LOCK 2026 & BUKU SOP BAST'}
                           </div>
                         </div>
-                        <a
-                          href="/blueprint/studio"
-                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 border border-emerald-700 font-mono text-[10px] font-black uppercase rounded-none transition whitespace-nowrap"
+                        <button
+                          type="button"
+                          onClick={() => openBookingModal('retail_ultimate')}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 border border-emerald-700 font-mono text-[10px] font-black uppercase rounded-none transition whitespace-nowrap cursor-pointer"
                         >
-                          {isEn ? 'INSPECT IN 3-PANE STUDIO →' : 'BUKA DI 3-PANE STUDIO →'}
-                        </a>
+                          {isEn ? 'UNLOCK ULTIMATE OS LICENSE →' : 'AKTIFKAN LISENSI ULTIMATE OS →'}
+                        </button>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">

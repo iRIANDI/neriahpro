@@ -2,19 +2,52 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\VisionBlueprint;
+use App\Mail\BlueprintReadyNotificationMail;
+use App\Models\AuditLog;
 use App\Models\BlueprintVoucher;
-use App\Models\Document;
 use App\Models\CmsGlobalSetting;
-use App\Services\MidtransSnapService;
+use App\Models\Document;
+use App\Models\LeadContact;
+use App\Models\PosChangeRequest;
+use App\Models\PosProject;
+use App\Models\Transaction;
+use App\Models\User;
+use App\Models\VisionBlueprint;
+use App\Services\BlueprintDeltaEvolutionService;
 use App\Services\BlueprintDiscoveryService;
+use App\Services\BlueprintDoctorService;
 use App\Services\BlueprintRefinementService;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
+use App\Services\BlueprintSlopScannerService;
+use App\Services\BrownfieldMigrationAuditorService;
+use App\Services\MidtransSnapService;
+use App\Services\PosCommercialBridgeService;
+use App\Services\PrdGeneratorService;
+use App\Services\ProjectOsBlueprintCompilerService;
+use App\Services\ScaffoldGeneratorService;
+use App\Services\Security\DocumentThreatSanitizerService;
+use App\Services\TopologicalPromptChunker;
+use App\Support\ContractLegalHelper;
+use App\Support\InputHygieneStandard;
+use App\Support\PosAgentShieldAndCoDesignCatalog;
+use App\Support\PosDualZoneFrontendAndSaasCatalog;
+use App\Support\PosEnterpriseGuaranteeCatalog;
+use App\Support\PosInclusiveCommercialCatalog;
+use App\Support\PosRealWorldRuntimeCatalog;
+use App\Support\PosSectorUiArchetypeCatalog;
+use App\Support\PosStackPresetCatalog;
+use App\Support\PricingRegistry;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Notifications\Actions\Action;
+use Filament\Notifications\Notification;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class BlueprintController extends Controller
 {
@@ -25,7 +58,7 @@ class BlueprintController extends Controller
     private function authorizeBlueprintAccess(VisionBlueprint $blueprint): void
     {
         $user = Auth::user();
-        
+
         // Lead Architects / Super Admins bypass
         if ($user && ($user->isSuperAdmin() || $user->hasRole('super_admin') || str_contains($user->email, 'neriahpro'))) {
             return;
@@ -50,10 +83,11 @@ class BlueprintController extends Controller
             abort(403, 'Akses Ditolak: Dokumen ini terproteksi hak cipta Neriah Pro dan hanya dapat diakses oleh pemilik lisensi terdaftar.');
         }
     }
+
     /**
      * Show the public Project OS & Vision Blueprint Questionnaire form.
      */
-    public function create(Request $request): \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+    public function create(Request $request): View|RedirectResponse
     {
         $globalSettings = CmsGlobalSetting::getAllCached();
         $isBlueprintEnabled = (bool) ($globalSettings['feature_enable_vision_blueprint']->value ?? true);
@@ -67,12 +101,12 @@ class BlueprintController extends Controller
         $draftId = $request->query('draft_id');
         $track = $request->query('track');
 
-        // Direct Access Guard:
-        // Wajib memilih paket terlebih dahulu dari halaman pricing (/pricing#retail).
-        // Jika pengguna langsung mengakses https://neriahpro.com/blueprint tanpa memilih paket
-        // (tanpa query ?tier=..., ?package=..., ?slug=..., atau ?draft_id=...), arahkan ke halaman pricing.
-        if (! $tier && ! $slug && ! $draftId && ! $track) {
-            return redirect('/pricing#retail');
+        // Direct Access & Satu Pintu Commercial Gate (v11.0):
+        // Wajib memilih paket SaaS terlebih dahulu dari halaman pricing (/pricing#retail atau /pricing#project).
+        // Hanya mengizinkan akses apabila memilih tier eksplisit (?tier=...), membuka blueprint sah (?slug=...), atau melanjutkan draft (?draft_id=...).
+        // Query ?track=retail atau ?track=mitra TANPA tier dilarang menerobos gerbang harga!
+        if (! $tier && ! $slug && ! $draftId) {
+            return redirect($track === 'mitra' ? '/pricing#project' : '/pricing#retail');
         }
 
         // Defensive cleanup if draft_id contains query separators (e.g. "?track=...")
@@ -126,21 +160,21 @@ class BlueprintController extends Controller
                     'publicUxPreset' => $existingBp->user_metadata['public_ux_preset'] ?? null,
                     'outputLocale' => $existingBp->user_metadata['output_locale'] ?? 'id',
                     'personaMode' => $existingBp->user_metadata['persona_mode'] ?? 'BUSINESS_WIZARD',
-                    'stackPreset' => \App\Support\PosStackPresetCatalog::normalizePresetCode(
+                    'stackPreset' => PosStackPresetCatalog::normalizePresetCode(
                         $existingBp->user_metadata['stack_preset']
                         ?? ($existingBp->prd_content['universal_blueprint_schema']['project_metadata']['stack_preset'] ?? null)
                     ),
                     '_meta' => [
                         'is_editing_slug' => $slug,
-                        'draft_token' => 'edit_' . $slug,
+                        'draft_token' => 'edit_'.$slug,
                         'is_fresh_workspace' => false,
                         'raw_idea_text' => $existingBp->masalah_utama,
-                    ]
+                    ],
                 ];
             }
-        } elseif ($draftId && !$request->boolean('reset') && !$request->has('new') && !$request->has('clean')) {
-            if (Cache::has('blueprint_draft_' . $draftId)) {
-                $initialData = Cache::get('blueprint_draft_' . $draftId, []);
+        } elseif ($draftId && ! $request->boolean('reset') && ! $request->has('new') && ! $request->has('clean')) {
+            if (Cache::has('blueprint_draft_'.$draftId)) {
+                $initialData = Cache::get('blueprint_draft_'.$draftId, []);
                 if (is_array($initialData) && ! empty($initialData)) {
                     $initialData['_meta'] = array_merge($initialData['_meta'] ?? [], [
                         'draft_token' => $draftId,
@@ -155,9 +189,9 @@ class BlueprintController extends Controller
             // MUST start 100% clean with a brand-new draft_token — ZERO bleed from previous projects!
             session()->forget('blueprint_draft');
             if ($draftId) {
-                Cache::forget('blueprint_draft_' . $draftId);
+                Cache::forget('blueprint_draft_'.$draftId);
             }
-            $freshToken = 'draft_' . strtolower((string) Str::ulid());
+            $freshToken = 'draft_'.strtolower((string) Str::ulid());
             $initialData = [
                 '_meta' => [
                     'draft_token' => $freshToken,
@@ -166,7 +200,7 @@ class BlueprintController extends Controller
             ];
         }
 
-        if (!is_array($initialData)) {
+        if (! is_array($initialData)) {
             $initialData = [];
         }
 
@@ -188,17 +222,17 @@ class BlueprintController extends Controller
             $initialData['track'] = 'retail';
             if (empty($initialData['kisaranBudget']) || str_contains($initialData['kisaranBudget'], 'Growth') || str_contains($initialData['kisaranBudget'], '15.000.000')) {
                 $tierLower = strtolower((string) $tier);
-                $satuPintu = \App\Support\PricingRegistry::getSatuPintuCatalog();
+                $satuPintu = PricingRegistry::getSatuPintuCatalog();
                 if ($tierLower === 'starter' || $tierLower === 'lite' || $tierLower === 'retail_starter' || $tierLower === 'retail_lite') {
-                    $liteLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_LITE]['formatted_price'] ?? 'Rp 99.000';
+                    $liteLabel = $satuPintu[PricingRegistry::TIER_RETAIL_LITE]['formatted_price'] ?? 'Rp 99.000';
                     $initialData['kisaranBudget'] = "Lite: {$liteLabel} (PRD 26 Parameter, Schema DDL & AI Directives)";
                     $initialData['terminPembayaran'] = 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
                 } elseif ($tierLower === 'pro' || $tierLower === 'retail_pro') {
-                    $proLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_PRO]['formatted_price'] ?? 'Rp 399.000';
+                    $proLabel = $satuPintu[PricingRegistry::TIER_RETAIL_PRO]['formatted_price'] ?? 'Rp 399.000';
                     $initialData['kisaranBudget'] = "Pro: {$proLabel} (Bundel Lengkap DDL, Docker Compose & Seeder)";
                     $initialData['terminPembayaran'] = 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
                 } elseif ($tierLower === 'ultimate' || $tierLower === 'retail_ultimate') {
-                    $ultLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_ULTIMATE]['formatted_price'] ?? 'Rp 1.490.000';
+                    $ultLabel = $satuPintu[PricingRegistry::TIER_RETAIL_ULTIMATE]['formatted_price'] ?? 'Rp 1.490.000';
                     $initialData['kisaranBudget'] = "Ultimate: {$ultLabel} (Full 10 Pilar Software Factory OS Turnkey Starter Kit)";
                     $initialData['terminPembayaran'] = 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
                 } else {
@@ -225,7 +259,7 @@ class BlueprintController extends Controller
         session()->forget('blueprint_draft');
 
         if ($draftId = $request->input('draft_id')) {
-            Cache::forget('blueprint_draft_' . $draftId);
+            Cache::forget('blueprint_draft_'.$draftId);
         }
 
         return response()->json([
@@ -245,7 +279,7 @@ class BlueprintController extends Controller
                 'success' => true,
                 'message' => 'Idea processed successfully.',
                 'redirect_url' => route('blueprint.create'),
-                'data' => []
+                'data' => [],
             ], 200);
         }
 
@@ -264,7 +298,7 @@ class BlueprintController extends Controller
 
         $rawIdeaText = $request->input('idea_text', '') ?: '';
         $files = $request->file('files', []) ?: [];
-        if (!is_array($files)) {
+        if (! is_array($files)) {
             $files = [$files];
         }
         $locale = $request->input('locale', app()->getLocale() ?: 'id');
@@ -284,11 +318,11 @@ class BlueprintController extends Controller
         $user = auth()->user();
         $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
         $identifier = $user ? $user->email : ($request->ip() ?: '127.0.0.1');
-        $monthKey = 'spark_quota_' . md5($identifier) . '_' . now()->format('Y_m');
+        $monthKey = 'spark_quota_'.md5($identifier).'_'.now()->format('Y_m');
         $currentUsage = (int) Cache::get($monthKey, 0);
 
         if (! $isExempt) {
-            $sparkLimitRaw = \App\Models\CmsGlobalSetting::getVal('pricing_retail_spark_limit', '2x Audit/Bulan');
+            $sparkLimitRaw = CmsGlobalSetting::getVal('pricing_retail_spark_limit', '2x Audit/Bulan');
             $maxSparkLimit = 2;
             if (preg_match('/(\d+)/', (string) $sparkLimitRaw, $matches)) {
                 $maxSparkLimit = (int) $matches[1];
@@ -298,7 +332,7 @@ class BlueprintController extends Controller
                 return response()->json([
                     'success' => false,
                     'error_code' => 'SPARK_QUOTA_EXCEEDED',
-                    'message' => 'Batas kuota gratis paket Spark (' . $maxSparkLimit . 'x analisis per bulan) telah tercapai untuk bulan ini. Kuota Anda akan di-reset otomatis pada awal bulan depan. Silakan login atau upgrade ke paket Lite / Pro untuk akses tak terbatas.',
+                    'message' => 'Batas kuota gratis paket Spark ('.$maxSparkLimit.'x analisis per bulan) telah tercapai untuk bulan ini. Kuota Anda akan di-reset otomatis pada awal bulan depan. Silakan login atau upgrade ke paket Lite / Pro untuk akses tak terbatas.',
                     'limit' => $maxSparkLimit,
                     'current_usage' => $currentUsage,
                     'reset_at' => now()->startOfMonth()->addMonth()->format('d M Y'),
@@ -324,7 +358,7 @@ class BlueprintController extends Controller
             }
 
             $draftId = (string) Str::ulid();
-            Cache::put('blueprint_draft_' . $draftId, $synthesized, now()->addHours(24));
+            Cache::put('blueprint_draft_'.$draftId, $synthesized, now()->addHours(24));
             session(['blueprint_draft' => $synthesized]);
 
             $aiTelemetry = $synthesized['_meta']['ai_telemetry'] ?? null;
@@ -332,7 +366,7 @@ class BlueprintController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => $locale === 'en' 
+                'message' => $locale === 'en'
                     ? 'Project blueprint synthesized successfully via MarkItDown & AI Engine.'
                     : 'Ide proyek berhasil dianalisis via MarkItDown & AI Engine.',
                 'draft_id' => $draftId,
@@ -343,17 +377,17 @@ class BlueprintController extends Controller
                 'converted_markdown' => $synthesized['_meta']['converted_markdown'] ?? '',
                 'ai_telemetry' => $aiTelemetry,
                 'notification' => $failoverNotice,
-                'data' => $synthesized
+                'data' => $synthesized,
             ]);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 422);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memproses ide: ' . $e->getMessage()
+                'message' => 'Gagal memproses ide: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -406,7 +440,7 @@ class BlueprintController extends Controller
                         return response()->json([
                             'success' => false,
                             'error_code' => 'REVISION_WINDOW_EXPIRED',
-                            'message' => 'Jendela revisi ' . $allowedDays . ' hari untuk paket ' . ucfirst($tier) . ' telah berakhir pada ' . $expirationDate->format('d M Y') . '. Silakan upgrade paket atau hubungi Lead Architect Neriah Pro untuk perpanjangan.',
+                            'message' => 'Jendela revisi '.$allowedDays.' hari untuk paket '.ucfirst($tier).' telah berakhir pada '.$expirationDate->format('d M Y').'. Silakan upgrade paket atau hubungi Lead Architect Neriah Pro untuk perpanjangan.',
                             'expired_at' => $expirationDate->toIso8601String(),
                         ], 403);
                     }
@@ -428,12 +462,12 @@ class BlueprintController extends Controller
         } catch (\InvalidArgumentException $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 422);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memproses ide tambahan: ' . $e->getMessage()
+                'message' => 'Gagal memproses ide tambahan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -444,10 +478,10 @@ class BlueprintController extends Controller
     public function autoSave(Request $request): JsonResponse
     {
         $blueprint = $request->input('blueprint', []);
-        $draftId = $request->input('draft_id') ?: ('draft_' . strtolower((string) Str::ulid()));
+        $draftId = $request->input('draft_id') ?: ('draft_'.strtolower((string) Str::ulid()));
         $persistedToDb = false;
 
-        if (!empty($blueprint) && is_array($blueprint)) {
+        if (! empty($blueprint) && is_array($blueprint)) {
             // HERMETIC ISOLATION (v6.0): Scope draft strictly to its unique draft_id cache key;
             // NEVER overwrite an existing DB VisionBlueprint unless explicitly editing a slug (`is_explicit_slug_edit === true`)!
             $isExplicitEdit = $request->has('is_explicit_slug_edit')
@@ -458,7 +492,7 @@ class BlueprintController extends Controller
             if (! $isExplicitEdit) {
                 unset($cleanDraft['_meta']['is_editing_slug']);
             }
-            Cache::put('blueprint_draft_' . $draftId, $cleanDraft, now()->addDays(7));
+            Cache::put('blueprint_draft_'.$draftId, $cleanDraft, now()->addDays(7));
 
             $slug = $isExplicitEdit
                 ? (string) ($request->input('slug') ?: ($blueprint['_meta']['is_editing_slug'] ?? ''))
@@ -494,7 +528,7 @@ class BlueprintController extends Controller
                             return response()->json([
                                 'success' => false,
                                 'error_code' => 'REVISION_WINDOW_EXPIRED',
-                                'message' => 'Jendela revisi ' . $allowedDays . ' hari untuk paket ' . ucfirst($tier) . ' telah berakhir pada ' . $expirationDate->format('d M Y') . '.',
+                                'message' => 'Jendela revisi '.$allowedDays.' hari untuk paket '.ucfirst($tier).' telah berakhir pada '.$expirationDate->format('d M Y').'.',
                                 'expired_at' => $expirationDate->toIso8601String(),
                             ], 403);
                         }
@@ -521,7 +555,7 @@ class BlueprintController extends Controller
                         $meta['selected_menus'] = $blueprint['selectedMenus'];
                     }
                     if (! empty($blueprint['stackPreset'])) {
-                        $meta['stack_preset'] = \App\Support\PosStackPresetCatalog::normalizePresetCode($blueprint['stackPreset']);
+                        $meta['stack_preset'] = PosStackPresetCatalog::normalizePresetCode($blueprint['stackPreset']);
                     }
                     if (! empty($blueprint['selectedUiVariant'])) {
                         $meta['selected_ui_variant'] = (string) $blueprint['selectedUiVariant'];
@@ -530,34 +564,64 @@ class BlueprintController extends Controller
                         $meta['navigation_shell'] = (string) $blueprint['navigationShell'];
                     }
                     if (! empty($blueprint['publicUxPreset'])) {
-                        $meta['public_ux_preset'] = \App\Support\PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset((string) $blueprint['publicUxPreset']);
+                        $meta['public_ux_preset'] = PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset((string) $blueprint['publicUxPreset']);
                     }
                     if (! empty($blueprint['outputLocale'])) {
-                        $meta['output_locale'] = \App\Support\PosInclusiveCommercialCatalog::normalizeOutputLocale((string) $blueprint['outputLocale']);
+                        $meta['output_locale'] = PosInclusiveCommercialCatalog::normalizeOutputLocale((string) $blueprint['outputLocale']);
                     }
                     if (! empty($blueprint['personaMode'])) {
-                        $meta['persona_mode'] = \App\Support\PosInclusiveCommercialCatalog::normalizePersonaMode((string) $blueprint['personaMode']);
+                        $meta['persona_mode'] = PosInclusiveCommercialCatalog::normalizePersonaMode((string) $blueprint['personaMode']);
                     }
                     $meta['last_autosaved_at'] = now()->toIso8601String();
 
                     $updatePayload = [
                         'user_metadata' => $meta,
                     ];
-                    if (!empty($blueprint['namaBisnis'])) $updatePayload['nama_bisnis'] = $blueprint['namaBisnis'];
-                    if (!empty($blueprint['clientName'])) $updatePayload['client_name'] = $blueprint['clientName'];
-                    if (!empty($blueprint['email'])) $updatePayload['email'] = \App\Support\InputHygieneStandard::sanitizeStrictEmail((string) $blueprint['email']);
-                    if (!empty($blueprint['phone'])) $updatePayload['phone'] = \App\Support\InputHygieneStandard::toE164((string) ($blueprint['countryCode'] ?? '+62'), (string) $blueprint['phone']);
-                    if (!empty($blueprint['masalahUtama'])) $updatePayload['masalah_utama'] = $blueprint['masalahUtama'];
-                    if (!empty($blueprint['tujuanUtama'])) $updatePayload['tujuan_utama'] = $blueprint['tujuanUtama'];
-                    if (!empty($blueprint['targetAudiens'])) $updatePayload['target_audiens'] = $blueprint['targetAudiens'];
-                    if (!empty($blueprint['aktorSistem'])) $updatePayload['aktor_sistem'] = $blueprint['aktorSistem'];
-                    if (!empty($blueprint['fiturWajib'])) $updatePayload['fitur_wajib'] = $blueprint['fiturWajib'];
-                    if (isset($blueprint['fiturTambahan'])) $updatePayload['fitur_tambahan'] = $blueprint['fiturTambahan'];
-                    if (!empty($blueprint['alurKerja'])) $updatePayload['alur_kerja'] = $blueprint['alurKerja'];
-                    if (isset($blueprint['kebutuhanIntegrasi'])) $updatePayload['kebutuhan_integrasi'] = $blueprint['kebutuhanIntegrasi'];
-                    if (isset($blueprint['referensiDesain'])) $updatePayload['referensi_desain'] = $blueprint['referensiDesain'];
-                    if (isset($blueprint['kesiapanAset'])) $updatePayload['kesiapan_aset'] = $blueprint['kesiapanAset'];
-                    if (isset($blueprint['targetWaktu'])) $updatePayload['target_waktu'] = $blueprint['targetWaktu'];
+                    if (! empty($blueprint['namaBisnis'])) {
+                        $updatePayload['nama_bisnis'] = $blueprint['namaBisnis'];
+                    }
+                    if (! empty($blueprint['clientName'])) {
+                        $updatePayload['client_name'] = $blueprint['clientName'];
+                    }
+                    if (! empty($blueprint['email'])) {
+                        $updatePayload['email'] = InputHygieneStandard::sanitizeStrictEmail((string) $blueprint['email']);
+                    }
+                    if (! empty($blueprint['phone'])) {
+                        $updatePayload['phone'] = InputHygieneStandard::toE164((string) ($blueprint['countryCode'] ?? '+62'), (string) $blueprint['phone']);
+                    }
+                    if (! empty($blueprint['masalahUtama'])) {
+                        $updatePayload['masalah_utama'] = $blueprint['masalahUtama'];
+                    }
+                    if (! empty($blueprint['tujuanUtama'])) {
+                        $updatePayload['tujuan_utama'] = $blueprint['tujuanUtama'];
+                    }
+                    if (! empty($blueprint['targetAudiens'])) {
+                        $updatePayload['target_audiens'] = $blueprint['targetAudiens'];
+                    }
+                    if (! empty($blueprint['aktorSistem'])) {
+                        $updatePayload['aktor_sistem'] = $blueprint['aktorSistem'];
+                    }
+                    if (! empty($blueprint['fiturWajib'])) {
+                        $updatePayload['fitur_wajib'] = $blueprint['fiturWajib'];
+                    }
+                    if (isset($blueprint['fiturTambahan'])) {
+                        $updatePayload['fitur_tambahan'] = $blueprint['fiturTambahan'];
+                    }
+                    if (! empty($blueprint['alurKerja'])) {
+                        $updatePayload['alur_kerja'] = $blueprint['alurKerja'];
+                    }
+                    if (isset($blueprint['kebutuhanIntegrasi'])) {
+                        $updatePayload['kebutuhan_integrasi'] = $blueprint['kebutuhanIntegrasi'];
+                    }
+                    if (isset($blueprint['referensiDesain'])) {
+                        $updatePayload['referensi_desain'] = $blueprint['referensiDesain'];
+                    }
+                    if (isset($blueprint['kesiapanAset'])) {
+                        $updatePayload['kesiapan_aset'] = $blueprint['kesiapanAset'];
+                    }
+                    if (isset($blueprint['targetWaktu'])) {
+                        $updatePayload['target_waktu'] = $blueprint['targetWaktu'];
+                    }
 
                     $record->update($updatePayload);
                     $persistedToDb = true;
@@ -571,7 +635,7 @@ class BlueprintController extends Controller
             'success' => true,
             'draft_id' => $draftId,
             'persisted_to_db' => $persistedToDb,
-            'saved_at' => now()->timezone($tz)->format('H:i:s') . ' WIB',
+            'saved_at' => now()->timezone($tz)->format('H:i:s').' WIB',
         ]);
     }
 
@@ -605,7 +669,7 @@ class BlueprintController extends Controller
         $contractDocument = $blueprint->getContractDocument();
 
         // Ensure PRD content is populated or regenerate if requested and scope is not locked
-        if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['engineering_specs']) || (request()->has('regenerate') && !$isScopeLocked)) {
+        if (empty($blueprint->prd_content) || ! isset($blueprint->prd_content['engineering_specs']) || (request()->has('regenerate') && ! $isScopeLocked)) {
             $blueprint->generateAndSavePrd();
             $blueprint->refresh();
         }
@@ -627,26 +691,26 @@ class BlueprintController extends Controller
     public function generateContract(string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
-        
+
         $existingContract = $blueprint->getContractDocument();
         if ($existingContract && ($blueprint->isContractSigned() || $blueprint->isDpConfirmed())) {
             return redirect()->route('document.sign', ['document' => $existingContract->id]);
         }
 
         // Ensure PRD with itemized estimation is populated
-        if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['itemized_cost_breakdown'])) {
+        if (empty($blueprint->prd_content) || ! isset($blueprint->prd_content['itemized_cost_breakdown'])) {
             $blueprint->generateAndSavePrd();
             $blueprint->refresh();
         }
 
         $tier = request('tier', 'standard');
-        $matchedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+        $matchedTier = PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
         $contractAmount = (float) $matchedTier['contract_amount'];
 
         // Check if voucher applied
         $voucherCode = strtoupper(trim((string) request('voucher', request('voucher_code', ''))));
         $appliedVoucher = null;
-        if (!empty($voucherCode)) {
+        if (! empty($voucherCode)) {
             $voucher = BlueprintVoucher::where('code', $voucherCode)->first();
             if ($voucher && $voucher->isValid()) {
                 $appliedVoucher = $voucher;
@@ -671,7 +735,7 @@ class BlueprintController extends Controller
         }
 
         $document = $blueprint->documents()->where('document_type', 'contract')->first();
-        if (!$document) {
+        if (! $document) {
             $document = $blueprint->convertToDigitalContract($overrides);
         } else {
             $document->update([
@@ -696,14 +760,14 @@ class BlueprintController extends Controller
                 'message' => 'Uang muka (DP) untuk proyek ini sudah terkonfirmasi / lunas. Tidak memerlukan pembayaran ulang.',
             ], 400);
         }
-        
-        if (empty($blueprint->prd_content) || !isset($blueprint->prd_content['itemized_cost_breakdown'])) {
+
+        if (empty($blueprint->prd_content) || ! isset($blueprint->prd_content['itemized_cost_breakdown'])) {
             $blueprint->generateAndSavePrd();
             $blueprint->refresh();
         }
 
         $existingContract = $blueprint->getContractDocument();
-        $isSignedContract = $existingContract && $existingContract->status === 'signed' && (float)$existingContract->contract_amount > 0;
+        $isSignedContract = $existingContract && $existingContract->status === 'signed' && (float) $existingContract->contract_amount > 0;
 
         if ($isSignedContract) {
             $contractAmount = (float) $existingContract->contract_amount;
@@ -712,11 +776,11 @@ class BlueprintController extends Controller
                 'id' => 'signed_contract',
                 'name' => $tierLabel,
                 'contract_amount' => $contractAmount,
-                'dp_amount' => (float)($existingContract->dp_amount ?: ($contractAmount * 0.50)),
+                'dp_amount' => (float) ($existingContract->dp_amount ?: ($contractAmount * 0.50)),
             ];
         } else {
             $tier = $request->input('tier', 'standard');
-            $matchedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+            $matchedTier = PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
             $contractAmount = (float) $matchedTier['contract_amount'];
             $tierLabel = $matchedTier['name'] ?? 'Standard Velocity';
         }
@@ -725,7 +789,7 @@ class BlueprintController extends Controller
         $voucherCode = strtoupper(trim((string) $request->input('voucher_code', '')));
         $voucher = null;
         $discountAmount = 0;
-        if (!empty($voucherCode)) {
+        if (! empty($voucherCode)) {
             $voucher = BlueprintVoucher::where('code', $voucherCode)->first();
             if ($voucher && $voucher->isValid()) {
                 if ($voucher->discount_type === 'percent') {
@@ -747,11 +811,11 @@ class BlueprintController extends Controller
         }
 
         // Guaranteed Order ID generation with full 26-character ULID (45 chars <= 50 Midtrans limit)
-        $orderId = 'NPRO-DP-' . $blueprint->id . '-' . time();
+        $orderId = 'NPRO-DP-'.$blueprint->id.'-'.time();
 
-        $itemName = 'DP (50%) - ' . ($blueprint->nama_bisnis ?: 'Proyek');
+        $itemName = 'DP (50%) - '.($blueprint->nama_bisnis ?: 'Proyek');
         if ($voucher) {
-            $itemName .= ' (Disc ' . $voucher->code . ')';
+            $itemName .= ' (Disc '.$voucher->code.')';
         }
 
         $params = [
@@ -766,17 +830,17 @@ class BlueprintController extends Controller
             ],
             'item_details' => [
                 [
-                    'id' => 'DP-' . strtoupper($matchedTier['id'] ?? $tier),
+                    'id' => 'DP-'.strtoupper($matchedTier['id'] ?? $tier),
                     'price' => $finalDpAmount,
                     'quantity' => 1,
                     'name' => substr($itemName, 0, 50),
-                ]
+                ],
             ],
         ];
 
         $snapResponse = MidtransSnapService::createSnapToken($params);
 
-        if (!$snapResponse['success']) {
+        if (! $snapResponse['success']) {
             return response()->json([
                 'success' => false,
                 'message' => $snapResponse['error'] ?? 'Gagal membuat sesi transaksi Midtrans.',
@@ -798,13 +862,13 @@ class BlueprintController extends Controller
         // Cancel any previous pending transactions for this blueprint's order IDs
         $existingDoc = $blueprint->getContractDocument();
         if ($existingDoc && $existingDoc->midtrans_order_id) {
-            \App\Models\Transaction::where('midtrans_order_id', $existingDoc->midtrans_order_id)
+            Transaction::where('midtrans_order_id', $existingDoc->midtrans_order_id)
                 ->where('status', 'pending')
                 ->update(['status' => 'cancel']);
         }
 
         // Attach/update Digital Contract Document with order_id for webhook fulfillment
-        $isSigned = $existingDoc && $existingDoc->status === 'signed' && (float)$existingDoc->contract_amount > 0;
+        $isSigned = $existingDoc && $existingDoc->status === 'signed' && (float) $existingDoc->contract_amount > 0;
 
         Document::updateOrCreate(
             [
@@ -813,7 +877,7 @@ class BlueprintController extends Controller
                 'document_type' => 'contract',
             ],
             [
-                'title' => $existingDoc?->title ?: ('Perjanjian Kerja Sama - ' . ($blueprint->nama_bisnis ?: $blueprint->client_name)),
+                'title' => $existingDoc?->title ?: ('Perjanjian Kerja Sama - '.($blueprint->nama_bisnis ?: $blueprint->client_name)),
                 'status' => $isSigned ? 'signed' : 'pending_signature',
                 'scope_locked' => $isSigned ? true : false,
                 'contract_amount' => $contractAmount,
@@ -826,7 +890,7 @@ class BlueprintController extends Controller
         );
 
         // Instantly record pending transaction for Blueprint DP in database
-        \App\Models\Transaction::create([
+        Transaction::create([
             'user_id' => $blueprint->user_id,
             'midtrans_order_id' => $orderId,
             'status' => 'pending',
@@ -864,7 +928,7 @@ class BlueprintController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
 
-        if (!$blueprint->isDpConfirmed()) {
+        if (! $blueprint->isDpConfirmed()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Tahap Uang Muka (DP 50%) belum diselesaikan. Silakan selesaikan DP terlebih dahulu.',
@@ -880,13 +944,13 @@ class BlueprintController extends Controller
 
         // Resolve contract amount & pelunasan amount
         $existingContract = $blueprint->getContractDocument();
-        if ($existingContract && (float)$existingContract->contract_amount > 0) {
+        if ($existingContract && (float) $existingContract->contract_amount > 0) {
             $contractAmount = (float) $existingContract->contract_amount;
             $dpAmount = (float) ($existingContract->dp_amount ?: ($contractAmount * 0.50));
             $pelunasanAmount = max(0, $contractAmount - $dpAmount);
         } else {
             $tier = $blueprint->user_metadata['package_tier'] ?? 'standard';
-            $resolvedTier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
+            $resolvedTier = PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
             $contractAmount = (float) ($resolvedTier['contract_amount'] ?? 50000000);
             $dpAmount = (float) ($resolvedTier['dp_amount'] ?? ($contractAmount * 0.50));
             $pelunasanAmount = max(0, $contractAmount - $dpAmount);
@@ -900,8 +964,8 @@ class BlueprintController extends Controller
         }
 
         // 48 characters (11 + 26 + 1 + 10): strictly under Midtrans 50-character limit
-        $orderId = 'NPRO-FINAL-' . $blueprint->id . '-' . time();
-        $itemName = 'Pelunasan (50%) - ' . ($blueprint->nama_bisnis ?: 'Proyek');
+        $orderId = 'NPRO-FINAL-'.$blueprint->id.'-'.time();
+        $itemName = 'Pelunasan (50%) - '.($blueprint->nama_bisnis ?: 'Proyek');
 
         $params = [
             'transaction_details' => [
@@ -919,20 +983,20 @@ class BlueprintController extends Controller
                     'price' => (int) $pelunasanAmount,
                     'quantity' => 1,
                     'name' => substr($itemName, 0, 50),
-                ]
+                ],
             ],
         ];
 
         // Cancel any previous pending pelunasan transaction for this blueprint
-        if ($existingContract && !empty($existingContract->content_clauses['pelunasan_order_id'])) {
-            \App\Models\Transaction::where('midtrans_order_id', $existingContract->content_clauses['pelunasan_order_id'])
+        if ($existingContract && ! empty($existingContract->content_clauses['pelunasan_order_id'])) {
+            Transaction::where('midtrans_order_id', $existingContract->content_clauses['pelunasan_order_id'])
                 ->where('status', 'pending')
                 ->update(['status' => 'cancel']);
         }
 
         $snapResponse = MidtransSnapService::createSnapToken($params);
 
-        if (!$snapResponse['success']) {
+        if (! $snapResponse['success']) {
             return response()->json([
                 'success' => false,
                 'message' => $snapResponse['error'] ?? 'Gagal membuat sesi transaksi Midtrans untuk pelunasan.',
@@ -949,7 +1013,7 @@ class BlueprintController extends Controller
         }
 
         // Instantly record pending transaction for Pelunasan in database
-        \App\Models\Transaction::create([
+        Transaction::create([
             'user_id' => $blueprint->user_id,
             'midtrans_order_id' => $orderId,
             'status' => 'pending',
@@ -973,7 +1037,7 @@ class BlueprintController extends Controller
             'order_id' => $orderId,
             'gross_amount' => (int) $pelunasanAmount,
             'pelunasan_amount' => (int) $pelunasanAmount,
-            'formatted_pelunasan_amount' => 'Rp ' . number_format($pelunasanAmount, 0, ',', '.'),
+            'formatted_pelunasan_amount' => 'Rp '.number_format($pelunasanAmount, 0, ',', '.'),
             'contract_amount' => (int) $contractAmount,
             'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
             'snap_url' => $snapResponse['snap_url'] ?? config('midtrans.snap_url'),
@@ -997,14 +1061,14 @@ class BlueprintController extends Controller
 
         $voucher = BlueprintVoucher::where('code', $code)->first();
 
-        if (!$voucher || !$voucher->isValid()) {
+        if (! $voucher || ! $voucher->isValid()) {
             return response()->json([
                 'valid' => false,
                 'message' => 'Kode voucher tidak valid, kuota telah habis, atau sudah kedaluwarsa.',
             ], 422);
         }
 
-        $isFreeBypass = $voucher->discount_type === 'free_bypass' 
+        $isFreeBypass = $voucher->discount_type === 'free_bypass'
             || ($voucher->discount_type === 'percent' && (float) $voucher->discount_value >= 100);
 
         return response()->json([
@@ -1014,7 +1078,7 @@ class BlueprintController extends Controller
             'discount_value' => (float) $voucher->discount_value,
             'description' => $voucher->description,
             'is_free_bypass' => $isFreeBypass,
-            'message' => 'Voucher valid! ' . ($voucher->description ?: 'Potongan biaya berhasil diterapkan.'),
+            'message' => 'Voucher valid! '.($voucher->description ?: 'Potongan biaya berhasil diterapkan.'),
         ]);
     }
 
@@ -1035,17 +1099,17 @@ class BlueprintController extends Controller
         $code = strtoupper(trim((string) $request->input('code')));
         $voucher = BlueprintVoucher::where('code', $code)->first();
 
-        if (!$voucher || !$voucher->isValid()) {
+        if (! $voucher || ! $voucher->isValid()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Kode voucher tidak valid, kuota telah habis, atau sudah kedaluwarsa.',
             ], 422);
         }
 
-        $isFreeBypass = $voucher->discount_type === 'free_bypass' 
+        $isFreeBypass = $voucher->discount_type === 'free_bypass'
             || ($voucher->discount_type === 'percent' && (float) $voucher->discount_value >= 100);
 
-        if (!$isFreeBypass) {
+        if (! $isFreeBypass) {
             return response()->json([
                 'success' => false,
                 'message' => 'Voucher ini adalah voucher potongan harga/subsidi (bukan gratis 100%). Silakan gunakan tombol "Bayar Sekarang via Midtrans Snap" untuk melakukan pembayaran DP dengan harga diskon.',
@@ -1071,7 +1135,7 @@ class BlueprintController extends Controller
 
         // Interconnect with Document/Contract if exists
         $document = $blueprint->documents()->where('document_type', 'contract')->first();
-        if (!$document) {
+        if (! $document) {
             $blueprint->convertToDigitalContract([
                 'contract_amount' => 0.00,
                 'dp_amount' => 0.00,
@@ -1093,13 +1157,13 @@ class BlueprintController extends Controller
         }
 
         // Send Email Notification to Customer
-        if (!empty($blueprint->email) && filter_var($blueprint->email, FILTER_VALIDATE_EMAIL) && !str_contains($blueprint->email, '@example.com')) {
+        if (! empty($blueprint->email) && filter_var($blueprint->email, FILTER_VALIDATE_EMAIL) && ! str_contains($blueprint->email, '@example.com')) {
             try {
-                \Illuminate\Support\Facades\Mail::to($blueprint->email)->send(
-                    new \App\Mail\BlueprintReadyNotificationMail($blueprint, 'Free Grant // Voucher')
+                Mail::to($blueprint->email)->send(
+                    new BlueprintReadyNotificationMail($blueprint, 'Free Grant // Voucher')
                 );
             } catch (\Throwable $mailEx) {
-                \Illuminate\Support\Facades\Log::warning('Gagal kirim notifikasi claim voucher: ' . $mailEx->getMessage());
+                \Illuminate\Support\Facades\Log::warning('Gagal kirim notifikasi claim voucher: '.$mailEx->getMessage());
             }
         }
 
@@ -1119,30 +1183,30 @@ class BlueprintController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
-        
+
         $prd = $blueprint->prd_content;
-        if (empty($prd) || !is_array($prd) || empty($prd['features'])) {
+        if (empty($prd) || ! is_array($prd) || empty($prd['features'])) {
             try {
-                $prd = \App\Services\PrdGeneratorService::generate($blueprint);
+                $prd = PrdGeneratorService::generate($blueprint);
                 $blueprint->prd_content = $prd;
                 $blueprint->saveQuietly();
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Gagal auto-generate prd_content untuk PDF: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::warning('Gagal auto-generate prd_content untuk PDF: '.$e->getMessage());
                 $prd = $prd ?: [];
             }
         }
-        
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.blueprint', [
+
+        $pdf = Pdf::loadView('pdf.blueprint', [
             'blueprint' => $blueprint,
             'prd' => $prd,
         ])->setPaper('a4', 'portrait')
-          ->setOptions([
-              'isHtml5ParserEnabled' => true,
-              'isRemoteEnabled' => true,
-              'defaultFont' => 'Helvetica',
-          ]);
-        
-        return $pdf->download('PRD_' . $blueprint->slug . '.pdf');
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'Helvetica',
+            ]);
+
+        return $pdf->download('PRD_'.$blueprint->slug.'.pdf');
     }
 
     /**
@@ -1154,21 +1218,21 @@ class BlueprintController extends Controller
         $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
 
-        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
         $wl = is_array($posProject?->white_label_branding_json) ? $posProject->white_label_branding_json : null;
         $actorSeed = (string) (auth()->id() ?: ($blueprint->email ?: request()->ip()));
-        $canarySig = \App\Support\PosInclusiveCommercialCatalog::computeCanaryFingerprint($actorSeed);
+        $canarySig = PosInclusiveCommercialCatalog::computeCanaryFingerprint($actorSeed);
 
-        $md = \App\Services\PrdGeneratorService::toMarkdown($blueprint, $prd);
-        $md .= \App\Support\PosInclusiveCommercialCatalog::renderViralCertifiedBadgeMarkdown($wl);
-        $md = \App\Support\PosInclusiveCommercialCatalog::injectCanaryWatermark($md, $actorSeed);
+        $md = PrdGeneratorService::toMarkdown($blueprint, $prd);
+        $md .= PosInclusiveCommercialCatalog::renderViralCertifiedBadgeMarkdown($wl);
+        $md = PosInclusiveCommercialCatalog::injectCanaryWatermark($md, $actorSeed);
 
-        if ($posProject && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'canary_watermark_sig')) {
+        if ($posProject && Schema::hasColumn('pos_projects', 'canary_watermark_sig')) {
             $posProject->forceFill(['canary_watermark_sig' => $canarySig])->saveQuietly();
         }
 
-        if (class_exists(\App\Models\AuditLog::class)) {
-            \App\Models\AuditLog::record(
+        if (class_exists(AuditLog::class)) {
+            AuditLog::record(
                 action: 'canary_watermark_embedded',
                 model: $blueprint,
                 newValues: [
@@ -1182,7 +1246,7 @@ class BlueprintController extends Controller
 
         return response($md, 200, [
             'Content-Type' => 'text/markdown; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="PRD_' . $blueprint->slug . '.md"',
+            'Content-Disposition' => 'attachment; filename="PRD_'.$blueprint->slug.'.md"',
         ]);
     }
 
@@ -1195,21 +1259,21 @@ class BlueprintController extends Controller
         $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
 
-        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
         $wl = is_array($posProject?->white_label_branding_json) ? $posProject->white_label_branding_json : null;
         $actorSeed = (string) (auth()->id() ?: ($blueprint->email ?: request()->ip()));
-        $canarySig = \App\Support\PosInclusiveCommercialCatalog::computeCanaryFingerprint($actorSeed);
+        $canarySig = PosInclusiveCommercialCatalog::computeCanaryFingerprint($actorSeed);
 
-        $md = \App\Services\PrdGeneratorService::toMarkdown($blueprint, $prd);
-        $md .= \App\Support\PosInclusiveCommercialCatalog::renderViralCertifiedBadgeMarkdown($wl);
-        $md = \App\Support\PosInclusiveCommercialCatalog::injectCanaryWatermark($md, $actorSeed);
+        $md = PrdGeneratorService::toMarkdown($blueprint, $prd);
+        $md .= PosInclusiveCommercialCatalog::renderViralCertifiedBadgeMarkdown($wl);
+        $md = PosInclusiveCommercialCatalog::injectCanaryWatermark($md, $actorSeed);
 
-        if ($posProject && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'canary_watermark_sig')) {
+        if ($posProject && Schema::hasColumn('pos_projects', 'canary_watermark_sig')) {
             $posProject->forceFill(['canary_watermark_sig' => $canarySig])->saveQuietly();
         }
 
-        if (class_exists(\App\Models\AuditLog::class)) {
-            \App\Models\AuditLog::record(
+        if (class_exists(AuditLog::class)) {
+            AuditLog::record(
                 action: 'canary_watermark_embedded',
                 model: $blueprint,
                 newValues: [
@@ -1233,28 +1297,28 @@ class BlueprintController extends Controller
     {
         return response()->json([
             'success' => true,
-            'schema_uri' => \App\Services\ProjectOsBlueprintCompilerService::SCHEMA_URI,
-            'catalog' => \App\Services\ProjectOsBlueprintCompilerService::getCachedCatalog(),
-            'satu_pintu_packages' => \App\Support\PricingRegistry::getSatuPintuCatalog(),
-            'inclusive_value_metric_packages' => \App\Support\PricingRegistry::getInclusiveValueMetricCatalog(),
-            'storyboard_wizard' => \App\Support\PosInclusiveCommercialCatalog::storyboardWizardCatalog(),
-            'sector_visual_ui_catalog' => \App\Support\PosInclusiveCommercialCatalog::allSectorVisualUiCatalog(),
-            'navigation_shell_options' => \App\Support\PosInclusiveCommercialCatalog::navigationShellOptions(),
-            'retention_and_security_matrix' => \App\Support\PosInclusiveCommercialCatalog::retentionAndSecurityMatrix(),
-            'community_primitives_marketplace' => \App\Support\PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
-            'commercial_estimator_config' => \App\Support\PricingRegistry::getCommercialEstimatorConfig(),
-            'commercial_bridge_features' => \App\Services\PosCommercialBridgeService::fiveCommercialBridgeFeatures(),
-            'guided_client_journey' => \App\Services\PosCommercialBridgeService::guidedClientJourneySteps(),
-            'agentshield_layers' => \App\Services\Security\DocumentThreatSanitizerService::fiveLayersBlueprintContract('NeriahPro Project OS', 'STACK_M1_LARAVEL_MONOLITH', 'SECTOR_01_COMMERCE_OMNICHANNEL')['layers'],
-            'sector_audit_presets' => \App\Support\PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets(),
-            'codesign_room_version' => \App\Support\PosAgentShieldAndCoDesignCatalog::VERSION,
-            'public_ux_presets' => array_values(\App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets()),
-            'five_iron_animation_laws' => \App\Support\PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws(),
-            'input_hygiene_contract' => \App\Support\PosDualZoneFrontendAndSaasCatalog::inputHygieneContract(),
-            'six_critical_saas_modules' => \App\Support\PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules(),
-            'verified_testimonials_aniwall' => \App\Support\PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog(),
-            'country_zones' => \App\Support\InputHygieneStandard::countryZonesForFrontend(),
-            'v10_release' => \App\Support\PosDualZoneFrontendAndSaasCatalog::VERSION,
+            'schema_uri' => ProjectOsBlueprintCompilerService::SCHEMA_URI,
+            'catalog' => ProjectOsBlueprintCompilerService::getCachedCatalog(),
+            'satu_pintu_packages' => PricingRegistry::getSatuPintuCatalog(),
+            'inclusive_value_metric_packages' => PricingRegistry::getInclusiveValueMetricCatalog(),
+            'storyboard_wizard' => PosInclusiveCommercialCatalog::storyboardWizardCatalog(),
+            'sector_visual_ui_catalog' => PosInclusiveCommercialCatalog::allSectorVisualUiCatalog(),
+            'navigation_shell_options' => PosInclusiveCommercialCatalog::navigationShellOptions(),
+            'retention_and_security_matrix' => PosInclusiveCommercialCatalog::retentionAndSecurityMatrix(),
+            'community_primitives_marketplace' => PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
+            'commercial_estimator_config' => PricingRegistry::getCommercialEstimatorConfig(),
+            'commercial_bridge_features' => PosCommercialBridgeService::fiveCommercialBridgeFeatures(),
+            'guided_client_journey' => PosCommercialBridgeService::guidedClientJourneySteps(),
+            'agentshield_layers' => DocumentThreatSanitizerService::fiveLayersBlueprintContract('NeriahPro Project OS', 'STACK_M1_LARAVEL_MONOLITH', 'SECTOR_01_COMMERCE_OMNICHANNEL')['layers'],
+            'sector_audit_presets' => PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets(),
+            'codesign_room_version' => PosAgentShieldAndCoDesignCatalog::VERSION,
+            'public_ux_presets' => array_values(PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets()),
+            'five_iron_animation_laws' => PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws(),
+            'input_hygiene_contract' => PosDualZoneFrontendAndSaasCatalog::inputHygieneContract(),
+            'six_critical_saas_modules' => PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules(),
+            'verified_testimonials_aniwall' => PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog(),
+            'country_zones' => InputHygieneStandard::countryZonesForFrontend(),
+            'v10_release' => PosDualZoneFrontendAndSaasCatalog::VERSION,
         ]);
     }
 
@@ -1267,7 +1331,7 @@ class BlueprintController extends Controller
         $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
         $schema = $prd['universal_blueprint_schema']
-            ?? \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+            ?? ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
 
         return response(
             json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
@@ -1288,15 +1352,15 @@ class BlueprintController extends Controller
         $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
         if (empty($prd)) {
-            $prd = \App\Services\PrdGeneratorService::generate($blueprint);
+            $prd = PrdGeneratorService::generate($blueprint);
         }
 
-        $format = strtolower((string)$request->query('format', 'cursorrules'));
+        $format = strtolower((string) $request->query('format', 'cursorrules'));
         $univSchema = $prd['universal_blueprint_schema']
-            ?? \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+            ?? ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
 
         $phasedPrompts = $univSchema['phased_prompt_sequencer']
-            ?? \App\Services\ProjectOsBlueprintCompilerService::compilePhasedPrompts($univSchema);
+            ?? ProjectOsBlueprintCompilerService::compilePhasedPrompts($univSchema);
 
         if (preg_match('/^phase-([1-7])$/', $format, $m)) {
             $phaseIdx = ((int) $m[1]) - 1;
@@ -1304,19 +1368,19 @@ class BlueprintController extends Controller
             if ($phaseItem) {
                 return response((string) ($phaseItem['prompt'] ?? ''), 200, [
                     'Content-Type' => 'text/markdown; charset=UTF-8',
-                    'Content-Disposition' => 'attachment; filename="' . ($phaseItem['filename'] ?? ("0{$m[1]}-phase.md")) . '"',
+                    'Content-Disposition' => 'attachment; filename="'.($phaseItem['filename'] ?? ("0{$m[1]}-phase.md")).'"',
                 ]);
             }
         }
 
         if (preg_match('/^subpart-([0-9]+\.[0-9]+)$/', $format, $sm)) {
             $subParts = $univSchema['sub_chunked_prompts']
-                ?? \App\Services\TopologicalPromptChunker::compileSubChunkedPrompts($univSchema);
+                ?? TopologicalPromptChunker::compileSubChunkedPrompts($univSchema);
             foreach ($subParts as $sp) {
                 if (($sp['part_code'] ?? '') === $sm[1]) {
                     return response((string) ($sp['prompt'] ?? ''), 200, [
                         'Content-Type' => 'text/markdown; charset=UTF-8',
-                        'Content-Disposition' => 'attachment; filename="' . ($sp['filename'] ?? ("part-{$sm[1]}.md")) . '"',
+                        'Content-Disposition' => 'attachment; filename="'.($sp['filename'] ?? ("part-{$sm[1]}.md")).'"',
                     ]);
                 }
             }
@@ -1324,7 +1388,7 @@ class BlueprintController extends Controller
 
         if ($format === 'symbol-manifest') {
             $manifest = $univSchema['symbol_manifest']
-                ?? \App\Services\TopologicalPromptChunker::generateSymbolManifest($univSchema);
+                ?? TopologicalPromptChunker::generateSymbolManifest($univSchema);
 
             return response(
                 (string) json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
@@ -1338,7 +1402,7 @@ class BlueprintController extends Controller
 
         if ($format === 'claude-settings') {
             return response(
-                \App\Services\Security\DocumentThreatSanitizerService::renderClaudeSettingsJson($univSchema),
+                DocumentThreatSanitizerService::renderClaudeSettingsJson($univSchema),
                 200,
                 [
                     'Content-Type' => 'application/json; charset=UTF-8',
@@ -1348,7 +1412,7 @@ class BlueprintController extends Controller
         }
 
         if ($format === 'dependency-manifest') {
-            $depManifest = $univSchema['approved_dependency_manifest'] ?? \App\Services\Security\DocumentThreatSanitizerService::approvedDependencyManifest(
+            $depManifest = $univSchema['approved_dependency_manifest'] ?? DocumentThreatSanitizerService::approvedDependencyManifest(
                 (string) ($univSchema['project_metadata']['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH'),
                 (string) ($univSchema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
             );
@@ -1374,94 +1438,94 @@ class BlueprintController extends Controller
 
         [$content, $filename] = match ($format) {
             'enterprise-menu' => [
-                \App\Support\PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown(
-                    $univSchema['enterprise_menu_matrix'] ?? \App\Support\PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector(
+                PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown(
+                    $univSchema['enterprise_menu_matrix'] ?? PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector(
                         (string) ($univSchema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
                     )
                 ),
                 'ENTERPRISE_MENU_MATRIX.md',
             ],
             'execution-blueprint' => [
-                \App\Services\ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($univSchema),
+                ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($univSchema),
                 'PROJECT_OS_EXECUTION_BLUEPRINT.md',
             ],
             'stack-topology' => [
-                \App\Services\ProjectOsBlueprintCompilerService::renderStackTopologyContractMarkdown($univSchema),
+                ProjectOsBlueprintCompilerService::renderStackTopologyContractMarkdown($univSchema),
                 'STACK_TOPOLOGY_CONTRACT.md',
             ],
             'ui-ux-contract' => [
-                \App\Services\ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
+                ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
                 'UI_UX_CONTRACT.md',
             ],
             'engineering-rules' => [
-                \App\Services\ProjectOsBlueprintCompilerService::renderEngineeringRulesMarkdown(),
+                ProjectOsBlueprintCompilerService::renderEngineeringRulesMarkdown(),
                 'ENGINEERING_RULES.md',
             ],
             'ecc-harness' => [
-                \App\Services\ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
+                ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
                 'AGENT_HARNESS_ECC.md',
             ],
             'verify-blueprint' => [
-                \App\Services\BlueprintSlopScannerService::generateVerifyBlueprintBashScript($blueprint->nama_bisnis ?: 'Enterprise App'),
+                BlueprintSlopScannerService::generateVerifyBlueprintBashScript($blueprint->nama_bisnis ?: 'Enterprise App'),
                 'verify-blueprint.sh',
             ],
             'print-spec' => [
-                \App\Services\ProjectOsBlueprintCompilerService::renderPrintSpecMarkdown($univSchema),
+                ProjectOsBlueprintCompilerService::renderPrintSpecMarkdown($univSchema),
                 'PRINT_THERMAL_AND_A4_CONTRACT.md',
             ],
             'day2-ops' => [
-                \App\Services\ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($univSchema),
+                ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($univSchema),
                 'DAY2_OPERATIONS_AND_SECURITY.md',
             ],
             'decision-tables' => [
-                \App\Services\ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($univSchema),
+                ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($univSchema),
                 'DECISION_TABLES_CONTRACT.md',
             ],
             'syntax-lock' => [
-                \App\Support\PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($univSchema),
+                PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($univSchema),
                 'SYNTAX_LOCK_2026.md',
             ],
             'dual-zone-ux' => [
-                \App\Support\PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($univSchema, app()->getLocale()),
+                PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($univSchema, app()->getLocale()),
                 'DUAL_ZONE_PUBLIC_UX_AND_INPUT_HYGIENE.md',
             ],
             'troubleshooting' => [
-                \App\Support\PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($univSchema),
+                PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($univSchema),
                 'TROUBLESHOOTING_INSTINCTS.md',
             ],
             'client-sop' => [
-                \App\Support\PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($univSchema, app()->getLocale()),
+                PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($univSchema, app()->getLocale()),
                 'CLIENT_SOP_AND_TRAINING_MANUAL.md',
             ],
             'pg16-partition' => [
-                \App\Support\PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($univSchema['data_dictionary'] ?? [], $blueprint->nama_bisnis ?: 'Enterprise App'),
+                PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($univSchema['data_dictionary'] ?? [], $blueprint->nama_bisnis ?: 'Enterprise App'),
                 'pg16_range_partitioning.sql',
             ],
             'env-blueprint' => [
-                \App\Services\ScaffoldGeneratorService::generateEnvBlueprintFile($univSchema, $blueprint->nama_bisnis ?: 'Enterprise App'),
+                ScaffoldGeneratorService::generateEnvBlueprintFile($univSchema, $blueprint->nama_bisnis ?: 'Enterprise App'),
                 '.env.blueprint',
             ],
             'mcp-json' => [
-                \App\Services\ScaffoldGeneratorService::generateMcpJsonFile($blueprint),
+                ScaffoldGeneratorService::generateMcpJsonFile($blueprint),
                 '.mcp.json',
             ],
             'claude' => [
-                \App\Services\PrdGeneratorService::toCursorrules($blueprint, $prd),
+                PrdGeneratorService::toCursorrules($blueprint, $prd),
                 'CLAUDE.md',
             ],
             'agents' => [
-                \App\Services\ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($univSchema),
+                ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($univSchema),
                 'AGENTS.md',
             ],
             default => [
-                \App\Services\PrdGeneratorService::toCursorrules($blueprint, $prd),
+                PrdGeneratorService::toCursorrules($blueprint, $prd),
                 '.cursorrules',
             ],
         };
 
         return response($content, 200, [
             'Content-Type' => 'text/plain; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
@@ -1503,14 +1567,14 @@ class BlueprintController extends Controller
         foreach ($mvpTasks as $idx => $t) {
             $title = trim($t['title'] ?? '');
             $desc = trim($t['desc'] ?? '');
-            $fiturWajibLines[] = $title . (!empty($desc) ? ' - ' . $desc : '');
+            $fiturWajibLines[] = $title.(! empty($desc) ? ' - '.$desc : '');
         }
 
         $fiturTambahanLines = [];
         foreach ($phase2Tasks as $idx => $t) {
             $title = trim($t['title'] ?? '');
             $desc = trim($t['desc'] ?? '');
-            $fiturTambahanLines[] = $title . (!empty($desc) ? ' - ' . $desc : '');
+            $fiturTambahanLines[] = $title.(! empty($desc) ? ' - '.$desc : '');
         }
 
         $blueprint->fitur_wajib = implode("\n", $fiturWajibLines);
@@ -1523,7 +1587,7 @@ class BlueprintController extends Controller
         $blueprint->document_sha256 = $blueprint->calculatePrdHash();
         $blueprint->save();
 
-        $itemized = $prd['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
+        $itemized = $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint);
 
         return response()->json([
             'success' => true,
@@ -1534,7 +1598,7 @@ class BlueprintController extends Controller
             'itemized_summary' => [
                 'base_total' => $itemized['base_contract_amount'] ?? 0,
                 'items_count' => count($itemized['items'] ?? []),
-            ]
+            ],
         ]);
     }
 
@@ -1570,12 +1634,12 @@ class BlueprintController extends Controller
         // Access Logic: Retail, SuperAdmin, or Draft can edit. Studio contracts are locked.
         $isRetail = $blueprint->project_status === 'Retail License';
         $isSuperAdmin = auth()->check() && auth()->user()->isSuperAdmin();
-        $isDraft = !$blueprint->signed_agreement && !$blueprint->isScopeFrozen();
+        $isDraft = ! $blueprint->signed_agreement && ! $blueprint->isScopeFrozen();
 
-        if (!($isRetail || $isSuperAdmin || $isDraft)) {
+        if (! ($isRetail || $isSuperAdmin || $isDraft)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Akses ditolak. Dokumen berada dalam status Scope Lock (Kontrak Studio) dan hanya dapat diubah melalui Change Request resmi. Hubungi admin Neriah Pro.'
+                'message' => 'Akses ditolak. Dokumen berada dalam status Scope Lock (Kontrak Studio) dan hanya dapat diubah melalui Change Request resmi. Hubungi admin Neriah Pro.',
             ], 403);
         }
 
@@ -1594,10 +1658,10 @@ class BlueprintController extends Controller
 
         if ($mode === 'manual') {
             $newContent = $request->input('content');
-            
+
             // Nested JSON update in prd_content
             $prd = $blueprint->prd_content ?? [];
-            
+
             if (str_contains($key, '.')) {
                 $parts = explode('.', $key);
                 if (count($parts) === 2) {
@@ -1606,7 +1670,7 @@ class BlueprintController extends Controller
             } else {
                 $prd[$key] = is_string($newContent) ? (json_decode($newContent, true) ?? $newContent) : $newContent;
             }
-            
+
             // Impact Matrix (Ripple Effect - Upstream to Downstream)
             $impactMatrix = [
                 'executive_summary' => ['system_actors', 'mvp_features', 'database_erd'],
@@ -1620,14 +1684,16 @@ class BlueprintController extends Controller
             if (isset($impactMatrix[$baseKey])) {
                 $impacted = $prd['_impacted_segments'] ?? [];
                 foreach ($impactMatrix[$baseKey] as $iKey) {
-                    if (!in_array($iKey, $impacted)) $impacted[] = $iKey;
+                    if (! in_array($iKey, $impacted)) {
+                        $impacted[] = $iKey;
+                    }
                 }
                 $prd['_impacted_segments'] = $impacted;
             }
             if (isset($prd['_impacted_segments'])) {
-                $prd['_impacted_segments'] = array_values(array_filter($prd['_impacted_segments'], fn($item) => $item !== $baseKey && $item !== $key));
+                $prd['_impacted_segments'] = array_values(array_filter($prd['_impacted_segments'], fn ($item) => $item !== $baseKey && $item !== $key));
             }
-            
+
             $blueprint->update(['prd_content' => $prd]);
 
             return response()->json([
@@ -1653,12 +1719,13 @@ class BlueprintController extends Controller
 
                 return response()->json($result);
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('Refinement failed: ' . $e->getMessage(), [
-                    'exception' => $e
+                \Illuminate\Support\Facades\Log::error('Refinement failed: '.$e->getMessage(), [
+                    'exception' => $e,
                 ]);
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gagal memperdalam segmen: ' . $e->getMessage(),
+                    'message' => 'Gagal memperdalam segmen: '.$e->getMessage(),
                 ], 422);
             }
         }
@@ -1698,7 +1765,7 @@ class BlueprintController extends Controller
 
         // Calculate progress percentage based on total steps
         $totalSteps = 6;
-        $completedCount = count(array_filter($checkpoints, fn ($c) => !empty($c['completed'])));
+        $completedCount = count(array_filter($checkpoints, fn ($c) => ! empty($c['completed'])));
         $progressPercent = min(100, (int) round(($completedCount / max(1, $totalSteps)) * 100));
 
         $metadata['dev_progress_percent'] = $progressPercent;
@@ -1714,7 +1781,7 @@ class BlueprintController extends Controller
             'is_completed' => $isCompleted,
             'completed_count' => $completedCount,
             'progress_percent' => $progressPercent,
-            'updated_at' => now()->format('d M Y, H:i') . ' WIB',
+            'updated_at' => now()->format('d M Y, H:i').' WIB',
         ]);
     }
 
@@ -1726,9 +1793,9 @@ class BlueprintController extends Controller
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
 
-        $zipPath = \App\Services\ScaffoldGeneratorService::createZipArchive($blueprint);
+        $zipPath = ScaffoldGeneratorService::createZipArchive($blueprint);
 
-        $downloadFilename = ($blueprint->slug ?: 'project') . '-starter-kit.zip';
+        $downloadFilename = ($blueprint->slug ?: 'project').'-starter-kit.zip';
 
         return response()->download($zipPath, $downloadFilename)->deleteFileAfterSend(true);
     }
@@ -1741,7 +1808,7 @@ class BlueprintController extends Controller
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
 
-        $files = \App\Services\ScaffoldGeneratorService::generateFiles($blueprint);
+        $files = ScaffoldGeneratorService::generateFiles($blueprint);
         $customizations = $blueprint->user_metadata['scaffold_customizations'] ?? [];
 
         return response()->json([
@@ -1789,7 +1856,7 @@ class BlueprintController extends Controller
         return response()->json([
             'success' => true,
             'filename' => $filename,
-            'saved_at' => now()->format('H:i:s') . ' WIB',
+            'saved_at' => now()->format('H:i:s').' WIB',
             'message' => "Berkas {$filename} berhasil dielaborasi dan disimpan otomatis.",
         ]);
     }
@@ -1817,14 +1884,14 @@ class BlueprintController extends Controller
         }
 
         // Generate clean default
-        $allFiles = \App\Services\ScaffoldGeneratorService::generateFiles($blueprint);
+        $allFiles = ScaffoldGeneratorService::generateFiles($blueprint);
         $defaultContent = $allFiles[$filename] ?? '';
 
         return response()->json([
             'success' => true,
             'filename' => $filename,
             'content' => $defaultContent,
-            'saved_at' => now()->format('H:i:s') . ' WIB',
+            'saved_at' => now()->format('H:i:s').' WIB',
             'message' => "Berkas {$filename} berhasil dikembalikan ke sintesis AI default.",
         ]);
     }
@@ -1838,7 +1905,7 @@ class BlueprintController extends Controller
         $this->authorizeBlueprintAccess($blueprint);
 
         // Security check for scope locking unless Retail License or SuperAdmin
-        if ($blueprint->scope_locked && !($blueprint->project_status === 'Retail License' || (auth()->user()?->isSuperAdmin() ?? false))) {
+        if ($blueprint->scope_locked && ! ($blueprint->project_status === 'Retail License' || (auth()->user()?->isSuperAdmin() ?? false))) {
             return response()->json([
                 'success' => false,
                 'message' => 'Spesifikasi telah dikunci (Scope Frozen). Pengubahan memerlukan Change Request resmi.',
@@ -1852,7 +1919,7 @@ class BlueprintController extends Controller
         ]);
 
         try {
-            $refinementService = app(\App\Services\BlueprintRefinementService::class);
+            $refinementService = app(BlueprintRefinementService::class);
             $result = $refinementService->refineScaffoldFile(
                 $blueprint,
                 $validated['filename'],
@@ -1862,7 +1929,7 @@ class BlueprintController extends Controller
 
             return response()->json($result);
         } catch (\Throwable $e) {
-            Log::error("Failed to refine scaffold file {$validated['filename']} for blueprint {$slug}: " . $e->getMessage());
+            Log::error("Failed to refine scaffold file {$validated['filename']} for blueprint {$slug}: ".$e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -1959,7 +2026,7 @@ class BlueprintController extends Controller
 
         if ($request->filled('email')) {
             $request->merge([
-                'email' => \App\Support\InputHygieneStandard::sanitizeStrictEmail((string) $request->input('email')),
+                'email' => InputHygieneStandard::sanitizeStrictEmail((string) $request->input('email')),
             ]);
         }
 
@@ -1984,14 +2051,14 @@ class BlueprintController extends Controller
         ]);
 
         $packageName = $request->input('package_tier') ?: ($request->input('package') ?: $request->input('selected_package'));
-        $packageMeta = \App\Support\PricingRegistry::get((string)$packageName);
-        $isRetail = \App\Support\PricingRegistry::isSelfService((string)$packageName);
-        $company = $request->input('company') ?: $request->input('company_name') ?: ($isRetail ? ($validated['name'] . ' (Personal License)') : ($validated['name'] . ' Project'));
+        $packageMeta = PricingRegistry::get((string) $packageName);
+        $isRetail = PricingRegistry::isSelfService((string) $packageName);
+        $company = $request->input('company') ?: $request->input('company_name') ?: ($isRetail ? ($validated['name'].' (Personal License)') : ($validated['name'].' Project'));
         $phoneInput = (string) $validated['phone'];
         $countryCode = (string) $request->input('country_code', '+62');
         $cleanPhone = str_starts_with(trim($phoneInput), '+')
-            ? ('+' . (preg_replace('/\D/', '', $phoneInput) ?: ''))
-            : \App\Support\InputHygieneStandard::toE164($countryCode, $phoneInput);
+            ? ('+'.(preg_replace('/\D/', '', $phoneInput) ?: ''))
+            : InputHygieneStandard::toE164($countryCode, $phoneInput);
 
         $sprintBatch = $request->input('sprint_batch');
         $kickoffSlot = $request->input('kickoff_slot');
@@ -1999,7 +2066,7 @@ class BlueprintController extends Controller
         $blueprintSlug = $request->input('blueprint_slug');
         $umkmCategory = $request->input('umkm_category');
 
-        $lead = \App\Models\LeadContact::create([
+        $lead = LeadContact::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'company_name' => $company,
@@ -2027,37 +2094,37 @@ class BlueprintController extends Controller
 
         // Send Filament notification to Admins via Spatie RBAC roles (Zero Hardcoded Email)
         try {
-            $admins = \App\Models\User::whereHas('roles', fn ($q) => $q->whereIn('name', ['super_admin', 'developer']))
+            $admins = User::whereHas('roles', fn ($q) => $q->whereIn('name', ['super_admin', 'developer']))
                 ->get();
 
-            $batchInfo = $sprintBatch ? " [Batch: {$sprintBatch}]" : ($umkmCategory ? " [Kategori: {$umkmCategory}]" : "");
+            $batchInfo = $sprintBatch ? " [Batch: {$sprintBatch}]" : ($umkmCategory ? " [Kategori: {$umkmCategory}]" : '');
             $notifTitle = $isRetail ? '💳 Pesanan Lisensi Digital Masuk!' : '🎯 Prospek Proyek / Reservasi Sprint Masuk!';
             $notifBody = $isRetail
                 ? "Pembeli {$validated['name']} ({$company}) memesan lisensi: {$displayPackage}. Email: {$validated['email']} / WA: {$cleanPhone}."
                 : "Klien {$validated['name']} ({$company}) memilih: {$displayPackage}{$batchInfo}.";
 
             foreach ($admins as $admin) {
-                \Filament\Notifications\Notification::make()
+                Notification::make()
                     ->title($notifTitle)
                     ->body($notifBody)
                     ->icon($isRetail ? 'heroicon-o-credit-card' : 'heroicon-o-calendar-days')
                     ->actions([
-                        \Filament\Notifications\Actions\Action::make('view_lead')
+                        Action::make('view_lead')
                             ->label('Buka Data Lead')
-                            ->url('/' . config('app.admin_path', 'admin') . '/lead-contacts'),
+                            ->url('/'.config('app.admin_path', 'admin').'/lead-contacts'),
                     ])
                     ->sendToDatabase($admin);
             }
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Notification to admin failed: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Notification to admin failed: '.$e->getMessage());
         }
 
         $basePrice = $packageMeta['default_price'] ?? 99000;
         $settingKey = $packageMeta['setting_key'] ?? null;
         if ($settingKey) {
             $rawVal = CmsGlobalSetting::getVal($settingKey, null);
-            if (!empty($rawVal)) {
-                $cleaned = (int) preg_replace('/[^\d]/', '', (string)$rawVal);
+            if (! empty($rawVal)) {
+                $cleaned = (int) preg_replace('/[^\d]/', '', (string) $rawVal);
                 if ($cleaned > 0) {
                     $basePrice = $cleaned;
                 }
@@ -2068,7 +2135,7 @@ class BlueprintController extends Controller
         $voucherCode = strtoupper(trim((string) ($validated['voucher_code'] ?? '')));
         $voucher = null;
         $discountAmount = 0;
-        if (!empty($voucherCode)) {
+        if (! empty($voucherCode)) {
             $voucher = BlueprintVoucher::where('code', $voucherCode)->first();
             if ($voucher && $voucher->isValid()) {
                 if ($voucher->discount_type === 'percent') {
@@ -2090,7 +2157,7 @@ class BlueprintController extends Controller
         if ($isPaidPackage) {
             // 46 characters (9 + 26 + 1 + 10): strictly conforms to Midtrans 50-character limit
             $orderPrefix = $isRetail ? 'NPRO-LIC-' : 'NPRO-PKG-';
-            $orderId = $orderPrefix . $lead->id . '-' . time();
+            $orderId = $orderPrefix.$lead->id.'-'.time();
 
             $params = [
                 'transaction_details' => [
@@ -2108,7 +2175,7 @@ class BlueprintController extends Controller
                         'price' => $finalAmount,
                         'quantity' => 1,
                         'name' => substr($displayPackage, 0, 50),
-                    ]
+                    ],
                 ],
             ];
 
@@ -2120,14 +2187,14 @@ class BlueprintController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gagal memproses sesi pembayaran Midtrans: ' . $errorMsg,
+                    'message' => 'Gagal memproses sesi pembayaran Midtrans: '.$errorMsg,
                     'is_paid_package' => true,
                     'order_id' => $orderId,
                 ], 422);
             }
 
             // Store cached checkout details for webhook reconciliation
-            Cache::put('pricing_order_' . $orderId, [
+            Cache::put('pricing_order_'.$orderId, [
                 'lead_id' => $lead->id,
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -2142,7 +2209,7 @@ class BlueprintController extends Controller
             ], now()->addDays(3));
 
             // Instantly record pending transaction in database for admin visibility
-            \App\Models\Transaction::create([
+            Transaction::create([
                 'user_id' => null,
                 'midtrans_order_id' => $orderId,
                 'status' => 'pending',
@@ -2169,43 +2236,43 @@ class BlueprintController extends Controller
 
         $waLines = [];
         if ($isRetail) {
-            $waLines[] = "Halo Tim Lisensi Neriah Pro, saya *{$validated['name']}*" . (!empty($company) ? " dari *{$company}*" : "") . ".";
-            $waLines[] = "Saya memesan lisensi mandiri: *{$displayPackage}*" . ($orderId ? " (Order ID: {$orderId})" : "");
-            $waLines[] = "Mohon panduan aktivasi lisensi resmi untuk akses unduh cetak biru proyek kami.";
-            if (!empty($validated['voucher_code'])) {
-                $waLines[] = "🏷️ *Kode Voucher/Promo:* " . strtoupper($validated['voucher_code']);
+            $waLines[] = "Halo Tim Lisensi Neriah Pro, saya *{$validated['name']}*".(! empty($company) ? " dari *{$company}*" : '').'.';
+            $waLines[] = "Saya memesan lisensi mandiri: *{$displayPackage}*".($orderId ? " (Order ID: {$orderId})" : '');
+            $waLines[] = 'Mohon panduan aktivasi lisensi resmi untuk akses unduh cetak biru proyek kami.';
+            if (! empty($validated['voucher_code'])) {
+                $waLines[] = '🏷️ *Kode Voucher/Promo:* '.strtoupper($validated['voucher_code']);
             }
-            if (!empty($validated['notes'])) {
-                $waLines[] = "📝 *Catatan Ide/Kebutuhan:* " . $validated['notes'];
+            if (! empty($validated['notes'])) {
+                $waLines[] = '📝 *Catatan Ide/Kebutuhan:* '.$validated['notes'];
             }
-            $waLines[] = "📧 *Email Terdaftar:* " . $validated['email'];
-            $waLines[] = "📱 *WhatsApp:* " . $cleanPhone;
+            $waLines[] = '📧 *Email Terdaftar:* '.$validated['email'];
+            $waLines[] = '📱 *WhatsApp:* '.$cleanPhone;
         } else {
-            $waLines[] = "Halo Mas Yoseph Iriandi (Lead Architect Neriah Pro), saya *{$validated['name']}*" . (!empty($company) ? " dari *{$company}*" : "") . ".";
-            $waLines[] = "Saya mengonfirmasi reservasi paket: *{$displayPackage}*" . ($orderId ? " (Ref: {$orderId})" : "");
+            $waLines[] = "Halo Mas Yoseph Iriandi (Lead Architect Neriah Pro), saya *{$validated['name']}*".(! empty($company) ? " dari *{$company}*" : '').'.';
+            $waLines[] = "Saya mengonfirmasi reservasi paket: *{$displayPackage}*".($orderId ? " (Ref: {$orderId})" : '');
 
             if ($sprintBatch) {
-                $waLines[] = "🗓️ *Pilihan Slot Batch:* " . $sprintBatch;
+                $waLines[] = '🗓️ *Pilihan Slot Batch:* '.$sprintBatch;
             }
             if ($kickoffSlot) {
-                $waLines[] = "⏰ *Waktu Kickoff Sync:* " . $kickoffSlot;
+                $waLines[] = '⏰ *Waktu Kickoff Sync:* '.$kickoffSlot;
             }
             if ($hasBlueprint) {
-                $waLines[] = "📐 *Status PRD:* " . ($hasBlueprint === 'ready' ? "Sudah Ada (Ref: {$blueprintSlug})" : "Belum Ada (Perlu Penyusunan Blueprint)");
+                $waLines[] = '📐 *Status PRD:* '.($hasBlueprint === 'ready' ? "Sudah Ada (Ref: {$blueprintSlug})" : 'Belum Ada (Perlu Penyusunan Blueprint)');
             }
             if ($umkmCategory) {
-                $waLines[] = "🏢 *Kategori Usaha:* " . $umkmCategory;
+                $waLines[] = '🏢 *Kategori Usaha:* '.$umkmCategory;
             }
-            if (!empty($validated['notes'])) {
-                $waLines[] = "📝 *Ringkasan Kebutuhan:* " . $validated['notes'];
+            if (! empty($validated['notes'])) {
+                $waLines[] = '📝 *Ringkasan Kebutuhan:* '.$validated['notes'];
             }
-            if (!empty($validated['voucher_code'])) {
-                $waLines[] = "🏷️ *Kode Voucher:* " . strtoupper($validated['voucher_code']);
+            if (! empty($validated['voucher_code'])) {
+                $waLines[] = '🏷️ *Kode Voucher:* '.strtoupper($validated['voucher_code']);
             }
         }
 
         $waMessage = implode("\n", $waLines);
-        $waUrl = "https://wa.me/{$targetWa}?text=" . rawurlencode($waMessage);
+        $waUrl = "https://wa.me/{$targetWa}?text=".rawurlencode($waMessage);
 
         $successMsg = $isRetail
             ? 'Pesanan lisensi digital mandiri Anda telah diproses. Sesi pembayaran Midtrans resmi telah dibuka.'
@@ -2224,7 +2291,7 @@ class BlueprintController extends Controller
             'order_id' => $orderId,
             'gross_amount' => $finalAmount,
             'net_price' => $finalAmount,
-            'formatted_net_price' => 'Rp ' . number_format($finalAmount, 0, ',', '.'),
+            'formatted_net_price' => 'Rp '.number_format($finalAmount, 0, ',', '.'),
             'client_key' => $snapResponse['client_key'] ?? config('midtrans.client_key'),
             'snap_url' => $snapResponse['snap_url'] ?? config('midtrans.snap_url'),
             'package_tier' => $packageName,
@@ -2242,8 +2309,8 @@ class BlueprintController extends Controller
             ?? VisionBlueprint::query()->where('slug', $identifier)->first();
 
         $posProject = null;
-        if (! $blueprint && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')) {
-            $posProject = \App\Models\PosProject::query()->where('id', $identifier)->first();
+        if (! $blueprint && Schema::hasTable('pos_projects')) {
+            $posProject = PosProject::query()->where('id', $identifier)->first();
             if ($posProject && $posProject->vision_blueprint_id) {
                 $blueprint = VisionBlueprint::query()->find($posProject->vision_blueprint_id);
             }
@@ -2251,6 +2318,7 @@ class BlueprintController extends Controller
 
         if (! $blueprint && ! $posProject) {
             $notFoundScript = "#!/usr/bin/env bash\necho \"[Project OS] Error 404: Blueprint '{$identifier}' tidak ditemukan.\" >&2\nexit 1\n";
+
             return response($notFoundScript, 404, [
                 'Content-Type' => 'text/x-shellscript; charset=UTF-8',
             ]);
@@ -2259,12 +2327,12 @@ class BlueprintController extends Controller
         if ($blueprint) {
             $prd = $blueprint->prd_content ?? [];
             if (empty($prd)) {
-                $prd = \App\Services\PrdGeneratorService::generate($blueprint);
+                $prd = PrdGeneratorService::generate($blueprint);
             }
             $schema = $prd['universal_blueprint_schema']
-                ?? \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
+                ?? ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
             $appName = $blueprint->nama_bisnis ?: ($schema['project_metadata']['name'] ?? 'Enterprise App');
-            $cursorRules = \App\Services\PrdGeneratorService::toCursorrules($blueprint, $prd);
+            $cursorRules = PrdGeneratorService::toCursorrules($blueprint, $prd);
         } else {
             $schema = json_decode((string) $posProject->compiled_schema_json, true) ?: [];
             $appName = $posProject->app_name ?: 'Enterprise App';
@@ -2272,70 +2340,70 @@ class BlueprintController extends Controller
         }
 
         $phasedPrompts = $schema['phased_prompt_sequencer']
-            ?? \App\Services\ProjectOsBlueprintCompilerService::compilePhasedPrompts($schema);
+            ?? ProjectOsBlueprintCompilerService::compilePhasedPrompts($schema);
 
         $filesToMaterialize = [
-            'AGENTS.md' => \App\Services\ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($schema),
+            'AGENTS.md' => ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($schema),
             'CLAUDE.md' => $cursorRules,
             '.cursorrules' => $cursorRules,
-            '.claude/settings.json' => \App\Services\Security\DocumentThreatSanitizerService::renderClaudeSettingsJson($schema),
+            '.claude/settings.json' => DocumentThreatSanitizerService::renderClaudeSettingsJson($schema),
             '.agents/APPROVED_DEPENDENCY_MANIFEST.json' => (string) json_encode(
-                $schema['approved_dependency_manifest'] ?? \App\Services\Security\DocumentThreatSanitizerService::approvedDependencyManifest(
+                $schema['approved_dependency_manifest'] ?? DocumentThreatSanitizerService::approvedDependencyManifest(
                     (string) ($schema['project_metadata']['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH'),
                     (string) ($schema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
                 ),
                 JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
             ),
-            'PROJECT_OS_EXECUTION_BLUEPRINT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($schema),
-            '.agents/PONYTAIL.md' => \App\Services\ScaffoldGeneratorService::generatePonytailProtocolMarkdown(),
-            '.agents/STACK_TOPOLOGY_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderStackTopologyContractMarkdown($schema),
-            '.agents/UI_UX_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
-            '.agents/ENGINEERING_RULES.md' => \App\Services\ProjectOsBlueprintCompilerService::renderEngineeringRulesMarkdown(),
-            '.agents/AGENT_HARNESS_ECC.md' => \App\Services\ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
-            '.agents/PRINT_THERMAL_AND_A4_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderPrintSpecMarkdown($schema),
-            '.agents/DAY2_OPERATIONS_AND_SECURITY.md' => \App\Services\ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($schema),
-            '.agents/DECISION_TABLES_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($schema),
-            '.agents/SYNTAX_LOCK_2026.md' => \App\Support\PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($schema),
-            '.agents/DUAL_ZONE_PUBLIC_UX_AND_INPUT_HYGIENE.md' => \App\Support\PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($schema),
-            '.agents/TROUBLESHOOTING_INSTINCTS.md' => \App\Support\PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($schema),
-            '.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md' => \App\Support\PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($schema, 'id'),
+            'PROJECT_OS_EXECUTION_BLUEPRINT.md' => ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($schema),
+            '.agents/PONYTAIL.md' => ScaffoldGeneratorService::generatePonytailProtocolMarkdown(),
+            '.agents/STACK_TOPOLOGY_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderStackTopologyContractMarkdown($schema),
+            '.agents/UI_UX_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
+            '.agents/ENGINEERING_RULES.md' => ProjectOsBlueprintCompilerService::renderEngineeringRulesMarkdown(),
+            '.agents/AGENT_HARNESS_ECC.md' => ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
+            '.agents/PRINT_THERMAL_AND_A4_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderPrintSpecMarkdown($schema),
+            '.agents/DAY2_OPERATIONS_AND_SECURITY.md' => ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($schema),
+            '.agents/DECISION_TABLES_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($schema),
+            '.agents/SYNTAX_LOCK_2026.md' => PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($schema),
+            '.agents/DUAL_ZONE_PUBLIC_UX_AND_INPUT_HYGIENE.md' => PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($schema),
+            '.agents/TROUBLESHOOTING_INSTINCTS.md' => PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($schema),
+            '.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md' => PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($schema, 'id'),
             '.agents/BLUEPRINT_SCHEMA.json' => (string) json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             '.agents/SYMBOL_MANIFEST.json' => (string) json_encode(
-                $schema['symbol_manifest'] ?? \App\Services\TopologicalPromptChunker::generateSymbolManifest($schema),
+                $schema['symbol_manifest'] ?? TopologicalPromptChunker::generateSymbolManifest($schema),
                 JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
             ),
-            '.agents/ENTERPRISE_MENU_MATRIX.md' => \App\Support\PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown(
-                $schema['enterprise_menu_matrix'] ?? \App\Support\PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector(
+            '.agents/ENTERPRISE_MENU_MATRIX.md' => PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown(
+                $schema['enterprise_menu_matrix'] ?? PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector(
                     (string) ($schema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
                 )
             ),
-            '.agents/graphify/graph.json' => \App\Services\ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
-            'app/Actions/Tenancy/InitializeNewTenantAction.php' => \App\Services\ScaffoldGeneratorService::generateInitializeNewTenantAction($schema),
+            '.agents/graphify/graph.json' => ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
+            'app/Actions/Tenancy/InitializeNewTenantAction.php' => ScaffoldGeneratorService::generateInitializeNewTenantAction($schema),
             'app/Actions/Audit/ExportFilteredAuditExcelAction.php' => (string) (@file_get_contents(app_path('Actions/Audit/ExportFilteredAuditExcelAction.php')) ?: ''),
             'app/Services/Security/DocumentThreatSanitizerService.php' => (string) (@file_get_contents(app_path('Services/Security/DocumentThreatSanitizerService.php')) ?: ''),
-            'app/Domains/Rules/DeterministicDecisionMatrix.php' => \App\Services\ScaffoldGeneratorService::generateDeterministicDecisionMatrixClass($schema, $appName),
-            'app/Filament/Pages/SmartGuide.php' => \App\Support\PosRealWorldRuntimeCatalog::renderClientSmartGuidePhp($schema),
-            'database/sql/pg16_range_partitioning.sql' => \App\Support\PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($schema['data_dictionary'] ?? [], $appName),
-            'resources/js/peripherals/barcode-wedge-and-dual-screen.js' => \App\Support\PosRealWorldRuntimeCatalog::renderHardwareBridgeJs($schema),
-            'tests/Feature/Security/TenantIsolationSecurityTest.php' => \App\Services\ScaffoldGeneratorService::generateTenantIsolationSecurityTest($schema, $appName),
-            'resources/views/prints/thermal-and-official-a4.blade.php' => \App\Services\ScaffoldGeneratorService::generateThermalAndOfficialPrintView($schema),
-            'config/project_os_day2_ops.php' => \App\Services\ScaffoldGeneratorService::generateDayTwoOpsConfig($schema),
-            '.env.blueprint' => \App\Services\ScaffoldGeneratorService::generateEnvBlueprintFile($schema, $appName),
-            '.mcp.json' => \App\Services\ScaffoldGeneratorService::generateMcpJsonFile($blueprint),
-            'database/seeders/RealisticSectorSeeder.php' => \App\Services\ScaffoldGeneratorService::generateRealisticSectorSeeder($schema),
-            'verify-blueprint.sh' => \App\Services\BlueprintSlopScannerService::generateVerifyBlueprintBashScript($appName),
+            'app/Domains/Rules/DeterministicDecisionMatrix.php' => ScaffoldGeneratorService::generateDeterministicDecisionMatrixClass($schema, $appName),
+            'app/Filament/Pages/SmartGuide.php' => PosRealWorldRuntimeCatalog::renderClientSmartGuidePhp($schema),
+            'database/sql/pg16_range_partitioning.sql' => PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($schema['data_dictionary'] ?? [], $appName),
+            'resources/js/peripherals/barcode-wedge-and-dual-screen.js' => PosRealWorldRuntimeCatalog::renderHardwareBridgeJs($schema),
+            'tests/Feature/Security/TenantIsolationSecurityTest.php' => ScaffoldGeneratorService::generateTenantIsolationSecurityTest($schema, $appName),
+            'resources/views/prints/thermal-and-official-a4.blade.php' => ScaffoldGeneratorService::generateThermalAndOfficialPrintView($schema),
+            'config/project_os_day2_ops.php' => ScaffoldGeneratorService::generateDayTwoOpsConfig($schema),
+            '.env.blueprint' => ScaffoldGeneratorService::generateEnvBlueprintFile($schema, $appName),
+            '.mcp.json' => ScaffoldGeneratorService::generateMcpJsonFile($blueprint),
+            'database/seeders/RealisticSectorSeeder.php' => ScaffoldGeneratorService::generateRealisticSectorSeeder($schema),
+            'verify-blueprint.sh' => BlueprintSlopScannerService::generateVerifyBlueprintBashScript($appName),
         ];
 
         foreach ($phasedPrompts as $pItem) {
-            $fname = $pItem['filename'] ?? ('0' . ($pItem['phase'] ?? 1) . '-phase.md');
-            $filesToMaterialize['.agents/prompts/' . $fname] = (string) ($pItem['prompt'] ?? '');
+            $fname = $pItem['filename'] ?? ('0'.($pItem['phase'] ?? 1).'-phase.md');
+            $filesToMaterialize['.agents/prompts/'.$fname] = (string) ($pItem['prompt'] ?? '');
         }
 
         $subChunkedPrompts = $schema['sub_chunked_prompts']
-            ?? \App\Services\TopologicalPromptChunker::compileSubChunkedPrompts($schema);
+            ?? TopologicalPromptChunker::compileSubChunkedPrompts($schema);
         foreach ($subChunkedPrompts as $spItem) {
-            $spName = $spItem['filename'] ?? ('part-' . ($spItem['part_code'] ?? '1.0') . '.md');
-            $filesToMaterialize['.agents/prompts/subparts/' . $spName] = (string) ($spItem['prompt'] ?? '');
+            $spName = $spItem['filename'] ?? ('part-'.($spItem['part_code'] ?? '1.0').'.md');
+            $filesToMaterialize['.agents/prompts/subparts/'.$spName] = (string) ($spItem['prompt'] ?? '');
         }
 
         $safeAppBanner = preg_replace('/[^a-zA-Z0-9 _\-\.\(\)]/', '', $appName);
@@ -2346,7 +2414,7 @@ class BlueprintController extends Controller
         $lines = [
             '#!/usr/bin/env bash',
             '# ==============================================================================',
-            "# Neriah Pro Project OS v6.0 — One-Command CLI Bootstrapper",
+            '# Neriah Pro Project OS v6.0 — One-Command CLI Bootstrapper',
             "# Target Project : {$safeAppBanner}",
             "# Sector / UI    : {$sectorCode} ({$primaryUi})",
             "# Stack Adapter  : {$stackCode}",
@@ -2374,7 +2442,7 @@ class BlueprintController extends Controller
             $b64 = base64_encode($rawContent);
             $lines[] = "echo \"  -> Materializing {$relPath}\"";
             $lines[] = "cat <<'EOF_B64' | tr -d '\\n\\r' | decode_b64 > \"{$relPath}\"";
-            $lines[] = chunk_split($b64, 76, "\n") . 'EOF_B64';
+            $lines[] = chunk_split($b64, 76, "\n").'EOF_B64';
             if ($relPath === 'verify-blueprint.sh') {
                 $lines[] = 'chmod +x verify-blueprint.sh';
             }
@@ -2388,7 +2456,7 @@ class BlueprintController extends Controller
         $lines[] = 'echo " Next Step 3: Verifikasi anti-slop kapan saja dengan ./verify-blueprint.sh"';
         $lines[] = 'echo "=================================================================="';
 
-        \App\Models\AuditLog::record(
+        AuditLog::record(
             action: 'cli_bootstrap_pulled',
             model: $blueprint ?? $posProject,
             newValues: [
@@ -2402,7 +2470,7 @@ class BlueprintController extends Controller
             eventCategory: 'cli_bootstrap'
         );
 
-        return response(implode("\n", $lines) . "\n", 200, [
+        return response(implode("\n", $lines)."\n", 200, [
             'Content-Type' => 'text/x-shellscript; charset=UTF-8',
             'X-Project-OS-Version' => '9.0.0',
         ]);
@@ -2433,18 +2501,18 @@ class BlueprintController extends Controller
             'locale' => 'nullable|string|in:id,en',
         ]);
 
-        $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+        $sectorCode = PosSectorUiArchetypeCatalog::normalizeSectorCode(
             (string) ($validated['sector_code'] ?? $validated['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
         );
-        $stackCode = \App\Support\PosStackPresetCatalog::normalizePresetCode(
+        $stackCode = PosStackPresetCatalog::normalizePresetCode(
             (string) ($validated['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH')
         );
         $resolvedPrimitives = $validated['primitive_codes'] ?? $validated['selected_primitives'] ?? [];
         $resolvedPublicUx = ! empty($validated['public_ux_preset'])
-            ? \App\Support\PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset((string) $validated['public_ux_preset'], $sectorCode)
-            : \App\Support\PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($sectorCode);
+            ? PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset((string) $validated['public_ux_preset'], $sectorCode)
+            : PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($sectorCode);
 
-        $schema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+        $schema = ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
             'app_name' => $validated['app_name'] ?? $validated['project_name'] ?? 'Enterprise Isolated Preview',
             'sector_code' => $sectorCode,
             'primitive_codes' => $resolvedPrimitives,
@@ -2457,7 +2525,7 @@ class BlueprintController extends Controller
             'persona_mode' => $validated['persona_mode'] ?? null,
         ]);
 
-        $quotation = app(\App\Services\PosCommercialBridgeService::class)->calculateScopeQuotation($schema, [
+        $quotation = app(PosCommercialBridgeService::class)->calculateScopeQuotation($schema, [
             'stack_preset' => $stackCode,
             'selected_ui_variant' => $validated['selected_ui_variant'] ?? null,
             'public_ux_preset' => $resolvedPublicUx,
@@ -2477,7 +2545,7 @@ class BlueprintController extends Controller
             'living_cve_security_alerts' => $schema['living_cve_security_alerts'] ?? [],
             'five_deterministic_guarantees' => $schema['five_deterministic_guarantees'] ?? [],
             'five_enterprise_glue_primitives' => $schema['five_enterprise_glue_primitives'] ?? [],
-            'five_real_world_elements' => \App\Support\PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview($validated['locale'] ?? app()->getLocale()),
+            'five_real_world_elements' => PosRealWorldRuntimeCatalog::fiveRealWorldElementsOverview($validated['locale'] ?? app()->getLocale()),
             'fifteen_pillars_freeze_matrix' => $schema['fifteen_pillars_freeze_matrix'] ?? [],
             'hardware_iot_peripheral_contract' => $schema['hardware_iot_peripheral_contract'] ?? [],
             'realtime_websocket_contract' => $schema['realtime_websocket_contract'] ?? [],
@@ -2515,7 +2583,7 @@ class BlueprintController extends Controller
     /**
      * Killer Feature #4: Reverse-Engineer / Brownfield SQL & Migration Importer API.
      */
-    public function brownfieldAudit(Request $request, \App\Services\BrownfieldMigrationAuditorService $auditor): JsonResponse
+    public function brownfieldAudit(Request $request, BrownfieldMigrationAuditorService $auditor): JsonResponse
     {
         $validated = $request->validate([
             'schema_text' => 'required|string|max:150000',
@@ -2534,7 +2602,7 @@ class BlueprintController extends Controller
     /**
      * Killer Feature #5: Blueprint Drift Auditor & Slop Scanner API.
      */
-    public function slopAudit(Request $request, string $slug, \App\Services\BlueprintSlopScannerService $scanner): JsonResponse
+    public function slopAudit(Request $request, string $slug, BlueprintSlopScannerService $scanner): JsonResponse
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
@@ -2547,7 +2615,7 @@ class BlueprintController extends Controller
     /**
      * Layer 8: Interactive Pre-Flight Blueprint Doctor API (before or during blueprint creation).
      */
-    public function blueprintDoctor(Request $request, \App\Services\BlueprintDoctorService $doctor): JsonResponse
+    public function blueprintDoctor(Request $request, BlueprintDoctorService $doctor): JsonResponse
     {
         $validated = $request->validate([
             'sector_code' => 'nullable|string|max:120',
@@ -2567,7 +2635,7 @@ class BlueprintController extends Controller
     /**
      * Layer 8: Blueprint Doctor Live Audit on a persisted VisionBlueprint.
      */
-    public function blueprintSlugDoctor(Request $request, string $slug, \App\Services\BlueprintDoctorService $doctor): JsonResponse
+    public function blueprintSlugDoctor(Request $request, string $slug, BlueprintDoctorService $doctor): JsonResponse
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
@@ -2584,7 +2652,7 @@ class BlueprintController extends Controller
     public function createDeltaChangeRequest(
         Request $request,
         string $slug,
-        \App\Services\BlueprintDeltaEvolutionService $deltaService
+        BlueprintDeltaEvolutionService $deltaService
     ): JsonResponse {
         $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
@@ -2598,7 +2666,7 @@ class BlueprintController extends Controller
             'added_decision_rules' => 'nullable|array',
         ]);
 
-        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
         $result = $deltaService->createChangeRequest($blueprint, $posProject, $validated, true);
 
         return response()->json($result, 201);
@@ -2612,7 +2680,7 @@ class BlueprintController extends Controller
         $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
 
-        if (! \Illuminate\Support\Facades\Schema::hasTable('pos_change_requests')) {
+        if (! Schema::hasTable('pos_change_requests')) {
             return response()->json([
                 'success' => true,
                 'items' => [],
@@ -2620,7 +2688,7 @@ class BlueprintController extends Controller
             ]);
         }
 
-        $cursorPage = \App\Models\PosChangeRequest::query()
+        $cursorPage = PosChangeRequest::query()
             ->where('vision_blueprint_id', $blueprint->id)
             ->orderBy('id', 'desc')
             ->cursorPaginate(15);
@@ -2636,7 +2704,7 @@ class BlueprintController extends Controller
     /**
      * Mitra Commercial #1: Satu Pintu Live Scope-to-Quotation & WBS Estimator API.
      */
-    public function commercialEstimate(Request $request, \App\Services\PosCommercialBridgeService $bridge): JsonResponse
+    public function commercialEstimate(Request $request, PosCommercialBridgeService $bridge): JsonResponse
     {
         $validated = $request->validate([
             'sector_code' => 'nullable|string|max:120',
@@ -2652,10 +2720,10 @@ class BlueprintController extends Controller
             'termin_scheme' => 'nullable|string|in:30_50_20,50_50',
         ]);
 
-        $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+        $sectorCode = PosSectorUiArchetypeCatalog::normalizeSectorCode(
             (string) ($validated['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
         );
-        $stackCode = \App\Support\PosStackPresetCatalog::normalizePresetCode(
+        $stackCode = PosStackPresetCatalog::normalizePresetCode(
             (string) ($validated['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH')
         );
 
@@ -2674,7 +2742,7 @@ class BlueprintController extends Controller
             ],
         ]);
 
-        $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($dummyBp, [
+        $schema = ProjectOsBlueprintCompilerService::compileUniversalSchema($dummyBp, [
             'sector_code' => $sectorCode,
             'primitive_codes' => $validated['primitive_codes'] ?? [],
             'stack_preset' => $stackCode,
@@ -2707,7 +2775,7 @@ class BlueprintController extends Controller
     public function lockScopeAndGenerateSpk(
         Request $request,
         string $slug,
-        \App\Services\PosCommercialBridgeService $bridge
+        PosCommercialBridgeService $bridge
     ): JsonResponse {
         $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
@@ -2717,7 +2785,7 @@ class BlueprintController extends Controller
             'contract_amount' => 'nullable|numeric|min:0',
         ]);
 
-        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
         $result = $bridge->lockScopeAndGenerateSpk($blueprint, $posProject, array_filter($validated, fn ($v) => $v !== null));
 
         return response()->json($result);
@@ -2730,12 +2798,12 @@ class BlueprintController extends Controller
         Request $request,
         string $slug,
         string $crId,
-        \App\Services\PosCommercialBridgeService $bridge
+        PosCommercialBridgeService $bridge
     ): JsonResponse {
         $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
 
-        $cr = \App\Models\PosChangeRequest::query()
+        $cr = PosChangeRequest::query()
             ->where('id', $crId)
             ->where('vision_blueprint_id', $blueprint->id)
             ->firstOrFail();
@@ -2756,7 +2824,7 @@ class BlueprintController extends Controller
     public function toggleUatScenario(
         Request $request,
         string $slug,
-        \App\Services\PosCommercialBridgeService $bridge
+        PosCommercialBridgeService $bridge
     ): JsonResponse {
         $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
@@ -2767,14 +2835,14 @@ class BlueprintController extends Controller
             'actor_name' => 'nullable|string|max:160',
         ]);
 
-        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
         if (! $posProject) {
-            $posProject = app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+            $posProject = app(ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
         }
 
         $schema = $posProject && ! empty($posProject->compiled_schema_json)
             ? (is_array($posProject->compiled_schema_json) ? $posProject->compiled_schema_json : (json_decode((string) $posProject->compiled_schema_json, true) ?: []))
-            : \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
+            : ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
 
         $uat = $bridge->toggleUatScenario(
             $posProject,
@@ -2796,7 +2864,7 @@ class BlueprintController extends Controller
     public function signOffUatAndIssueBast(
         Request $request,
         string $slug,
-        \App\Services\PosCommercialBridgeService $bridge
+        PosCommercialBridgeService $bridge
     ): JsonResponse {
         $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
@@ -2808,7 +2876,7 @@ class BlueprintController extends Controller
         ]);
         $validated['signer_ip'] = $request->ip();
 
-        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
         $result = $bridge->signOffUatAndIssueBast($blueprint, $posProject, $validated);
 
         return response()->json($result, ($result['success'] ?? false) ? 200 : 422);
@@ -2821,20 +2889,20 @@ class BlueprintController extends Controller
         Request $request,
         string $slug,
         string $docType,
-        \App\Services\PosCommercialBridgeService $bridge
+        PosCommercialBridgeService $bridge
     ) {
         $docType = in_array($docType, ['rab', 'spk-appendix', 'bast', 'sop-training'], true) ? $docType : 'rab';
         $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
 
-        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+        $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
         if (! $posProject) {
-            $posProject = app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+            $posProject = app(ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
         }
 
         $schema = $posProject && ! empty($posProject->compiled_schema_json)
             ? (is_array($posProject->compiled_schema_json) ? $posProject->compiled_schema_json : (json_decode((string) $posProject->compiled_schema_json, true) ?: []))
-            : \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
+            : ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
 
         $quotation = ! empty($posProject?->commercial_quotation_json) && is_array($posProject->commercial_quotation_json)
             ? $posProject->commercial_quotation_json
@@ -2845,8 +2913,8 @@ class BlueprintController extends Controller
             is_array($posProject?->uat_checklist_json) ? $posProject->uat_checklist_json : []
         );
 
-        $changeRequests = \Illuminate\Support\Facades\Schema::hasTable('pos_change_requests')
-            ? \App\Models\PosChangeRequest::query()->where('vision_blueprint_id', $blueprint->id)->orderBy('id', 'asc')->limit(20)->get()
+        $changeRequests = Schema::hasTable('pos_change_requests')
+            ? PosChangeRequest::query()->where('vision_blueprint_id', $blueprint->id)->orderBy('id', 'asc')->limit(20)->get()
             : collect();
 
         $whiteLabel = is_array($posProject?->white_label_branding_json) ? $posProject->white_label_branding_json : [];
@@ -2858,7 +2926,7 @@ class BlueprintController extends Controller
                 'pic_name' => trim((string) $request->query('pic_name', '')),
                 'pic_title' => trim((string) $request->query('pic_title', '')),
             ];
-            if ($posProject && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'white_label_branding_json')) {
+            if ($posProject && Schema::hasColumn('pos_projects', 'white_label_branding_json')) {
                 $posProject->forceFill(['white_label_branding_json' => $whiteLabel])->saveQuietly();
             }
         }
@@ -2872,13 +2940,13 @@ class BlueprintController extends Controller
             'quotation' => $quotation,
             'uat' => $uat,
             'changeRequests' => $changeRequests,
-            'devInfo' => \App\Support\ContractLegalHelper::getDeveloperInfo(),
+            'devInfo' => ContractLegalHelper::getDeveloperInfo(),
             'whiteLabel' => $whiteLabel,
             'isPdfStream' => $request->query('download') === 'pdf',
         ];
 
-        if ($request->query('download') === 'pdf' && class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('prints.mitra-commercial-pack', $viewData);
+        if ($request->query('download') === 'pdf' && class_exists(Pdf::class)) {
+            $pdf = Pdf::loadView('prints.mitra-commercial-pack', $viewData);
 
             return $pdf->stream("{$docType}-{$blueprint->slug}.pdf");
         }
@@ -2892,7 +2960,7 @@ class BlueprintController extends Controller
     public function codesignSignModule(
         Request $request,
         string $slug,
-        \App\Services\PosCommercialBridgeService $bridge
+        PosCommercialBridgeService $bridge
     ): JsonResponse {
         $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
@@ -2904,8 +2972,8 @@ class BlueprintController extends Controller
             'extra_man_hours' => 'nullable|integer|min:0|max:400',
         ]);
 
-        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first()
-            ?? app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+        $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first()
+            ?? app(ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
 
         $dualKey = is_array($posProject->codesign_dual_key_json) ? $posProject->codesign_dual_key_json : [];
         if (! empty($dualKey['locked_v1_readonly'])) {
@@ -2917,7 +2985,7 @@ class BlueprintController extends Controller
 
         $schema = ! empty($posProject->compiled_schema_json)
             ? (is_array($posProject->compiled_schema_json) ? $posProject->compiled_schema_json : (json_decode((string) $posProject->compiled_schema_json, true) ?: []))
-            : \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
+            : ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
 
         $existingModules = is_array($posProject->codesign_modules_json) && ! empty($posProject->codesign_modules_json)
             ? $posProject->codesign_modules_json
@@ -2953,18 +3021,18 @@ class BlueprintController extends Controller
             ], 404);
         }
 
-        $recompiledSchema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
+        $recompiledSchema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
             'persist_project' => true,
             'codesign_modules' => $existingModules,
             'codesign_dual_key' => $dualKey,
         ]);
         $quotation = $bridge->calculateScopeQuotation($recompiledSchema);
-        if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'commercial_quotation_json')) {
+        if (Schema::hasColumn('pos_projects', 'commercial_quotation_json')) {
             $posProject->refresh();
             $posProject->forceFill(['commercial_quotation_json' => $quotation])->saveQuietly();
         }
 
-        \App\Models\AuditLog::record(
+        AuditLog::record(
             action: 'CODESIGN_MODULE_SIGN_OFF',
             model: $blueprint,
             newValues: [
@@ -2996,7 +3064,7 @@ class BlueprintController extends Controller
     public function codesignAnnotate(
         Request $request,
         string $slug,
-        \App\Services\PosCommercialBridgeService $bridge
+        PosCommercialBridgeService $bridge
     ): JsonResponse {
         $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
@@ -3015,8 +3083,8 @@ class BlueprintController extends Controller
             'ulid_tables.*' => 'string|max:80',
         ]);
 
-        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first()
-            ?? app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+        $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first()
+            ?? app(ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
 
         $dualKey = is_array($posProject->codesign_dual_key_json) ? $posProject->codesign_dual_key_json : [];
         if (! empty($dualKey['locked_v1_readonly'])) {
@@ -3028,7 +3096,7 @@ class BlueprintController extends Controller
 
         $schema = ! empty($posProject->compiled_schema_json)
             ? (is_array($posProject->compiled_schema_json) ? $posProject->compiled_schema_json : (json_decode((string) $posProject->compiled_schema_json, true) ?: []))
-            : \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
+            : ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => false]);
 
         $existingModules = is_array($posProject->codesign_modules_json) && ! empty($posProject->codesign_modules_json)
             ? $posProject->codesign_modules_json
@@ -3039,7 +3107,7 @@ class BlueprintController extends Controller
 
         if (! empty($validated['add_custom_module'])) {
             $titleClean = trim((string) ($validated['module_title'] ?? 'Modul Tambahan Klien'));
-            $customCode = 'MOD_CUSTOM_' . strtoupper(substr(md5($titleClean . microtime()), 0, 6));
+            $customCode = 'MOD_CUSTOM_'.strtoupper(substr(md5($titleClean.microtime()), 0, 6));
             $extraHours = max(4, (int) ($validated['extra_man_hours'] ?? 12));
             $existingModules[] = [
                 'module_code' => $customCode,
@@ -3052,7 +3120,7 @@ class BlueprintController extends Controller
                     'wireframe_widgets' => ! empty($validated['widgets']) ? $validated['widgets'] : [$titleClean, 'O(1) Cursor Table', 'Form Approval'],
                 ],
                 'architect_technical_lens' => [
-                    'ulid_tables' => ! empty($validated['ulid_tables']) ? $validated['ulid_tables'] : [\Illuminate\Support\Str::snake($titleClean) . '_records'],
+                    'ulid_tables' => ! empty($validated['ulid_tables']) ? $validated['ulid_tables'] : [Str::snake($titleClean).'_records'],
                 ],
                 'annotations' => ! empty($validated['note']) ? [[
                     'author_name' => $authorName,
@@ -3094,18 +3162,18 @@ class BlueprintController extends Controller
             $auditAction = 'CODESIGN_ANNOTATION_ADDED';
         }
 
-        $recompiledSchema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
+        $recompiledSchema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
             'persist_project' => true,
             'codesign_modules' => $existingModules,
             'codesign_dual_key' => $dualKey,
         ]);
         $quotation = $bridge->calculateScopeQuotation($recompiledSchema);
-        if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'commercial_quotation_json')) {
+        if (Schema::hasColumn('pos_projects', 'commercial_quotation_json')) {
             $posProject->refresh();
             $posProject->forceFill(['commercial_quotation_json' => $quotation])->saveQuietly();
         }
 
-        \App\Models\AuditLog::record(
+        AuditLog::record(
             action: $auditAction,
             model: $blueprint,
             newValues: [
@@ -3115,7 +3183,7 @@ class BlueprintController extends Controller
                 'updated_quotation_idr' => $quotation['quotation_idr'] ?? 0,
                 'scope_hash_short' => $quotation['scope_hash_short'] ?? '',
             ],
-            description: "Co-Design Kolaborasi [{$auditAction}] pada modul {$targetModuleCode} oleh {$authorName} -> Estimasi RAB baru: " . ($quotation['formatted_quotation_idr'] ?? ''),
+            description: "Co-Design Kolaborasi [{$auditAction}] pada modul {$targetModuleCode} oleh {$authorName} -> Estimasi RAB baru: ".($quotation['formatted_quotation_idr'] ?? ''),
             eventCategory: 'codesign_alignment',
             sectorCode: (string) ($recompiledSchema['project_metadata']['primary_sector'] ?? null),
             primitiveCode: 'PRIMITIVE_CODESIGN_ROOM',
@@ -3136,7 +3204,7 @@ class BlueprintController extends Controller
     public function codesignDualKeyLock(
         Request $request,
         string $slug,
-        \App\Services\PosCommercialBridgeService $bridge
+        PosCommercialBridgeService $bridge
     ): JsonResponse {
         $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
@@ -3147,12 +3215,12 @@ class BlueprintController extends Controller
             'termin_scheme' => 'nullable|string|in:30_50_20,50_50',
         ]);
 
-        $posProject = \App\Models\PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first()
-            ?? app(\App\Services\ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
+        $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first()
+            ?? app(ProjectOsBlueprintCompilerService::class)->compileAndPersist($blueprint);
 
         $schema = ! empty($posProject->compiled_schema_json)
             ? (is_array($posProject->compiled_schema_json) ? $posProject->compiled_schema_json : (json_decode((string) $posProject->compiled_schema_json, true) ?: []))
-            : \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
+            : ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
 
         $codesign = $schema['codesign_alignment_contract'] ?? [];
         if (empty($codesign['can_execute_dual_key_lock'])) {
@@ -3183,17 +3251,17 @@ class BlueprintController extends Controller
             'spk_document_id' => $lockResult['document_id'] ?? null,
         ];
 
-        $recompiledSchema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
+        $recompiledSchema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
             'persist_project' => true,
             'codesign_modules' => $posProject->codesign_modules_json,
             'codesign_dual_key' => $dualKeyPayload,
         ]);
 
-        \App\Models\AuditLog::record(
+        AuditLog::record(
             action: 'DUAL_KEY_SCOPE_LOCK',
             model: $blueprint,
             newValues: $dualKeyPayload,
-            description: "Dual-Key Cryptographic Scope Lock v1.0 disahkan oleh [{$architectSigner}] & [{$clientSigner}] — Master SHA-256: " . substr($masterHash, 0, 16),
+            description: "Dual-Key Cryptographic Scope Lock v1.0 disahkan oleh [{$architectSigner}] & [{$clientSigner}] — Master SHA-256: ".substr($masterHash, 0, 16),
             eventCategory: 'codesign_alignment',
             sectorCode: (string) ($recompiledSchema['project_metadata']['primary_sector'] ?? null),
             primitiveCode: 'PRIMITIVE_CODESIGN_ROOM',

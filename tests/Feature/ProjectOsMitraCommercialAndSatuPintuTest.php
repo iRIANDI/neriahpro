@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\ProjectOsMatrixPage;
 use App\Livewire\BlueprintArchitectStudio;
 use App\Livewire\Studio\BlueprintWorkbench;
 use App\Models\AuditLog;
@@ -300,7 +301,7 @@ class ProjectOsMitraCommercialAndSatuPintuTest extends TestCase
         }
 
         // Verify Backend Filament ProjectOsMatrixPage ('mitra' tab) renders cleanly with Live RAB Simulator
-        Livewire::test(\App\Filament\Pages\ProjectOsMatrixPage::class)
+        Livewire::test(ProjectOsMatrixPage::class)
             ->set('activeTab', 'mitra')
             ->assertSee('ALGORITHMIC SCOPE-TO-QUOTATION SIMULATOR');
     }
@@ -342,9 +343,9 @@ class ProjectOsMitraCommercialAndSatuPintuTest extends TestCase
             ->call('signStudioDigitalBast')
             ->assertSet('uatChecklistState.all_passed', true);
 
-        // Verify 40 Native AI Tools + RBAC Mutation Guard on Mitra Tools #23 & #24
-        $this->assertCount(40, GeminiToolRegistry::getDeclarations());
-        $this->assertCount(40, GeminiToolRegistry::getOpenAiTools());
+        // Verify 44 Native AI Tools + RBAC Mutation Guard on Mitra Tools #23 & #24
+        $this->assertCount(44, GeminiToolRegistry::getDeclarations());
+        $this->assertCount(44, GeminiToolRegistry::getOpenAiTools());
         $engine = app(AgenticActionExecutionEngine::class);
 
         $this->actingAs($reviewer);

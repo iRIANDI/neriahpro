@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use App\Models\AuditLog;
+use App\Models\PosChangeRequest;
 use App\Models\PosProject;
 use App\Models\VisionBlueprint;
 use App\Services\BlueprintDeltaEvolutionService;
@@ -15,9 +16,9 @@ use App\Services\ProjectOsBlueprintCompilerService;
 use App\Services\Saas\PosSaasCommercialEngineService;
 use App\Services\ScaffoldGeneratorService;
 use App\Services\Security\DocumentThreatSanitizerService;
+use App\Services\Sla\PosSlaAndSandboxEngineService;
 use App\Services\TopologicalPromptChunker;
 use App\Support\InputHygieneStandard;
-use App\Support\PosAgentShieldAndCoDesignCatalog;
 use App\Support\PosDualZoneFrontendAndSaasCatalog;
 use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosInclusiveCommercialCatalog;
@@ -25,7 +26,9 @@ use App\Support\PosLifecycleAndStudioCatalog;
 use App\Support\PosRealWorldRuntimeCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
 use App\Support\PosStackPresetCatalog;
+use App\Support\PricingRegistry;
 use App\Support\ProjectOsMatrixCatalog;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -42,16 +45,22 @@ class BlueprintArchitectStudio extends Component
     public string $workspaceIsolationId = '';
 
     public ?string $slug = null;
+
     public string $projectName = 'Proyek Enterprise Baru';
+
     public string $currentVersion = 'v1.0';
+
     public string $sectorCode = 'SECTOR_01_COMMERCE_OMNICHANNEL';
+
     public string $stackCode = 'STACK_M1_LARAVEL_MONOLITH';
+
     public array $selectedPrimitives = [
         'PRIMITIVE_RBAC_TENANCY',
         'PRIMITIVE_CATALOG_SKU',
         'PRIMITIVE_INVENTORY_LEDGER',
         'PRIMITIVE_DOUBLE_ENTRY_LEDGER',
     ];
+
     public array $selectedMenus = [];
 
     // Dual-Mode Satu Pintu: 'RETAIL_SELF_DEV' vs 'MITRA_TURNKEY_PROJECT'
@@ -59,68 +68,113 @@ class BlueprintArchitectStudio extends Component
 
     // v8.0 Inclusive Dual-Persona UX + 36 Visual UI Blueprints + Tier-1 Jurisdiction + White-Label Security
     public string $personaMode = PosInclusiveCommercialCatalog::PERSONA_ARCHITECT_PRO;
+
     public int $storyboardStep = 1;
+
     public string $selectedUiVariant = '';
+
     public string $publicUxPreset = '';
+
     public string $navigationShell = '';
+
     public string $outputLocale = 'id';
+
     public bool $whiteLabelEnabled = false;
+
     public string $whiteLabelAgencyName = '';
+
     public string $whiteLabelLegalEntity = '';
+
     public string $mcpRevokeNotice = '';
 
     // 3-Pane Studio UI State
     public string $centerTab = 'schema'; // schema | states | ui_print | decisions | delta_verify | commercial_mitra | menus_glue
+
     public string $rightDockMode = 'phases'; // phases | dag_subparts | symbol_manifest | enterprise_menu | agents_md | graph_json | mcp_json | env_blueprint
+
     public int $activePhase = 1;
+
     public string $activeSubPartCode = '1.0';
+
     public bool $showWizardModal = false;
+
     public int $wizardStep = 1;
+
     public bool $showSlopDiffModal = false;
 
     // Mitra Commercial, SPK, UAT & Digital BAST State
     public array $uatChecklistState = [];
+
     public array $bastSignoffState = [];
+
     public array $latestSpkResult = [];
+
     public array $latestAddendumResult = [];
+
     public string $bastSignerName = '';
+
     public string $bastSignerEmail = '';
 
     // v9.0 Co-Design Alignment & Sign-Off Room ("Satu Data, Dua Kacamata") + AgentShield State
     public string $codesignLensMode = 'CLIENT_BUSINESS'; // CLIENT_BUSINESS | ARCHITECT_TECHNICAL
+
     public string $selectedCoDesignModuleCode = '';
+
     public array $codesignModulesState = [];
+
     public array $codesignDualKeyState = [];
+
     public string $newCoDesignNote = '';
+
     public string $newCoDesignAuthorRole = 'KLIEN_MITRA';
+
     public string $newCustomModuleTitle = '';
+
     public int $newCustomModuleHours = 12;
+
     public string $codesignClientSignerName = '';
+
     public string $codesignArchitectSignerName = 'Lead Architect NeriahPro';
+
     public string $codesignStatusNotice = '';
 
     // Custom Table & Unguarded Status Simulation (Blueprint Doctor Live Guard)
     public string $newCustomTableName = '';
+
     public bool $newCustomTableHasStatus = true;
+
     public array $customTables = [];
+
     public array $autoStateMachineTables = [];
 
     // Feature #3: Decision Matrix Interactive Builder
     public array $customDecisionRules = [];
+
     public string $newRuleCondA = '';
+
     public string $newRuleCondB = '';
+
     public string $newRuleCondC = '';
+
     public string $newRuleAction = '';
+
     public string $newRuleFormula = '';
 
     // Feature #1: Day-30 Delta Change Request Builder
     public string $deltaTitle = '';
+
     public string $deltaSummary = '';
+
     public array $latestDeltaResult = [];
+
+    // v11.0 Local Sandbox Webhook Simulator Result
+    public array $sandboxSimResult = [];
 
     // Feature #2 & Screen 5: Phase Progress & Execution Drift Audit Terminal
     public array $phaseProgress = [];
+
     public string $verifyTerminalInput = '';
+
     public array $driftBadges = [
         'database_ulid_strict_pgsql' => '100% Pass',
         'zero_external_cdn_and_popups' => '100% Pass',
@@ -131,7 +185,7 @@ class BlueprintArchitectStudio extends Component
     public function mount(?string $slug = null): void
     {
         ProjectOsMatrixCatalog::ensureSeeded();
-        $this->workspaceIsolationId = 'ws_' . strtolower((string) Str::ulid());
+        $this->workspaceIsolationId = 'ws_'.strtolower((string) Str::ulid());
 
         $blueprint = null;
         if ($slug && ! request()->boolean('new', false) && ! request()->boolean('reset', false)) {
@@ -284,7 +338,7 @@ class BlueprintArchitectStudio extends Component
             $this->outputLocale = PosInclusiveCommercialCatalog::normalizeOutputLocale((string) $meta['output_locale']);
         }
         $tier = (string) ($meta['package_tier'] ?? $meta['retail_tier'] ?? '');
-        if ($tier !== '' && \App\Support\PricingRegistry::isStudioContract($tier) && empty($posProject?->engagement_mode)) {
+        if ($tier !== '' && PricingRegistry::isStudioContract($tier) && empty($posProject?->engagement_mode)) {
             $this->engagementMode = PosCommercialBridgeService::MODE_MITRA;
         }
         $schema = $posProject && ! empty($posProject->compiled_schema_json)
@@ -338,7 +392,7 @@ class BlueprintArchitectStudio extends Component
         $this->blueprintId = null;
         $this->posProjectId = null;
         $this->slug = null;
-        $this->workspaceIsolationId = 'ws_' . strtolower((string) Str::ulid());
+        $this->workspaceIsolationId = 'ws_'.strtolower((string) Str::ulid());
         $this->projectName = 'Proyek Enterprise Baru';
         $this->currentVersion = 'v1.0';
         $this->customTables = [];
@@ -405,7 +459,7 @@ class BlueprintArchitectStudio extends Component
         $this->publicUxPreset = PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset($presetCode, $this->sectorCode);
         if ($this->posProjectId) {
             $proj = PosProject::query()->find($this->posProjectId);
-            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'public_ux_preset')) {
+            if ($proj && Schema::hasColumn('pos_projects', 'public_ux_preset')) {
                 $proj->forceFill(['public_ux_preset' => $this->publicUxPreset])->saveQuietly();
             }
         }
@@ -421,7 +475,7 @@ class BlueprintArchitectStudio extends Component
         $this->personaMode = PosInclusiveCommercialCatalog::normalizePersonaMode($mode);
         if ($this->posProjectId) {
             $proj = PosProject::query()->find($this->posProjectId);
-            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'persona_mode')) {
+            if ($proj && Schema::hasColumn('pos_projects', 'persona_mode')) {
                 $proj->forceFill(['persona_mode' => $this->personaMode])->saveQuietly();
             }
         }
@@ -440,7 +494,7 @@ class BlueprintArchitectStudio extends Component
 
         if ($this->posProjectId) {
             $proj = PosProject::query()->find($this->posProjectId);
-            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'selected_ui_variant')) {
+            if ($proj && Schema::hasColumn('pos_projects', 'selected_ui_variant')) {
                 $proj->forceFill([
                     'selected_ui_variant' => $this->selectedUiVariant,
                     'navigation_shell' => $this->navigationShell,
@@ -456,7 +510,7 @@ class BlueprintArchitectStudio extends Component
 
         if ($this->posProjectId) {
             $proj = PosProject::query()->find($this->posProjectId);
-            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'output_locale')) {
+            if ($proj && Schema::hasColumn('pos_projects', 'output_locale')) {
                 $proj->forceFill([
                     'output_locale' => $this->outputLocale,
                     'jurisdiction_profile' => (string) ($jurisdiction['jurisdiction_code'] ?? 'ID_UU_PDP_PSAK'),
@@ -489,7 +543,7 @@ class BlueprintArchitectStudio extends Component
             $bp = VisionBlueprint::query()->create([
                 'user_id' => $user?->id,
                 'nama_bisnis' => $this->projectName ?: 'Proyek Enterprise Baru',
-                'slug' => $baseSlug . '-' . strtolower(substr((string) Str::ulid(), -6)),
+                'slug' => $baseSlug.'-'.strtolower(substr((string) Str::ulid(), -6)),
                 'client_name' => $user?->name ?: 'Studio Principal Architect',
                 'email' => $user?->email ?: 'studio@neriahpro.com',
                 'phone' => '+628110000000',
@@ -543,13 +597,13 @@ class BlueprintArchitectStudio extends Component
 
         if ($this->posProjectId) {
             $proj = PosProject::query()->find($this->posProjectId);
-            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'white_label_branding_json')) {
+            if ($proj && Schema::hasColumn('pos_projects', 'white_label_branding_json')) {
                 $proj->forceFill(['white_label_branding_json' => $payload])->saveQuietly();
-                \App\Models\AuditLog::record(
+                AuditLog::record(
                     action: 'whitelabel_branding_updated',
                     model: $proj,
                     newValues: $payload,
-                    description: "White-Label Agency branding updated for PosProject [{$proj->id}]: " . ($payload['agency_name'] ?: 'Disabled'),
+                    description: "White-Label Agency branding updated for PosProject [{$proj->id}]: ".($payload['agency_name'] ?: 'Disabled'),
                     eventCategory: 'whitelabel_agency'
                 );
             }
@@ -562,13 +616,13 @@ class BlueprintArchitectStudio extends Component
             $proj = PosProject::query()->find($this->posProjectId);
             if ($proj) {
                 $newToken = $proj->revokeMcpToken(auth()->id() ? (string) auth()->id() : null);
-                $this->mcpRevokeNotice = 'Token MCP lama dicabut instan! Token baru: ' . substr($newToken, 0, 18) . '...';
+                $this->mcpRevokeNotice = 'Token MCP lama dicabut instan! Token baru: '.substr($newToken, 0, 18).'...';
 
                 return;
             }
         }
 
-        $this->mcpRevokeNotice = 'Token MCP simulasi berhasil dirotasi (npro_mcp_' . substr(strtolower((string) Str::ulid()), -10) . '...).';
+        $this->mcpRevokeNotice = 'Token MCP simulasi berhasil dirotasi (npro_mcp_'.substr(strtolower((string) Str::ulid()), -10).'...).';
     }
 
     public function selectStack(string $code): void
@@ -661,7 +715,7 @@ class BlueprintArchitectStudio extends Component
     public function togglePhaseVerified(int $phaseNum): void
     {
         $phaseNum = max(1, min(7, $phaseNum));
-        $key = 'phase_' . $phaseNum;
+        $key = 'phase_'.$phaseNum;
         $current = $this->phaseProgress[$key]['status'] ?? 'PENDING';
 
         if ($current === 'VERIFIED') {
@@ -678,7 +732,7 @@ class BlueprintArchitectStudio extends Component
 
         if ($this->posProjectId) {
             $proj = PosProject::query()->find($this->posProjectId);
-            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'phase_progress_json')) {
+            if ($proj && Schema::hasColumn('pos_projects', 'phase_progress_json')) {
                 $proj->forceFill(['phase_progress_json' => $this->phaseProgress])->saveQuietly();
                 if ($phaseNum === 6 && ($this->phaseProgress[$key]['status'] ?? '') === 'VERIFIED') {
                     app(PosSaasCommercialEngineService::class)->issueVerifiedArchitectureReceiptTestimonial(
@@ -735,12 +789,12 @@ class BlueprintArchitectStudio extends Component
             ? VisionBlueprint::query()->find($this->blueprintId)
             : new VisionBlueprint([
                 'nama_bisnis' => $this->projectName,
-                'slug' => $this->slug ?: ('studio-' . substr($this->workspaceIsolationId ?: 'isolated', -8)),
+                'slug' => $this->slug ?: ('studio-'.substr($this->workspaceIsolationId ?: 'isolated', -8)),
                 'user_metadata' => [
                     'primary_sector' => $this->sectorCode,
                     'selected_primitives' => $this->selectedPrimitives,
                     'selected_menus' => $this->selectedMenus,
-                    'isolation_token' => $this->workspaceIsolationId ?: ('ws_' . strtolower((string) Str::ulid())),
+                    'isolation_token' => $this->workspaceIsolationId ?: ('ws_'.strtolower((string) Str::ulid())),
                     'stack_preset' => $this->stackCode,
                 ],
             ]);
@@ -749,7 +803,7 @@ class BlueprintArchitectStudio extends Component
             'sector_code' => $this->sectorCode,
             'primitive_codes' => $this->selectedPrimitives,
             'selected_menus' => ! empty($this->selectedMenus) ? $this->selectedMenus : null,
-            'isolation_token' => $this->workspaceIsolationId ?: ('ws_' . strtolower((string) Str::ulid())),
+            'isolation_token' => $this->workspaceIsolationId ?: ('ws_'.strtolower((string) Str::ulid())),
             'stack_preset' => $this->stackCode,
             'custom_decision_rules' => $this->customDecisionRules,
             'persona_mode' => $this->personaMode,
@@ -844,6 +898,7 @@ class BlueprintArchitectStudio extends Component
             'claude_settings_json' => DocumentThreatSanitizerService::renderClaudeSettingsJson($schema),
             'dependency_manifest' => (string) json_encode($schema['approved_dependency_manifest'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             'dual_zone_md' => PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($schema),
+            'seo_geo_md' => ScaffoldGeneratorService::generateSeoGeoAndZeroFailureContractMarkdown($schema, $this->projectName),
             default => (string) ($selectedPhaseObj['prompt'] ?? ''),
         };
 
@@ -892,8 +947,11 @@ class BlueprintArchitectStudio extends Component
             'dependencyManifest' => $schema['approved_dependency_manifest'] ?? [],
             'cryptoAuditContract' => $schema['cryptographic_audit_explorer_contract'] ?? [],
             'worldClassTaskMatrix' => $schema['world_class_task_matrix'] ?? [],
+            'seoGeoContract' => $schema['seo_geo_authority_contract'] ?? [],
+            'sixZeroFailureModules' => $schema['six_final_zero_failure_modules'] ?? [],
+            'twentyPillars' => $schema['twenty_pillars_paripurna_matrix'] ?? [],
         ])->layout('components.layouts.studio', [
-            'title' => 'Project OS Architect Studio v10.0 (Dual-Zone UX, Verified Aniwall, AgentShield & 15-Pillar Freeze)',
+            'title' => 'Project OS Architect Studio v11.0 (SEO/GEO Authority, UU PDP Vault, Offline PWA & 20-Pillar Paripurna)',
         ]);
     }
 
@@ -944,7 +1002,7 @@ class BlueprintArchitectStudio extends Component
         }
 
         $this->codesignModulesState = $nextState;
-        $this->persistCoDesignStateToProject('codesign_module_' . strtolower($normalizedStatus), [
+        $this->persistCoDesignStateToProject('codesign_module_'.strtolower($normalizedStatus), [
             'module_code' => $moduleCode,
             'status' => $normalizedStatus,
             'signer' => $signer,
@@ -1016,7 +1074,7 @@ class BlueprintArchitectStudio extends Component
         $hours = max(4, min(240, (int) $this->newCustomModuleHours));
         $schema = $this->compileCurrentStudioSchema();
         $modules = $schema['codesign_alignment_contract']['modules'] ?? [];
-        $newCode = 'MOD_CUSTOM_' . strtoupper(substr((string) Str::ulid(), -6));
+        $newCode = 'MOD_CUSTOM_'.strtoupper(substr((string) Str::ulid(), -6));
 
         $modules[] = [
             'module_code' => $newCode,
@@ -1083,7 +1141,7 @@ class BlueprintArchitectStudio extends Component
         ];
 
         $this->persistCoDesignStateToProject('dual_key_scope_lock_sealed', $this->codesignDualKeyState);
-        $this->codesignStatusNotice = '🔒 Dual-Key Scope Lock v1.0 Resmi Disegel! Master SHA-256: ' . substr((string) $quot['scope_hash_full'], 0, 18) . '...';
+        $this->codesignStatusNotice = '🔒 Dual-Key Scope Lock v1.0 Resmi Disegel! Master SHA-256: '.substr((string) $quot['scope_hash_full'], 0, 18).'...';
     }
 
     /**
@@ -1094,13 +1152,13 @@ class BlueprintArchitectStudio extends Component
         $proj = $this->posProjectId ? PosProject::query()->find($this->posProjectId) : null;
         if ($proj) {
             $updates = [];
-            if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'codesign_modules_json')) {
+            if (Schema::hasColumn('pos_projects', 'codesign_modules_json')) {
                 $updates['codesign_modules_json'] = $this->codesignModulesState;
             }
-            if (\Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'codesign_dual_key_json') && ! empty($this->codesignDualKeyState)) {
+            if (Schema::hasColumn('pos_projects', 'codesign_dual_key_json') && ! empty($this->codesignDualKeyState)) {
                 $updates['codesign_dual_key_json'] = $this->codesignDualKeyState;
             }
-            if (! empty($this->codesignDualKeyState['master_scope_hash_sha256']) && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'scope_hash_sha256')) {
+            if (! empty($this->codesignDualKeyState['master_scope_hash_sha256']) && Schema::hasColumn('pos_projects', 'scope_hash_sha256')) {
                 $updates['scope_hash_sha256'] = $this->codesignDualKeyState['master_scope_hash_sha256'];
             }
             if (! empty($updates)) {
@@ -1136,7 +1194,7 @@ class BlueprintArchitectStudio extends Component
 
         if ($this->posProjectId) {
             $proj = PosProject::query()->find($this->posProjectId);
-            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'engagement_mode')) {
+            if ($proj && Schema::hasColumn('pos_projects', 'engagement_mode')) {
                 $proj->forceFill(['engagement_mode' => $normalized])->saveQuietly();
             }
         }
@@ -1153,7 +1211,7 @@ class BlueprintArchitectStudio extends Component
                 'scope_hash_full' => $quot['scope_hash_full'],
                 'scope_hash_short' => $quot['scope_hash_short'],
                 'quotation' => $quot,
-                'document_title' => 'Simulasi SPK & Lampiran Scope SHA-256 - ' . $this->projectName,
+                'document_title' => 'Simulasi SPK & Lampiran Scope SHA-256 - '.$this->projectName,
             ];
 
             return;
@@ -1171,7 +1229,7 @@ class BlueprintArchitectStudio extends Component
             return;
         }
 
-        $cr = \App\Models\PosChangeRequest::query()->find($crId);
+        $cr = PosChangeRequest::query()->find($crId);
         if (! $cr) {
             return;
         }
@@ -1229,13 +1287,29 @@ class BlueprintArchitectStudio extends Component
             $quot = $bridge->calculateScopeQuotation($schema);
             $this->toggleStudioUatScenario('ALL', $bridge);
             $this->bastSignoffState = [
-                'bast_number' => 'BAST/NPRO/' . now()->format('Y/m') . '/SIMUL',
-                'bast_sha256' => hash('sha256', $this->projectName . '|' . $quot['scope_hash_full']),
+                'bast_number' => 'BAST/NPRO/'.now()->format('Y/m').'/SIMUL',
+                'bast_sha256' => hash('sha256', $this->projectName.'|'.$quot['scope_hash_full']),
                 'signer_name' => $this->bastSignerName ?: 'PIC Klien Resmi',
                 'signed_at' => now()->toIso8601String(),
                 'formatted_final_termin' => $quot['termin_schedule'][count($quot['termin_schedule']) - 1]['formatted_amount'] ?? 'Rp 0',
             ];
         }
     }
-}
 
+    public function runStudioSandboxWebhook(string $scenario, PosSlaAndSandboxEngineService $slaService): void
+    {
+        if (app()->isProduction()) {
+            $this->sandboxSimResult = [
+                'success' => false,
+                'message' => 'Sandbox Webhook Simulator is strictly disabled in production.',
+            ];
+
+            return;
+        }
+
+        $this->sandboxSimResult = $slaService->simulateSandboxWebhookEvent($scenario, [
+            'plan_tier' => 'retail_pro',
+            'amount_idr' => 399000,
+        ], auth()->user());
+    }
+}

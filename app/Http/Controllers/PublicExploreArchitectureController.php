@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\Privacy\ExportAndRedactUserPiiAction;
 use App\Models\AuditLog;
 use App\Models\PosOrganizationMember;
 use App\Models\PosOrganizationWorkspace;
@@ -13,12 +14,14 @@ use App\Models\User;
 use App\Models\VisionBlueprint;
 use App\Services\Saas\PosSaasCommercialEngineService;
 use App\Services\Security\DocumentThreatSanitizerService;
+use App\Services\SeoGeo\GeoAuthorityGeneratorService;
+use App\Services\Sla\PosSlaAndSandboxEngineService;
 use App\Support\PosDualZoneFrontendAndSaasCatalog;
+use App\Support\PosSeoGeoAndZeroFailureCatalog;
 use App\Support\ProjectOsMatrixCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -79,43 +82,15 @@ class PublicExploreArchitectureController extends Controller
             : ($sectorMap[$activeSector]['name'][$locale] ?? $activeSector);
         $pageTitle = "{$domainHost} - {$sectorTitle}";
 
-        $schemaOrgJsonLd = Cache::rememberForever("project_os:seo_explore_jsonld:v10:{$locale}:{$activeSector}", static function () use ($filteredTestimonials, $sectorTitle, $locale, $activeSector): string {
-            $itemList = [];
-            foreach (array_slice($filteredTestimonials, 0, 12) as $idx => $item) {
-                $slug = $item['seo_slug'] ?? Str::slug($item['client_company'] ?? ('architecture-'.($idx + 1)));
-                $itemList[] = [
-                    '@type' => 'ListItem',
-                    'position' => $idx + 1,
-                    'url' => route('explore.show', ['sector' => strtolower($item['sector_code']), 'slug' => $slug]),
-                    'name' => ($item['sector_badge'] ?? $item['sector_code']).' — '.($item['public_ux_label'] ?? $item['public_ux_preset']),
-                ];
-            }
-
-            return (string) json_encode([
-                '@context' => 'https://schema.org',
-                '@graph' => [
-                    [
-                        '@type' => 'CollectionPage',
-                        'name' => $sectorTitle,
-                        'description' => $locale === 'en'
-                            ? 'Cryptographically verified enterprise software blueprints across 12 functional sectors with PostgreSQL 16 Strict ULID, Dual-Zone UI, and Zero AI Slop.'
-                            : 'Katalog arsitektur perangkat lunak enterprise terverifikasi kriptografi lintas 12 sektor bisnis dengan PostgreSQL 16 Strict ULID, Dual-Zone UI, dan Zero AI Slop.',
-                        'url' => $activeSector === 'ALL' ? route('explore.index') : route('explore.sector', ['sector' => strtolower($activeSector)]),
-                        'mainEntity' => [
-                            '@type' => 'ItemList',
-                            'itemListElement' => $itemList,
-                        ],
-                    ],
-                    [
-                        '@type' => 'BreadcrumbList',
-                        'itemListElement' => [
-                            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
-                            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Explore Architecture', 'item' => route('explore.index')],
-                        ],
-                    ],
-                ],
-            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
-        });
+        $schemaOrgJsonLd = GeoAuthorityGeneratorService::generateSchemaGraph([
+            'locale' => $locale,
+            'sector_code' => $activeSector,
+            'slug' => $activeSector === 'ALL' ? 'explore-root' : strtolower($activeSector),
+            'headline' => $sectorTitle,
+            'url' => $activeSector === 'ALL' ? route('explore.index') : route('explore.sector', ['sector' => strtolower($activeSector)]),
+        ]);
+        $answerCapsule = PosSeoGeoAndZeroFailureCatalog::sectorCapsule($activeSector, $locale);
+        $comparisonRows = PosSeoGeoAndZeroFailureCatalog::comparisonMatrixRows($locale);
 
         return view('explore.index', [
             'pageTitle' => $pageTitle,
@@ -129,6 +104,8 @@ class PublicExploreArchitectureController extends Controller
             'fiveIronLaws' => $fiveIronLaws,
             'sixSaasModules' => $sixSaasModules,
             'schemaOrgJsonLd' => $schemaOrgJsonLd,
+            'answerCapsule' => $answerCapsule,
+            'comparisonRows' => $comparisonRows,
         ]);
     }
 
@@ -160,41 +137,18 @@ class PublicExploreArchitectureController extends Controller
         $domainHost = parse_url((string) config('app.url', 'https://neriahpro.com'), PHP_URL_HOST) ?: 'neriahpro.com';
         $headline = ($matched['sector_badge'] ?? $matched['sector_code']).' Blueprint';
         $pageTitle = "{$domainHost} - {$headline}";
-        $ogSvgUrl = route('explore.og', ['slug' => $slug]);
+        $ogSvgUrl = route('explore.og.png', ['slug' => $slug]);
+        $matchedSectorCode = (string) ($matched['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL');
 
-        $schemaOrgJsonLd = Cache::rememberForever("project_os:seo_explore_detail:v10:{$locale}:{$slug}", static function () use ($matched, $headline, $ogSvgUrl, $sector, $slug): string {
-            return (string) json_encode([
-                '@context' => 'https://schema.org',
-                '@graph' => [
-                    [
-                        '@type' => 'SoftwareApplication',
-                        'name' => 'NeriahPro Project OS — '.$headline,
-                        'applicationCategory' => 'BusinessApplication',
-                        'operatingSystem' => 'Linux, Docker, PostgreSQL 16, Web',
-                        'image' => $ogSvgUrl,
-                        'offers' => [
-                            '@type' => 'Offer',
-                            'price' => '0',
-                            'priceCurrency' => 'IDR',
-                        ],
-                        'review' => [
-                            '@type' => 'Review',
-                            'author' => ['@type' => 'Person', 'name' => $matched['client_name']],
-                            'reviewBody' => $matched['quote'],
-                            'reviewRating' => ['@type' => 'Rating', 'ratingValue' => '5', 'bestRating' => '5'],
-                        ],
-                    ],
-                    [
-                        '@type' => 'BreadcrumbList',
-                        'itemListElement' => [
-                            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
-                            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Explore', 'item' => route('explore.index')],
-                            ['@type' => 'ListItem', 'position' => 3, 'name' => $headline, 'item' => route('explore.show', ['sector' => $sector, 'slug' => $slug])],
-                        ],
-                    ],
-                ],
-            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
-        });
+        $schemaOrgJsonLd = GeoAuthorityGeneratorService::generateSchemaGraph([
+            'locale' => $locale,
+            'sector_code' => $matchedSectorCode,
+            'slug' => $slug,
+            'headline' => $headline,
+            'url' => route('explore.show', ['sector' => $sector, 'slug' => $slug]),
+        ]);
+        $answerCapsule = PosSeoGeoAndZeroFailureCatalog::sectorCapsule($matchedSectorCode, $locale);
+        $comparisonRows = PosSeoGeoAndZeroFailureCatalog::comparisonMatrixRows($locale);
 
         return view('explore.show', [
             'pageTitle' => $pageTitle,
@@ -204,6 +158,8 @@ class PublicExploreArchitectureController extends Controller
             'fiveIronLaws' => $fiveIronLaws,
             'ogSvgUrl' => $ogSvgUrl,
             'schemaOrgJsonLd' => $schemaOrgJsonLd,
+            'answerCapsule' => $answerCapsule,
+            'comparisonRows' => $comparisonRows,
         ]);
     }
 
@@ -365,9 +321,19 @@ SVG;
             'phone_country_code' => 'nullable|string|max:10',
             'phone_number' => 'nullable|string|max:40',
             'seat_limit' => 'nullable|integer|min:2|max:100',
+            'parent_organization_id' => 'nullable|string|size:26',
+            'entity_level' => 'nullable|string|in:HOLDING_HQ,SUBSIDIARY,BRANCH_OUTLET',
+            'elimination_account_code' => 'nullable|string|max:32',
         ]);
 
         $workspace = PosSaasCommercialEngineService::createOrUpdateWorkspace($user, $validated);
+        if (! empty($validated['parent_organization_id']) || ! empty($validated['entity_level']) || ! empty($validated['elimination_account_code'])) {
+            $workspace->forceFill(array_filter([
+                'parent_organization_id' => $validated['parent_organization_id'] ?? null,
+                'entity_level' => $validated['entity_level'] ?? null,
+                'elimination_account_code' => $validated['elimination_account_code'] ?? null,
+            ], static fn ($v) => $v !== null))->save();
+        }
 
         return response()->json([
             'success' => true,
@@ -576,6 +542,190 @@ SVG;
             'success' => true,
             'message' => 'Testimoni terverifikasi arsitektur Anda berhasil diperbarui.',
             'testimonial' => $testimonial,
+        ]);
+    }
+
+    /**
+     * Project OS v11.0 (GEO Mechanism #2): Native /llms.txt for AI Search Bots.
+     */
+    public function llmsTxt(): Response
+    {
+        return response(GeoAuthorityGeneratorService::generateLlmsTxt(), 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+
+    /**
+     * Project OS v11.0 (GEO Mechanism #2): Native /llms-full.txt complete specification for AI Citation Engines.
+     */
+    public function llmsFullTxt(): Response
+    {
+        return response(GeoAuthorityGeneratorService::generateLlmsFullTxt(), 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+
+    /**
+     * Project OS v11.0 (GEO Mechanism #4): IndexNow key verification endpoint (/indexnow-key.txt).
+     */
+    public function indexNowKeyTxt(): Response
+    {
+        return response(GeoAuthorityGeneratorService::getIndexNowKey(), 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+        ]);
+    }
+
+    /**
+     * Project OS v11.0 (GEO Mechanism #5): 100% Local 1200x630 PNG OpenGraph Citation Card (/explore/og/{slug}.png).
+     */
+    public function openGraphPng(string $slug): Response
+    {
+        $rendered = GeoAuthorityGeneratorService::renderLocalOpenGraphCard($slug, 'png');
+
+        return response($rendered['binary'], 200, [
+            'Content-Type' => $rendered['content_type'],
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    /**
+     * Project OS v11.0 (Zero-Failure #3): Submit & Auto-Triage Post-BAST SLA Warranty vs Paid Delta Ticket.
+     */
+    public function submitSlaMaintenanceTicket(Request $request, PosSlaAndSandboxEngineService $slaService): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $validated = $request->validate([
+            'pos_project_id' => 'nullable|string|size:26',
+            'vision_blueprint_id' => 'nullable|string|size:26',
+            'reporter_name' => 'nullable|string|max:160',
+            'reporter_email' => 'nullable|string|max:190',
+            'reporter_phone_country_code' => 'nullable|string|max:10',
+            'reporter_phone' => 'nullable|string|max:40',
+            'issue_title' => 'required|string|min:5|max:200',
+            'issue_description' => 'required|string|min:10|max:4000',
+        ]);
+
+        if (! empty($validated['pos_project_id'])) {
+            $project = PosProject::query()->findOrFail($validated['pos_project_id']);
+            if (! $user->isSuperAdmin() && $project->user_id !== null && $project->user_id !== $user->id) {
+                abort(403, 'Unauthorized access to project SLA tracker.');
+            }
+        }
+
+        $result = $slaService->submitAndTriageSlaTicket($validated, $user);
+
+        return response()->json($result, 201);
+    }
+
+    /**
+     * Project OS v11.0 (Zero-Failure #2): UU PDP No. 27/2022 1-Click Data Portability JSON Export.
+     */
+    public function exportPrivacyPortability(Request $request, ExportAndRedactUserPiiAction $action): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $archive = $action->exportPortabilityArchive($user, $request->input('phone'));
+
+        return response()->json([
+            'success' => true,
+            'archive' => $archive,
+        ]);
+    }
+
+    /**
+     * Project OS v11.0 (Zero-Failure #2): UU PDP No. 27/2022 Ledger-Safe Right-to-Erasure PII Redaction.
+     */
+    public function redactPrivacyRightToErasure(Request $request, ExportAndRedactUserPiiAction $action): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $request->validate([
+            'confirm_erasure' => 'required|accepted',
+            'phone' => 'nullable|string|max:40',
+        ]);
+
+        $result = $action->redactPersonalDataPreservingLedger($user, $request->input('phone'));
+
+        return response()->json($result);
+    }
+
+    /**
+     * Project OS v11.0 (Zero-Failure #5): Local Sandbox Webhook Simulator Console (Blocked 403 in production).
+     */
+    public function simulateSandboxWebhook(Request $request, PosSlaAndSandboxEngineService $slaService): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        if (app()->isProduction()) {
+            abort(403, 'Sandbox Webhook Simulator is strictly disabled in production.');
+        }
+
+        $validated = $request->validate([
+            'scenario' => 'required|string|in:qris_payment_success,payment_expired,duplicate_webhook_attack,simulate_qris_success,simulate_expired_payment,simulate_duplicate_webhook_attack',
+            'order_id' => 'nullable|string|max:64',
+            'event_id' => 'nullable|string|max:64',
+            'plan_tier' => 'nullable|string|max:40',
+            'amount_idr' => 'nullable|integer|min:0',
+        ]);
+
+        $result = $slaService->simulateSandboxWebhookEvent($validated['scenario'], $validated, $user);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Project OS v11.0 (Zero-Failure #6): Multi-Entity Holding Consolidation & Inter-Company Elimination Report.
+     */
+    public function holdingConsolidationReport(Request $request, string $workspaceId): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $workspace = PosOrganizationWorkspace::query()->findOrFail($workspaceId);
+        $isMember = PosOrganizationMember::query()
+            ->where('workspace_id', $workspace->id)
+            ->where('user_id', $user->id)
+            ->exists();
+
+        if (! $user->isSuperAdmin() && $workspace->owner_user_id !== $user->id && ! $isMember) {
+            abort(403, 'Cross-holding consolidation access denied.');
+        }
+
+        $eliminations = is_array($request->input('eliminations')) ? $request->input('eliminations') : [];
+        $report = $workspace->buildHoldingConsolidationReport($eliminations);
+
+        AuditLog::record(
+            action: 'holding_consolidation_rollup_generated',
+            model: $workspace,
+            newValues: [
+                'holding_workspace_id' => $workspace->id,
+                'branches_count' => $report['branches_count'],
+                'consolidated_net_idr' => $report['consolidated_net_idr'],
+            ],
+            description: "Holding consolidation report generated for {$workspace->name}.",
+            eventCategory: 'holding_consolidation'
+        );
+
+        return response()->json([
+            'success' => true,
+            'report' => $report,
         ]);
     }
 }

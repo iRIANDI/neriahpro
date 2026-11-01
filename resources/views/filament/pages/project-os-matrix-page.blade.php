@@ -72,6 +72,7 @@
                         'inclusive_v8' => ['label' => '36 Visual UI, RTL & Canary', 'count' => 'v8.0'],
                         'agentshield_v9' => ['label' => 'AgentShield, Co-Design & Audit', 'count' => 'v9.0'],
                         'dual_zone_v10' => ['label' => 'Dual-Zone UX, Aniwall & SaaS', 'count' => 'v10.0'],
+                        'seo_geo_v11' => ['label' => 'SEO/GEO, UU PDP & 20 Pilar', 'count' => 'v11.0'],
                         'lab' => ['label' => 'Brownfield & Slop Lab', 'count' => 'LAB'],
                     ] as $tabKey => $tabMeta)
                         <button
@@ -1094,6 +1095,104 @@
                                 <div class="text-[11px] font-sans text-zinc-700 dark:text-zinc-300 mt-0.5">{{ $mod['localized_summary'] ?? '' }}</div>
                             </div>
                         @endforeach
+                    </div>
+                </div>
+            </div>
+        @elseif($this->activeTab === 'seo_geo_v11')
+            @php
+                $v11Loc = app()->getLocale() === 'en' ? 'en' : 'id';
+                $v11Sectors = \App\Support\PosSeoGeoAndZeroFailureCatalog::sectorSeoGeoAuthorityMatrix();
+                $v11SixModules = \App\Support\PosSeoGeoAndZeroFailureCatalog::sixFinalZeroFailureModules($v11Loc);
+                $v11TwentyPillars = \App\Support\PosSeoGeoAndZeroFailureCatalog::twentyPillarsParipurnaMatrix();
+            @endphp
+            <div class="space-y-4">
+                <!-- 1. 12-Sector SEO (Schema.org @@graph) & GEO (/llms.txt + IndexNow) Authority Matrix -->
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2.5">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">PROJECT OS v11.0 PARIPURNA // 12-SECTOR SEO &amp; GEO AI CITATION ENGINE</div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
+                                {{ $v11Loc === 'en' ? 'Multi-Graph Schema.org @@graph + Statutory Standards + 50-Word Answer Capsules' : 'Pemetaan Multi-Graph Schema.org @@graph + Standar Regulasi + Kapsul Jawaban 50 Kata (Top-3 AI Citation)' }}
+                            </h3>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ url('/llms.txt') }}" target="_blank" class="px-2.5 py-1 bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 font-mono text-[11px] font-black uppercase rounded-none border border-zinc-800 dark:border-zinc-300">
+                                ↗ /llms.txt
+                            </a>
+                            <a href="{{ url('/llms-full.txt') }}" target="_blank" class="px-2.5 py-1 bg-emerald-600 text-zinc-950 font-mono text-[11px] font-black uppercase rounded-none border border-emerald-700">
+                                ↗ /llms-full.txt
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                        @foreach($v11Sectors as $secCode => $secMeta)
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-1.5">
+                                <div class="flex items-center justify-between gap-2 font-mono text-[10px] font-black">
+                                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 rounded-none">{{ $secCode }}</span>
+                                    @if(!empty($secMeta['offline_pwa_critical']))
+                                        <span class="px-1.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 rounded-none">OFFLINE PWA</span>
+                                    @endif
+                                </div>
+                                <div class="flex flex-wrap gap-1 pt-0.5">
+                                    @foreach(($secMeta['schema_types'] ?? []) as $st)
+                                        <span class="px-1.5 py-0.5 bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-none">@@type: {{ $st }}</span>
+                                    @endforeach
+                                </div>
+                                <p class="text-[11px] text-zinc-800 dark:text-zinc-300 leading-relaxed">
+                                    {{ $secMeta['tldr'][$v11Loc] ?? $secMeta['tldr']['id'] ?? '' }}
+                                </p>
+                                <div class="font-mono text-[10px] font-bold text-cyan-900 dark:text-cyan-300 pt-1">
+                                    ⚖️ {{ implode(' • ', $secMeta['statutory_standards'] ?? []) }}
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- 2. 6 Final Enterprise & Statutory Zero-Failure Modules + 20-Pillar Paripurna Matrix -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-2.5">
+                        <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">6 FINAL ENTERPRISE &amp; STATUTORY ZERO-FAILURE FEATURES</div>
+                        @foreach($v11SixModules as $zf)
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-xs space-y-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="font-black text-zinc-950 dark:text-zinc-100">[0{{ $zf['number'] }} // {{ $zf['code'] }}]</span>
+                                    <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 text-[10px] font-black rounded-none">{{ $zf['badge'] }}</span>
+                                </div>
+                                <div class="font-sans font-bold text-zinc-950 dark:text-zinc-100 text-xs">{{ $zf['title'] }}</div>
+                                <div class="text-[11px] font-sans text-zinc-700 dark:text-zinc-300">{{ $zf['summary'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-2.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="text-[10px] font-mono font-black uppercase text-cyan-900 dark:text-cyan-300">20-PILLAR MASTER PARIPURNA VERIFICATION MATRIX (8 DIMENSIONS)</div>
+                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black rounded-none">20/20 LOCKED</span>
+                        </div>
+                        <div class="max-h-[430px] overflow-y-auto border border-zinc-200 dark:border-zinc-800">
+                            <table class="w-full text-left font-mono text-[11px] tabular-nums">
+                                <thead class="sticky top-0 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-950 dark:text-zinc-100">
+                                    <tr>
+                                        <th class="px-2.5 py-1.5">#</th>
+                                        <th class="px-2.5 py-1.5">Dimensi</th>
+                                        <th class="px-2.5 py-1.5">Pilar Arsitektur</th>
+                                        <th class="px-2.5 py-1.5 text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($v11TwentyPillars as $pil)
+                                        <tr class="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50 dark:even:bg-zinc-900/60 border-b border-zinc-200 dark:border-zinc-800">
+                                            <td class="px-2.5 py-1.5 font-black text-zinc-950 dark:text-zinc-100">{{ $pil['pillar'] }}</td>
+                                            <td class="px-2.5 py-1.5 text-zinc-800 dark:text-zinc-300">{{ $pil['dimension'] }}</td>
+                                            <td class="px-2.5 py-1.5 font-sans text-zinc-950 dark:text-zinc-100">{{ $pil['title'] }}</td>
+                                            <td class="px-2.5 py-1.5 text-right font-black text-emerald-900 dark:text-emerald-300">{{ $pil['status'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

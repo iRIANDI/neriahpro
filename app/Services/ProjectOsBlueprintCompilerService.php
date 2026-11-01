@@ -7,6 +7,7 @@ use App\Models\PosPrimitive;
 use App\Models\PosProject;
 use App\Models\PosRulePack;
 use App\Models\PosSector;
+use App\Models\PosSectorPrimitive;
 use App\Models\PosStackPreset;
 use App\Models\VisionBlueprint;
 use App\Services\Security\DocumentThreatSanitizerService;
@@ -18,8 +19,10 @@ use App\Support\PosInclusiveCommercialCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
 use App\Support\PosRealWorldRuntimeCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
+use App\Support\PosSeoGeoAndZeroFailureCatalog;
 use App\Support\PosStackPresetCatalog;
 use App\Support\ProjectOsMatrixCatalog;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -65,14 +68,14 @@ class ProjectOsBlueprintCompilerService
             foreach ($mandatory as $code) {
                 if ($primitives->has($code)) {
                     $clone = clone $primitives->get($code);
-                    $clone->setRelation('pivot', new \App\Models\PosSectorPrimitive(['is_mandatory' => true, 'sort_order' => $order++]));
+                    $clone->setRelation('pivot', new PosSectorPrimitive(['is_mandatory' => true, 'sort_order' => $order++]));
                     $attached->push($clone);
                 }
             }
             foreach ($optional as $code) {
                 if ($primitives->has($code)) {
                     $clone = clone $primitives->get($code);
-                    $clone->setRelation('pivot', new \App\Models\PosSectorPrimitive(['is_mandatory' => false, 'sort_order' => $order++]));
+                    $clone->setRelation('pivot', new PosSectorPrimitive(['is_mandatory' => false, 'sort_order' => $order++]));
                     $attached->push($clone);
                 }
             }
@@ -204,6 +207,7 @@ class ProjectOsBlueprintCompilerService
                     'hardware_iot_peripheral_contract' => PosRealWorldRuntimeCatalog::hardwarePeripheralContractForSector($s->code),
                     'realtime_websocket_contract' => PosRealWorldRuntimeCatalog::websocketBroadcastContract($s->code),
                     'visual_ui_options' => PosInclusiveCommercialCatalog::visualUiContractForSector($s->code),
+                    'seo_geo_capsule' => PosSeoGeoAndZeroFailureCatalog::sectorCapsule($s->code),
                 ])->values()->all(),
                 'primitives' => $mem['primitives']->values()->map(fn (PosPrimitive $p) => [
                     'id' => $p->id,
@@ -239,6 +243,10 @@ class ProjectOsBlueprintCompilerService
                 'community_primitives_marketplace' => PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
                 'agentshield_layers' => DocumentThreatSanitizerService::fiveLayersBlueprintContract('NeriahPro Project OS', 'STACK_M1_LARAVEL_MONOLITH', 'SECTOR_01_COMMERCE_OMNICHANNEL')['layers'],
                 'sector_audit_presets' => PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets(),
+                'seo_geo_authority_matrix' => PosSeoGeoAndZeroFailureCatalog::sectorSeoGeoAuthorityMatrix(),
+                'geo_comparison_table' => PosSeoGeoAndZeroFailureCatalog::comparisonMatrixRows(),
+                'six_final_zero_failure_modules' => PosSeoGeoAndZeroFailureCatalog::sixFinalZeroFailureModules(),
+                'twenty_pillars_paripurna_matrix' => PosSeoGeoAndZeroFailureCatalog::twentyPillarsParipurnaMatrix(),
             ];
         }
 
@@ -279,6 +287,7 @@ class ProjectOsBlueprintCompilerService
                         'realtime_websocket_contract' => PosRealWorldRuntimeCatalog::websocketBroadcastContract($s->code),
                         'visual_ui_options' => PosInclusiveCommercialCatalog::visualUiContractForSector($s->code),
                         'audit_preset' => PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets()[$s->code] ?? null,
+                        'seo_geo_capsule' => PosSeoGeoAndZeroFailureCatalog::sectorCapsule($s->code),
                     ];
                 })
                 ->values()
@@ -374,6 +383,10 @@ class ProjectOsBlueprintCompilerService
                 'input_hygiene_contract' => PosDualZoneFrontendAndSaasCatalog::inputHygieneContract(),
                 'six_critical_saas_modules' => PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules(),
                 'verified_testimonials_aniwall' => PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog(),
+                'seo_geo_authority_matrix' => PosSeoGeoAndZeroFailureCatalog::sectorSeoGeoAuthorityMatrix(),
+                'geo_comparison_table' => PosSeoGeoAndZeroFailureCatalog::comparisonMatrixRows(),
+                'six_final_zero_failure_modules' => PosSeoGeoAndZeroFailureCatalog::sixFinalZeroFailureModules(),
+                'twenty_pillars_paripurna_matrix' => PosSeoGeoAndZeroFailureCatalog::twentyPillarsParipurnaMatrix(),
             ];
         });
     }
@@ -413,7 +426,7 @@ class ProjectOsBlueprintCompilerService
                 return false;
             }
             if (mb_strlen($kwLower) <= 4 && ! str_contains($kwLower, ' ')) {
-                return (bool) preg_match('/\b' . preg_quote($kwLower, '/') . '\b/u', $haystack);
+                return (bool) preg_match('/\b'.preg_quote($kwLower, '/').'\b/u', $haystack);
             }
 
             return str_contains($haystack, $kwLower);
@@ -543,7 +556,6 @@ class ProjectOsBlueprintCompilerService
                 'stack_preset' => $stackPreset,
                 'selected_menus' => is_array($payload['selected_menus'] ?? null) ? $payload['selected_menus'] : null,
                 'selected_ui_variant' => $payload['selected_ui_variant'] ?? null,
-                'public_ux_preset' => $payload['public_ux_preset'] ?? null,
                 'navigation_shell' => $payload['navigation_shell'] ?? null,
                 'output_locale' => $payload['output_locale'] ?? 'id',
                 'persona_mode' => $payload['persona_mode'] ?? null,
@@ -557,12 +569,11 @@ class ProjectOsBlueprintCompilerService
             'selected_primitives' => $primitives,
             'selected_menus' => is_array($payload['selected_menus'] ?? null) ? $payload['selected_menus'] : null,
             'selected_ui_variant' => $payload['selected_ui_variant'] ?? null,
-            'public_ux_preset' => $payload['public_ux_preset'] ?? null,
             'navigation_shell' => $payload['navigation_shell'] ?? null,
             'output_locale' => $payload['output_locale'] ?? 'id',
             'persona_mode' => $payload['persona_mode'] ?? null,
             'white_label_branding' => is_array($payload['white_label_branding'] ?? null) ? $payload['white_label_branding'] : null,
-            'isolation_token' => (string) ($payload['isolation_token'] ?? ('sim_' . strtolower((string) Str::ulid()))),
+            'isolation_token' => (string) ($payload['isolation_token'] ?? ('sim_'.strtolower((string) Str::ulid()))),
             'stack_preset' => $stackPreset,
             'corpus' => (string) ($payload['corpus'] ?? ''),
             'persist_project' => false,
@@ -605,7 +616,7 @@ class ProjectOsBlueprintCompilerService
         $resolved = self::resolveSectorAndPrimitives($corpus, $explicitSector, $explicitPrimitives);
         /** @var PosSector|null $sector */
         $sector = $resolved['sector'];
-        /** @var \Illuminate\Support\Collection<int, PosPrimitive> $primitives */
+        /** @var Collection<int, PosPrimitive> $primitives */
         $primitives = $resolved['primitives'];
 
         $appName = trim((string) ($options['app_name'] ?? $blueprint?->nama_bisnis ?? 'Target Enterprise Application'));
@@ -847,7 +858,7 @@ class ProjectOsBlueprintCompilerService
         }
 
         $isolationToken = (string) ($blueprint?->id
-            ?: ($options['isolation_token'] ?? ($meta['isolation_token'] ?? ('iso_' . strtolower((string) Str::ulid())))));
+            ?: ($options['isolation_token'] ?? ($meta['isolation_token'] ?? ('iso_'.strtolower((string) Str::ulid())))));
 
         $selectedMenus = $options['selected_menus'] ?? ($meta['selected_menus'] ?? null);
         $enterpriseMenuMatrix = PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector(
@@ -1151,6 +1162,27 @@ class ProjectOsBlueprintCompilerService
         $schema['five_iron_animation_laws'] = $dualZoneUiContract['five_iron_animation_laws'];
         $schema['input_hygiene_contract'] = $dualZoneUiContract['input_hygiene_contract'];
 
+        // === PROJECT OS v11.0 PARIPURNA: SEO/GEO AUTHORITY ENGINE, OFFLINE OUTBOX PWA, UU PDP BLIND INDEX VAULT, SLA TRIAGE, HOLDING & 20 PILLARS ===
+        $v11ParipurnaContract = PosSeoGeoAndZeroFailureCatalog::compileSectorSeoGeoAndZeroFailureContract(
+            $resolvedSectorCode,
+            $appName,
+            $outputLocale
+        );
+        foreach ($v11ParipurnaContract['injected_v11_primitives'] as $v11PrimCode) {
+            if (! in_array($v11PrimCode, $schema['project_metadata']['injected_primitives'], true)) {
+                $schema['project_metadata']['injected_primitives'][] = $v11PrimCode;
+            }
+        }
+        $schema['paripurna_release'] = PosSeoGeoAndZeroFailureCatalog::VERSION;
+        $schema['seo_geo_authority_contract'] = $v11ParipurnaContract['seo_geo_authority_contract'];
+        $schema['offline_outbox_pwa_contract'] = $v11ParipurnaContract['offline_outbox_pwa_contract'];
+        $schema['uu_pdp_privacy_vault_contract'] = $v11ParipurnaContract['uu_pdp_privacy_vault_contract'];
+        $schema['sla_post_bast_warranty_contract'] = $v11ParipurnaContract['sla_post_bast_warranty_contract'];
+        $schema['holding_multi_branch_contract'] = $v11ParipurnaContract['holding_multi_branch_contract'];
+        $schema['atomic_rollback_and_sandbox_contract'] = $v11ParipurnaContract['atomic_rollback_and_sandbox_contract'];
+        $schema['six_final_zero_failure_modules'] = $v11ParipurnaContract['six_final_zero_failure_modules'];
+        $schema['twenty_pillars_paripurna_matrix'] = $v11ParipurnaContract['twenty_pillars_paripurna_matrix'];
+
         $schema['world_class_task_matrix'] = PosAgentShieldAndCoDesignCatalog::compileWorldClassSprintTaskMatrix($schema, $outputLocale);
 
         $schema['cross_stage_causality_graph'] = PosRealWorldRuntimeCatalog::computeCrossStageCausalityGraph($schema, $outputLocale);
@@ -1289,6 +1321,9 @@ class ProjectOsBlueprintCompilerService
             if (Schema::hasColumn('pos_projects', 'dual_zone_ui_contract_json')) {
                 $projectPayload['dual_zone_ui_contract_json'] = $dualZoneUiContract;
             }
+            if (Schema::hasColumn('pos_projects', 'seo_geo_contract_json')) {
+                $projectPayload['seo_geo_contract_json'] = $v11ParipurnaContract;
+            }
 
             if ($existingProject) {
                 $existingProject->update($projectPayload);
@@ -1375,7 +1410,7 @@ class ProjectOsBlueprintCompilerService
                 'table' => $tableName,
                 'tenant_scoped' => true,
                 'soft_deletes' => false,
-                'source_module' => 'CUSTOM_DOMAIN_EXTENSION_' . ($idx + 1),
+                'source_module' => 'CUSTOM_DOMAIN_EXTENSION_'.($idx + 1),
                 'feature_origin' => (string) $featureLine,
                 'columns' => [
                     ['name' => 'id', 'type' => 'ULID', 'primary' => true],
@@ -1435,7 +1470,7 @@ class ProjectOsBlueprintCompilerService
 
         if (! empty($stackInfo['stack_specific_anti_slop_rules'])) {
             $md .= "### Stack-Specific Anti-Slop Rules (`{$stackPresetCode}`)\n";
-            $md .= $stackInfo['stack_specific_anti_slop_rules'] . "\n\n";
+            $md .= $stackInfo['stack_specific_anti_slop_rules']."\n\n";
         }
 
         if (! empty($schema['domain_invariants']['sector_invariants'])) {
@@ -1472,7 +1507,7 @@ class ProjectOsBlueprintCompilerService
                 if (isset($col['nullable'])) {
                     $mods[] = $col['nullable'] ? 'NULLABLE' : 'NOT NULL';
                 }
-                $md .= "| `{$col['name']}` | `{$col['type']}` | " . implode(', ', $mods) . " |\n";
+                $md .= "| `{$col['name']}` | `{$col['type']}` | ".implode(', ', $mods)." |\n";
             }
             if (! empty($table['unique_constraints'])) {
                 foreach ($table['unique_constraints'] as $uc) {
@@ -1514,7 +1549,7 @@ class ProjectOsBlueprintCompilerService
         }
 
         $md .= "## 4. Role-Based Access Control (RBAC) & Policies\n";
-        $md .= "- **Canonical Roles:** `" . implode('`, `', $schema['rbac_matrix']['roles'] ?? []) . "`\n\n";
+        $md .= '- **Canonical Roles:** `'.implode('`, `', $schema['rbac_matrix']['roles'] ?? [])."`\n\n";
         $md .= "| Action Permission | Allowed Roles | Requires Reason | SHA-256 Audit Logged |\n";
         $md .= "| :--- | :--- | :--- | :--- |\n";
         foreach (($schema['rbac_matrix']['permissions'] ?? []) as $perm) {
@@ -1566,7 +1601,7 @@ class ProjectOsBlueprintCompilerService
             $md .= "- **`{$arch['archetype']}` — {$arch['screen']} (`{$arch['source_module']}`)**\n";
             $md .= "  - *Layout:* {$arch['layout_contract']}\n";
             if (! empty($shortcuts)) {
-                $md .= '  - *Keyboard Shortcuts:* ' . implode(' | ', $shortcuts) . "\n";
+                $md .= '  - *Keyboard Shortcuts:* '.implode(' | ', $shortcuts)."\n";
             }
             $md .= "  - *Empty State:* {$arch['empty_state']}\n";
             $md .= "  - *Loading State:* {$arch['loading_state']}\n";
@@ -1588,7 +1623,7 @@ class ProjectOsBlueprintCompilerService
             }
             if (! empty($secUi['keyboard_shortcuts'])) {
                 $keys = array_map(fn ($k) => "`{$k['key']}` ({$k['action']})", $secUi['keyboard_shortcuts']);
-                $md .= '- **Mandatory Keyboard Shortcuts:** ' . implode(' | ', $keys) . "\n";
+                $md .= '- **Mandatory Keyboard Shortcuts:** '.implode(' | ', $keys)."\n";
             }
             foreach (($secUi['forbidden_ux_patterns'] ?? []) as $forbid) {
                 $md .= "- **FORBIDDEN UX:** {$forbid}\n";
@@ -1623,7 +1658,7 @@ class ProjectOsBlueprintCompilerService
             $jTax = implode(' | ', $jp['tax_and_invoicing_rules'] ?? []);
             $jPriv = implode(' | ', $jp['privacy_and_sector_mandates'] ?? []);
             $md .= "### Tier-1 Output Locale & Jurisdiction Compliance Contract (`{$jCode}`)\n";
-            $md .= "- **Output Language & Direction:** {$jLabel} (`" . ($jp['direction'] ?? 'ltr') . "`)\n";
+            $md .= "- **Output Language & Direction:** {$jLabel} (`".($jp['direction'] ?? 'ltr')."`)\n";
             $md .= "- **Number & Currency Format:** `{$jp['currency']}` — `{$jp['thousand_decimal_format']}` (`tabular-nums`)\n";
             $md .= "- **Statutory Accounting Standards:** {$jAcct}\n";
             $md .= "- **Tax & E-Invoicing Rules:** {$jTax}\n";
@@ -1632,8 +1667,8 @@ class ProjectOsBlueprintCompilerService
 
         if (! empty($schema['realistic_domain_seeder'])) {
             $seederSpec = $schema['realistic_domain_seeder'];
-            $md .= "### Realistic Domain Seeder & Stress-Test Factory (`" . ($seederSpec['seeder_class'] ?? 'RealisticSectorSeeder') . "`)\n";
-            $md .= '- **Forbidden Dummy Strings:** `' . implode('`, `', $seederSpec['forbidden_dummy_strings'] ?? ['Test Name 1', 'Lorem ipsum']) . "`\n";
+            $md .= '### Realistic Domain Seeder & Stress-Test Factory (`'.($seederSpec['seeder_class'] ?? 'RealisticSectorSeeder')."`)\n";
+            $md .= '- **Forbidden Dummy Strings:** `'.implode('`, `', $seederSpec['forbidden_dummy_strings'] ?? ['Test Name 1', 'Lorem ipsum'])."`\n";
             foreach (($seederSpec['realistic_fixtures'] ?? []) as $fx) {
                 $md .= "- **Fixture:** {$fx}\n";
             }
@@ -1651,18 +1686,18 @@ class ProjectOsBlueprintCompilerService
         $md .= "\n";
 
         $md .= "## 10. Step-by-Step Implementation Order for AI (6-Stage ECC Loop)\n";
-        $md .= "1. **Enums & Contracts First:** Generate State Machine Enums and Inter-Layer Type Contracts (`" . ($stackInfo['inter_layer_type_contract']['mechanism'] ?? 'Typed DTOs & Actions') . "`) for every entity in Section 3.\n";
+        $md .= '1. **Enums & Contracts First:** Generate State Machine Enums and Inter-Layer Type Contracts (`'.($stackInfo['inter_layer_type_contract']['mechanism'] ?? 'Typed DTOs & Actions')."`) for every entity in Section 3.\n";
         $md .= "2. **ULID Migrations, Historical Snapshots & RESTRICT Policies:** Generate PostgreSQL 16 migrations (`CHAR(26)` ULID PK, `DECIMAL(19,4)`, `*_snapshot` columns, `ON DELETE RESTRICT`, `outbox_messages`, `webhook_inbound_logs`, `import_staging_batches`, `import_staging_rows`).\n";
         $md .= "3. **Atomic Domain Actions, Tenant Zero-State & Formulas:** Implement `InitializeNewTenantAction`, State Machine Actions (`SELECT ... FOR UPDATE`), Section 6 Outbox Compensations, Section 7 Penny-Allocation Formulas, and Omnichannel `notification_dispatch`.\n";
         $md .= "4. **Acceptance Test Matrix First (TDD):** Implement all Given-When-Then scenarios from Section 9 and verify 100% pass.\n";
         $md .= "5. **Zero-Slop UI Archetypes + Thermal/A4 Print Layouts:** Build every screen strictly following Section 8 Archetypes, `GuidedSetupChecklistWidget`, Staged CSV Importer UI, and Section 11 Print Specs (`58mm/80mm` ESC/POS + Official A4 local SVG QR).\n";
         $md .= "6. **Day-2 Ops, Security & Deployment:** Configure 4-Lane Redis Queue, Tiered Rate Limiters, `disk = \"private\"` 5-min Signed URLs, update `.agents/graphify/graph.json`, run `./verify-blueprint.sh`, and deploy.\n\n";
 
-        $md .= self::renderPrintSpecMarkdown($schema) . "\n\n";
-        $md .= self::renderDayTwoOpsMarkdown($schema) . "\n\n";
+        $md .= self::renderPrintSpecMarkdown($schema)."\n\n";
+        $md .= self::renderDayTwoOpsMarkdown($schema)."\n\n";
 
         if (! empty($schema['enterprise_menu_matrix']) && is_array($schema['enterprise_menu_matrix'])) {
-            $md .= PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown($schema['enterprise_menu_matrix']) . "\n";
+            $md .= PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown($schema['enterprise_menu_matrix'])."\n";
         }
 
         if (! empty($schema['agentshield_security_contract']) && is_array($schema['agentshield_security_contract'])) {
@@ -1984,15 +2019,15 @@ MD;
         $isolationId = (string) ($meta['project_isolation_id'] ?? 'isolated-workspace');
 
         return "# AGENTS.md & CLAUDE.md — {$meta['name']} (Project OS v9.0 — 15-Pillar Freeze + AgentShield 5-Layer Defense)\n\n"
-            . "> **Project Isolation ID:** `{$isolationId}` (100% Isolated Workspace — Zero Cross-Project State Bleed)\n"
-            . "> **Primary Sector:** `{$meta['primary_sector']}` | **Visual UI:** `{$meta['selected_ui_variant']}` (`{$meta['navigation_shell']}`) | **Archetype:** `{$meta['architecture_archetype']}` | **Stack Preset:** `{$meta['stack_preset']}`\n"
-            . "> **Injected Primitives:** `{$primitives}`\n"
-            . "> **AgentShield Security Mandate:** Enforce `.claude/settings.json` File-Path Jail (NEVER touch `.env*`, `.git/hooks/*`, `auth.json`, `~/.ssh/*` or run `curl`/`wget`/`nc`), enforce `.agents/APPROVED_DEPENDENCY_MANIFEST.json` (ZERO unverified package installation / anti-slopquatting), wrap all client-uploaded text inside `<UNTRUSTED_CLIENT_DOCUMENT_DATA>`, and maintain SHA-256 chained `audit_logs` (`ExportFilteredAuditExcelAction`).\n"
-            . "> **Canonical Machine Contracts:** Always read `.agents/SYNTAX_LOCK_2026.md`, `.agents/TROUBLESHOOTING_INSTINCTS.md`, `.agents/SYMBOL_MANIFEST.json`, `.agents/APPROVED_DEPENDENCY_MANIFEST.json`, `.agents/ENTERPRISE_MENU_MATRIX.md`, `.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md`, `.agents/BLUEPRINT_SCHEMA.json`, and `PROJECT_OS_EXECUTION_BLUEPRINT.md` before writing any code. NEVER deviate from `__invoke()` signatures in `.agents/SYMBOL_MANIFEST.json`, NEVER use `wire:poll.<30s` (use Private Tenant Channel `organization.{ulid}.{module}`), and ALWAYS enforce `Model::shouldBeStrict(! app()->isProduction())`!\n\n"
-            . "---\n\n"
-            . self::renderAgentHarnessEccMarkdown() . "\n\n---\n\n"
-            . self::renderEngineeringRulesMarkdown() . "\n\n---\n\n"
-            . self::renderUiUxContractMarkdown() . "\n";
+            ."> **Project Isolation ID:** `{$isolationId}` (100% Isolated Workspace — Zero Cross-Project State Bleed)\n"
+            ."> **Primary Sector:** `{$meta['primary_sector']}` | **Visual UI:** `{$meta['selected_ui_variant']}` (`{$meta['navigation_shell']}`) | **Archetype:** `{$meta['architecture_archetype']}` | **Stack Preset:** `{$meta['stack_preset']}`\n"
+            ."> **Injected Primitives:** `{$primitives}`\n"
+            ."> **AgentShield Security Mandate:** Enforce `.claude/settings.json` File-Path Jail (NEVER touch `.env*`, `.git/hooks/*`, `auth.json`, `~/.ssh/*` or run `curl`/`wget`/`nc`), enforce `.agents/APPROVED_DEPENDENCY_MANIFEST.json` (ZERO unverified package installation / anti-slopquatting), wrap all client-uploaded text inside `<UNTRUSTED_CLIENT_DOCUMENT_DATA>`, and maintain SHA-256 chained `audit_logs` (`ExportFilteredAuditExcelAction`).\n"
+            ."> **Canonical Machine Contracts:** Always read `.agents/SYNTAX_LOCK_2026.md`, `.agents/TROUBLESHOOTING_INSTINCTS.md`, `.agents/SYMBOL_MANIFEST.json`, `.agents/APPROVED_DEPENDENCY_MANIFEST.json`, `.agents/ENTERPRISE_MENU_MATRIX.md`, `.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md`, `.agents/BLUEPRINT_SCHEMA.json`, and `PROJECT_OS_EXECUTION_BLUEPRINT.md` before writing any code. NEVER deviate from `__invoke()` signatures in `.agents/SYMBOL_MANIFEST.json`, NEVER use `wire:poll.<30s` (use Private Tenant Channel `organization.{ulid}.{module}`), and ALWAYS enforce `Model::shouldBeStrict(! app()->isProduction())`!\n\n"
+            ."---\n\n"
+            .self::renderAgentHarnessEccMarkdown()."\n\n---\n\n"
+            .self::renderEngineeringRulesMarkdown()."\n\n---\n\n"
+            .self::renderUiUxContractMarkdown()."\n";
     }
 
     /**
@@ -2003,7 +2038,7 @@ MD;
         $meta = $schema['project_metadata'] ?? [];
         $nodes = [
             [
-                'id' => 'project:' . Str::slug($meta['name'] ?? 'app'),
+                'id' => 'project:'.Str::slug($meta['name'] ?? 'app'),
                 'type' => 'ProjectRoot',
                 'label' => $meta['name'] ?? 'Target Application',
                 'sector' => $meta['primary_sector'] ?? '',
@@ -2017,7 +2052,7 @@ MD;
             if ($tableName === '') {
                 continue;
             }
-            $modelClass = 'App\\Models\\' . Str::studly(Str::singular($tableName));
+            $modelClass = 'App\\Models\\'.Str::studly(Str::singular($tableName));
             $nodes[] = [
                 'id' => "table:{$tableName}",
                 'type' => 'DatabaseTable',
@@ -2030,7 +2065,7 @@ MD;
                 'id' => "model:{$modelClass}",
                 'type' => 'EloquentModel',
                 'label' => $modelClass,
-                'path' => 'app/Models/' . Str::studly(Str::singular($tableName)) . '.php',
+                'path' => 'app/Models/'.Str::studly(Str::singular($tableName)).'.php',
             ];
             $edges[] = [
                 'from' => "model:{$modelClass}",
@@ -2040,7 +2075,7 @@ MD;
         }
 
         foreach (($schema['state_machines'] ?? []) as $sm) {
-            $enumClass = $sm['enum_class'] ?? ('App\\Enums\\' . ($sm['entity'] ?? 'Entity') . 'Status');
+            $enumClass = $sm['enum_class'] ?? ('App\\Enums\\'.($sm['entity'] ?? 'Entity').'Status');
             $nodes[] = [
                 'id' => "enum:{$enumClass}",
                 'type' => 'StateMachineEnum',
@@ -2068,8 +2103,8 @@ MD;
         foreach (($schema['topological_dag_plan']['dependency_edges'] ?? []) as $depEdge) {
             if (! empty($depEdge['from']) && ! empty($depEdge['to'])) {
                 $edges[] = [
-                    'from' => 'table:' . $depEdge['from'],
-                    'to' => 'table:' . $depEdge['to'],
+                    'from' => 'table:'.$depEdge['from'],
+                    'to' => 'table:'.$depEdge['to'],
                     'relation' => 'FOREIGN_ULID_DEPENDS_ON',
                 ];
             }
@@ -2105,7 +2140,7 @@ MD;
         $topology = $stack['topology'] ?? 'MONOLITH';
         $primitivesList = implode(', ', $meta['injected_primitives'] ?? []);
         $tableNames = implode(', ', array_map(fn ($t) => $t['table'] ?? '', $schema['data_dictionary'] ?? []));
-        $stateEntities = implode(', ', array_map(fn ($sm) => ($sm['entity'] ?? '') . ' (' . implode(' -> ', $sm['states'] ?? []) . ')', $schema['state_machines'] ?? []));
+        $stateEntities = implode(', ', array_map(fn ($sm) => ($sm['entity'] ?? '').' ('.implode(' -> ', $sm['states'] ?? []).')', $schema['state_machines'] ?? []));
         $primaryArch = $secUi['primary_archetype'] ?? 'POS_SPLIT_TERMINAL';
         $secondaryArch = $secUi['secondary_archetype'] ?? 'DENSE_SKU_MATRIX';
         $ergonomicsBullets = implode("\n", array_map(fn ($e) => "- {$e}", $secUi['ergonomics_and_layout'] ?? []));
@@ -2117,7 +2152,7 @@ MD;
         $vHtmlDir = $vUi['html_dir_attribute'] ?? 'dir="ltr"';
         $vRtlRule = $vUi['rtl_logical_css_mandate'] ?? 'Standard LTR layout.';
         $vPanesBullets = implode("\n", array_map(
-            fn (array $p): string => "- **Pane `col-span-{$p['span']}` ({$p['label']})**: " . implode(', ', $p['widgets'] ?? []),
+            fn (array $p): string => "- **Pane `col-span-{$p['span']}` ({$p['label']})**: ".implode(', ', $p['widgets'] ?? []),
             $vUi['selected_variant_panes'] ?? []
         ));
         $jProf = is_array($schema['jurisdiction_compliance_profile'] ?? null) ? $schema['jurisdiction_compliance_profile'] : [];
@@ -2146,7 +2181,7 @@ MD;
                 'phase' => 1,
                 'filename' => '01-foundation.md',
                 'title' => 'Fase 1: Foundation, Guardrails & Multi-Tenant ULID Architecture',
-                'objective' => 'Memasang AGENTS.md, SYMBOL_MANIFEST.json, graph.json awal, adapter stack [' . $stackShort . '], konfigurasi PostgreSQL 16 Strict ULID, dan isolasi organization_id.',
+                'objective' => 'Memasang AGENTS.md, SYMBOL_MANIFEST.json, graph.json awal, adapter stack ['.$stackShort.'], konfigurasi PostgreSQL 16 Strict ULID, dan isolasi organization_id.',
                 'prompt' => <<<PROMPT
 # PROJECT OS EXECUTION — FASE 1/7: FOUNDATION, SYMBOL LOCK & GUARDRAILS ({$appName})
 Baca terlebih dahulu `AGENTS.md`, `.agents/SYMBOL_MANIFEST.json`, `.agents/STACK_TOPOLOGY_CONTRACT.md`, dan `.agents/graphify/graph.json`.
@@ -2323,8 +2358,8 @@ PROMPT,
         $lines = [
             "# DETERMINISTIC BUSINESS RULE DECISION TABLES — {$appName}",
             '',
-            '> **Anti-Slop Mandate:** ' . ($matrix['anti_slop_mandate'] ?? ''),
-            '> **Matrix Name:** `' . ($matrix['matrix_name'] ?? '') . '`',
+            '> **Anti-Slop Mandate:** '.($matrix['anti_slop_mandate'] ?? ''),
+            '> **Matrix Name:** `'.($matrix['matrix_name'] ?? '').'`',
             '',
             '| Rule ID | Priority | Condition A | Condition B | Condition C | Action Code | Exact Formula (`DECIMAL(19,4)`) |',
             '| :--- | :---: | :--- | :--- | :--- | :--- | :--- |',
@@ -2349,6 +2384,6 @@ PROMPT,
         $lines[] = PosLifecycleAndStudioCatalog::compileDecisionTablesToPhpClass($matrix, $appName);
         $lines[] = '```';
 
-        return implode("\n", $lines) . "\n";
+        return implode("\n", $lines)."\n";
     }
 }

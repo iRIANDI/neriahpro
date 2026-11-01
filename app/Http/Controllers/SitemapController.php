@@ -42,6 +42,24 @@ class SitemapController extends Controller
                 'priority' => '0.9',
             ];
 
+            // Project OS v10.0 Programmatic SEO Architecture Library (/explore & /explore/{sector}/{slug})
+            $urls[] = [
+                'loc' => $baseUrl . '/explore',
+                'lastmod' => Carbon::now()->toDateString(),
+                'changefreq' => 'daily',
+                'priority' => '0.9',
+            ];
+            foreach (\App\Support\PosDualZoneFrontendAndSaasCatalog::baselineTwelveSectorReceipts('id') as $item) {
+                if (! empty($item['seo_slug']) && ! empty($item['sector_code'])) {
+                    $urls[] = [
+                        'loc' => $baseUrl . '/explore/' . strtolower($item['sector_code']) . '/' . $item['seo_slug'],
+                        'lastmod' => Carbon::now()->toDateString(),
+                        'changefreq' => 'weekly',
+                        'priority' => '0.85',
+                    ];
+                }
+            }
+
             // Publicly Published Blueprints
             try {
                 $blueprints = VisionBlueprint::where('is_published', true)

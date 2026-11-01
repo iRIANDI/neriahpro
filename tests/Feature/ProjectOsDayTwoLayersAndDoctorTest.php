@@ -248,9 +248,9 @@ class ProjectOsDayTwoLayersAndDoctorTest extends TestCase
         $reviewer = User::query()->where('email', 'reviewer.midtrans@neriahpro.com')->firstOrFail();
         $this->assertFalse($reviewer->can('manage_day2_ops_contracts'));
 
-        // 30 Gemini & OpenAI Tools registered (v7.0)
-        $this->assertCount(36, GeminiToolRegistry::getDeclarations());
-        $this->assertCount(36, GeminiToolRegistry::getOpenAiTools());
+        // 40 Gemini & OpenAI Tools registered (v10.0)
+        $this->assertCount(40, GeminiToolRegistry::getDeclarations());
+        $this->assertCount(40, GeminiToolRegistry::getOpenAiTools());
 
         $admin = User::query()->where('email', 'yoseph.iriandi.tambunan@gmail.com')->firstOrFail();
         $this->actingAs($admin);

@@ -95,13 +95,13 @@ class ProjectOsMatrixPage extends Page
     public function getSubheading(): string | Htmlable | null
     {
         return app()->getLocale() === 'en'
-            ? 'Project OS v9.0 Ultimate — NeriahPro AgentShield (5-Layer AI Malware Defense), Co-Design Alignment & Dual-Key Scope Lock, Cryptographic SHA-256 Audit Explorer (3-Sheet XLSX + 12 Sector Presets), 36 Visual Frontend UIs & 15 Frozen Master Pillars.'
-            : 'Project OS v9.0 Ultimate — NeriahPro AgentShield (5 Lapis Pertahanan Malware AI), Co-Design Alignment & Dual-Key Scope Lock, Cryptographic SHA-256 Audit Explorer (3-Sheet XLSX + 12 Preset Sektor), 36 Desain UI Visual & 15 Pilar Utama.';
+            ? 'Project OS v10.0 Ultimate — Dual-Zone Enterprise UI (36 Back-Stage UIs + 6 Public Front-Stage UX Presets), Cryptographically Verified Aniwall, 6 SaaS Commercial Modules, Universal Input Hygiene, AgentShield & 15 Frozen Master Pillars.'
+            : 'Project OS v10.0 Ultimate — Dual-Zone Enterprise UI (36 UI Back-Stage + 6 Preset UX Publik Front-Stage), Aniwall Terverifikasi Kriptografi, 6 Modul Komersial SaaS, Standar Input Hygiene Universal, AgentShield & 15 Pilar Utama.';
     }
 
     public function setTab(string $tab): void
     {
-        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lifecycle', 'mitra', 'guarantees_v6', 'freeze_15_pillars', 'inclusive_v8', 'agentshield_v9', 'lab'], true)) {
+        if (in_array($tab, ['sectors', 'primitives', 'stacks', 'rules', 'projects', 'day2', 'lifecycle', 'mitra', 'guarantees_v6', 'freeze_15_pillars', 'inclusive_v8', 'agentshield_v9', 'dual_zone_v10', 'lab'], true)) {
             $this->activeTab = $tab;
             $this->cursor = null;
             $this->selectedIds = [];

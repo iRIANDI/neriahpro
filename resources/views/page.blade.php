@@ -166,6 +166,7 @@
                     $pluginName = '';
                     if($type == 'hero_section') $pluginName = 'HeroIsland';
                     if($type == 'onboarding_form' && $featureFlags['enable_client_onboarding']) $pluginName = 'ClientOnboardingIsland';
+                    if($type == 'verified_aniwall_showcase') $pluginName = 'VerifiedAniwallShowcaseIsland';
                     if($type == 'architecture_pricing' || $type == 'pricing_section') {
                         if ($hasRenderedPricing) continue;
                         $pluginName = 'ArchitecturePricingIsland';
@@ -201,6 +202,9 @@
                         'whatsappNumber' => $getSettingVal('company_whatsapp', '6281380448253'),
                         'featureFlags' => $featureFlags,
                         'currentLocale' => $locale,
+                        'countries' => \App\Support\InputHygieneStandard::countryZonesForFrontend(),
+                        'testimonials' => $pluginName === 'VerifiedAniwallShowcaseIsland' ? \App\Support\PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog($locale) : [],
+                        'publicUxPresets' => $pluginName === 'VerifiedAniwallShowcaseIsland' ? array_values(\App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets($locale)) : [],
                         'authUser' => auth()->check() ? [
                             'id' => auth()->id(),
                             'name' => auth()->user()->name,
@@ -238,11 +242,21 @@
             @endif
         @endforeach
 
+        @if(($page->slug ?? '') === 'home')
+            @react('VerifiedAniwallShowcaseIsland', [
+                'currentLocale' => app()->getLocale(),
+                'testimonials' => \App\Support\PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog(app()->getLocale()),
+                'publicUxPresets' => array_values(\App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets(app()->getLocale())),
+                'exploreUrl' => route('explore.index'),
+            ])
+        @endif
+
         @if(($page->slug ?? '') === 'pricing' && ! $hasRenderedPricing)
             @react('ArchitecturePricingIsland', [
                 'whatsappNumber' => $getSettingVal('company_whatsapp', '6281380448253'),
                 'featureFlags' => $featureFlags,
                 'currentLocale' => app()->getLocale(),
+                'countries' => \App\Support\InputHygieneStandard::countryZonesForFrontend(),
                 'pricingSettings' => [
                     'advisory_price' => $getSettingVal('pricing_advisory_price', '2.500.000'),
                     'mvp_price' => $getSettingVal('pricing_mvp_price', 'Custom Quotation'),

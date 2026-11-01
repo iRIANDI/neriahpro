@@ -3,8 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\CmsGlobalSetting;
+use App\Models\PosAffiliateReferral;
+use App\Models\PosImpactGrantApplication;
+use App\Models\PosOrganizationMember;
+use App\Models\PosOrganizationWorkspace;
 use App\Models\Transaction;
 use App\Models\VisionBlueprint;
+use App\Services\Saas\PosSaasCommercialEngineService;
+use App\Support\InputHygieneStandard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -260,12 +266,32 @@ class CustomerDashboardController extends Controller
         // Resolve prefilled profile from blueprints or transactions if user profile columns are empty
         $prefilledCompany = $user->company_name 
             ?? ($blueprints->first()->nama_bisnis ?? ($transactions->first()?->customer_details['company_name'] ?? ''));
-        $prefilledPhone = $user->phone 
-            ?? ($blueprints->first()->phone ?? '');
-        $prefilledCountryCode = $user->phone_country_code ?? '+62';
+        $prefilledPhone = InputHygieneStandard::sanitizePhoneLocalNumber((string) ($user->phone
+            ?? ($blueprints->first()->phone ?? '')));
+        $prefilledCountryCode = InputHygieneStandard::normalizeDialCode((string) ($user->phone_country_code ?? '+62'));
+
+        $saasEngine = app(PosSaasCommercialEngineService::class);
+        $referralCode = $saasEngine->ensureUserReferralCode($user);
+        $affiliateReferrals = Schema::hasTable('pos_affiliate_referrals')
+            ? PosAffiliateReferral::query()->where('referrer_user_id', $user->id)->orderByDesc('id')->limit(25)->get()
+            : collect();
+        $workspace = Schema::hasTable('pos_organization_workspaces')
+            ? PosOrganizationWorkspace::query()->where('owner_user_id', $user->id)->first()
+            : null;
+        $workspaceMembers = ($workspace && Schema::hasTable('pos_organization_members'))
+            ? PosOrganizationMember::query()->where('workspace_id', $workspace->id)->orderBy('id', 'asc')->get()
+            : collect();
+        $impactGrantApplications = Schema::hasTable('pos_impact_grant_applications')
+            ? PosImpactGrantApplication::query()->where('user_id', $user->id)->orderByDesc('id')->limit(10)->get()
+            : collect();
 
         return view('customer.dashboard', [
             'user' => $user,
+            'referralCode' => $referralCode,
+            'affiliateReferrals' => $affiliateReferrals,
+            'workspace' => $workspace,
+            'workspaceMembers' => $workspaceMembers,
+            'impactGrantApplications' => $impactGrantApplications,
             'blueprints' => $blueprints,
             'retailLicenses' => $retailLicenses,
             'studioProjects' => $studioProjects,
@@ -411,12 +437,9 @@ class CustomerDashboardController extends Controller
             'notify_wa_billing' => 'nullable|boolean',
         ]);
 
-        // Clean phone number (strip spaces/dashes and leading zeros if country code provided)
-        $rawPhone = preg_replace('/[^0-9]/', '', $validated['phone'] ?? '');
-        $countryCode = trim($validated['phone_country_code'] ?? '+62');
-        if (!str_starts_with($countryCode, '+')) {
-            $countryCode = '+' . $countryCode;
-        }
+        // Clean phone number (config/country_zones.php + instant leading-0 strip)
+        $countryCode = InputHygieneStandard::normalizeDialCode((string) ($validated['phone_country_code'] ?? '+62'));
+        $rawPhone = InputHygieneStandard::sanitizePhoneLocalNumber((string) ($validated['phone'] ?? ''), $countryCode);
 
         $notifPrefs = [
             'email_sprints' => (bool) ($request->input('notify_email_sprints', true)),

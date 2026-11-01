@@ -200,6 +200,7 @@ class VectorEmbeddingService
             'inclusive_visual_ui_v8',
             'inclusive_security_pricing_v8',
             'agentshield_codesign_audit_v9',
+            'dual_zone_aniwall_saas_v10',
         ], true);
 
         if (! $isTrustedInternal) {
@@ -1016,6 +1017,60 @@ class VectorEmbeddingService
                 'embedding' => $embedding,
                 'metadata' => [
                     'category' => 'Project OS v9.0 Co-Design & World-Class Tasks',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        // 14. Indeks Project OS v10.0: Dual-Zone UI Architecture (Zone A + Zone B UX_F1..UX_F6), 5 Hukum Besi Animasi, Aniwall Terverifikasi & Universal Input Hygiene
+        $v10DualZoneSourceId = 'dual-zone-v10-aniwall-scrollytelling-and-input-hygiene';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v10DualZoneSourceId)->exists()) {
+            $uxLines = [];
+            foreach (\App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets('id') as $ux) {
+                $uxLines[] = "- {$ux['code']} ({$ux['localized_name']}): {$ux['localized_summary']}";
+            }
+            $v10Content = "Project OS v10.0 Ultimate — Dual-Zone UI Architecture, Cryptographically Verified Testimonial Aniwall (`PRIMITIVE_VERIFIED_SOCIAL_PROOF`), 5 Hukum Besi Animasi Anti-Slop & Universal Input Hygiene:\n"
+                . "1. Dual-Zone UI Policy: Zone A Operational Back-Stage (Dashboard Admin, Kasir POS, RME Klinik, Buku Besar) WAJIB 100% Linear/Stripe Crisp (`UI_01A..UI_12C`) dengan 0% parallax/scrollytelling; Zone B Public Front-Stage (Landing Page, Katalog, Kampanye Donasi, Microsite Event) menggunakan 6 Preset Advanced UX lintas 12 Sektor:\n"
+                . implode("\n", $uxLines) . "\n"
+                . "2. 5 Hukum Besi Animasi Enterprise Anti-Slop: (1) 100% Local Bundled Libraries via `@vite` (0% CDN eksternal), (2) GPU Compositor Only (`translate3d()`, `scale()`, `opacity` — haram menganimasikan `top/left/width/height/margin`), (3) `CLS = 0.00` aspect-ratio eksplisit, (4) Wajib `@media (prefers-reduced-motion: reduce)`, (5) Lazy-Hydration via `IntersectionObserver` (`FCP < 0.8s`).\n"
+                . "3. BAST-Linked & Phase-6 Telemetry-Backed Testimonials (`PRIMITIVE_VERIFIED_SOCIAL_PROOF`): Terbit otomatis saat BAST Mitra ditandatangani atau Fase 6 Retail lolos verifikasi lengkap struk telemetri (`ULID Tables | Concurrency Locks | Token Saved % | SHA-256 Scope Seal`) dan modal `[ 🔍 Inspect Anonymized Blueprint Architecture ]`.\n"
+                . "4. Standar Wajib Universal Input Hygiene: Email hanya karakter resmi `[a-zA-Z0-9._%+\\-@]`; nominal angka memakai pemisah ribuan regional (`1.500.000` ID vs `1,500,000` EN); nomor telepon wajib dropdown Country Zone dari `config/country_zones.php` dan **otomatis menghapus angka `0` di awal ketikan pertama** (`0812...` -> `812...` -> `+62812...`).";
+
+            $embedding = $this->generateEmbedding("Project OS v10.0 Dual-Zone UI Scrollytelling Aniwall 5 Iron Animation Laws & Input Hygiene\n{$v10Content}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v10.0: Dual-Zone UI (UX_F1..UX_F6), Verified Aniwall, 5 Iron Animation Laws & Input Hygiene',
+                'source_type' => 'dual_zone_aniwall_saas_v10',
+                'source_id' => $v10DualZoneSourceId,
+                'content' => "### Project OS v10.0: Dual-Zone UI, Verified Aniwall & Universal Input Hygiene\n\n{$v10Content}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'Project OS v10.0 Dual-Zone UX & Input Hygiene',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
+        // 15. Indeks Project OS v10.0: 6 Modul Komersial SaaS Kritikal (Billing IDR/USD <2s, Affiliate Finder's Fee, Multi-Seat White-Label, Impact Grant, SEO /explore & Health Pulse)
+        $v10SaasSourceId = 'saas-v10-6-commercial-growth-modules';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v10SaasSourceId)->exists()) {
+            $saasLines = [];
+            foreach (\App\Support\PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules('id') as $m) {
+                $saasLines[] = "{$m['number']}. [{$m['code']}] {$m['localized_title']}: {$m['localized_summary']}";
+            }
+            $v10SaasContent = "Project OS v10.0 — 6 Modul Bisnis, Monetisasi & Pertumbuhan SaaS NeriahPro (`PosSaasCommercialEngineService`):\n"
+                . implode("\n", $saasLines);
+
+            $embedding = $this->generateEmbedding("Project OS v10.0 6 Critical SaaS Commercial Modules Billing Affiliate Multi-Seat Impact Grant SEO Explore Health Pulse\n{$v10SaasContent}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v10.0: 6 Modul Komersial SaaS (Billing IDR/USD, Affiliate Finder\'s Fee, Multi-Seat White-Label, Impact Grant, SEO /explore & Health Pulse)',
+                'source_type' => 'dual_zone_aniwall_saas_v10',
+                'source_id' => $v10SaasSourceId,
+                'content' => "### Project OS v10.0: 6 Modul Komersial & Pertumbuhan SaaS\n\n{$v10SaasContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'Project OS v10.0 SaaS Commercial Engine',
                 ],
             ]);
             $syncedSections++;

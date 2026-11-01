@@ -646,6 +646,31 @@
                                 @endforeach
                             </div>
                         @endif
+
+                        <!-- v10.0 ZONE B PUBLIC FRONT-STAGE UX SELECTOR (UX_F1..UX_F6) + 5 IRON ANIMATION LAWS -->
+                        <div class="pt-2.5 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div class="font-mono text-[10px] font-black uppercase text-cyan-900 dark:text-cyan-300">
+                                    V10.0 ZONE B — PUBLIC FRONT-STAGE UX PRESET (6 ARCHETYPES • ZERO-JANK 60FPS GPU)
+                                </div>
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black">
+                                    PUBLIC UX: {{ $publicUxPreset }}
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                @foreach(($publicUxPresets ?? []) as $uxCode => $uxItem)
+                                    @php $isPubPicked = $publicUxPreset === $uxCode; @endphp
+                                    <button
+                                        type="button"
+                                        wire:click="selectPublicUxPreset('{{ $uxCode }}')"
+                                        class="p-2 text-left border rounded-none cursor-pointer transition {{ $isPubPicked ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950 dark:text-white dark:border-emerald-400 font-black' : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:text-zinc-200 dark:border-zinc-800 font-bold' }}"
+                                    >
+                                        <div class="font-mono text-[9px] uppercase {{ $isPubPicked ? 'text-emerald-400' : 'text-emerald-900 dark:text-emerald-300' }}">{{ $uxCode }} (+{{ $uxItem['extra_man_hours'] ?? $uxItem['complexity_hours'] ?? 12 }}h)</div>
+                                        <div class="text-[11px] leading-snug mt-0.5">{{ $uxItem['localized_name'] ?? $uxCode }}</div>
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
 
                     <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-2.5">

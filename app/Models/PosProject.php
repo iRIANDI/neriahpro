@@ -69,6 +69,9 @@ class PosProject extends Model
         'codesign_dual_key_json',
         'approved_dependency_manifest_json',
         'agentshield_policy_json',
+        'public_ux_preset',
+        'dual_zone_ui_contract_json',
+        'organization_workspace_id',
         'architectural_freeze_score',
     ];
 
@@ -102,6 +105,7 @@ class PosProject extends Model
             'codesign_dual_key_json' => 'array',
             'approved_dependency_manifest_json' => 'array',
             'agentshield_policy_json' => 'array',
+            'dual_zone_ui_contract_json' => 'array',
             'architectural_freeze_score' => 'integer',
         ];
     }

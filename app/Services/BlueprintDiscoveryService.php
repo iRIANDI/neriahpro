@@ -202,6 +202,18 @@ class BlueprintDiscoveryService
             $corpusText,
             $locale
         );
+        $publicUxMatch = \App\Support\PosDualZoneFrontendAndSaasCatalog::autoMatchPublicUxPresetForSectorAndIdea(
+            $result['primarySector'],
+            $corpusText,
+            $locale
+        );
+        $dualZoneUiContract = \App\Support\PosDualZoneFrontendAndSaasCatalog::compileDualZoneUiContract(
+            $result['primarySector'],
+            $visualMatch['selected_ui_variant'],
+            $visualMatch['navigation_shell'],
+            $publicUxMatch['code'],
+            $locale
+        );
         $enterpriseMenuMatrix = PosEnterpriseGuaranteeCatalog::enterpriseMenuMatrixForSector($result['primarySector']);
         $defaultSelectedMenus = [];
         foreach (($enterpriseMenuMatrix['divisions'] ?? []) as $div) {
@@ -214,7 +226,9 @@ class BlueprintDiscoveryService
 
         $result['selectedUiVariant'] = $visualMatch['selected_ui_variant'];
         $result['navigationShell'] = $visualMatch['navigation_shell'];
+        $result['publicUxPreset'] = $publicUxMatch['code'];
         $result['visualUiContract'] = $visualMatch['variant_detail'];
+        $result['dualZoneUiContract'] = $dualZoneUiContract;
         $result['selectedMenus'] = $defaultSelectedMenus;
         $result['enterpriseMenuMatrix'] = $enterpriseMenuMatrix;
         $result['approvedDependencyManifest'] = DocumentThreatSanitizerService::approvedDependencyManifest(
@@ -229,6 +243,7 @@ class BlueprintDiscoveryService
                 'text_direction' => $visualMatch['variant_detail']['text_direction'] ?? 'ltr',
             ],
             'visual_frontend_ui_contract' => $visualMatch['variant_detail'],
+            'dual_zone_ui_contract' => $dualZoneUiContract,
             'enterprise_menu_matrix' => $enterpriseMenuMatrix,
             'data_dictionary' => array_fill(0, max(12, count($result['selectedPrimitives']) * 3 + 7), ['table' => 'ulid_table']),
             'state_machines' => array_fill(0, max(3, count($result['selectedPrimitives'])), ['entity' => 'DomainEntity']),
@@ -252,8 +267,9 @@ class BlueprintDiscoveryService
             'topology' => $resolvedStackPreset->topology,
             'selected_ui_variant' => $result['selectedUiVariant'],
             'navigation_shell' => $result['navigationShell'],
+            'public_ux_preset' => $result['publicUxPreset'],
             'included_v1_menus_count' => count($defaultSelectedMenus),
-            'world_class_tasks_count' => $result['worldClassTaskMatrix']['total_world_class_tasks'] ?? 13,
+            'world_class_tasks_count' => $result['worldClassTaskMatrix']['total_world_class_tasks'] ?? 15,
             'blueprint_invariants' => $resolvedSector?->blueprint_invariants ?? [],
             'compliance_standards' => $resolvedSector?->default_compliance_standards ?? [],
             'domain_terminology' => $resolvedSector?->domain_terminology ?? [],
@@ -267,6 +283,7 @@ class BlueprintDiscoveryService
         $result['_meta']['visual_ui_match'] = [
             'selected_ui_variant' => $result['selectedUiVariant'],
             'navigation_shell' => $result['navigationShell'],
+            'public_ux_preset' => $result['publicUxPreset'],
         ];
 
         return $result;

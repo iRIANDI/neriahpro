@@ -48,6 +48,7 @@ class VisionBlueprintController extends Controller
             'stack_preset' => 'stackPreset',
             'selected_ui_variant' => 'selectedUiVariant',
             'navigation_shell' => 'navigationShell',
+            'public_ux_preset' => 'publicUxPreset',
             'output_locale' => 'outputLocale',
             'persona_mode' => 'personaMode',
         ];
@@ -55,6 +56,12 @@ class VisionBlueprintController extends Controller
             if (! $request->filled($snakeKey) && $request->has($camelKey)) {
                 $request->merge([$snakeKey => $request->input($camelKey)]);
             }
+        }
+
+        if ($request->filled('email')) {
+            $request->merge([
+                'email' => \App\Support\InputHygieneStandard::sanitizeStrictEmail((string) $request->input('email')),
+            ]);
         }
 
         // 2. Validation
@@ -102,6 +109,8 @@ class VisionBlueprintController extends Controller
             'selectedUiVariant' => 'nullable|string|max:120',
             'navigation_shell' => 'nullable|string|max:80',
             'navigationShell' => 'nullable|string|max:80',
+            'public_ux_preset' => 'nullable|string|max:80',
+            'publicUxPreset' => 'nullable|string|max:80',
             'output_locale' => 'nullable|string|max:20',
             'outputLocale' => 'nullable|string|max:20',
             'persona_mode' => 'nullable|string|max:40',
@@ -139,6 +148,7 @@ class VisionBlueprintController extends Controller
             'selected_menus' => $request->input('selected_menus') ?: $request->input('selectedMenus', []),
             'selected_ui_variant' => $request->input('selected_ui_variant') ?: $request->input('selectedUiVariant'),
             'navigation_shell' => $request->input('navigation_shell') ?: $request->input('navigationShell'),
+            'public_ux_preset' => $request->input('public_ux_preset') ?: $request->input('publicUxPreset'),
             'output_locale' => \App\Support\PosInclusiveCommercialCatalog::normalizeOutputLocale(
                 $request->input('output_locale') ?: $request->input('outputLocale') ?: $request->input('locale')
             ),
@@ -151,27 +161,12 @@ class VisionBlueprintController extends Controller
             ),
         ];
 
-        // 4. Normalize phone number (Anti-0 and Country Code Protocol)
-        $rawPhone = $request->input('phone');
-        $countryCode = $request->input('country_code', '+62');
-        $phoneDigits = $request->input('phone_digits');
-        $normalizedPhone = null;
-
-        if (!empty($phoneDigits)) {
-            $cleanDigits = ltrim(preg_replace('/\D/', '', $phoneDigits), '0');
-            $code = str_starts_with($countryCode, '+') ? $countryCode : ('+' . $countryCode);
-            $normalizedPhone = $cleanDigits ? ($code . $cleanDigits) : null;
-        } elseif (!empty($rawPhone)) {
-            $digits = preg_replace('/\D/', '', $rawPhone);
-            if (str_starts_with($digits, '620')) {
-                $digits = '62' . substr($digits, 3);
-            } elseif (str_starts_with($digits, '0')) {
-                $digits = ltrim($digits, '0');
-                $codeDigits = preg_replace('/\D/', '', $countryCode) ?: '62';
-                $digits = $codeDigits . $digits;
-            }
-            $normalizedPhone = $digits ? ('+' . $digits) : null;
-        }
+        // 4. Normalize phone number via Universal Input Hygiene Standard (config/country_zones.php + leading-0 strip)
+        $rawPhone = (string) ($request->input('phone_digits') ?: $request->input('phone', ''));
+        $countryCode = (string) $request->input('country_code', '+62');
+        $normalizedPhone = $rawPhone !== ''
+            ? (\App\Support\InputHygieneStandard::toE164($countryCode, $rawPhone) ?: null)
+            : null;
 
         // 5. Save to Database & Generate PRD
         try {

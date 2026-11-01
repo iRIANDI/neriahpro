@@ -1401,11 +1401,12 @@ PHP;
         $sopSteps = (int) ($schema['client_sop_and_onboarding']['total_interactive_tour_steps'] ?? $v1Menus);
         $visualVariant = (string) ($schema['visual_frontend_ui_contract']['selected_variant_code'] ?? $schema['project_metadata']['selected_ui_variant'] ?? 'DEFAULT_SECTOR_UI');
         $navShell = (string) ($schema['visual_frontend_ui_contract']['navigation_shell_code'] ?? $schema['project_metadata']['navigation_shell'] ?? 'SIDEBAR_ERP_DENSE');
+        $publicUxPreset = (string) ($schema['dual_zone_ui_contract']['zone_b_public_frontstage']['selected_public_ux_preset'] ?? $schema['project_metadata']['public_ux_preset'] ?? '');
         $outputLocale = (string) ($schema['jurisdiction_compliance_profile']['locale_code'] ?? $schema['project_metadata']['output_locale'] ?? 'id');
         $jurisdictionCode = (string) ($schema['jurisdiction_compliance_profile']['jurisdiction_code'] ?? 'ID_NKRI_STATUTORY');
         $extraCoDesignHours = (int) ($schema['codesign_alignment_contract']['extra_codesign_man_hours'] ?? 0);
         $approvedCoDesignModules = (int) ($schema['codesign_alignment_contract']['approved_modules_count'] ?? 0);
-        $worldClassTasksCount = (int) ($schema['world_class_task_matrix']['total_world_class_tasks'] ?? 13);
+        $worldClassTasksCount = (int) ($schema['world_class_task_matrix']['total_world_class_tasks'] ?? 15);
 
         $hashParts = [
             $sector,
@@ -1420,6 +1421,9 @@ PHP;
             $navShell,
             $outputLocale,
         ];
+        if ($publicUxPreset !== '') {
+            $hashParts[] = "pubux:{$publicUxPreset}";
+        }
         if ($extraCoDesignHours > 0 || $approvedCoDesignModules > 0) {
             $hashParts[] = "codesign:{$approvedCoDesignModules}:{$extraCoDesignHours}";
         }
@@ -1437,6 +1441,7 @@ PHP;
                 'stack_preset' => $stack,
                 'selected_ui_variant' => $visualVariant,
                 'navigation_shell' => $navShell,
+                'public_ux_preset' => $publicUxPreset ?: 'UX_F2_KINETIC_ANIWALL',
                 'output_locale' => $outputLocale,
                 'jurisdiction_code' => $jurisdictionCode,
                 'v1_enterprise_menus' => $v1Menus,

@@ -94,6 +94,10 @@ class MidtransWebhookController extends Controller
                         'status' => $mappedStatus,
                         'midtrans_transaction_id' => $midtransTxId ?: $tx->midtrans_transaction_id,
                     ]);
+
+                    if ($mappedStatus === 'settlement') {
+                        \App\Services\Saas\PosSaasCommercialEngineService::settleCommissionForTransaction($tx);
+                    }
                 }
             }
 

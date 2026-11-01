@@ -71,6 +71,7 @@
                         'freeze_15_pillars' => ['label' => '15 Pilar Freeze & 5 Runtime', 'count' => 'v7.0'],
                         'inclusive_v8' => ['label' => '36 Visual UI, RTL & Canary', 'count' => 'v8.0'],
                         'agentshield_v9' => ['label' => 'AgentShield, Co-Design & Audit', 'count' => 'v9.0'],
+                        'dual_zone_v10' => ['label' => 'Dual-Zone UX, Aniwall & SaaS', 'count' => 'v10.0'],
                         'lab' => ['label' => 'Brownfield & Slop Lab', 'count' => 'LAB'],
                     ] as $tabKey => $tabMeta)
                         <button
@@ -1035,6 +1036,62 @@
                                 <div class="text-[10px] font-mono text-emerald-900 dark:text-emerald-300 font-bold pt-1">
                                     {{ implode(' • ', $preset['compliance_standards'] ?? []) }}
                                 </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @elseif($this->activeTab === 'dual_zone_v10')
+            @php
+                $v10Loc = app()->getLocale() === 'en' ? 'en' : 'id';
+                $v10Presets = \App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets($v10Loc);
+                $v10Laws = \App\Support\PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws($v10Loc);
+                $v10Saas = \App\Support\PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules($v10Loc);
+            @endphp
+            <div class="space-y-4">
+                <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2.5">
+                        <div>
+                            <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">PROJECT OS v10.0 // ZONE B PUBLIC FRONT-STAGE UX PRESETS</div>
+                            <h3 class="text-sm font-black text-zinc-950 dark:text-zinc-100">
+                                {{ $v10Loc === 'en' ? '6 Advanced Public Frontend UX Archetypes (Mapped Across All 12 Sectors)' : '6 Preset UX Halaman Publik Tingkat Lanjut (Dipetakan ke Seluruh 12 Sektor)' }}
+                            </h3>
+                        </div>
+                        <a href="{{ url('/explore') }}" target="_blank" class="px-2.5 py-1 bg-emerald-600 text-zinc-950 font-mono text-[11px] font-black uppercase rounded-none">
+                            ↗ /explore Aniwall
+                        </a>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                        @foreach($v10Presets as $uxCode => $uxItem)
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-1.5">
+                                <div class="flex items-center justify-between gap-2 font-mono text-[10px] font-black">
+                                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 rounded-none">{{ $uxCode }}</span>
+                                    <span class="tabular-nums text-zinc-800 dark:text-zinc-300">+{{ $uxItem['extra_man_hours'] ?? $uxItem['complexity_hours'] ?? 12 }}h</span>
+                                </div>
+                                <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $uxItem['localized_name'] ?? $uxCode }}</div>
+                                <p class="text-[11px] text-zinc-700 dark:text-zinc-300">{{ $uxItem['localized_summary'] ?? '' }}</p>
+                                <div class="font-mono text-[10px] text-cyan-900 dark:text-cyan-300 font-bold">⚡ {{ $uxItem['local_tech_stack'] ?? $uxItem['animation_engine'] ?? '' }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-2.5">
+                        <div class="text-[10px] font-mono font-black uppercase text-emerald-900 dark:text-emerald-300">5 IRON ANTI-SLOP ANIMATION LAWS</div>
+                        @foreach($v10Laws as $law)
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                                <div class="font-black text-zinc-950 dark:text-zinc-100">[{{ $law['code'] }}] {{ $law['localized_title'] ?? '' }}</div>
+                                <div class="text-[11px] font-sans text-zinc-700 dark:text-zinc-300 mt-0.5">{{ $law['localized_rule'] ?? '' }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-sm space-y-2.5">
+                        <div class="text-[10px] font-mono font-black uppercase text-cyan-900 dark:text-cyan-300">6 CRITICAL SAAS COMMERCIAL &amp; GROWTH MODULES</div>
+                        @foreach($v10Saas as $mod)
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                                <div class="font-black text-zinc-950 dark:text-zinc-100">[{{ $mod['code'] }}] {{ $mod['localized_title'] ?? '' }}</div>
+                                <div class="text-[11px] font-sans text-zinc-700 dark:text-zinc-300 mt-0.5">{{ $mod['localized_summary'] ?? '' }}</div>
                             </div>
                         @endforeach
                     </div>

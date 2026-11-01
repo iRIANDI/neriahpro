@@ -289,6 +289,11 @@ class PosCommercialBridgeService
         // Each active v1.0 ERP screen contributes 2h UI/SOP wiring, each active hardware peripheral bridge 4h, each WS channel 2h
         $menuAndRuntimeHours = ($v1MenusCount * 2) + ($hardwareActiveCount * 4) + ($wsChannelsCount * 2);
         $extraCoDesignHours = (int) ($options['extra_codesign_man_hours'] ?? $schema['codesign_alignment_contract']['extra_codesign_man_hours'] ?? 0);
+        $publicUxHours = (int) ($schema['dual_zone_ui_contract']['zone_b_public_frontstage']['extra_man_hours'] ?? 0);
+        $publicUxPreset = (string) ($options['public_ux_preset']
+            ?? $schema['dual_zone_ui_contract']['zone_b_public_frontstage']['selected_public_ux_preset']
+            ?? $schema['project_metadata']['public_ux_preset']
+            ?? '');
 
         $rawHours = ($tablesCount * $hoursPerTable)
             + ($statesCount * $hoursPerState)
@@ -296,6 +301,7 @@ class PosCommercialBridgeService
             + ($integrationsCount * $hoursPerIntegration)
             + $menuAndRuntimeHours
             + $extraCoDesignHours
+            + $publicUxHours
             + $baseSetupHours;
 
         $effectiveManHours = (int) ceil($rawHours * $stackMultiplier);
@@ -338,6 +344,9 @@ class PosCommercialBridgeService
             'decisions_count' => count($decisions),
         ];
         sort($canonicalPayload['primitives']);
+        if ($publicUxPreset !== '') {
+            $canonicalPayload['public_ux_preset'] = $publicUxPreset;
+        }
         if ($extraCoDesignHours > 0) {
             $canonicalPayload['extra_codesign_man_hours'] = $extraCoDesignHours;
         }
@@ -1205,6 +1214,15 @@ class PosCommercialBridgeService
             'signer_ip' => $signerIp,
         ])->saveQuietly();
 
+        // Bagian 1 (v10.0): Auto-issue Telemetry-Backed Verified Architecture Receipt Testimonial upon BAST Sign-Off!
+        $verifiedTestimonial = null;
+        if ($posProject && $posProject->exists) {
+            $verifiedTestimonial = \App\Services\Saas\PosSaasCommercialEngineService::issueVerifiedArchitectureReceiptTestimonial(
+                $posProject,
+                'MITRA_BAST_SIGNED'
+            );
+        }
+
         AuditLog::record(
             action: 'uat_signed_off_and_digital_bast_issued',
             model: $bastDoc,
@@ -1218,6 +1236,7 @@ class PosCommercialBridgeService
             'bast' => $bastRecord,
             'document_id' => $bastDoc->id,
             'uat' => $uat,
+            'verified_testimonial_id' => $verifiedTestimonial?->id,
         ];
     }
 }

@@ -33,6 +33,12 @@ import {
   ExternalLink,
   ShoppingBag
 } from 'lucide-react';
+import {
+  normalizeCountryZones,
+  sanitizeStrictEmailInput,
+  sanitizePhoneLocalDigitsInput,
+  COUNTRY_ZONES_TEMPLATE,
+} from '../utils/inputHygiene';
 
 /**
  * Concrete Package Registry for fundamental architectural consistency.
@@ -148,9 +154,11 @@ export default function ArchitecturePricingIsland({
   featureFlags = {},
   currentLocale = 'id',
   pricingSettings = {},
-  authUser = null
+  authUser = null,
+  countries = []
 }) {
   const isEn = currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
+  const countryList = normalizeCountryZones(countries || COUNTRY_ZONES_TEMPLATE);
 
   // Dynamic feature flag & admin toggle for CV Pro module switcher
   const isCvProEnabled = Boolean(featureFlags?.enable_cv_pro) && Boolean(featureFlags?.pricing_show_cv_tab);
@@ -422,6 +430,22 @@ export default function ArchitecturePricingIsland({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'email') {
+      setFormData(prev => ({ ...prev, email: sanitizeStrictEmailInput(value) }));
+      return;
+    }
+    if (name === 'phone') {
+      setFormData(prev => ({ ...prev, phone: sanitizePhoneLocalDigitsInput(value, prev.country_code) }));
+      return;
+    }
+    if (name === 'country_code') {
+      setFormData(prev => ({
+        ...prev,
+        country_code: value,
+        phone: sanitizePhoneLocalDigitsInput(prev.phone, value),
+      }));
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -4503,20 +4527,21 @@ return match (true) {
                           onChange={handleInputChange}
                           className="bg-zinc-100 dark:bg-zinc-700 border border-r-0 border-zinc-300 dark:border-zinc-600 p-2 text-xs font-mono font-bold rounded-none"
                         >
-                          <option value="+62">+62</option>
-                          <option value="+65">+65</option>
-                          <option value="+1">+1</option>
-                          <option value="+44">+44</option>
-                          <option value="+81">+81</option>
+                          {countryList.map((zone) => (
+                            <option key={`${zone.iso}-${zone.dial_code}`} value={zone.dial_code}>
+                              {zone.flag} {zone.dial_code} ({zone.iso})
+                            </option>
+                          ))}
                         </select>
                         <input
                           type="tel"
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
+                          inputMode="numeric"
                           placeholder="8123456789"
                           required
-                          className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-mono"
+                          className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-mono tabular-nums"
                         />
                       </div>
                       {isPaidSelfService && (

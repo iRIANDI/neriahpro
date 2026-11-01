@@ -430,6 +430,8 @@ class PosAgentShieldAndCoDesignCatalog
         $sectorCode = (string) ($schema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL');
         $uiCode = (string) ($schema['visual_frontend_ui_contract']['selected_variant_code'] ?? 'UI_01A_POS_SPLIT_TERMINAL');
         $shellCode = (string) ($schema['visual_frontend_ui_contract']['navigation_shell_code'] ?? 'SIDEBAR_ERP_DENSE');
+        $publicUxCode = (string) ($schema['dual_zone_ui_contract']['zone_b_public_frontstage']['selected_public_ux_preset'] ?? 'UX_F2_KINETIC_ANIWALL');
+        $publicUxName = (string) ($schema['dual_zone_ui_contract']['zone_b_public_frontstage']['preset_name'] ?? 'Kinetic Aniwall');
         $stackCode = (string) ($schema['project_metadata']['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH');
         $textDir = (string) ($schema['project_metadata']['text_direction'] ?? 'ltr');
         $tablesCount = count((array) ($schema['data_dictionary'] ?? []));
@@ -542,6 +544,22 @@ class PosAgentShieldAndCoDesignCatalog
                             ? 'Implement ESC/POS 58mm/80mm Thermal Receipt + Page-Break-Proof Official A4 PDF with local SHA-256 SVG QR'
                             : 'Implementasi Cetak Struk Thermal 58mm/80mm ESC/POS + Dokumen Resmi A4 anti-terpotong bersegel QR SVG SHA-256 lokal',
                         'deliverable' => 'thermal-and-official-a4.blade.php',
+                    ],
+                    [
+                        'task_code' => 'TSK-304',
+                        'role' => 'Public Front-Stage & Motion Engineer',
+                        'title' => $loc === 'en'
+                            ? "Build Zone B Public Front-Stage [{$publicUxCode}: {$publicUxName}] + PRIMITIVE_VERIFIED_SOCIAL_PROOF Aniwall obeying 5 Iron GPU Animation Laws (0% CDN, CLS=0.00)"
+                            : "Bangun Zona B Public Front-Stage [{$publicUxCode}: {$publicUxName}] + PRIMITIVE_VERIFIED_SOCIAL_PROOF Aniwall patuh 5 Hukum Animasi GPU (0% CDN, CLS=0.00)",
+                        'deliverable' => "Zone B {$publicUxCode} + VerifiedTestimonialAniwall",
+                    ],
+                    [
+                        'task_code' => 'TSK-305',
+                        'role' => 'UX & Form Integrity Engineer',
+                        'title' => $loc === 'en'
+                            ? 'Enforce Strict Email Chars, Regional Thousand Separators (1.000/1,000) & config/country_zones.php Phone Selector with instant leading-0 strip'
+                            : 'Tegakkan Filter Karakter Email Murni, Pemisah Ribuan Regional (1.000/1,000) & Country Zone config/country_zones.php dengan hapus instan angka 0 awal',
+                        'deliverable' => 'InputHygieneStandard + country_zones.php',
                     ],
                 ],
             ],

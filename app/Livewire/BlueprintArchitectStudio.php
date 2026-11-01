@@ -12,10 +12,13 @@ use App\Services\BlueprintDoctorService;
 use App\Services\BlueprintSlopScannerService;
 use App\Services\PosCommercialBridgeService;
 use App\Services\ProjectOsBlueprintCompilerService;
+use App\Services\Saas\PosSaasCommercialEngineService;
 use App\Services\ScaffoldGeneratorService;
 use App\Services\Security\DocumentThreatSanitizerService;
 use App\Services\TopologicalPromptChunker;
+use App\Support\InputHygieneStandard;
 use App\Support\PosAgentShieldAndCoDesignCatalog;
+use App\Support\PosDualZoneFrontendAndSaasCatalog;
 use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosInclusiveCommercialCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
@@ -58,6 +61,7 @@ class BlueprintArchitectStudio extends Component
     public string $personaMode = PosInclusiveCommercialCatalog::PERSONA_ARCHITECT_PRO;
     public int $storyboardStep = 1;
     public string $selectedUiVariant = '';
+    public string $publicUxPreset = '';
     public string $navigationShell = '';
     public string $outputLocale = 'id';
     public bool $whiteLabelEnabled = false;
@@ -174,6 +178,11 @@ class BlueprintArchitectStudio extends Component
             $this->selectedUiVariant = strtoupper(trim($queryUiVariant));
         }
 
+        $queryPubUx = (string) request()->query('public_ux', '');
+        if ($queryPubUx !== '') {
+            $this->publicUxPreset = PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset($queryPubUx, $this->sectorCode);
+        }
+
         $queryShell = (string) request()->query('shell', '');
         if ($queryShell !== '') {
             $this->navigationShell = strtoupper(trim($queryShell));
@@ -188,6 +197,9 @@ class BlueprintArchitectStudio extends Component
             $uiDefault = PosInclusiveCommercialCatalog::visualUiContractForSector($this->sectorCode, null, null, $this->outputLocale);
             $this->selectedUiVariant = (string) ($uiDefault['selected_variant_code'] ?? 'UI_01A_POS_SPLIT_TERMINAL');
             $this->navigationShell = (string) ($uiDefault['navigation_shell']['code'] ?? 'FULLSCREEN_OPERATIONAL_KIOSK');
+        }
+        if ($this->publicUxPreset === '') {
+            $this->publicUxPreset = PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($this->sectorCode);
         }
 
         $queryTab = strtolower(trim((string) request()->query('tab', '')));
@@ -236,6 +248,9 @@ class BlueprintArchitectStudio extends Component
             if (! empty($posProject->selected_ui_variant)) {
                 $this->selectedUiVariant = (string) $posProject->selected_ui_variant;
             }
+            if (! empty($posProject->public_ux_preset)) {
+                $this->publicUxPreset = (string) $posProject->public_ux_preset;
+            }
             if (! empty($posProject->navigation_shell)) {
                 $this->navigationShell = (string) $posProject->navigation_shell;
             }
@@ -258,6 +273,9 @@ class BlueprintArchitectStudio extends Component
         $meta = is_array($blueprint->user_metadata) ? $blueprint->user_metadata : [];
         if ($this->selectedUiVariant === '' && ! empty($meta['selected_ui_variant'])) {
             $this->selectedUiVariant = (string) $meta['selected_ui_variant'];
+        }
+        if ($this->publicUxPreset === '' && ! empty($meta['public_ux_preset'])) {
+            $this->publicUxPreset = (string) $meta['public_ux_preset'];
         }
         if ($this->navigationShell === '' && ! empty($meta['navigation_shell'])) {
             $this->navigationShell = (string) $meta['navigation_shell'];
@@ -295,6 +313,9 @@ class BlueprintArchitectStudio extends Component
             $uiDefault = PosInclusiveCommercialCatalog::visualUiContractForSector($this->sectorCode, null, null, $this->outputLocale);
             $this->selectedUiVariant = (string) ($uiDefault['selected_variant_code'] ?? '');
             $this->navigationShell = (string) ($uiDefault['navigation_shell']['code'] ?? '');
+        }
+        if ($this->publicUxPreset === '') {
+            $this->publicUxPreset = PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($this->sectorCode);
         }
     }
 
@@ -376,6 +397,23 @@ class BlueprintArchitectStudio extends Component
         $uiDefault = PosInclusiveCommercialCatalog::visualUiContractForSector($normalized, null, null, $this->outputLocale);
         $this->selectedUiVariant = (string) ($uiDefault['selected_variant_code'] ?? '');
         $this->navigationShell = (string) ($uiDefault['navigation_shell']['code'] ?? '');
+        $this->publicUxPreset = PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($normalized);
+    }
+
+    public function selectPublicUxPreset(string $presetCode): void
+    {
+        $this->publicUxPreset = PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset($presetCode, $this->sectorCode);
+        if ($this->posProjectId) {
+            $proj = PosProject::query()->find($this->posProjectId);
+            if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'public_ux_preset')) {
+                $proj->forceFill(['public_ux_preset' => $this->publicUxPreset])->saveQuietly();
+            }
+        }
+    }
+
+    public function updatedBastSignerEmail(string $value): void
+    {
+        $this->bastSignerEmail = InputHygieneStandard::sanitizeStrictEmail($value);
     }
 
     public function switchPersonaMode(string $mode): void
@@ -465,6 +503,7 @@ class BlueprintArchitectStudio extends Component
                     'stack_preset' => $this->stackCode,
                     'persona_mode' => $this->personaMode,
                     'selected_ui_variant' => $this->selectedUiVariant ?: null,
+                    'public_ux_preset' => $this->publicUxPreset ?: PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($this->sectorCode),
                     'navigation_shell' => $this->navigationShell ?: null,
                     'output_locale' => $this->outputLocale,
                 ],
@@ -481,6 +520,7 @@ class BlueprintArchitectStudio extends Component
             'stack_preset' => $this->stackCode,
             'persona_mode' => $this->personaMode,
             'selected_ui_variant' => $this->selectedUiVariant ?: null,
+            'public_ux_preset' => $this->publicUxPreset ?: PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($this->sectorCode),
             'navigation_shell' => $this->navigationShell ?: null,
             'output_locale' => $this->outputLocale,
             'isolation_token' => $this->workspaceIsolationId,
@@ -640,6 +680,12 @@ class BlueprintArchitectStudio extends Component
             $proj = PosProject::query()->find($this->posProjectId);
             if ($proj && \Illuminate\Support\Facades\Schema::hasColumn('pos_projects', 'phase_progress_json')) {
                 $proj->forceFill(['phase_progress_json' => $this->phaseProgress])->saveQuietly();
+                if ($phaseNum === 6 && ($this->phaseProgress[$key]['status'] ?? '') === 'VERIFIED') {
+                    app(PosSaasCommercialEngineService::class)->issueVerifiedArchitectureReceiptTestimonial(
+                        $proj,
+                        'RETAIL_PHASE6_VERIFIED'
+                    );
+                }
             }
         }
     }
@@ -708,6 +754,7 @@ class BlueprintArchitectStudio extends Component
             'custom_decision_rules' => $this->customDecisionRules,
             'persona_mode' => $this->personaMode,
             'selected_ui_variant' => $this->selectedUiVariant ?: null,
+            'public_ux_preset' => $this->publicUxPreset ?: PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($this->sectorCode),
             'navigation_shell' => $this->navigationShell ?: null,
             'output_locale' => $this->outputLocale,
             'white_label_branding' => [
@@ -796,6 +843,7 @@ class BlueprintArchitectStudio extends Component
             'env_blueprint' => ScaffoldGeneratorService::generateEnvBlueprintFile($schema, $this->projectName),
             'claude_settings_json' => DocumentThreatSanitizerService::renderClaudeSettingsJson($schema),
             'dependency_manifest' => (string) json_encode($schema['approved_dependency_manifest'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            'dual_zone_md' => PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($schema),
             default => (string) ($selectedPhaseObj['prompt'] ?? ''),
         };
 
@@ -835,6 +883,9 @@ class BlueprintArchitectStudio extends Component
             'cveAlerts' => $schema['living_cve_security_alerts'] ?? PosInclusiveCommercialCatalog::livingCveSecurityAlerts($this->stackCode, $this->sectorCode),
             'communityMarketplace' => PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
             'visualUiContract' => $schema['visual_frontend_ui_contract'] ?? [],
+            'dualZoneUiContract' => $schema['dual_zone_ui_contract'] ?? [],
+            'publicUxPresets' => PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets('id'),
+            'fiveIronLaws' => PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws('id'),
             'jurisdictionProfile' => $schema['jurisdiction_compliance_profile'] ?? [],
             'codesignContract' => $codesignContract,
             'agentShieldContract' => $schema['agentshield_security_contract'] ?? [],
@@ -842,7 +893,7 @@ class BlueprintArchitectStudio extends Component
             'cryptoAuditContract' => $schema['cryptographic_audit_explorer_contract'] ?? [],
             'worldClassTaskMatrix' => $schema['world_class_task_matrix'] ?? [],
         ])->layout('components.layouts.studio', [
-            'title' => 'Project OS Architect Studio v9.0 (AgentShield, Co-Design Room, 36 Visual UI & 15-Pillar Freeze)',
+            'title' => 'Project OS Architect Studio v10.0 (Dual-Zone UX, Verified Aniwall, AgentShield & 15-Pillar Freeze)',
         ]);
     }
 
@@ -1166,7 +1217,7 @@ class BlueprintArchitectStudio extends Component
         if ($bp) {
             $res = $bridge->signOffUatAndIssueBast($bp, $proj, [
                 'signer_name' => $this->bastSignerName ?: 'PIC Klien Resmi',
-                'signer_email' => $this->bastSignerEmail ?: 'client@neriahpro.com',
+                'signer_email' => InputHygieneStandard::sanitizeStrictEmail($this->bastSignerEmail ?: 'client@neriahpro.com'),
                 'mark_all_passed' => true,
             ]);
             if (! empty($res['bast'])) {

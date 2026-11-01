@@ -31,6 +31,11 @@ use Filament\Panel;
     'two_factor_recovery_codes',
     'two_factor_confirmed_at',
     'two_factor_required',
+    'referral_code',
+    'referred_by_user_id',
+    'saas_subscription_tier',
+    'saas_subscription_expires_at',
+    'saas_project_quota',
 ])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements FilamentUser
@@ -50,6 +55,8 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'notification_preferences' => 'array',
             'profile_metadata' => 'array',
+            'saas_subscription_expires_at' => 'datetime',
+            'saas_project_quota' => 'integer',
         ];
     }
 

@@ -31,8 +31,14 @@ class CustomerAuthController extends Controller
             $mode = 'login';
         }
 
+        if ($request->filled('email')) {
+            $request->merge([
+                'email' => \App\Support\InputHygieneStandard::sanitizeStrictEmail((string) $request->input('email')),
+            ]);
+        }
+
         $rules = [
-            'email' => 'required|email|max:255',
+            'email' => ['required', 'email', 'max:255', 'regex:/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/'],
             'mode' => 'nullable|string|in:login,register,forgot_password',
         ];
 
@@ -297,6 +303,18 @@ class CustomerAuthController extends Controller
         if (!$user->email_verified_at) {
             $user->email_verified_at = now();
             $user->save();
+        }
+
+        // SaaS Commercial Module #2: Ensure Referral Code + Record Referral Attribution (?ref=CODE)
+        try {
+            $saasEngine = app(\App\Services\Saas\PosSaasCommercialEngineService::class);
+            $saasEngine->ensureUserReferralCode($user);
+            $refCode = (string) ($request->input('ref_code') ?: session('neriah_ref_code', $request->cookie('neriah_ref_code', '')));
+            if ($refCode !== '') {
+                $saasEngine->recordReferralAttribution($user, $refCode);
+            }
+        } catch (\Throwable $refErr) {
+            \Log::warning('Referral attribution skipped: ' . $refErr->getMessage());
         }
 
         // Authenticate into session

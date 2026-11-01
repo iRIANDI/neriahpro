@@ -114,7 +114,7 @@
             'csrfToken' => csrf_token(),
             'submitUrl' => url('/api/vision-blueprint'),
             'initialData' => $initialData ?? [],
-            'countries' => config('countries', []),
+            'countries' => \App\Support\InputHygieneStandard::countryZonesForFrontend(),
         ])
     </main>
 

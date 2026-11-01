@@ -371,6 +371,8 @@ class AuditLog extends Model
 
         return [
             'status' => $isIntact ? 'VERIFIED_INTACT' : 'TAMPER_ALERT_DETECTED',
+            'valid' => $isIntact,
+            'is_valid' => $isIntact,
             'is_intact' => $isIntact,
             'is_chain_valid' => $isIntact,
             'total_scanned' => $totalScanned,
@@ -387,9 +389,27 @@ class AuditLog extends Model
         ];
     }
 
+    /**
+     * Alias for verifyChainSummary() providing O(1) cursor-based SHA-256 chain verification.
+     *
+     * @param  array<string, mixed>|int  $filters
+     * @return array<string, mixed>
+     */
+    public static function verifyChainIntegrity(array|int $filters = [], int $maxScan = 2500): array
+    {
+        return static::verifyChainSummary($filters, $maxScan);
+    }
+
     public static function inferCategory(string $action, ?string $actorType, ?string $modelClass, ?string $description): string
     {
         $haystack = strtolower($action . ' ' . ($modelClass ?? '') . ' ' . ($description ?? ''));
+
+        if (str_contains($haystack, 'aniwall') || str_contains($haystack, 'verified_testimonial') || str_contains($haystack, 'posverifiedtestimonial')) {
+            return 'verified_aniwall_v10';
+        }
+        if (str_contains($haystack, 'impact_grant') || str_contains($haystack, 'affiliate') || str_contains($haystack, 'finders_fee') || str_contains($haystack, 'saas_billing') || str_contains($haystack, 'workspace_member')) {
+            return 'saas_commercial_v10';
+        }
 
         if (str_contains($haystack, 'agentshield') || str_contains($haystack, 'slopquatting') || str_contains($haystack, 'prompt_injection') || str_contains($haystack, 'rag_document_threat') || str_contains($haystack, 'dependency_manifest')) {
             return 'agentshield_security';

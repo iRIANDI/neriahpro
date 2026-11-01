@@ -333,9 +333,9 @@ class ProjectOsV9AgentShieldCoDesignAndCryptoAuditTest extends TestCase
 
     public function test_36_native_ai_tools_rbac_isolation_pos_sector_resource_and_tier1_bilingual_parity(): void
     {
-        // 1. 36 Native AI Tools registered & synced with RAG/CAG/KAG
+        // 1. 40 Native AI Tools registered & synced with RAG/CAG/KAG
         $declarations = GeminiToolRegistry::getDeclarations();
-        $this->assertCount(36, $declarations);
+        $this->assertCount(40, $declarations);
         $toolNames = array_column($declarations, 'name');
         $this->assertContains('sanitize_and_audit_agentshield', $toolNames);
         $this->assertContains('manage_codesign_alignment_room', $toolNames);

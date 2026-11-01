@@ -63,6 +63,12 @@ class SuperAdminSeeder extends Seeder
         $executeDualKeyLockPerm = Permission::firstOrCreate(['name' => 'execute_dual_key_scope_lock', 'guard_name' => 'web']);
         $verifyCryptoAuditPerm = Permission::firstOrCreate(['name' => 'verify_crypto_audit_chain', 'guard_name' => 'web']);
         $export3SheetAuditPerm = Permission::firstOrCreate(['name' => 'export_3sheet_audit_xlsx', 'guard_name' => 'web']);
+        $manageVerifiedTestimonialsPerm = Permission::firstOrCreate(['name' => 'manage_verified_testimonials', 'guard_name' => 'web']);
+        $configureDualZoneUxPerm = Permission::firstOrCreate(['name' => 'configure_dual_zone_public_ux', 'guard_name' => 'web']);
+        $manageAffiliatePerm = Permission::firstOrCreate(['name' => 'manage_affiliate_commissions', 'guard_name' => 'web']);
+        $approveImpactGrantsPerm = Permission::firstOrCreate(['name' => 'approve_nonprofit_impact_grants', 'guard_name' => 'web']);
+        $manageOrgWorkspacesPerm = Permission::firstOrCreate(['name' => 'manage_organization_workspaces', 'guard_name' => 'web']);
+        $viewSaasHealthPulsePerm = Permission::firstOrCreate(['name' => 'view_saas_system_health_pulse', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
@@ -104,6 +110,12 @@ class SuperAdminSeeder extends Seeder
             $executeDualKeyLockPerm,
             $verifyCryptoAuditPerm,
             $export3SheetAuditPerm,
+            $manageVerifiedTestimonialsPerm,
+            $configureDualZoneUxPerm,
+            $manageAffiliatePerm,
+            $approveImpactGrantsPerm,
+            $manageOrgWorkspacesPerm,
+            $viewSaasHealthPulsePerm,
         ]);
 
         $developerRole->givePermissionTo([
@@ -136,6 +148,9 @@ class SuperAdminSeeder extends Seeder
             $executeDualKeyLockPerm,
             $verifyCryptoAuditPerm,
             $export3SheetAuditPerm,
+            $manageVerifiedTestimonialsPerm,
+            $configureDualZoneUxPerm,
+            $viewSaasHealthPulsePerm,
         ]);
 
         // Grant Due Diligence Read-Only permissions to Investor & Superadmin
@@ -152,6 +167,7 @@ class SuperAdminSeeder extends Seeder
             $verifyCryptoAuditPerm,
             $export3SheetAuditPerm,
             $participateCoDesignPerm,
+            $viewSaasHealthPulsePerm,
         ]);
 
         // Retail & Partner Clients can export CLI bootstrapper, print/ops specs, connect MCP bridge, & manage iterative Delta CRs for their own licensed blueprints
@@ -166,6 +182,8 @@ class SuperAdminSeeder extends Seeder
             $compileSymbolDagPerm,
             $generateClientSopPerm,
             $participateCoDesignPerm,
+            $configureDualZoneUxPerm,
+            $manageOrgWorkspacesPerm,
         ]);
         $clientPartnerRole->givePermissionTo([
             $cliBootstrapPerm,
@@ -185,6 +203,8 @@ class SuperAdminSeeder extends Seeder
             $generateClientSopPerm,
             $participateCoDesignPerm,
             $executeDualKeyLockPerm,
+            $configureDualZoneUxPerm,
+            $manageOrgWorkspacesPerm,
         ]);
 
         // 1. Primary Superadmin (Founder & Chief Architect - Yoseph Iriandi Tambunan)

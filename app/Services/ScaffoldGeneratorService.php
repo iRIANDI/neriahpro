@@ -117,6 +117,7 @@ class ScaffoldGeneratorService
             '.agents/DAY2_OPERATIONS_AND_SECURITY.md' => ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($universalSchema),
             '.agents/DECISION_TABLES_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($universalSchema),
             '.agents/SYNTAX_LOCK_2026.md' => \App\Support\PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($universalSchema),
+            '.agents/DUAL_ZONE_PUBLIC_UX_AND_INPUT_HYGIENE.md' => \App\Support\PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($universalSchema),
             '.agents/TROUBLESHOOTING_INSTINCTS.md' => \App\Support\PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($universalSchema),
             '.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md' => \App\Support\PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($universalSchema, 'id'),
             '.agents/CLIENT_SOP_AND_TRAINING_MANUAL.en.md' => \App\Support\PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($universalSchema, 'en'),

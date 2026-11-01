@@ -176,6 +176,23 @@ class BlueprintSlopScannerService
             $violations[] = 'Kompilasi ulang blueprint ke v7.0 untuk menyertakan 5 Elemen Dunia Nyata & 15 Pilar Architectural Freeze.';
         }
 
+        // Check 9: Project OS v10.0 — Dual-Zone UI Architecture (Zone A Operational + Zone B Public UX), 5 Iron Animation Laws & Universal Input Hygiene
+        $hasDualZoneV10 = ! empty($schema['dual_zone_ui_contract']['zone_b_public_frontstage']['public_ux_preset_code'])
+            && count((array) ($schema['dual_zone_ui_contract']['five_iron_animation_laws'] ?? [])) === 5
+            && ! empty($schema['input_hygiene_contract']['phone_country_zone']['strip_leading_zero_on_first_keystroke']);
+        $checks[] = [
+            'id' => 'SCAN_09_DUAL_ZONE_UI_AND_INPUT_HYGIENE',
+            'code' => 'SCAN_09_DUAL_ZONE_UI_AND_INPUT_HYGIENE',
+            'label' => 'Dual-Zone UI (Zone A Crisp + Zone B UX_F1..UX_F6), 5 Hukum Besi Animasi Anti-Slop & Universal Input Hygiene',
+            'passed' => $hasDualZoneV10,
+            'detail' => $hasDualZoneV10
+                ? 'Zone B ' . ($schema['dual_zone_ui_contract']['zone_b_public_frontstage']['public_ux_preset_code'] ?? 'UX_F2') . ', 5 Hukum Besi Animasi GPU/CLS=0, & Hygiene Email/Ribuan/Country-Zone (hapus 0 depan) aktif.'
+                : 'Kompilasi ulang blueprint ke v10.0 untuk menyertakan Dual-Zone UI Contract & Universal Input Hygiene.',
+        ];
+        if (! $hasDualZoneV10) {
+            $violations[] = 'Kompilasi ulang blueprint ke v10.0 untuk menyertakan Dual-Zone UI (Zone A + Zone B UX_F1..F6) & Universal Input Hygiene.';
+        }
+
         $passedCount = count(array_filter($checks, fn ($c) => $c['passed']));
         $score = (int) round(($passedCount / max(1, count($checks))) * 100);
 
@@ -224,6 +241,7 @@ class BlueprintSlopScannerService
             ['pattern' => '/(?:->|::)paginate\s*\(/', 'rule' => 'OFFSET_PAGINATION_SLOP', 'fix' => 'Ganti `->paginate()` / `::paginate()` dengan `->orderBy(\'id\', \'desc\')->cursorPaginate()` untuk kompleksitas O(1).'],
             ['pattern' => '/if\s*\([^)]+\)\s*\{[^{}]*if\s*\([^)]+\)\s*\{[^{}]*if\s*\([^)]+\)\s*\{/s', 'rule' => 'NESTED_IF_ELSE_SPAGHETTI', 'fix' => 'Ganti percabangan `if (...) { if (...) { if (...)` bersarang dengan `DeterministicDecisionMatrix` berbasis PHP 8.4+ `match()` / tabel kebenaran data-driven.'],
             ['pattern' => '/\bwire:poll(?:\.(?:[1-9]|[12][0-9])s|\.\d+ms)?(?![0-9a-zA-Z\.])/', 'rule' => 'HIGH_FREQ_WIRE_POLL_SLOP', 'fix' => 'DILARANG menggunakan `wire:poll` frekuensi tinggi (`< 30s`) yang membebani CPU PostgreSQL; ganti ke Event-Driven WebSocket (`Laravel Reverb` / `Soketi`) pada Private Tenant Channel `organization.{ulid}.{module}`!'],
+            ['pattern' => '/(?:@keyframes\s+[a-zA-Z0-9_\-]+\s*\{[\s\S]{0,600}?\b(?:top|left|right|bottom|margin-top|margin-left|width|height)\s*:|\btransition\s*:\s*[^;{}]*\b(?:top|left|right|bottom|margin|width|height)\b)/i', 'rule' => 'LAYOUT_REFLOW_ANIMATION_SLOP', 'fix' => 'Patuhi 5 Hukum Besi Animasi Anti-Slop: DILARANG menganimasikan `top/left/width/height/margin` di `@keyframes` maupun `transition:`; gunakan khusus GPU Compositor (`transform: translate3d(...)`, `scale(...)`, `opacity`) + `@media (prefers-reduced-motion: reduce)`!'],
             ['pattern' => '/\bFilament\\\\Forms\\\\(?:Form|Get|Set)\b|\bLocaleSwitcher::make\s*\(/', 'rule' => 'SYNTAX_OR_LOCALE_SWITCHER_DRIFT_2026', 'fix' => 'Patuhi `.agents/SYNTAX_LOCK_2026.md`: gunakan `Filament\\Schemas\\Schema`, `Filament\\Schemas\\Components\\Utilities\\Get`/`Set`, dan ganti `LocaleSwitcher::make()` dengan `TranslatableTabs::make()` in-place!'],
         ];
 
@@ -231,6 +249,7 @@ class BlueprintSlopScannerService
             if (preg_match($r['pattern'], $code)) {
                 $violations[] = [
                     'rule' => $r['rule'],
+                    'code' => $r['rule'],
                     'fix' => $r['fix'],
                 ];
             }

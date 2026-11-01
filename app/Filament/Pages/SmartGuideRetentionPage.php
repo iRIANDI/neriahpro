@@ -47,8 +47,8 @@ class SmartGuideRetentionPage extends Page
     public function getSubheading(): string | Htmlable | null
     {
         return app()->getLocale() === 'en'
-            ? 'Executive Business & Engineering Playbook (Project OS v9.0 Ultimate): 98%+ Margin Unit Economics, AgentShield 5-Layer AI Defense, Co-Design Dual-Key Scope Lock, SHA-256 3-Sheet Audit Explorer & 36 Visual Sector UIs.'
-            : 'Dokumentasi Rahasia Bisnis & Operasional Neriah Pro (Project OS v9.0 Ultimate): Validasi Unit Economics 98%+ Margin, AgentShield 5-Layer AI Defense, Co-Design Dual-Key Scope Lock, SHA-256 3-Sheet Audit Explorer & 36 Visual UI Sektor.';
+            ? 'Executive Business & Engineering Playbook (Project OS v10.0 Ultimate): 98%+ Margin Unit Economics, Dual-Zone Enterprise UI (36 Back-Stage + 6 Front-Stage UX), Verified Aniwall, 6 SaaS Growth Modules, AgentShield & 40 Native AI Tools.'
+            : 'Dokumentasi Rahasia Bisnis & Operasional Neriah Pro (Project OS v10.0 Ultimate): Validasi Unit Economics 98%+ Margin, Dual-Zone Enterprise UI (36 UI Back-Stage + 6 UX Publik), Aniwall Terverifikasi, 6 Modul SaaS, AgentShield & 40 Native AI Tools.';
     }
 
     public function getViewData(): array
@@ -86,6 +86,9 @@ class SmartGuideRetentionPage extends Page
                 'SECTOR_01_COMMERCE_OMNICHANNEL'
             ),
             'v9SectorAuditPresets' => \App\Support\PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets(),
+            'v10PublicUxPresets' => \App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets('id'),
+            'v10FiveIronLaws' => \App\Support\PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws('id'),
+            'v10SixSaasModules' => \App\Support\PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules('id'),
             'guidedJourneySteps' => \App\Services\PosCommercialBridgeService::guidedClientJourneySteps(),
             'satuPintuPackages' => \App\Support\PricingRegistry::getSatuPintuCatalog(),
             'estimatorConfig' => \App\Support\PricingRegistry::getCommercialEstimatorConfig(),

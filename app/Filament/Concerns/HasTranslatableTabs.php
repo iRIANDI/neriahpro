@@ -29,6 +29,9 @@ trait HasTranslatableTabs
             'summary',
             'function_guarantee',
             'technical_contract',
+            'client_role',
+            'quote',
+            'case_study_summary',
         ];
     }
 

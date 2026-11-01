@@ -291,10 +291,10 @@ class ProjectOsV7RealWorldFreezeAndTier1LocaleTest extends TestCase
         $this->assertTrue($admin->can('manage_15_architecture_pillars'));
         $this->assertFalse($reviewer->can('manage_15_architecture_pillars'));
 
-        // Subsystem #3: 30 Native Tools & valid JSON object map for every Gemini tool declaration (zero HTTP 400 list-to-map bug)
+        // Subsystem #3: 40 Native Tools & valid JSON object map for every Gemini tool declaration (zero HTTP 400 list-to-map bug)
         $declarations = GeminiToolRegistry::getDeclarations();
-        $this->assertCount(36, $declarations);
-        $this->assertCount(36, GeminiToolRegistry::getOpenAiTools());
+        $this->assertCount(40, $declarations);
+        $this->assertCount(40, GeminiToolRegistry::getOpenAiTools());
 
         foreach ($declarations as $idx => $decl) {
             $encoded = json_encode($decl['parameters']);

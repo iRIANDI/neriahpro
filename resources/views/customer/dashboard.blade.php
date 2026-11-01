@@ -704,6 +704,21 @@
                     RETENSI
                 </span>
             </button>
+            <!-- Tab 8: Affiliate, Multi-Seat Workspace & Impact Grant (v10.0) -->
+            <button
+                type="button"
+                @click="setTab('saas_growth')"
+                :class="currentTab === 'saas_growth'
+                    ? 'bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 font-bold shadow-xs'
+                    : 'bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white border border-zinc-200 dark:border-zinc-800'"
+                class="px-3.5 py-2 transition rounded-none uppercase flex items-center gap-2 whitespace-nowrap cursor-pointer"
+            >
+                <span>🤝</span>
+                <span>{{ $isEn ? 'Affiliate, Team & Grant' : 'Afiliasi, Tim & Hibah' }}</span>
+                <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 text-[10px] font-black">
+                    v10.0
+                </span>
+            </button>
         </nav>
 
         <!-- =================================================================== -->
@@ -1994,12 +2009,14 @@
                                     </div>
                                 </div>
 
-                                <!-- Phone Number Input -->
+                                <!-- Phone Number Input (Instant Leading-0 Removal) -->
                                 <input 
                                     type="tel" 
                                     x-model="profilePhone" 
+                                    @input="profilePhone = String(profilePhone || '').replace(/\D/g, '').replace(/^0+/, '')"
+                                    inputmode="numeric"
                                     placeholder="81234567890" 
-                                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono text-xs focus:border-emerald-500 focus:outline-hidden rounded-none transition"
+                                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono tabular-nums text-xs focus:border-emerald-500 focus:outline-hidden rounded-none transition"
                                 >
                             </div>
                             <p class="text-[10px] text-zinc-500 font-sans">
@@ -2328,6 +2345,166 @@
                         Jika berkas digital rusak atau pengerjaan gagal memenuhi klausul kontrak, ajukan klaim pengembalian dana melalui email resmi: {{ \App\Models\CmsGlobalSetting::getVal('developer_support_email', 'support@neriahpro.com') }}.
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- PANE 8: AFFILIATE FINDER'S FEE, MULTI-SEAT TEAM & IMPACT GRANT v10  -->
+        <!-- =================================================================== -->
+        <div x-show="currentTab === 'saas_growth'" x-cloak class="space-y-6">
+            <!-- 1. Affiliate & High-Ticket Finder's Fee Card -->
+            <div class="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
+                            SAAS_MOD_02 // AFFILIATE &amp; MITRA FINDER'S FEE
+                        </span>
+                        <h2 class="text-xl font-black text-zinc-950 dark:text-white mt-2">
+                            {{ $isEn ? '20% Retail Commission + 7.5% Mitra Turnkey Finder\'s Fee' : 'Komisi 20% Lisensi Retail + 7,5% Finder\'s Fee Proyek Mitra' }}
+                        </h2>
+                    </div>
+                    <div class="font-mono text-xs tabular-nums bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 px-3 py-2">
+                        {{ $isEn ? 'Your Referral URL:' : 'Link Referral Anda:' }}
+                        <strong class="text-emerald-900 dark:text-emerald-300 select-all">{{ url('/?ref=' . ($referralCode ?? 'NPRO')) }}</strong>
+                    </div>
+                </div>
+
+                @if(($affiliateReferrals ?? collect())->isNotEmpty())
+                    <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-800">
+                        <table class="w-full text-left font-mono text-xs tabular-nums">
+                            <thead class="bg-zinc-100 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800">
+                                <tr>
+                                    <th class="px-3 py-2">Track</th>
+                                    <th class="px-3 py-2">Rate</th>
+                                    <th class="px-3 py-2">Gross (IDR)</th>
+                                    <th class="px-3 py-2">Commission (IDR)</th>
+                                    <th class="px-3 py-2">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($affiliateReferrals as $refRow)
+                                    <tr class="odd:bg-white dark:odd:bg-zinc-900 even:bg-zinc-50 dark:even:bg-zinc-950/60 border-b border-zinc-200 dark:border-zinc-800">
+                                        <td class="px-3 py-2 font-bold">{{ $refRow->conversion_track }}</td>
+                                        <td class="px-3 py-2">{{ number_format((float) $refRow->commission_rate_percent, 1) }}%</td>
+                                        <td class="px-3 py-2">Rp {{ number_format((int) $refRow->gross_transaction_idr, 0, ',', '.') }}</td>
+                                        <td class="px-3 py-2 font-black text-emerald-900 dark:text-emerald-300">Rp {{ number_format((int) $refRow->commission_amount_idr, 0, ',', '.') }}</td>
+                                        <td class="px-3 py-2">{{ $refRow->payout_status }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <p class="text-xs font-mono text-zinc-700 dark:text-zinc-300">
+                        {{ $isEn
+                            ? 'Share your referral link above. Every Retail license or Mitra Turnkey DP settled via your link automatically credits your ledger.'
+                            : 'Bagikan link referral di atas. Setiap pembelian Lisensi Retail atau pelunasan DP Proyek Mitra dari link Anda otomatis tercatat di buku besar komisi.' }}
+                    </p>
+                @endif
+            </div>
+
+            <!-- 2. Multi-Seat Workspace & 1-Click Non-Profit Impact Grant Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                 x-data="{
+                    wsName: @json($workspace->name ?? ($user->company_name ?: 'Agency Workspace')),
+                    wsHex: @json($workspace->brand_primary_hex ?? '#10b981'),
+                    inviteEmail: '',
+                    inviteRole: 'LEAD_ARCHITECT',
+                    grantOrgName: '',
+                    grantType: 'NGO',
+                    grantEmail: @json($user->email ?? ''),
+                    grantDial: '+62',
+                    grantPhone: '',
+                    grantBudgetDisplay: '',
+                    grantMission: '',
+                    async saveWorkspace() {
+                        const res = await fetch('/api/saas/workspaces', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: JSON.stringify({ name: this.wsName, brand_primary_hex: this.wsHex })
+                        });
+                        const data = await res.json();
+                        if (window.showToast) window.showToast({ type: data.success ? 'success' : 'error', title: 'WORKSPACE', message: data.message || 'Saved' });
+                    },
+                    async submitImpactGrant(e) {
+                        const fd = new FormData(e.target);
+                        fd.set('pic_email', this.grantEmail);
+                        fd.set('country_code', this.grantDial);
+                        fd.set('pic_phone', this.grantPhone);
+                        const res = await fetch('/api/saas/impact-grants', {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: fd
+                        });
+                        const data = await res.json();
+                        if (window.showToast) window.showToast({ type: data.success ? 'success' : 'error', title: 'IMPACT GRANT', message: data.message || 'Submitted' });
+                    }
+                 }">
+                <!-- Multi-Seat Agency White-Label Card -->
+                <div class="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-4">
+                    <span class="px-2 py-0.5 bg-zinc-100 text-zinc-950 border border-zinc-400 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-600 font-mono text-[10px] font-black uppercase">
+                        SAAS_MOD_03 // MULTI-SEAT &amp; WHITE-LABEL VAULT
+                    </span>
+                    <h3 class="text-base font-black text-zinc-950 dark:text-white">
+                        {{ $isEn ? 'Organization Team Seats & Brand Letterhead' : 'Workspace Tim Multi-Seat & Kop Surat White-Label' }}
+                    </h3>
+                    <div class="space-y-3 text-xs font-mono">
+                        <div>
+                            <label class="block font-bold mb-1">{{ $isEn ? 'Agency / Organization Name' : 'Nama Agensi / Organisasi' }}</label>
+                            <input type="text" x-model="wsName" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-none">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">{{ $isEn ? 'Primary Brand Accent Hex' : 'Warna Aksen Brand (Hex)' }}</label>
+                            <input type="text" x-model="wsHex" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-none">
+                        </div>
+                        <button type="button" @click="saveWorkspace()" class="px-4 py-2 bg-zinc-950 hover:bg-zinc-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white dark:text-zinc-950 font-black uppercase rounded-none cursor-pointer">
+                            {{ $isEn ? 'Save White-Label Vault' : 'Simpan Brankas White-Label' }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 1-Click Non-Profit Impact Grant Card -->
+                <form @submit.prevent="submitImpactGrant($event)" class="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-3 text-xs font-mono">
+                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 text-[10px] font-black uppercase">
+                        SAAS_MOD_04 // NON-PROFIT / NGO / ACADEMIC IMPACT GRANT
+                    </span>
+                    <h3 class="text-base font-black font-sans text-zinc-950 dark:text-white">
+                        {{ $isEn ? 'Apply for 100% Free Impact Grant Tier' : 'Ajukan Hibah 100% Gratis Yayasan / NGO / Akademik' }}
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <input type="text" name="organization_name" x-model="grantOrgName" required placeholder="{{ $isEn ? 'Foundation / NGO Name *' : 'Nama Yayasan / Kampus *' }}" class="px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-none">
+                        <select name="organization_type" x-model="grantType" class="px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-none">
+                            <option value="NGO">NGO / Non-Profit</option>
+                            <option value="RELIGIOUS">Religious / Rumah Ibadah</option>
+                            <option value="ACADEMIC">Academic / Kampus</option>
+                            <option value="SOCIAL_FOUNDATION">Yayasan Sosial</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">{{ $isEn ? 'Official PIC Email (Strict Email Characters) *' : 'Email Resmi PIC (Hanya Karakter Email) *' }}</label>
+                        <input type="email" name="pic_email" x-model="grantEmail" @input="grantEmail = String(grantEmail || '').replace(/[^a-zA-Z0-9._%+\-@]/g, '').toLowerCase()" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-none">
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">{{ $isEn ? 'PIC WhatsApp (Country Zone + Auto Strip 0) *' : 'WhatsApp PIC (Zona Negara + Hapus 0 Otomatis) *' }}</label>
+                        <div class="flex gap-1.5">
+                            <select x-model="grantDial" class="w-32 px-2 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-none">
+                                @foreach(($countryZones ?? []) as $cz)
+                                    <option value="{{ $cz['dial_code'] ?? '+62' }}">{{ $cz['flag'] ?? '🌐' }} {{ $cz['dial_code'] ?? '+62' }}</option>
+                                @endforeach
+                            </select>
+                            <input type="tel" x-model="grantPhone" @input="grantPhone = String(grantPhone || '').replace(/\D/g, '').replace(/^0+/, '')" inputmode="numeric" placeholder="81234567890" required class="flex-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 tabular-nums rounded-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">{{ $isEn ? 'Annual Beneficiaries (Regional Thousand Separator)' : 'Estimasi Penerima Manfaat (Pemisah Ribuan)' }}</label>
+                        <input type="text" name="annual_beneficiaries_display" x-model="grantBudgetDisplay" @input="let d = String(grantBudgetDisplay || '').replace(/\D/g, ''); grantBudgetDisplay = d ? d.replace(/\B(?=(\d{3})+(?!\d))/g, '{{ $isEn ? ',' : '.' }}') : '';" inputmode="numeric" placeholder="{{ $isEn ? '10,000' : '10.000' }}" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 tabular-nums rounded-none">
+                    </div>
+                    <textarea name="social_mission_summary" x-model="grantMission" rows="2" required placeholder="{{ $isEn ? 'Describe your social/educational mission...' : 'Jelaskan misi sosial/pendidikan yayasan Anda...' }}" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-none"></textarea>
+                    <input type="file" name="legality_document" accept=".pdf,.png,.jpg,.jpeg" class="w-full text-[11px]">
+                    <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black uppercase rounded-none cursor-pointer">
+                        {{ $isEn ? 'Submit Impact Grant Verification ->' : 'Ajukan Verifikasi Hibah Non-Profit ->' }}
+                    </button>
+                </form>
             </div>
         </div>
 

@@ -330,6 +330,9 @@
             <a href="#sec-v9-agentshield-codesign-audit" @click.prevent="scrollTo('sec-v9-agentshield-codesign-audit')" :class="activeSection === 'sec-v9-agentshield-codesign-audit' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 16. <span x-text="t[lang].nav_v9_agentshield"></span>
             </a>
+            <a href="#sec-v10-dual-zone-aniwall-saas" @click.prevent="scrollTo('sec-v10-dual-zone-aniwall-saas')" :class="activeSection === 'sec-v10-dual-zone-aniwall-saas' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                17. <span x-text="t[lang].nav_v10_dual_zone"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -1672,6 +1675,72 @@
         </div>
     </div>
 
+    <!-- Section 17: Project OS v10.0 Ultimate — Dual-Zone UX, Cryptographic Aniwall, 6 SaaS Modules & Universal Input Hygiene -->
+    <div id="sec-v10-dual-zone-aniwall-saas" class="sg-card" x-show="matchesSearch('scrollytelling aniwall dual-zone ux_f1 ux_f2 ux_f3 ux_f4 ux_f5 ux_f6 translate3d cls 0.00 affiliate 20% finder fee 7.5% multi-seat white-label impact grant explore seo country_zones hygiene 40 tools')">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
+            <div>
+                <span class="sg-badge-confidential">17 // PROJECT OS v10.0 ULTIMATE — DUAL-ZONE UX + CRYPTOGRAPHIC ANIWALL + 6 SAAS MODULES ({{ $nativeToolsCount ?? 40 }} NATIVE AI TOOLS)</span>
+                <h2 style="font-size: 20px; font-weight: 800; color: var(--sg-text-title); margin: 8px 0 4px;" x-text="t[lang].sec17_title"></h2>
+                <p style="font-size: 13px; color: var(--sg-text-muted); margin: 0;" x-text="t[lang].sec17_desc"></p>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <a href="{{ url('/explore') }}" target="_blank" style="text-decoration: none; padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; background: #10b981; color: #000000; border: 1px solid #047857; border-radius: 2px;">
+                    ✨ <span x-show="lang === 'id'">Buka /explore Aniwall</span><span x-show="lang === 'en'" x-cloak>Open /explore Aniwall</span>
+                </a>
+                <a href="{{ url('/admin/saas-system-health-pulse') }}" style="text-decoration: none; padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; background: var(--sg-subcard-bg); color: var(--sg-text-title); border: 1px solid var(--sg-border); border-radius: 2px;">
+                    💓 <span x-show="lang === 'id'">SaaS Health Pulse &amp;Hibah</span><span x-show="lang === 'en'" x-cloak>SaaS Health Pulse &amp; Grants</span>
+                </a>
+                <a href="{{ url('/admin/pos-verified-testimonials') }}" style="text-decoration: none; padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; background: var(--sg-subcard-bg); color: var(--sg-text-title); border: 1px solid var(--sg-border); border-radius: 2px;">
+                    🏅 <span x-show="lang === 'id'">CRUD Testimoni Terverifikasi</span><span x-show="lang === 'en'" x-cloak>Verified Testimonials CRUD</span>
+                </a>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #10b981;">
+                    DUAL-ZONE UI + 5 IRON ANIMATION LAWS
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: var(--sg-text-title); margin-top: 4px;">
+                    <span x-show="lang === 'id'">Zone A (36 Operational UIs) + Zone B (6 Public UX Presets `UX_F1..UX_F6`)</span>
+                    <span x-show="lang === 'en'" x-cloak>Zone A (36 Operational UIs) + Zone B (6 Public UX Presets `UX_F1..UX_F6`)</span>
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 6px; line-height: 1.55;">
+                    <span x-show="lang === 'id'">Zone A Back-Stage 100% bebas animasi berat demi kecepatan kerja staf; Zone B Front-Stage menghadirkan 6 preset UX interaktif 60fps (`translate3d` GPU-only, `CLS = 0.00`, `@@vite` 100% lokal, `prefers-reduced-motion`).</span>
+                    <span x-show="lang === 'en'" x-cloak>Zone A Back-Stage enforces zero heavy animation for staff precision; Zone B Front-Stage delivers 6 interactive 60fps UX presets (`translate3d` GPU-only, `CLS = 0.00`, 100% local `@@vite`, `prefers-reduced-motion`).</span>
+                </div>
+            </div>
+
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #0ea5e9;">
+                    CRYPTOGRAPHIC ANIWALL &amp; 6 SAAS MODULES
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: var(--sg-text-title); margin-top: 4px;">
+                    <span x-show="lang === 'id'">BAST / Phase-6 Auto Receipt + 20% Retail / 7,5% Mitra Finder's Fee</span>
+                    <span x-show="lang === 'en'" x-cloak>BAST / Phase-6 Auto Receipt + 20% Retail / 7.5% Mitra Finder's Fee</span>
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 6px; line-height: 1.55;">
+                    <span x-show="lang === 'id'"> Mencakup Dual-Gateway Billing HMAC `&lt; 2s`, Affiliate `/?ref=CODE`, Multi-Seat Agency White-Label, 1-Click Non-Profit Impact Grant, Pustaka SEO `/explore`, &amp; `SaasSystemHealthPulsePage`.</span>
+                    <span x-show="lang === 'en'" x-cloak>Covers `&lt; 2s` HMAC Dual-Gateway Billing, `/?ref=CODE` Affiliate &amp; Finder's Fee, Multi-Seat Agency White-Label, 1-Click Non-Profit Impact Grant, `/explore` SEO Library, &amp; `SaasSystemHealthPulsePage`.</span>
+                </div>
+            </div>
+
+            <div class="sg-subcard">
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #f59e0b;">
+                    UNIVERSAL INPUT HYGIENE STANDARD
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: var(--sg-text-title); margin-top: 4px;">
+                    <span x-show="lang === 'id'">Strict Email + Pemisah Ribuan Regional + `country_zones.php` Auto-Strip `0`</span>
+                    <span x-show="lang === 'en'" x-cloak>Strict Email + Regional Thousand Separators + `country_zones.php` Auto-Strip `0`</span>
+                </div>
+                <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 6px; line-height: 1.55;">
+                    <span x-show="lang === 'id'">Karakter non-email diblokir seketika, angka ribuan diformat regional (`1.500.000` ID / `1,500,000` EN), dan angka `0` pertama di input telepon langsung dihapus karena sudah memakai kode negara `config/country_zones.php`.</span>
+                    <span x-show="lang === 'en'" x-cloak>Non-email characters are stripped immediately, numbers use regional thousand separators (`1.500.000` ID / `1,500,000` EN), and leading `0` on phone inputs is stripped instantly alongside `config/country_zones.php`.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1700,6 +1769,7 @@ function smartGuideApp() {
                 nav_v7_freeze: '5 Elemen Nyata & 15 Pilar (100% Freeze)',
                 nav_v8_inclusive: '36 UI Visual, Tier-1 RTL & IP Canary (v8.0)',
                 nav_v9_agentshield: 'AgentShield, Co-Design & Audit (v9.0)',
+                nav_v10_dual_zone: 'Dual-Zone UX, Aniwall & 6 Modul SaaS (v10.0)',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -1808,7 +1878,9 @@ function smartGuideApp() {
                 sec15_title: 'Project OS v8.0: Adaptive Dual-Persona Storyboard, 36 Varian Visual UI/UX, 7 Yurisdiksi Tier-1 (+RTL), Pricing Inklusif & 5-Layer Canary Security',
                 sec15_desc: 'Menjembatani founder awam & arsitek senior dalam satu kanvas: 5-Step Storyboard Wizard, pemilih visual pasti 36 UI Frontend (12 Sektor × 3 Opsi + 5 Shells), perpindahan kepatuhan hukum 7 bahasa Tier-1 (termasuk Arab dir="rtl" + ZATCA), paket CSR Non-Profit / Single-App UMKM Rp 299rb / Agency White-Label Rp 990rb, peringatan CVE + Auto-Patch, brankas AES-256, dan steganografi Zero-Width Canary 64-bit.',
                 sec16_title: 'Project OS v9.0 Ultimate: NeriahPro AgentShield (5-Layer AI Malware Defense), Co-Design Alignment & Dual-Key Scope Lock, dan Cryptographic Audit Explorer (3-Sheet XLSX + 12 Sektor)',
-                sec16_desc: 'Mengunci postur keamanan & kolaborasi enterprise: firewall sanitasi Indirect Prompt Injection (<UNTRUSTED_CLIENT_DOCUMENT_DATA>), pemblokir Slopquatting Allowlist, sandbox .claude/settings.json, Co-Design Sign-Off Room dua arah (Developer <-> Klien), serta rantai audit SHA-256 siap kantor akuntan publik (PSAK 109, ISAK 35, PP 93/2010, RME Kemenkes, SOC2).'
+                sec16_desc: 'Mengunci postur keamanan & kolaborasi enterprise: firewall sanitasi Indirect Prompt Injection (<UNTRUSTED_CLIENT_DOCUMENT_DATA>), pemblokir Slopquatting Allowlist, sandbox .claude/settings.json, Co-Design Sign-Off Room dua arah (Developer <-> Klien), serta rantai audit SHA-256 siap kantor akuntan publik (PSAK 109, ISAK 35, PP 93/2010, RME Kemenkes, SOC2).',
+                sec17_title: 'Project OS v10.0 Ultimate: Dual-Zone Enterprise UI (Zone A Back-Stage + Zone B 6 Public UX Presets), Cryptographic Aniwall, 6 Modul Komersial SaaS & Universal Input Hygiene',
+                sec17_desc: 'Menyatukan 36 UI Operasional Staf bebas jank dengan 6 Preset UX Halaman Publik 60fps (Scrollytelling, Kinetic Aniwall, Spatial Floorplan, Lookbook, Trust Simulator, Gamified Pathway), resi testimoni BAST/Fase-6 terverifikasi, komisi afiliasi 20%/7,5%, hibah NGO 1-klik, pustaka SEO /explore, 40 Native AI Tools, dan standar kebersihan input email/angka/telepon E.164.'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -1827,6 +1899,7 @@ function smartGuideApp() {
                 nav_v7_freeze: '5 Real-World & 15 Pillars (100% Freeze)',
                 nav_v8_inclusive: '36 Visual UI, Tier-1 RTL & IP Canary (v8.0)',
                 nav_v9_agentshield: 'AgentShield, Co-Design & Audit (v9.0)',
+                nav_v10_dual_zone: 'Dual-Zone UX, Aniwall & 6 SaaS Modules (v10.0)',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -1935,7 +2008,9 @@ function smartGuideApp() {
                 sec15_title: 'Project OS v8.0: Adaptive Dual-Persona Storyboard, 36 Visual Sector UI Blueprints, 7 Tier-1 Jurisdictions (+RTL), Inclusive Pricing & 5-Layer Canary Security',
                 sec15_desc: 'Bridges non-technical founders & principal architects on one shared state: 5-Step Storyboard Wizard, deterministic 36 Visual Frontend UI Picker (12 Sectors × 3 Variants + 5 Shells), 7 Tier-1 statutory jurisdictions (including Arabic dir="rtl" + ZATCA), Impact CSR Grant / Single-App UMKM Pass / Agency White-Label PDF, Living CVE Auto-Patch, AES-256 Vault, and 64-bit Zero-Width Canary Watermarking.',
                 sec16_title: 'Project OS v9.0 Ultimate: NeriahPro AgentShield (5-Layer AI Malware Defense), Co-Design Alignment & Dual-Key Scope Lock, and Cryptographic Audit Explorer (3-Sheet XLSX + 12 Sectors)',
-                sec16_desc: 'Seals enterprise security & collaboration: Indirect Prompt Injection sanitization firewall (<UNTRUSTED_CLIENT_DOCUMENT_DATA>), Anti-Slopquatting package allowlist, .claude/settings.json sandbox jail, bidirectional Co-Design Sign-Off Room (Developer <-> Client), and CPA-ready SHA-256 chained audit trail (PSAK 109, ISAK 35, PP 93/2010, MoH EMR, SOC2).'
+                sec16_desc: 'Seals enterprise security & collaboration: Indirect Prompt Injection sanitization firewall (<UNTRUSTED_CLIENT_DOCUMENT_DATA>), Anti-Slopquatting package allowlist, .claude/settings.json sandbox jail, bidirectional Co-Design Sign-Off Room (Developer <-> Client), and CPA-ready SHA-256 chained audit trail (PSAK 109, ISAK 35, PP 93/2010, MoH EMR, SOC2).',
+                sec17_title: 'Project OS v10.0 Ultimate: Dual-Zone Enterprise UI (Zone A Back-Stage + Zone B 6 Public UX Presets), Cryptographic Aniwall, 6 SaaS Growth Modules & Universal Input Hygiene',
+                sec17_desc: 'Unifies 36 zero-jank staff operational UIs with 6 60fps Public Front-Stage UX Presets (Scrollytelling, Kinetic Aniwall, Spatial Floorplan, Lookbook, Trust Simulator, Gamified Pathway), cryptographically verified BAST/Phase-6 testimonial receipts, 20%/7.5% affiliate finder\'s fees, 1-click NGO impact grants, /explore Programmatic SEO, 40 Native AI Tools, and strict email/number/E.164 phone hygiene.'
             }
         },
 
@@ -1963,7 +2038,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze', 'sec-v8-inclusive-security', 'sec-v9-agentshield-codesign-audit'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze', 'sec-v8-inclusive-security', 'sec-v9-agentshield-codesign-audit', 'sec-v10-dual-zone-aniwall-saas'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

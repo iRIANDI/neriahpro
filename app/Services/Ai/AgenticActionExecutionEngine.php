@@ -92,6 +92,10 @@ class AgenticActionExecutionEngine
                 'sanitize_and_audit_agentshield' => $this->guardMutation($user, $toolName) ?? $this->sanitizeAndAuditAgentshield($args),
                 'manage_codesign_alignment_room' => (in_array(strtolower(trim((string) ($args['action'] ?? 'inspect_room'))), ['sign_module', 'add_custom_module', 'dual_key_lock'], true) ? $this->guardMutation($user, $toolName) : null) ?? $this->manageCodesignAlignmentRoom($args, $user),
                 'verify_and_export_crypto_audit_trail' => $this->guardMutation($user, $toolName) ?? $this->verifyAndExportCryptoAuditTrail($args),
+                'configure_dual_zone_public_ux_preset' => (! empty($args['project_ulid']) ? $this->guardMutation($user, $toolName) : null) ?? $this->configureDualZonePublicUxPreset($args),
+                'manage_verified_testimonials_aniwall' => (strtolower(trim((string) ($args['action'] ?? 'list_aniwall'))) === 'issue_receipt' ? $this->guardMutation($user, $toolName) : null) ?? $this->manageVerifiedTestimonialsAniwall($args),
+                'manage_affiliate_and_impact_grants' => (strtolower(trim((string) ($args['action'] ?? 'summary'))) === 'approve_grant' ? $this->guardMutation($user, $toolName) : null) ?? $this->manageAffiliateAndImpactGrants($args, $user),
+                'inspect_saas_system_health_and_billing_gate' => $this->inspectSaasSystemHealthAndBillingGate($args, $user),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
@@ -551,6 +555,9 @@ class AgenticActionExecutionEngine
             'inclusive_plg_skus_count' => count(\App\Support\PricingRegistry::getInclusiveValueMetricCatalog()),
             'agentshield_layers_count' => 5,
             'sector_audit_presets_count' => count(PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets()),
+            'public_ux_presets_count' => count(\App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets()),
+            'saas_commercial_modules_count' => count(\App\Support\PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules()),
+            'verified_testimonials_count' => count(\App\Support\PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog()),
             'world_class_sprints_count' => 5,
             'native_tools_count' => count(GeminiToolRegistry::getDeclarations()),
         ];
@@ -1826,6 +1833,167 @@ class AgenticActionExecutionEngine
             'success' => true,
             'operation' => 'verify_chain',
             'chain_summary' => $chain,
+        ];
+    }
+
+    /**
+     * 37. Configure Dual-Zone UI Architecture (Zone A Operational + Zone B Public UX UX_F1..UX_F6) & Input Hygiene (v10.0)
+     */
+    protected function configureDualZonePublicUxPreset(array $args): array
+    {
+        $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
+            (string) ($args['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
+        );
+        $ideaText = trim((string) ($args['idea_text'] ?? ''));
+        $explicitUx = trim((string) ($args['public_ux_preset'] ?? ''));
+
+        $matchedUx = $explicitUx !== ''
+            ? (\App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets()[\App\Support\PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset($explicitUx)] ?? null)
+            : \App\Support\PosDualZoneFrontendAndSaasCatalog::autoMatchPublicUxPresetForSectorAndIdea($sectorCode, $ideaText);
+
+        $uxCode = (string) ($matchedUx['code'] ?? \App\Support\PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($sectorCode));
+        $dualContract = \App\Support\PosDualZoneFrontendAndSaasCatalog::compileDualZoneUiContract($sectorCode, null, null, $uxCode);
+
+        $persistedProject = null;
+        if (! empty($args['project_ulid']) && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')) {
+            $proj = \App\Models\PosProject::query()->where('id', (string) $args['project_ulid'])->first();
+            if ($proj && $proj->visionBlueprint) {
+                $schema = \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($proj->visionBlueprint, [
+                    'public_ux_preset' => $uxCode,
+                    'persist_project' => true,
+                ]);
+                $quotation = app(\App\Services\PosCommercialBridgeService::class)->calculateScopeQuotation($schema, [
+                    'public_ux_preset' => $uxCode,
+                ]);
+                $persistedProject = [
+                    'project_id' => $proj->id,
+                    'public_ux_preset' => $uxCode,
+                    'quotation_idr' => $quotation['quotation_idr'] ?? 0,
+                    'scope_hash_short' => $quotation['scope_hash_short'] ?? '',
+                ];
+            }
+        }
+
+        return [
+            'success' => true,
+            'sector_code' => $sectorCode,
+            'selected_public_ux_preset' => $uxCode,
+            'dual_zone_ui_contract' => $dualContract,
+            'five_iron_animation_laws' => \App\Support\PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws(),
+            'input_hygiene_contract' => \App\Support\PosDualZoneFrontendAndSaasCatalog::inputHygieneContract(),
+            'persisted_project' => $persistedProject,
+        ];
+    }
+
+    /**
+     * 38. Manage Cryptographically Verified Testimonials & Infinite Kinetic Aniwall (v10.0)
+     */
+    protected function manageVerifiedTestimonialsAniwall(array $args): array
+    {
+        $action = strtolower(trim((string) ($args['action'] ?? 'list_aniwall')));
+        $sectorFilter = trim((string) ($args['sector_code'] ?? ''));
+
+        if ($action === 'issue_receipt') {
+            $projId = trim((string) ($args['project_ulid'] ?? ''));
+            $proj = $projId !== '' && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')
+                ? \App\Models\PosProject::query()->where('id', $projId)->first()
+                : null;
+            if (! $proj) {
+                return ['error' => 'PosProject tidak ditemukan untuk penerbitan Architecture Receipt.'];
+            }
+            $trigger = strtoupper(trim((string) ($args['verification_trigger'] ?? 'MITRA_BAST_SIGNED')));
+            $issued = \App\Services\Saas\PosSaasCommercialEngineService::issueVerifiedArchitectureReceiptTestimonial($proj, $trigger);
+
+            return [
+                'success' => true,
+                'action' => 'issue_receipt',
+                'testimonial_id' => $issued->id,
+                'sector_code' => $issued->sector_code,
+                'receipt' => $issued->architecture_receipt_json,
+            ];
+        }
+
+        $catalog = \App\Support\PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog();
+        if ($sectorFilter !== '') {
+            $normalized = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode($sectorFilter);
+            $catalog = array_values(array_filter($catalog, static fn (array $row): bool => ($row['sector_code'] ?? '') === $normalized));
+        }
+
+        return [
+            'success' => true,
+            'action' => 'list_aniwall',
+            'total_verified_testimonials' => count($catalog),
+            'explore_url' => url('/explore'),
+            'items' => array_slice($catalog, 0, 12),
+        ];
+    }
+
+    /**
+     * 39. Manage Affiliate Finder's Fee Ledger & 1-Click Non-Profit Impact Grants (v10.0)
+     */
+    protected function manageAffiliateAndImpactGrants(array $args, ?User $user): array
+    {
+        $action = strtolower(trim((string) ($args['action'] ?? 'summary')));
+
+        if ($action === 'approve_grant') {
+            $appId = trim((string) ($args['application_id'] ?? ''));
+            $grantApp = $appId !== '' && \Illuminate\Support\Facades\Schema::hasTable('pos_impact_grant_applications')
+                ? \App\Models\PosImpactGrantApplication::query()->where('id', $appId)->first()
+                : null;
+            if (! $grantApp) {
+                return ['error' => 'Permohonan Impact Grant tidak ditemukan.'];
+            }
+            if (! $user) {
+                return ['error' => 'Operator autentikasi diperlukan untuk menyetujui Impact Grant.'];
+            }
+            $res = \App\Services\Saas\PosSaasCommercialEngineService::approveImpactGrantOneClick(
+                $grantApp,
+                $user,
+                (string) ($args['review_notes'] ?? 'Approved via AI Native Tool')
+            );
+
+            return array_merge(['action' => 'approve_grant'], $res);
+        }
+
+        $pendingGrants = \Illuminate\Support\Facades\Schema::hasTable('pos_impact_grant_applications')
+            ? \App\Models\PosImpactGrantApplication::query()
+                ->where('status', 'PENDING_REVIEW')
+                ->orderBy('id', 'desc')
+                ->limit(15)
+                ->get(['id', 'organization_name', 'organization_type', 'official_email', 'requested_project_budget_idr', 'status'])
+                ->toArray()
+            : [];
+
+        $affiliateTotalIdr = \Illuminate\Support\Facades\Schema::hasTable('pos_affiliate_referrals')
+            ? (int) \App\Models\PosAffiliateReferral::query()->sum('commission_amount_idr')
+            : 0;
+
+        return [
+            'success' => true,
+            'action' => $action,
+            'retail_affiliate_rate_percent' => \App\Services\Saas\PosSaasCommercialEngineService::RETAIL_AFFILIATE_RATE_PERCENT,
+            'mitra_finders_fee_rate_percent' => \App\Services\Saas\PosSaasCommercialEngineService::MITRA_FINDERS_FEE_RATE_PERCENT,
+            'reserved_affiliate_commissions_idr' => $affiliateTotalIdr,
+            'pending_impact_grants_count' => count($pendingGrants),
+            'pending_impact_grants' => $pendingGrants,
+        ];
+    }
+
+    /**
+     * 40. Inspect Super Admin SaaS System Health Pulse & Subscription Feature Gate (v10.0)
+     */
+    protected function inspectSaasSystemHealthAndBillingGate(array $args, ?User $user): array
+    {
+        $feature = (string) ($args['feature'] ?? 'copy_phase_3_6');
+        $proj = ! empty($args['project_ulid']) && \Illuminate\Support\Facades\Schema::hasTable('pos_projects')
+            ? \App\Models\PosProject::query()->where('id', (string) $args['project_ulid'])->first()
+            : null;
+
+        return [
+            'success' => true,
+            'feature_gate' => \App\Services\Saas\PosSaasCommercialEngineService::checkFeatureAccess($user, $proj, $feature),
+            'system_health_pulse' => \App\Services\Saas\PosSaasCommercialEngineService::collectSystemHealthPulse(),
+            'admin_dashboard_url' => url('/admin/saas-system-health-pulse'),
         ];
     }
 

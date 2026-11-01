@@ -18,6 +18,15 @@ class SetAppLocale
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // 0. Capture Affiliate / Referral Attribution (?ref=CODE) site-wide into Session + 60-day Cookie
+        if ($request->filled('ref')) {
+            $rawRef = strtoupper((string) preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $request->query('ref')));
+            if ($rawRef !== '' && strlen($rawRef) <= 32) {
+                Session::put('neriah_ref_code', $rawRef);
+                cookie()->queue(cookie('neriah_ref_code', $rawRef, 60 * 24 * 60, '/', null, false, true));
+            }
+        }
+
         // 1. Explicit URL query parameter (?lang=en or ?lang=id)
         if ($request->has('lang') && in_array($request->query('lang'), ['id', 'en'], true)) {
             $locale = $request->query('lang');

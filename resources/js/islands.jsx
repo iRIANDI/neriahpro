@@ -11,6 +11,7 @@ import ProjectBlueprintIsland from './Islands/ProjectBlueprintIsland.jsx';
 import CvProStudioIsland from './Islands/CvProStudioIsland.jsx';
 import CvPricingIsland from './Islands/CvPricingIsland.jsx';
 import ArchitecturePricingIsland from './Islands/ArchitecturePricingIsland.jsx';
+import VerifiedAniwallShowcaseIsland from './Islands/VerifiedAniwallShowcaseIsland.jsx';
 
 const islands = {
     ClientOnboardingIsland,
@@ -23,6 +24,7 @@ const islands = {
     CvProStudioIsland,
     CvPricingIsland,
     ArchitecturePricingIsland,
+    VerifiedAniwallShowcaseIsland,
 };
 
 document.addEventListener('DOMContentLoaded', () => {

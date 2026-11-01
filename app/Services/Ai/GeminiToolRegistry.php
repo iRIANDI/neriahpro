@@ -728,6 +728,94 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+            [
+                'name' => 'configure_dual_zone_public_ux_preset',
+                'description' => 'Inspeksi atau simpan konfigurasi Dual-Zone UI Architecture Project OS v10.0: Zone A Operational Back-Stage (Linear/Stripe Crisp 36 UIs, 0% parallax) + Zone B Public Front-Stage (6 Preset Advanced UX: UX_F1_SCROLLYTELLING, UX_F2_KINETIC_ANIWALL, UX_F3_SPATIAL_SHOWCASE, UX_F4_LOOKBOOK_COMMERCE, UX_F5_TRUST_SIMULATOR, UX_F6_GAMIFIED_PATHWAY), 5 Hukum Besi Animasi Anti-Slop (GPU translate3d/opacity, CLS 0.00, 0% CDN), serta Universal Input Hygiene (email karakter ketat, pemisah ribuan regional, country_zones.php hapus 0 depan).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode sektor fungsional (SECTOR_01_COMMERCE_OMNICHANNEL s/d SECTOR_12_GOVTECH_NONPROFIT).',
+                        ],
+                        'public_ux_preset' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional kode preset Zone B: UX_F1_SCROLLYTELLING, UX_F2_KINETIC_ANIWALL, UX_F3_SPATIAL_SHOWCASE, UX_F4_LOOKBOOK_COMMERCE, UX_F5_TRUST_SIMULATOR, atau UX_F6_GAMIFIED_PATHWAY.',
+                        ],
+                        'idea_text' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional teks ide proyek untuk auto-matching preset UX publik paling relevan.',
+                        ],
+                        'project_ulid' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID PosProject untuk menyimpan perubahan secara persisten & mengalkulasi ulang RAB + SHA-256 (wajib izin RBAC).',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'manage_verified_testimonials_aniwall',
+                'description' => 'Inspeksi katalog Infinite Kinetic Aniwall (PRIMITIVE_VERIFIED_SOCIAL_PROOF — Testimoni Klien Terverifikasi BAST / Phase 6 lengkap Telemetry Architecture Receipt) lintas 12 Sektor, atau terbitkan Architecture Receipt baru untuk PosProject yang telah lolos BAST / Phase 6 (issue_receipt wajib izin mutasi RBAC).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => [
+                            'type' => 'STRING',
+                            'description' => 'Aksi: list_aniwall (baca katalog per sektor) atau issue_receipt (terbitkan testimoni terverifikasi untuk PosProject).',
+                        ],
+                        'sector_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional filter kode sektor (SECTOR_01..SECTOR_12).',
+                        ],
+                        'project_ulid' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID PosProject bila action = issue_receipt.',
+                        ],
+                        'verification_trigger' => [
+                            'type' => 'STRING',
+                            'description' => 'MITRA_BAST_SIGNED atau RETAIL_PHASE6_VERIFIED.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'manage_affiliate_and_impact_grants',
+                'description' => 'Inspeksi buku besar Komisi Afiliasi & Mitra Finder\'s Fee (?ref=CODE — 20% Retail Recurring + 7.5% Mitra Turnkey), tinjau antrean permohonan Non-Profit/Yayasan/Akademik Impact Grant, atau setujui 1-klik permohonan Impact Grant beserta penerbitan Voucher Gratis 100% (approve_grant wajib izin mutasi RBAC).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => [
+                            'type' => 'STRING',
+                            'description' => 'Aksi: summary (ringkasan afiliasi & grant), list_pending_grants, atau approve_grant (wajib RBAC).',
+                        ],
+                        'application_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID PosImpactGrantApplication bila action = approve_grant.',
+                        ],
+                        'review_notes' => [
+                            'type' => 'STRING',
+                            'description' => 'Catatan persetujuan kurasi Impact Grant.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'inspect_saas_system_health_and_billing_gate',
+                'description' => 'Inspeksi real-time Super Admin SaaS System Health Pulse (Queue/Failed Jobs, Multi-AI LLM Quota Health, Conversion Funnel Retail/Mitra, Komisi Afiliasi, Disk VPS) dan cek status Feature Gate langganan Dual-Gateway IDR/USD (copy_phase_3_6 / mcp_bridge).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'feature' => [
+                            'type' => 'STRING',
+                            'description' => 'Nama fitur yang dicek pada Feature Gate (default copy_phase_3_6).',
+                        ],
+                        'project_ulid' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID PosProject untuk pengecekan entitlement.',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

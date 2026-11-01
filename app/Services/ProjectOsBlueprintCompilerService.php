@@ -12,6 +12,7 @@ use App\Models\VisionBlueprint;
 use App\Services\Security\DocumentThreatSanitizerService;
 use App\Support\PosAgentShieldAndCoDesignCatalog;
 use App\Support\PosDayTwoProductionCatalog;
+use App\Support\PosDualZoneFrontendAndSaasCatalog;
 use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosInclusiveCommercialCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
@@ -368,6 +369,11 @@ class ProjectOsBlueprintCompilerService
                 'community_primitives_marketplace' => PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
                 'agentshield_layers' => DocumentThreatSanitizerService::fiveLayersBlueprintContract('NeriahPro Project OS', 'STACK_M1_LARAVEL_MONOLITH', 'SECTOR_01_COMMERCE_OMNICHANNEL')['layers'],
                 'sector_audit_presets' => PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets(),
+                'public_ux_presets' => array_values(PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets()),
+                'five_iron_animation_laws' => PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws(),
+                'input_hygiene_contract' => PosDualZoneFrontendAndSaasCatalog::inputHygieneContract(),
+                'six_critical_saas_modules' => PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules(),
+                'verified_testimonials_aniwall' => PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog(),
             ];
         });
     }
@@ -537,6 +543,7 @@ class ProjectOsBlueprintCompilerService
                 'stack_preset' => $stackPreset,
                 'selected_menus' => is_array($payload['selected_menus'] ?? null) ? $payload['selected_menus'] : null,
                 'selected_ui_variant' => $payload['selected_ui_variant'] ?? null,
+                'public_ux_preset' => $payload['public_ux_preset'] ?? null,
                 'navigation_shell' => $payload['navigation_shell'] ?? null,
                 'output_locale' => $payload['output_locale'] ?? 'id',
                 'persona_mode' => $payload['persona_mode'] ?? null,
@@ -550,6 +557,7 @@ class ProjectOsBlueprintCompilerService
             'selected_primitives' => $primitives,
             'selected_menus' => is_array($payload['selected_menus'] ?? null) ? $payload['selected_menus'] : null,
             'selected_ui_variant' => $payload['selected_ui_variant'] ?? null,
+            'public_ux_preset' => $payload['public_ux_preset'] ?? null,
             'navigation_shell' => $payload['navigation_shell'] ?? null,
             'output_locale' => $payload['output_locale'] ?? 'id',
             'persona_mode' => $payload['persona_mode'] ?? null,
@@ -1122,6 +1130,27 @@ class ProjectOsBlueprintCompilerService
             $savedDualKey,
             $outputLocale
         );
+
+        // === PROJECT OS v10.0: DUAL-ZONE UI (ZONE A OPERATIONAL + ZONE B PUBLIC FRONT-STAGE UX_F1..F6), 5 IRON ANIMATION LAWS & INPUT HYGIENE ===
+        $requestedPublicUx = $options['public_ux_preset']
+            ?? ($meta['public_ux_preset'] ?? ($existingProject?->public_ux_preset ?? null));
+        $dualZoneUiContract = PosDualZoneFrontendAndSaasCatalog::compileDualZoneUiContract(
+            $resolvedSectorCode,
+            $visualUiContract,
+            is_string($requestedPublicUx) ? $requestedPublicUx : null,
+            $corpus,
+            $outputLocale
+        );
+        $selectedPublicUxCode = (string) ($dualZoneUiContract['zone_b_public_frontstage']['selected_public_ux_preset'] ?? PosDualZoneFrontendAndSaasCatalog::UX_F2);
+        $schema['project_metadata']['public_ux_preset'] = $selectedPublicUxCode;
+        if (! in_array(PosDualZoneFrontendAndSaasCatalog::PRIMITIVE_SOCIAL_PROOF, $schema['project_metadata']['injected_primitives'], true)) {
+            $schema['project_metadata']['injected_primitives'][] = PosDualZoneFrontendAndSaasCatalog::PRIMITIVE_SOCIAL_PROOF;
+        }
+        $schema['dual_zone_release'] = PosDualZoneFrontendAndSaasCatalog::VERSION;
+        $schema['dual_zone_ui_contract'] = $dualZoneUiContract;
+        $schema['five_iron_animation_laws'] = $dualZoneUiContract['five_iron_animation_laws'];
+        $schema['input_hygiene_contract'] = $dualZoneUiContract['input_hygiene_contract'];
+
         $schema['world_class_task_matrix'] = PosAgentShieldAndCoDesignCatalog::compileWorldClassSprintTaskMatrix($schema, $outputLocale);
 
         $schema['cross_stage_causality_graph'] = PosRealWorldRuntimeCatalog::computeCrossStageCausalityGraph($schema, $outputLocale);
@@ -1253,6 +1282,12 @@ class ProjectOsBlueprintCompilerService
             }
             if (Schema::hasColumn('pos_projects', 'agentshield_policy_json')) {
                 $projectPayload['agentshield_policy_json'] = $agentShieldContract;
+            }
+            if (Schema::hasColumn('pos_projects', 'public_ux_preset')) {
+                $projectPayload['public_ux_preset'] = $selectedPublicUxCode;
+            }
+            if (Schema::hasColumn('pos_projects', 'dual_zone_ui_contract_json')) {
+                $projectPayload['dual_zone_ui_contract_json'] = $dualZoneUiContract;
             }
 
             if ($existingProject) {
@@ -2093,6 +2128,10 @@ MD;
             (array) ($jProf['tax_and_invoicing_rules'] ?? []),
             (array) ($jProf['privacy_and_sector_mandates'] ?? [])
         ));
+        $dualZone = is_array($schema['dual_zone_ui_contract'] ?? null) ? $schema['dual_zone_ui_contract'] : [];
+        $pubUxCode = (string) ($dualZone['zone_b_public_frontstage']['selected_public_ux_preset'] ?? 'UX_F2_KINETIC_ANIWALL');
+        $pubUxName = (string) ($dualZone['zone_b_public_frontstage']['preset_name'] ?? 'Interactive Bento & Kinetic Aniwall');
+        $pubUxStack = (string) ($dualZone['zone_b_public_frontstage']['local_tech_stack'] ?? 'Tailwind CSS + Alpine.js (@vite)');
 
         $gateP1 = TopologicalPromptChunker::buildMandatoryVerificationGate('1.0', 'Phase1FoundationTest');
         $gateP2 = TopologicalPromptChunker::buildMandatoryVerificationGate('2.0', 'Phase2DatabaseTopologicalTest');
@@ -2200,8 +2239,11 @@ PROMPT,
 Baca `.agents/ENTERPRISE_MENU_MATRIX.md`, `.agents/SYMBOL_MANIFEST.json`, dan `.agents/UI_UX_CONTRACT.md`.
 *(Catatan Anti-Truncation: Bangun layar per Divisi `05.1` s/d `05.5` di `.agents/prompts/subparts/`!)*
 
-**Archetype Wajib Industri:** `{$primaryArch}` & `{$secondaryArch}`
-**Desain Visual Frontend Pilihan Klien:** `{$vUiCode}` ({$vUiLabel}) | **Navigation Shell:** `{$vShellCode}`
+**Archetype Wajib Industri (Zona A Operational Back-Stage):** `{$primaryArch}` & `{$secondaryArch}`
+**Desain Visual Frontend Operasional (Zona A):** `{$vUiCode}` ({$vUiLabel}) | **Navigation Shell:** `{$vShellCode}` *(HARAM Scrollytelling/Parallax di Zona A)*
+**Public Front-Stage UX Preset (Zona B):** `{$pubUxCode}` — {$pubUxName} (`{$pubUxStack}` + `PRIMITIVE_VERIFIED_SOCIAL_PROOF` Aniwall)
+**5 Hukum Besi Animasi Enterprise (Zona B):** 100% Local `@vite` (0% CDN), GPU `translate3d()/scale()/opacity` Only, `CLS = 0.00` aspect-ratio lock, `@media (prefers-reduced-motion: reduce)`, & `IntersectionObserver` FCP `< 0.8s`.
+**Standar Higienitas Input Wajib:** Email murni karakter `[a-zA-Z0-9._%+\-@]`, angka/mata uang `>= 1.000` wajib pemisah ribuan regional (`.` ID / `,` EN) + `tabular-nums`, dan input telepon wajib menggunakan `config/country_zones.php` + hapus otomatis angka `0` di awal ketikan.
 **Bahasa Output & Yurisdiksi:** `{$jOutputLocale}` (`{$vHtmlDir}` — `{$jCode}`)
 **Standar Akuntansi, Pajak & Privasi Yurisdiksi:** {$jStatutoryRules}
 **Kontrak Arah Teks / RTL:** {$vRtlRule}

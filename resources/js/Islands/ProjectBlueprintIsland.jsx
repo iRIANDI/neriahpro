@@ -58,6 +58,99 @@ import {
   Rocket,
   ArrowUpRight
 } from 'lucide-react';
+import {
+  normalizeCountryZones,
+  sanitizeStrictEmailInput,
+  sanitizePhoneLocalDigitsInput,
+  formatRegionalNumberInput,
+  COUNTRY_ZONES_TEMPLATE,
+} from '../utils/inputHygiene';
+
+const PUBLIC_UX_PRESETS_V10 = [
+  {
+    code: 'UX_F1_SCROLLYTELLING',
+    badge: 'UX_F1 • NARRATIVE SCROLL',
+    hours: 8,
+    name: { id: 'Narrative Scrollytelling & Sticky Reveal', en: 'Narrative Scrollytelling & Sticky Reveal' },
+    summary: {
+      id: 'Layar kanan sticky berubah mulus 60fps mengikuti narasi scroll kiri (gaya Stripe/Apple). 100% GPU translate3d & CLS = 0.00.',
+      en: 'Sticky right viewport morphs smoothly at 60fps with left narrative steps (Stripe/Apple style). 100% GPU translate3d & CLS = 0.00.',
+    },
+    engine: 'Local CSS Sticky + IntersectionObserver + GPU translate3d',
+  },
+  {
+    code: 'UX_F2_KINETIC_ANIWALL',
+    badge: 'UX_F2 • KINETIC ANIWALL',
+    hours: 6,
+    name: { id: 'Infinite Kinetic Aniwall & Bento Grid', en: 'Infinite Kinetic Aniwall & Bento Grid' },
+    summary: {
+      id: 'Dinding bukti sosial & portofolio bergerak halus dua arah (pause on hover + prefers-reduced-motion) dengan filter instan.',
+      en: 'Bidirectional smooth kinetic proof wall & bento grid (pause on hover + prefers-reduced-motion) with instant filter.',
+    },
+    engine: 'Pure CSS @keyframes translate3d(x,0,0) + Bento Grid',
+  },
+  {
+    code: 'UX_F3_SPATIAL_SHOWCASE',
+    badge: 'UX_F3 • SPATIAL FLOORPLAN',
+    hours: 12,
+    name: { id: 'Interactive Spatial Map, Unit & Seat Picker', en: 'Interactive Spatial Map, Unit & Seat Picker' },
+    summary: {
+      id: 'Eksplorasi denah lantai/kavling/meja/kamar interaktif berbasis SVG lokal dengan status ketersediaan real-time.',
+      en: 'Interactive local SVG floorplan/unit/table/room explorer with real-time availability status.',
+    },
+    engine: 'Local Interactive SVG Pan/Zoom + WebSocket Stock Badge',
+  },
+  {
+    code: 'UX_F4_LOOKBOOK_COMMERCE',
+    badge: 'UX_F4 • EDITORIAL COMMERCE',
+    hours: 8,
+    name: { id: 'Editorial Lookbook & Slide-Over Quick-Cart', en: 'Editorial Lookbook & Slide-Over Quick-Cart' },
+    summary: {
+      id: 'Katalog produk ritel/F&B rasio gambar terkunci (CLS 0.00) dengan laci keranjang instan tanpa reload halaman.',
+      en: 'Aspect-locked retail/F&B product catalog (CLS 0.00) with instant slide-over cart drawer and zero page reload.',
+    },
+    engine: 'Aspect-Locked Grid + Slide-Over Cart Drawer',
+  },
+  {
+    code: 'UX_F5_TRUST_SIMULATOR',
+    badge: 'UX_F5 • LIVE ROI / TRANSPARENCY',
+    hours: 9,
+    name: { id: 'Interactive Calculator & Live Transparency Ledger', en: 'Interactive Calculator & Live Transparency Ledger' },
+    summary: {
+      id: 'Kalkulator cicilan/premi/pajak/donasi interaktif tabular-nums real-time + buku besar transparansi dana terverifikasi.',
+      en: 'Real-time tabular-nums installment/tax/donation simulator + cryptographically verified public transparency ledger.',
+    },
+    engine: 'Deterministic Client Math + Tabular-Nums Counter',
+  },
+  {
+    code: 'UX_F6_GAMIFIED_PATHWAY',
+    badge: 'UX_F6 • MILESTONE PATHWAY',
+    hours: 8,
+    name: { id: 'Guided Step-by-Step Pathway & Milestone Tracker', en: 'Guided Step-by-Step Pathway & Milestone Tracker' },
+    summary: {
+      id: 'Peta kurikulum/pelatihan/pendaftaran bertahap dengan indikator progres tajam dan verifikasi sertifikat QR.',
+      en: 'Step-by-step curriculum/admissions/onboarding milestone pathway with crisp progress tracker and QR verification.',
+    },
+    engine: 'Progressive Stepper + Instant Milestone State',
+  },
+];
+
+function resolveDefaultPublicUxForSector(sectorCode) {
+  const s = String(sectorCode || '').toUpperCase();
+  if (s.includes('SECTOR_01')) return 'UX_F4_LOOKBOOK_COMMERCE';
+  if (s.includes('SECTOR_02')) return 'UX_F6_GAMIFIED_PATHWAY';
+  if (s.includes('SECTOR_03')) return 'UX_F5_TRUST_SIMULATOR';
+  if (s.includes('SECTOR_04')) return 'UX_F1_SCROLLYTELLING';
+  if (s.includes('SECTOR_05')) return 'UX_F3_SPATIAL_SHOWCASE';
+  if (s.includes('SECTOR_06')) return 'UX_F6_GAMIFIED_PATHWAY';
+  if (s.includes('SECTOR_07')) return 'UX_F1_SCROLLYTELLING';
+  if (s.includes('SECTOR_08')) return 'UX_F5_TRUST_SIMULATOR';
+  if (s.includes('SECTOR_09')) return 'UX_F1_SCROLLYTELLING';
+  if (s.includes('SECTOR_10')) return 'UX_F2_KINETIC_ANIWALL';
+  if (s.includes('SECTOR_11')) return 'UX_F5_TRUST_SIMULATOR';
+  if (s.includes('SECTOR_12')) return 'UX_F3_SPATIAL_SHOWCASE';
+  return 'UX_F1_SCROLLYTELLING';
+}
 
 const TRANSLATIONS = {
   id: {
@@ -700,18 +793,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     });
   };
 
-  // Country code selector
-  const countryList = (countries && Array.isArray(countries) && countries.length > 0)
-    ? countries
-    : [
-        { name: 'Indonesia', code: '+62', emoji: '🇮🇩', iso: 'ID' },
-        { name: 'Malaysia', code: '+60', emoji: '🇲🇾', iso: 'MY' },
-        { name: 'Singapore', code: '+65', emoji: '🇸🇬', iso: 'SG' },
-        { name: 'United States', code: '+1', emoji: '🇺🇸', iso: 'US' },
-        { name: 'Australia', code: '+61', emoji: '🇦🇺', iso: 'AU' },
-        { name: 'United Kingdom', code: '+44', emoji: '🇬🇧', iso: 'GB' },
-        { name: 'Japan', code: '+81', emoji: '🇯🇵', iso: 'JP' },
-      ];
+  // Country code selector (config/country_zones.php template)
+  const countryList = useMemo(() => normalizeCountryZones(countries || COUNTRY_ZONES_TEMPLATE), [countries]);
 
   const [selectedCountryCode, setSelectedCountryCode] = useState(() => {
     if (initialData.country_code) return initialData.country_code;
@@ -961,6 +1044,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         return '';
       }
     })(),
+    publicUxPreset: initialData.publicUxPreset || initialData.public_ux_preset || (() => {
+      try {
+        return new URLSearchParams(window.location.search).get('public_ux') || '';
+      } catch {
+        return '';
+      }
+    })(),
     navigationShell: initialData.navigationShell || (() => {
       try {
         return new URLSearchParams(window.location.search).get('shell') || '';
@@ -1181,6 +1271,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         selectedPrimitives: mergedPrims,
         selectedMenus: defaultMenuCodes,
         selectedUiVariant: defaultVariant?.code || '',
+        publicUxPreset: resolveDefaultPublicUxForSector(sectorCode),
         navigationShell: defaultVariant?.default_shell || '',
       };
       triggerAutoSave(next);
@@ -1289,6 +1380,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           selected_menus: effectiveSelectedMenus,
           project_name: formData.namaBisnis || '',
           selected_ui_variant: formData.selectedUiVariant || null,
+          public_ux_preset: formData.publicUxPreset || resolveDefaultPublicUxForSector(formData.primarySector || 'SECTOR_01_COMMERCE_RETAIL'),
           navigation_shell: formData.navigationShell || null,
           output_locale: formData.outputLocale || 'id',
           persona_mode: formData.personaMode || 'BUSINESS_WIZARD',
@@ -1313,6 +1405,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     effectiveSelectedMenus,
     formData.namaBisnis,
     formData.selectedUiVariant,
+    formData.publicUxPreset,
     formData.navigationShell,
     formData.outputLocale,
     formData.personaMode,
@@ -2304,17 +2397,23 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       });
     }
 
+    let sanitizedValue = value;
+    if (field === 'email') {
+      sanitizedValue = sanitizeStrictEmailInput(value);
+    } else if (field === 'durasiHari') {
+      sanitizedValue = formatRegionalNumberInput(value, lang);
+    }
+
     setFormData(prev => {
-      const next = { ...prev, [field]: value };
+      const next = { ...prev, [field]: sanitizedValue };
       triggerAutoSave(next);
       return next;
     });
   };
 
-  // Phone input sanitizer
+  // Phone input sanitizer (config/country_zones.php + instant leading-0 removal)
   const handlePhoneDigitsChange = (e) => {
-    let clean = e.target.value.replace(/\D/g, '');
-    clean = clean.replace(/^0+/, '');
+    const clean = sanitizePhoneLocalDigitsInput(e.target.value, selectedCountryCode);
     setPhoneDigits(clean);
     updateField('phone', clean ? `${selectedCountryCode}${clean}` : '');
   };
@@ -2456,8 +2555,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         ...formData,
         ...synData,
         stackPreset: resolvedStackPreset,
+        publicUxPreset: synData.publicUxPreset || synData.public_ux_preset || resolveDefaultPublicUxForSector(synData.primarySector || formData.primarySector),
         clientName: synData.clientName || formData.clientName,
-        email: synData.email || formData.email,
+        email: sanitizeStrictEmailInput(synData.email || formData.email),
         phone: synData.phone || formData.phone,
       };
 
@@ -2531,6 +2631,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       selectedMenus: [],
       stackPreset: 'STACK_M1_LARAVEL_MONOLITH',
       selectedUiVariant: '',
+      publicUxPreset: '',
       navigationShell: '',
       worldClassTaskMatrix: null,
       agentshieldReport: null,
@@ -2815,8 +2916,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     setIsSubmitting(true);
 
     try {
+      const resolvedPubUx = formData.publicUxPreset || resolveDefaultPublicUxForSector(formData.primarySector);
       const payload = {
         ...formData,
+        publicUxPreset: resolvedPubUx,
+        public_ux_preset: resolvedPubUx,
         selectedMenus: effectiveSelectedMenus,
         selected_menus: effectiveSelectedMenus,
         isolation_token: draftIdRef.current,
@@ -5092,6 +5196,88 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                               </div>
                             )}
                           </div>
+
+                          {/* v10.0 ZONE B — PUBLIC FRONT-STAGE UX VISUAL SELECTOR (UX_F1..UX_F6) + 5 IRON ANTI-SLOP ANIMATION LAWS */}
+                          {(() => {
+                            const activePubUxCode = formData.publicUxPreset || resolveDefaultPublicUxForSector(resolvedSectorKey);
+                            return (
+                              <div className="p-3.5 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none space-y-2.5">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div>
+                                    <div className="font-mono text-[10px] font-black uppercase text-emerald-950 dark:text-emerald-300">
+                                      ✨ {lang === 'en'
+                                        ? 'ZONE B — PUBLIC FRONT-STAGE UX PRESET (6 ADVANCED ARCHETYPES • ZERO-JANK 60FPS)'
+                                        : 'ZONE B — PILIHAN UX HALAMAN PUBLIK / DEPAN (6 PRESET INTERAKTIF • ZERO-JANK 60FPS)'}
+                                    </div>
+                                    <p className="text-[11px] text-zinc-700 dark:text-zinc-300 mt-0.5">
+                                      {lang === 'en'
+                                        ? 'Dual-Zone Architecture strictly separates Zone A Back-Stage (zero heavy animation) from Zone B Public Front-Stage (GPU translate3d, CLS = 0.00, 100% local @vite).'
+                                        : 'Arsitektur Dual-Zone memisahkan tegas Zone A Operasional Staf (tanpa animasi berat) dari Zone B Halaman Publik Klien (GPU translate3d, CLS = 0.00, 100% lokal @vite).'}
+                                    </p>
+                                  </div>
+                                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black uppercase rounded-none">
+                                    LOCKED: {activePubUxCode}
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                  {PUBLIC_UX_PRESETS_V10.map((ux) => {
+                                    const isPubPicked = activePubUxCode === ux.code;
+                                    const uxTitle = lang === 'en' ? ux.name.en : ux.name.id;
+                                    const uxDesc = lang === 'en' ? ux.summary.en : ux.summary.id;
+                                    return (
+                                      <button
+                                        key={ux.code}
+                                        type="button"
+                                        onClick={() => {
+                                          setFormData((prev) => {
+                                            const next = { ...prev, publicUxPreset: ux.code };
+                                            triggerAutoSave(next);
+                                            return next;
+                                          });
+                                        }}
+                                        className={`p-2.5 text-left border rounded-none transition cursor-pointer flex flex-col justify-between ${
+                                          isPubPicked
+                                            ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950/90 dark:text-white dark:border-emerald-400'
+                                            : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-800'
+                                        }`}
+                                      >
+                                        <div>
+                                          <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase">
+                                            <span className={isPubPicked ? 'text-emerald-400' : 'text-emerald-900 dark:text-emerald-300'}>
+                                              {ux.badge}
+                                            </span>
+                                            <span>{isPubPicked ? '✓ ACTIVE' : `+${ux.hours}h`}</span>
+                                          </div>
+                                          <div className="text-xs font-black mt-1 leading-snug">{uxTitle}</div>
+                                          <p className={`text-[10px] mt-1 leading-relaxed ${isPubPicked ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                                            {uxDesc}
+                                          </p>
+                                        </div>
+                                        <div className={`mt-2 pt-1.5 border-t font-mono text-[9px] ${isPubPicked ? 'border-zinc-800 text-emerald-300' : 'border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-400'}`}>
+                                          ⚡ {ux.engine}
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+
+                                <div className="flex flex-wrap gap-1.5 pt-1 font-mono text-[9px]">
+                                  {[
+                                    'LAW_01: 100% Local @vite (0% CDN)',
+                                    'LAW_02: GPU translate3d/opacity Only',
+                                    'LAW_03: CLS = 0.00 Aspect Lock',
+                                    'LAW_04: prefers-reduced-motion Guard',
+                                    'LAW_05: IntersectionObserver FCP <0.8s',
+                                  ].map((law) => (
+                                    <span key={law} className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-800 font-bold rounded-none">
+                                      ✓ {law}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
 
                           {/* v9.0 WORLD-CLASS 5-SPRINT ENGINEERING TASK BACKLOG & CRYPTO AUDIT PRESET */}
                           {taskMatrix?.sprints && taskMatrix.sprints.length > 0 && (() => {

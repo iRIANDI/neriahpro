@@ -123,6 +123,7 @@ class BlueprintController extends Controller
                     'selectedMenus' => $existingBp->user_metadata['selected_menus'] ?? [],
                     'selectedUiVariant' => $existingBp->user_metadata['selected_ui_variant'] ?? null,
                     'navigationShell' => $existingBp->user_metadata['navigation_shell'] ?? null,
+                    'publicUxPreset' => $existingBp->user_metadata['public_ux_preset'] ?? null,
                     'outputLocale' => $existingBp->user_metadata['output_locale'] ?? 'id',
                     'personaMode' => $existingBp->user_metadata['persona_mode'] ?? 'BUSINESS_WIZARD',
                     'stackPreset' => \App\Support\PosStackPresetCatalog::normalizePresetCode(
@@ -528,6 +529,9 @@ class BlueprintController extends Controller
                     if (! empty($blueprint['navigationShell'])) {
                         $meta['navigation_shell'] = (string) $blueprint['navigationShell'];
                     }
+                    if (! empty($blueprint['publicUxPreset'])) {
+                        $meta['public_ux_preset'] = \App\Support\PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset((string) $blueprint['publicUxPreset']);
+                    }
                     if (! empty($blueprint['outputLocale'])) {
                         $meta['output_locale'] = \App\Support\PosInclusiveCommercialCatalog::normalizeOutputLocale((string) $blueprint['outputLocale']);
                     }
@@ -541,8 +545,8 @@ class BlueprintController extends Controller
                     ];
                     if (!empty($blueprint['namaBisnis'])) $updatePayload['nama_bisnis'] = $blueprint['namaBisnis'];
                     if (!empty($blueprint['clientName'])) $updatePayload['client_name'] = $blueprint['clientName'];
-                    if (!empty($blueprint['email'])) $updatePayload['email'] = $blueprint['email'];
-                    if (!empty($blueprint['phone'])) $updatePayload['phone'] = $blueprint['phone'];
+                    if (!empty($blueprint['email'])) $updatePayload['email'] = \App\Support\InputHygieneStandard::sanitizeStrictEmail((string) $blueprint['email']);
+                    if (!empty($blueprint['phone'])) $updatePayload['phone'] = \App\Support\InputHygieneStandard::toE164((string) ($blueprint['countryCode'] ?? '+62'), (string) $blueprint['phone']);
                     if (!empty($blueprint['masalahUtama'])) $updatePayload['masalah_utama'] = $blueprint['masalahUtama'];
                     if (!empty($blueprint['tujuanUtama'])) $updatePayload['tujuan_utama'] = $blueprint['tujuanUtama'];
                     if (!empty($blueprint['targetAudiens'])) $updatePayload['target_audiens'] = $blueprint['targetAudiens'];
@@ -1244,6 +1248,13 @@ class BlueprintController extends Controller
             'agentshield_layers' => \App\Services\Security\DocumentThreatSanitizerService::fiveLayersBlueprintContract('NeriahPro Project OS', 'STACK_M1_LARAVEL_MONOLITH', 'SECTOR_01_COMMERCE_OMNICHANNEL')['layers'],
             'sector_audit_presets' => \App\Support\PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets(),
             'codesign_room_version' => \App\Support\PosAgentShieldAndCoDesignCatalog::VERSION,
+            'public_ux_presets' => array_values(\App\Support\PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets()),
+            'five_iron_animation_laws' => \App\Support\PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws(),
+            'input_hygiene_contract' => \App\Support\PosDualZoneFrontendAndSaasCatalog::inputHygieneContract(),
+            'six_critical_saas_modules' => \App\Support\PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules(),
+            'verified_testimonials_aniwall' => \App\Support\PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog(),
+            'country_zones' => \App\Support\InputHygieneStandard::countryZonesForFrontend(),
+            'v10_release' => \App\Support\PosDualZoneFrontendAndSaasCatalog::VERSION,
         ]);
     }
 
@@ -1409,6 +1420,10 @@ class BlueprintController extends Controller
             'syntax-lock' => [
                 \App\Support\PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($univSchema),
                 'SYNTAX_LOCK_2026.md',
+            ],
+            'dual-zone-ux' => [
+                \App\Support\PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($univSchema, app()->getLocale()),
+                'DUAL_ZONE_PUBLIC_UX_AND_INPUT_HYGIENE.md',
             ],
             'troubleshooting' => [
                 \App\Support\PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($univSchema),
@@ -1942,9 +1957,15 @@ class BlueprintController extends Controller
             ], 422);
         }
 
+        if ($request->filled('email')) {
+            $request->merge([
+                'email' => \App\Support\InputHygieneStandard::sanitizeStrictEmail((string) $request->input('email')),
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'email' => ['required', 'email', 'max:255', 'regex:/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/'],
             'phone' => 'required|string|max:50',
             'company' => 'nullable|string|max:255',
             'company_name' => 'nullable|string|max:255',
@@ -1966,9 +1987,11 @@ class BlueprintController extends Controller
         $packageMeta = \App\Support\PricingRegistry::get((string)$packageName);
         $isRetail = \App\Support\PricingRegistry::isSelfService((string)$packageName);
         $company = $request->input('company') ?: $request->input('company_name') ?: ($isRetail ? ($validated['name'] . ' (Personal License)') : ($validated['name'] . ' Project'));
-        $phoneInput = $validated['phone'];
-        $countryCode = $request->input('country_code', '+62');
-        $cleanPhone = str_starts_with($phoneInput, '+') ? $phoneInput : "{$countryCode}" . ltrim($phoneInput, '0');
+        $phoneInput = (string) $validated['phone'];
+        $countryCode = (string) $request->input('country_code', '+62');
+        $cleanPhone = str_starts_with(trim($phoneInput), '+')
+            ? ('+' . (preg_replace('/\D/', '', $phoneInput) ?: ''))
+            : \App\Support\InputHygieneStandard::toE164($countryCode, $phoneInput);
 
         $sprintBatch = $request->input('sprint_batch');
         $kickoffSlot = $request->input('kickoff_slot');
@@ -2273,6 +2296,7 @@ class BlueprintController extends Controller
             '.agents/DAY2_OPERATIONS_AND_SECURITY.md' => \App\Services\ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($schema),
             '.agents/DECISION_TABLES_CONTRACT.md' => \App\Services\ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($schema),
             '.agents/SYNTAX_LOCK_2026.md' => \App\Support\PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($schema),
+            '.agents/DUAL_ZONE_PUBLIC_UX_AND_INPUT_HYGIENE.md' => \App\Support\PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($schema),
             '.agents/TROUBLESHOOTING_INSTINCTS.md' => \App\Support\PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($schema),
             '.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md' => \App\Support\PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($schema, 'id'),
             '.agents/BLUEPRINT_SCHEMA.json' => (string) json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
@@ -2391,33 +2415,43 @@ class BlueprintController extends Controller
     {
         $validated = $request->validate([
             'sector_code' => 'nullable|string|max:120',
+            'primary_sector' => 'nullable|string|max:120',
             'primitive_codes' => 'nullable|array',
             'primitive_codes.*' => 'string|max:120',
+            'selected_primitives' => 'nullable|array',
+            'selected_primitives.*' => 'string|max:120',
             'stack_preset' => 'nullable|string|max:120',
             'selected_menus' => 'nullable|array',
             'selected_menus.*' => 'string|max:40',
             'selected_ui_variant' => 'nullable|string|max:80',
+            'public_ux_preset' => 'nullable|string|max:80',
             'navigation_shell' => 'nullable|string|max:48',
             'output_locale' => 'nullable|string|max:16',
             'persona_mode' => 'nullable|string|max:32',
             'app_name' => 'nullable|string|max:160',
+            'project_name' => 'nullable|string|max:160',
             'locale' => 'nullable|string|in:id,en',
         ]);
 
         $sectorCode = \App\Support\PosSectorUiArchetypeCatalog::normalizeSectorCode(
-            (string) ($validated['sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
+            (string) ($validated['sector_code'] ?? $validated['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL')
         );
         $stackCode = \App\Support\PosStackPresetCatalog::normalizePresetCode(
             (string) ($validated['stack_preset'] ?? 'STACK_M1_LARAVEL_MONOLITH')
         );
+        $resolvedPrimitives = $validated['primitive_codes'] ?? $validated['selected_primitives'] ?? [];
+        $resolvedPublicUx = ! empty($validated['public_ux_preset'])
+            ? \App\Support\PosDualZoneFrontendAndSaasCatalog::normalizePublicUxPreset((string) $validated['public_ux_preset'], $sectorCode)
+            : \App\Support\PosDualZoneFrontendAndSaasCatalog::defaultPublicUxForSector($sectorCode);
 
         $schema = \App\Services\ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
-            'app_name' => $validated['app_name'] ?? 'Enterprise Isolated Preview',
+            'app_name' => $validated['app_name'] ?? $validated['project_name'] ?? 'Enterprise Isolated Preview',
             'sector_code' => $sectorCode,
-            'primitive_codes' => $validated['primitive_codes'] ?? [],
+            'primitive_codes' => $resolvedPrimitives,
             'stack_preset_code' => $stackCode,
             'selected_menus' => $validated['selected_menus'] ?? null,
             'selected_ui_variant' => $validated['selected_ui_variant'] ?? null,
+            'public_ux_preset' => $resolvedPublicUx,
             'navigation_shell' => $validated['navigation_shell'] ?? null,
             'output_locale' => $validated['output_locale'] ?? ($validated['locale'] ?? 'id'),
             'persona_mode' => $validated['persona_mode'] ?? null,
@@ -2426,16 +2460,19 @@ class BlueprintController extends Controller
         $quotation = app(\App\Services\PosCommercialBridgeService::class)->calculateScopeQuotation($schema, [
             'stack_preset' => $stackCode,
             'selected_ui_variant' => $validated['selected_ui_variant'] ?? null,
+            'public_ux_preset' => $resolvedPublicUx,
             'navigation_shell' => $validated['navigation_shell'] ?? null,
             'output_locale' => $validated['output_locale'] ?? ($validated['locale'] ?? 'id'),
         ]);
 
         return response()->json([
             'success' => true,
-            'guarantees_release' => $schema['guarantees_release'] ?? '8.0.0',
+            'guarantees_release' => $schema['guarantees_release'] ?? '10.0.0',
             'architectural_freeze' => $schema['architectural_freeze'] ?? [],
             'project_isolation_id' => $schema['project_metadata']['project_isolation_id'] ?? null,
             'visual_frontend_ui_contract' => $schema['visual_frontend_ui_contract'] ?? [],
+            'dual_zone_ui_contract' => $schema['dual_zone_ui_contract'] ?? [],
+            'input_hygiene_contract' => $schema['input_hygiene_contract'] ?? [],
             'jurisdiction_compliance_profile' => $schema['jurisdiction_compliance_profile'] ?? [],
             'living_cve_security_alerts' => $schema['living_cve_security_alerts'] ?? [],
             'five_deterministic_guarantees' => $schema['five_deterministic_guarantees'] ?? [],
@@ -2610,6 +2647,7 @@ class BlueprintController extends Controller
             'selected_menus.*' => 'string|max:40',
             'selected_ui_variant' => 'nullable|string|max:80',
             'navigation_shell' => 'nullable|string|max:48',
+            'public_ux_preset' => 'nullable|string|max:80',
             'output_locale' => 'nullable|string|max:16',
             'termin_scheme' => 'nullable|string|in:30_50_20,50_50',
         ]);
@@ -2631,6 +2669,7 @@ class BlueprintController extends Controller
                 'selected_menus' => $validated['selected_menus'] ?? null,
                 'selected_ui_variant' => $validated['selected_ui_variant'] ?? null,
                 'navigation_shell' => $validated['navigation_shell'] ?? null,
+                'public_ux_preset' => $validated['public_ux_preset'] ?? null,
                 'output_locale' => $validated['output_locale'] ?? 'id',
             ],
         ]);
@@ -2642,6 +2681,7 @@ class BlueprintController extends Controller
             'selected_menus' => $validated['selected_menus'] ?? null,
             'selected_ui_variant' => $validated['selected_ui_variant'] ?? null,
             'navigation_shell' => $validated['navigation_shell'] ?? null,
+            'public_ux_preset' => $validated['public_ux_preset'] ?? null,
             'output_locale' => $validated['output_locale'] ?? 'id',
             'persist_project' => false,
         ]);
@@ -2650,6 +2690,7 @@ class BlueprintController extends Controller
             'stack_preset' => $validated['stack_preset'] ?? $stackCode,
             'selected_ui_variant' => $validated['selected_ui_variant'] ?? null,
             'navigation_shell' => $validated['navigation_shell'] ?? null,
+            'public_ux_preset' => $validated['public_ux_preset'] ?? null,
             'output_locale' => $validated['output_locale'] ?? 'id',
             'termin_scheme' => $validated['termin_scheme'] ?? null,
         ]);

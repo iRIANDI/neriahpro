@@ -292,6 +292,14 @@ class ProjectOsMcpController extends Controller
             ])->saveQuietly();
         }
 
+        // Auto-issue Telemetry-Backed Verified Architecture Receipt Testimonial when Phase 6 is completed via MCP Bridge
+        $verifiedReceiptTestimonialId = null;
+        if ($phaseNum === 6 && $posProject && $posProject->exists && Schema::hasTable('pos_verified_testimonials')) {
+            $issuedTestimonial = app(\App\Services\Saas\PosSaasCommercialEngineService::class)
+                ->issueVerifiedArchitectureReceiptTestimonial($posProject, 'RETAIL_PHASE6_VERIFIED');
+            $verifiedReceiptTestimonialId = $issuedTestimonial?->id;
+        }
+
         // Also mirror into VisionBlueprint dev_checkpoints so /customer/dashboard live roadmap turns Green!
         if ($blueprint && $blueprint->exists) {
             $prd = is_array($blueprint->prd_content) ? $blueprint->prd_content : [];
@@ -309,6 +317,7 @@ class ProjectOsMcpController extends Controller
             'verified_phases_count' => $verifiedCount,
             'total_phases' => 7,
             'completion_percent' => $completionPercent,
+            'verified_receipt_testimonial_id' => $verifiedReceiptTestimonialId,
             'phase_progress' => $progress,
         ];
     }

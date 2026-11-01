@@ -224,5 +224,45 @@ Route::get('/smart-guide', [\App\Http\Controllers\LegalPolicyController::class, 
 Route::get('/panduan-klien', [\App\Http\Controllers\LegalPolicyController::class, 'guide']);
 Route::get('/customer-guide', [\App\Http\Controllers\LegalPolicyController::class, 'guide']);
 
+// Project OS v10.0 — Programmatic SEO Architecture Library & Verified Aniwall Showcase
+Route::get('/explore', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'index'])->name('explore.index');
+Route::get('/explore/og/{slug}.svg', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'openGraphSvg'])->name('explore.og');
+Route::get('/explore/{sector}', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'index'])->name('explore.sector');
+Route::get('/explore/{sector}/{slug}', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'show'])->name('explore.show');
+
+// Project OS v10.0 — SaaS Commercial, Billing Webhook, Multi-Seat Workspace & Impact Grant APIs
+Route::prefix('api/saas')->group(function () {
+    Route::get('/feature-gate/{slug?}', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'featureGate'])
+        ->middleware('throttle:60,1')
+        ->name('api.saas.feature-gate');
+    Route::post('/billing/webhook', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'billingWebhook'])
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+        ->middleware('throttle:60,1')
+        ->name('api.saas.billing.webhook');
+    Route::middleware('auth')->group(function () {
+        Route::post('/workspace', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'upsertWorkspace'])
+            ->middleware('throttle:30,1')
+            ->name('api.saas.workspace.upsert');
+        Route::post('/workspaces', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'upsertWorkspace'])
+            ->middleware('throttle:30,1')
+            ->name('api.saas.workspaces.upsert');
+        Route::post('/workspace/invite', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'inviteWorkspaceMember'])
+            ->middleware('throttle:20,1')
+            ->name('api.saas.workspace.invite');
+        Route::post('/workspaces/{workspaceId}/members', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'inviteWorkspaceMember'])
+            ->middleware('throttle:20,1')
+            ->name('api.saas.workspaces.members.invite');
+        Route::post('/impact-grant', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'submitImpactGrant'])
+            ->middleware('throttle:10,1')
+            ->name('api.saas.impact-grant.submit');
+        Route::post('/impact-grants', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'submitImpactGrant'])
+            ->middleware('throttle:10,1')
+            ->name('api.saas.impact-grants.submit');
+        Route::post('/testimonials/submit', [\App\Http\Controllers\PublicExploreArchitectureController::class, 'updateTestimonialQuote'])
+            ->middleware('throttle:20,1')
+            ->name('api.saas.testimonials.submit');
+    });
+});
+
 // Fallback dynamic route for CMS pages (Must be at the very bottom)
 Route::get('/{slug?}', [PageController::class, 'show'])->where('slug', '.*');

@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Terminal, Layers } from 'lucide-react';
+import {
+  normalizeCountryZones,
+  sanitizeStrictEmailInput,
+  sanitizePhoneLocalDigitsInput,
+  formatRegionalNumberInput,
+  parseRegionalNumberInput,
+  COUNTRY_ZONES_TEMPLATE,
+} from '../utils/inputHygiene';
 
-export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLocale }) {
+export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLocale, countries }) {
   const isEn = currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
+  const countryList = normalizeCountryZones(countries || COUNTRY_ZONES_TEMPLATE);
 
   const steps = isEn ? [
     { id: 'intro', title: 'Project Identity', desc: 'Who are you and what is your organization name?' },
@@ -20,9 +29,12 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    country_code: '+62',
+    phone: '',
     company_name: '',
     project_needs: {},
     budget_range: '',
+    custom_budget_amount: '',
     privacy_consent_agreed: false
   });
 
@@ -38,6 +50,24 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
     if (name === 'vision') {
       setVisionText(value);
       setFormData(prev => ({ ...prev, project_needs: { ...prev.project_needs, vision: value } }));
+    } else if (name === 'email') {
+      setFormData(prev => ({ ...prev, email: sanitizeStrictEmailInput(value) }));
+    } else if (name === 'phone') {
+      setFormData(prev => ({ ...prev, phone: sanitizePhoneLocalDigitsInput(value, prev.country_code) }));
+    } else if (name === 'country_code') {
+      setFormData(prev => ({
+        ...prev,
+        country_code: value,
+        phone: sanitizePhoneLocalDigitsInput(prev.phone, value),
+      }));
+    } else if (name === 'custom_budget_amount') {
+      const formatted = formatRegionalNumberInput(value, isEn ? 'en' : 'id');
+      const numeric = parseRegionalNumberInput(formatted, 0);
+      setFormData(prev => ({
+        ...prev,
+        custom_budget_amount: formatted,
+        project_needs: { ...prev.project_needs, estimated_budget_numeric: numeric },
+      }));
     } else {
       setFormData(prev => ({
         ...prev,
@@ -221,9 +251,42 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
                     name="email" 
                     value={formData.email} 
                     onChange={handleChange} 
+                    inputMode="email"
+                    autoComplete="email"
                     className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-sans rounded-none focus:border-emerald-500 outline-none" 
                     placeholder="alexander@company.com" 
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
+                    {isEn ? 'WhatsApp / Mobile Number (Country Zone E.164) *' : 'No. WhatsApp / HP Aktif (Zona Negara E.164) *'}
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      name="country_code"
+                      value={formData.country_code}
+                      onChange={handleChange}
+                      className="w-40 shrink-0 px-3 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-xs font-mono rounded-none focus:border-emerald-500 outline-none"
+                    >
+                      {countryList.map((zone) => (
+                        <option key={`${zone.iso}-${zone.dial_code}`} value={zone.dial_code}>
+                          {zone.flag} {zone.dial_code} ({zone.iso})
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      inputMode="numeric"
+                      className="flex-1 px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-mono tabular-nums rounded-none focus:border-emerald-500 outline-none"
+                      placeholder="81234567890"
+                    />
+                  </div>
+                  <p className="text-[11px] font-mono text-zinc-600 dark:text-zinc-400 mt-1">
+                    {isEn ? 'Leading 0 is stripped automatically because country zone is selected.' : 'Angka 0 di awal otomatis dihapus karena kode negara sudah dipilih.'}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
@@ -293,6 +356,20 @@ export default function ClientOnboardingIsland({ csrfToken, submitUrl, currentLo
                       <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{range.desc}</div>
                     </button>
                   ))}
+                </div>
+                <div className="pt-2">
+                  <label className="block text-xs font-mono uppercase font-bold tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
+                    {isEn ? 'Target Numeric Budget Cap (Optional — Regional Thousand Separator)' : 'Target Anggaran Spesifik (Opsional — Pemisah Ribuan Otomatis)'}
+                  </label>
+                  <input
+                    type="text"
+                    name="custom_budget_amount"
+                    value={formData.custom_budget_amount}
+                    onChange={handleChange}
+                    inputMode="numeric"
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm font-mono tabular-nums rounded-none focus:border-emerald-500 outline-none"
+                    placeholder={isEn ? 'e.g. 5,000' : 'Contoh: 50.000.000'}
+                  />
                 </div>
               </div>
             )}

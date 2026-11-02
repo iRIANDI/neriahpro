@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Legal\LegalDocumentVaultService;
 use App\Services\MidtransSnapService;
 use App\Services\PrdGeneratorService;
 use App\Services\ProjectOsBlueprintCompilerService;
@@ -79,6 +80,15 @@ class VisionBlueprint extends Model
                 } while (static::query()->where('slug', $candidate)->exists());
 
                 $model->slug = $candidate;
+            }
+        });
+
+        static::deleting(function ($model) {
+            if (! empty($model->id)) {
+                LegalDocumentVaultService::purgeEntityDocuments('projects', (string) $model->id);
+            }
+            if (! empty($model->slug)) {
+                LegalDocumentVaultService::purgeEntityDocuments('projects', (string) $model->slug);
             }
         });
     }

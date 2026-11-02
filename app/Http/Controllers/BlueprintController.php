@@ -9,6 +9,7 @@ use App\Models\CmsGlobalSetting;
 use App\Models\Document;
 use App\Models\LeadContact;
 use App\Models\PosChangeRequest;
+use App\Models\PosImpactGrantApplication;
 use App\Models\PosProject;
 use App\Models\Transaction;
 use App\Models\User;
@@ -19,6 +20,7 @@ use App\Services\BlueprintDoctorService;
 use App\Services\BlueprintRefinementService;
 use App\Services\BlueprintSlopScannerService;
 use App\Services\BrownfieldMigrationAuditorService;
+use App\Services\Legal\LegalDocumentVaultService;
 use App\Services\MidtransSnapService;
 use App\Services\PosCommercialBridgeService;
 use App\Services\PrdGeneratorService;
@@ -2030,6 +2032,9 @@ class BlueprintController extends Controller
             ]);
         }
 
+        $packageName = $request->input('package_tier') ?: ($request->input('package') ?: $request->input('selected_package'));
+        $isGrant = in_array((string) $packageName, ['impact_nonprofit_grant', 'impact_csr', 'grant'], true);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255', 'regex:/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/'],
@@ -2048,9 +2053,11 @@ class BlueprintController extends Controller
             'has_blueprint' => 'nullable|string|max:50',
             'blueprint_slug' => 'nullable|string|max:100',
             'umkm_category' => 'nullable|string|max:100',
+            'legal_decree_number' => $isGrant ? 'required|string|max:160' : 'nullable|string|max:160',
+            'legal_document' => $isGrant ? 'required|file|mimes:pdf,jpg,jpeg,png,webp|max:10240' : 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'organization_type' => 'nullable|string|max:50',
         ]);
 
-        $packageName = $request->input('package_tier') ?: ($request->input('package') ?: $request->input('selected_package'));
         $packageMeta = PricingRegistry::get((string) $packageName);
         $isRetail = PricingRegistry::isSelfService((string) $packageName);
         $company = $request->input('company') ?: $request->input('company_name') ?: ($isRetail ? ($validated['name'].' (Personal License)') : ($validated['name'].' Project'));
@@ -2089,6 +2096,95 @@ class BlueprintController extends Controller
                 'submitted_at' => now()->toIso8601String(),
             ],
         ]);
+
+        // Secure Legal Document Partitioning & 1-Click Verification for Non-Profit/CSR Grants
+        $uploadedDocMeta = null;
+        $grantApplicationId = null;
+
+        if ($packageName === 'impact_nonprofit_grant') {
+            $grantApplicationId = strtolower((string) Str::ulid());
+            $decreeNumber = (string) ($request->input('legal_decree_number') ?: ('SK-SUBMITTED-'.strtoupper(substr($lead->id, -8))));
+            $orgType = (string) ($request->input('organization_type') ?: 'NONPROFIT_YAYASAN');
+            if (! in_array($orgType, ['NONPROFIT_YAYASAN', 'NGO_SOCIAL', 'RELIGIOUS_HOUSE', 'ACADEMIC_CAMPUS'], true)) {
+                $orgType = 'NONPROFIT_YAYASAN';
+            }
+
+            if ($request->hasFile('legal_document')) {
+                try {
+                    $uploadedDocMeta = LegalDocumentVaultService::storeLegalDocument(
+                        $request->file('legal_document'),
+                        'impact_grants',
+                        $grantApplicationId,
+                        [
+                            'lead_id' => $lead->id,
+                            'name' => $validated['name'],
+                            'company' => $company,
+                            'decree_number' => $decreeNumber,
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to store legal document in vault: '.$e->getMessage());
+                }
+            }
+
+            $grantApplication = PosImpactGrantApplication::create([
+                'id' => $grantApplicationId,
+                'user_id' => Auth::id(),
+                'applicant_name' => $validated['name'],
+                'organization_name' => $company,
+                'organization_type' => $orgType,
+                'official_email' => $validated['email'],
+                'phone_country_code' => $countryCode,
+                'phone_number' => $cleanPhone,
+                'legal_decree_number' => $decreeNumber,
+                'private_document_path' => $uploadedDocMeta['storage_path'] ?? null,
+                'requested_project_budget_idr' => 0,
+                'mission_statement' => [
+                    'id' => $validated['notes'] ?? 'Pengajuan Hibah CSR Yayasan/NGO/Rumah Ibadah 100% via Formulir Pricing.',
+                    'en' => $validated['notes'] ?? '100% Subsidized CSR Non-Profit/Faith Grant Application via Pricing Form.',
+                ],
+                'status' => 'PENDING_REVIEW',
+            ]);
+
+            if ($uploadedDocMeta) {
+                Document::create([
+                    'title' => 'Dokumen Legalitas: '.$company,
+                    'document_type' => 'legal_proof',
+                    'related_type' => PosImpactGrantApplication::class,
+                    'related_id' => $grantApplication->id,
+                    'file_path' => $uploadedDocMeta['storage_path'],
+                    'document_hash' => $uploadedDocMeta['sha256'],
+                    'status' => 'draft',
+                    'scope_locked' => true,
+                ]);
+            }
+        } elseif ($request->hasFile('legal_document')) {
+            try {
+                $uploadedDocMeta = LegalDocumentVaultService::storeLegalDocument(
+                    $request->file('legal_document'),
+                    'leads',
+                    (string) $lead->id,
+                    [
+                        'lead_id' => $lead->id,
+                        'name' => $validated['name'],
+                        'company' => $company,
+                    ]
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to store legal document in vault: '.$e->getMessage());
+            }
+        }
+
+        if ($uploadedDocMeta || $grantApplicationId) {
+            $currentMeta = $lead->metadata ?? [];
+            if ($uploadedDocMeta) {
+                $currentMeta['legal_document'] = $uploadedDocMeta;
+            }
+            if ($grantApplicationId) {
+                $currentMeta['grant_application_id'] = $grantApplicationId;
+            }
+            $lead->update(['metadata' => $currentMeta]);
+        }
 
         $displayPackage = $packageMeta['name'] ?? $packageName;
 
@@ -2296,6 +2392,11 @@ class BlueprintController extends Controller
             'snap_url' => $snapResponse['snap_url'] ?? config('midtrans.snap_url'),
             'package_tier' => $packageName,
             'is_retail' => $isRetail,
+            'grant_application_id' => $grantApplicationId,
+            'legal_document' => $uploadedDocMeta ? [
+                'name' => $uploadedDocMeta['original_name'],
+                'size_bytes' => $uploadedDocMeta['size_bytes'],
+            ] : null,
         ]);
     }
 

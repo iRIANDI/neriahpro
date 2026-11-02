@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Legal\LegalDocumentVaultService;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class PosImpactGrantApplication extends Model
 {
@@ -15,6 +17,7 @@ class PosImpactGrantApplication extends Model
     protected $table = 'pos_impact_grant_applications';
 
     protected $fillable = [
+        'id',
         'user_id',
         'applicant_name',
         'organization_name',
@@ -39,6 +42,18 @@ class PosImpactGrantApplication extends Model
             'mission_statement' => 'array',
             'reviewed_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (PosImpactGrantApplication $model): void {
+            if (! empty($model->id)) {
+                LegalDocumentVaultService::purgeEntityDocuments('impact_grants', $model->id);
+            }
+            if (! empty($model->private_document_path) && Storage::disk('private')->exists($model->private_document_path)) {
+                Storage::disk('private')->delete($model->private_document_path);
+            }
+        });
     }
 
     public function applicant(): BelongsTo

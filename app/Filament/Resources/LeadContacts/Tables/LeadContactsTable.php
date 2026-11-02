@@ -159,7 +159,7 @@ class LeadContactsTable
                             // Create an audit campaign entry
                             $campaign = EmailCampaign::create([
                                 'created_by_user_id' => auth()->id(),
-                                'title' => 'Direct Mail to: ' . $record->name . ' (' . ($record->company_name ?: $record->email) . ')',
+                                'title' => 'Direct Mail to: '.$record->name.' ('.($record->company_name ?: $record->email).')',
                                 'subject' => $subject,
                                 'sender_name' => $data['sender_name'],
                                 'sender_email' => $data['sender_email'],
@@ -207,6 +207,14 @@ class LeadContactsTable
                                 ->send();
                         }
                     }),
+
+                Action::make('viewLegalDocument')
+                    ->label('Dokumen Legalitas')
+                    ->icon('heroicon-o-document-text')
+                    ->color('info')
+                    ->visible(fn (LeadContact $record) => ! empty($record->metadata['legal_document']['storage_path']))
+                    ->url(fn (LeadContact $record) => route('admin.impact-grant.document', $record->id))
+                    ->openUrlInNewTab(),
 
                 ViewAction::make(),
                 EditAction::make(),

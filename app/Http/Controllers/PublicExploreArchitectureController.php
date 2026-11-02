@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Privacy\ExportAndRedactUserPiiAction;
 use App\Models\AuditLog;
+use App\Models\LeadContact;
 use App\Models\PosOrganizationMember;
 use App\Models\PosOrganizationWorkspace;
 use App\Models\PosProject;
@@ -488,6 +489,41 @@ SVG;
                 'message' => $e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Securely download or view private legal document for an Impact Grant application.
+     */
+    public function downloadGrantDocument(Request $request, string $id)
+    {
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $application = PosImpactGrantApplication::query()->find($id);
+        $filePath = $application?->private_document_path;
+
+        if (! $filePath) {
+            $lead = LeadContact::query()->find($id);
+            $filePath = $lead?->metadata['legal_document']['storage_path'] ?? null;
+        }
+
+        if (! $filePath || ! Storage::disk('private')->exists($filePath)) {
+            abort(404, 'Dokumen legalitas tidak ditemukan di brankas penyimpanan.');
+        }
+
+        // Authorization: Super Admin, Developer role, or the verified applicant
+        $isAuthorized = $user->isSuperAdmin()
+            || (method_exists($user, 'hasRole') && ($user->hasRole('super_admin') || $user->hasRole('developer')))
+            || ($application && $application->user_id === $user->id)
+            || ($application && $application->official_email === $user->email);
+
+        if (! $isAuthorized) {
+            abort(403, 'Akses Ditolak: Anda tidak memiliki wewenang meninjau dokumen legalitas ini.');
+        }
+
+        return Storage::disk('private')->response($filePath);
     }
 
     /**

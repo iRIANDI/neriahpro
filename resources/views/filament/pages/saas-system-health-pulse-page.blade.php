@@ -82,6 +82,7 @@
                         <tr>
                             <th class="px-3 py-2">Organisasi</th>
                             <th class="px-3 py-2">Tipe</th>
+                            <th class="px-3 py-2">Dokumen Legalitas &amp; SK</th>
                             <th class="px-3 py-2">PIC Email &amp; E.164</th>
                             <th class="px-3 py-2">Status</th>
                             <th class="px-3 py-2">Voucher Hibah</th>
@@ -93,6 +94,16 @@
                             <tr class="odd:bg-white dark:odd:bg-zinc-900 even:bg-zinc-50 dark:even:bg-zinc-950/60 border-b border-zinc-200 dark:border-zinc-800">
                                 <td class="px-3 py-2 font-bold text-zinc-950 dark:text-white">{{ $grant->organization_name }}</td>
                                 <td class="px-3 py-2">{{ $grant->organization_type }}</td>
+                                <td class="px-3 py-2">
+                                    <div class="font-bold text-zinc-950 dark:text-zinc-100">{{ $grant->legal_decree_number ?? '-' }}</div>
+                                    @if(!empty($grant->private_document_path) && \Illuminate\Support\Facades\Storage::disk('private')->exists($grant->private_document_path))
+                                        <a href="{{ route('admin.impact-grant.document', $grant->id) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-cyan-600 dark:text-cyan-400 hover:underline font-bold mt-0.5">
+                                            📋 Lihat Dokumen
+                                        </a>
+                                    @else
+                                        <span class="text-[10px] text-zinc-400">Tidak ada file</span>
+                                    @endif
+                                </td>
                                 <td class="px-3 py-2">{{ $grant->pic_email }} · {{ $grant->pic_phone_country_code }}{{ $grant->pic_phone }}</td>
                                 <td class="px-3 py-2 font-black">{{ $grant->status }}</td>
                                 <td class="px-3 py-2 text-emerald-900 dark:text-emerald-300 font-bold">{{ $grant->granted_voucher_code ?? '-' }}</td>
@@ -112,7 +123,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-3 py-4 text-center text-zinc-600 dark:text-zinc-400">
+                                <td colspan="7" class="px-3 py-4 text-center text-zinc-600 dark:text-zinc-400">
                                     {{ $isEn ? 'No Impact Grant applications submitted yet.' : 'Belum ada pengajuan hibah Non-Profit yang masuk.' }}
                                 </td>
                             </tr>

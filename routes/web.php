@@ -286,6 +286,9 @@ Route::prefix('api/saas')->group(function () {
         Route::post('/impact-grants', [PublicExploreArchitectureController::class, 'submitImpactGrant'])
             ->middleware('throttle:10,1')
             ->name('api.saas.impact-grants.submit');
+        Route::get('/impact-grants/{id}/document', [PublicExploreArchitectureController::class, 'downloadGrantDocument'])
+            ->middleware(['auth', 'throttle:30,1'])
+            ->name('admin.impact-grant.document');
         Route::post('/testimonials/submit', [PublicExploreArchitectureController::class, 'updateTestimonialQuote'])
             ->middleware('throttle:20,1')
             ->name('api.saas.testimonials.submit');

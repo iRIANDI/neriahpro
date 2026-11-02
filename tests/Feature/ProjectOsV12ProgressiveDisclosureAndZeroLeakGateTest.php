@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Livewire\BlueprintArchitectStudio;
+use App\Models\Document;
+use App\Models\PosImpactGrantApplication;
 use App\Models\VisionBlueprint;
 use App\Services\Ai\AgenticActionExecutionEngine;
 use App\Services\Ai\GeminiToolRegistry;
@@ -10,6 +12,8 @@ use App\Services\Entitlement\BlueprintEntitlementGateService;
 use App\Services\MidtransSnapService;
 use App\Support\PosProgressiveDisclosureCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -200,5 +204,62 @@ class ProjectOsV12ProgressiveDisclosureAndZeroLeakGateTest extends TestCase
         $this->assertStringContainsString("isEn ? 'PARTNER PROJECT VERSION' : 'VERSI MITRA PROYEK'", $jsx);
         $this->assertStringContainsString("isEn ? 'RETAIL SAAS // ONE-STOP V12.0' : 'RETAIL SAAS // SATU PINTU V12.0'", $jsx);
         $this->assertStringContainsString("isEn ? 'MITRA TURNKEY // ESCROW WBS V12.0' : 'MITRA TURNKEY // ESCROW RAB V12.0'", $jsx);
+    }
+
+    public function test_impact_grant_inquiry_requires_legal_decree_and_stores_isolated_vault_document_without_zombies(): void
+    {
+        Storage::fake('private');
+
+        // 1. Validasi: Tanpa nomor SK dan dokumen, request gagal validasi
+        $resFail = $this->postJson('/api/pricing/inquiry', [
+            'name' => 'Pastor Yohanes',
+            'email' => 'yohanes@gerejakasih.org',
+            'phone' => '081299887766',
+            'package_tier' => 'impact_nonprofit_grant',
+        ]);
+        $resFail->assertStatus(422);
+        $resFail->assertJsonValidationErrors(['legal_decree_number', 'legal_document']);
+
+        // 2. Submit dengan file legalitas resmi (PDF)
+        $fakePdf = UploadedFile::fake()->create('akta_notaris_pendirian_gereja.pdf', 300, 'application/pdf');
+
+        $resSuccess = $this->post('/api/pricing/inquiry', [
+            'name' => 'Pastor Yohanes',
+            'company' => 'Gereja Kasih Karunia',
+            'email' => 'yohanes@gerejakasih.org',
+            'phone' => '081299887766',
+            'package_tier' => 'impact_nonprofit_grant',
+            'organization_type' => 'RELIGIOUS_HOUSE',
+            'legal_decree_number' => 'SK-KEMENAG-RI/GKK/2024/0991',
+            'legal_document' => $fakePdf,
+        ]);
+
+        $resSuccess->assertStatus(200);
+        $data = $resSuccess->json();
+        $this->assertTrue($data['success']);
+        $this->assertSame('impact_nonprofit_grant', $data['package_tier']);
+        $this->assertSame(0, $data['gross_amount']);
+
+        // 3. Verifikasi record PosImpactGrantApplication dan Document terbentuk
+        $grant = PosImpactGrantApplication::where('official_email', 'yohanes@gerejakasih.org')->first();
+        $this->assertNotNull($grant);
+        $this->assertSame('SK-KEMENAG-RI/GKK/2024/0991', $grant->legal_decree_number);
+        $this->assertSame('RELIGIOUS_HOUSE', $grant->organization_type);
+        $this->assertNotEmpty($grant->private_document_path);
+
+        // Path tersimpan di disk private dengan partisi per-entitas: legal_documents/impact_grants/{grant_id}/...
+        $this->assertStringStartsWith('legal_documents/impact_grants/'.strtolower((string) $grant->id).'/', $grant->private_document_path);
+        Storage::disk('private')->assertExists($grant->private_document_path);
+
+        $docRecord = Document::where('document_type', 'legal_proof')->first();
+        $this->assertNotNull($docRecord);
+        $this->assertNotEmpty($docRecord->document_hash);
+
+        // 4. Verifikasi Anti-Zombie: Saat model PosImpactGrantApplication dihapus, berkas di vault terhapus tuntas
+        $filePath = $grant->private_document_path;
+        $grant->delete();
+
+        // Model deleting hook harus membersihkan direktori entitas dari storage private (zero zombie files)
+        Storage::disk('private')->assertMissing($filePath);
     }
 }

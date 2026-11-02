@@ -32,7 +32,9 @@ import {
   CreditCard,
   ExternalLink,
   ShoppingBag,
-  Search
+  Search,
+  Upload,
+  FileCheck
 } from 'lucide-react';
 import {
   normalizeCountryZones,
@@ -247,8 +249,12 @@ export default function ArchitecturePricingIsland({
     estimated_budget_display: '',
     voucher_code: '',
     notes: '',
+    legal_decree_number: '',
+    organization_type: 'NONPROFIT_YAYASAN',
     honeypot: ''
   });
+  const [legalDocumentFile, setLegalDocumentFile] = useState(null);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -437,6 +443,8 @@ export default function ArchitecturePricingIsland({
     setLastOrder(null);
     setPaymentStatus('idle');
     setAgreeTerms(false);
+    setLegalDocumentFile(null);
+    setIsDraggingFile(false);
     setIsModalOpen(true);
   };
 
@@ -480,7 +488,7 @@ export default function ArchitecturePricingIsland({
     e.preventDefault();
     if (formData.honeypot) return; // bot detected
 
-    if (!agreeTerms && !['retail_spark', 'impact_nonprofit_grant'].includes(selectedPackage)) {
+    if (!agreeTerms && selectedPackage !== 'retail_spark') {
       if (window.showToast) {
         window.showToast({
           type: 'warning',
@@ -493,32 +501,71 @@ export default function ArchitecturePricingIsland({
       return;
     }
 
+    if (selectedPackage === 'impact_nonprofit_grant') {
+      if (!formData.legal_decree_number?.trim()) {
+        const msg = isEn
+          ? 'Please enter your official Decree / AHU / Deed registration number for CSR grant verification.'
+          : 'Harap masukkan Nomor SK Kemenkumham / Akta Notaris / Sertifikat Lembaga untuk verifikasi subsidi CSR.';
+        if (window.showToast) {
+          window.showToast({
+            type: 'warning',
+            title: isEn ? 'LEGAL NUMBER REQUIRED' : 'NOMOR SK / AKTA WAJIB',
+            message: msg
+          });
+        }
+        setSubmitError(msg);
+        return;
+      }
+      if (!legalDocumentFile) {
+        const msg = isEn
+          ? 'Please attach a scan of your official legal deed / decree document (PDF, JPG, or PNG).'
+          : 'Harap lampirkan pindaian berkas dokumen legalitas resmi (PDF, JPG, atau PNG) sebagai bukti berhak menerima subsidi 100% CSR.';
+        if (window.showToast) {
+          window.showToast({
+            type: 'warning',
+            title: isEn ? 'DOCUMENT FILE REQUIRED' : 'BERKAS DOKUMEN WAJIB',
+            message: msg
+          });
+        }
+        setSubmitError(msg);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
+      const payload = new FormData();
+      payload.append('name', formData.name);
+      payload.append('company', formData.company || (isRetailTier ? `${formData.name} (Personal)` : ''));
+      payload.append('email', formData.email);
+      payload.append('country_code', formData.country_code);
+      payload.append('phone', formData.phone);
+      payload.append('package_tier', selectedPackage);
+      if (formData.voucher_code) payload.append('voucher_code', formData.voucher_code);
+      if (activePkg.requires_sprint_batch && sprintBatch) payload.append('sprint_batch', sprintBatch);
+      if (activePkg.requires_kickoff_slot && kickoffSlot) payload.append('kickoff_slot', kickoffSlot);
+      if (selectedPackage === 'full_mvp' && hasBlueprint) payload.append('has_blueprint', hasBlueprint);
+      if (selectedPackage === 'full_mvp' && hasBlueprint === 'ready' && blueprintSlug) payload.append('blueprint_slug', blueprintSlug);
+      if (selectedPackage === 'umkm_starter' && umkmCategory) payload.append('umkm_category', umkmCategory);
+      if (formData.notes) payload.append('notes', formData.notes);
+      if (formData.estimated_budget_display) payload.append('budget_range', formData.estimated_budget_display);
+      if (selectedPackage === 'impact_nonprofit_grant') {
+        payload.append('legal_decree_number', formData.legal_decree_number || '');
+        payload.append('organization_type', formData.organization_type || 'NONPROFIT_YAYASAN');
+        if (legalDocumentFile) {
+          payload.append('legal_document', legalDocumentFile);
+        }
+      }
+
       const response = await fetch('/api/pricing/inquiry', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
         },
-        body: JSON.stringify({
-          name: formData.name,
-          company: formData.company || (isRetailTier ? `${formData.name} (Personal)` : ''),
-          email: formData.email,
-          country_code: formData.country_code,
-          phone: formData.phone,
-          package_tier: selectedPackage,
-          voucher_code: formData.voucher_code,
-          sprint_batch: activePkg.requires_sprint_batch ? sprintBatch : null,
-          kickoff_slot: activePkg.requires_kickoff_slot ? kickoffSlot : null,
-          has_blueprint: selectedPackage === 'full_mvp' ? hasBlueprint : null,
-          blueprint_slug: selectedPackage === 'full_mvp' && hasBlueprint === 'ready' ? blueprintSlug : null,
-          umkm_category: selectedPackage === 'umkm_starter' ? umkmCategory : null,
-          notes: formData.notes
-        })
+        body: payload
       });
 
       const result = await response.json();
@@ -4676,9 +4723,11 @@ return match (true) {
                     <h4 className="font-bold text-sm text-zinc-900 dark:text-white uppercase font-mono">
                       {paymentStatus === 'success'
                         ? (isEn ? 'PAYMENT CONFIRMED & ACCESS UNLOCKED!' : 'PEMBAYARAN LUNAS & AKSES AKTIF!')
-                        : lastOrder?.is_paid_package
-                          ? (isEn ? 'ORDER ISSUED // READY FOR MIDTRANS PAYMENT' : 'PESANAN TERBIT // SIAP DIBAYAR VIA MIDTRANS')
-                          : (isEn ? 'INQUIRY SUBMITTED SUCCESSFULLY!' : 'PERMINTAAN KONSULTASI TERCATAT!')}
+                        : selectedPackage === 'impact_nonprofit_grant'
+                          ? (isEn ? 'CSR GRANT APPLICATION & LEGAL PROOF SUBMITTED!' : 'PENGAJUAN HIBAH CSR & BERKAS LEGALITAS BERHASIL DIKIRIM!')
+                          : lastOrder?.is_paid_package
+                            ? (isEn ? 'ORDER ISSUED // READY FOR MIDTRANS PAYMENT' : 'PESANAN TERBIT // SIAP DIBAYAR VIA MIDTRANS')
+                            : (isEn ? 'INQUIRY SUBMITTED SUCCESSFULLY!' : 'PERMINTAAN KONSULTASI TERCATAT!')}
                     </h4>
 
                     {lastOrder?.order_id && (
@@ -4694,13 +4743,17 @@ return match (true) {
                       ? (isEn
                         ? 'Your payment was successfully verified! Blueprint specification files, SQL schemas, and official invoices are available in your Customer Dashboard.'
                         : 'Pembayaran Anda telah sukses diverifikasi! Dokumen spesifikasi PRD, skema SQL DDL, dan invoice resmi telah aktif di Dashboard Pelanggan Anda.')
-                      : lastOrder?.is_paid_package
+                      : selectedPackage === 'impact_nonprofit_grant'
                         ? (isEn
-                          ? 'Complete your payment securely via Midtrans Snap (QRIS, BCA/Mandiri/BRI Virtual Account, Credit Card). Your digital license will activate immediately upon payment.'
-                          : 'Selesaikan pembayaran via Midtrans Snap (QRIS, BCA/Mandiri/BRI Virtual Account, Kartu Kredit). Lisensi spesifikasi digital langsung aktif otomatis setelah pembayaran.')
-                        : (isEn
-                          ? 'Your slot and timeline requirements have been logged into our CRM. Our Lead Architect will review and contact you promptly.'
-                          : 'Slot jadwal dan spesifikasi kebutuhan Anda telah tercatat di CRM Neriah Pro. Lead Architect kami akan segera meninjau dan menghubungi Anda.')}
+                          ? 'Your non-profit grant application, legal decree registration number, and verified legal documentation have been securely vaulted (SHA-256 integrity). Our team will audit the documents within 1x24 hours to activate your subsidised Pro Quota.'
+                          : 'Pengajuan hibah CSR, nomor registrasi SK/Akta, dan berkas legalitas lembaga Anda telah tersimpan aman dalam vault terenkripsi (integritas SHA-256). Tim audit kami akan memverifikasi berkas dalam 1x24 jam untuk mengaktifkan Kuota Lisensi Pro bersubsidi Anda.')
+                        : lastOrder?.is_paid_package
+                          ? (isEn
+                            ? 'Complete your payment securely via Midtrans Snap (QRIS, BCA/Mandiri/BRI Virtual Account, Credit Card). Your digital license will activate immediately upon payment.'
+                            : 'Selesaikan pembayaran via Midtrans Snap (QRIS, BCA/Mandiri/BRI Virtual Account, Kartu Kredit). Lisensi spesifikasi digital langsung aktif otomatis setelah pembayaran.')
+                          : (isEn
+                            ? 'Your slot and timeline requirements have been logged into our CRM. Our Lead Architect will review and contact you promptly.'
+                            : 'Slot jadwal dan spesifikasi kebutuhan Anda telah tercatat di CRM Neriah Pro. Lead Architect kami akan segera meninjau dan menghubungi Anda.')}
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
@@ -5183,6 +5236,169 @@ return match (true) {
                       />
                     </div>
                   </div>
+
+                  {/* Verifikasi Dokumen Legalitas CSR (Khusus Paket Impact & Non-Profit Grant) */}
+                  {selectedPackage === 'impact_nonprofit_grant' && (
+                    <div className="p-3.5 bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-300 dark:border-cyan-800 space-y-3">
+                      <div className="flex items-start gap-2.5">
+                        <div className="p-1.5 bg-cyan-500 text-black shrink-0">
+                          <FileCheck className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h5 className="text-xs font-mono font-black text-cyan-950 dark:text-cyan-200 uppercase tracking-tight">
+                            {isEn ? 'Mandatory Legal Verification Documents (ISAK 35 / PSAK 109)' : 'Dokumen Verifikasi Legalitas Wajib (ISAK 35 / PSAK 109)'}
+                          </h5>
+                          <p className="text-[11px] text-cyan-900/80 dark:text-cyan-300/80 font-sans leading-relaxed mt-0.5">
+                            {isEn
+                              ? 'To prevent fraudulent claims and ensure the 100% subsidy reaches legitimate public-service institutions, please select your organization type, enter your registration/decree number, and upload proof of legal standing.'
+                              : 'Untuk mencegah penyalahgunaan subsidi 100% dan memastikan tepat sasaran bagi lembaga pelayanan publik yang sah, pilih jenis lembaga, masukkan nomor SK/Akta resmi, dan unggah pindaian bukti dokumen.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Dropdown Kategori Lembaga & Nomor SK */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-mono font-bold text-zinc-800 dark:text-zinc-200 uppercase mb-1">
+                            {isEn ? 'Organization Type *' : 'Kategori Lembaga *'}
+                          </label>
+                          <select
+                            name="organization_type"
+                            value={formData.organization_type || 'NONPROFIT_YAYASAN'}
+                            onChange={(e) => setFormData(prev => ({ ...prev, organization_type: e.target.value }))}
+                            className="w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2 text-xs text-zinc-900 dark:text-white rounded-none focus:border-cyan-500 focus:outline-hidden font-mono"
+                          >
+                            <option value="NONPROFIT_YAYASAN">
+                              {isEn ? 'Foundation / Social Charity (Yayasan)' : 'Yayasan Sosial / Kemanusiaan'}
+                            </option>
+                            <option value="RELIGIOUS_HOUSE">
+                              {isEn ? 'House of Worship (Mosque/Church/Temple)' : 'Rumah Ibadah (Masjid / Gereja / Vihara / Pura)'}
+                            </option>
+                            <option value="NGO_SOCIAL">
+                              {isEn ? 'Non-Profit NGO / Zakat & Waqf Institution' : 'Lembaga Zakat / Wakaf / NGO Nirlaba'}
+                            </option>
+                            <option value="ACADEMIC_CAMPUS">
+                              {isEn ? 'Academic Research / Campus Lab' : 'Lembaga Riset / Kampus Terakreditasi'}
+                            </option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-mono font-bold text-zinc-800 dark:text-zinc-200 uppercase mb-1">
+                            {isEn ? 'Decree / Deed Registration No. *' : 'Nomor SK Kemenkumham / Akta Notaris *'}
+                          </label>
+                          <input
+                            type="text"
+                            name="legal_decree_number"
+                            value={formData.legal_decree_number || ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, legal_decree_number: e.target.value }))}
+                            placeholder={isEn ? 'e.g. AHU-0012345.AH.01.04.Tahun 2020' : 'Mis: AHU-0012345.AH.01.04.Tahun 2020 / No. Akta Notaris'}
+                            required
+                            className="w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2 text-xs text-zinc-900 dark:text-white rounded-none focus:border-cyan-500 focus:outline-hidden font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      {/* File Upload Zone */}
+                      <div className="space-y-1.5 pt-1">
+                        <label className="block text-[11px] font-mono font-bold text-zinc-800 dark:text-zinc-200 uppercase">
+                          {isEn ? 'Legal Document File (PDF, JPG, PNG, Max 10MB) *' : 'Berkas Pindaian Dokumen Legalitas (PDF, JPG, PNG, Maks 10MB) *'}
+                        </label>
+
+                        {legalDocumentFile ? (
+                          <div className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 border border-cyan-400 dark:border-cyan-700">
+                            <div className="flex items-center gap-2.5 overflow-hidden">
+                              <div className="p-1.5 bg-cyan-100 dark:bg-cyan-950 text-cyan-900 dark:text-cyan-200 shrink-0">
+                                <FileCheck className="w-4 h-4" />
+                              </div>
+                              <div className="truncate">
+                                <p className="text-xs font-mono font-bold text-zinc-900 dark:text-white truncate">
+                                  {legalDocumentFile.name}
+                                </p>
+                                <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
+                                  <span>{(legalDocumentFile.size / 1024 / 1024).toFixed(2)} MB</span>
+                                  <span>•</span>
+                                  <span className="text-cyan-700 dark:text-cyan-300 font-semibold">
+                                    {isEn ? 'Encrypted Vault Storage' : 'Tersimpan Terisolasi'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setLegalDocumentFile(null)}
+                              className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 hover:text-red-500 transition cursor-pointer shrink-0 ml-2"
+                              title={isEn ? 'Remove file' : 'Hapus file'}
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div
+                            onDragOver={(e) => { e.preventDefault(); setIsDraggingFile(true); }}
+                            onDragLeave={() => setIsDraggingFile(false)}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              setIsDraggingFile(false);
+                              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                const file = e.dataTransfer.files[0];
+                                if (file.size > 10 * 1024 * 1024) {
+                                  if (window.showToast) {
+                                    window.showToast({
+                                      type: 'error',
+                                      title: isEn ? 'FILE TOO LARGE' : 'UKURAN FILE TERLALU BESAR',
+                                      message: isEn ? 'Maximum document file size is 10MB.' : 'Ukuran maksimal berkas dokumen adalah 10MB.'
+                                    });
+                                  }
+                                  return;
+                                }
+                                setLegalDocumentFile(file);
+                              }
+                            }}
+                            className={`border-2 border-dashed p-4 text-center transition cursor-pointer ${
+                              isDraggingFile
+                                ? 'border-cyan-500 bg-cyan-500/10'
+                                : 'border-zinc-300 dark:border-zinc-700 hover:border-cyan-500 bg-white/60 dark:bg-zinc-900/40'
+                            }`}
+                            onClick={() => {
+                              const input = document.getElementById('csr-legal-document-input');
+                              if (input) input.click();
+                            }}
+                          >
+                            <input
+                              id="csr-legal-document-input"
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png,.webp"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  const file = e.target.files[0];
+                                  if (file.size > 10 * 1024 * 1024) {
+                                    if (window.showToast) {
+                                      window.showToast({
+                                        type: 'error',
+                                        title: isEn ? 'FILE TOO LARGE' : 'UKURAN FILE TERLALU BESAR',
+                                        message: isEn ? 'Maximum document file size is 10MB.' : 'Ukuran maksimal berkas dokumen adalah 10MB.'
+                                      });
+                                    }
+                                    return;
+                                  }
+                                  setLegalDocumentFile(file);
+                                }
+                              }}
+                            />
+                            <Upload className="w-6 h-6 mx-auto mb-2 text-cyan-600 dark:text-cyan-400" />
+                            <p className="text-xs font-mono font-bold text-zinc-800 dark:text-zinc-200">
+                              {isEn ? 'Drop Akta / SK file here, or click to browse' : 'Tarik & lepas file Akta / SK ke sini, atau klik untuk memilih'}
+                            </p>
+                            <p className="text-[10px] text-zinc-500 font-sans mt-0.5">
+                              {isEn ? 'PDF, JPG, PNG, WEBP (Max 10MB). Scanned clearly with official stamp.' : 'PDF, JPG, PNG, WEBP (Maks 10MB). Pindaian jelas dengan stempel resmi.'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Persetujuan Syarat & Ketentuan serta Kebijakan Refund */}
                   {selectedPackage !== 'retail_spark' && (

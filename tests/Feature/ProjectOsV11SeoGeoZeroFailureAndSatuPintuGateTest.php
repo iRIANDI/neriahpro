@@ -93,7 +93,7 @@ class ProjectOsV11SeoGeoZeroFailureAndSatuPintuGateTest extends TestCase
         $this->assertStringContainsString('activeRetailPkg', $jsxContent);
         $this->assertStringContainsString('activeMitraPkg', $jsxContent);
         $this->assertStringContainsString('28 PARAMETER EVALUASI × 20 PILAR REKAYASA', $jsxContent);
-        $this->assertStringContainsString('KNOWLEDGE BASE &amp; FAQ V11.0 PARIPURNA', $jsxContent);
+        $this->assertStringContainsString('KNOWLEDGE BASE &amp; FAQ V12.0 PARIPURNA', $jsxContent);
         $this->assertStringNotContainsString('href={`/blueprint/studio?', $jsxContent);
         $this->assertStringNotContainsString('1. MULAI WIZARD BARU BERSIH', $jsxContent);
         $this->assertStringNotContainsString('1. BUKA STUDIO MITRA', $jsxContent);

@@ -121,10 +121,32 @@
                     <option value="{{ $locCode }}" @selected($outputLocale === $locCode)>{{ $locLabel }}</option>
                 @endforeach
             </select>
+            <!-- v12.0 Server-Side Entitlement Gate Switcher -->
+            <select
+                wire:change="switchEntitlementTier($event.target.value)"
+                aria-label="Tier Lisensi & Server Gate"
+                class="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-500 text-emerald-950 dark:text-emerald-200 font-mono text-[10px] font-black rounded-none"
+            >
+                <option value="FREE_SANDBOX" @selected($entitlementTier === 'FREE_SANDBOX')>🔒 Tier: Spark Sandbox (Rp 0 • Gate P2–P7)</option>
+                <option value="SINGLE_APP_PASS" @selected($entitlementTier === 'SINGLE_APP_PASS')>🔓 Tier: Single-App Pass (Rp 299rb)</option>
+                <option value="PRO_RETAIL" @selected($entitlementTier === 'PRO_RETAIL')>⚡ Tier: Pro Agentic / CSR (Rp 399rb)</option>
+                <option value="AGENCY_PARTNER" @selected($entitlementTier === 'AGENCY_PARTNER')>👑 Tier: Agency White-Label (Rp 990rb+)</option>
+                <option value="MITRA_TURNKEY" @selected($entitlementTier === 'MITRA_TURNKEY')>🤝 Tier: Mitra Proyek Turnkey (SPK)</option>
+            </select>
         </div>
 
-        <!-- Screen 3: Blueprint Doctor + Scope Hash + Mitra RAB Badge -->
+        <!-- Screen 3: Blueprint Doctor + Scope Hash + Mitra RAB Badge + Rescue Button -->
         <div class="flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+            <!-- v12.0 The "Rescue" Button (100% Retail Fee Credited to Mitra DP) -->
+            <button
+                type="button"
+                wire:click="convertRetailToMitraRescue"
+                class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-500 dark:bg-amber-950/90 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-600 font-black text-[10px] rounded-none cursor-pointer transition"
+                title="{{ $rescueCreditData['guarantee_summary'] ?? '' }}"
+            >
+                🛟 Butuh Bantuan Engineer NeriahPro? Konversi ke Mitra Proyek (Potong DP 100%)
+            </button>
+
             <div class="hidden xl:flex items-center gap-1.5 px-2 py-1 bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs tabular-nums text-[10px]">
                 <span class="text-zinc-600 dark:text-zinc-400">Scope Hash:</span>
                 <code class="font-black text-zinc-950 dark:text-emerald-300">{{ $commercialQuotation['scope_hash_short'] ?? '-' }}</code>
@@ -204,7 +226,9 @@
             <span class="font-black text-emerald-900 dark:text-emerald-400 uppercase">ALUR SATU PINTU:</span>
             <a href="/pricing" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500">01. Pilih Paket &amp; Sektor</a>
             <span class="text-zinc-400">&rarr;</span>
-            <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black">02. Rakit 3-Pane Studio [AKTIF]</span>
+            <button type="button" wire:click="$set('centerTab', 'proposal_wow')" class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black cursor-pointer">01B. Layar 1: Proposal Bisnis (WOW View)</button>
+            <span class="text-zinc-400">&rarr;</span>
+            <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black">02. Layar 2: 3-Pane Studio [AKTIF]</span>
             <span class="text-zinc-400">&rarr;</span>
             <button type="button" wire:click="$set('centerTab', 'commercial_mitra')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">03. Kunci SPK SHA-256 / Lisensi</button>
             <span class="text-zinc-400">&rarr;</span>
@@ -237,6 +261,52 @@
             15 Pilar Freeze (100%) &rarr;
         </button>
     </div>
+
+    <!-- =================================================================== -->
+    <!-- V12.0 MANDATORY ANTI-OVER-PLANNING (SCOPE PARALYSIS GUARD) RIBBON   -->
+    <!-- =================================================================== -->
+    <div class="shrink-0 bg-amber-100/95 dark:bg-amber-950/60 border-b-2 border-amber-500 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+        <div class="flex flex-wrap items-center gap-2 font-sans">
+            <span class="px-1.5 py-0.5 bg-zinc-950 text-amber-300 font-mono text-[9px] font-black uppercase">
+                {{ $scopeFreezeActive ? '🔒 SCOPE FREEZE AKTIF (100% READY)' : '🛡️ PROTEKSI ANTI-OVER-PLANNING' }}
+            </span>
+            <strong class="font-mono text-amber-950 dark:text-amber-200">
+                {{ $scopeParalysisGuard['title'] ?? 'Peringatan Penting: Bahaya Over-Planning (Scope Paralysis)' }}:
+            </strong>
+            <span class="text-zinc-900 dark:text-zinc-100">
+                Blueprint telah mencapai 100%. Berhenti menambah konsep di atas kertas (<strong>SCOPE FREEZE</strong>) &amp; mulai eksekusi bertahap:
+            </span>
+        </div>
+        <div class="flex flex-wrap items-center gap-1 font-mono text-[9px]">
+            @foreach(($scopeParalysisGuard['execution_stages'] ?? []) as $execSt)
+                <button
+                    type="button"
+                    wire:click="activateScopeFreezeAndExecuteStage('{{ $execSt['stage_key'] }}')"
+                    class="px-2 py-0.5 border cursor-pointer transition rounded-none {{ $activeExecutionStageKey === $execSt['stage_key'] ? 'bg-zinc-950 text-emerald-400 border-zinc-950 font-black' : 'bg-white hover:bg-zinc-950 text-zinc-950 hover:text-amber-300 dark:bg-zinc-900 dark:text-zinc-100 border-zinc-900 dark:border-amber-500 font-bold' }}"
+                    title="{{ $execSt['query'] }}"
+                >
+                    ⚡ Tahap {{ $execSt['stage_number'] }}: {{ $execSt['stage_number'] === 1 ? 'Migrasi ULID' : ($execSt['stage_number'] === 2 ? 'Seeder 12 Sektor' : 'Compiler SYMBOL_MANIFEST') }}
+                </button>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- V12.0 Enterprise Upscale Advisor Banner (>18 ULID Tables) -->
+    @if(!empty($enterpriseUpscaleAdvisor))
+        <div class="shrink-0 bg-cyan-100/90 dark:bg-cyan-950/60 border-b border-cyan-500 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
+            <div class="text-cyan-950 dark:text-cyan-200">
+                <strong>{{ $enterpriseUpscaleAdvisor['badge'] }}:</strong>
+                <span class="font-sans">{{ $enterpriseUpscaleAdvisor['title'] }} {{ $enterpriseUpscaleAdvisor['recommendation'] }}</span>
+            </div>
+            <button
+                type="button"
+                wire:click="$set('centerTab', 'seo_geo_v11')"
+                class="px-2 py-0.5 bg-zinc-950 text-cyan-300 font-black text-[10px] rounded-none cursor-pointer"
+            >
+                Aktifkan Modul Enterprise &rarr;
+            </button>
+        </div>
+    @endif
 
     <!-- Optional Blueprint Doctor Warning Banner when Assumption Gap Exists -->
     @if(!empty($doctor['findings']))
@@ -374,6 +444,7 @@
             <!-- Center Tabs -->
             <div class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-2.5 py-2 flex flex-wrap gap-1 font-mono text-[11px]">
                 @foreach([
+                    'proposal_wow' => '0. 🏛️ Proposal Bisnis (WOW View)',
                     'schema' => '1. Schema & Locks',
                     'states' => '2. State Machine',
                     'ui_print' => '3. 36 Visual UI & Print',
@@ -481,6 +552,169 @@
                                     </button>
                                 </div>
                             @endif
+                        </div>
+                    </div>
+                @endif
+
+                <!-- TAB 0: PROGRESSIVE DISCLOSURE FLOW v12.0 — LAYAR 1: WEBSITE ARCHITECTURE PROPOSAL (WOW VIEW) & TAHAP A SMART INTAKE -->
+                @if($centerTab === 'proposal_wow')
+                    <div class="space-y-3 font-mono text-[11px]">
+                        <!-- Tahap A: Smart Idea Auto-Detection Box -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border-2 border-emerald-600 dark:border-emerald-500 rounded-none space-y-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black uppercase text-[10px]">
+                                    TAHAP A // SMART IDEA INTAKE &amp; AUTO-MAPPING
+                                </span>
+                                <span class="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
+                                    Sektor Terdeteksi: <strong class="text-emerald-900 dark:text-emerald-300">{{ $sectorCode }}</strong>
+                                </span>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input
+                                    type="text"
+                                    wire:model="ideaDetectionInput"
+                                    placeholder="Ketik ide aplikasi bebas (misal: aplikasi klinik gigi & rekam medis dengan booking dokter)..."
+                                    class="flex-1 px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 text-xs font-sans rounded-none"
+                                />
+                                <button
+                                    type="button"
+                                    wire:click="runIdeaAutoDetection"
+                                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase rounded-none cursor-pointer shrink-0"
+                                >
+                                    ✨ Deteksi Sektor &amp; Modul Otomatis dari Ide Saya
+                                </button>
+                            </div>
+                            @if(!empty($ideaDetectionResult))
+                                <div class="p-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-[10px] text-zinc-900 dark:text-zinc-100 font-bold">
+                                    ✓ {{ $ideaDetectionResult['summary']['id'] ?? '' }} • Confidence: <strong>{{ $ideaDetectionResult['confidence_score'] ?? 95 }}%</strong> • Primitives: <strong>{{ implode(', ', $ideaDetectionResult['detected_primitives'] ?? []) }}</strong>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Tahap B: Layar 1 — Website Architecture Proposal (Ruang Kagum & Validasi Bisnis) -->
+                        <div class="p-3.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-3">
+                            <div class="flex flex-wrap items-start justify-between gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                                <div>
+                                    <span class="px-2 py-0.5 bg-zinc-950 text-emerald-400 font-black uppercase text-[10px]">
+                                        TAHAP B // LAYAR 1 — WEBSITE ARCHITECTURE PROPOSAL (RUANG KAGUM / WOW VIEW)
+                                    </span>
+                                    <h3 class="text-sm font-black font-sans text-zinc-950 dark:text-zinc-100 mt-1">
+                                        {{ $websiteArchitectureProposal['executive_headline']['id'] ?? 'Proposal Arsitektur Bisnis Terpadu' }}
+                                    </h3>
+                                    <p class="text-[11px] font-sans text-zinc-700 dark:text-zinc-300 mt-0.5">
+                                        {{ $websiteArchitectureProposal['executive_subheadline']['id'] ?? '' }}
+                                    </p>
+                                </div>
+                                <div class="text-right shrink-0 p-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-700">
+                                    <div class="text-[9px] font-black uppercase text-emerald-950 dark:text-emerald-300">Efisiensi Waktu &amp; Biaya Rekayasa</div>
+                                    <div class="text-xs font-black text-zinc-950 dark:text-white tabular-nums">
+                                        Hemat {{ number_format((int) ($websiteArchitectureProposal['engineering_hours_saved'] ?? 320), 0, ',', '.') }} Jam (~Rp {{ number_format((int) ($websiteArchitectureProposal['engineering_value_saved_idr'] ?? 48000000), 0, ',', '.') }})
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Peta 5 Divisi Operasional Otomatis (25 Menu L1–L4) -->
+                            <div class="space-y-1.5">
+                                <div class="text-[10px] font-black uppercase text-zinc-900 dark:text-zinc-100">
+                                    🏛️ Peta Lengkap 5 Divisi Operasional Perusahaan (Auto-Expand {{ $websiteArchitectureProposal['total_menus'] ?? 25 }} Menu L1–L4)
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    @foreach(($websiteArchitectureProposal['divisions'] ?? []) as $divCard)
+                                        <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                            <div class="flex items-center justify-between">
+                                                <span class="font-black text-emerald-900 dark:text-emerald-300 text-[10px]">{{ $divCard['code'] }} • {{ $divCard['label']['id'] ?? '' }}</span>
+                                                <span class="px-1.5 py-0.5 bg-zinc-900 text-white text-[9px] font-black">{{ $divCard['menu_count'] ?? 5 }} Menu</span>
+                                            </div>
+                                            <p class="text-[10px] font-sans text-zinc-700 dark:text-zinc-300">{{ $divCard['benefit']['id'] ?? '' }}</p>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- Zone A + Zone B Dual-Zone UI Preview -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800">
+                                    <div class="text-[9px] font-black uppercase text-emerald-900 dark:text-emerald-300">ZONA A — PUBLIC MARKETING &amp; PORTAL KLIEN</div>
+                                    <div class="text-[11px] font-bold text-zinc-950 dark:text-zinc-100 mt-0.5">{{ $websiteArchitectureProposal['zone_a_public']['id'] ?? '' }}</div>
+                                </div>
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800">
+                                    <div class="text-[9px] font-black uppercase text-amber-900 dark:text-amber-300">ZONA B — INTERNAL OPERATIONAL WORKSPACE</div>
+                                    <div class="text-[11px] font-bold text-zinc-950 dark:text-zinc-100 mt-0.5">{{ $websiteArchitectureProposal['zone_b_workspace']['id'] ?? '' }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Bridge CTAs (2 Tombol Jelas Tanpa Kebingungan) -->
+                            <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2">
+                                <button
+                                    type="button"
+                                    wire:click="$set('centerTab', 'schema')"
+                                    class="px-3 py-2 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black text-[10px] uppercase rounded-none cursor-pointer"
+                                >
+                                    {{ $websiteArchitectureProposal['cta_self_dev']['label']['id'] ?? '💻 Saya Ingin Koding Sendiri dengan AI (Buka 3-Pane Studio) →' }}
+                                </button>
+                                <button
+                                    type="button"
+                                    wire:click="convertRetailToMitraRescue"
+                                    class="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-[10px] uppercase rounded-none cursor-pointer"
+                                >
+                                    {{ $websiteArchitectureProposal['cta_mitra_turnkey']['label']['id'] ?? '🤝 Terima Beres Dikodingkan Tim NeriahPro (Lihat RAB & Kontrak SPK) →' }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tahap C: Vibe Coder Guided View (Step-by-Step Coach) -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
+                            <div class="text-[10px] font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                🧭 TAHAP C // PANDUAN EKSEKUSI VIBE CODER PEMULA (3 LANGKAH PASTI JADI)
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                @foreach(($vibeCoderGuidedSteps ?? []) as $vcStep)
+                                    <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border {{ ($vcStep['is_locked'] ?? false) ? 'border-amber-400 dark:border-amber-700' : 'border-emerald-400 dark:border-emerald-700' }} space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-black text-[10px] text-zinc-950 dark:text-zinc-100">{{ $vcStep['title']['id'] ?? '' }}</span>
+                                            <span class="px-1.5 py-0.5 text-[9px] font-black {{ ($vcStep['is_locked'] ?? false) ? 'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-200' : 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-200' }}">
+                                                {{ ($vcStep['is_locked'] ?? false) ? '🔒 TERKUNCI' : '✅ SIAP SALIN' }}
+                                            </span>
+                                        </div>
+                                        <p class="text-[10px] font-sans text-zinc-700 dark:text-zinc-300">{{ $vcStep['instruction']['id'] ?? '' }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Peringatan Penting: Bahaya Over-Planning (Scope Paralysis) + 3 Tahap Eksekusi -->
+                        <div class="p-3.5 bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-500 dark:border-amber-600 rounded-none space-y-2.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="px-2 py-0.5 bg-amber-200 text-amber-950 border border-amber-500 dark:bg-amber-900 dark:text-amber-100 font-black uppercase text-[10px]">
+                                    🛑 {{ $scopeParalysisGuard['warning_title']['id'] ?? 'Peringatan Penting: Bahaya Over-Planning (Scope Paralysis)' }}
+                                </span>
+                                <span class="font-black text-[10px] text-amber-950 dark:text-amber-200">
+                                    STATUS: {{ ($scopeParalysisGuard['scope_freeze_active'] ?? true) ? 'SCOPE FREEZE 100% AKTIF' : 'SIAP KUNCI SCOPE' }}
+                                </span>
+                            </div>
+                            <p class="text-[11px] font-sans text-zinc-900 dark:text-zinc-100 font-bold leading-relaxed">
+                                {{ $scopeParalysisGuard['warning_body']['id'] ?? '' }}
+                            </p>
+                            <div class="text-[11px] font-black text-amber-950 dark:text-amber-200">
+                                {{ $scopeParalysisGuard['action_prompt']['id'] ?? 'Dari mana Anda ingin kita mulai mengeksekusi kodenya hari ini?' }}
+                            </div>
+                            <div class="grid grid-cols-1 gap-2">
+                                @foreach(($scopeParalysisGuard['execution_stages'] ?? []) as $exStg)
+                                    <div class="p-2.5 bg-white dark:bg-zinc-950 border border-amber-400 dark:border-amber-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div class="space-y-0.5">
+                                            <div class="font-black text-zinc-950 dark:text-zinc-100 text-[11px]">{{ $exStg['label'] }}</div>
+                                            <div class="text-[10px] font-sans text-zinc-700 dark:text-zinc-300">{{ $exStg['query'] }}</div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            wire:click="activateScopeFreezeAndExecuteStage('{{ $exStg['stage_code'] }}')"
+                                            class="px-3 py-1.5 bg-zinc-950 hover:bg-zinc-800 text-amber-300 border border-amber-500 font-black text-[10px] uppercase rounded-none cursor-pointer shrink-0"
+                                        >
+                                            🚀 Eksekusi Tahap {{ $exStg['stage_number'] }} &rarr;
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 @endif
@@ -1878,13 +2112,14 @@
                             @php
                                 $isDone = ($phaseProgress['phase_' . $p]['status'] ?? '') === 'VERIFIED';
                                 $isActiveP = $activePhase === $p;
+                                $isPhaseLocked = (bool) ($phases[$p - 1]['is_locked'] ?? false);
                             @endphp
                             <button
                                 type="button"
                                 wire:click="$set('activePhase', {{ $p }})"
-                                class="py-1 border text-center cursor-pointer tabular-nums rounded-none {{ $isActiveP ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black' : ($isDone ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-bold' : 'bg-white text-zinc-800 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700') }}"
+                                class="py-1 border text-center cursor-pointer tabular-nums rounded-none {{ $isActiveP ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black' : ($isPhaseLocked ? 'bg-amber-50 text-amber-950 border-amber-400 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700 font-bold' : ($isDone ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-bold' : 'bg-white text-zinc-800 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700')) }}"
                             >
-                                P{{ $p }}{{ $isDone ? '✓' : '' }}
+                                P{{ $p }}{{ $isPhaseLocked ? '🔒' : ($isDone ? '✓' : '') }}
                             </button>
                         @endfor
                     </div>
@@ -1943,6 +2178,58 @@
                     </button>
                 </div>
             </div>
+
+            @if($showRescueMitraModal && !empty($rescueMitraCredit))
+                <div class="shrink-0 p-2.5 bg-amber-50 dark:bg-amber-950/60 border-b border-amber-400 dark:border-amber-700 font-mono text-[10px] space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-amber-950 dark:text-amber-200">🛟 KONVERSI RETAIL &rarr; MITRA PROYEK (POTONG DP 100%)</span>
+                        <button type="button" wire:click="$set('showRescueMitraModal', false)" class="px-1.5 py-0.5 bg-zinc-900 text-white font-black text-[9px] cursor-pointer">✕</button>
+                    </div>
+                    <div class="text-zinc-900 dark:text-zinc-100 font-bold">
+                        {{ $rescueMitraCredit['guarantee_statement']['id'] ?? '' }}
+                    </div>
+                    <div class="text-emerald-900 dark:text-emerald-300 font-black tabular-nums">
+                        DP Awal 30%: Rp {{ number_format((int) ($rescueMitraCredit['original_dp_30_idr'] ?? 0), 0, ',', '.') }} &bull; Potongan Retail: -Rp {{ number_format((int) ($rescueMitraCredit['credited_retail_fee_idr'] ?? 0), 0, ',', '.') }} &bull; Sisa DP Bersih: Rp {{ number_format((int) ($rescueMitraCredit['net_dp_payable_idr'] ?? 0), 0, ',', '.') }}
+                    </div>
+                </div>
+            @endif
+
+            @if($rightDockMode === 'phases' && ($selectedPhaseObj['is_locked'] ?? false))
+                @php $upAdv = $selectedPhaseObj['upsell_advice'] ?? []; @endphp
+                <div class="shrink-0 p-3 bg-amber-50 dark:bg-amber-950/50 border-b-2 border-amber-500 dark:border-amber-600 font-mono text-[10px] space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="px-1.5 py-0.5 bg-amber-200 text-amber-950 border border-amber-500 dark:bg-amber-900 dark:text-amber-100 font-black uppercase text-[9px]">
+                            🔒 ZERO-LEAK SERVER GATE // FASE {{ $activePhase }} TERKUNCI
+                        </span>
+                        <span class="text-[9px] font-black text-red-900 dark:text-red-300">0% DOM LEAK</span>
+                    </div>
+                    <div class="text-xs font-black text-zinc-950 dark:text-zinc-100 font-sans">
+                        {{ $upAdv['headline']['id'] ?? 'Fase ini memerlukan Lisensi Penuh' }}
+                    </div>
+                    <div class="p-2 bg-red-50 dark:bg-red-950/60 border border-red-300 dark:border-red-800 text-red-950 dark:text-red-200 font-sans text-[10px] font-bold">
+                        {{ $upAdv['risk_if_skipped']['id'] ?? '' }}
+                    </div>
+                    <div class="text-emerald-950 dark:text-emerald-200 font-sans text-[10px] font-bold">
+                        {{ $upAdv['value_proposition']['id'] ?? '' }}
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        <button
+                            type="button"
+                            wire:click="switchEntitlementTier('SINGLE_APP_PASS')"
+                            class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded-none cursor-pointer"
+                        >
+                            💳 {{ $upAdv['cta_retail']['label']['id'] ?? 'Buka Kunci Semua 7 Fase (Rp 299.000 Single-App Pass)' }}
+                        </button>
+                        <button
+                            type="button"
+                            wire:click="convertRetailToMitraRescue"
+                            class="px-2.5 py-1.5 bg-zinc-950 hover:bg-zinc-800 text-amber-300 border border-amber-500 font-black text-[9px] uppercase rounded-none cursor-pointer"
+                        >
+                            🛟 {{ $upAdv['cta_mitra']['label']['id'] ?? 'Terima Beres Dikodingkan Tim (Mitra DP 30%)' }}
+                        </button>
+                    </div>
+                </div>
+            @endif
 
             <!-- Live Code / Prompt Inspector -->
             <div class="flex-1 lg:overflow-y-auto studio-scroll p-3 bg-zinc-950 text-zinc-100">

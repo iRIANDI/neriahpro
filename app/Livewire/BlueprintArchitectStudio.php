@@ -11,6 +11,7 @@ use App\Models\VisionBlueprint;
 use App\Services\BlueprintDeltaEvolutionService;
 use App\Services\BlueprintDoctorService;
 use App\Services\BlueprintSlopScannerService;
+use App\Services\Entitlement\BlueprintEntitlementGateService;
 use App\Services\PosCommercialBridgeService;
 use App\Services\ProjectOsBlueprintCompilerService;
 use App\Services\Saas\PosSaasCommercialEngineService;
@@ -23,6 +24,7 @@ use App\Support\PosDualZoneFrontendAndSaasCatalog;
 use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosInclusiveCommercialCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
+use App\Support\PosProgressiveDisclosureCatalog;
 use App\Support\PosRealWorldRuntimeCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
 use App\Support\PosStackPresetCatalog;
@@ -170,6 +172,27 @@ class BlueprintArchitectStudio extends Component
     // v11.0 Local Sandbox Webhook Simulator Result
     public array $sandboxSimResult = [];
 
+    // v12.0 Progressive Disclosure Flow, Server-Side Zero-Leak Entitlement Gate & Scope Paralysis Guard
+    public string $entitlementTier = 'PRO_RETAIL'; // FREE_SANDBOX | SINGLE_APP_PASS | PRO_RETAIL | AGENCY_PARTNER | MITRA_TURNKEY
+
+    public string $ideaAutoDetectInput = '';
+
+    public string $ideaDetectionInput = '';
+
+    public array $autoDetectResult = [];
+
+    public array $ideaDetectionResult = [];
+
+    public bool $scopeFreezeActive = false;
+
+    public bool $scopeFreezeLocked = false;
+
+    public string $activeExecutionStageKey = '';
+
+    public string $selectedFoundationStageCode = '';
+
+    public bool $showRescueMitraModal = false;
+
     // Feature #2 & Screen 5: Phase Progress & Execution Drift Audit Terminal
     public array $phaseProgress = [];
 
@@ -208,8 +231,18 @@ class BlueprintArchitectStudio extends Component
         if (in_array($queryMode, ['mitra', 'mitra_turnkey_project', 'studio', 'project'], true)) {
             $this->engagementMode = PosCommercialBridgeService::MODE_MITRA;
             $this->centerTab = 'commercial_mitra';
+            $this->entitlementTier = 'MITRA_TURNKEY';
         } elseif (in_array($queryMode, ['retail', 'retail_self_dev', 'self_service'], true)) {
             $this->engagementMode = PosCommercialBridgeService::MODE_RETAIL;
+        }
+
+        $queryTier = strtolower(trim((string) request()->query('tier', '')));
+        if ($queryTier !== '') {
+            $this->entitlementTier = app(BlueprintEntitlementGateService::class)->resolveUserTier(
+                auth()->user(),
+                $this->posProjectId ?? $this->blueprintId,
+                $queryTier
+            );
         }
 
         $querySector = (string) request()->query('sector', '');
@@ -258,11 +291,16 @@ class BlueprintArchitectStudio extends Component
 
         $queryTab = strtolower(trim((string) request()->query('tab', '')));
         if (in_array($queryTab, [
-            'schema', 'states', 'ui_print', 'decisions', 'delta_verify',
+            'proposal_wow', 'schema', 'states', 'ui_print', 'decisions', 'delta_verify',
             'commercial_mitra', 'menus_glue', 'runtime_sop_v7',
             'inclusive_security_v8', 'codesign_room', 'agentshield_tasks',
         ], true)) {
             $this->centerTab = $queryTab;
+        }
+
+        $execStage = strtolower(trim((string) request()->query('exec_stage', '')));
+        if (in_array($execStage, ['stage_1_migrations', 'stage_2_seeders', 'stage_3_compiler'], true)) {
+            $this->activateScopeFreezeAndExecuteStage($execStage);
         }
     }
 
@@ -877,30 +915,65 @@ class BlueprintArchitectStudio extends Component
         $catalog = ProjectOsBlueprintCompilerService::getCachedCatalog();
         $schema = $this->compileCurrentStudioSchema();
         $doctor = $this->computeDoctorReport($schema);
-        $phases = $schema['phased_prompt_sequencer'] ?? [];
+
+        $gateService = app(BlueprintEntitlementGateService::class);
+        $bridge = app(PosCommercialBridgeService::class);
+        $bpDummy = $this->blueprintId ? VisionBlueprint::query()->find($this->blueprintId) : null;
+        $posProj = $this->posProjectId ? PosProject::query()->find($this->posProjectId) : null;
+        $commercialQuotation = $bridge->calculateScopeQuotation($schema);
+        $uatChecklist = $bridge->buildUatChecklist($schema, $this->uatChecklistState);
+        $milestoneGantt = $bridge->buildMilestoneGanttAndStaging($bpDummy, $posProj, $schema);
+
+        // v12.0 Progressive Disclosure Proposal, Upscale Advisor (< / > 18 tables), Rescue Credit & Scope Paralysis Guard
+        $proposalWowData = $gateService->buildWebsiteArchitectureProposal($schema, $this->sectorCode, $this->outputLocale);
+        $enterpriseUpscaleAdvisor = $gateService->buildEnterpriseUpscaleAdvisor($schema, $this->entitlementTier, $this->outputLocale);
+        $scopeParalysisGuard = $gateService->buildScopeParalysisGuard($schema, $this->outputLocale);
+        $rescueCreditData = $gateService->calculateRetailToMitraRescueCredit(
+            auth()->user(),
+            $this->posProjectId ?? $this->blueprintId,
+            (int) ($commercialQuotation['quotation_idr'] ?? 32500000),
+            30,
+            $this->entitlementTier,
+            $this->outputLocale
+        );
+
+        // v12.0 Server-Side Zero-Leak Entitlement Gate (0% F12 Inspect Element Leak on FREE_SANDBOX)
+        $rawPhases = $schema['phased_prompt_sequencer'] ?? [];
+        $phases = $gateService->filterPhasedPromptsForTier($rawPhases, $this->entitlementTier, $this->sectorCode, $this->outputLocale);
+        $schema['data_dictionary'] = $gateService->filterDataDictionaryForTier($schema['data_dictionary'] ?? [], $this->entitlementTier, $this->outputLocale);
+        $schema['symbol_manifest'] = $gateService->filterSymbolManifestForTier($schema['symbol_manifest'] ?? [], $this->entitlementTier, $this->outputLocale);
+
         $selectedPhaseObj = $phases[max(0, $this->activePhase - 1)] ?? ($phases[0] ?? []);
         $subParts = $schema['sub_chunked_prompts'] ?? [];
         $selectedSubPartObj = collect($subParts)->firstWhere('part_code', $this->activeSubPartCode) ?? ($subParts[0] ?? []);
+        $vibeCoderGuidedSteps = $gateService->buildVibeCoderGuidedSteps($phases, $this->entitlementTier, $this->outputLocale);
 
-        $bpDummy = $this->blueprintId ? VisionBlueprint::query()->find($this->blueprintId) : null;
-        $compiledRightContent = match ($this->rightDockMode) {
-            'dag_subparts' => (string) ($selectedSubPartObj['prompt'] ?? ''),
-            'symbol_manifest' => (string) json_encode($schema['symbol_manifest'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-            'enterprise_menu' => PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown($schema['enterprise_menu_matrix'] ?? []),
-            'syntax_lock_md' => PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($schema),
-            'troubleshooting_md' => PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($schema),
-            'client_sop_md' => PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($schema, 'id'),
-            'pg16_partition_sql' => PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($schema['data_dictionary'] ?? [], $this->projectName),
-            'agents_md' => ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($schema),
-            'graph_json' => ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
-            'mcp_json' => ScaffoldGeneratorService::generateMcpJsonFile($bpDummy),
-            'env_blueprint' => ScaffoldGeneratorService::generateEnvBlueprintFile($schema, $this->projectName),
-            'claude_settings_json' => DocumentThreatSanitizerService::renderClaudeSettingsJson($schema),
-            'dependency_manifest' => (string) json_encode($schema['approved_dependency_manifest'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-            'dual_zone_md' => PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($schema),
-            'seo_geo_md' => ScaffoldGeneratorService::generateSeoGeoAndZeroFailureContractMarkdown($schema, $this->projectName),
-            default => (string) ($selectedPhaseObj['prompt'] ?? ''),
-        };
+        if ($this->entitlementTier === 'FREE_SANDBOX' && ($this->rightDockMode !== 'phases' || $this->activePhase > 1)) {
+            if ($this->rightDockMode === 'symbol_manifest') {
+                $compiledRightContent = (string) json_encode($schema['symbol_manifest'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            } else {
+                $compiledRightContent = (string) ($selectedPhaseObj['prompt'] ?? '# [LOCKED IN FREE SANDBOX — SERVER GATE ACTIVE]');
+            }
+        } else {
+            $compiledRightContent = match ($this->rightDockMode) {
+                'dag_subparts' => (string) ($selectedSubPartObj['prompt'] ?? ''),
+                'symbol_manifest' => (string) json_encode($schema['symbol_manifest'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                'enterprise_menu' => PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown($schema['enterprise_menu_matrix'] ?? []),
+                'syntax_lock_md' => PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($schema),
+                'troubleshooting_md' => PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($schema),
+                'client_sop_md' => PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($schema, 'id'),
+                'pg16_partition_sql' => PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($schema['data_dictionary'] ?? [], $this->projectName),
+                'agents_md' => ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($schema),
+                'graph_json' => ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
+                'mcp_json' => ScaffoldGeneratorService::generateMcpJsonFile($bpDummy),
+                'env_blueprint' => ScaffoldGeneratorService::generateEnvBlueprintFile($schema, $this->projectName),
+                'claude_settings_json' => DocumentThreatSanitizerService::renderClaudeSettingsJson($schema),
+                'dependency_manifest' => (string) json_encode($schema['approved_dependency_manifest'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                'dual_zone_md' => PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($schema),
+                'seo_geo_md' => ScaffoldGeneratorService::generateSeoGeoAndZeroFailureContractMarkdown($schema, $this->projectName),
+                default => (string) ($selectedPhaseObj['prompt'] ?? ''),
+            };
+        }
 
         $codesignContract = $schema['codesign_alignment_contract'] ?? [];
         if ($this->selectedCoDesignModuleCode === '' && ! empty($codesignContract['modules'][0]['module_code'])) {
@@ -911,12 +984,6 @@ class BlueprintArchitectStudio extends Component
             $schema['decision_tables_matrix'] ?? [],
             $this->projectName
         );
-
-        $bridge = app(PosCommercialBridgeService::class);
-        $posProj = $this->posProjectId ? PosProject::query()->find($this->posProjectId) : null;
-        $commercialQuotation = $bridge->calculateScopeQuotation($schema);
-        $uatChecklist = $bridge->buildUatChecklist($schema, $this->uatChecklistState);
-        $milestoneGantt = $bridge->buildMilestoneGanttAndStaging($bpDummy, $posProj, $schema);
 
         return view('livewire.blueprint-architect-studio', [
             'catalog' => $catalog,
@@ -950,8 +1017,17 @@ class BlueprintArchitectStudio extends Component
             'seoGeoContract' => $schema['seo_geo_authority_contract'] ?? [],
             'sixZeroFailureModules' => $schema['six_final_zero_failure_modules'] ?? [],
             'twentyPillars' => $schema['twenty_pillars_paripurna_matrix'] ?? [],
+            'proposalWowData' => $proposalWowData,
+            'websiteArchitectureProposal' => $proposalWowData,
+            'enterpriseUpscaleAdvisor' => $enterpriseUpscaleAdvisor,
+            'scopeParalysisGuard' => $scopeParalysisGuard,
+            'rescueCreditData' => $rescueCreditData,
+            'rescueMitraCredit' => $rescueCreditData,
+            'vibeCoderGuidedSteps' => $vibeCoderGuidedSteps,
+            'disclosureStages' => PosProgressiveDisclosureCatalog::disclosureStages(),
+            'tierEntitlementMatrix' => PosProgressiveDisclosureCatalog::tierEntitlementMatrix(),
         ])->layout('components.layouts.studio', [
-            'title' => 'Project OS Architect Studio v11.0 (SEO/GEO Authority, UU PDP Vault, Offline PWA & 20-Pillar Paripurna)',
+            'title' => 'Project OS Architect Studio v12.0 (Progressive Disclosure Flow, Zero-Leak Gate & Scope Paralysis Guard)',
         ]);
     }
 
@@ -1311,5 +1387,56 @@ class BlueprintArchitectStudio extends Component
             'plan_tier' => 'retail_pro',
             'amount_idr' => 399000,
         ], auth()->user());
+    }
+
+    public function switchEntitlementTier(string $tier): void
+    {
+        $this->entitlementTier = app(BlueprintEntitlementGateService::class)->normalizeRequestedTierSlug($tier);
+        if ($this->entitlementTier === 'MITRA_TURNKEY') {
+            $this->engagementMode = PosCommercialBridgeService::MODE_MITRA;
+        }
+    }
+
+    public function runIdeaAutoDetection(BlueprintEntitlementGateService $gateService): void
+    {
+        $rawIdea = trim($this->ideaDetectionInput) !== '' ? $this->ideaDetectionInput : $this->ideaAutoDetectInput;
+        $this->ideaAutoDetectInput = $rawIdea;
+        $this->ideaDetectionInput = $rawIdea;
+
+        $detected = $gateService->autoDetectSectorAndModulesFromIdea($rawIdea, $this->outputLocale);
+        $this->autoDetectResult = $detected;
+        $this->ideaDetectionResult = $detected;
+
+        $mappedSector = PosSectorUiArchetypeCatalog::normalizeSectorCode((string) ($detected['detected_sector_code'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL'));
+        $this->selectSector($mappedSector);
+    }
+
+    public function activateScopeFreezeAndExecuteStage(string $stageKey): void
+    {
+        $this->scopeFreezeActive = true;
+        $this->scopeFreezeLocked = true;
+        $this->activeExecutionStageKey = $stageKey;
+        $this->selectedFoundationStageCode = $stageKey;
+
+        if ($stageKey === 'stage_1_migrations') {
+            $this->centerTab = 'schema';
+            $this->activePhase = 2;
+            $this->rightDockMode = 'phases';
+        } elseif ($stageKey === 'stage_2_seeders') {
+            $this->centerTab = 'menus_glue';
+            $this->activePhase = 1;
+            $this->rightDockMode = 'enterprise_menu';
+        } elseif ($stageKey === 'stage_3_compiler') {
+            $this->centerTab = 'schema';
+            $this->activePhase = 3;
+            $this->rightDockMode = 'symbol_manifest';
+        }
+    }
+
+    public function convertRetailToMitraRescue(): void
+    {
+        $this->engagementMode = PosCommercialBridgeService::MODE_MITRA;
+        $this->centerTab = 'commercial_mitra';
+        $this->showRescueMitraModal = true;
     }
 }

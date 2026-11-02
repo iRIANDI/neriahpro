@@ -336,6 +336,9 @@
             <a href="#sec-v11-seo-geo-paripurna" @click.prevent="scrollTo('sec-v11-seo-geo-paripurna')" :class="activeSection === 'sec-v11-seo-geo-paripurna' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 18. <span x-text="t[lang].nav_v11_paripurna"></span>
             </a>
+            <a href="#sec-v12-progressive-disclosure" @click.prevent="scrollTo('sec-v12-progressive-disclosure')" :class="activeSection === 'sec-v12-progressive-disclosure' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                19. <span x-text="t[lang].nav_v12_disclosure"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -1832,6 +1835,97 @@
         </div>
     </div>
 
+    <!-- 19. Section Project OS v12.0 — Progressive Disclosure Flow, Zero-Leak Gate, Contextual Upsell Coach & Anti-Over-Planning (Scope Paralysis) Guard -->
+    <div id="sec-v12-progressive-disclosure" class="sg-card" x-show="matchesSearch('v12.0 progressive disclosure flow show the full ferrari lock the ignition zero-leak server-side entitlement gate free_sandbox retail_spark contextual upsell coach rescue button potong dp 100% over-planning scope paralysis scope freeze tahap 1 tahap 2 tahap 3')">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #059669; text-transform: uppercase; font-weight: 700;">
+                    19 // PROJECT OS v12.0 — PROGRESSIVE DISCLOSURE FLOW, ZERO-LEAK GATE &amp; ANTI-OVER-PLANNING GUARD
+                </span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec19_title"></h3>
+            </div>
+            <span class="sg-badge-active">SHOW THE FULL FERRARI, LOCK THE IGNITION • 0% DOM LEAK • SCOPE FREEZE 100%</span>
+        </div>
+
+        <p style="font-size: 13px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;" x-text="t[lang].sec19_desc"></p>
+
+        <!-- 3-Stage Progressive Disclosure Flow Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px;">
+            @foreach(($v12DisclosureStages ?? []) as $dStg)
+                <div class="sg-subcard" style="border-left: 3px solid #10b981;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <strong style="font-size: 12px; color: var(--sg-text-title);">{{ $dStg['title']['id'] ?? $dStg['stage_code'] }}</strong>
+                        <span style="font-family: ui-monospace, monospace; font-size: 10px; font-weight: 700; padding: 2px 6px; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35);">
+                            {{ $dStg['badge'] ?? 'v12.0' }}
+                        </span>
+                    </div>
+                    <div style="font-size: 11px; color: #0284c7; font-weight: 700; margin-bottom: 4px;">
+                        {{ $dStg['persona_target']['id'] ?? '' }}
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--sg-text-muted); line-height: 1.55;">
+                        {{ $dStg['summary']['id'] ?? '' }}
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <!-- Zero-Leak Entitlement Gate Matrix -->
+        <div style="padding: 14px; background: var(--sg-subcard-bg); border: 1px solid var(--sg-border); border-radius: 3px; margin-bottom: 16px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #059669; text-transform: uppercase; margin-bottom: 8px;">
+                🔒 MATRIKS ZERO-LEAK SERVER-SIDE ENTITLEMENT GATE (BlueprintEntitlementGateService.php)
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="sg-table" style="margin-top: 4px;">
+                    <thead>
+                        <tr>
+                            <th>Tier Code &amp; Nama Paket</th>
+                            <th>Fase Prompt Terbuka</th>
+                            <th>Tabel DDL Mentah</th>
+                            <th>Proteksi Server-Side (0% DOM Leak)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(($v12TierMatrix ?? []) as $tKey => $tMeta)
+                            <tr>
+                                <td>
+                                    <strong style="color: var(--sg-text-title);">{{ $tMeta['label']['id'] ?? $tKey }}</strong>
+                                    <div style="font-family: ui-monospace, monospace; font-size: 10px; color: var(--sg-text-muted);">{{ $tKey }} ({{ $tMeta['price_formatted'] ?? 'Rp 0' }})</div>
+                                </td>
+                                <td style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700;">
+                                    Fase {{ implode(', ', $tMeta['unlocked_phases'] ?? [1]) }}
+                                </td>
+                                <td style="font-family: ui-monospace, monospace; font-size: 11px;">
+                                    Maks {{ $tMeta['unlocked_tables_limit'] ?? 2 }} Tabel ULID
+                                </td>
+                                <td style="font-size: 11px; color: var(--sg-text-muted);">
+                                    {{ ($tMeta['server_side_zero_leak'] ?? true) ? '100% Server-Side Withheld (Tidak dikirim ke HTML DOM bila terkunci)' : 'Full Access' }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Peringatan Penting: Bahaya Over-Planning (Scope Paralysis) + 3 Tahap Eksekusi -->
+        <div style="padding: 14px; background: rgba(245, 158, 11, 0.1); border: 2px solid rgba(245, 158, 11, 0.55); border-radius: 3px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 800; color: #d97706; text-transform: uppercase; margin-bottom: 6px;">
+                🛑 {{ $v12ScopeParalysisGuard['warning_title']['id'] ?? 'Peringatan Penting: Bahaya Over-Planning (Scope Paralysis)' }}
+            </div>
+            <p style="font-size: 12px; color: var(--sg-text-body); font-weight: 700; line-height: 1.55; margin-bottom: 10px;">
+                {{ $v12ScopeParalysisGuard['warning_body']['id'] ?? '' }}
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;">
+                @foreach(($v12ScopeParalysisGuard['execution_stages'] ?? []) as $stgItem)
+                    <div style="padding: 10px; background: var(--sg-card-bg); border: 1px solid rgba(245, 158, 11, 0.45);">
+                        <strong style="font-size: 11.5px; color: var(--sg-text-title);">{{ $stgItem['label'] }}</strong>
+                        <div style="font-size: 11px; color: var(--sg-text-muted); margin-top: 4px; line-height: 1.45;">{{ $stgItem['query'] }}</div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1862,6 +1956,7 @@ function smartGuideApp() {
                 nav_v9_agentshield: 'AgentShield, Co-Design & Audit (v9.0)',
                 nav_v10_dual_zone: 'Dual-Zone UX, Aniwall & 6 Modul SaaS (v10.0)',
                 nav_v11_paripurna: 'SEO/GEO /llms.txt, UU PDP & 20 Pilar (v11.0)',
+                nav_v12_disclosure: 'Progressive Disclosure, Zero-Leak Gate & Anti-Over-Planning (v12.0)',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -1974,7 +2069,9 @@ function smartGuideApp() {
                 sec17_title: 'Project OS v10.0 Ultimate: Dual-Zone Enterprise UI (Zone A Back-Stage + Zone B 6 Public UX Presets), Cryptographic Aniwall, 6 Modul Komersial SaaS & Universal Input Hygiene',
                 sec17_desc: 'Menyatukan 36 UI Operasional Staf bebas jank dengan 6 Preset UX Halaman Publik 60fps (Scrollytelling, Kinetic Aniwall, Spatial Floorplan, Lookbook, Trust Simulator, Gamified Pathway), resi testimoni BAST/Fase-6 terverifikasi, komisi afiliasi 20%/7,5%, hibah NGO 1-klik, pustaka SEO /explore, 40 Native AI Tools, dan standar kebersihan input email/angka/telepon E.164.',
                 sec18_title: 'Project OS v11.0 Paripurna Edition: Gerbang Komersial Satu Pintu SaaS, Otoritas SEO/GEO 12 Sektor (/llms.txt + Multi-Graph Schema.org), 6 Lapisan Zero-Failure & 20 Pilar Paripurna',
-                sec18_desc: 'Mengunci konsistensi komersial Satu Pintu tanpa bypass gratis ke Studio, mendominasi kutipan AI Search & Google Rich Results lintas 12 sektor (/llms.txt, /llms-full.txt, IndexNow, OG Lokal 1200x630), serta menambahkan Brankas Privasi UU PDP Blind Index O(1), Offline Outbox PWA, Triase Garansi Bug SLA 90 Hari Pasca-BAST, Rollback pg_dump Atomik, Simulator Webhook Lokal, Konsolidasi Holding Multi-PT, dan 44 Native AI Tools.'
+                sec18_desc: 'Mengunci konsistensi komersial Satu Pintu tanpa bypass gratis ke Studio, mendominasi kutipan AI Search & Google Rich Results lintas 12 sektor (/llms.txt, /llms-full.txt, IndexNow, OG Lokal 1200x630), serta menambahkan Brankas Privasi UU PDP Blind Index O(1), Offline Outbox PWA, Triase Garansi Bug SLA 90 Hari Pasca-BAST, Rollback pg_dump Atomik, Simulator Webhook Lokal, Konsolidasi Holding Multi-PT, dan 44 Native AI Tools.',
+                sec19_title: 'Project OS v12.0: Progressive Disclosure Flow ("Show the Full Ferrari, Lock the Ignition"), Zero-Leak Server Gate, Contextual Upsell Coach & Anti-Over-Planning (Scope Paralysis) Guard',
+                sec19_desc: 'Mencegah kebingungan klien awam sekaligus mengunci konversi tinggi: Tahap A deteksi sektor otomatis dari ide, Tahap B Layar 1 Proposal Bisnis WOW View (peta 25 menu 5 divisi & kalkulator penghematan jam rekayasa), Tahap C Layar 2 Dual-View Studio dengan Zero-Leak Server Gate (0% kebocoran Fase 2–7 di HTML DOM untuk FREE_SANDBOX), tombol Rescue Konversi ke Mitra Proyek (potong DP 100%), serta pelindung Bahaya Over-Planning (Scope Paralysis) dengan 3 tombol eksekusi fondasi.'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -1995,6 +2092,7 @@ function smartGuideApp() {
                 nav_v9_agentshield: 'AgentShield, Co-Design & Audit (v9.0)',
                 nav_v10_dual_zone: 'Dual-Zone UX, Aniwall & 6 SaaS Modules (v10.0)',
                 nav_v11_paripurna: 'SEO/GEO /llms.txt, UU PDP & 20 Pillars (v11.0)',
+                nav_v12_disclosure: 'Progressive Disclosure, Zero-Leak Gate & Anti-Over-Planning (v12.0)',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -2107,7 +2205,9 @@ function smartGuideApp() {
                 sec17_title: 'Project OS v10.0 Ultimate: Dual-Zone Enterprise UI (Zone A Back-Stage + Zone B 6 Public UX Presets), Cryptographic Aniwall, 6 SaaS Growth Modules & Universal Input Hygiene',
                 sec17_desc: 'Unifies 36 zero-jank staff operational UIs with 6 60fps Public Front-Stage UX Presets (Scrollytelling, Kinetic Aniwall, Spatial Floorplan, Lookbook, Trust Simulator, Gamified Pathway), cryptographically verified BAST/Phase-6 testimonial receipts, 20%/7.5% affiliate finder\'s fees, 1-click NGO impact grants, /explore Programmatic SEO, 40 Native AI Tools, and strict email/number/E.164 phone hygiene.',
                 sec18_title: 'Project OS v11.0 Paripurna Edition: Unified Satu Pintu SaaS Commercial Gate, 12-Sector SEO/GEO Authority (/llms.txt + Multi-Graph Schema.org), 6 Zero-Failure Layers & 20 Locked Master Pillars',
-                sec18_desc: 'Seals commercial consistency on Satu Pintu with zero unpaid Studio bypasses, dominates Google Rich Results & AI Search citations across all 12 sectors (/llms.txt, /llms-full.txt, IndexNow, local 1200x630 QR OG), and delivers UU PDP AES-256 + O(1) Blind Index Privacy Vault, Offline Outbox PWA, Post-BAST 90-Day SLA Bug vs Paid Delta Triage, Atomic pg_dump Rollback, Webhook Chaos Console, Multi-Entity Holding Consolidation, and 44 Native AI Tools.'
+                sec18_desc: 'Seals commercial consistency on Satu Pintu with zero unpaid Studio bypasses, dominates Google Rich Results & AI Search citations across all 12 sectors (/llms.txt, /llms-full.txt, IndexNow, local 1200x630 QR OG), and delivers UU PDP AES-256 + O(1) Blind Index Privacy Vault, Offline Outbox PWA, Post-BAST 90-Day SLA Bug vs Paid Delta Triage, Atomic pg_dump Rollback, Webhook Chaos Console, Multi-Entity Holding Consolidation, and 44 Native AI Tools.',
+                sec19_title: 'Project OS v12.0: Progressive Disclosure Flow ("Show the Full Ferrari, Lock the Ignition"), Zero-Leak Server Gate, Contextual Upsell Coach & Anti-Over-Planning (Scope Paralysis) Guard',
+                sec19_desc: 'Eliminates client overwhelm while maximizing conversion & retention: Stage A smart sector auto-detection from free-form ideas, Stage B Screen 1 Business Proposal WOW View (25-menu 5-division map & engineering hours saved calculator), Stage C Screen 2 Dual-View Studio with Zero-Leak Server Gate (0% HTML DOM leak for Phases 2–7 in FREE_SANDBOX), 100% DP Credit Rescue Button to Mitra Turnkey, and Scope Paralysis Guard with 3 Foundation Execution Launchers.'
             }
         },
 
@@ -2135,7 +2235,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze', 'sec-v8-inclusive-security', 'sec-v9-agentshield-codesign-audit', 'sec-v10-dual-zone-aniwall-saas', 'sec-v11-seo-geo-paripurna'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze', 'sec-v8-inclusive-security', 'sec-v9-agentshield-codesign-audit', 'sec-v10-dual-zone-aniwall-saas', 'sec-v11-seo-geo-paripurna', 'sec-v12-progressive-disclosure'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

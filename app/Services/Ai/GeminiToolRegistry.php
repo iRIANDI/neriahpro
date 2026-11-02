@@ -896,6 +896,39 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+            [
+                'name' => 'evaluate_entitlement_and_scope_paralysis_guard',
+                'description' => 'Evaluasi Progressive Disclosure Flow v12.0, Zero-Leak Server-Side Entitlement Gate (FREE_SANDBOX vs Paid Tiers), deteksi sektor otomatis dari ide teks bebas (`action = auto_detect_idea`), kalkulasi kredit konversi Retail ke Mitra Proyek (`action = calculate_rescue_credit`), serta status Scope Paralysis Guard & 3 Tahap Eksekusi Fondasi (`action = scope_paralysis_status`).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => [
+                            'type' => 'STRING',
+                            'description' => 'Aksi: auto_detect_idea, evaluate_gate, calculate_rescue_credit, atau scope_paralysis_status.',
+                        ],
+                        'idea_text' => [
+                            'type' => 'STRING',
+                            'description' => 'Teks ide aplikasi bebas untuk action = auto_detect_idea.',
+                        ],
+                        'tier_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode tier lisensi (FREE_SANDBOX, SINGLE_APP_PASS, PRO_RETAIL, AGENCY_PARTNER, MITRA_TURNKEY).',
+                        ],
+                        'phase_number' => [
+                            'type' => 'INTEGER',
+                            'description' => 'Nomor fase prompt (1..7) untuk evaluasi Zero-Leak Gate.',
+                        ],
+                        'mitra_quotation_idr' => [
+                            'type' => 'INTEGER',
+                            'description' => 'Nominal RAB Mitra Proyek IDR untuk simulasi potongan DP 100% dari biaya Retail.',
+                        ],
+                        'retail_paid_idr' => [
+                            'type' => 'INTEGER',
+                            'description' => 'Nominal paket Retail yang sudah dibayar klien (misal 299000 atau 399000).',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

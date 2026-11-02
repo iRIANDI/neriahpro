@@ -3616,6 +3616,141 @@ return match (true) {
                           ))}
                         </div>
                       </div>
+
+                      {/* ========================================================================= */}
+                      {/* V12.0: 3-STAGE PROGRESSIVE DISCLOSURE FLOW & ANTI-OVER-PLANNING GUARD    */}
+                      {/* ========================================================================= */}
+                      <div className="p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-950 border-t-2 border-zinc-900 dark:border-zinc-700 space-y-5">
+                        {/* 1. 3-Stage Progressive Disclosure ("Show the Full Ferrari, Lock the Ignition") */}
+                        <div className="p-4 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-emerald-500/80 space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
+                                PROGRESSIVE DISCLOSURE FLOW V12.0
+                              </span>
+                              <h5 className="font-mono text-xs sm:text-sm font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                {isEn
+                                  ? '"Show the Full Ferrari, Lock the Ignition" — High-Retention 3-Stage Guided Flow + 0% DOM Leak Gate'
+                                  : '"Show the Full Ferrari, Lock the Ignition" — Alur 3-Tahap Tanpa Kebingungan + Gerbang Server 0% Leak'}
+                              </h5>
+                            </div>
+                            <span className="px-2 py-0.5 bg-zinc-950 text-emerald-400 dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[9px] font-black uppercase">
+                              0% F12 INSPECT ELEMENT LEAK
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-sans text-xs">
+                            {[
+                              {
+                                badge: isEn ? 'STAGE A // ZERO-JARGON INTAKE' : 'TAHAP A // INTAKE TANPA PUSING',
+                                title: isEn ? 'Smart Idea Auto-Detection' : 'Deteksi Sektor & Modul Otomatis',
+                                desc: isEn
+                                  ? 'Type your business idea in plain words and click [✨ Auto-Detect Sector & Modules]. Automatically maps Sector #01–#12, Transaction Primitives, L1–L4 Menus, and Zone A+B UI.'
+                                  : 'Ketik ide bisnis dalam bahasa sehari-hari lalu klik [✨ Deteksi Sektor & Modul Otomatis]. Sistem otomatis memetakan Sektor #01–#12, Primitif Transaksi, Peta Menu L1–L4, dan Zona UI A+B.',
+                              },
+                              {
+                                badge: isEn ? 'STAGE B // SCREEN 1 WOW PROPOSAL' : 'TAHAP B // LAYAR 1 PROPOSAL BISNIS',
+                                title: isEn ? 'Website Architecture Proposal (WOW View)' : 'Proposal Arsitektur Bisnis (Ruang Kagum)',
+                                desc: isEn
+                                  ? 'Welcomes clients with a human-friendly Executive Proposal, auto-expanded 5-Division Operational Menu Map (L1–L4), Zone A+B Screen Preview, and Engineering Cost Saved Calculator.'
+                                  : 'Menyambut klien dengan Proposal Eksekutif ramah manusia, Peta Menu 5 Divisi Operasional (L1–L4) yang langsung terbuka, Pratinjau Layar Zona A+B, dan Kalkulasi Penghematan Biaya Rekayasa.',
+                              },
+                              {
+                                badge: isEn ? 'STAGE C // SCREEN 2 DUAL STUDIO' : 'TAHAP C // LAYAR 2 STUDIO MODE GANDA',
+                                title: isEn ? 'Vibe Coder Guided vs Architect Pro + Rescue' : 'Mode Terpandu Vibe Coder vs Arsitek Pro + Tombol Penyelamat',
+                                desc: isEn
+                                  ? 'Step-by-step copy-paste checklist for Cursor/Claude Code OR full ULID DDL & SYMBOL_MANIFEST.json for Architects. Includes 100% Retail-to-Mitra DP Rescue Credit!'
+                                  : 'Checklist tempel-jalan untuk Cursor/Claude Code ATAU mode Arsitek penuh. Dilengkapi Tombol Penyelamat Konversi ke Mitra Proyek (100% biaya Retail memotong DP Mitra)!',
+                              },
+                            ].map((stItem) => (
+                              <div key={stItem.badge} className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-1.5">
+                                <span className="inline-block px-1.5 py-0.5 bg-cyan-100 text-cyan-950 border border-cyan-400 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-700 font-mono text-[9px] font-black">
+                                  {stItem.badge}
+                                </span>
+                                <div className="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100">
+                                  {stItem.title}
+                                </div>
+                                <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                                  {stItem.desc}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 2. Mandatory Anti-Over-Planning (Scope Paralysis Guard) */}
+                        <div className="p-4 sm:p-5 bg-amber-100/90 dark:bg-amber-950/50 border-2 border-amber-600 dark:border-amber-500 space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="px-2 py-0.5 bg-zinc-950 text-amber-300 font-mono text-[10px] font-black uppercase tracking-wider">
+                              {isEn
+                                ? '🛡️ ANTI-OVER-PLANNING GUARD // 100% MATURITY REACHED — ACTIVATE SCOPE FREEZE'
+                                : '🛡️ PROTEKSI ANTI-OVER-PLANNING // BLUEPRINT 100% MATANG — AKTIFKAN SCOPE FREEZE'}
+                            </span>
+                            <a
+                              href="/blueprint/studio?tab=proposal_wow"
+                              className="px-3 py-1 bg-zinc-950 hover:bg-zinc-800 text-emerald-400 font-mono text-[10px] font-black uppercase rounded-none transition"
+                            >
+                              {isEn ? '⚡ OPEN 3-PANE STUDIO & EXECUTE →' : '⚡ BUKA 3-PANE STUDIO & EKSEKUSI →'}
+                            </a>
+                          </div>
+
+                          <h5 className="font-mono text-sm sm:text-base font-black text-amber-950 dark:text-amber-200 uppercase">
+                            {isEn
+                              ? 'Important Warning: The Danger of Over-Planning (Scope Paralysis)'
+                              : 'Peringatan Penting: Bahaya Over-Planning (Scope Paralysis)'}
+                          </h5>
+
+                          <div className="space-y-2 text-xs text-zinc-900 dark:text-zinc-100 leading-relaxed font-sans">
+                            <p>
+                              {isEn
+                                ? 'In product engineering, once a blueprint reaches 100%, the biggest enemy is no longer "missing features", but delaying code writing by endlessly hunting for extra features on paper.'
+                                : 'Dalam rekayasa produk, ketika sebuah blueprint sudah mencapai 100%, musuh terbesar berikutnya bukanlah "fitur yang kurang", melainkan menunda penulisan kode karena terus mencari tambahan fitur di atas kertas.'}
+                            </p>
+                            <p className="font-bold">
+                              {isEn
+                                ? 'All the ammunition is already in your hands. The highest-impact step right now is to stop adding new concepts (SCOPE FREEZE) and start executing the foundation of neriahpro.com step by step in your IDE. Where would you like us to start executing the code today?'
+                                : 'Semua amunisi sudah ada di tangan Anda. Langkah paling berdampak tinggi sekarang adalah berhenti menambah konsep baru (SCOPE FREEZE) dan mulai mengeksekusi pembangunan fondasi neriahpro.com tahap demi tahap di IDE Anda. Dari mana Anda ingin kita mulai mengeksekusi kodenya hari ini?'}
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
+                            {[
+                              {
+                                stage: 1,
+                                label: isEn
+                                  ? 'Start Stage 1 Execution: Generate Full Internal Database Migrations for neriahpro.com'
+                                  : 'Mulai Eksekusi Tahap 1: Buat File Migrasi Lengkap Database Internal neriahpro.com',
+                                href: '/blueprint/studio?tab=schema&exec_stage=stage_1_migrations',
+                              },
+                              {
+                                stage: 2,
+                                label: isEn
+                                  ? 'Start Stage 2 Execution: Generate Master Seeder for 12 Sectors, 9 Stacks & L1-L4 Menu Matrix'
+                                  : 'Mulai Eksekusi Tahap 2: Buat Seeder Master 12 Sektor, 9 Stack & L1-L4 Menu Matrix',
+                                href: '/blueprint/studio?tab=menu_map&exec_stage=stage_2_seeders',
+                              },
+                              {
+                                stage: 3,
+                                label: isEn
+                                  ? 'Start Stage 3 Execution: Build SYMBOL_MANIFEST.json & Phased Prompt Compiler'
+                                  : 'Mulai Eksekusi Tahap 3: Bangun Compiler SYMBOL_MANIFEST.json & Phased Prompt',
+                                href: '/blueprint/studio?tab=prompts&exec_stage=stage_3_compiler',
+                              },
+                            ].map((execBtn) => (
+                              <a
+                                key={execBtn.stage}
+                                href={execBtn.href}
+                                className="p-3 bg-white hover:bg-zinc-950 text-zinc-950 hover:text-amber-300 dark:bg-zinc-900 dark:hover:bg-amber-500 dark:text-zinc-100 dark:hover:text-zinc-950 border-2 border-zinc-900 dark:border-amber-500 font-mono text-[11px] font-black leading-snug transition rounded-none flex flex-col justify-between gap-2"
+                              >
+                                <span className="text-[9px] uppercase tracking-wider opacity-80">
+                                  [STAGE 0{execBtn.stage} // SCOPE FREEZE READY]
+                                </span>
+                                <span>{execBtn.label} →</span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -4468,19 +4603,64 @@ return match (true) {
                         : 'Pembayaran instan 100% mandiri via Midtrans Snap (QRIS, Virtual Account BCA/Mandiri/BRI, Kartu Kredit). Kunci lisensi dan akses unduh PRD 26 parameter langsung aktif seketika di akun Anda.'}
                     </p>
                   </>
+                ) : selectedPackage === 'single_app_umkm_pass' ? (
+                  <>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
+                      <CreditCard className="w-3 h-3" />
+                      <span>{isEn ? 'ONE-TIME PASS // LOCK 1 APPLICATION PERMANENTLY' : 'SEKALI BAYAR // KUNCI 1 APLIKASI PERMANEN'}</span>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
+                      {isEn ? 'Checkout Single-App UMKM Pass' : 'Checkout Single-App UMKM Pass'} (Rp {pricingSettings.single_app_pass_price || '299.000'})
+                    </h3>
+                    <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
+                      {isEn
+                        ? 'One-time payment (no monthly subscription) to permanently unlock all 7 AI Prompt Phases, full ULID DDL, and SYMBOL_MANIFEST.json for 1 application project.'
+                        : 'Sekali bayar tanpa langganan bulanan untuk membuka penuh 7 Fase Prompt AI, skema SQL ULID, dan SYMBOL_MANIFEST.json khusus 1 proyek aplikasi UMKM Anda.'}
+                    </p>
+                  </>
+                ) : selectedPackage === 'agency_whitelabel_partner' ? (
+                  <>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
+                      <Crown className="w-3 h-3" />
+                      <span>{isEn ? 'AGENCY 5-SEAT // WHITE-LABEL PROPOSAL & ZIP EXPORT' : 'AGENSI 5-KURSI // EKSPOR PROPOSAL & ZIP WHITE-LABEL'}</span>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
+                      {isEn ? 'Checkout Agency White-Label Partner' : 'Checkout Agency White-Label Partner'} (Rp {pricingSettings.agency_whitelabel_price || '990.000'})
+                    </h3>
+                    <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
+                      {isEn
+                        ? 'Up to 25 blueprints/month, 5 team seats, and custom white-label PDF/ZIP architecture proposals bearing your software house logo.'
+                        : 'Kuota 25 blueprint/bulan, akses kolaborasi 5 kursi tim, serta ekspor dokumen proposal PDF/ZIP berlogo software house / agensi Anda sendiri.'}
+                    </p>
+                  </>
+                ) : selectedPackage === 'impact_nonprofit_grant' ? (
+                  <>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-cyan-100 text-cyan-950 border border-cyan-400 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
+                      <ShieldCheck className="w-3 h-3" />
+                      <span>{isEn ? '100% CSR CROSS-SUBSIDY // VERIFIED NON-PROFIT GRANT' : 'SUBSIDI SILANG CSR 100% // HIBAH YAYASAN & RUMAH IBADAH'}</span>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
+                      {isEn ? 'Impact & Non-Profit CSR Grant (Rp 0 — Subsidized)' : 'Hibah CSR Yayasan, NGO, Rumah Ibadah & Riset (Rp 0)'}
+                    </h3>
+                    <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
+                      {isEn
+                        ? 'Commercial value Rp 1,490,000 subsidized 100% to Rp 0 for verified non-profits, houses of worship, NGOs, and academic research (ISAK 35 / PSAK 109 compliant).'
+                        : 'Nilai komersial Rp 1.490.000 disubsidi 100% menjadi Rp 0 khusus Yayasan Sosial, Lembaga Zakat/Wakaf, Rumah Ibadah, dan Riset Akademik terverifikasi.'}
+                    </p>
+                  </>
                 ) : (
                   <>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-cyan-100 text-cyan-950 border border-cyan-400 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
                       <Terminal className="w-3 h-3" />
-                      <span>{isEn ? '100% SELF-SERVICE // GUEST ACCESS (NO LOGIN)' : '100% SELF-SERVICE // AKSES TAMU (TANPA LOGIN)'}</span>
+                      <span>{isEn ? '100% SELF-SERVICE // GUEST ACCESS (NO CREDIT CARD)' : '100% SELF-SERVICE // AKSES TAMU (TANPA KARTU KREDIT)'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
                       Spark Free Idea Audit (Rp 0)
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn
-                        ? 'Quick sanity check and 5 essential MVP features in Guest Mode. 2 free audits per month, auto-reset on the 1st of every month.'
-                        : 'Audit cepat kelayakan ide dan pemetaan 5 fitur MVP. Kuota gratis 2x per bulan, otomatis di-reset kembali setiap tanggal 1 awal bulan baru.'}
+                        ? 'Quick sanity check, Executive Architecture Proposal (WOW View), and Phase 1 + 2 Core ULID Table Preview in Guest Mode. 2 free audits per month.'
+                        : 'Audit cepat kelayakan ide, Proposal Arsitektur Bisnis (Layar 1), serta Pratinjau Fase 1 + 2 Tabel Inti ULID. Kuota gratis 2x per bulan.'}
                     </p>
                   </>
                 )}
@@ -4619,14 +4799,25 @@ return match (true) {
                     </select>
                   </div>
 
-                  {/* BADGE PENEGASAN AKSI DIGITAL INSTAN (KHUSUS PAKET SELF-SERVICE // SPRINT BATCH & KICKOFF DISEMBUNYIKAN) */}
+                  {/* BADGE PENEGASAN AKSI DIGITAL INSTAN (MENYESUAIKAN PAKET GRATIS VS BERBAYAR) */}
                   {isSelfService && (
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono flex items-center gap-2.5 text-emerald-700 dark:text-emerald-400">
-                      <Zap className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <div className={`p-3 border text-xs font-mono flex items-center gap-2.5 ${selectedPackage === 'retail_spark' || selectedPackage === 'impact_nonprofit_grant'
+                      ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-700 dark:text-cyan-300'
+                      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                      }`}>
+                      <Zap className={`w-4 h-4 shrink-0 ${selectedPackage === 'retail_spark' || selectedPackage === 'impact_nonprofit_grant' ? 'text-cyan-500' : 'text-emerald-500'}`} />
                       <div className="font-bold tracking-tight">
-                        {isEn
-                          ? '⚡ Instant Digital Access — Auto-Generated & Ready for Download Post-Payment'
-                          : '⚡ Akses Digital Instan — Dihasilkan Otomatis & Siap Unduh Pasca Pembayaran'}
+                        {selectedPackage === 'retail_spark'
+                          ? (isEn
+                            ? '🚀 Free Guest Sandbox Quota (Rp 0 • 2x/Month) — Fill Details Below & Click the Single Launch Button at the Bottom'
+                            : '🚀 Kuota Tamu Sandbox Gratis (Rp 0 • 2x/Bulan) — Lengkapi Data di Bawah & Klik Satu Tombol Mulai di Paling Bawah')
+                          : selectedPackage === 'impact_nonprofit_grant'
+                            ? (isEn
+                              ? '🕊️ 100% CSR Cross-Subsidy (Rp 0) — Submit Foundation / NGO Details Below to Activate Pro Quota'
+                              : '🕊️ Subsidi Silang CSR 100% (Rp 0) — Lengkapi Data Yayasan / NGO / Rumah Ibadah di Bawah untuk Aktivasi Kuota Pro')
+                            : (isEn
+                              ? '⚡ Instant Digital Access — Auto-Generated & Ready for Download Post-Payment'
+                              : '⚡ Akses Digital Instan — Dihasilkan Otomatis & Siap Unduh Pasca Pembayaran')}
                       </div>
                     </div>
                   )}
@@ -4817,29 +5008,23 @@ return match (true) {
                     </div>
                   )}
 
-                  {/* 5. KHUSUS SPARK FREE TIER: GUEST MODE EXPLORER */}
+                  {/* 5. KHUSUS SPARK FREE TIER: GUEST MODE EXPLORER (SINGLE UNIFIED FLOW — ZERO DUPLICATE BYPASS BUTTON) */}
                   {selectedPackage === 'retail_spark' && (
                     <div className="p-3.5 bg-cyan-500/10 border border-cyan-500/30 text-xs font-sans space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 font-mono font-bold text-xs text-cyan-600 dark:text-cyan-400 uppercase">
+                        <div className="flex items-center gap-1.5 font-mono font-bold text-xs text-cyan-700 dark:text-cyan-300 uppercase">
                           <Rocket className="w-3.5 h-3.5 shrink-0" />
-                          <span>{isEn ? 'SPARK FREE IDEA AUDIT (GUEST MODE)' : 'SPARK AUDIT IDE GRATIS (GUEST MODE)'}</span>
+                          <span>{isEn ? 'SPARK FREE IDEA AUDIT (GUEST SANDBOX MODE)' : 'SPARK AUDIT IDE GRATIS (GUEST SANDBOX MODE)'}</span>
                         </div>
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-cyan-500/20 text-cyan-700 dark:text-cyan-300">
-                          {isEn ? '2 AUDITS / MONTH' : '2X AUDIT / BULAN'}
+                        <span className="text-[10px] font-mono font-black px-2 py-0.5 bg-cyan-100 text-cyan-950 border border-cyan-400 dark:bg-cyan-950/80 dark:text-cyan-200 dark:border-cyan-700">
+                          {isEn ? '2 AUDITS / MONTH • RP 0' : '2X AUDIT / BULAN • RP 0'}
                         </span>
                       </div>
-                      <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                      <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
                         {isEn
-                          ? 'Spark is 100% free with 2 idea sanity checks per month in Guest Mode (no credit card or registration needed). You can launch it directly now, or submit your details to save audit history:'
-                          : 'Paket Spark 100% gratis 2x per bulan dalam mode Tamu (tanpa kartu kredit atau pendaftaran). Anda dapat langsung membuka generator di bawah, atau isi formulir jika ingin menyimpan riwayat audit ke akun:'}
+                          ? 'Spark is 100% free (no credit card required) and unlocks Screen 1 (Website Architecture Proposal WOW View), Phase 1 Foundation, and 2 Core ULID Tables. Fill in your name, email, and WhatsApp below, then click the green launch button at the bottom:'
+                          : 'Paket Spark 100% gratis (tanpa kartu kredit) dan membuka Layar 1 (Proposal Arsitektur Bisnis WOW View), Fase 1 Fondasi, serta 2 Tabel Inti ULID. Silakan isi nama, email, dan nomor WhatsApp di bawah lalu klik satu tombol mulai di bagian paling bawah:'}
                       </p>
-                      <a
-                        href="/blueprint?tier=spark"
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-[11px] font-bold uppercase tracking-wider transition rounded-none mt-1"
-                      >
-                        <span>{isEn ? '🚀 LAUNCH FREE SPARK GENERATOR (GUEST MODE) →' : '🚀 BUKA GENERATOR SPARK (GUEST MODE) →'}</span>
-                      </a>
                     </div>
                   )}
 
@@ -4862,9 +5047,13 @@ return match (true) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        {isRetailTier
-                          ? (isEn ? 'License Holder Full Name *' : 'Nama Lengkap Pemilik Lisensi *')
-                          : (isEn ? 'Full Name / Contact Person *' : 'Nama Lengkap / PIC *')}
+                        {selectedPackage === 'retail_spark'
+                          ? (isEn ? 'Guest Full Name (Audit Log) *' : 'Nama Lengkap Pengunjung (Audit Tamu) *')
+                          : selectedPackage === 'impact_nonprofit_grant'
+                            ? (isEn ? 'Foundation / NGO Representative Name *' : 'Nama Lengkap Pengurus Yayasan / NGO *')
+                            : isRetailTier
+                              ? (isEn ? 'License Holder Full Name *' : 'Nama Lengkap Pemilik Lisensi *')
+                              : (isEn ? 'Full Name / Contact Person *' : 'Nama Lengkap / PIC *')}
                       </label>
                       <input
                         type="text"
@@ -4879,17 +5068,21 @@ return match (true) {
 
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        {isRetailTier
-                          ? (isEn ? 'Company / Brand (Optional)' : 'Perusahaan / Brand (Opsional)')
-                          : (isEn ? 'Company / Business Entity *' : 'Perusahaan / Bisnis *')}
+                        {selectedPackage === 'impact_nonprofit_grant'
+                          ? (isEn ? 'Foundation / House of Worship / Campus Name *' : 'Nama Yayasan / Rumah Ibadah / Kampus *')
+                          : isRetailTier
+                            ? (isEn ? 'Company / Brand (Optional)' : 'Perusahaan / Brand (Opsional)')
+                            : (isEn ? 'Company / Business Entity *' : 'Perusahaan / Bisnis *')}
                       </label>
                       <input
                         type="text"
                         name="company"
                         value={formData.company}
                         onChange={handleInputChange}
-                        placeholder={isEn ? 'e.g. Acme Corp / Freelance' : 'Contoh: PT Inovasi Maju / Mandiri'}
-                        required={!isRetailTier}
+                        placeholder={selectedPackage === 'impact_nonprofit_grant'
+                          ? (isEn ? 'e.g. Yayasan Amal Nusantara' : 'Contoh: Yayasan Amal Nusantara')
+                          : (isEn ? 'e.g. Acme Corp / Freelance' : 'Contoh: PT Inovasi Maju / Mandiri')}
+                        required={!isRetailTier || selectedPackage === 'impact_nonprofit_grant'}
                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden"
                       />
                     </div>
@@ -4898,9 +5091,11 @@ return match (true) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        {isRetailTier
-                          ? (isEn ? 'Email (License & PRD Delivery) *' : 'Email (Kunci Lisensi & Unduhan PRD) *')
-                          : (isEn ? 'Business Email *' : 'Email Bisnis *')}
+                        {selectedPackage === 'retail_spark'
+                          ? (isEn ? 'Active Email (Audit Summary & Link) *' : 'Email Aktif (Pengiriman Ringkasan Audit) *')
+                          : isRetailTier
+                            ? (isEn ? 'Email (License & PRD Delivery) *' : 'Email (Kunci Lisensi & Unduhan PRD) *')
+                            : (isEn ? 'Business Email *' : 'Email Bisnis *')}
                       </label>
                       <input
                         type="email"
@@ -4920,9 +5115,11 @@ return match (true) {
 
                     <div>
                       <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                        {isRetailTier
-                          ? (isEn ? 'Phone / Mobile (For Midtrans Payment Status) *' : 'No. Ponsel / HP (Notifikasi Pembayaran Midtrans) *')
-                          : (isEn ? 'WhatsApp Phone *' : 'No. WhatsApp *')}
+                        {selectedPackage === 'retail_spark' || selectedPackage === 'impact_nonprofit_grant'
+                          ? (isEn ? 'Active WhatsApp / Mobile (E.164 Zone) *' : 'No. WhatsApp / HP Aktif (Zona Negara) *')
+                          : isRetailTier
+                            ? (isEn ? 'Phone / Mobile (For Midtrans Payment Status) *' : 'No. Ponsel / HP (Notifikasi Pembayaran Midtrans) *')
+                            : (isEn ? 'WhatsApp Phone *' : 'No. WhatsApp *')}
                       </label>
                       <div className="flex">
                         <select
@@ -5040,29 +5237,48 @@ return match (true) {
                   {/* Submit CTA */}
                   <button
                     type="submit"
-                    disabled={isSubmitting || (!agreeTerms && selectedPackage !== 'retail_spark')}
-                    className={`w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-md cursor-pointer ${(!agreeTerms && selectedPackage !== 'retail_spark') ? 'opacity-50 cursor-not-allowed' : ''
+                    disabled={isSubmitting || (!agreeTerms && !['retail_spark', 'impact_nonprofit_grant'].includes(selectedPackage))}
+                    className={`w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3.5 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-md cursor-pointer ${(!agreeTerms && !['retail_spark', 'impact_nonprofit_grant'].includes(selectedPackage)) ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
                   >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>{isEn ? 'OPENING MIDTRANS PAYMENT SNAP...' : 'MEMBUKA GATEWAY PEMBAYARAN MIDTRANS...'}</span>
+                        <span>
+                          {selectedPackage === 'retail_spark' || selectedPackage === 'impact_nonprofit_grant'
+                            ? (isEn ? 'LAUNCHING ARCHITECTURE STUDIO...' : 'MENYIAPKAN RUANG ARSITEKTUR STUDIO...')
+                            : (isEn ? 'OPENING MIDTRANS PAYMENT SNAP...' : 'MEMBUKA GATEWAY PEMBAYARAN MIDTRANS...')}
+                        </span>
                       </>
                     ) : selectedPackage === 'retail_lite' ? (
                       <>
                         <CreditCard className="w-4 h-4" />
                         <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.retail_lite_price || '99.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.retail_lite_price || '99.000'}) →`}</span>
                       </>
+                    ) : selectedPackage === 'single_app_umkm_pass' ? (
+                      <>
+                        <CreditCard className="w-4 h-4" />
+                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.single_app_pass_price || '299.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.single_app_pass_price || '299.000'}) →`}</span>
+                      </>
                     ) : selectedPackage === 'retail_pro' ? (
                       <>
                         <Sparkles className="w-4 h-4" />
                         <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.retail_pro_price || '399.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.retail_pro_price || '399.000'}) →`}</span>
                       </>
+                    ) : selectedPackage === 'agency_whitelabel_partner' ? (
+                      <>
+                        <Crown className="w-4 h-4" />
+                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.agency_whitelabel_price || '990.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.agency_whitelabel_price || '990.000'}) →`}</span>
+                      </>
                     ) : selectedPackage === 'retail_ultimate' ? (
                       <>
                         <Crown className="w-4 h-4" />
                         <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.retail_ultimate_price || '1.490.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.retail_ultimate_price || '1.490.000'}) →`}</span>
+                      </>
+                    ) : selectedPackage === 'impact_nonprofit_grant' ? (
+                      <>
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>{isEn ? 'APPLY FOR 100% CSR SUBSIDY GRANT (RP 0) →' : 'AJUKAN HIBAH SUBSIDI CSR 100% (RP 0) →'}</span>
                       </>
                     ) : selectedPackage === 'retail_spark' ? (
                       <>
@@ -5100,11 +5316,17 @@ return match (true) {
                     </span>
                     <span className="flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-500" />
-                      {isEn ? 'Instant Payment (QRIS / VA Midtrans < Rp 10M)' : 'Pembayaran Instan (QRIS / VA Midtrans < Rp 10 Jt)'}
+                      {selectedPackage === 'retail_spark'
+                        ? (isEn ? 'No Credit Card Required (Rp 0)' : 'Tanpa Kartu Kredit (Rp 0)')
+                        : selectedPackage === 'impact_nonprofit_grant'
+                          ? (isEn ? '100% CSR Cross-Subsidy (ISAK 35)' : 'Subsidi Silang CSR 100% (ISAK 35)')
+                          : (isEn ? 'Instant Payment (QRIS / VA Midtrans < Rp 10M)' : 'Pembayaran Instan (QRIS / VA Midtrans < Rp 10 Jt)')}
                     </span>
                     <span className="flex items-center gap-1">
                       <FileText className="w-3 h-3 text-emerald-500" />
-                      {isEn ? 'Official Commercial Invoice' : 'Bukti Pembayaran & Kwitansi Resmi'}
+                      {selectedPackage === 'retail_spark'
+                        ? (isEn ? '0% DOM Leak Server Gate' : 'Gerbang Server 0% Leak')
+                        : (isEn ? 'Official Commercial Invoice' : 'Bukti Pembayaran & Kwitansi Resmi')}
                     </span>
                   </div>
                 </form>

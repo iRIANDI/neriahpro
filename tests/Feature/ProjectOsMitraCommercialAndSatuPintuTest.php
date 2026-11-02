@@ -343,9 +343,9 @@ class ProjectOsMitraCommercialAndSatuPintuTest extends TestCase
             ->call('signStudioDigitalBast')
             ->assertSet('uatChecklistState.all_passed', true);
 
-        // Verify 44 Native AI Tools + RBAC Mutation Guard on Mitra Tools #23 & #24
-        $this->assertCount(44, GeminiToolRegistry::getDeclarations());
-        $this->assertCount(44, GeminiToolRegistry::getOpenAiTools());
+        // Verify 45 Native AI Tools + RBAC Mutation Guard on Mitra Tools #23 & #24
+        $this->assertCount(45, GeminiToolRegistry::getDeclarations());
+        $this->assertCount(45, GeminiToolRegistry::getOpenAiTools());
         $engine = app(AgenticActionExecutionEngine::class);
 
         $this->actingAs($reviewer);

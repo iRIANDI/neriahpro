@@ -57,7 +57,7 @@ class ProjectOsMultiPlatformAndSprintTasksTest extends TestCase
             if (str_starts_with($filePath, 'database/migrations/2026_01_01_') && str_ends_with($filePath, '.php')) {
                 $hasMigration = true;
             }
-            if (str_starts_with($filePath, 'app/Models/') && str_ends_with($filePath, '.php')) {
+            if (str_starts_with($filePath, 'app/Models/') && ! str_starts_with($filePath, 'app/Models/Concerns/') && str_ends_with($filePath, '.php')) {
                 $hasModel = true;
                 $this->assertStringContainsString('use HasFactory, HasUlids;', $files[$filePath]);
             }
@@ -142,11 +142,11 @@ class ProjectOsMultiPlatformAndSprintTasksTest extends TestCase
     public function test_large_corpus_hierarchical_digest_preserves_middle_chapters(): void
     {
         // Build 25,000 character corpus with critical spec in the exact middle (around 12,000 - 15,000 char mark)
-        $intro = str_repeat("Bab 1: Pendahuluan dan Latar Belakang Bisnis Umum. ", 150); // ~7.5k chars
+        $intro = str_repeat('Bab 1: Pendahuluan dan Latar Belakang Bisnis Umum. ', 150); // ~7.5k chars
         $middleChapter = "\n\n## Bab 4: Spesifikasi Fungsional Inti (Krusial)\n- Fitur Rahasia: Algoritma Pencocokan Dinamis AI.\n- Tabel Database: dynamic_matcher_engines dan candidate_profiles.\n- Parameter: Strict O(1) latency under 5ms.\n\n";
-        $outro = str_repeat("Bab 8: Lampiran dan Daftar Istilah Tambahan Regulasi. ", 150); // ~7.5k chars
+        $outro = str_repeat('Bab 8: Lampiran dan Daftar Istilah Tambahan Regulasi. ', 150); // ~7.5k chars
 
-        $largeDocument = $intro . $middleChapter . $outro;
+        $largeDocument = $intro.$middleChapter.$outro;
         $this->assertGreaterThan(15000, mb_strlen($largeDocument));
 
         $blueprint = VisionBlueprint::create([

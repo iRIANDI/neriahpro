@@ -1279,6 +1279,53 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     });
   }, [matrixCatalog.sectors, matrixCatalog.sector_visual_ui_catalog]);
 
+  // Tahap A (Progressive Disclosure Flow v12.0): Smart Idea Auto-Mapping to 12 Sectors, Primitives, L1-L4 Menus & Zone A+B UI
+  const handleQuickDetectSectorFromIdea = useCallback(() => {
+    const corpus = `${ideaText || ''} ${formData.namaBisnis || ''} ${formData.masalahUtama || ''}`.toLowerCase();
+    const sectors = matrixCatalog.sectors || [];
+    const findCode = (numPrefix, fallbackIdx = 0) => {
+      const found = sectors.find((s) => String(s.code || '').includes(`SECTOR_${numPrefix}`));
+      return found?.code || sectors[fallbackIdx]?.code || 'SECTOR_01_COMMERCE_RETAIL';
+    };
+
+    let matchedSector = findCode('01', 0);
+    if (/(klinik|rumah sakit|dokter|pasien|rekam medis|rme|satusehat|bpjs|apotek|resep|gigi|odontogram)/i.test(corpus)) {
+      matchedSector = findCode('04', 3);
+    } else if (/(sekolah|kampus|kursus|bimbel|lms|ujian|cbt|sertifikat|guru|siswa|mahasiswa|pesantren)/i.test(corpus)) {
+      matchedSector = findCode('05', 4);
+    } else if (/(logistik|ekspedisi|kurir|armada|truk|kargo|pengiriman|resi|manifest|surat jalan|pod)/i.test(corpus)) {
+      matchedSector = findCode('06', 5);
+    } else if (/(pabrik|manufaktur|produksi|bom|bahan baku|perakitan|qc|mesin|work order)/i.test(corpus)) {
+      matchedSector = findCode('07', 6);
+    } else if (/(agensi|konsultan|firma hukum|pengacara|notaris|akuntan|kap|timesheet|retainer|milestone)/i.test(corpus)) {
+      matchedSector = findCode('08', 7);
+    } else if (/(properti|perumahan|konstruksi|kontraktor|kos|apartemen|kavling|rab proyek|mandor|kpr)/i.test(corpus)) {
+      matchedSector = findCode('09', 8);
+    } else if (/(koperasi|simpan pinjam|fintech|bmt|shu|angsuran|pinjaman|kredit|mikrofinansial)/i.test(corpus)) {
+      matchedSector = findCode('10', 9);
+    } else if (/(yayasan|ngo|zakat|wakaf|donasi|amal|masjid|gereja|rumah ibadah|panti asuhan|csr|hibah)/i.test(corpus)) {
+      matchedSector = findCode('11', 10);
+    } else if (/(pemda|pemerintah|dinas|desa|bumn|spbe|e-office|disposisi|perizinan|tte|asn)/i.test(corpus)) {
+      matchedSector = findCode('12', 11);
+    } else if (/(marketplace|multi-vendor|rekber|escrow|komisi penjual|lapak|split payment)/i.test(corpus)) {
+      matchedSector = findCode('03', 2);
+    } else if (/(toko|minimarket|supermarket|grosir|eceran|barcode|stok barang|gudang toko|distro)/i.test(corpus)) {
+      matchedSector = findCode('02', 1);
+    }
+
+    selectMatrixSector(matchedSector);
+    const secObj = sectors.find((s) => s.code === matchedSector);
+    const secLabel = secObj?.name?.[lang] || secObj?.name?.id || matchedSector;
+
+    showLocalToast(
+      'success',
+      lang === 'en'
+        ? `Auto-mapped your idea to ${secLabel} + Zone A Cockpit + Zone B Public Scrollytelling + L1–L4 Menus!`
+        : `Ide Anda otomatis dipetakan ke ${secLabel} + Kokpit Zona A + Scrollytelling Zona B + Peta Menu L1–L4!`,
+      'TAHAP A // DETEKSI SEKTOR OTOMATIS'
+    );
+  }, [ideaText, formData.namaBisnis, formData.masalahUtama, matrixCatalog.sectors, selectMatrixSector, lang, showLocalToast]);
+
   const activeEnterpriseMenuMatrix = useMemo(() => {
     const secObj = activeMatrixSectorObj || matrixCatalog.sectors?.[0] || null;
     return secObj?.enterprise_menu_matrix || null;
@@ -4355,8 +4402,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               </p>
             </div>
 
-            {/* Brain Dump Textarea */}
-            <div id="field-ideaText">
+            {/* Brain Dump Textarea + Tahap A Smart Idea Auto-Mapping Button */}
+            <div id="field-ideaText" className="space-y-2.5">
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
                   Uraian Ide & Alur Proses Bisnis
@@ -4372,6 +4419,32 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 placeholder={t.textareaPlaceholder}
                 className={inputClass}
               />
+
+              {/* Tahap A (Progressive Disclosure Flow v12.0): 1-Click Auto-Detect Sector & Modules */}
+              <div className="p-3 bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-400 dark:border-emerald-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-none">
+                <div className="text-[11px] font-sans text-zinc-800 dark:text-zinc-200 leading-snug">
+                  <span className="font-mono font-black uppercase text-emerald-950 dark:text-emerald-300 block">
+                    {lang === 'en'
+                      ? 'TAHAP A // ZERO-JARGON SMART IDEA AUTO-MAPPING'
+                      : 'TAHAP A // PEMETAAN IDE OTOMATIS TANPA ISTILAH TEKNIS'}
+                  </span>
+                  <span>
+                    {lang === 'en'
+                      ? 'Not sure which of the 12 Sectors, Transaction Primitives, or Zone A+B UI fits your business? Click the button to auto-detect instantly:'
+                      : 'Bingung memilih Sektor #01–#12, Modul Transaksi, atau Tampilan Layar Zona A+B? Klik tombol di samping untuk mendeteksi otomatis dari ide Anda:'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  id="btn-auto-detect-sector-idea"
+                  onClick={handleQuickDetectSectorFromIdea}
+                  className="px-3.5 py-2 bg-zinc-950 hover:bg-zinc-800 text-emerald-400 dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 font-mono text-[11px] font-black uppercase tracking-wider shrink-0 rounded-none cursor-pointer transition"
+                >
+                  {lang === 'en'
+                    ? '✨ Auto-Detect Sector & Modules from My Idea'
+                    : '✨ Deteksi Sektor & Modul Otomatis dari Ide Saya'}
+                </button>
+              </div>
             </div>
 
             {/* MarkItDown File Dropzone */}

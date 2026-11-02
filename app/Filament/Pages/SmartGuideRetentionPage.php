@@ -13,6 +13,7 @@ use App\Support\PosDualZoneFrontendAndSaasCatalog;
 use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosInclusiveCommercialCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
+use App\Support\PosProgressiveDisclosureCatalog;
 use App\Support\PosRealWorldRuntimeCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
 use App\Support\PosSeoGeoAndZeroFailureCatalog;
@@ -67,8 +68,8 @@ class SmartGuideRetentionPage extends Page
     public function getSubheading(): string|Htmlable|null
     {
         return app()->getLocale() === 'en'
-            ? 'Executive Business & Engineering Playbook (Project OS v11.0 Paripurna Edition): Satu Pintu SaaS Commercial Gate, 12-Sector SEO/GEO Authority (/llms.txt + Multi-Graph Schema.org), UU PDP Privacy Vault, Offline Outbox PWA, Post-BAST SLA Warranty, Holding Consolidation & 44 Native AI Tools.'
-            : 'Dokumentasi Rahasia Bisnis & Operasional Neriah Pro (Project OS v11.0 Paripurna Edition): Gerbang Komersial Satu Pintu SaaS, Otoritas SEO/GEO 12 Sektor (/llms.txt + Multi-Graph Schema.org), Brankas Privasi UU PDP, Offline Outbox PWA, Garansi SLA Pasca-BAST, Konsolidasi Holding & 44 Native AI Tools.';
+            ? 'Executive Business & Engineering Playbook (Project OS v12.0 Progressive Disclosure & Paripurna Edition): Satu Pintu SaaS Commercial Gate, Progressive Disclosure Flow, Zero-Leak Server Gate, 12-Sector SEO/GEO Authority (/llms.txt + Multi-Graph Schema.org), UU PDP Privacy Vault, Offline Outbox PWA, Post-BAST SLA Warranty, Holding Consolidation & 45 Native AI Tools.'
+            : 'Dokumentasi Rahasia Bisnis & Operasional Neriah Pro (Project OS v12.0 Progressive Disclosure & Paripurna Edition): Gerbang Komersial Satu Pintu SaaS, Progressive Disclosure Flow, Zero-Leak Server Gate, Otoritas SEO/GEO 12 Sektor (/llms.txt + Multi-Graph Schema.org), Brankas Privasi UU PDP, Offline Outbox PWA, Garansi SLA Pasca-BAST, Konsolidasi Holding & 45 Native AI Tools.';
     }
 
     public function getViewData(): array
@@ -112,6 +113,10 @@ class SmartGuideRetentionPage extends Page
             'v11ZeroFailureModulesId' => PosSeoGeoAndZeroFailureCatalog::sixFinalZeroFailureModules('id'),
             'v11ZeroFailureModulesEn' => PosSeoGeoAndZeroFailureCatalog::sixFinalZeroFailureModules('en'),
             'v11TwentyPillars' => PosSeoGeoAndZeroFailureCatalog::twentyPillarsParipurnaMatrix(),
+            'v12DisclosureStages' => PosProgressiveDisclosureCatalog::disclosureStages(),
+            'v12TierMatrix' => PosProgressiveDisclosureCatalog::tierEntitlementMatrix(),
+            'v12PhaseUpsellCatalog' => PosProgressiveDisclosureCatalog::phaseUpsellCatalog(),
+            'v12ScopeParalysisGuard' => PosProgressiveDisclosureCatalog::scopeParalysisProtectionBlueprint(),
             'guidedJourneySteps' => PosCommercialBridgeService::guidedClientJourneySteps(),
             'satuPintuPackages' => PricingRegistry::getSatuPintuCatalog(),
             'estimatorConfig' => PricingRegistry::getCommercialEstimatorConfig(),

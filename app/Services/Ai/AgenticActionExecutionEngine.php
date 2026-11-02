@@ -22,6 +22,7 @@ use App\Services\BlueprintDeltaEvolutionService;
 use App\Services\BlueprintDoctorService;
 use App\Services\BlueprintSlopScannerService;
 use App\Services\BrownfieldMigrationAuditorService;
+use App\Services\Entitlement\BlueprintEntitlementGateService;
 use App\Services\PosCommercialBridgeService;
 use App\Services\ProjectOsBlueprintCompilerService;
 use App\Services\Saas\PosSaasCommercialEngineService;
@@ -34,6 +35,7 @@ use App\Support\PosDualZoneFrontendAndSaasCatalog;
 use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosInclusiveCommercialCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
+use App\Support\PosProgressiveDisclosureCatalog;
 use App\Support\PosRealWorldRuntimeCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
 use App\Support\PosSeoGeoAndZeroFailureCatalog;
@@ -124,6 +126,7 @@ class AgenticActionExecutionEngine
                 'audit_uu_pdp_blind_index_and_privacy' => $this->auditUuPdpBlindIndexAndPrivacy($args),
                 'triage_post_bast_sla_maintenance_ticket' => (strtolower(trim((string) ($args['action'] ?? 'list_tickets'))) === 'submit_ticket' ? $this->guardMutation($user, $toolName) : null) ?? $this->triagePostBastSlaMaintenanceTicket($args, $user),
                 'simulate_sandbox_webhook_and_holding_rollup' => (strtolower(trim((string) ($args['action'] ?? 'holding_rollup'))) === 'simulate_webhook' ? $this->guardMutation($user, $toolName) : null) ?? $this->simulateSandboxWebhookAndHoldingRollup($args, $user),
+                'evaluate_entitlement_and_scope_paralysis_guard' => $this->evaluateEntitlementAndScopeParalysisGuard($args, $user),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
@@ -2207,6 +2210,58 @@ class AgenticActionExecutionEngine
             'action' => 'holding_rollup',
             'holding_configured' => true,
             'report' => $workspace->buildHoldingConsolidationReport(),
+        ];
+    }
+
+    /**
+     * 45. Evaluate Progressive Disclosure Flow, Zero-Leak Entitlement Gate & Anti-Over-Planning Scope Paralysis Guard (v12.0)
+     */
+    protected function evaluateEntitlementAndScopeParalysisGuard(array $args, ?User $user): array
+    {
+        $action = strtolower(trim((string) ($args['action'] ?? 'scope_paralysis_status')));
+        $gateService = app(BlueprintEntitlementGateService::class);
+
+        if ($action === 'auto_detect_idea') {
+            $ideaText = trim((string) ($args['idea_text'] ?? ''));
+
+            return [
+                'success' => true,
+                'action' => 'auto_detect_idea',
+                'detection' => $gateService->autoDetectSectorAndModulesFromIdea($ideaText),
+            ];
+        }
+
+        if ($action === 'calculate_rescue_credit') {
+            $mitraQuotation = max(1000000, (int) ($args['mitra_quotation_idr'] ?? 61950000));
+            $retailPaid = max(0, (int) ($args['retail_paid_idr'] ?? 399000));
+
+            return [
+                'success' => true,
+                'action' => 'calculate_rescue_credit',
+                'rescue_credit' => $gateService->calculateRetailToMitraRescueCredit($mitraQuotation, $user, $retailPaid),
+            ];
+        }
+
+        if ($action === 'evaluate_gate') {
+            $tierCode = strtoupper(trim((string) ($args['tier_code'] ?? 'FREE_SANDBOX')));
+            $phaseNumber = min(max((int) ($args['phase_number'] ?? 3), 1), 7);
+
+            return [
+                'success' => true,
+                'action' => 'evaluate_gate',
+                'tier_code' => $tierCode,
+                'phase_number' => $phaseNumber,
+                'upsell_advice' => $gateService->buildContextualUpsellAdvice($phaseNumber, 'SECTOR_01_COMMERCE_OMNICHANNEL', $tierCode),
+                'disclosure_stages' => PosProgressiveDisclosureCatalog::disclosureStages(),
+            ];
+        }
+
+        return [
+            'success' => true,
+            'action' => 'scope_paralysis_status',
+            'scope_paralysis_guard' => PosProgressiveDisclosureCatalog::scopeParalysisProtectionBlueprint(),
+            'disclosure_stages' => PosProgressiveDisclosureCatalog::disclosureStages(),
+            'tier_entitlement_matrix' => PosProgressiveDisclosureCatalog::tierEntitlementMatrix(),
         ];
     }
 

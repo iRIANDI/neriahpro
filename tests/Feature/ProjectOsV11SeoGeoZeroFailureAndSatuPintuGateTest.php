@@ -464,9 +464,9 @@ class ProjectOsV11SeoGeoZeroFailureAndSatuPintuGateTest extends TestCase
         $this->assertContains('app/Models/Concerns/HasEncryptedPiiWithBlindIndex.php', $scaffoldFiles);
         $this->assertContains('public/sw-offline-outbox.js', $scaffoldFiles);
 
-        // 3. 44 Native AI Tools (#41..#44), RAG Knowledge Sync, KAG Rule #12 & Strict RBAC
+        // 3. 45 Native AI Tools (#41..#45), RAG Knowledge Sync, KAG Rule #12 & Strict RBAC
         $declarations = GeminiToolRegistry::getDeclarations();
-        $this->assertCount(44, $declarations);
+        $this->assertCount(45, $declarations);
 
         foreach ([
             'manage_seo_geo_authority',

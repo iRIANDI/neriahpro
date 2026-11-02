@@ -317,9 +317,9 @@ class ProjectOsV6DeterministicGuaranteesAndIsolationTest extends TestCase
         $this->assertTrue($admin->can('manage_enterprise_menu_matrix'));
         $this->assertTrue($admin->can('compile_symbol_manifest_and_dag_chunks'));
 
-        // Subsystem #3: 44 Native AI Tools + RAG Vector Knowledge Base v11.0
-        $this->assertCount(44, GeminiToolRegistry::getDeclarations());
-        $this->assertCount(44, GeminiToolRegistry::getOpenAiTools());
+        // Subsystem #3: 45 Native AI Tools + RAG Vector Knowledge Base v12.0
+        $this->assertCount(45, GeminiToolRegistry::getDeclarations());
+        $this->assertCount(45, GeminiToolRegistry::getOpenAiTools());
 
         $vectorService = app(VectorEmbeddingService::class);
         $syncRes = $vectorService->syncSystemKnowledgeBase(true);

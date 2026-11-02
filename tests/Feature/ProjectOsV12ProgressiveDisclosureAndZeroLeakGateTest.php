@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Livewire\BlueprintArchitectStudio;
+use App\Models\VisionBlueprint;
 use App\Services\Ai\AgenticActionExecutionEngine;
 use App\Services\Ai\GeminiToolRegistry;
 use App\Services\Entitlement\BlueprintEntitlementGateService;
+use App\Services\MidtransSnapService;
 use App\Support\PosProgressiveDisclosureCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -140,5 +143,62 @@ class ProjectOsV12ProgressiveDisclosureAndZeroLeakGateTest extends TestCase
         $this->assertTrue($scopeRes['success'] ?? false);
         $this->assertTrue($scopeRes['scope_paralysis_guard']['scope_freeze_enforced'] ?? false);
         $this->assertCount(3, $scopeRes['scope_paralysis_guard']['execution_stages'] ?? []);
+    }
+
+    public function test_midtrans_snap_service_bypasses_http_api_when_gross_amount_is_zero_or_negative(): void
+    {
+        // Testing that calling createSnapToken with gross_amount <= 0 never calls external Midtrans HTTP API
+        // and safely returns is_free = true, preventing Midtrans SNAP validation errors and merchant emails
+        $resZero = MidtransSnapService::createSnapToken([
+            'transaction_details' => [
+                'order_id' => 'NPRO-TEST-ZERO-'.time(),
+                'gross_amount' => 0,
+            ],
+            'customer_details' => [
+                'first_name' => 'Pastor Yohanes',
+                'email' => 'yohanes@gerejakasih.org',
+            ],
+        ]);
+
+        $this->assertTrue($resZero['success']);
+        $this->assertTrue($resZero['is_free']);
+        $this->assertNull($resZero['redirect_url']);
+        $this->assertStringStartsWith('free_grant_zero_amount_', $resZero['token']);
+    }
+
+    public function test_vision_blueprint_contract_generation_with_zero_dp_does_not_call_midtrans(): void
+    {
+        $blueprint = VisionBlueprint::create([
+            'slug' => 'csr-aplikasi-kasih-'.Str::random(6),
+            'nama_bisnis' => 'Aplikasi Kasih Komunitas',
+            'client_name' => 'Pastor Yohanes',
+            'email' => 'yohanes@gerejakasih.org',
+            'phone' => '081299887766',
+            'package_type' => 'impact_nonprofit_grant',
+            'status' => 'active',
+            'sector' => 'SECTOR_12_GOVTECH_NONPROFIT',
+        ]);
+
+        $doc = $blueprint->convertToDigitalContract([
+            'contract_amount' => 0,
+            'dp_amount' => 0,
+        ]);
+
+        $this->assertNotNull($doc);
+        $this->assertSame(0.0, (float) $doc->dp_amount);
+        // Midtrans payment URL must be null for Rp 0 CSR grants, zero Midtrans call
+        $this->assertNull($doc->content_clauses['midtrans_payment_url'] ?? null);
+    }
+
+    public function test_satu_pintu_wizard_v12_tier_1_bilingual_compliance_in_pricing_island(): void
+    {
+        $jsx = (string) file_get_contents(resource_path('js/Islands/ArchitecturePricingIsland.jsx'));
+
+        // Pastikan Satu Pintu v12.0 telah menggunakan token bilingual dinamis (isEn ? 'ONE-STOP WIZARD V12.0' : 'SATU PINTU WIZARD V12.0')
+        $this->assertStringContainsString("isEn ? 'ONE-STOP WIZARD V12.0' : 'SATU PINTU WIZARD V12.0'", $jsx);
+        $this->assertStringContainsString("isEn ? 'RETAIL VERSION' : 'VERSI RETAIL'", $jsx);
+        $this->assertStringContainsString("isEn ? 'PARTNER PROJECT VERSION' : 'VERSI MITRA PROYEK'", $jsx);
+        $this->assertStringContainsString("isEn ? 'RETAIL SAAS // ONE-STOP V12.0' : 'RETAIL SAAS // SATU PINTU V12.0'", $jsx);
+        $this->assertStringContainsString("isEn ? 'MITRA TURNKEY // ESCROW WBS V12.0' : 'MITRA TURNKEY // ESCROW RAB V12.0'", $jsx);
     }
 }

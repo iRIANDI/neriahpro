@@ -2,11 +2,17 @@
 
 namespace App\Models;
 
+use App\Services\MidtransSnapService;
+use App\Services\PrdGeneratorService;
+use App\Services\ProjectOsBlueprintCompilerService;
+use App\Support\PosEnterpriseGuaranteeCatalog;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUlids;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class VisionBlueprint extends Model
@@ -69,7 +75,7 @@ class VisionBlueprint extends Model
                     $base = 'proyek';
                 }
                 do {
-                    $candidate = $base . '-' . strtolower(Str::random(6));
+                    $candidate = $base.'-'.strtolower(Str::random(6));
                 } while (static::query()->where('slug', $candidate)->exists());
 
                 $model->slug = $candidate;
@@ -85,12 +91,12 @@ class VisionBlueprint extends Model
         return $this->morphMany(Document::class, 'related');
     }
 
-    public function issues(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function issues(): HasMany
     {
         return $this->hasMany(ProjectIssue::class, 'vision_blueprint_id');
     }
 
-    public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function comments(): HasMany
     {
         return $this->hasMany(ProjectComment::class, 'vision_blueprint_id');
     }
@@ -106,7 +112,7 @@ class VisionBlueprint extends Model
     /**
      * Composable 12-Sector Project OS Matrix assembly linked to this blueprint.
      */
-    public function posProject(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function posProject(): HasOne
     {
         return $this->hasOne(PosProject::class, 'vision_blueprint_id');
     }
@@ -116,22 +122,22 @@ class VisionBlueprint extends Model
      */
     public function generateAndSavePrd(?string $preferredAiProvider = null): array
     {
-        $content = \App\Services\PrdGeneratorService::generate($this, $preferredAiProvider);
+        $content = PrdGeneratorService::generate($this, $preferredAiProvider);
         $this->update(['prd_content' => $content]);
 
         // Partitioned Project Storage: Save official PRD Markdown + Universal Blueprint Schema v1.0 into dedicated project folder
         try {
-            $slug = $this->slug ?: \Illuminate\Support\Str::slug($this->nama_bisnis);
+            $slug = $this->slug ?: Str::slug($this->nama_bisnis);
             if ($slug) {
                 $projectDir = storage_path("app/projects/{$slug}");
-                if (!is_dir($projectDir)) {
+                if (! is_dir($projectDir)) {
                     @mkdir($projectDir, 0775, true);
                 }
-                $md = \App\Services\PrdGeneratorService::toMarkdown($this, $content);
+                $md = PrdGeneratorService::toMarkdown($this, $content);
                 @file_put_contents("{$projectDir}/prd.md", $md);
                 @file_put_contents("{$projectDir}/blueprint.json", json_encode($this->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
-                if (!empty($content['universal_blueprint_schema']) && is_array($content['universal_blueprint_schema'])) {
+                if (! empty($content['universal_blueprint_schema']) && is_array($content['universal_blueprint_schema'])) {
                     $ubs = $content['universal_blueprint_schema'];
                     @file_put_contents(
                         "{$projectDir}/BLUEPRINT_SCHEMA.json",
@@ -139,24 +145,24 @@ class VisionBlueprint extends Model
                     );
                     @file_put_contents(
                         "{$projectDir}/PROJECT_OS_EXECUTION_BLUEPRINT.md",
-                        \App\Services\ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($ubs)
+                        ProjectOsBlueprintCompilerService::renderExecutionBlueprintMarkdown($ubs)
                     );
-                    if (!empty($ubs['symbol_manifest']) && is_array($ubs['symbol_manifest'])) {
+                    if (! empty($ubs['symbol_manifest']) && is_array($ubs['symbol_manifest'])) {
                         @file_put_contents(
                             "{$projectDir}/SYMBOL_MANIFEST.json",
                             json_encode($ubs['symbol_manifest'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                         );
                     }
-                    if (!empty($ubs['enterprise_menu_matrix']) && is_array($ubs['enterprise_menu_matrix'])) {
+                    if (! empty($ubs['enterprise_menu_matrix']) && is_array($ubs['enterprise_menu_matrix'])) {
                         @file_put_contents(
                             "{$projectDir}/ENTERPRISE_MENU_MATRIX.md",
-                            \App\Support\PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown($ubs['enterprise_menu_matrix'])
+                            PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown($ubs['enterprise_menu_matrix'])
                         );
                     }
                 }
             }
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Failed to save PRD markdown in project folder: " . $e->getMessage());
+            Log::warning('Failed to save PRD markdown in project folder: '.$e->getMessage());
         }
 
         return $content;
@@ -167,23 +173,23 @@ class VisionBlueprint extends Model
      */
     public function convertToDigitalContract(array $overrides = []): Document
     {
-        $defaultAmount = $this->prd_content['itemized_cost_breakdown']['base_subtotal'] 
-            ?? (\App\Services\PrdGeneratorService::getPrimaryVelocityTiers($this)[0]['contract_amount'] ?? 50000000.00);
-        $contractAmount = isset($overrides['contract_amount']) ? (float)$overrides['contract_amount'] : (float)$defaultAmount;
-        $dpAmount = isset($overrides['dp_amount']) ? (float)$overrides['dp_amount'] : ($contractAmount * 0.50);
+        $defaultAmount = $this->prd_content['itemized_cost_breakdown']['base_subtotal']
+            ?? (PrdGeneratorService::getPrimaryVelocityTiers($this)[0]['contract_amount'] ?? 50000000.00);
+        $contractAmount = isset($overrides['contract_amount']) ? (float) $overrides['contract_amount'] : (float) $defaultAmount;
+        $dpAmount = isset($overrides['dp_amount']) ? (float) $overrides['dp_amount'] : ($contractAmount * 0.50);
 
         $clauses = [
             'pasal_1_ruang_lingkup' => [
                 'title' => 'Pasal 1: Ruang Lingkup Sistem & Spesifikasi PRD',
-                'description' => 'Pihak Kedua sepakat untuk mengembangkan arsitektur sistem perangkat lunak untuk "' . ($this->nama_bisnis ?: $this->client_name) . '" sesuai dengan rincian fitur MVP Fase 1 yang tercantum dalam Ultimate PRD (ID: ' . strtoupper(substr($this->id, 0, 10)) . ').',
+                'description' => 'Pihak Kedua sepakat untuk mengembangkan arsitektur sistem perangkat lunak untuk "'.($this->nama_bisnis ?: $this->client_name).'" sesuai dengan rincian fitur MVP Fase 1 yang tercantum dalam Ultimate PRD (ID: '.strtoupper(substr($this->id, 0, 10)).').',
             ],
             'pasal_2_timeline_sprint' => [
                 'title' => 'Pasal 2: Alokasi Waktu Pengerjaan (5 Sprint Kerja)',
-                'description' => 'Pekerjaan dilaksanakan dengan total durasi ' . ($this->target_waktu ?: '30 Hari Kerja') . ' yang dibagi ke dalam 5 Sprint berurutan (Sprint 1: Architecture, Sprint 2: Core MVP, Sprint 3: Frontend Flow, Sprint 4: Security Audit, Sprint 5: Deployment VPS).',
+                'description' => 'Pekerjaan dilaksanakan dengan total durasi '.($this->target_waktu ?: '30 Hari Kerja').' yang dibagi ke dalam 5 Sprint berurutan (Sprint 1: Architecture, Sprint 2: Core MVP, Sprint 3: Frontend Flow, Sprint 4: Security Audit, Sprint 5: Deployment VPS).',
             ],
             'pasal_3_biaya_dan_dp' => [
                 'title' => 'Pasal 3: Nilai Kontrak & Ketentuan Pembayaran DP',
-                'description' => 'Total nilai investasi proyek adalah Rp ' . number_format($contractAmount, 0, ',', '.') . ' dengan termin pembayaran: Uang Muka (DP 50%) sebesar Rp ' . number_format($dpAmount, 0, ',', '.') . ' dibayarkan sebelum pekerjaan dimulai, dan Pelunasan (50%) saat serah terima sistem.',
+                'description' => 'Total nilai investasi proyek adalah Rp '.number_format($contractAmount, 0, ',', '.').' dengan termin pembayaran: Uang Muka (DP 50%) sebesar Rp '.number_format($dpAmount, 0, ',', '.').' dibayarkan sebelum pekerjaan dimulai, dan Pelunasan (50%) saat serah terima sistem.',
             ],
             'pasal_4_penguncian_scope' => [
                 'title' => 'Pasal 4: Penguncian Ruang Lingkup (Scope Freeze)',
@@ -195,11 +201,11 @@ class VisionBlueprint extends Model
             ],
         ];
 
-        $orderId = $overrides['midtrans_order_id'] ?? ('NPRO-DP-' . strtoupper(Str::random(8)));
+        $orderId = $overrides['midtrans_order_id'] ?? ('NPRO-DP-'.strtoupper(Str::random(8)));
         $paymentUrl = $overrides['midtrans_payment_url'] ?? null;
 
-        if (!$paymentUrl && class_exists(\App\Services\MidtransSnapService::class)) {
-            $snapRes = \App\Services\MidtransSnapService::createSnapToken([
+        if ($dpAmount > 0 && ! $paymentUrl && class_exists(MidtransSnapService::class)) {
+            $snapRes = MidtransSnapService::createSnapToken([
                 'transaction_details' => [
                     'order_id' => $orderId,
                     'gross_amount' => (int) $dpAmount,
@@ -214,18 +220,20 @@ class VisionBlueprint extends Model
                         'id' => 'DP-CONTRACT',
                         'price' => (int) $dpAmount,
                         'quantity' => 1,
-                        'name' => substr('DP Kontrak: ' . ($this->nama_bisnis ?: 'Proyek'), 0, 50),
-                    ]
+                        'name' => substr('DP Kontrak: '.($this->nama_bisnis ?: 'Proyek'), 0, 50),
+                    ],
                 ],
             ]);
 
             if ($snapRes['success'] ?? false) {
                 $paymentUrl = $snapRes['redirect_url'];
             }
+        } elseif ($dpAmount <= 0) {
+            $paymentUrl = null;
         }
 
         $document = Document::create([
-            'title' => 'Perjanjian Kerja Sama Pengembangan Sistem - ' . ($this->nama_bisnis ?: $this->client_name),
+            'title' => 'Perjanjian Kerja Sama Pengembangan Sistem - '.($this->nama_bisnis ?: $this->client_name),
             'document_type' => 'contract',
             'related_type' => self::class,
             'related_id' => $this->id,
@@ -244,7 +252,7 @@ class VisionBlueprint extends Model
             'content_clauses' => $clauses,
         ]);
 
-        if (!$this->isDpConfirmed()) {
+        if (! $this->isDpConfirmed()) {
             $this->update([
                 'project_status' => $overrides['project_status'] ?? 'Contract Created',
             ]);
@@ -266,7 +274,7 @@ class VisionBlueprint extends Model
      */
     public function getPublicUrlAttribute(): string
     {
-        return url('/blueprint/' . $this->slug);
+        return url('/blueprint/'.$this->slug);
     }
 
     /**
@@ -304,7 +312,7 @@ class VisionBlueprint extends Model
      */
     public function provisionStagingUrl(): string
     {
-        if (!empty($this->staging_url)) {
+        if (! empty($this->staging_url)) {
             return $this->staging_url;
         }
 
@@ -344,7 +352,7 @@ class VisionBlueprint extends Model
         }
 
         // 3. Staging sandbox already provisioned with signed agreement
-        if (!empty($this->staging_url) && $this->signed_agreement) {
+        if (! empty($this->staging_url) && $this->signed_agreement) {
             return true;
         }
 
@@ -355,8 +363,8 @@ class VisionBlueprint extends Model
             ->filter()
             ->toArray();
 
-        if (!empty($docOrderIds)) {
-            $hasDocTx = \App\Models\Transaction::whereIn('midtrans_order_id', $docOrderIds)
+        if (! empty($docOrderIds)) {
+            $hasDocTx = Transaction::whereIn('midtrans_order_id', $docOrderIds)
                 ->whereIn('status', ['settlement', 'capture', 'success'])
                 ->exists();
             if ($hasDocTx) {
@@ -365,10 +373,10 @@ class VisionBlueprint extends Model
         }
 
         // 5. Exact ULID matching for direct blueprint payment transactions
-        $hasExactTx = \App\Models\Transaction::whereIn('status', ['settlement', 'capture', 'success'])
+        $hasExactTx = Transaction::whereIn('status', ['settlement', 'capture', 'success'])
             ->where(function ($q) {
-                $q->where('midtrans_order_id', 'LIKE', 'NPRO-DP-' . $this->id . '-%')
-                  ->orWhere('midtrans_order_id', 'LIKE', 'NP-BP-' . $this->id . '-%');
+                $q->where('midtrans_order_id', 'LIKE', 'NPRO-DP-'.$this->id.'-%')
+                    ->orWhere('midtrans_order_id', 'LIKE', 'NP-BP-'.$this->id.'-%');
             })
             ->exists();
 
@@ -401,8 +409,8 @@ class VisionBlueprint extends Model
     public function isRetailLicense(): bool
     {
         return $this->project_status === 'Retail License'
-            || !empty($this->user_metadata['retail_tier'])
-            || !empty($this->user_metadata['package_tier'])
+            || ! empty($this->user_metadata['retail_tier'])
+            || ! empty($this->user_metadata['package_tier'])
             || str_contains(strtolower($this->slug ?? ''), '-retail-');
     }
 
@@ -411,9 +419,9 @@ class VisionBlueprint extends Model
      */
     public function isScopeFrozen(): bool
     {
-        return $this->signed_agreement 
-            || $this->isDpConfirmed() 
-            || !empty($this->document_sha256) 
+        return $this->signed_agreement
+            || $this->isDpConfirmed()
+            || ! empty($this->document_sha256)
             || $this->documents()->where('scope_locked', true)->exists();
     }
 
@@ -427,14 +435,14 @@ class VisionBlueprint extends Model
         }
 
         $contract = $this->getContractDocument();
-        if ($contract && (!empty($contract->content_clauses['is_fully_settled']) || in_array($contract->status, ['fully_settled', 'completed'], true))) {
+        if ($contract && (! empty($contract->content_clauses['is_fully_settled']) || in_array($contract->status, ['fully_settled', 'completed'], true))) {
             return true;
         }
 
-        return \App\Models\Transaction::whereIn('status', ['settlement', 'capture', 'success'])
+        return Transaction::whereIn('status', ['settlement', 'capture', 'success'])
             ->where(function ($q) {
-                $q->where('midtrans_order_id', 'LIKE', 'NPRO-FN-' . $this->id . '-%')
-                  ->orWhere('midtrans_order_id', 'LIKE', 'NPRO-FINAL-' . $this->id . '-%');
+                $q->where('midtrans_order_id', 'LIKE', 'NPRO-FN-'.$this->id.'-%')
+                    ->orWhere('midtrans_order_id', 'LIKE', 'NPRO-FINAL-'.$this->id.'-%');
             })
             ->exists();
     }
@@ -454,11 +462,12 @@ class VisionBlueprint extends Model
     {
         $contract = $this->getContractDocument();
         if ($contract && $contract->total_amount > 0) {
-            $total = (float)$contract->total_amount;
+            $total = (float) $contract->total_amount;
+
             return round($total * 0.50, 2);
         }
 
-        $baseSubtotal = (float)($this->prd_content['itemized_cost_breakdown']['base_subtotal'] ?? 0);
+        $baseSubtotal = (float) ($this->prd_content['itemized_cost_breakdown']['base_subtotal'] ?? 0);
         if ($baseSubtotal > 0) {
             return round($baseSubtotal * 0.50, 2);
         }
@@ -466,4 +475,3 @@ class VisionBlueprint extends Model
         return 25000000.0;
     }
 }
-

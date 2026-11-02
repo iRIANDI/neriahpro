@@ -257,7 +257,7 @@ export default function ArchitecturePricingIsland({
   const [paymentStatus, setPaymentStatus] = useState('idle'); // 'idle' | 'pending' | 'success' | 'error'
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  // Tab 04 Comparison Matrix & Tab 05 FAQ Search / Filter / Density States (v11.0 Paripurna)
+  // Tab 04 Comparison Matrix & Tab 05 FAQ Search / Filter / Density States (v12.0 Paripurna)
   const [matrixSearchQuery, setMatrixSearchQuery] = useState('');
   const [matrixCategoryFilter, setMatrixCategoryFilter] = useState('ALL');
   const [matrixDensity, setMatrixDensity] = useState('normal'); // 'compact' | 'normal' | 'relaxed'
@@ -563,11 +563,11 @@ export default function ArchitecturePricingIsland({
     {
       category: 'SATU_PINTU',
       q: isEn
-        ? 'Why does Satu Pintu Wizard v11.0 require selecting a SaaS License or Mitra Contract before unlocking full blueprints (No Unpaid Studio Bypass)?'
-        : 'Mengapa Satu Pintu Wizard v11.0 mengunci akses cetak biru penuh ke pemilihan Paket SaaS atau Kontrak Mitra (Tanpa Tombol Bypass Gratis)?',
+        ? 'Why does the One-Stop Wizard (Satu Pintu v12.0) require selecting a SaaS License or Mitra Contract before unlocking full blueprints (No Unpaid Studio Bypass)?'
+        : 'Mengapa Satu Pintu Wizard v12.0 mengunci akses cetak biru penuh ke pemilihan Paket SaaS atau Kontrak Mitra (Tanpa Tombol Bypass Gratis)?',
       a: isEn
-        ? 'To guarantee 100% commercial consistency between the Satu Pintu configurator and our official 7 Retail SaaS Tiers & 3 Mitra Studio Contracts below. In Satu Pintu v11.0, every left-panel selection (Step B 12 Sectors, Step C Stack Topology, Step D 36 Visual UI + 6 Scrollytelling Presets, Step E1 Persona Mode, Step E2 Tier-1 Regulation) dynamically updates the right-hand summary in real time and locks directly into Step F (your chosen SaaS License or Mitra Contract). Server-side validation in BlueprintController::create() also enforces entitlement so unpaid sessions cannot bypass paid Pro/Ultimate/Agency tiers.'
-        : 'Demi menjaga konsistensi komersial 100% antara konfigurator Satu Pintu di atas dengan daftar 7 Paket SaaS Retail & 3 Kontrak Mitra di bawahnya. Pada Satu Pintu v11.0, setiap pilihan di panel kiri (Langkah B 12 Sektor, Langkah C Topologi Stack, Langkah D 36 Visual UI + 6 Preset Scrollytelling, Langkah E1 Mode Persona, Langkah E2 Regulasi Tier-1) langsung memperbarui panel status kanan secara real-time dan dikunci ke Langkah F (pilihan Lisensi SaaS atau Kontrak Mitra). Proteksi server di BlueprintController::create() juga memblokir bypass URL langsung tanpa lisensi aktif.'
+        ? 'To guarantee 100% commercial consistency between the One-Stop configurator and our official 7 Retail SaaS Tiers & 3 Mitra Studio Contracts below. In Satu Pintu v12.0, every left-panel selection (Step B 12 Sectors, Step C Stack Topology, Step D 36 Visual UI + 6 Scrollytelling Presets, Step E1 Persona Mode, Step E2 Tier-1 Regulation) dynamically updates the right-hand summary in real time and locks directly into Step F (your chosen SaaS License or Mitra Contract). Server-side validation in BlueprintController::create() also enforces entitlement so unpaid sessions cannot bypass paid Pro/Ultimate/Agency tiers.'
+        : 'Demi menjaga konsistensi komersial 100% antara konfigurator Satu Pintu di atas dengan daftar 7 Paket SaaS Retail & 3 Kontrak Mitra di bawahnya. Pada Satu Pintu v12.0, setiap pilihan di panel kiri (Langkah B 12 Sektor, Langkah C Topologi Stack, Langkah D 36 Visual UI + 6 Preset Scrollytelling, Langkah E1 Mode Persona, Langkah E2 Regulasi Tier-1) langsung memperbarui panel status kanan secara real-time dan dikunci ke Langkah F (pilihan Lisensi SaaS atau Kontrak Mitra). Proteksi server di BlueprintController::create() juga memblokir bypass URL langsung tanpa lisensi aktif.'
     },
     {
       category: 'SATU_PINTU',
@@ -584,8 +584,8 @@ export default function ArchitecturePricingIsland({
         ? 'How does Cross-Stage Causal Synergy work from Stage 1 (Sector & Visual UI) all the way to Stage 7 (BAST & 90-Day SLA)?'
         : 'Bagaimana cara kerja Sinergi Kausal Lintas-Tahap (Cross-Stage Synergy) dari Tahap 1 (Sektor & Visual UI) hingga Tahap 7 (BAST & Garansi SLA 90 Hari)?',
       a: isEn
-        ? 'Nothing in Project OS v11.0 is an isolated form! Changing your Sector (12 Taxonomies), Stack (M1/D1/S1), Internal Cockpit (Zone A: 36 Visual UIs), or Public Scrollytelling Preset (Zone B: 6 60fps Presets) in Stage 1 automatically recalculates: (Stage 2) PostgreSQL 16 Strict ULID tables & Dual-Persona Storyboard; (Stage 3) Algorithmic Man-Hours RAB, SHA-256 Scope Lock & Canary IP Watermark; (Stage 4) 7-Phase Prompt Sequencer & Living CVE Autopatch; (Stage 5) Schema.org Multi-Graph JSON-LD, /llms.txt GEO Citation, Offline Outbox PWA & UU PDP Blind Index; (Stage 6) Co-Design Alignment Room & Sector UAT Checklist; and (Stage 7) Digital BAST + 90-Day Post-BAST SLA Bug-Warranty.'
-        : 'Tidak ada satu pun fitur di Project OS v11.0 yang berdiri sendiri! Mengubah Sektor (12 Taksonomi), Stack (M1/D1/S1), Kokpit Internal (Zona A: 36 Visual UI), atau Preset Scrollytelling Publik (Zona B: 6 Preset 60fps) pada Tahap 1 secara otomatis menghitung ulang: (Tahap 2) Tabel PostgreSQL 16 Strict ULID & Storyboard Dual-Persona; (Tahap 3) RAB Jam Kerja Algoritmik, Segel Kontrak SHA-256 & Canary IP Watermark; (Tahap 4) 7-Fase Prompt AI & Living CVE Autopatch; (Tahap 5) Schema.org Multi-Graph JSON-LD, GEO /llms.txt, Offline Outbox PWA & Blind Index UU PDP; (Tahap 6) Co-Design Alignment Room & Checklist UAT Sektoral; hingga (Tahap 7) BAST Digital + Garansi Bug SLA 90 Hari.'
+        ? 'Nothing in Project OS v12.0 is an isolated form! Changing your Sector (12 Taxonomies), Stack (M1/D1/S1), Internal Cockpit (Zone A: 36 Visual UIs), or Public Scrollytelling Preset (Zone B: 6 60fps Presets) in Stage 1 automatically recalculates: (Stage 2) PostgreSQL 16 Strict ULID tables & Dual-Persona Storyboard; (Stage 3) Algorithmic Man-Hours RAB, SHA-256 Scope Lock & Canary IP Watermark; (Stage 4) 7-Phase Prompt Sequencer & Living CVE Autopatch; (Stage 5) Schema.org Multi-Graph JSON-LD, /llms.txt GEO Citation, Offline Outbox PWA & UU PDP Blind Index; (Stage 6) Co-Design Alignment Room & Sector UAT Checklist; and (Stage 7) Digital BAST + 90-Day Post-BAST SLA Bug-Warranty.'
+        : 'Tidak ada satu pun fitur di Project OS v12.0 yang berdiri sendiri! Mengubah Sektor (12 Taksonomi), Stack (M1/D1/S1), Kokpit Internal (Zona A: 36 Visual UI), atau Preset Scrollytelling Publik (Zona B: 6 Preset 60fps) pada Tahap 1 secara otomatis menghitung ulang: (Tahap 2) Tabel PostgreSQL 16 Strict ULID & Storyboard Dual-Persona; (Tahap 3) RAB Jam Kerja Algoritmik, Segel Kontrak SHA-256 & Canary IP Watermark; (Tahap 4) 7-Fase Prompt AI & Living CVE Autopatch; (Tahap 5) Schema.org Multi-Graph JSON-LD, GEO /llms.txt, Offline Outbox PWA & Blind Index UU PDP; (Tahap 6) Co-Design Alignment Room & Checklist UAT Sektoral; hingga (Tahap 7) BAST Digital + Garansi Bug SLA 90 Hari.'
     },
     {
       category: 'SEO_GEO_UU_PDP',
@@ -593,8 +593,8 @@ export default function ArchitecturePricingIsland({
         ? 'How does PRIMITIVE_SEO_GEO_AUTHORITY_ENGINE get our application cited in the Top 3 of ChatGPT Search, Perplexity, Claude, and Google AI Overviews?'
         : 'Bagaimana PRIMITIVE_SEO_GEO_AUTHORITY_ENGINE membuat aplikasi kami dikutip di Top-3 ChatGPT Search, Perplexity, Claude, dan Google AI Overviews?',
       a: isEn
-        ? 'Traditional SEO only targets blue links; Generative Engine Optimization (GEO) feeds structured facts directly to AI citation crawlers (OAI-SearchBot, PerplexityBot, ClaudeBot, Google-Extended). Project OS v11.0 compiles 5 automated GEO engines: (1) Multi-Graph Schema.org JSON-LD (@graph combining Organization, SoftwareApplication, FAQPage + Sector-Specific types like Product, LodgingBusiness, MedicalClinic, Course, Restaurant, Event, NGO); (2) Native /llms.txt and /llms-full.txt markdown indexes; (3) Semantic HTML Answer Capsules (50-word factual TL;DR + <table> comparison matrix); (4) IndexNow instant ping on save; and (5) Local 1200x630 OpenGraph & QR Citation Cards rendered via PHP GD/SVG with zero external CDN latency.'
-        : 'SEO lama hanya mengejar halaman pencarian biasa, sedangkan Generative Engine Optimization (GEO) menyuplai fakta terstruktur langsung ke mesin pencari AI (OAI-SearchBot, PerplexityBot, ClaudeBot, Google-Extended). Project OS v11.0 membekali 5 mesin otomatis: (1) Multi-Graph Schema.org JSON-LD (@graph berisi Organization, SoftwareApplication, FAQPage + tipe spesifik 12 sektor seperti Product, LodgingBusiness, MedicalClinic, Course, Restaurant, Event, NGO); (2) Endpoint native /llms.txt & /llms-full.txt; (3) Kapsul Jawaban Semantik (50 kata TL;DR faktual + tabel HTML <table>); (4) IndexNow Instant Ping saat halaman disimpan; dan (5) Kartu OpenGraph 1200x630 + QR lokal berbasis PHP GD/SVG tanpa latensi CDN luar.'
+        ? 'Traditional SEO only targets blue links; Generative Engine Optimization (GEO) feeds structured facts directly to AI citation crawlers (OAI-SearchBot, PerplexityBot, ClaudeBot, Google-Extended). Project OS v12.0 compiles 5 automated GEO engines: (1) Multi-Graph Schema.org JSON-LD (@graph combining Organization, SoftwareApplication, FAQPage + Sector-Specific types like Product, LodgingBusiness, MedicalClinic, Course, Restaurant, Event, NGO); (2) Native /llms.txt and /llms-full.txt markdown indexes; (3) Semantic HTML Answer Capsules (50-word factual TL;DR + <table> comparison matrix); (4) IndexNow instant ping on save; and (5) Local 1200x630 OpenGraph & QR Citation Cards rendered via PHP GD/SVG with zero external CDN latency.'
+        : 'SEO lama hanya mengejar halaman pencarian biasa, sedangkan Generative Engine Optimization (GEO) menyuplai fakta terstruktur langsung ke mesin pencari AI (OAI-SearchBot, PerplexityBot, ClaudeBot, Google-Extended). Project OS v12.0 membekali 5 mesin otomatis: (1) Multi-Graph Schema.org JSON-LD (@graph berisi Organization, SoftwareApplication, FAQPage + tipe spesifik 12 sektor seperti Product, LodgingBusiness, MedicalClinic, Course, Restaurant, Event, NGO); (2) Endpoint native /llms.txt & /llms-full.txt; (3) Kapsul Jawaban Semantik (50 kata TL;DR faktual + tabel HTML <table>); (4) IndexNow Instant Ping saat halaman disimpan; dan (5) Kartu OpenGraph 1200x630 + QR lokal berbasis PHP GD/SVG tanpa latensi CDN luar.'
     },
     {
       category: 'SEO_GEO_UU_PDP',
@@ -697,11 +697,11 @@ export default function ArchitecturePricingIsland({
     {
       category: 'AI_MCP_SECURITY',
       q: isEn
-        ? 'What are the "20 Pillars of Software Factory OS v11.0 Paripurna" included in Neriah Pro Project OS?'
-        : 'Apa itu "20 Pilar Software Factory OS v11.0 Paripurna" yang menjadi standar rekayasa Project OS Neriah Pro?',
+        ? 'What are the "20 Pillars of Software Factory OS v12.0 Paripurna" included in Neriah Pro Project OS?'
+        : 'Apa itu "20 Pilar Software Factory OS v12.0 Paripurna" yang menjadi standar rekayasa Project OS Neriah Pro?',
       a: isEn
-        ? 'Project OS v11.0 expands our core 10 Pillars into 20 Paripurna Engineering Pillars: (1–10) 26-Parameter PRD, Clean Solid Brutalist UI/UX, Docker PHP 8.5/PG16/Redis Stack, 100+ Realistic ID Domain Seeders, AI Agent Directives (.cursorrules/AGENTS.md), Automated Pest/Playwright Contract Suite, GitHub Actions + deploy.sh CI/CD, Health Probes (/healthz), Encrypted Disaster Recovery Drills, and Scalar OpenAPI 3.1 Docs; PLUS (11–20) 12 Sectoral × 36 Visual UI Cockpits, Zone B 60fps Scrollytelling Presets, Dual-Persona Studio & Co-Design Room, 7-Phase Prompt Sequencer & CLI /init, Live 2-Way MCP Server Bridge, NeriahPro AgentShield & Living CVE Autopatch, Multi-Graph Schema.org + /llms.txt GEO Authority, UU PDP AES-256 + HMAC-SHA256 Blind Index Vault, Offline Outbox PWA Background Sync, and Post-BAST 90-Day SLA Triage + Multi-Entity Holding Consolidation.'
-        : 'Project OS v11.0 memperluas 10 Pilar inti menjadi 20 Pilar Rekayasa Paripurna: (1–10) PRD 26 Parameter, UI/UX Clean Solid Brutalism, Docker PHP 8.5/PG16/Redis, 100+ Seeder Data Realistis Indonesia, Direktif AI (.cursorrules/AGENTS.md), Suite Uji Kontrak Pest/Playwright, CI/CD GitHub Actions + deploy.sh, Health Probes (/healthz), Backup Terenkripsi & DR Runbook, serta Scalar OpenAPI 3.1; DITAMBAH (11–20) 12 Sektor × 36 Visual UI Kokpit, Zona B 6 Preset Scrollytelling 60fps, Dual-Persona Studio & Co-Design Room, 7-Fase Prompt & CLI /init, Jembatan Live MCP 2-Arah, NeriahPro AgentShield & Living CVE Autopatch, Schema.org Multi-Graph + GEO /llms.txt, Brankas Privasi UU PDP Blind Index HMAC-SHA256, Offline Outbox PWA Anti-Sinyal-Buruk, serta Garansi SLA 90 Hari Pasca-BAST + Konsolidasi Holding Multi-Cabang.'
+        ? 'Project OS v12.0 expands our core 10 Pillars into 20 Paripurna Engineering Pillars: (1–10) 26-Parameter PRD, Clean Solid Brutalist UI/UX, Docker PHP 8.5/PG16/Redis Stack, 100+ Realistic ID Domain Seeders, AI Agent Directives (.cursorrules/AGENTS.md), Automated Pest/Playwright Contract Suite, GitHub Actions + deploy.sh CI/CD, Health Probes (/healthz), Encrypted Disaster Recovery Drills, and Scalar OpenAPI 3.1 Docs; PLUS (11–20) 12 Sectoral × 36 Visual UI Cockpits, Zone B 60fps Scrollytelling Presets, Dual-Persona Studio & Co-Design Room, 7-Phase Prompt Sequencer & CLI /init, Live 2-Way MCP Server Bridge, NeriahPro AgentShield & Living CVE Autopatch, Multi-Graph Schema.org + /llms.txt GEO Authority, UU PDP AES-256 + HMAC-SHA256 Blind Index Vault, Offline Outbox PWA Background Sync, and Post-BAST 90-Day SLA Triage + Multi-Entity Holding Consolidation.'
+        : 'Project OS v12.0 memperluas 10 Pilar inti menjadi 20 Pilar Rekayasa Paripurna: (1–10) PRD 26 Parameter, UI/UX Clean Solid Brutalism, Docker PHP 8.5/PG16/Redis, 100+ Seeder Data Realistis Indonesia, Direktif AI (.cursorrules/AGENTS.md), Suite Uji Kontrak Pest/Playwright, CI/CD GitHub Actions + deploy.sh, Health Probes (/healthz), Backup Terenkripsi & DR Runbook, serta Scalar OpenAPI 3.1; DITAMBAH (11–20) 12 Sektor × 36 Visual UI Kokpit, Zona B 6 Preset Scrollytelling 60fps, Dual-Persona Studio & Co-Design Room, 7-Fase Prompt & CLI /init, Jembatan Live MCP 2-Arah, NeriahPro AgentShield & Living CVE Autopatch, Schema.org Multi-Graph + GEO /llms.txt, Brankas Privasi UU PDP Blind Index HMAC-SHA256, Offline Outbox PWA Anti-Sinyal-Buruk, serta Garansi SLA 90 Hari Pasca-BAST + Konsolidasi Holding Multi-Cabang.'
     },
     {
       category: 'UI_UX_12_SEKTOR',
@@ -1338,13 +1338,13 @@ export default function ArchitecturePricingIsland({
               const activeMitraPkg = mitraPackageCatalog[wizardMitraTier] || mitraPackageCatalog['full_mvp'];
 
               const launchSatuPintuCheckout = (pkgKey) => {
-                const summaryLine = `[SATU PINTU v11.0 LOCKED] Sector=${wizardSector.code} | Stack=${wizardStackCode} | UI=${activeVisualUi.code} (${activeVisualUi.shell}) | Persona=${wizardPersonaMode} | Locale=${wizardOutputLocale.toUpperCase()}${wizardMode === 'MITRA_TURNKEY_PROJECT' ? ` | EstRAB=Rp ${formatIdrPlain(estimatedRabIdr)} (${totalHours}h)` : ''}`;
+                const summaryLine = `[${isEn ? 'ONE-STOP' : 'SATU PINTU'} v12.0 LOCKED] Sector=${wizardSector.code} | Stack=${wizardStackCode} | UI=${activeVisualUi.code} (${activeVisualUi.shell}) | Persona=${wizardPersonaMode} | Locale=${wizardOutputLocale.toUpperCase()}${wizardMode === 'MITRA_TURNKEY_PROJECT' ? ` | EstRAB=Rp ${formatIdrPlain(estimatedRabIdr)} (${totalHours}h)` : ''}`;
                 setSatuPintuReturnQuery(blueprintQueryTail);
                 openBookingModal(pkgKey);
                 setFormData((prev) => ({
                   ...prev,
-                  notes: prev.notes && prev.notes.includes('[SATU PINTU')
-                    ? prev.notes.replace(/\[SATU PINTU[^\n]*/g, summaryLine)
+                  notes: prev.notes && (prev.notes.includes('[SATU PINTU') || prev.notes.includes('[ONE-STOP'))
+                    ? prev.notes.replace(/\[(SATU PINTU|ONE-STOP)[^\n]*/g, summaryLine)
                     : (prev.notes ? `${summaryLine}\n${prev.notes}` : summaryLine),
                 }));
               };
@@ -1365,7 +1365,7 @@ export default function ArchitecturePricingIsland({
                     {/* Top Satu Pintu Bar */}
                     <div className="px-4 sm:px-6 py-3 bg-zinc-950 text-white dark:bg-zinc-950 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] font-black uppercase tracking-wider">
-                        <span className="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black">SATU PINTU WIZARD v11.0</span>
+                        <span className="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black">{isEn ? 'ONE-STOP WIZARD V12.0' : 'SATU PINTU WIZARD V12.0'}</span>
                         <span>{isEn ? 'UNIFIED SAAS & MITRA COMMERCIAL CONFIGURATOR • 12 SECTORS • 20 PILLARS LOCKED' : 'KONFIGURATOR TERPADU PAKET SAAS & MITRA • 12 SEKTOR • 20 PILAR PARIPURNA'}</span>
                       </div>
                       <button
@@ -1414,7 +1414,7 @@ export default function ArchitecturePricingIsland({
                                   }`}
                               >
                                 <div className="flex items-center justify-between gap-2 font-mono text-[10px] font-black uppercase">
-                                  <span className={wizardMode === 'RETAIL_SELF_DEV' ? 'text-emerald-400' : 'text-emerald-800 dark:text-emerald-400'}>⚡ VERSI RETAIL</span>
+                                  <span className={wizardMode === 'RETAIL_SELF_DEV' ? 'text-emerald-400' : 'text-emerald-800 dark:text-emerald-400'}>⚡ {isEn ? 'RETAIL VERSION' : 'VERSI RETAIL'}</span>
                                   <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 dark:bg-emerald-900 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700">Rp 0 – Rp {pricingSettings.retail_ultimate_price || '1.490.000'}</span>
                                 </div>
                                 <div className="font-bold text-xs mt-1">
@@ -1435,7 +1435,7 @@ export default function ArchitecturePricingIsland({
                                   }`}
                               >
                                 <div className="flex items-center justify-between gap-2 font-mono text-[10px] font-black uppercase">
-                                  <span className={wizardMode === 'MITRA_TURNKEY_PROJECT' ? 'text-amber-300' : 'text-amber-900 dark:text-amber-300'}>🤝 VERSI MITRA PROYEK</span>
+                                  <span className={wizardMode === 'MITRA_TURNKEY_PROJECT' ? 'text-amber-300' : 'text-amber-900 dark:text-amber-300'}>🤝 {isEn ? 'PARTNER PROJECT VERSION' : 'VERSI MITRA PROYEK'}</span>
                                   <span className="px-1.5 py-0.5 bg-amber-100 text-amber-950 dark:bg-amber-900/80 dark:text-amber-200 border border-amber-400 dark:border-amber-700">TURNKEY SLA</span>
                                 </div>
                                 <div className="font-bold text-xs mt-1">
@@ -1609,7 +1609,7 @@ export default function ArchitecturePricingIsland({
                             <div className="space-y-3">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
-                                  RETAIL SAAS // SATU PINTU V11.0
+                                  {isEn ? 'RETAIL SAAS // ONE-STOP V12.0' : 'RETAIL SAAS // SATU PINTU V12.0'}
                                 </span>
                                 <span className="font-mono text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
                                   {isEn ? 'SaaS Entitlement Gate' : 'Gerbang Resmi Paket SaaS'}
@@ -1779,7 +1779,7 @@ export default function ArchitecturePricingIsland({
                             <div className="space-y-3">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black uppercase">
-                                  MITRA TURNKEY // ESCROW RAB V11.0
+                                  {isEn ? 'MITRA TURNKEY // ESCROW WBS V12.0' : 'MITRA TURNKEY // ESCROW RAB V12.0'}
                                 </span>
                                 <span className="font-mono text-[10px] font-bold text-zinc-700 dark:text-zinc-300 tabular-nums">
                                   Rp {formatIdrPlain(hourlyRate)}/{isEn ? 'hr' : 'jam'} &bull; {activeStack.mult}x
@@ -1930,35 +1930,35 @@ export default function ArchitecturePricingIsland({
                     id: 'retail',
                     num: '01',
                     title: isEn ? 'Retail Packages' : 'Paket Retail',
-                    sub: '7 SAAS TIERS V11.0',
+                    sub: '7 SAAS TIERS V12.0',
                     icon: ShoppingBag,
                   },
                   {
                     id: 'project',
                     num: '02',
                     title: isEn ? 'Mitra & Studio' : 'Mitra & Studio',
-                    sub: 'TURNKEY ESCROW V11.0',
+                    sub: 'TURNKEY ESCROW V12.0',
                     icon: Rocket,
                   },
                   {
                     id: 'sectoral',
                     num: '03',
                     title: isEn ? '12-Sector 36 UI & OS' : '12 Sektor 36 UI & OS',
-                    sub: '36 UI + 6 SCROLL V11.0',
+                    sub: '36 UI + 6 SCROLL V12.0',
                     icon: Terminal,
                   },
                   {
                     id: 'matrix',
                     num: '04',
                     title: isEn ? 'Comparison Matrix' : 'Matriks Perbandingan',
-                    sub: isEn ? '20 PILLARS V11.0' : '20 PILAR V11.0',
+                    sub: isEn ? '20 PILLARS V12.0' : '20 PILAR V12.0',
                     icon: Layers,
                   },
                   {
                     id: 'faq',
                     num: '05',
                     title: isEn ? 'Project OS FAQ' : 'FAQ Project OS',
-                    sub: `${faqs.length} ${isEn ? 'FAQS V11.0' : 'FAQ V11.0'}`,
+                    sub: `${faqs.length} ${isEn ? 'FAQS V12.0' : 'FAQ V12.0'}`,
                     icon: HelpCircle,
                   }
                 ].map((tab) => {
@@ -3758,7 +3758,7 @@ return match (true) {
             })()}
 
             {/* ========================================================================= */}
-            {/* TAB 4: TECHNICAL SPECIFICATION COMPARISON MATRIX (V11.0 20 PILLARS)       */}
+            {/* TAB 4: TECHNICAL SPECIFICATION COMPARISON MATRIX (V12.0 20 PILLARS)       */}
             {/* ========================================================================= */}
             {pricingSectionTab === 'matrix' && (() => {
               const matrixCategories = [
@@ -3809,7 +3809,7 @@ return match (true) {
                 },
                 {
                   cat: 'ARCHITECTURE',
-                  param: isEn ? '05. 20 Pillars of Software Factory OS v11.0 Paripurna' : '05. Kelengkapan 20 Pilar Software Factory OS v11.0 Paripurna',
+                  param: isEn ? '05. 20 Pillars of Software Factory OS v12.0 Paripurna' : '05. Kelengkapan 20 Pilar Software Factory OS v12.0 Paripurna',
                   sparkGrant: isEn ? 'Spark: Pillar 1–2 Audit | Verified CSR Grant: Complete 20 Pillars (Subsidized)' : 'Spark: Audit Pilar 1–2 | Hibah CSR Terverifikasi: Lengkap 20 Pilar (Subsidi)',
                   starterPass: isEn ? 'Starter: 5 Core Pillars | Single-App UMKM Pass: 20 Pillars (1 App Scope)' : 'Starter: 5 Pilar Inti | Single-App UMKM Pass: 20 Pilar (1 Aplikasi)',
                   proAgencyUlt: isEn ? '✅ Complete 20 Paripurna Pillars Specification & Export Bundle' : '✅ Spesifikasi & Ekspor Lengkap 20 Pilar Rekayasa Paripurna',
@@ -4078,7 +4078,7 @@ return match (true) {
                     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6 pb-4 border-b-2 border-zinc-200 dark:border-zinc-800">
                       <div>
                         <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-zinc-950 text-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 border border-zinc-800 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
-                          <span>PROJECT OS V11.0 PARIPURNA</span>
+                          <span>PROJECT OS V12.0 PARIPURNA</span>
                           <span>&bull;</span>
                           <span>{isEn ? '28 EVALUATION PARAMETERS × 20 PILLARS' : '28 PARAMETER EVALUASI × 20 PILAR REKAYASA'}</span>
                         </div>
@@ -4232,17 +4232,17 @@ return match (true) {
                     </div>
                   </div>
 
-                  {/* PART B: 20-PILLAR PARIPURNA ARCHITECTURAL SUPERIORITY MATRIX (RAW AI SLOP VS PROJECT OS V11.0) */}
+                  {/* PART B: 20-PILLAR PARIPURNA ARCHITECTURAL SUPERIORITY MATRIX (RAW AI SLOP VS PROJECT OS V12.0) */}
                   <div className="border-2 border-zinc-900 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 p-5 sm:p-8 rounded-none shadow-xs">
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                       <div>
                         <span className="px-2 py-0.5 bg-emerald-600 text-white font-mono text-[10px] font-black uppercase">
-                          {isEn ? '20 COMPLETE PILLARS V11.0 // ZERO-FAILURE GUARANTEE' : '20 PILAR PARIPURNA V11.0 // ZERO-FAILURE GUARANTEE'}
+                          {isEn ? '20 COMPLETE PILLARS V12.0 // ZERO-FAILURE GUARANTEE' : '20 PILAR PARIPURNA V12.0 // ZERO-FAILURE GUARANTEE'}
                         </span>
                         <h4 className="text-lg sm:text-xl font-black uppercase text-zinc-950 dark:text-white font-sans mt-1">
                           {isEn
-                            ? 'WHY RAW PROMPTING & CONVENTIONAL AGENCIES FAIL VS NERIAHPRO PROJECT OS V11.0'
-                            : 'MENGAPA PROMPT AI BIASA & AGENSI KONVENSIONAL GAGAL VS NERIAHPRO PROJECT OS V11.0'}
+                            ? 'WHY RAW PROMPTING & CONVENTIONAL AGENCIES FAIL VS NERIAHPRO PROJECT OS V12.0'
+                            : 'MENGAPA PROMPT AI BIASA & AGENSI KONVENSIONAL GAGAL VS NERIAHPRO PROJECT OS V12.0'}
                         </h4>
                       </div>
                       <span className="font-mono text-[11px] font-bold text-emerald-900 dark:text-emerald-300">
@@ -4274,7 +4274,7 @@ return match (true) {
                             </div>
                           </div>
                           <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-[10px] text-emerald-950 dark:text-emerald-200 font-semibold leading-snug">
-                            <strong className="font-mono uppercase block text-[9px]">✓ Project OS v11.0:</strong>
+                            <strong className="font-mono uppercase block text-[9px]">✓ {isEn ? 'Project OS v12.0:' : 'Project OS v12.0:'}</strong>
                             {p.pos}
                           </div>
                         </div>
@@ -4286,7 +4286,7 @@ return match (true) {
             })()}
 
             {/* ========================================================================= */}
-            {/* TAB 5: FREQUENTLY ASKED QUESTIONS (FAQ) ACCORDION V11.0                   */}
+            {/* TAB 5: FREQUENTLY ASKED QUESTIONS (FAQ) ACCORDION V12.0                   */}
             {/* ========================================================================= */}
             {pricingSectionTab === 'faq' && (() => {
               const faqCategories = [
@@ -4326,16 +4326,16 @@ return match (true) {
                 >
                   <div className="text-center mb-6">
                     <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-zinc-950 text-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 border border-zinc-800 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
-                      <span>KNOWLEDGE BASE &amp; FAQ V11.0 PARIPURNA</span>
+                      <span>KNOWLEDGE BASE &amp; FAQ V12.0 PARIPURNA</span>
                       <span>&bull;</span>
                       <span>{faqs.length} {isEn ? 'VERIFIED ANSWERS' : 'JAWABAN TERVERIFIKASI'}</span>
                     </div>
                     <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-zinc-950 dark:text-white font-sans">
-                      {isEn ? 'FREQUENTLY ASKED QUESTIONS (PROJECT OS V11.0)' : 'PERTANYAAN YANG SERING DIAJUKAN (FAQ PROJECT OS V11.0)'}
+                      {isEn ? 'FREQUENTLY ASKED QUESTIONS (PROJECT OS V12.0)' : 'PERTANYAAN YANG SERING DIAJUKAN (FAQ PROJECT OS V12.0)'}
                     </h3>
                     <p className="text-xs text-zinc-700 dark:text-zinc-300 font-sans mt-1 max-w-2xl mx-auto">
                       {isEn
-                        ? 'Complete answers covering Satu Pintu commercial lock, CSR Non-Profit Grant verification, 12 Sectors × 36 Visual UIs, SEO/GEO /llms.txt, UU PDP Blind Index, Offline Outbox PWA, and 90-Day Post-BAST SLA.'
+                        ? 'Complete answers covering One-Stop Wizard commercial lock, CSR Non-Profit Grant verification, 12 Sectors × 36 Visual UIs, SEO/GEO /llms.txt, UU PDP Blind Index, Offline Outbox PWA, and 90-Day Post-BAST SLA.'
                         : 'Jawaban tuntas mengenai Gerbang Satu Pintu, syarat Hibah CSR Rp 0, 12 Sektor × 36 Visual UI, SEO/GEO /llms.txt, Blind Index UU PDP, Offline Outbox PWA, hingga Garansi Bug SLA 90 Hari Pasca-BAST.'}
                     </p>
                   </div>

@@ -753,7 +753,7 @@ class PosCommercialBridgeService
         $snapToken = null;
         $redirectUrl = null;
 
-        if (class_exists(MidtransSnapService::class)) {
+        if ($amount > 0 && class_exists(MidtransSnapService::class)) {
             try {
                 $snapRes = MidtransSnapService::createSnapToken([
                     'transaction_details' => [

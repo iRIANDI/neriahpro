@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class MidtransSnapService
 {
@@ -28,14 +29,28 @@ class MidtransSnapService
         }
 
         try {
+            $grossAmount = (float) ($params['transaction_details']['gross_amount'] ?? 0);
+            if ($grossAmount <= 0) {
+                Log::info("MidtransSnapService: Bypassing Midtrans Snap token request because gross_amount is {$grossAmount} (Free/Grant/CSR transaction).");
+
+                return [
+                    'success' => true,
+                    'token' => 'free_grant_zero_amount_'.strtolower(Str::random(16)),
+                    'redirect_url' => null,
+                    'is_free' => true,
+                    'client_key' => $clientKey,
+                    'snap_url' => $snapUrl,
+                ];
+            }
+
             // Strict Midtrans compliance: transaction_details.order_id must not exceed 50 characters
-            if (!empty($params['transaction_details']['order_id']) && strlen((string) $params['transaction_details']['order_id']) > 50) {
+            if (! empty($params['transaction_details']['order_id']) && strlen((string) $params['transaction_details']['order_id']) > 50) {
                 $originalOrderId = (string) $params['transaction_details']['order_id'];
                 $params['transaction_details']['order_id'] = substr($originalOrderId, 0, 50);
                 Log::warning("Midtrans order_id exceeded 50 characters, auto-truncated from '{$originalOrderId}' to '{$params['transaction_details']['order_id']}'");
             }
 
-            $authHeader = 'Basic ' . base64_encode($serverKey . ':');
+            $authHeader = 'Basic '.base64_encode($serverKey.':');
 
             $response = Http::withHeaders([
                 'Authorization' => $authHeader,
@@ -45,6 +60,7 @@ class MidtransSnapService
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return [
                     'success' => true,
                     'token' => $data['token'] ?? null,
@@ -55,7 +71,7 @@ class MidtransSnapService
             }
 
             $errorBody = $response->json() ?? [];
-            $errorMessage = $errorBody['error_messages'][0] ?? ($errorBody['error'] ?? 'Gagal membuat sesi pembayaran Midtrans (' . $response->status() . ')');
+            $errorMessage = $errorBody['error_messages'][0] ?? ($errorBody['error'] ?? 'Gagal membuat sesi pembayaran Midtrans ('.$response->status().')');
 
             Log::warning('Midtrans Snap API Warning', [
                 'status' => $response->status(),
@@ -66,7 +82,7 @@ class MidtransSnapService
             if (app()->environment('testing')) {
                 return [
                     'success' => true,
-                    'token' => 'snap-test-token-' . substr(md5(json_encode($params)), 0, 16),
+                    'token' => 'snap-test-token-'.substr(md5(json_encode($params)), 0, 16),
                     'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v2/vtweb/test-token',
                     'client_key' => $clientKey,
                     'snap_url' => $snapUrl,
@@ -81,12 +97,12 @@ class MidtransSnapService
                 'snap_url' => $snapUrl,
             ];
         } catch (\Throwable $e) {
-            Log::error('Midtrans Snap Exception: ' . $e->getMessage());
+            Log::error('Midtrans Snap Exception: '.$e->getMessage());
 
             if (app()->environment('testing')) {
                 return [
                     'success' => true,
-                    'token' => 'snap-test-token-' . substr(md5(json_encode($params)), 0, 16),
+                    'token' => 'snap-test-token-'.substr(md5(json_encode($params)), 0, 16),
                     'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v2/vtweb/test-token',
                     'client_key' => $clientKey,
                     'snap_url' => $snapUrl,
@@ -120,11 +136,11 @@ class MidtransSnapService
         }
 
         try {
-            $authHeader = 'Basic ' . base64_encode($serverKey . ':');
+            $authHeader = 'Basic '.base64_encode($serverKey.':');
             $response = Http::withHeaders([
                 'Authorization' => $authHeader,
                 'Accept' => 'application/json',
-            ])->timeout(10)->get($baseUrl . $orderId . '/status');
+            ])->timeout(10)->get($baseUrl.$orderId.'/status');
 
             if ($response->successful()) {
                 return [
@@ -137,11 +153,11 @@ class MidtransSnapService
             return [
                 'success' => false,
                 'status_code' => $response->status(),
-                'error' => $response->json()['status_message'] ?? 'Midtrans status check failed (' . $response->status() . ')',
+                'error' => $response->json()['status_message'] ?? 'Midtrans status check failed ('.$response->status().')',
                 'data' => $response->json(),
             ];
         } catch (\Throwable $e) {
-            Log::error("Midtrans checkStatus Exception for {$orderId}: " . $e->getMessage());
+            Log::error("Midtrans checkStatus Exception for {$orderId}: ".$e->getMessage());
 
             return [
                 'success' => false,

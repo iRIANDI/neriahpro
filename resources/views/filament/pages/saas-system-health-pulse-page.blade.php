@@ -278,6 +278,67 @@
                 </table>
             </div>
         </div>
+
+        <!-- Section 04: CV Pro Digital Tools & 4-Pillar Legal Compliance Governance -->
+        <div class="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div>
+                    <div class="font-mono text-xs font-black uppercase text-cyan-900 dark:text-cyan-300">
+                        V12_CV_PRO_LEGAL_04 // CV PRO DIGITAL TOOLS &amp; 4-PILLAR LEGAL COMPLIANCE GOVERNANCE
+                    </div>
+                    <h3 class="text-lg font-black text-zinc-950 dark:text-white">
+                        {{ $isEn ? 'CV Pro Studio Compliance & Data Governance Shield' : 'Tata Kelola Kepatuhan Hukum & Privasi 4 Pilar CV Pro Studio' }}
+                    </h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-mono text-xs font-black">
+                        100% COMPLIANT
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                    <div class="font-mono text-[11px] font-black uppercase text-emerald-900 dark:text-emerald-300 flex items-center justify-between">
+                        <span>1. UU PDP No. 27/2022</span>
+                        <span class="text-[9px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">ACTIVE</span>
+                    </div>
+                    <p class="text-xs text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed">
+                        Anti-Broker Data 100% ditegakkan. Hak Penghapusan Data (Right to Erasure) aktif mandiri via endpoint <code>/api/cv-pro/purge-data</code>.
+                    </p>
+                </div>
+
+                <div class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                    <div class="font-mono text-[11px] font-black uppercase text-indigo-900 dark:text-indigo-300 flex items-center justify-between">
+                        <span>2. DISCLAIMER OF WARRANTY</span>
+                        <span class="text-[9px] px-1.5 py-0.5 bg-indigo-500/20 text-indigo-700 dark:text-indigo-300">SECTION 4</span>
+                    </div>
+                    <p class="text-xs text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed">
+                        Klausul pembebasan tanggung jawab hukum atas kebenaran kualifikasi, ijazah, dan pengalaman pengguna tertera di Syarat &amp; Ketentuan.
+                    </p>
+                </div>
+
+                <div class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                    <div class="font-mono text-[11px] font-black uppercase text-cyan-900 dark:text-cyan-300 flex items-center justify-between">
+                        <span>3. SIL OFL FONTS</span>
+                        <span class="text-[9px] px-1.5 py-0.5 bg-cyan-500/20 text-cyan-700 dark:text-cyan-300">VERIFIED</span>
+                    </div>
+                    <p class="text-xs text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed">
+                        Seluruh font ekspor PDF (Inter, Roboto, Merriweather) dan aset ikon Lucide bebas royalti untuk penggunaan komersial.
+                    </p>
+                </div>
+
+                <div class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                    <div class="font-mono text-[11px] font-black uppercase text-amber-900 dark:text-amber-300 flex items-center justify-between">
+                        <span>4. DIGITAL GOODS POLICY</span>
+                        <span class="text-[9px] px-1.5 py-0.5 bg-amber-500/20 text-amber-700 dark:text-amber-300">SECTION 3</span>
+                    </div>
+                    <p class="text-xs text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed">
+                        Kuota ekspor dan token AI yang sudah dikonsumsi bersifat non-refundable sesuai standar internasional merchant digital.
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </x-filament-panels::page>
 

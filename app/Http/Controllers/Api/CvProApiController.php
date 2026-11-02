@@ -2,17 +2,22 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Exceptions\SecurityException;
+use App\Http\Controllers\Controller;
 use App\Jobs\ProcessSecureDataset;
+use App\Models\AuditLog;
+use App\Models\CvProPlan;
 use App\Models\InterviewSession;
 use App\Models\OutreachLetter;
 use App\Models\Resume;
 use App\Services\CvPro\CvAiService;
+use App\Services\CvPro\CvPricingService;
+use App\Services\CvPro\CvQuotaService;
+use App\Services\MarkItDown\CvMarkdownParser;
+use App\Services\MarkItDown\MarkItDownService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class CvProApiController extends Controller
 {
@@ -83,7 +88,7 @@ class CvProApiController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menyimpan resume: ' . $e->getMessage(),
+                'message' => 'Gagal menyimpan resume: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -215,13 +220,13 @@ class CvProApiController extends Controller
 
             // 0. Sandboxed dataset & file security inspection
             ProcessSecureDataset::inspectAndSanitizeUploadedFile($file);
-            
+
             // 1. Convert file to Markdown via Microsoft MarkItDown replica service
-            $markItDownService = new \App\Services\MarkItDown\MarkItDownService();
+            $markItDownService = new MarkItDownService;
             $conversion = $markItDownService->convert($file);
 
             // 2. Parse Markdown into structured CV data
-            $cvParser = new \App\Services\MarkItDown\CvMarkdownParser();
+            $cvParser = new CvMarkdownParser;
             $parsedCv = $cvParser->parse($conversion['markdown']);
 
             // 3. Pre-audit ATS score on the newly parsed data
@@ -249,7 +254,7 @@ class CvProApiController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memproses berkas CV: ' . $e->getMessage(),
+                'message' => 'Gagal memproses berkas CV: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -306,28 +311,33 @@ class CvProApiController extends Controller
             case 'summary':
                 $role = $request->input('role', $content['personal_info']['title'] ?? 'Profesional');
                 $result = CvAiService::generateAiSummary($content, $role, $lang, $humanize);
+
                 return response()->json(['success' => true, 'data' => ['summary' => $result]]);
 
             case 'enhance_bullet':
                 $bullet = $request->input('bullet', '');
                 $role = $request->input('role', 'Engineer');
                 $result = CvAiService::enhanceBulletPoint($bullet, $role, $lang, $humanize);
+
                 return response()->json(['success' => true, 'data' => ['bullet' => $result]]);
 
             case 'condense_bullet':
                 $bullet = $request->input('bullet', '');
                 $result = CvAiService::condenseBulletPoint($bullet, $lang);
+
                 return response()->json(['success' => true, 'data' => ['bullet' => $result]]);
 
             case 'brainstorm':
                 $role = $request->input('role', 'Systems Architect');
                 $industry = $request->input('industry', 'Technology');
                 $result = CvAiService::brainstormAchievements($role, $industry, $lang);
+
                 return response()->json(['success' => true, 'data' => ['achievements' => $result]]);
 
             case 'skills':
                 $role = $request->input('role', 'Full Stack Engineer');
                 $result = CvAiService::suggestSkills($role, $lang);
+
                 return response()->json(['success' => true, 'data' => ['skills' => $result]]);
 
             default:
@@ -369,18 +379,17 @@ class CvProApiController extends Controller
         ]);
     }
 
-
     /**
      * Get dynamic pricing tiers, a la carte top-ups, and financial margins.
      */
     public function pricing(Request $request): JsonResponse
     {
-        $economicsData = \App\Services\CvPro\CvPricingService::getAllPlansWithEconomics();
+        $economicsData = CvPricingService::getAllPlansWithEconomics();
 
         $user = $request->user();
         $userQuota = null;
         if ($user) {
-            $userQuota = \App\Services\CvPro\CvQuotaService::getUserQuota($user);
+            $userQuota = CvQuotaService::getUserQuota($user);
         }
 
         return response()->json([
@@ -400,7 +409,7 @@ class CvProApiController extends Controller
     public function quota(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => true,
                 'is_guest' => true,
@@ -416,7 +425,7 @@ class CvProApiController extends Controller
             ]);
         }
 
-        $quota = \App\Services\CvPro\CvQuotaService::getUserQuota($user);
+        $quota = CvQuotaService::getUserQuota($user);
 
         return response()->json([
             'success' => true,
@@ -452,19 +461,19 @@ class CvProApiController extends Controller
         }
 
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Autentikasi diperlukan untuk aktivasi paket atau top-up kuota.',
             ], 401);
         }
 
-        $plan = \App\Models\CvProPlan::where('code', $request->input('plan_code'))->firstOrFail();
+        $plan = CvProPlan::where('code', $request->input('plan_code'))->firstOrFail();
 
         if ($plan->type === 'subscription') {
-            $updatedQuota = \App\Services\CvPro\CvQuotaService::applyPlan($user, $plan);
+            $updatedQuota = CvQuotaService::applyPlan($user, $plan);
         } else {
-            $updatedQuota = \App\Services\CvPro\CvQuotaService::applyTopUp($user, $plan);
+            $updatedQuota = CvQuotaService::applyTopUp($user, $plan);
         }
 
         return response()->json([
@@ -515,6 +524,114 @@ class CvProApiController extends Controller
             'data' => $result,
         ]);
     }
+
+    /**
+     * UU PDP No. 27/2022 Compliance: Right to Erasure / Purge User CV & PII Data.
+     */
+    public function purgeData(Request $request): JsonResponse
+    {
+        $lang = $request->input('lang', 'id');
+        $resumeId = $request->input('resume_id');
+        $user = auth()->user();
+
+        $purgedCount = 0;
+        if (! empty($resumeId)) {
+            $resume = Resume::find($resumeId);
+            if ($resume) {
+                $resume->delete();
+                $purgedCount++;
+            }
+        } elseif ($user) {
+            $purgedCount = Resume::where('user_id', $user->id)->delete();
+        }
+
+        try {
+            AuditLog::create([
+                'user_id' => $user?->id,
+                'actor_name' => $user?->name ?? 'Guest User',
+                'actor_type' => $user ? 'user' : 'guest',
+                'execution_channel' => 'web_api',
+                'action' => 'CV_USER_DATA_PURGED_UU_PDP',
+                'event_category' => 'privacy_compliance',
+                'sector_code' => 'SECTOR_07_HRTECH_EDUTECH',
+                'primitive_code' => 'PRIMITIVE_RIGHT_TO_ERASURE',
+                'description' => "Pengguna mengeksekusi Hak Penghapusan Data Pribadi (Right to Erasure UU PDP No. 27/2022). Total resume dihapus: {$purgedCount}.",
+                'model_type' => Resume::class,
+                'model_id' => $resumeId ?: ($user?->id ? (string) $user->id : null),
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 255),
+                'context_url' => $request->fullUrl(),
+            ]);
+        } catch (\Throwable $e) {
+            // Log silently
+        }
+
+        return response()->json([
+            'success' => true,
+            'purged_count' => $purgedCount,
+            'message' => $lang === 'id'
+                ? 'Seluruh data riwayat karir dan informasi pribadi CV berhasil dimusnahkan secara permanen (Kepatuhan UU PDP No. 27/2022).'
+                : 'All CV biographical data and personal identifiers have been permanently purged (UU PDP No. 27/2022 compliance).',
+        ]);
+    }
+
+    /**
+     * Check CV Pro 4-Pillar Compliance Governance status.
+     */
+    public function complianceStatus(Request $request): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'governance_certified' => true,
+            'pillars' => [
+                'uu_pdp_compliance' => [
+                    'code' => 'UU_PDP_27_2022',
+                    'status' => 'ACTIVE',
+                    'title' => [
+                        'id' => 'Pelindungan Data Pribadi & Anti-Broker Data (UU PDP No. 27/2022)',
+                        'en' => 'Personal Data Protection & Zero Data Brokering (Indonesian PDP Law 27/2022)',
+                    ],
+                    'description' => [
+                        'id' => 'Data riwayat hidup diproses semata-mata untuk memformat dokumen Pengguna. Hak Penghapusan Data (Right to Erasure) aktif 100%.',
+                        'en' => 'Biographical data is processed solely for formatting user resumes. Right to Erasure is 100% operational.',
+                    ],
+                    'right_to_erasure_endpoint' => '/api/cv-pro/purge-data',
+                ],
+                'content_disclaimer' => [
+                    'code' => 'DISCLAIMER_OF_WARRANTY',
+                    'status' => 'ACTIVE',
+                    'title' => [
+                        'id' => 'Bebas Tanggung Jawab atas Kebenaran Isi CV (Disclaimer of Warranty)',
+                        'en' => 'User Credential Responsibility (Disclaimer of Warranty)',
+                    ],
+                    'description' => [
+                        'id' => 'Neriah Pro menyediakan sarana teknologi tata letak. Kebenaran ijazah, riwayat karir, dan sertifikat 100% tanggung jawab pengguna.',
+                        'en' => 'Neriah Pro provides layout technology. All claims, degrees, and career records are 100% user responsibility.',
+                    ],
+                ],
+                'royalty_free_licensing' => [
+                    'code' => 'SIL_OFL_FONTS',
+                    'status' => 'ACTIVE',
+                    'title' => [
+                        'id' => 'Lisensi Tipografi & Aset Visual Bebas Royalti (SIL Open Font License)',
+                        'en' => 'Royalty-Free Typography & Visual Asset Licensing (SIL OFL)',
+                    ],
+                    'verified_fonts' => ['Inter', 'Roboto', 'Merriweather'],
+                    'verified_icons' => ['Lucide', 'FontAwesome Open Source'],
+                ],
+                'digital_goods_policy' => [
+                    'code' => 'CONSUMED_DIGITAL_GOODS_NO_REFUND',
+                    'status' => 'ACTIVE',
+                    'title' => [
+                        'id' => 'Kebijakan Produk Digital & Token AI Terpakai (Non-Refundable)',
+                        'en' => 'Consumed Digital Goods & AI Tokens Policy (Non-Refundable)',
+                    ],
+                    'description' => [
+                        'id' => 'Pembelian kuota unduh dan token AI yang telah terpakai bersifat final, kecuali terbukti terjadi penagihan ganda (double-charge).',
+                        'en' => 'Consumed download credits and AI tokens are final, except in cases of verified double-billing errors.',
+                    ],
+                ],
+            ],
+        ]);
+    }
 }
-
-

@@ -224,6 +224,8 @@ Route::prefix('api/cv-pro')->group(function () {
     Route::get('/pricing', [CvProApiController::class, 'pricing'])->middleware('throttle:60,1');
     Route::get('/quota', [CvProApiController::class, 'quota'])->middleware('throttle:60,1');
     Route::post('/topup', [CvProApiController::class, 'topup'])->middleware('throttle:30,1');
+    Route::post('/purge-data', [CvProApiController::class, 'purgeData'])->middleware('throttle:30,1');
+    Route::get('/compliance-status', [CvProApiController::class, 'complianceStatus'])->middleware('throttle:60,1');
 });
 
 // Dynamic Search Engine & GEO AI Citation Architecture: Sitemap.xml, Robots.txt, llms.txt & IndexNow

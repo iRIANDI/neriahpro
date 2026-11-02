@@ -929,6 +929,27 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+            [
+                'name' => 'audit_cv_pro_compliance_and_governance',
+                'description' => 'Audit 4 Syarat Kepatuhan Hukum CV Pro Studio & Resume Generator: 1) UU PDP No. 27/2022 Anti-Data Brokering & Right to Erasure, 2) Disclaimer of Warranty atas kebenaran kualifikasi karir pengguna, 3) Lisensi Tipografi Bebas Royalti (SIL OFL: Inter, Roboto, Merriweather), dan 4) Kebijakan Produk Digital & Token AI Non-Refundable.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => [
+                            'type' => 'STRING',
+                            'description' => 'Aksi: audit_compliance (skor kepatuhan 4 pilar), purge_user_cv_data (eksekusi Hak Penghapusan Data UU PDP), atau get_governance_report.',
+                        ],
+                        'user_id' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ID pengguna untuk audit spesifik atau penghapusan data.',
+                        ],
+                        'resume_id' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID resume yang diaudit atau dihapus.',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

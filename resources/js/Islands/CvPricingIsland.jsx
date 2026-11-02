@@ -13,15 +13,69 @@ import {
   FileText,
   Lock,
   Globe,
-  Radio
+  Radio,
+  Trash2,
+  Scale,
+  Type,
+  CreditCard
 } from 'lucide-react';
 
 export default function CvPricingIsland({ 
   headline = 'INVESTASI KARIR IMPIAN // PILIHAN KELAS & KUOTA CV PRO',
   subheadline = 'Pilih paket yang sesuai dengan akselerasi karir Anda. Pengunjung gratis tetap dapat mengisi form secara manual dan mengunduh PDF secara cuma-cuma.',
-  whatsappNumber = '6281380448253'
+  whatsappNumber = '6281380448253',
+  locale = 'id'
 }) {
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'alacarte'
+  const [isPurging, setIsPurging] = useState(false);
+
+  const isEn = (locale === 'en') || (typeof document !== 'undefined' && document.documentElement.lang === 'en');
+
+  const handlePurgeData = async () => {
+    const confirmPrompt = isEn 
+      ? 'Are you sure you want to permanently purge all your CV and biographical data from Neriah Pro under Indonesian PDP Law No. 27/2022? This action is irreversible.'
+      : 'Apakah Anda yakin ingin memusnahkan seluruh data CV dan riwayat hidup pribadi Anda dari server Neriah Pro sesuai amanat UU PDP No. 27/2022? Tindakan ini permanen dan tidak dapat dibatalkan.';
+    
+    // Non-native modal or simple inline confirmation
+    if (typeof window !== 'undefined' && window.showToast) {
+      window.showToast({
+        type: 'info',
+        title: isEn ? 'RIGHT TO ERASURE' : 'HAK PENGHAPUSAN DATA',
+        message: isEn ? 'Processing permanent CV data purge...' : 'Memproses pemusnahan data CV...'
+      });
+    }
+
+    setIsPurging(true);
+    try {
+      const response = await fetch('/api/cv-pro/purge-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        },
+        body: JSON.stringify({ lang: isEn ? 'en' : 'id' })
+      });
+      const data = await response.json();
+      if (data.success && typeof window !== 'undefined' && window.showToast) {
+        window.showToast({
+          type: 'success',
+          title: isEn ? 'DATA PURGED SUCCESSFULLY' : 'DATA DIMUSNAHKAN DENGAN SUKSES',
+          message: data.message || (isEn ? 'All biographical data permanently deleted.' : 'Seluruh data pribadi CV berhasil dimusnahkan.')
+        });
+      }
+    } catch (e) {
+      if (typeof window !== 'undefined' && window.showToast) {
+        window.showToast({
+          type: 'error',
+          title: isEn ? 'PURGE FAILED' : 'PEMUSNAHAN GAGAL',
+          message: e.message
+        });
+      }
+    } finally {
+      setIsPurging(false);
+    }
+  };
 
   const plans = [
     {
@@ -295,6 +349,91 @@ export default function CvPricingIsland({
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* 4 SYARAT KEPATUHAN HUKUM & TATA KELOLA CV PRO (UU PDP, DISCLAIMER, SIL OFL, DIGITAL GOODS) */}
+      <div className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-6 sm:p-8 mb-16 rounded-none">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5 mb-6">
+          <div>
+            <div className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-bold mb-1">
+              <ShieldCheck className="w-4 h-4" />
+              <span>{isEn ? 'LEGAL COMPLIANCE & PRIVACY GOVERNANCE' : 'STANDAR KEPATUHAN HUKUM & TATA KELOLA PRIVASI'}</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white">
+              {isEn ? '4 Legal Pillars of CV Pro Studio' : '4 Pilar Kepatuhan Hukum CV Pro Studio'}
+            </h3>
+            <p className="text-xs text-zinc-500 font-sans mt-0.5">
+              {isEn
+                ? 'Strict adherence to Indonesian PDP Law No. 27/2022, consumer transparency, and copyright protection.'
+                : 'Patuh penuh pada UU Pelindungan Data Pribadi (UU PDP No. 27/2022), transparansi konsumen, dan hak cipta.'}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            disabled={isPurging}
+            onClick={handlePurgeData}
+            className="inline-flex items-center gap-2 px-3.5 py-2 border border-red-300 dark:border-red-900/60 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/40 text-red-700 dark:text-red-300 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer self-start sm:self-auto rounded-none"
+            title={isEn ? 'Permanently purge your CV and biographical data' : 'Musnahkan data CV dan informasi pribadi secara permanen'}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>{isPurging ? (isEn ? 'Purging...' : 'Memusnahkan...') : (isEn ? 'Right to Erasure (Purge Data)' : 'Hak Penghapusan Data (UU PDP)')}</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Pilar 1: UU PDP */}
+          <div className="p-4 border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 space-y-2">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold uppercase">
+              <ShieldCheck className="w-4 h-4 shrink-0" />
+              <span>{isEn ? '1. Zero Data Brokering (UU PDP 27/2022)' : '1. Anti-Broker Data (UU PDP No. 27/2022)'}</span>
+            </div>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
+              {isEn
+                ? 'Your biographical data is processed exclusively for formatting your resume. Neriah Pro never sells, leases, or discloses your resume data to advertisers or third-party brokers. Right to Erasure is 100% active.'
+                : 'Data riwayat hidup diproses semata-mata untuk memformat CV Anda. Neriah Pro tidak pernah dan tidak akan menjual, menyewakan, atau membocorkan data pengguna ke broker pihak ketiga mana pun.'}
+            </p>
+          </div>
+
+          {/* Pilar 2: Disclaimer of Warranty */}
+          <div className="p-4 border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 space-y-2">
+            <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-mono text-xs font-bold uppercase">
+              <Scale className="w-4 h-4 shrink-0" />
+              <span>{isEn ? '2. Disclaimer of Warranty (User Responsibility)' : '2. Tanggung Jawab Isi (Disclaimer of Warranty)'}</span>
+            </div>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
+              {isEn
+                ? 'Neriah Pro provides layout, formatting, and ATS optimization technology. All career achievements, degree credentials, and certifications written in the CV remain 100% the legal responsibility of the User.'
+                : 'Neriah Pro menyediakan sarana teknologi tata letak dan optimasi ATS. Seluruh kebenaran fakta riwayat pekerjaan, klaim kompetensi, ijazah, dan sertifikat sepenuhnya merupakan tanggung jawab hukum Pengguna.'}
+            </p>
+          </div>
+
+          {/* Pilar 3: SIL OFL Fonts & Open Source Assets */}
+          <div className="p-4 border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 space-y-2">
+            <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-mono text-xs font-bold uppercase">
+              <Type className="w-4 h-4 shrink-0" />
+              <span>{isEn ? '3. Royalty-Free Fonts (SIL Open Font License)' : '3. Font & Aset Bebas Royalti (SIL OFL)'}</span>
+            </div>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
+              {isEn
+                ? 'PDF exports strictly use certified open-source typography (Inter, Roboto, Merriweather under SIL OFL) and open-source Lucide/FontAwesome visual assets, verified 100% royalty-free for commercial use.'
+                : 'Seluruh ekspor dokumen PDF menggunakan tipografi bersertifikasi SIL Open Font License (Inter, Roboto, Merriweather) dan ikon Lucide open-source yang bebas royalti untuk kepentingan komersial.'}
+            </p>
+          </div>
+
+          {/* Pilar 4: Consumed Digital Goods Policy */}
+          <div className="p-4 border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 space-y-2">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-mono text-xs font-bold uppercase">
+              <CreditCard className="w-4 h-4 shrink-0" />
+              <span>{isEn ? '4. Digital Goods & AI Quota Policy' : '4. Kebijakan Produk Digital & Token AI'}</span>
+            </div>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
+              {isEn
+                ? 'Purchases of digital licenses and consumed AI credits are final and non-refundable once utilized, except in verified cases of technical double-billing confirmed by Midtrans payment gateway logs.'
+                : 'Pembelian kuota unduh dan token AI yang telah terpakai bersifat final dan tidak dapat di-refund (No Refund for Consumed Goods), kecuali terbukti terjadi kegagalan sistemik penagihan ganda (double-charge).'}
+            </p>
+          </div>
         </div>
       </div>
 

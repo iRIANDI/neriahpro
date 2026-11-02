@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
+use App\Models\Document;
+use App\Models\LeadContact;
+use App\Models\LegalPolicy;
+use App\Models\Product;
+use App\Models\Transaction;
+use App\Models\User;
+use App\Models\VisionBlueprint;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use App\Models\User;
-use App\Models\Product;
-use App\Models\LegalPolicy;
-use App\Models\VisionBlueprint;
-use App\Models\Document;
-use App\Models\Transaction;
-use App\Models\LeadContact;
 
 class WorkflowEndToEndSeeder extends Seeder
 {
@@ -55,11 +55,11 @@ class WorkflowEndToEndSeeder extends Seeder
             [
                 'title' => [
                     'id' => 'Syarat dan Ketentuan Layanan Neriah Pro',
-                    'en' => 'Neriah Pro Terms and Conditions of Service'
+                    'en' => 'Neriah Pro Terms and Conditions of Service',
                 ],
                 'content' => [
-                    'id' => '<h3>1. Ruang Lingkup Layanan</h3><p>Neriah Pro menyediakan jasa rekayasa perangkat lunak berskala tinggi, penyusunan Product Requirements Document (PRD), dan kontrak kerja sama digital. Seluruh pengerjaan mengacu pada spesifikasi PRD yang telah dikunci (Scope Locked).</p><h3>2. Ketentuan Pembayaran DP (Down Payment)</h3><p>Pengerjaan sprint resmi dimulai setelah Klien menandatangani Kontrak Digital dan melunasi Uang Muka (DP) sebesar 50% melalui payment gateway Midtrans. Pelunasan 50% dilakukan saat serah terima sistem di server produksi.</p><h3>3. Perubahan Ruang Lingkup (Addendum)</h3><p>Setiap penambahan fitur di luar dokumen PRD terkunci akan dihitung sebagai Change Request (CR) / Addendum terpisah dengan tambahan biaya dan hari kerja tersendiri.</p>',
-                    'en' => '<h3>1. Scope of Services</h3><p>Neriah Pro provides enterprise software architecture, automated PRD synthesis, and digital contract agreements. All development follows the agreed, scope-locked PRD specifications.</p><h3>2. Down Payment Terms</h3><p>Development sprints officially commence once the Client executes the Digital Contract and settles a 50% Down Payment (DP) via Midtrans. The remaining 50% balance is payable upon production deployment.</p><h3>3. Change Requests (Addendum)</h3><p>Any additional feature requests beyond the locked PRD document shall be handled via an independent Addendum with separate billing and timelines.</p>'
+                    'id' => '<h3>1. Ruang Lingkup Layanan</h3><p>Neriah Pro menyediakan jasa rekayasa perangkat lunak berskala tinggi, penyusunan Product Requirements Document (PRD), dan kontrak kerja sama digital. Seluruh pengerjaan mengacu pada spesifikasi PRD yang telah dikunci (Scope Locked).</p><h3>2. Ketentuan Pembayaran DP (Down Payment)</h3><p>Pengerjaan sprint resmi dimulai setelah Klien menandatangani Kontrak Digital dan melunasi Uang Muka (DP) sebesar 50% melalui payment gateway Midtrans. Pelunasan 50% dilakukan saat serah terima sistem di server produksi.</p><h3>3. Perubahan Ruang Lingkup (Addendum)</h3><p>Setiap penambahan fitur di luar dokumen PRD terkunci akan dihitung sebagai Change Request (CR) / Addendum terpisah dengan tambahan biaya dan hari kerja tersendiri.</p><h3>4. Layanan Utilitas Digital & Pembuat Resume (CV Pro Studio)</h3><p>Neriah Pro menyediakan sarana teknologi pemformatan, tata letak otomatis ATS, dan generator dokumen karir digital. Seluruh data riwayat karir, kualifikasi, ijazah, sertifikat, dan klaim kompetensi yang dimasukkan ke dalam dokumen CV sepenuhnya merupakan tanggung jawab hukum Pengguna (Disclaimer of Warranty). Neriah Pro tidak bertanggung jawab atas sengketa ketenagakerjaan atau ketidakbenaran informasi yang dicantumkan oleh Pengguna.</p><h3>5. Lisensi Tipografi & Aset Visual Bebas Royalti</h3><p>Seluruh dokumen PDF dan tata letak grafis yang dihasilkan oleh Neriah Pro menggunakan tipografi bersertifikasi SIL Open Font License (Inter, Roboto, Merriweather) dan aset visual open-source (Lucide & FontAwesome) yang bebas royalti untuk kepentingan komersial maupun profesional.</p>',
+                    'en' => '<h3>1. Scope of Services</h3><p>Neriah Pro provides enterprise software architecture, automated PRD synthesis, and digital contract agreements. All development follows the agreed, scope-locked PRD specifications.</p><h3>2. Down Payment Terms</h3><p>Development sprints officially commence once the Client executes the Digital Contract and settles a 50% Down Payment (DP) via Midtrans. The remaining 50% balance is payable upon production deployment.</p><h3>3. Change Requests (Addendum)</h3><p>Any additional feature requests beyond the locked PRD document shall be handled via an independent Addendum with separate billing and timelines.</p><h3>4. Digital Career Utilities & Resume Builder (CV Pro Studio)</h3><p>Neriah Pro provides layout formatting tools, ATS scoring automation, and digital resume generation. All career history, educational credentials, certifications, and qualification claims inputted into the resume are the sole legal responsibility of the User (Disclaimer of Warranty). Neriah Pro disclaims all liability for employment disputes or falsification of credentials submitted by Users.</p><h3>5. Royalty-Free Typography & Visual Asset Licensing</h3><p>All exported PDF documents and graphic layouts generated by Neriah Pro strictly utilize SIL Open Font Licensed typography (Inter, Roboto, Merriweather) and open-source visual assets (Lucide & FontAwesome), verified 100% royalty-free for commercial and professional use.</p>',
                 ],
                 'is_active' => true,
             ]
@@ -70,11 +70,11 @@ class WorkflowEndToEndSeeder extends Seeder
             [
                 'title' => [
                     'id' => 'Kebijakan Privasi & Perlindungan Data',
-                    'en' => 'Privacy and Data Protection Policy'
+                    'en' => 'Privacy and Data Protection Policy',
                 ],
                 'content' => [
-                    'id' => '<h3>1. Kerahasiaan Ide & Arsitektur</h3><p>Kami menjamin 100% kerahasiaan ide bisnis, skema database, dan dokumen PRD Anda. Neriah Pro tidak akan menjual, menyewakan, atau mendistribusikan data klien kepada pihak ketiga mana pun.</p><h3>2. Penyimpanan Berstandar PostgreSQL ULID</h3><p>Seluruh identitas data dienkripsi dan disimpan menggunakan primary key ULID 26 karakter untuk menjamin integritas dan keamanan arsitektur data terdistribusi.</p>',
-                    'en' => '<h3>1. Confidentiality of Client Ideas</h3><p>We guarantee 100% confidentiality regarding your business ideas, database schemas, and PRD specifications. Neriah Pro never sells, leases, or discloses client data to third parties.</p><h3>2. PostgreSQL ULID Security Standards</h3><p>All records are encrypted and indexed using 26-character ULID primary keys to maintain distributed database security and strict data isolation.</p>'
+                    'id' => '<h3>1. Kerahasiaan Ide & Arsitektur</h3><p>Kami menjamin 100% kerahasiaan ide bisnis, skema database, dan dokumen PRD Anda. Neriah Pro tidak akan menjual, menyewakan, atau mendistribusikan data klien kepada pihak ketiga mana pun.</p><h3>2. Penyimpanan Berstandar PostgreSQL ULID</h3><p>Seluruh identitas data dienkripsi dan disimpan menggunakan primary key ULID 26 karakter untuk menjamin integritas dan keamanan arsitektur data terdistribusi.</p><h3>3. Perlindungan Data Riwayat Karir & Anti-Broker Data (UU PDP No. 27/2022)</h3><p>Sesuai amanat Undang-Undang Pelindungan Data Pribadi (UU PDP No. 27/2022), data pribadi dan riwayat hidup yang diisi pada CV Pro Studio (nama, kontak, riwayat pekerjaan, foto) semata-mata diproses untuk memformat dokumen CV milik Pengguna. Neriah Pro menerapkan kebijakan Zero Data Brokering di mana data Pengguna tidak pernah dan tidak akan dijual, disewakan, atau dibagikan kepada pihak ketiga atau agen periklanan mana pun.</p><h3>4. Hak Penghapusan Data Pribadi (Right to Erasure)</h3><p>Pengguna memiliki hak mutlak untuk menghapus seluruh data riwayat hidup, resume, dan riwayat token AI yang tersimpan di server Neriah Pro kapan saja melalui fitur Hapus Data CV Mandiri atau permintaan resmi melalui endpoint privasi.</p>',
+                    'en' => '<h3>1. Confidentiality of Client Ideas</h3><p>We guarantee 100% confidentiality regarding your business ideas, database schemas, and PRD specifications. Neriah Pro never sells, leases, or discloses client data to third parties.</p><h3>2. PostgreSQL ULID Security Standards</h3><p>All records are encrypted and indexed using 26-character ULID primary keys to maintain distributed database security and strict data isolation.</p><h3>3. Career Data Privacy & Zero Data Brokering (Indonesian PDP Law No. 27/2022)</h3><p>In strict compliance with Personal Data Protection Law (UU PDP No. 27/2022), personal identifiers and biographical data inputted into CV Pro Studio are processed exclusively for formatting User resumes. Neriah Pro enforces an uncompromising Zero Data Brokering policy: user data is never sold, leased, or disclosed to third-party data brokers or advertisers under any circumstances.</p><h3>4. Right to Erasure</h3><p>Users possess the absolute right to purge all biographical data, stored resumes, and AI interaction histories from Neriah Pro servers at any time via the self-service Purge CV Data action or official privacy deletion endpoints.</p>',
                 ],
                 'is_active' => true,
             ]
@@ -85,11 +85,11 @@ class WorkflowEndToEndSeeder extends Seeder
             [
                 'title' => [
                     'id' => 'Kebijakan Pengembalian Dana & Pembatalan',
-                    'en' => 'Refund and Cancellation Policy'
+                    'en' => 'Refund and Cancellation Policy',
                 ],
                 'content' => [
-                    'id' => '<h3>1. Kebijakan Uang Muka (DP)</h3><p>Uang Muka (DP 50%) yang telah dibayarkan melalui Midtrans tidak dapat dikembalikan (non-refundable) apabila sprint pengerjaan arsitektur dan skema database telah resmi dimulai.</p><h3>2. Garansi Perbaikan Bug (30 Hari)</h3><p>Setelah serah terima sistem, Neriah Pro memberikan garansi pemeliharaan dan perbaikan bug secara gratis selama 30 hari kalender sesuai ruang lingkup kontrak.</p>',
-                    'en' => '<h3>1. Down Payment Refund Terms</h3><p>The 50% Down Payment processed via Midtrans is non-refundable once architecture and database sprint development has commenced.</p><h3>2. 30-Day Bug Fix Warranty</h3><p>Upon production handover, Neriah Pro provides a 30-calendar-day warranty for defect fixes within the agreed scope of work at zero additional charge.</p>'
+                    'id' => '<h3>1. Kebijakan Uang Muka (DP)</h3><p>Uang Muka (DP 50%) yang telah dibayarkan melalui Midtrans tidak dapat dikembalikan (non-refundable) apabila sprint pengerjaan arsitektur dan skema database telah resmi dimulai.</p><h3>2. Garansi Perbaikan Bug (30 Hari)</h3><p>Setelah serah terima sistem, Neriah Pro memberikan garansi pemeliharaan dan perbaikan bug secara gratis selama 30 hari kalender sesuai ruang lingkup kontrak.</p><h3>3. Kebijakan Produk Digital & Token AI (Non-Refundable)</h3><p>Pembelian lisensi digital sekali unduh, paket kuota ekspor PDF, serta token AI yang telah berhasil digunakan atau dikreditkan ke akun pengguna bersifat final dan tidak dapat dibatalkan atau di-refund (No Refund for Consumed Digital Goods). Pengembalian dana hanya dapat diproses apabila terbukti terjadi kegagalan sistemik penagihan ganda (double-charge) yang diverifikasi oleh audit log gateway pembayaran Midtrans.</p>',
+                    'en' => '<h3>1. Down Payment Refund Terms</h3><p>The 50% Down Payment processed via Midtrans is non-refundable once architecture and database sprint development has commenced.</p><h3>2. 30-Day Bug Fix Warranty</h3><p>Upon production handover, Neriah Pro provides a 30-calendar-day warranty for defect fixes within the agreed scope of work at zero additional charge.</p><h3>3. Consumed Digital Goods & AI Tokens Policy</h3><p>Purchases of one-time digital licenses, PDF export allowances, and utilized AI generation credits are final and strictly non-refundable once credited or downloaded. Refund claims are only eligible in cases of verified technical double-billing confirmed by Midtrans payment gateway audit logs.</p>',
                 ],
                 'is_active' => true,
             ]
@@ -105,18 +105,18 @@ class WorkflowEndToEndSeeder extends Seeder
             [
                 'name' => [
                     'id' => 'Project OS & Architecture PRD Blueprint',
-                    'en' => 'Project OS & Architecture PRD Blueprint'
+                    'en' => 'Project OS & Architecture PRD Blueprint',
                 ],
                 'description' => [
                     'id' => 'Layanan perancangan spesifikasi sistem lengkap: Product Requirements Document (PRD), skema tabel ERD PostgreSQL Strict ULID, alur kerja, dan pembagian 5 sprint proyek.',
-                    'en' => 'Complete software specification service: Product Requirements Document (PRD), PostgreSQL Strict ULID ERD schema, user workflows, and 5 aligned project sprints.'
+                    'en' => 'Complete software specification service: Product Requirements Document (PRD), PostgreSQL Strict ULID ERD schema, user workflows, and 5 aligned project sprints.',
                 ],
                 'features' => [
                     'Kuesioner Discovery 4 Blok',
                     'Skema ERD Database PostgreSQL ULID',
                     'Matriks Scope MVP vs Roadmap Fase 2',
                     'Alokasi 5 Sprint Timeline Kerja',
-                    'Dokumen Cetak PDF Siap Eksekusi'
+                    'Dokumen Cetak PDF Siap Eksekusi',
                 ],
                 'price_idr' => 2500000.00,
                 'price_usd' => 160.00,
@@ -129,18 +129,18 @@ class WorkflowEndToEndSeeder extends Seeder
             [
                 'name' => [
                     'id' => 'Enterprise Rapid Monolith Development (Fase 1 MVP)',
-                    'en' => 'Enterprise Rapid Monolith Development (Phase 1 MVP)'
+                    'en' => 'Enterprise Rapid Monolith Development (Phase 1 MVP)',
                 ],
                 'description' => [
                     'id' => 'Pengembangan aplikasi bisnis lengkap berbasis Modern Monolith (Laravel 13, Filament v5, PostgreSQL Strict ULID, Redis) di dedicated VPS dengan termin DP 50% via Midtrans.',
-                    'en' => 'Complete enterprise web application development powered by Modern Monolith (Laravel 13, Filament v5, PostgreSQL Strict ULID, Redis) on dedicated VPS.'
+                    'en' => 'Complete enterprise web application development powered by Modern Monolith (Laravel 13, Filament v5, PostgreSQL Strict ULID, Redis) on dedicated VPS.',
                 ],
                 'features' => [
                     'Backend Laravel 13 Monolith Berkecepatan Tinggi',
                     'Panel Admin Filament PHP v5 Enterprise',
                     'Paginasi Keyset O(1) Tanpa Limitasi Skala',
                     'Penguncian Kontrak Digital & Scope Freeze',
-                    'Termin Pembayaran DP 50% via Midtrans'
+                    'Termin Pembayaran DP 50% via Midtrans',
                 ],
                 'price_idr' => 50000000.00,
                 'price_usd' => 3200.00,
@@ -153,17 +153,17 @@ class WorkflowEndToEndSeeder extends Seeder
             [
                 'name' => [
                     'id' => 'Canva-Style CV & Portfolio Studio',
-                    'en' => 'Canva-Style CV & Portfolio Studio'
+                    'en' => 'Canva-Style CV & Portfolio Studio',
                 ],
                 'description' => [
                     'id' => 'Studio perancangan resume dan portofolio profesional interaktif bergaya visual drag-and-drop dengan ekspor PDF tajam dan tautan publik portofolio.',
-                    'en' => 'Interactive visual drag-and-drop resume and portfolio studio with sharp brutalist styling, high-resolution PDF export, and public shareable URLs.'
+                    'en' => 'Interactive visual drag-and-drop resume and portfolio studio with sharp brutalist styling, high-resolution PDF export, and public shareable URLs.',
                 ],
                 'features' => [
                     'Kanvas WYSIWYG Drag & Drop',
                     'Format ATS-Friendly Internasional',
                     'Ekspor PDF Resolusi Tinggi',
-                    'Sinkronisasi Cloud Real-Time'
+                    'Sinkronisasi Cloud Real-Time',
                 ],
                 'price_idr' => 450000.00,
                 'price_usd' => 30.00,
@@ -176,17 +176,17 @@ class WorkflowEndToEndSeeder extends Seeder
             [
                 'name' => [
                     'id' => 'Digital Contract & Legal E-Signature',
-                    'en' => 'Digital Contract & Legal E-Signature'
+                    'en' => 'Digital Contract & Legal E-Signature',
                 ],
                 'description' => [
                     'id' => 'Penyusunan surat perjanjian kerja sama resmi dengan tanda tangan digital sah touchscreen/mouse, audit trail IP address, dan enkripsi hash kriptografi SHA-256.',
-                    'en' => 'Official agreement preparation with legal touchscreen/mouse digital signature, IP address audit trail, and SHA-256 cryptographic hashing.'
+                    'en' => 'Official agreement preparation with legal touchscreen/mouse digital signature, IP address audit trail, and SHA-256 cryptographic hashing.',
                 ],
                 'features' => [
                     'Tanda Tangan Digital Touchscreen & Mouse',
                     'Pencatatan Audit Trail IP Address & UTC Timestamp',
                     'Enkripsi Kriptografi SHA-256 Terverifikasi',
-                    'Protokol Scope Freeze / Anti-Revisi Liar'
+                    'Protokol Scope Freeze / Anti-Revisi Liar',
                 ],
                 'price_idr' => 1500000.00,
                 'price_usd' => 95.00,
@@ -199,17 +199,17 @@ class WorkflowEndToEndSeeder extends Seeder
             [
                 'name' => [
                     'id' => 'Project OS: Tier 02 Lite PRD Blueprint',
-                    'en' => 'Project OS: Tier 02 Lite PRD Blueprint'
+                    'en' => 'Project OS: Tier 02 Lite PRD Blueprint',
                 ],
                 'description' => [
                     'id' => 'Paket Retail Self-Service Instant PRD: Spesifikasi inti sistem, identitas bisnis, dan kuesioner arsitektur 26 parameter (Pilar 1).',
-                    'en' => 'Self-Service Instant PRD Specification: Core system spec, business identity, and 26-parameter architecture questionnaire (Pillar 1).'
+                    'en' => 'Self-Service Instant PRD Specification: Core system spec, business identity, and 26-parameter architecture questionnaire (Pillar 1).',
                 ],
                 'features' => [
                     'Pilar 1: Spesifikasi Inti & Kuesioner 26 Parameter',
                     'Perumusan Dokumen PRD Otomatis via AI Project OS',
                     'Revisi Form 30 Hari & Unduh Dokumen Selamanya',
-                    'Lisensi Penggunaan Mandiri untuk Tim Developer Internal'
+                    'Lisensi Penggunaan Mandiri untuk Tim Developer Internal',
                 ],
                 'price_idr' => 99000.00,
                 'price_usd' => 6.00,
@@ -222,11 +222,11 @@ class WorkflowEndToEndSeeder extends Seeder
             [
                 'name' => [
                     'id' => 'Project OS: Tier 03 Pro Production Blueprint',
-                    'en' => 'Project OS: Tier 03 Pro Production Blueprint'
+                    'en' => 'Project OS: Tier 03 Pro Production Blueprint',
                 ],
                 'description' => [
                     'id' => 'Paket Retail Self-Service Komplit: Rangka koding scaffold container, data awal seeder, panduan agen AI, 6 diagram visual, dan lisensi white-label (Pilar 1, 3, 4, 5).',
-                    'en' => 'Complete Production Blueprint: Scaffold container stack, synthetic data seeder, AI agent rules, 6 visual diagrams, and white-label license (Pillars 1, 3, 4, 5).'
+                    'en' => 'Complete Production Blueprint: Scaffold container stack, synthetic data seeder, AI agent rules, 6 visual diagrams, and white-label license (Pillars 1, 3, 4, 5).',
                 ],
                 'features' => [
                     'Pilar 1, 3, 4, 5 (Spesifikasi, Scaffold, Seeder, AI Rules)',
@@ -234,7 +234,7 @@ class WorkflowEndToEndSeeder extends Seeder
                     '6 Diagram Arsitektur & ERD PostgreSQL Strict ULID',
                     'SyntheticDataSeeder (100+ Data Awal Realistis)',
                     'Panduan Agen AI (.cursorrules, CLAUDE.md, AGENTS.md)',
-                    'Revisi 6 Bulan & Unlimited AI Regeneration'
+                    'Revisi 6 Bulan & Unlimited AI Regeneration',
                 ],
                 'price_idr' => 399000.00,
                 'price_usd' => 25.00,
@@ -247,11 +247,11 @@ class WorkflowEndToEndSeeder extends Seeder
             [
                 'name' => [
                     'id' => 'Project OS: Tier 04 Ultimate Software Factory OS',
-                    'en' => 'Project OS: Tier 04 Ultimate Software Factory OS'
+                    'en' => 'Project OS: Tier 04 Ultimate Software Factory OS',
                 ],
                 'description' => [
                     'id' => 'Paket Retail Self-Service Tertinggi 7 Pilar: Wireframe UI/UX, pengujian kontrak otomatis ApiContractTest, CI/CD Cloud Pipeline, NDA resmi berpayung hukum, dan 1 jam sesi konsultasi bersama Principal Architect.',
-                    'en' => 'Ultimate 7-Pillar Factory OS: UI/UX wireframes, ApiContractTest suite, CI/CD Cloud Pipeline, binding legal NDA, and 1-hour Principal Architect consultation.'
+                    'en' => 'Ultimate 7-Pillar Factory OS: UI/UX wireframes, ApiContractTest suite, CI/CD Cloud Pipeline, binding legal NDA, and 1-hour Principal Architect consultation.',
                 ],
                 'features' => [
                     'Lengkap Seluruh 7 Pilar Software Factory OS',
@@ -260,7 +260,7 @@ class WorkflowEndToEndSeeder extends Seeder
                     'Pilar 7: Otomasi Server & CI/CD Pipeline (deploy.sh)',
                     'Surat Perjanjian Kerahasiaan (NDA) Resmi Berpayung Hukum',
                     '1 Jam Sesi Konsultasi 1-on-1 Bersama Principal Architect',
-                    'Prioritas 1 Tahun & Potongan Biaya DP Penuh jika Lanjut MVP'
+                    'Prioritas 1 Tahun & Potongan Biaya DP Penuh jika Lanjut MVP',
                 ],
                 'price_idr' => 1490000.00,
                 'price_usd' => 95.00,
@@ -321,7 +321,7 @@ class WorkflowEndToEndSeeder extends Seeder
         $clauses = [
             'pasal_1_ruang_lingkup' => [
                 'title' => 'Pasal 1: Ruang Lingkup Proyek (Scope Locked)',
-                'description' => 'Pihak Kedua (Neriah Pro) sepakat untuk merancang dan membangun arsitektur perangkat lunak untuk Pihak Pertama (Apex Logistics Global) sesuai spesifikasi yang tertuang di dalam Dokumen Ultimate PRD ID: ' . strtoupper(substr($blueprint->id, 0, 10)) . '.',
+                'description' => 'Pihak Kedua (Neriah Pro) sepakat untuk merancang dan membangun arsitektur perangkat lunak untuk Pihak Pertama (Apex Logistics Global) sesuai spesifikasi yang tertuang di dalam Dokumen Ultimate PRD ID: '.strtoupper(substr($blueprint->id, 0, 10)).'.',
             ],
             'pasal_2_timeline' => [
                 'title' => 'Pasal 2: Alokasi Waktu Pengerjaan (30 Hari Kerja - 5 Sprint)',
@@ -358,7 +358,7 @@ class WorkflowEndToEndSeeder extends Seeder
                 'signer_ip_address' => '182.253.51.197',
                 'signed_at' => now()->subDays(2),
                 'document_hash' => hash('sha256', 'NERIAHPRO-APEX-CONTRACT-2026-SIGNED'),
-                'digital_signature_image' => 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="100" viewBox="0 0 300 100"><path d="M 20 60 Q 60 10, 100 50 T 180 40 T 260 70" fill="none" stroke="#0044cc" stroke-width="3" stroke-linecap="round"/><text x="20" y="90" font-family="monospace" font-size="12" fill="#666">Verified by Neriah Pro E-Sign</text></svg>'),
+                'digital_signature_image' => 'data:image/svg+xml;base64,'.base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="100" viewBox="0 0 300 100"><path d="M 20 60 Q 60 10, 100 50 T 180 40 T 260 70" fill="none" stroke="#0044cc" stroke-width="3" stroke-linecap="round"/><text x="20" y="90" font-family="monospace" font-size="12" fill="#666">Verified by Neriah Pro E-Sign</text></svg>'),
                 'content_clauses' => $clauses,
             ]
         );
@@ -366,7 +366,7 @@ class WorkflowEndToEndSeeder extends Seeder
 
     private function seedTransaction(Product $product, Document $contract): void
     {
-        $reviewerUser = User::where('email', 'reviewer.midtrans@neriahpro.com')->first() 
+        $reviewerUser = User::where('email', 'reviewer.midtrans@neriahpro.com')->first()
             ?? User::where('email', 'yoseph.iriandi.tambunan@gmail.com')->first();
 
         Transaction::updateOrCreate(
@@ -374,7 +374,7 @@ class WorkflowEndToEndSeeder extends Seeder
             [
                 'user_id' => $reviewerUser?->id,
                 'product_id' => $product->id,
-                'midtrans_transaction_id' => 'TRX-MIDTRANS-' . strtoupper(Str::random(10)),
+                'midtrans_transaction_id' => 'TRX-MIDTRANS-'.strtoupper(Str::random(10)),
                 'status' => 'settlement', // LUNAS (Settled by Midtrans)
                 'total_idr' => 25000000.00,
                 'original_currency' => 'IDR',
@@ -457,7 +457,7 @@ class WorkflowEndToEndSeeder extends Seeder
         $clauses = [
             'pasal_1_ruang_lingkup' => [
                 'title' => 'Pasal 1: Ruang Lingkup Proyek (Scope Locked)',
-                'description' => 'Pihak Kedua (Neriah Pro) sepakat untuk merancang dan membangun arsitektur perangkat lunak Medika Prima Telehealth sesuai spesifikasi yang tertuang di dalam Dokumen Ultimate PRD ID: ' . strtoupper(substr($blueprint->id, 0, 10)) . '.',
+                'description' => 'Pihak Kedua (Neriah Pro) sepakat untuk merancang dan membangun arsitektur perangkat lunak Medika Prima Telehealth sesuai spesifikasi yang tertuang di dalam Dokumen Ultimate PRD ID: '.strtoupper(substr($blueprint->id, 0, 10)).'.',
             ],
             'pasal_2_timeline' => [
                 'title' => 'Pasal 2: Alokasi Waktu Pengerjaan (14 Hari Kerja - Gemini Ultra Swarm Parallel Sprint)',
@@ -494,7 +494,7 @@ class WorkflowEndToEndSeeder extends Seeder
                 'signer_ip_address' => '180.252.120.44',
                 'signed_at' => now()->subHours(6),
                 'document_hash' => hash('sha256', 'NERIAHPRO-MEDIKA-CONTRACT-2026-PENDING-DP'),
-                'digital_signature_image' => 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="100" viewBox="0 0 300 100"><path d="M 30 70 Q 70 20, 110 60 T 190 30 T 270 80" fill="none" stroke="#059669" stroke-width="3" stroke-linecap="round"/><text x="30" y="90" font-family="monospace" font-size="12" fill="#059669">Signed by dr. Hendra Pratama</text></svg>'),
+                'digital_signature_image' => 'data:image/svg+xml;base64,'.base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="100" viewBox="0 0 300 100"><path d="M 30 70 Q 70 20, 110 60 T 190 30 T 270 80" fill="none" stroke="#059669" stroke-width="3" stroke-linecap="round"/><text x="30" y="90" font-family="monospace" font-size="12" fill="#059669">Signed by dr. Hendra Pratama</text></svg>'),
                 'content_clauses' => $clauses,
             ]
         );

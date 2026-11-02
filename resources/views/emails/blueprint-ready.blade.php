@@ -151,7 +151,7 @@
             </p>
         </div>
         <div class="footer">
-            &copy; {{ date('Y') }} PT Neriah Pro Solusindo &bull; Digital Architecture & Enterprise Scope Lock OS.
+            &copy; {{ date('Y') }} Neriah Pro Studio &bull; Digital Architecture & Enterprise Scope Lock OS.
         </div>
     </div>
 </body>

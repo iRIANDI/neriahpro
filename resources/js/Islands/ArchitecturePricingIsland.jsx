@@ -1595,10 +1595,10 @@ export default function ArchitecturePricingIsland({
 
                           <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
                             <span className="font-bold text-zinc-800 dark:text-zinc-200">
-                              UI Terkunci: <strong className="text-emerald-900 dark:text-emerald-300">{activeVisualUi.code}</strong> &bull; <strong>{activeJurisdiction.dir === 'rtl' ? 'RTL Logical CSS' : 'LTR Logical CSS'}</strong>
+                              {isEn ? 'Locked UI:' : 'UI Terkunci:'} <strong className="text-emerald-900 dark:text-emerald-300">{activeVisualUi.code}</strong> &bull; <strong>{activeJurisdiction.dir === 'rtl' ? 'RTL Logical CSS' : 'LTR Logical CSS'}</strong>
                             </span>
                             <span className="px-2 py-0.5 bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200 font-black text-[10px] tabular-nums">
-                              {comp.tables + 5} ULID Tables &bull; 20 Pilar Paripurna &bull; SEO/GEO + UU PDP
+                              {comp.tables + 5} {isEn ? 'ULID Tables • 20 Complete Pillars • SEO/GEO + Data Privacy' : 'Tabel ULID • 20 Pilar Paripurna • SEO/GEO + UU PDP'}
                             </span>
                           </div>
                         </div>
@@ -1670,7 +1670,7 @@ export default function ArchitecturePricingIsland({
                               <div className="p-2.5 bg-zinc-100/90 dark:bg-zinc-900/90 border border-zinc-300 dark:border-zinc-800 font-mono text-[10px] space-y-1.5">
                                 <div className="text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
                                   <span>{isEn ? 'LIVE SPECIFICATION SYNC (FROM LEFT PANEL):' : 'SPESIFIKASI AKTIF (DARI PILIHAN SEBELAH KIRI):'}</span>
-                                  <span className="text-emerald-800 dark:text-emerald-400 font-black">● TERKUNCI REAL-TIME</span>
+                                  <span className="text-emerald-800 dark:text-emerald-400 font-black">{isEn ? '● LOCKED REAL-TIME' : '● TERKUNCI REAL-TIME'}</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-1.5 text-zinc-900 dark:text-zinc-100">
                                   <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
@@ -1687,11 +1687,11 @@ export default function ArchitecturePricingIsland({
                                   </div>
                                   <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
                                     <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Database & Scale' : 'Skema Database & Pilar'}</span>
-                                    <strong className="truncate block font-black">{comp.tables + 5} Tabel ULID &bull; 20 Pilar</strong>
+                                    <strong className="truncate block font-black">{comp.tables + 5} {isEn ? 'ULID Tables • 20 Pillars' : 'Tabel ULID • 20 Pilar'}</strong>
                                   </div>
                                   <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
                                     <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Studio Interface' : 'Mode Antarmuka (Langkah E1)'}</span>
-                                    <strong className="truncate block font-black">{wizardPersonaMode === 'ARCHITECT_PRO' ? 'Mode Arsitek 3-Pane' : 'Mode Bisnis / Awam'}</strong>
+                                    <strong className="truncate block font-black">{wizardPersonaMode === 'ARCHITECT_PRO' ? (isEn ? 'Architect Pro (3-Pane)' : 'Mode Arsitek 3-Pane') : (isEn ? 'Business / Visual Mode' : 'Mode Bisnis / Awam')}</strong>
                                   </div>
                                   <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
                                     <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Jurisdiction & Locale' : 'Regulasi & Bahasa (Langkah E2)'}</span>
@@ -1831,11 +1831,11 @@ export default function ArchitecturePricingIsland({
                               ) : wizardMitraTier === 'umkm_starter' ? (
                                 <div className="grid grid-cols-2 gap-1.5 font-mono text-[10px] tabular-nums">
                                   <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
-                                    <div className="text-zinc-600 dark:text-zinc-400 font-bold">DP 50% (Kickoff)</div>
+                                    <div className="text-zinc-600 dark:text-zinc-400 font-bold">{isEn ? 'Kickoff DP 50%' : 'DP 50% (Kickoff)'}</div>
                                     <div className="font-black text-zinc-950 dark:text-zinc-100">Rp {formatIdrPlain(1875000)}</div>
                                   </div>
                                   <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
-                                    <div className="text-zinc-600 dark:text-zinc-400 font-bold">Pelunasan UAT 50%</div>
+                                    <div className="text-zinc-600 dark:text-zinc-400 font-bold">{isEn ? 'UAT Settlement 50%' : 'Pelunasan UAT 50%'}</div>
                                     <div className="font-black text-emerald-800 dark:text-emerald-400">Rp {formatIdrPlain(1875000)}</div>
                                   </div>
                                 </div>
@@ -1865,8 +1865,8 @@ export default function ArchitecturePricingIsland({
                                     <strong className="truncate block font-black text-cyan-900 dark:text-cyan-300">{activeVisualUi.code}</strong>
                                   </div>
                                   <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
-                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Post-BAST Warranty' : 'Garansi SLA & Pilar'}</span>
-                                    <strong className="truncate block font-black">SLA 90 Hari &bull; 20 Pilar</strong>
+                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Post-BAST Warranty & Pillars' : 'Garansi SLA & Pilar'}</span>
+                                    <strong className="truncate block font-black">{isEn ? '90-Day SLA • 20 Pillars' : 'SLA 90 Hari • 20 Pilar'}</strong>
                                   </div>
                                 </div>
                               </div>
@@ -3601,7 +3601,7 @@ return match (true) {
                               <div>
                                 <div className="flex items-center justify-between gap-1 mb-1">
                                   <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black">
-                                    PILAR {p.no}
+                                    {isEn ? 'PILLAR' : 'PILAR'} {p.no}
                                   </span>
                                   <span className="font-mono text-[9px] font-black text-emerald-900 dark:text-emerald-300">100%</span>
                                 </div>
@@ -4237,7 +4237,7 @@ return match (true) {
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                       <div>
                         <span className="px-2 py-0.5 bg-emerald-600 text-white font-mono text-[10px] font-black uppercase">
-                          20 PILAR PARIPURNA V11.0 // ZERO-FAILURE GUARANTEE
+                          {isEn ? '20 COMPLETE PILLARS V11.0 // ZERO-FAILURE GUARANTEE' : '20 PILAR PARIPURNA V11.0 // ZERO-FAILURE GUARANTEE'}
                         </span>
                         <h4 className="text-lg sm:text-xl font-black uppercase text-zinc-950 dark:text-white font-sans mt-1">
                           {isEn
@@ -4259,7 +4259,7 @@ return match (true) {
                           <div>
                             <div className="flex items-center justify-between gap-2 mb-1.5">
                               <span className="px-1.5 py-0.5 bg-zinc-950 text-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 border border-zinc-800 dark:border-emerald-700 font-mono text-[9px] font-black">
-                                PILAR {p.no}
+                                {isEn ? 'PILLAR' : 'PILAR'} {p.no}
                               </span>
                               <span className="font-mono text-[9px] font-black text-emerald-800 dark:text-emerald-400">
                                 100% LOCKED

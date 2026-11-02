@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>neriahpro.com - Project OS Discovery Blueprint</title>
-    <meta name="description" content="Kuesioner penyusunan spesifikasi teknis dan blueprint arsitektur aplikasi terpusat untuk bisnis Anda.">
+    <title>neriahpro.com - {{ app()->getLocale() === 'en' ? 'Project OS Discovery Blueprint' : 'Blueprint & Arsitektur Project OS' }}</title>
+    <meta name="description" content="{{ app()->getLocale() === 'en' ? 'Centralized technical specification and application architecture blueprint for your enterprise.' : 'Kuesioner penyusunan spesifikasi teknis dan blueprint arsitektur aplikasi terpusat untuk bisnis Anda.' }}">
     <link rel="canonical" href="{{ url('/blueprint') }}">
 
     <style>
@@ -87,7 +87,7 @@
                     THEME
                 </button>
                 <a href="/customer/dashboard" class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition flex items-center gap-1">
-                    Portal Klien &rarr;
+                    {{ app()->getLocale() === 'en' ? 'Client Portal' : 'Portal Klien' }} &rarr;
                 </a>
             </div>
         </div>
@@ -103,7 +103,7 @@
                 Website Architecture Proposal
             </h1>
             <p class="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto font-sans leading-relaxed">
-                Disiapkan khusus untuk menunjang skalabilitas dan kecepatan operasional bisnis Anda dengan arsitektur teknologi terpusat Modern Monolith.
+                {{ app()->getLocale() === 'en' ? 'Specifically crafted to power enterprise scalability and sub-10ms operational velocity with modern monolithic architecture.' : 'Disiapkan khusus untuk menunjang skalabilitas dan kecepatan operasional bisnis Anda dengan arsitektur teknologi terpusat Modern Monolith.' }}
             </p>
         </div>
     </section>
@@ -115,6 +115,7 @@
             'submitUrl' => url('/api/vision-blueprint'),
             'initialData' => $initialData ?? [],
             'countries' => \App\Support\InputHygieneStandard::countryZonesForFrontend(),
+            'currentLocale' => app()->getLocale(),
         ])
     </main>
 

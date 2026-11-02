@@ -546,6 +546,11 @@ class BlueprintArchitectStudio extends Component
         $this->outputLocale = PosInclusiveCommercialCatalog::normalizeOutputLocale($locale);
         $jurisdiction = PosInclusiveCommercialCatalog::jurisdictionComplianceProfile($this->outputLocale);
 
+        if (in_array($this->outputLocale, ['id', 'en', 'ar', 'ja', 'zh-CN', 'de', 'es'], true)) {
+            session(['neriah_locale' => $this->outputLocale]);
+            app()->setLocale($this->outputLocale);
+        }
+
         if ($this->posProjectId) {
             $proj = PosProject::query()->find($this->posProjectId);
             if ($proj && Schema::hasColumn('pos_projects', 'output_locale')) {
@@ -961,7 +966,7 @@ class BlueprintArchitectStudio extends Component
                 'enterprise_menu' => PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown($schema['enterprise_menu_matrix'] ?? []),
                 'syntax_lock_md' => PosRealWorldRuntimeCatalog::renderSyntaxLock2026Markdown($schema),
                 'troubleshooting_md' => PosRealWorldRuntimeCatalog::renderTroubleshootingInstinctsMarkdown($schema),
-                'client_sop_md' => PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($schema, 'id'),
+                'client_sop_md' => PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($schema, $this->outputLocale ?? app()->getLocale() ?? 'id'),
                 'pg16_partition_sql' => PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($schema['data_dictionary'] ?? [], $this->projectName),
                 'agents_md' => ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($schema),
                 'graph_json' => ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($schema),
@@ -1006,8 +1011,8 @@ class BlueprintArchitectStudio extends Component
             'communityMarketplace' => PosInclusiveCommercialCatalog::communityPrimitivesMarketplace(),
             'visualUiContract' => $schema['visual_frontend_ui_contract'] ?? [],
             'dualZoneUiContract' => $schema['dual_zone_ui_contract'] ?? [],
-            'publicUxPresets' => PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets('id'),
-            'fiveIronLaws' => PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws('id'),
+            'publicUxPresets' => PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets($this->outputLocale ?? app()->getLocale() ?? 'id'),
+            'fiveIronLaws' => PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws($this->outputLocale ?? app()->getLocale() ?? 'id'),
             'jurisdictionProfile' => $schema['jurisdiction_compliance_profile'] ?? [],
             'codesignContract' => $codesignContract,
             'agentShieldContract' => $schema['agentshield_security_contract'] ?? [],

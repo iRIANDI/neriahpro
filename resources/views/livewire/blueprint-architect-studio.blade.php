@@ -1,4 +1,11 @@
 @php
+    $curLoc = $outputLocale ?? app()->getLocale() ?? 'id';
+    $isEnLoc = ($curLoc === 'en');
+    $locVal = function ($item, $fallback = '') use ($curLoc, $isEnLoc) {
+        if (!is_array($item)) return (string) ($item ?: $fallback);
+        return $item[$curLoc] ?? $item[$isEnLoc ? 'en' : 'id'] ?? $item['id'] ?? $item['en'] ?? $fallback;
+    };
+
     $tables = $schema['data_dictionary'] ?? [];
     $stateMachines = $schema['state_machines'] ?? [];
     $locks = $schema['domain_invariants']['concurrency_locks'] ?? [];
@@ -51,7 +58,7 @@
                 <input
                     type="text"
                     wire:model.live.debounce.400ms="projectName"
-                    aria-label="Nama Proyek"
+                    aria-label="{{ $isEnLoc ? 'Project Name' : 'Nama Proyek' }}"
                     class="px-2 py-0.5 w-40 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-black text-zinc-950 dark:text-zinc-100 rounded-xs text-xs"
                 />
                 <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 text-[10px] font-black rounded-xs tabular-nums">
@@ -61,9 +68,9 @@
                     type="button"
                     wire:click="startFreshIsolatedProject"
                     class="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-700 text-[10px] font-black rounded-xs cursor-pointer transition"
-                    title="Reset workspace bersih 100% terisolasi tanpa menyentuh proyek sebelumnya"
+                    title="{{ $isEnLoc ? 'Reset clean 100% isolated workspace without touching previous project' : 'Reset workspace bersih 100% terisolasi tanpa menyentuh proyek sebelumnya' }}"
                 >
-                    + Proyek Baru Bersih
+                    {{ $isEnLoc ? '+ Clean New Project' : '+ Proyek Baru Bersih' }}
                 </button>
             </div>
 
@@ -74,14 +81,14 @@
                     wire:click="switchEngagementMode('RETAIL_SELF_DEV')"
                     class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $engagementMode === 'RETAIL_SELF_DEV' ? 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black' : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 font-bold' }}"
                 >
-                    Mode Retail (Self-Dev AI)
+                    {{ $isEnLoc ? 'Retail Mode (AI Self-Dev)' : 'Mode Retail (Self-Dev AI)' }}
                 </button>
                 <button
                     type="button"
                     wire:click="switchEngagementMode('MITRA_TURNKEY_PROJECT')"
                     class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $engagementMode === 'MITRA_TURNKEY_PROJECT' ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black' : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 font-bold' }}"
                 >
-                    Mode Mitra Proyek (Kontrak &amp; BAST)
+                    {{ $isEnLoc ? 'Mitra Project Mode (Contract & Handover)' : 'Mode Mitra Proyek (Kontrak & BAST)' }}
                 </button>
             </div>
 
@@ -92,21 +99,21 @@
                     wire:click="switchPersonaMode('BUSINESS_WIZARD')"
                     class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $personaMode === 'BUSINESS_WIZARD' ? 'bg-emerald-600 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black' : 'text-zinc-800 dark:text-zinc-300 font-bold' }}"
                 >
-                    🧭 Mode Bisnis / Awam
+                    {{ $isEnLoc ? '🧭 Business / Simple Mode' : '🧭 Mode Bisnis / Awam' }}
                 </button>
                 <button
                     type="button"
                     wire:click="switchPersonaMode('ARCHITECT_PRO')"
                     class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $personaMode === 'ARCHITECT_PRO' ? 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black' : 'text-zinc-800 dark:text-zinc-300 font-bold' }}"
                 >
-                    ⚡ Mode Arsitek Pro
+                    {{ $isEnLoc ? '⚡ Architect Pro Mode' : '⚡ Mode Arsitek Pro' }}
                 </button>
             </div>
 
             <!-- v8.0 Tier-1 Jurisdiction & RTL Output Locale Selector -->
             <select
                 wire:change="selectOutputLocale($event.target.value)"
-                aria-label="Bahasa & Regulasi Output Blueprint"
+                aria-label="{{ $isEnLoc ? 'Language & Jurisdiction Output' : 'Bahasa & Regulasi Output Blueprint' }}"
                 class="px-2 py-1 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-[10px] font-black rounded-none"
             >
                 @foreach([
@@ -124,13 +131,15 @@
             <!-- v12.0 Server-Side Entitlement Gate Switcher -->
             <select
                 wire:change="switchEntitlementTier($event.target.value)"
-                aria-label="Tier Lisensi & Server Gate"
+                aria-label="{{ $isEnLoc ? 'License Tier & Server Gate' : 'Tier Lisensi & Server Gate' }}"
                 class="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-500 text-emerald-950 dark:text-emerald-200 font-mono text-[10px] font-black rounded-none"
             >
-                <option value="FREE_SANDBOX" @selected($entitlementTier === 'FREE_SANDBOX')>🔒 Tier: Spark Sandbox (Rp 0 • Gate P2–P7)</option>
-                <option value="SINGLE_APP_PASS" @selected($entitlementTier === 'SINGLE_APP_PASS')>🔓 Tier: Single-App Pass (Rp 299rb)</option>
-                <option value="PRO_RETAIL" @selected($entitlementTier === 'PRO_RETAIL')>⚡ Tier: Pro Agentic / CSR (Rp 399rb)</option>
-                <option value="AGENCY_PARTNER" @selected($entitlementTier === 'AGENCY_PARTNER')>👑 Tier: Agency White-Label (Rp 990rb+)</option>
+                <option value="FREE_SANDBOX" @selected($entitlementTier === 'FREE_SANDBOX')>{{ $isEnLoc ? '🔒 Tier: Spark Sandbox (Free • Gate P2–P7)' : '🔒 Tier: Spark Sandbox (Rp 0 • Gate P2–P7)' }}</option>
+                <option value="SINGLE_APP_PASS" @selected($entitlementTier === 'SINGLE_APP_PASS')>{{ $isEnLoc ? '🔓 Tier: Single-App Pass ($19 / Rp 299k)' : '🔓 Tier: Single-App Pass (Rp 299rb)' }}</option>
+                <option value="PRO_RETAIL" @selected($entitlementTier === 'PRO_RETAIL')>{{ $isEnLoc ? '⚡ Tier: Pro Agentic / CSR ($25 / Rp 399k)' : '⚡ Tier: Pro Agentic / CSR (Rp 399rb)' }}</option>
+                <option value="AGENCY_PARTNER" @selected($entitlementTier === 'AGENCY_PARTNER')>{{ $isEnLoc ? '👑 Tier: Agency White-Label ($65+ / Rp 990k+)' : '👑 Tier: Agency White-Label (Rp 990rb+)' }}</option>
+                <option value="MITRA_TURNKEY" @selected($entitlementTier === 'MITRA_TURNKEY')>{{ $isEnLoc ? '🤝 Tier: Mitra Turnkey Project (Contract)' : '🤝 Tier: Mitra Proyek Turnkey (SPK)' }}</option>
+            </select>
                 <option value="MITRA_TURNKEY" @selected($entitlementTier === 'MITRA_TURNKEY')>🤝 Tier: Mitra Proyek Turnkey (SPK)</option>
             </select>
         </div>
@@ -144,7 +153,7 @@
                 class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-500 dark:bg-amber-950/90 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-600 font-black text-[10px] rounded-none cursor-pointer transition"
                 title="{{ $rescueCreditData['guarantee_summary'] ?? '' }}"
             >
-                🛟 Butuh Bantuan Engineer NeriahPro? Konversi ke Mitra Proyek (Potong DP 100%)
+                {{ $isEnLoc ? '🛟 Need NeriahPro Engineers? Convert to Mitra Project (100% DP Credited)' : '🛟 Butuh Bantuan Engineer NeriahPro? Konversi ke Mitra Proyek (Potong DP 100%)' }}
             </button>
 
             <div class="hidden xl:flex items-center gap-1.5 px-2 py-1 bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs tabular-nums text-[10px]">
@@ -157,19 +166,19 @@
                     wire:click="$set('centerTab', 'commercial_mitra')"
                     class="px-2 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 rounded-xs font-black tabular-nums text-[10px] cursor-pointer"
                 >
-                    RAB: {{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }} &bull; {{ $commercialQuotation['timeline_days'] ?? 0 }} Hari
+                    {{ $isEnLoc ? 'Cost Est:' : 'RAB:' }} {{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }} &bull; {{ $commercialQuotation['timeline_days'] ?? 0 }} {{ $isEnLoc ? 'Days' : 'Hari' }}
                 </button>
             @endif
             <div class="flex items-center gap-1.5 px-2.5 py-1 border rounded-xs tabular-nums {{ $isZeroAssumptionReady ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700' : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700' }}">
                 <span class="font-black">Determinism Score: {{ $detScore }}%</span>
-                <span>{{ $isZeroAssumptionReady ? 'Zero-Assumption Ready ✅' : '⚠️ Celah Asumsi Terdeteksi' }}</span>
+                <span>{{ $isZeroAssumptionReady ? ($isEnLoc ? 'Zero-Assumption Ready ✅' : 'Zero-Assumption Ready ✅') : ($isEnLoc ? '⚠️ Assumption Gaps Detected' : '⚠️ Celah Asumsi Terdeteksi') }}</span>
                 @if(!empty($doctor['one_click_auto_fix']['has_fixes']))
                     <button
                         type="button"
                         wire:click="applyDoctorAutoFix"
                         class="ml-1 px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-amber-400 dark:text-zinc-950 font-black text-[10px] rounded-none cursor-pointer hover:opacity-90"
                     >
-                        + Buat Otomatis
+                        {{ $isEnLoc ? '+ Auto Resolve' : '+ Buat Otomatis' }}
                     </button>
                 @endif
             </div>
@@ -203,7 +212,7 @@
                     href="{{ route('blueprint.show', $slug) }}"
                     class="px-2.5 py-1 bg-white hover:bg-zinc-100 text-zinc-950 border border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold rounded-xs transition"
                 >
-                    📄 Dokumen PRD
+                    {{ $isEnLoc ? '📄 PRD Document' : '📄 Dokumen PRD' }}
                 </a>
             @endif
 
@@ -223,21 +232,21 @@
     <!-- =================================================================== -->
     <div class="shrink-0 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-3 py-1 flex items-center justify-between gap-2 overflow-x-auto font-mono text-[10px]">
         <div class="flex items-center gap-1.5 whitespace-nowrap">
-            <span class="font-black text-emerald-900 dark:text-emerald-400 uppercase">ALUR SATU PINTU:</span>
-            <a href="/pricing" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500">01. Pilih Paket &amp; Sektor</a>
+            <span class="font-black text-emerald-900 dark:text-emerald-400 uppercase">{{ $isEnLoc ? 'SATU PINTU FLOW:' : 'ALUR SATU PINTU:' }}</span>
+            <a href="/pricing" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500">{{ $isEnLoc ? '01. Select Package & Sector' : '01. Pilih Paket & Sektor' }}</a>
             <span class="text-zinc-400">&rarr;</span>
-            <button type="button" wire:click="$set('centerTab', 'proposal_wow')" class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black cursor-pointer">01B. Layar 1: Proposal Bisnis (WOW View)</button>
+            <button type="button" wire:click="$set('centerTab', 'proposal_wow')" class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black cursor-pointer">{{ $isEnLoc ? '01B. Screen 1: Business Proposal (WOW View)' : '01B. Layar 1: Proposal Bisnis (WOW View)' }}</button>
             <span class="text-zinc-400">&rarr;</span>
-            <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black">02. Layar 2: 3-Pane Studio [AKTIF]</span>
+            <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black">{{ $isEnLoc ? '02. Screen 2: 3-Pane Studio [ACTIVE]' : '02. Layar 2: 3-Pane Studio [AKTIF]' }}</span>
             <span class="text-zinc-400">&rarr;</span>
-            <button type="button" wire:click="$set('centerTab', 'commercial_mitra')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">03. Kunci SPK SHA-256 / Lisensi</button>
+            <button type="button" wire:click="$set('centerTab', 'commercial_mitra')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">{{ $isEnLoc ? '03. Lock Contract / License' : '03. Kunci SPK SHA-256 / Lisensi' }}</button>
             <span class="text-zinc-400">&rarr;</span>
-            <button type="button" wire:click="$set('rightDockMode', 'mcp_json')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">04. Live 7-Fase MCP ({{ $verifiedCount }}/7)</button>
+            <button type="button" wire:click="$set('rightDockMode', 'mcp_json')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">{{ $isEnLoc ? '04. Live 7-Phase MCP' : '04. Live 7-Fase MCP' }} ({{ $verifiedCount }}/7)</button>
             <span class="text-zinc-400">&rarr;</span>
-            <button type="button" wire:click="$set('centerTab', 'commercial_mitra')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">05. UAT ({{ $uatChecklist['progress_percent'] ?? 0 }}%) &amp; BAST</button>
+            <button type="button" wire:click="$set('centerTab', 'commercial_mitra')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">{{ $isEnLoc ? '05. UAT & Handover' : '05. UAT & BAST' }} ({{ $uatChecklist['progress_percent'] ?? 0 }}%)</button>
         </div>
         <a href="/customer/dashboard" class="whitespace-nowrap px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black hover:opacity-90">
-            Portal Klien &rarr;
+            {{ $isEnLoc ? 'Client Portal' : 'Portal Klien' }} &rarr;
         </a>
     </div>
 
@@ -246,8 +255,8 @@
     <!-- =================================================================== -->
     <div class="shrink-0 bg-emerald-50/70 dark:bg-zinc-900/90 border-b border-emerald-300 dark:border-zinc-800 px-3 py-1 flex items-center justify-between gap-2 overflow-x-auto font-mono text-[10px] tabular-nums">
         <div class="flex items-center gap-1.5 whitespace-nowrap">
-            <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black">RANTAI KAUSAL v7.0:</span>
-            <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ count($enterpriseMenuMatrix['v1_mvp_menus'] ?? []) }}/25 Menu</span>
+            <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black">{{ $isEnLoc ? 'CAUSAL CHAIN v7.0:' : 'RANTAI KAUSAL v7.0:' }}</span>
+            <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ count($enterpriseMenuMatrix['v1_mvp_menus'] ?? []) }}/25 {{ $isEnLoc ? 'Menus' : 'Menu' }}</span>
             <span class="text-emerald-700 dark:text-emerald-400">&rarr;</span>
             <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $hwContract['active_bridges_count'] ?? 1 }} HW Bridge &bull; {{ count($wsContract['channels'] ?? []) }} WS Zero-Poll</span>
             <span class="text-emerald-700 dark:text-emerald-400">&rarr;</span>
@@ -258,7 +267,7 @@
             <span class="text-emerald-900 dark:text-emerald-300 font-black">{{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }} ({{ $commercialQuotation['scope_hash_short'] ?? '-' }})</span>
         </div>
         <button type="button" wire:click="$set('centerTab', 'runtime_sop_v7')" class="whitespace-nowrap px-2 py-0.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black cursor-pointer">
-            15 Pilar Freeze (100%) &rarr;
+            {{ $isEnLoc ? '15 Pillars Freeze (100%)' : '15 Pilar Freeze (100%)' }} &rarr;
         </button>
     </div>
 
@@ -268,13 +277,17 @@
     <div class="shrink-0 bg-amber-100/95 dark:bg-amber-950/60 border-b-2 border-amber-500 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
         <div class="flex flex-wrap items-center gap-2 font-sans">
             <span class="px-1.5 py-0.5 bg-zinc-950 text-amber-300 font-mono text-[9px] font-black uppercase">
-                {{ $scopeFreezeActive ? '🔒 SCOPE FREEZE AKTIF (100% READY)' : '🛡️ PROTEKSI ANTI-OVER-PLANNING' }}
+                {{ $scopeFreezeActive ? ($isEnLoc ? '🔒 SCOPE FREEZE ACTIVE (100% READY)' : '🔒 SCOPE FREEZE AKTIF (100% READY)') : ($isEnLoc ? '🛡️ ANTI-OVER-PLANNING PROTECTION' : '🛡️ PROTEKSI ANTI-OVER-PLANNING') }}
             </span>
             <strong class="font-mono text-amber-950 dark:text-amber-200">
-                {{ $scopeParalysisGuard['title'] ?? 'Peringatan Penting: Bahaya Over-Planning (Scope Paralysis)' }}:
+                {{ $locVal($scopeParalysisGuard['warning_title'] ?? $scopeParalysisGuard['title'] ?? null, $isEnLoc ? 'Critical Warning: Danger of Over-Planning (Scope Paralysis)' : 'Peringatan Penting: Bahaya Over-Planning (Scope Paralysis)') }}:
             </strong>
             <span class="text-zinc-900 dark:text-zinc-100">
-                Blueprint telah mencapai 100%. Berhenti menambah konsep di atas kertas (<strong>SCOPE FREEZE</strong>) &amp; mulai eksekusi bertahap:
+                @if($isEnLoc)
+                    Blueprint has reached 100%. Stop adding concepts on paper (<strong>SCOPE FREEZE</strong>) &amp; begin staged execution:
+                @else
+                    Blueprint telah mencapai 100%. Berhenti menambah konsep di atas kertas (<strong>SCOPE FREEZE</strong>) &amp; mulai eksekusi bertahap:
+                @endif
             </span>
         </div>
         <div class="flex flex-wrap items-center gap-1 font-mono text-[9px]">
@@ -285,7 +298,7 @@
                     class="px-2 py-0.5 border cursor-pointer transition rounded-none {{ $activeExecutionStageKey === $execSt['stage_key'] ? 'bg-zinc-950 text-emerald-400 border-zinc-950 font-black' : 'bg-white hover:bg-zinc-950 text-zinc-950 hover:text-amber-300 dark:bg-zinc-900 dark:text-zinc-100 border-zinc-900 dark:border-amber-500 font-bold' }}"
                     title="{{ $execSt['query'] }}"
                 >
-                    ⚡ Tahap {{ $execSt['stage_number'] }}: {{ $execSt['stage_number'] === 1 ? 'Migrasi ULID' : ($execSt['stage_number'] === 2 ? 'Seeder 12 Sektor' : 'Compiler SYMBOL_MANIFEST') }}
+                    ⚡ {{ $isEnLoc ? 'Stage' : 'Tahap' }} {{ $execSt['stage_number'] }}: {{ $execSt['stage_number'] === 1 ? ($isEnLoc ? 'ULID Migration' : 'Migrasi ULID') : ($execSt['stage_number'] === 2 ? ($isEnLoc ? '12 Sectors Seeder' : 'Seeder 12 Sektor') : ($isEnLoc ? 'SYMBOL_MANIFEST Compiler' : 'Compiler SYMBOL_MANIFEST')) }}
                 </button>
             @endforeach
         </div>
@@ -303,7 +316,7 @@
                 wire:click="$set('centerTab', 'seo_geo_v11')"
                 class="px-2 py-0.5 bg-zinc-950 text-cyan-300 font-black text-[10px] rounded-none cursor-pointer"
             >
-                Aktifkan Modul Enterprise &rarr;
+                {{ $isEnLoc ? 'Activate Enterprise Module' : 'Aktifkan Modul Enterprise' }} &rarr;
             </button>
         </div>
     @endif
@@ -312,8 +325,8 @@
     @if(!empty($doctor['findings']))
         <div class="shrink-0 bg-amber-100 dark:bg-amber-950/90 border-b border-amber-400 dark:border-amber-700 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-950 dark:text-amber-100">
             <div class="font-mono font-bold">
-                {{ $doctor['findings'][0]['title']['id'] ?? 'Peringatan Blueprint Doctor' }} —
-                <span class="font-sans font-normal">{{ $doctor['findings'][0]['message']['id'] ?? '' }}</span>
+                {{ $locVal($doctor['findings'][0]['title'], $isEnLoc ? 'Blueprint Doctor Warning' : 'Peringatan Blueprint Doctor') }} —
+                <span class="font-sans font-normal">{{ $locVal($doctor['findings'][0]['message']) }}</span>
             </div>
             @if(!empty($doctor['one_click_auto_fix']['has_fixes']))
                 <button
@@ -321,7 +334,7 @@
                     wire:click="applyDoctorAutoFix"
                     class="px-2.5 py-0.5 bg-zinc-950 text-white dark:bg-amber-300 dark:text-zinc-950 font-mono text-[10px] font-black uppercase rounded-none cursor-pointer"
                 >
-                    [ + Buat Otomatis &amp; Kunci 100% ]
+                    {{ $isEnLoc ? '[ + Auto-Resolve & Lock 100% ]' : '[ + Buat Otomatis & Kunci 100% ]' }}
                 </button>
             @endif
         </div>
@@ -345,10 +358,10 @@
                 </span>
             </div>
 
-            <!-- 1. Stack Preset Selector -->
+            <!-- 1. Stack Topology Adapter (9) -->
             <div class="space-y-1">
                 <label class="block font-mono text-[10px] font-black uppercase text-zinc-800 dark:text-zinc-300">
-                    &gt; 1. Stack Topology Adapter (9)
+                    &gt; 1. {{ $isEnLoc ? 'Stack Topology Adapter (9)' : 'Stack Topology Adapter (9)' }}
                 </label>
                 <select
                     wire:change="selectStack($event.target.value)"
@@ -356,7 +369,7 @@
                 >
                     @foreach(($catalog['stack_presets'] ?? []) as $sp)
                         <option value="{{ $sp['code'] }}" @selected($stackCode === $sp['code'])>
-                            [{{ $sp['short_code'] }}] {{ $sp['topology'] }} — {{ $sp['name']['id'] ?? $sp['code'] }}
+                            [{{ $sp['short_code'] }}] {{ $sp['topology'] }} — {{ $locVal($sp['name'], $sp['code']) }}
                         </option>
                     @endforeach
                 </select>
@@ -373,7 +386,7 @@
             <!-- 2. Functional Sector Selector -->
             <div class="space-y-1">
                 <label class="block font-mono text-[10px] font-black uppercase text-zinc-800 dark:text-zinc-300">
-                    &gt; 2. Functional Sector (12)
+                    &gt; 2. {{ $isEnLoc ? 'Functional Sector (12)' : 'Sektor Fungsional (12)' }}
                 </label>
                 <select
                     wire:change="selectSector($event.target.value)"
@@ -381,7 +394,7 @@
                 >
                     @foreach(($catalog['sectors'] ?? []) as $sec)
                         <option value="{{ $sec['code'] }}" @selected($sectorCode === $sec['code'])>
-                            {{ sprintf('%02d', $sec['sector_number'] ?? 1) }}. {{ $sec['name']['id'] ?? $sec['code'] }}
+                            {{ sprintf('%02d', $sec['sector_number'] ?? 1) }}. {{ $locVal($sec['name'], $sec['code']) }}
                         </option>
                     @endforeach
                 </select>
@@ -390,7 +403,7 @@
             <!-- 3. Reactive Composable Primitives Checkboxes -->
             <div class="space-y-1.5">
                 <div class="font-mono text-[10px] font-black uppercase text-zinc-800 dark:text-zinc-300">
-                    v 3. Active Composable Primitives
+                    v 3. {{ $isEnLoc ? 'Active Composable Primitives' : 'Primitif Komposabel Aktif' }}
                 </div>
                 <div class="space-y-1">
                     @foreach(($catalog['primitives'] ?? []) as $prim)
@@ -408,7 +421,7 @@
                             />
                             <div class="flex-1 min-w-0">
                                 <div class="font-mono text-[11px] font-bold leading-tight truncate">
-                                    {{ $prim['name']['id'] ?? $pCode }}
+                                    {{ $locVal($prim['name'], $pCode) }}
                                 </div>
                                 <div class="flex items-center gap-1 mt-0.5 font-mono text-[9px]">
                                     <span class="text-zinc-600 dark:text-zinc-400 truncate">{{ str_replace('PRIMITIVE_', '', $pCode) }}</span>
@@ -443,21 +456,24 @@
         <section class="lg:col-span-5 bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:overflow-hidden" @if(($jurisdictionProfile['direction'] ?? 'ltr') === 'rtl') dir="rtl" @endif>
             <!-- Center Tabs -->
             <div class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-2.5 py-2 flex flex-wrap gap-1 font-mono text-[11px]">
-                @foreach([
-                    'proposal_wow' => '0. 🏛️ Proposal Bisnis (WOW View)',
-                    'schema' => '1. Schema & Locks',
-                    'states' => '2. State Machine',
-                    'ui_print' => '3. 36 Visual UI & Print',
-                    'decisions' => '4. Decision Matrix',
-                    'delta_verify' => '5. Delta v1.1 & Verify',
-                    'commercial_mitra' => '6. Kontrak, RAB & BAST',
-                    'menus_glue' => '7. L1–L4 Menu (25) & 5 Glue',
-                    'runtime_sop_v7' => '8. ⚡ 5 Runtime, SOP & 15 Pilar',
-                    'inclusive_security_v8' => '9. 🛡️ CVE, White-Label & IP',
-                    'codesign_room' => '10. 🤝 Co-Design & Sign-Off',
-                    'agentshield_tasks' => '11. 🧱 AgentShield & 5-Sprint',
-                    'seo_geo_v11' => '12. 🌐 SEO/GEO, UU PDP & Sandbox',
-                ] as $tabKey => $tabLabel)
+                @php
+                    $centerTabsList = [
+                        'proposal_wow' => $isEnLoc ? '0. 🏛️ Business Proposal (WOW View)' : '0. 🏛️ Proposal Bisnis (WOW View)',
+                        'schema' => '1. Schema & Locks',
+                        'states' => $isEnLoc ? '2. State Machine' : '2. State Machine',
+                        'ui_print' => $isEnLoc ? '3. 36 Visual UI & Print' : '3. 36 Visual UI & Print',
+                        'decisions' => $isEnLoc ? '4. Decision Matrix' : '4. Decision Matrix',
+                        'delta_verify' => $isEnLoc ? '5. Delta v1.1 & Verify' : '5. Delta v1.1 & Verify',
+                        'commercial_mitra' => $isEnLoc ? '6. Contract, Cost & Handover' : '6. Kontrak, RAB & BAST',
+                        'menus_glue' => $isEnLoc ? '7. L1–L4 Menu (25) & 5 Glue' : '7. L1–L4 Menu (25) & 5 Glue',
+                        'runtime_sop_v7' => $isEnLoc ? '8. ⚡ 5 Runtime, SOP & 15 Pillars' : '8. ⚡ 5 Runtime, SOP & 15 Pilar',
+                        'inclusive_security_v8' => $isEnLoc ? '9. 🛡️ CVE, White-Label & IP' : '9. 🛡️ CVE, White-Label & IP',
+                        'codesign_room' => $isEnLoc ? '10. 🤝 Co-Design & Sign-Off' : '10. 🤝 Co-Design & Sign-Off',
+                        'agentshield_tasks' => $isEnLoc ? '11. 🧱 AgentShield & 5-Sprint' : '11. 🧱 AgentShield & 5-Sprint',
+                        'seo_geo_v11' => $isEnLoc ? '12. 🌐 SEO/GEO, Data Privacy & Sandbox' : '12. 🌐 SEO/GEO, UU PDP & Sandbox',
+                    ];
+                @endphp
+                @foreach($centerTabsList as $tabKey => $tabLabel)
                     <button
                         type="button"
                         wire:click="$set('centerTab', '{{ $tabKey }}')"
@@ -477,10 +493,10 @@
                         <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-800">
                             <div>
                                 <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
-                                    🧭 MODE BISNIS / AWAM (ZERO-JARGON 5-STEP STORYBOARD)
+                                    {{ $isEnLoc ? '🧭 BUSINESS / SIMPLE MODE (ZERO-JARGON 5-STEP STORYBOARD)' : '🧭 MODE BISNIS / AWAM (ZERO-JARGON 5-STEP STORYBOARD)' }}
                                 </span>
                                 <div class="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1">
-                                    {{ $storyboardWizard['headline'] ?? 'Rancang Sistem Bisnis Anda dalam 5 Langkah Bahasa Manusia' }}
+                                    {{ $locVal($storyboardWizard['headline'] ?? null, $isEnLoc ? 'Design Your Business System in 5 Human Steps' : 'Rancang Sistem Bisnis Anda dalam 5 Langkah Bahasa Manusia') }}
                                 </div>
                             </div>
                             <button
@@ -488,7 +504,7 @@
                                 wire:click="switchPersonaMode('ARCHITECT_PRO')"
                                 class="px-2 py-1 bg-zinc-950 text-white dark:bg-zinc-800 dark:text-emerald-300 font-mono text-[10px] font-black rounded-none cursor-pointer"
                             >
-                                Beralih ke Mode Arsitek Teknis &rarr;
+                                {{ $isEnLoc ? 'Switch to Technical Architect Mode' : 'Beralih ke Mode Arsitek Teknis' }} &rarr;
                             </button>
                         </div>
 
@@ -500,7 +516,7 @@
                                     wire:click="$set('storyboardStep', {{ $stepNum }})"
                                     class="p-1.5 border text-left rounded-none cursor-pointer {{ $storyboardStep === $stepNum ? 'bg-zinc-950 text-emerald-400 border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black' : 'bg-zinc-50 text-zinc-800 border-zinc-300 dark:bg-zinc-950 dark:text-zinc-300 dark:border-zinc-800 font-bold' }}"
                                 >
-                                    0{{ $stepNum }}. {{ $sbStep['short_label'] ?? $sbStep['title'] ?? '' }}
+                                    0{{ $stepNum }}. {{ $locVal($sbStep['short_label'] ?? $sbStep['title'] ?? '') }}
                                 </button>
                             @endforeach
                         </div>
@@ -510,14 +526,14 @@
                             $availVariants = $visualUiContract['available_variants'] ?? [];
                         @endphp
                         <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-2">
-                            <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $currentSb['question'] ?? '' }}</div>
-                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300">{{ $currentSb['helper'] ?? '' }}</p>
+                            <div class="text-xs font-black text-zinc-950 dark:text-zinc-100">{{ $locVal($currentSb['question'] ?? '') }}</div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300">{{ $locVal($currentSb['helper'] ?? '') }}</p>
 
                             @if($storyboardStep === 1)
                                 <select wire:change="selectSector($event.target.value)" class="w-full px-2.5 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold font-mono rounded-none">
                                     @foreach(($catalog['sectors'] ?? []) as $secItem)
                                         <option value="{{ $secItem['code'] }}" @selected($sectorCode === $secItem['code'])>
-                                            {{ $secItem['name']['id'] ?? $secItem['code'] }}
+                                            {{ $locVal($secItem['name'], $secItem['code']) }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -530,25 +546,25 @@
                                             class="p-2 text-left border rounded-none cursor-pointer {{ $selectedUiVariant === $vrItem['code'] ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950 dark:text-white dark:border-emerald-400 font-black' : 'bg-white text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 font-bold' }}"
                                         >
                                             <div class="font-mono text-[9px] text-emerald-500">{{ $vrItem['badge'] ?? '' }}</div>
-                                            <div class="text-[11px] mt-0.5 leading-snug">{{ $vrItem['name']['id'] ?? $vrItem['code'] }}</div>
+                                            <div class="text-[11px] mt-0.5 leading-snug">{{ $locVal($vrItem['name'], $vrItem['code']) }}</div>
                                         </button>
                                     @endforeach
                                 </div>
                             @elseif($storyboardStep === 3)
                                 <div class="text-[11px] font-mono text-emerald-900 dark:text-emerald-300 font-bold">
-                                    ✓ {{ count($selectedMenus) }}/25 Menu Operasional L1–L4 &amp; {{ count($selectedPrimitives) }} Modul Anti-Selisih Aktif (Bisa dikustom di Tab 7).
+                                    ✓ {{ count($selectedMenus) }}/25 {{ $isEnLoc ? 'Operational Menus L1–L4 &' : 'Menu Operasional L1–L4 &' }} {{ count($selectedPrimitives) }} {{ $isEnLoc ? 'Active Anti-Discrepancy Modules (Configurable in Tab 7).' : 'Modul Anti-Selisih Aktif (Bisa dikustom di Tab 7).' }}
                                 </div>
                             @elseif($storyboardStep === 4)
                                 <div class="text-[11px] font-mono text-zinc-900 dark:text-zinc-100 font-bold">
-                                    Regulasi Aktif: <strong>{{ $jurisdictionProfile['jurisdiction_code'] ?? 'ID_UU_PDP_PSAK' }}</strong> ({{ implode(' • ', $jurisdictionProfile['accounting_standards'] ?? []) }}) • Arah Layar: <strong>{{ strtoupper($jurisdictionProfile['direction'] ?? 'ltr') }}</strong>
+                                    {{ $isEnLoc ? 'Active Jurisdiction:' : 'Regulasi Aktif:' }} <strong>{{ $jurisdictionProfile['jurisdiction_code'] ?? 'ID_UU_PDP_PSAK' }}</strong> ({{ implode(' • ', $jurisdictionProfile['accounting_standards'] ?? []) }}) &bull; {{ $isEnLoc ? 'Direction:' : 'Arah Layar:' }} <strong>{{ strtoupper($jurisdictionProfile['direction'] ?? 'ltr') }}</strong>
                                 </div>
                             @else
                                 <div class="flex flex-wrap gap-2 font-mono text-[10px]">
                                     <button type="button" wire:click="switchEngagementMode('RETAIL_SELF_DEV')" class="px-2.5 py-1.5 bg-zinc-950 text-white font-black rounded-none cursor-pointer">
-                                        ⚡ Unduh Blueprint Mandiri (Retail)
+                                        ⚡ {{ $isEnLoc ? 'Download Blueprint (Retail)' : 'Unduh Blueprint Mandiri (Retail)' }}
                                     </button>
                                     <button type="button" wire:click="switchEngagementMode('MITRA_TURNKEY_PROJECT')" class="px-2.5 py-1.5 bg-emerald-600 text-white font-black rounded-none cursor-pointer">
-                                        🤝 Terima Beres Dikodingkan Tim ({{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }})
+                                        🤝 {{ $isEnLoc ? 'Fully Coded by Team' : 'Terima Beres Dikodingkan Tim' }} ({{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }})
                                     </button>
                                 </div>
                             @endif
@@ -563,17 +579,17 @@
                         <div class="p-3 bg-white dark:bg-zinc-900 border-2 border-emerald-600 dark:border-emerald-500 rounded-none space-y-2">
                             <div class="flex flex-wrap items-center justify-between gap-2">
                                 <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black uppercase text-[10px]">
-                                    TAHAP A // SMART IDEA INTAKE &amp; AUTO-MAPPING
+                                    {{ $isEnLoc ? 'STAGE A // SMART IDEA INTAKE & AUTO-MAPPING' : 'TAHAP A // SMART IDEA INTAKE & AUTO-MAPPING' }}
                                 </span>
                                 <span class="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
-                                    Sektor Terdeteksi: <strong class="text-emerald-900 dark:text-emerald-300">{{ $sectorCode }}</strong>
+                                    {{ $isEnLoc ? 'Detected Sector:' : 'Sektor Terdeteksi:' }} <strong class="text-emerald-900 dark:text-emerald-300">{{ $sectorCode }}</strong>
                                 </span>
                             </div>
                             <div class="flex flex-col sm:flex-row gap-2">
                                 <input
                                     type="text"
                                     wire:model="ideaDetectionInput"
-                                    placeholder="Ketik ide aplikasi bebas (misal: aplikasi klinik gigi & rekam medis dengan booking dokter)..."
+                                    placeholder="{{ $isEnLoc ? 'Type your app idea (e.g. dental clinic & electronic health records with appointment booking)...' : 'Ketik ide aplikasi bebas (misal: aplikasi klinik gigi & rekam medis dengan booking dokter)...' }}"
                                     class="flex-1 px-2.5 py-1.5 bg-zinc-50 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 text-xs font-sans rounded-none"
                                 />
                                 <button
@@ -581,12 +597,12 @@
                                     wire:click="runIdeaAutoDetection"
                                     class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase rounded-none cursor-pointer shrink-0"
                                 >
-                                    ✨ Deteksi Sektor &amp; Modul Otomatis dari Ide Saya
+                                    {{ $isEnLoc ? '✨ Auto-Detect Sector & Modules from My Idea' : '✨ Deteksi Sektor & Modul Otomatis dari Ide Saya' }}
                                 </button>
                             </div>
                             @if(!empty($ideaDetectionResult))
                                 <div class="p-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-[10px] text-zinc-900 dark:text-zinc-100 font-bold">
-                                    ✓ {{ $ideaDetectionResult['summary']['id'] ?? '' }} • Confidence: <strong>{{ $ideaDetectionResult['confidence_score'] ?? 95 }}%</strong> • Primitives: <strong>{{ implode(', ', $ideaDetectionResult['detected_primitives'] ?? []) }}</strong>
+                                    ✓ {{ $locVal($ideaDetectionResult['summary']) }} • Confidence: <strong>{{ $ideaDetectionResult['confidence_score'] ?? 95 }}%</strong> • Primitives: <strong>{{ implode(', ', $ideaDetectionResult['detected_primitives'] ?? []) }}</strong>
                                 </div>
                             @endif
                         </div>
@@ -596,19 +612,19 @@
                             <div class="flex flex-wrap items-start justify-between gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-800">
                                 <div>
                                     <span class="px-2 py-0.5 bg-zinc-950 text-emerald-400 font-black uppercase text-[10px]">
-                                        TAHAP B // LAYAR 1 — WEBSITE ARCHITECTURE PROPOSAL (RUANG KAGUM / WOW VIEW)
+                                        {{ $isEnLoc ? 'STAGE B // SCREEN 1 — WEBSITE ARCHITECTURE PROPOSAL (WOW VIEW)' : 'TAHAP B // LAYAR 1 — WEBSITE ARCHITECTURE PROPOSAL (RUANG KAGUM / WOW VIEW)' }}
                                     </span>
                                     <h3 class="text-sm font-black font-sans text-zinc-950 dark:text-zinc-100 mt-1">
-                                        {{ $websiteArchitectureProposal['executive_headline']['id'] ?? 'Proposal Arsitektur Bisnis Terpadu' }}
+                                        {{ $locVal($websiteArchitectureProposal['executive_headline'], 'Proposal Arsitektur Bisnis Terpadu') }}
                                     </h3>
                                     <p class="text-[11px] font-sans text-zinc-700 dark:text-zinc-300 mt-0.5">
-                                        {{ $websiteArchitectureProposal['executive_subheadline']['id'] ?? '' }}
+                                        {{ $locVal($websiteArchitectureProposal['executive_subheadline']) }}
                                     </p>
                                 </div>
                                 <div class="text-right shrink-0 p-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-700">
-                                    <div class="text-[9px] font-black uppercase text-emerald-950 dark:text-emerald-300">Efisiensi Waktu &amp; Biaya Rekayasa</div>
+                                    <div class="text-[9px] font-black uppercase text-emerald-950 dark:text-emerald-300">{{ $isEnLoc ? 'Engineering Time & Cost Savings' : 'Efisiensi Waktu & Biaya Rekayasa' }}</div>
                                     <div class="text-xs font-black text-zinc-950 dark:text-white tabular-nums">
-                                        Hemat {{ number_format((int) ($websiteArchitectureProposal['engineering_hours_saved'] ?? 320), 0, ',', '.') }} Jam (~Rp {{ number_format((int) ($websiteArchitectureProposal['engineering_value_saved_idr'] ?? 48000000), 0, ',', '.') }})
+                                        {{ $isEnLoc ? 'Saves ' . number_format((int) ($websiteArchitectureProposal['engineering_hours_saved'] ?? 320), 0) . ' Hours (~$' . number_format(((int) ($websiteArchitectureProposal['engineering_value_saved_idr'] ?? 48000000)) / 16000, 0) . ')' : 'Hemat ' . number_format((int) ($websiteArchitectureProposal['engineering_hours_saved'] ?? 320), 0, ',', '.') . ' Jam (~Rp ' . number_format((int) ($websiteArchitectureProposal['engineering_value_saved_idr'] ?? 48000000), 0, ',', '.') . ')' }}
                                     </div>
                                 </div>
                             </div>
@@ -616,16 +632,16 @@
                             <!-- Peta 5 Divisi Operasional Otomatis (25 Menu L1–L4) -->
                             <div class="space-y-1.5">
                                 <div class="text-[10px] font-black uppercase text-zinc-900 dark:text-zinc-100">
-                                    🏛️ Peta Lengkap 5 Divisi Operasional Perusahaan (Auto-Expand {{ $websiteArchitectureProposal['total_menus'] ?? 25 }} Menu L1–L4)
+                                    {{ $isEnLoc ? '🏛️ Full Map of 5 Company Operational Divisions (Auto-Expand ' . ($websiteArchitectureProposal['total_menus'] ?? 25) . ' L1–L4 Menus)' : '🏛️ Peta Lengkap 5 Divisi Operasional Perusahaan (Auto-Expand ' . ($websiteArchitectureProposal['total_menus'] ?? 25) . ' Menu L1–L4)' }}
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     @foreach(($websiteArchitectureProposal['divisions'] ?? []) as $divCard)
                                         <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
                                             <div class="flex items-center justify-between">
-                                                <span class="font-black text-emerald-900 dark:text-emerald-300 text-[10px]">{{ $divCard['code'] }} • {{ $divCard['label']['id'] ?? '' }}</span>
-                                                <span class="px-1.5 py-0.5 bg-zinc-900 text-white text-[9px] font-black">{{ $divCard['menu_count'] ?? 5 }} Menu</span>
+                                                <span class="font-black text-emerald-900 dark:text-emerald-300 text-[10px]">{{ $divCard['code'] }} • {{ $locVal($divCard['label']) }}</span>
+                                                <span class="px-1.5 py-0.5 bg-zinc-900 text-white text-[9px] font-black">{{ $divCard['menu_count'] ?? 5 }} {{ $isEnLoc ? 'Menus' : 'Menu' }}</span>
                                             </div>
-                                            <p class="text-[10px] font-sans text-zinc-700 dark:text-zinc-300">{{ $divCard['benefit']['id'] ?? '' }}</p>
+                                            <p class="text-[10px] font-sans text-zinc-700 dark:text-zinc-300">{{ $locVal($divCard['benefit']) }}</p>
                                         </div>
                                     @endforeach
                                 </div>
@@ -634,12 +650,12 @@
                             <!-- Zone A + Zone B Dual-Zone UI Preview -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800">
-                                    <div class="text-[9px] font-black uppercase text-emerald-900 dark:text-emerald-300">ZONA A — PUBLIC MARKETING &amp; PORTAL KLIEN</div>
-                                    <div class="text-[11px] font-bold text-zinc-950 dark:text-zinc-100 mt-0.5">{{ $websiteArchitectureProposal['zone_a_public']['id'] ?? '' }}</div>
+                                    <div class="text-[9px] font-black uppercase text-emerald-900 dark:text-emerald-300">{{ $isEnLoc ? 'ZONE A — PUBLIC MARKETING & CLIENT PORTAL' : 'ZONA A — PUBLIC MARKETING & PORTAL KLIEN' }}</div>
+                                    <div class="text-[11px] font-bold text-zinc-950 dark:text-zinc-100 mt-0.5">{{ $locVal($websiteArchitectureProposal['zone_a_public']) }}</div>
                                 </div>
                                 <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800">
-                                    <div class="text-[9px] font-black uppercase text-amber-900 dark:text-amber-300">ZONA B — INTERNAL OPERATIONAL WORKSPACE</div>
-                                    <div class="text-[11px] font-bold text-zinc-950 dark:text-zinc-100 mt-0.5">{{ $websiteArchitectureProposal['zone_b_workspace']['id'] ?? '' }}</div>
+                                    <div class="text-[9px] font-black uppercase text-amber-900 dark:text-amber-300">{{ $isEnLoc ? 'ZONE B — INTERNAL OPERATIONAL WORKSPACE' : 'ZONA B — INTERNAL OPERATIONAL WORKSPACE' }}</div>
+                                    <div class="text-[11px] font-bold text-zinc-950 dark:text-zinc-100 mt-0.5">{{ $locVal($websiteArchitectureProposal['zone_b_workspace']) }}</div>
                                 </div>
                             </div>
 
@@ -650,14 +666,14 @@
                                     wire:click="$set('centerTab', 'schema')"
                                     class="px-3 py-2 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black text-[10px] uppercase rounded-none cursor-pointer"
                                 >
-                                    {{ $websiteArchitectureProposal['cta_self_dev']['label']['id'] ?? '💻 Saya Ingin Koding Sendiri dengan AI (Buka 3-Pane Studio) →' }}
+                                    {{ $locVal($websiteArchitectureProposal['cta_self_dev']['label'], $isEnLoc ? '💻 I Want to Code Myself with AI (Open 3-Pane Studio) →' : '💻 Saya Ingin Koding Sendiri dengan AI (Buka 3-Pane Studio) →') }}
                                 </button>
                                 <button
                                     type="button"
                                     wire:click="convertRetailToMitraRescue"
                                     class="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-[10px] uppercase rounded-none cursor-pointer"
                                 >
-                                    {{ $websiteArchitectureProposal['cta_mitra_turnkey']['label']['id'] ?? '🤝 Terima Beres Dikodingkan Tim NeriahPro (Lihat RAB & Kontrak SPK) →' }}
+                                    {{ $locVal($websiteArchitectureProposal['cta_mitra_turnkey']['label'], $isEnLoc ? '🤝 Fully Coded by NeriahPro Team (View Cost & Contract) →' : '🤝 Terima Beres Dikodingkan Tim NeriahPro (Lihat RAB & Kontrak SPK) →') }}
                                 </button>
                             </div>
                         </div>
@@ -665,18 +681,18 @@
                         <!-- Tahap C: Vibe Coder Guided View (Step-by-Step Coach) -->
                         <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
                             <div class="text-[10px] font-black uppercase text-zinc-950 dark:text-zinc-100">
-                                🧭 TAHAP C // PANDUAN EKSEKUSI VIBE CODER PEMULA (3 LANGKAH PASTI JADI)
+                                {{ $isEnLoc ? '🧭 STAGE C // BEGINNER VIBE CODER EXECUTION GUIDE (3 SUREFIRE STEPS)' : '🧭 TAHAP C // PANDUAN EKSEKUSI VIBE CODER PEMULA (3 LANGKAH PASTI JADI)' }}
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 @foreach(($vibeCoderGuidedSteps ?? []) as $vcStep)
                                     <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border {{ ($vcStep['is_locked'] ?? false) ? 'border-amber-400 dark:border-amber-700' : 'border-emerald-400 dark:border-emerald-700' }} space-y-1">
                                         <div class="flex items-center justify-between">
-                                            <span class="font-black text-[10px] text-zinc-950 dark:text-zinc-100">{{ $vcStep['title']['id'] ?? '' }}</span>
+                                            <span class="font-black text-[10px] text-zinc-950 dark:text-zinc-100">{{ $locVal($vcStep['friendly_title'] ?? $vcStep['title']) }}</span>
                                             <span class="px-1.5 py-0.5 text-[9px] font-black {{ ($vcStep['is_locked'] ?? false) ? 'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-200' : 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-200' }}">
-                                                {{ ($vcStep['is_locked'] ?? false) ? '🔒 TERKUNCI' : '✅ SIAP SALIN' }}
+                                                {{ ($vcStep['is_locked'] ?? false) ? ($isEnLoc ? '🔒 LOCKED' : '🔒 TERKUNCI') : ($isEnLoc ? '✅ READY TO COPY' : '✅ SIAP SALIN') }}
                                             </span>
                                         </div>
-                                        <p class="text-[10px] font-sans text-zinc-700 dark:text-zinc-300">{{ $vcStep['instruction']['id'] ?? '' }}</p>
+                                        <p class="text-[10px] font-sans text-zinc-700 dark:text-zinc-300">{{ $locVal($vcStep['ide_instruction'] ?? $vcStep['instruction']) }}</p>
                                     </div>
                                 @endforeach
                             </div>
@@ -686,31 +702,31 @@
                         <div class="p-3.5 bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-500 dark:border-amber-600 rounded-none space-y-2.5">
                             <div class="flex flex-wrap items-center justify-between gap-2">
                                 <span class="px-2 py-0.5 bg-amber-200 text-amber-950 border border-amber-500 dark:bg-amber-900 dark:text-amber-100 font-black uppercase text-[10px]">
-                                    🛑 {{ $scopeParalysisGuard['warning_title']['id'] ?? 'Peringatan Penting: Bahaya Over-Planning (Scope Paralysis)' }}
+                                    🛑 {{ $locVal($scopeParalysisGuard['warning_title'], $isEnLoc ? 'Critical Warning: Danger of Over-Planning (Scope Paralysis)' : 'Peringatan Penting: Bahaya Over-Planning (Scope Paralysis)') }}
                                 </span>
                                 <span class="font-black text-[10px] text-amber-950 dark:text-amber-200">
-                                    STATUS: {{ ($scopeParalysisGuard['scope_freeze_active'] ?? true) ? 'SCOPE FREEZE 100% AKTIF' : 'SIAP KUNCI SCOPE' }}
+                                    STATUS: {{ ($scopeParalysisGuard['scope_freeze_active'] ?? true) ? ($isEnLoc ? 'SCOPE FREEZE 100% ACTIVE' : 'SCOPE FREEZE 100% AKTIF') : ($isEnLoc ? 'READY TO LOCK SCOPE' : 'SIAP KUNCI SCOPE') }}
                                 </span>
                             </div>
                             <p class="text-[11px] font-sans text-zinc-900 dark:text-zinc-100 font-bold leading-relaxed">
-                                {{ $scopeParalysisGuard['warning_body']['id'] ?? '' }}
+                                {{ $locVal($scopeParalysisGuard['warning_body']) }}
                             </p>
                             <div class="text-[11px] font-black text-amber-950 dark:text-amber-200">
-                                {{ $scopeParalysisGuard['action_prompt']['id'] ?? 'Dari mana Anda ingin kita mulai mengeksekusi kodenya hari ini?' }}
+                                {{ $locVal($scopeParalysisGuard['action_prompt'], $isEnLoc ? 'Where would you like us to start executing the code today?' : 'Dari mana Anda ingin kita mulai mengeksekusi kodenya hari ini?') }}
                             </div>
                             <div class="grid grid-cols-1 gap-2">
                                 @foreach(($scopeParalysisGuard['execution_stages'] ?? []) as $exStg)
                                     <div class="p-2.5 bg-white dark:bg-zinc-950 border border-amber-400 dark:border-amber-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                         <div class="space-y-0.5">
-                                            <div class="font-black text-zinc-950 dark:text-zinc-100 text-[11px]">{{ $exStg['label'] }}</div>
-                                            <div class="text-[10px] font-sans text-zinc-700 dark:text-zinc-300">{{ $exStg['query'] }}</div>
+                                            <div class="font-black text-zinc-950 dark:text-zinc-100 text-[11px]">{{ $locVal($exStg['label'] ?? null, $exStg['label'] ?? '') }}</div>
+                                            <div class="text-[10px] font-sans text-zinc-700 dark:text-zinc-300">{{ $locVal($exStg['query'] ?? null, $exStg['query'] ?? '') }}</div>
                                         </div>
                                         <button
                                             type="button"
                                             wire:click="activateScopeFreezeAndExecuteStage('{{ $exStg['stage_code'] }}')"
                                             class="px-3 py-1.5 bg-zinc-950 hover:bg-zinc-800 text-amber-300 border border-amber-500 font-black text-[10px] uppercase rounded-none cursor-pointer shrink-0"
                                         >
-                                            🚀 Eksekusi Tahap {{ $exStg['stage_number'] }} &rarr;
+                                            🚀 {{ $isEnLoc ? 'Execute Stage' : 'Eksekusi Tahap' }} {{ $exStg['stage_number'] }} &rarr;
                                         </button>
                                     </div>
                                 @endforeach
@@ -854,7 +870,7 @@
                                     class="p-2.5 text-left border rounded-none cursor-pointer transition {{ $isVarSelected ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950 dark:text-white dark:border-emerald-400 font-black' : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:text-zinc-200 dark:border-zinc-800 font-bold' }}"
                                 >
                                     <div class="font-mono text-[9px] uppercase {{ $isVarSelected ? 'text-emerald-400' : 'text-emerald-900 dark:text-emerald-300' }}">{{ $vOpt['badge'] ?? '' }}</div>
-                                    <div class="text-[11px] leading-snug mt-0.5">{{ $vOpt['name']['id'] ?? $vOpt['code'] }}</div>
+                                    <div class="text-[11px] leading-snug mt-0.5">{{ $locVal($vOpt['name'], $vOpt['code']) }}</div>
                                 </button>
                             @endforeach
                         </div>
@@ -901,7 +917,7 @@
                                         class="p-2 text-left border rounded-none cursor-pointer transition {{ $isPubPicked ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950 dark:text-white dark:border-emerald-400 font-black' : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:text-zinc-200 dark:border-zinc-800 font-bold' }}"
                                     >
                                         <div class="font-mono text-[9px] uppercase {{ $isPubPicked ? 'text-emerald-400' : 'text-emerald-900 dark:text-emerald-300' }}">{{ $uxCode }} (+{{ $uxItem['extra_man_hours'] ?? $uxItem['complexity_hours'] ?? 12 }}h)</div>
-                                        <div class="text-[11px] leading-snug mt-0.5">{{ $uxItem['localized_name'] ?? $uxCode }}</div>
+                                        <div class="text-[11px] leading-snug mt-0.5">{{ $locVal($uxItem['localized_name'] ?? $uxItem['name'] ?? null, $uxCode) }}</div>
                                     </button>
                                 @endforeach
                             </div>
@@ -918,7 +934,7 @@
                                 {{ $secUi['secondary_archetype'] ?? 'LEDGER_VIEW' }}
                             </span>
                         </div>
-                        <p class="text-xs text-zinc-800 dark:text-zinc-300">{{ $secUi['headline']['id'] ?? '' }}</p>
+                        <p class="text-xs text-zinc-800 dark:text-zinc-300">{{ $locVal($secUi['headline']) }}</p>
 
                         <!-- 12-Col Wireframe Preview -->
                         @if(!empty($secUi['wireframe_blueprint']['panes']))
@@ -1307,7 +1323,7 @@
                                     JAMINAN 1: L1–L4 ENTERPRISE MENU &amp; CAPABILITY MATRIX (ANTI-SHALLOW APP)
                                 </div>
                                 <div class="text-xs font-bold text-zinc-950 dark:text-zinc-100 tabular-nums">
-                                    {{ $enterpriseMenuMatrix['included_v1_count'] ?? 25 }}/{{ $enterpriseMenuMatrix['total_menus'] ?? 25 }} Sub-Menu Operasional Aktif di v1.0 (5 Divisi Standar Korporat)
+                                    {{ $enterpriseMenuMatrix['included_v1_count'] ?? 25 }}/{{ $enterpriseMenuMatrix['total_menus'] ?? 25 }} {{ $isEnLoc ? 'Operational Sub-Menus Active in v1.0 (5 Corporate Divisions)' : 'Sub-Menu Operasional Aktif di v1.0 (5 Divisi Standar Korporat)' }}
                                 </div>
                             </div>
                             <button
@@ -1315,7 +1331,7 @@
                                 wire:click="selectAllEnterpriseMenus"
                                 class="px-2 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[10px] font-black rounded-none cursor-pointer"
                             >
-                                Aktifkan Semua 25 Menu
+                                {{ $isEnLoc ? 'Activate All 25 Menus' : 'Aktifkan Semua 25 Menu' }}
                             </button>
                         </div>
 
@@ -1324,7 +1340,7 @@
                                 <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-1.5">
                                     <div class="flex items-center justify-between gap-2 font-mono text-[11px]">
                                         <span class="font-black text-zinc-950 dark:text-zinc-100">
-                                            Divisi {{ $div['division_number'] }}: {{ $div['division_name']['id'] ?? '' }}
+                                            {{ $isEnLoc ? 'Division' : 'Divisi' }} {{ $div['division_number'] }}: {{ $locVal($div['division_name']) }}
                                         </span>
                                         <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 text-[9px] font-black rounded-none tabular-nums">
                                             Part 5.{{ $div['division_number'] }}
@@ -1369,7 +1385,7 @@
                             @foreach($enterpriseGlueList as $gp)
                                 <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none font-mono text-[10px] space-y-0.5">
                                     <div class="flex items-center justify-between gap-2">
-                                        <span class="font-black text-zinc-950 dark:text-zinc-100">{{ $gp['name']['id'] ?? $gp['code'] }}</span>
+                                        <span class="font-black text-zinc-950 dark:text-zinc-100">{{ $locVal($gp['name'], $gp['code']) }}</span>
                                         <code class="px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black">{{ $gp['table'] }}</code>
                                     </div>
                                     <div class="text-zinc-700 dark:text-zinc-300">{{ $gp['invariant'] }}</div>
@@ -1451,10 +1467,10 @@
                                 @foreach($fifteenPillars as $fp)
                                     <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
                                         <div class="flex items-center justify-between font-mono text-[9px]">
-                                            <span class="font-black text-emerald-900 dark:text-emerald-300">PILAR {{ sprintf('%02d', $fp['pillar_number'] ?? 0) }}</span>
+                                            <span class="font-black text-emerald-900 dark:text-emerald-300">{{ $isEnLoc ? 'PILLAR' : 'PILAR' }} {{ sprintf('%02d', $fp['pillar_number'] ?? 0) }}</span>
                                             <span class="font-black text-zinc-950 dark:text-zinc-100">{{ $fp['maturity_percent'] ?? 100 }}%</span>
                                         </div>
-                                        <div class="text-[11px] font-black text-zinc-950 dark:text-zinc-100 mt-0.5 leading-snug">{{ $fp['name']['id'] ?? $fp['code'] }}</div>
+                                        <div class="text-[11px] font-black text-zinc-950 dark:text-zinc-100 mt-0.5 leading-snug">{{ $locVal($fp['name'], $fp['code']) }}</div>
                                         <div class="font-mono text-[9px] text-zinc-600 dark:text-zinc-400 truncate mt-0.5">{{ $fp['artifact_contract'] ?? '' }}</div>
                                     </div>
                                 @endforeach
@@ -1482,15 +1498,15 @@
                                         <span class="font-black text-rose-900 dark:text-rose-300">{{ $cve['cve_id'] ?? '' }} • {{ $cve['severity'] ?? 'HIGH' }}</span>
                                         <button
                                             type="button"
-                                            x-on:click="navigator.clipboard.writeText($el.nextElementSibling.innerText); window.showToast({ type: &apos;success&apos;, title: &apos;AUTO-PATCH PROMPT COPIED&apos;, message: &apos;Tempel prompt patch keamanan ini langsung ke AI IDE Anda.&apos; })"
+                                            x-on:click="navigator.clipboard.writeText($el.nextElementSibling.innerText); window.showToast({ type: 'success', title: 'AUTO-PATCH PROMPT COPIED', message: 'Tempel prompt patch keamanan ini langsung ke AI IDE Anda.' })"
                                             class="px-2 py-0.5 bg-zinc-950 text-emerald-400 font-black rounded-none cursor-pointer"
                                         >
-                                            📋 Salin Prompt Auto-Patch 1-Klik
+                                            📋 {{ $isEnLoc ? 'Copy 1-Click Auto-Patch Prompt' : 'Salin Prompt Auto-Patch 1-Klik' }}
                                         </button>
                                         <pre class="hidden">{{ $cve['one_click_autopatch_prompt'] ?? '' }}</pre>
                                     </div>
-                                    <div class="font-bold text-zinc-950 dark:text-zinc-100 font-sans text-xs">{{ $cve['title']['id'] ?? ($cve['cve_id'] ?? '') }}</div>
-                                    <div class="text-zinc-700 dark:text-zinc-300 font-sans text-[11px]">{{ $cve['remediation_summary']['id'] ?? '' }}</div>
+                                    <div class="font-bold text-zinc-950 dark:text-zinc-100 font-sans text-xs">{{ $locVal($cve['title'], $cve['cve_id'] ?? '') }}</div>
+                                    <div class="text-zinc-700 dark:text-zinc-300 font-sans text-[11px]">{{ $locVal($cve['remediation_summary']) }}</div>
                                 </div>
                             @endforeach
                         </div>
@@ -1583,8 +1599,8 @@
                                             <span>{{ $mp['code'] ?? '' }}</span>
                                             <span>Rp {{ number_format((int) ($mp['price_idr'] ?? 0), 0, ',', '.') }}</span>
                                         </div>
-                                        <div class="font-bold text-zinc-950 dark:text-zinc-100 font-sans text-xs mt-0.5">{{ $mp['name']['id'] ?? '' }}</div>
-                                        <div class="text-zinc-600 dark:text-zinc-400 mt-0.5">Oleh {{ $mp['author'] ?? 'Verified Partner' }} &bull; Bagi Hasil {{ $mp['revenue_split'] ?? '70:30' }}</div>
+                                        <div class="font-bold text-zinc-950 dark:text-zinc-100 font-sans text-xs mt-0.5">{{ $locVal($mp['name']) }}</div>
+                                        <div class="text-zinc-600 dark:text-zinc-400 mt-0.5">{{ $isEnLoc ? 'By' : 'Oleh' }} {{ $mp['author'] ?? 'Verified Partner' }} &bull; {{ $isEnLoc ? 'Revenue Share' : 'Bagi Hasil' }} {{ $mp['revenue_split'] ?? '70:30' }}</div>
                                     </div>
                                 @endforeach
                             </div>
@@ -2165,7 +2181,7 @@
                             wire:click="togglePhaseVerified({{ $activePhase }})"
                             class="px-2 py-1 border font-mono text-[10px] font-black rounded-xs cursor-pointer {{ $currVerified ? 'bg-emerald-100 text-emerald-950 border-emerald-500 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-600' : 'bg-white text-zinc-800 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700' }}"
                         >
-                            {{ $currVerified ? 'Verified ✅' : 'Tandai Selesai' }}
+                            {{ $currVerified ? 'Verified ✅' : ($isEnLoc ? 'Mark Complete' : 'Tandai Selesai') }}
                         </button>
                     @endif
                     <button
@@ -2182,14 +2198,14 @@
             @if($showRescueMitraModal && !empty($rescueMitraCredit))
                 <div class="shrink-0 p-2.5 bg-amber-50 dark:bg-amber-950/60 border-b border-amber-400 dark:border-amber-700 font-mono text-[10px] space-y-1">
                     <div class="flex items-center justify-between">
-                        <span class="font-black text-amber-950 dark:text-amber-200">🛟 KONVERSI RETAIL &rarr; MITRA PROYEK (POTONG DP 100%)</span>
+                        <span class="font-black text-amber-950 dark:text-amber-200">🛟 {{ $isEnLoc ? 'RETAIL CONVERSION → MITRA PROJECT (100% DP CREDITED)' : 'KONVERSI RETAIL → MITRA PROYEK (POTONG DP 100%)' }}</span>
                         <button type="button" wire:click="$set('showRescueMitraModal', false)" class="px-1.5 py-0.5 bg-zinc-900 text-white font-black text-[9px] cursor-pointer">✕</button>
                     </div>
                     <div class="text-zinc-900 dark:text-zinc-100 font-bold">
-                        {{ $rescueMitraCredit['guarantee_statement']['id'] ?? '' }}
+                        {{ $locVal($rescueMitraCredit['guarantee_statement']) }}
                     </div>
                     <div class="text-emerald-900 dark:text-emerald-300 font-black tabular-nums">
-                        DP Awal 30%: Rp {{ number_format((int) ($rescueMitraCredit['original_dp_30_idr'] ?? 0), 0, ',', '.') }} &bull; Potongan Retail: -Rp {{ number_format((int) ($rescueMitraCredit['credited_retail_fee_idr'] ?? 0), 0, ',', '.') }} &bull; Sisa DP Bersih: Rp {{ number_format((int) ($rescueMitraCredit['net_dp_payable_idr'] ?? 0), 0, ',', '.') }}
+                        {{ $isEnLoc ? 'Initial DP 30%:' : 'DP Awal 30%:' }} Rp {{ number_format((int) ($rescueMitraCredit['original_dp_30_idr'] ?? 0), 0, ',', '.') }} &bull; {{ $isEnLoc ? 'Retail Credit:' : 'Potongan Retail:' }} -Rp {{ number_format((int) ($rescueMitraCredit['credited_retail_fee_idr'] ?? 0), 0, ',', '.') }} &bull; {{ $isEnLoc ? 'Net DP Payable:' : 'Sisa DP Bersih:' }} Rp {{ number_format((int) ($rescueMitraCredit['net_dp_payable_idr'] ?? 0), 0, ',', '.') }}
                     </div>
                 </div>
             @endif
@@ -2199,18 +2215,18 @@
                 <div class="shrink-0 p-3 bg-amber-50 dark:bg-amber-950/50 border-b-2 border-amber-500 dark:border-amber-600 font-mono text-[10px] space-y-2">
                     <div class="flex items-center justify-between gap-2">
                         <span class="px-1.5 py-0.5 bg-amber-200 text-amber-950 border border-amber-500 dark:bg-amber-900 dark:text-amber-100 font-black uppercase text-[9px]">
-                            🔒 ZERO-LEAK SERVER GATE // FASE {{ $activePhase }} TERKUNCI
+                            🔒 {{ $isEnLoc ? 'ZERO-LEAK SERVER GATE // PHASE ' . $activePhase . ' LOCKED' : 'ZERO-LEAK SERVER GATE // FASE ' . $activePhase . ' TERKUNCI' }}
                         </span>
                         <span class="text-[9px] font-black text-red-900 dark:text-red-300">0% DOM LEAK</span>
                     </div>
                     <div class="text-xs font-black text-zinc-950 dark:text-zinc-100 font-sans">
-                        {{ $upAdv['headline']['id'] ?? 'Fase ini memerlukan Lisensi Penuh' }}
+                        {{ $locVal($upAdv['headline'], $isEnLoc ? 'This phase requires a Full License' : 'Fase ini memerlukan Lisensi Penuh') }}
                     </div>
                     <div class="p-2 bg-red-50 dark:bg-red-950/60 border border-red-300 dark:border-red-800 text-red-950 dark:text-red-200 font-sans text-[10px] font-bold">
-                        {{ $upAdv['risk_if_skipped']['id'] ?? '' }}
+                        {{ $locVal($upAdv['risk_if_skipped']) }}
                     </div>
                     <div class="text-emerald-950 dark:text-emerald-200 font-sans text-[10px] font-bold">
-                        {{ $upAdv['value_proposition']['id'] ?? '' }}
+                        {{ $locVal($upAdv['value_proposition']) }}
                     </div>
                     <div class="flex flex-wrap gap-1.5 pt-1">
                         <button
@@ -2218,14 +2234,14 @@
                             wire:click="switchEntitlementTier('SINGLE_APP_PASS')"
                             class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded-none cursor-pointer"
                         >
-                            💳 {{ $upAdv['cta_retail']['label']['id'] ?? 'Buka Kunci Semua 7 Fase (Rp 299.000 Single-App Pass)' }}
+                            💳 {{ $locVal($upAdv['cta_retail']['label'] ?? null, $isEnLoc ? 'Unlock All 7 Phases (Single-App Pass)' : 'Buka Kunci Semua 7 Fase (Rp 299.000 Single-App Pass)') }}
                         </button>
                         <button
                             type="button"
                             wire:click="convertRetailToMitraRescue"
                             class="px-2.5 py-1.5 bg-zinc-950 hover:bg-zinc-800 text-amber-300 border border-amber-500 font-black text-[9px] uppercase rounded-none cursor-pointer"
                         >
-                            🛟 {{ $upAdv['cta_mitra']['label']['id'] ?? 'Terima Beres Dikodingkan Tim (Mitra DP 30%)' }}
+                            🛟 {{ $locVal($upAdv['cta_mitra']['label'] ?? null, $isEnLoc ? 'Fully Coded by Team (Mitra DP 30%)' : 'Terima Beres Dikodingkan Tim (Mitra DP 30%)') }}
                         </button>
                     </div>
                 </div>
@@ -2276,7 +2292,7 @@
 
                 <div class="p-4 overflow-y-auto studio-scroll space-y-4">
                     <div class="flex gap-2 font-mono text-xs">
-                        @foreach([1 => '1. Pilih Sektor Bisnis (12)', 2 => '2. Pilih Stack & Sizing (9)', 3 => '3. Anti-Slop Shield & Kunci'] as $stNum => $stLabel)
+                        @foreach([1 => ($isEnLoc ? '1. Select Business Sector (12)' : '1. Pilih Sektor Bisnis (12)'), 2 => ($isEnLoc ? '2. Select Stack & Sizing (9)' : '2. Pilih Stack & Sizing (9)'), 3 => ($isEnLoc ? '3. Anti-Slop Shield & Lock' : '3. Anti-Slop Shield & Kunci')] as $stNum => $stLabel)
                             <button
                                 type="button"
                                 wire:click="$set('wizardStep', {{ $stNum }})"
@@ -2300,14 +2316,14 @@
                                             SECTOR {{ sprintf('%02d', $sec['sector_number'] ?? 1) }}
                                         </div>
                                         <div class="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-0.5">
-                                            {{ $sec['name']['id'] ?? $sec['code'] }}
+                                            {{ $locVal($sec['name'], $sec['code']) }}
                                         </div>
                                     </button>
                                 @endforeach
                             </div>
                             <div class="lg:col-span-5 p-3.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-xs space-y-2.5">
                                 <div class="font-mono text-[10px] font-black uppercase text-emerald-900 dark:text-emerald-300">LIVE SECTOR PREVIEW</div>
-                                <div class="text-sm font-black text-zinc-950 dark:text-zinc-100">{{ $activeSectorObj['name']['id'] ?? $sectorCode }}</div>
+                                <div class="text-sm font-black text-zinc-950 dark:text-zinc-100">{{ $locVal($activeSectorObj['name'], $sectorCode) }}</div>
                                 <div class="text-xs font-mono text-zinc-800 dark:text-zinc-200">
                                     UI Layout: <strong>{{ $activeSectorObj['ui_ux_archetypes']['primary_archetype'] ?? '' }}</strong>
                                 </div>
@@ -2315,7 +2331,7 @@
                                     Auto-Active Primitives: {{ implode(', ', $activeSectorObj['mandatory_primitives'] ?? []) }}
                                 </div>
                                 <div class="text-[11px] font-mono text-amber-950 dark:text-amber-300">
-                                    Regulasi &amp; Pajak: {{ implode(', ', $activeSectorObj['default_compliance_standards'] ?? []) }}
+                                    {{ $isEnLoc ? 'Regulations & Tax:' : 'Regulasi & Pajak:' }} {{ implode(', ', $activeSectorObj['default_compliance_standards'] ?? []) }}
                                 </div>
                             </div>
                         </div>
@@ -2329,7 +2345,7 @@
                                     class="p-3 text-left border rounded-xs cursor-pointer {{ $stackCode === $sp['code'] ? 'bg-emerald-50 border-emerald-500 dark:bg-emerald-950/60 dark:border-emerald-500' : 'bg-white border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800' }}"
                                 >
                                     <div class="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100">[{{ $sp['short_code'] }}] {{ $sp['topology'] }}</div>
-                                    <div class="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 mt-0.5">{{ $sp['name']['id'] ?? '' }}</div>
+                                    <div class="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 mt-0.5">{{ $locVal($sp['name']) }}</div>
                                     <div class="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 font-mono text-[10px] text-zinc-700 dark:text-zinc-300 space-y-0.5">
                                         <div>{{ $spSize['build_speed'] ?? '' }}</div>
                                         <div>{{ $spSize['concurrency'] ?? '' }}</div>
@@ -2341,7 +2357,7 @@
                     @else
                         <div class="space-y-3">
                             <div>
-                                <label class="block font-mono text-xs font-black mb-1">Nama Proyek / Produk SaaS</label>
+                                <label class="block font-mono text-xs font-black mb-1">{{ $isEnLoc ? 'Project Name / SaaS Product' : 'Nama Proyek / Produk SaaS' }}</label>
                                 <input type="text" wire:model="projectName" class="w-full px-3 py-2 text-sm font-mono bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xs" />
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-xs">
@@ -2359,11 +2375,11 @@
                     <div class="flex gap-2">
                         @if($wizardStep < 3)
                             <button type="button" wire:click="$set('wizardStep', {{ $wizardStep + 1 }})" class="px-4 py-1.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-xs font-black rounded-xs cursor-pointer">
-                                Lanjut &rarr;
+                                {{ $isEnLoc ? 'Next' : 'Lanjut' }} &rarr;
                             </button>
                         @else
                             <button type="button" wire:click="$set('showWizardModal', false)" class="px-4 py-1.5 bg-emerald-600 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-xs font-black rounded-xs cursor-pointer">
-                                🚀 Terapkan ke 3-Pane Studio
+                                🚀 {{ $isEnLoc ? 'Apply to 3-Pane Studio' : 'Terapkan ke 3-Pane Studio' }}
                             </button>
                         @endif
                     </div>
@@ -2383,24 +2399,24 @@
                         ⚖️ SIDE-BY-SIDE ANTI-SLOP DIFF PREVIEWER (RAW AI PROMPT VS NERIAHPRO PROJECT OS v4.0)
                     </span>
                     <button type="button" wire:click="$set('showSlopDiffModal', false)" class="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-mono font-bold cursor-pointer">
-                        ✕ TUTUP
+                        ✕ {{ $isEnLoc ? 'CLOSE' : 'TUTUP' }}
                     </button>
                 </div>
                 <div class="p-4 overflow-y-auto studio-scroll space-y-4">
                     @foreach($slopDiffPairs as $pair)
                         <div class="border border-zinc-300 dark:border-zinc-800 rounded-xs overflow-hidden">
                             <div class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900 font-mono text-xs font-black text-zinc-950 dark:text-zinc-100 border-b border-zinc-300 dark:border-zinc-800">
-                                {{ $pair['dimension']['id'] ?? '' }}
+                                {{ $locVal($pair['dimension']) }}
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-zinc-300 dark:divide-zinc-800">
                                 <div class="p-3 bg-red-50/60 dark:bg-red-950/20 space-y-1.5">
                                     <span class="px-1.5 py-0.5 bg-red-200 text-red-950 dark:bg-red-900 dark:text-red-100 font-mono text-[10px] font-black">{{ $pair['raw_ai_slop']['badge'] }}</span>
-                                    <p class="text-xs text-zinc-800 dark:text-zinc-300">{{ $pair['raw_ai_slop']['summary']['id'] }}</p>
+                                    <p class="text-xs text-zinc-800 dark:text-zinc-300">{{ $locVal($pair['raw_ai_slop']['summary']) }}</p>
                                     <pre class="p-2 bg-zinc-950 text-red-200 text-[10px] font-mono overflow-x-auto">{{ $pair['raw_ai_slop']['code'] }}</pre>
                                 </div>
                                 <div class="p-3 bg-emerald-50/60 dark:bg-emerald-950/20 space-y-1.5">
                                     <span class="px-1.5 py-0.5 bg-emerald-200 text-emerald-950 dark:bg-emerald-900 dark:text-emerald-100 font-mono text-[10px] font-black">{{ $pair['project_os_v4']['badge'] }}</span>
-                                    <p class="text-xs text-zinc-800 dark:text-zinc-300">{{ $pair['project_os_v4']['summary']['id'] }}</p>
+                                    <p class="text-xs text-zinc-800 dark:text-zinc-300">{{ $locVal($pair['project_os_v4']['summary']) }}</p>
                                     <pre class="p-2 bg-zinc-950 text-emerald-200 text-[10px] font-mono overflow-x-auto">{{ $pair['project_os_v4']['code'] }}</pre>
                                 </div>
                             </div>

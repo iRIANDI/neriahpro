@@ -665,8 +665,13 @@ const FIELD_LABELS = {
   phone: { num: '26', id: '26. WhatsApp / Telepon PIC', en: '26. PIC WhatsApp / Phone' },
 };
 
-export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialData = {}, countries = [] }) {
-  const [lang, setLang] = useState('id');
+export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialData = {}, countries = [], currentLocale = null }) {
+  const initialLang = (currentLocale === 'en')
+    || (initialData?.language === 'en' || initialData?.locale === 'en')
+    || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')))
+    ? 'en'
+    : 'id';
+  const [lang, setLang] = useState(initialLang);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const t = TRANSLATIONS[lang];
 
@@ -1322,7 +1327,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       lang === 'en'
         ? `Auto-mapped your idea to ${secLabel} + Zone A Cockpit + Zone B Public Scrollytelling + L1–L4 Menus!`
         : `Ide Anda otomatis dipetakan ke ${secLabel} + Kokpit Zona A + Scrollytelling Zona B + Peta Menu L1–L4!`,
-      'TAHAP A // DETEKSI SEKTOR OTOMATIS'
+      lang === 'en' ? 'STAGE A // AUTO SECTOR DETECTION' : 'TAHAP A // DETEKSI SEKTOR OTOMATIS'
     );
   }, [ideaText, formData.namaBisnis, formData.masalahUtama, matrixCatalog.sectors, selectMatrixSector, lang, showLocalToast]);
 
@@ -4146,7 +4151,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               {t.aiTierLabel}
             </span>
             <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-sans">
-              Tahap Blueprint: Flash Tier (Hemat Token). Tahap PRD Final: Pro Tier.
+              {lang === 'en' ? 'Blueprint Stage: Flash Tier (Token-Saver). Final PRD Stage: Pro Tier.' : 'Tahap Blueprint: Flash Tier (Hemat Token). Tahap PRD Final: Pro Tier.'}
             </span>
           </div>
           <span className="px-2 py-0.5 text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold shrink-0">
@@ -4406,7 +4411,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             <div id="field-ideaText" className="space-y-2.5">
               <div className="flex items-center justify-between mb-1.5">
                 <label className={labelClass}>
-                  Uraian Ide & Alur Proses Bisnis
+                  {lang === 'en' ? 'Project Vision & Business Process Description' : 'Uraian Ide & Alur Proses Bisnis'}
                 </label>
                 <span className="text-[11px] font-mono text-zinc-400">
                   {ideaText.length} {t.charCount}
@@ -4512,7 +4517,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               {attachedFiles.length > 0 && (
                 <div className="mt-3 space-y-2">
                   <span className="text-[11px] font-mono uppercase text-zinc-500 font-bold block">
-                    Berkas Siap Dikonversi ({attachedFiles.length}/5):
+                    {lang === 'en' ? `Files Ready for Conversion (${attachedFiles.length}/5):` : `Berkas Siap Dikonversi (${attachedFiles.length}/5):`}
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {attachedFiles.map((file, idx) => (
@@ -4620,7 +4625,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                       </span>
                       {isApplied && (
                         <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
-                          <Check className="w-3 h-3" /> Ditambahkan
+                          <Check className="w-3 h-3" /> {lang === 'en' ? 'Added' : 'Ditambahkan'}
                         </span>
                       )}
                     </div>
@@ -4629,7 +4634,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   </div>
                   {!isApplied && (
                     <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold mt-2 flex items-center gap-1">
-                      <Plus className="w-3 h-3" /> Pasang ke Form
+                      <Plus className="w-3 h-3" /> {lang === 'en' ? 'Apply to Form' : 'Pasang ke Form'}
                     </span>
                   )}
                 </button>
@@ -4641,7 +4646,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         {/* Lightweight Co-Pilot Input Bar */}
         <form onSubmit={handleCoPilotSubmit} className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
           <label className={labelClass}>
-            Konsultasikan Kebutuhan Baru ke Asisten AI (Gemini Flash)
+            {lang === 'en' ? 'Consult New Requirements with AI Assistant (Gemini Flash)' : 'Konsultasikan Kebutuhan Baru ke Asisten AI (Gemini Flash)'}
           </label>
           <div className="flex gap-2">
             <input
@@ -4707,7 +4712,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                 <div>
                   <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-800 dark:text-emerald-400 font-black block mb-1">
-                    PROJECT OS V6.0 ULTIMATE // 12 SEKTOR + 25 MENU L1–L4 + 5 ENTERPRISE GLUE + DAG SUB-PARTS + SYMBOL LOCK
+                    PROJECT OS V12.0 ULTIMATE // 12 SEKTOR + 25 MENU L1–L4 + 5 ENTERPRISE GLUE + DAG SUB-PARTS + SYMBOL LOCK
                   </span>
                   <h3 className="text-lg font-black uppercase tracking-tight text-zinc-950 dark:text-zinc-100">
                     {lang === 'en'
@@ -4762,7 +4767,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
-                    <span>1. SEKTOR &amp; UI INDUSTRI</span>
+                    <span>1. {lang === 'en' ? 'SECTOR & INDUSTRIAL UI' : 'SEKTOR & UI INDUSTRI'}</span>
                     <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700">
                       {formData.primarySector ? 'MANUAL' : 'AUTO AI'}
                     </span>
@@ -4779,7 +4784,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
-                    <span>2. CORE PRIMITIVES</span>
+                    <span>2. {lang === 'en' ? 'CORE PRIMITIVES' : 'CORE PRIMITIVES'}</span>
                     <span className="tabular-nums font-black text-zinc-950 dark:text-zinc-100">{effectivePrimitiveCodes.length}/12</span>
                   </div>
                   <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 tabular-nums">
@@ -4796,7 +4801,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
-                    <span>3. TOPOLOGI &amp; STACK</span>
+                    <span>3. {lang === 'en' ? 'TOPOLOGY & STACK' : 'TOPOLOGI & STACK'}</span>
                     <span className="px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950">
                       {activeStackPresetObj?.short_code || 'M1'}
                     </span>
@@ -4815,16 +4820,16 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
-                    <span>4. DAY-2 OPS &amp; PRINT</span>
+                    <span>4. {lang === 'en' ? 'DAY-2 OPS & PRINT' : 'DAY-2 OPS & CETAK'}</span>
                     <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700">
-                      8 LAYER AKTIF
+                      {lang === 'en' ? '8 LAYERS ACTIVE' : '8 LAYER AKTIF'}
                     </span>
                   </div>
                   <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate">
                     {thermalMode === 'A4_OFFICIAL_ONLY' ? 'Official A4 + Inline SVG QR' : 'Thermal 58/80mm + A4 QR'}
                   </div>
                   <div className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 mt-0.5 truncate tabular-nums">
-                    {officialDocsCount} Dokumen Resmi • *_snapshot • CSV Staging
+                    {officialDocsCount} {lang === 'en' ? 'Official Documents • *_snapshot • CSV Staging' : 'Dokumen Resmi • *_snapshot • CSV Staging'}
                   </div>
                 </button>
 
@@ -4834,13 +4839,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   className="text-left p-3 rounded-xs bg-emerald-50/70 hover:bg-emerald-100/70 dark:bg-emerald-950/35 dark:hover:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-700 hover:border-emerald-600 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-emerald-950 dark:text-emerald-200">
-                    <span>5. MENU L1–L4 &amp; GLUE</span>
+                    <span>5. {lang === 'en' ? 'L1–L4 MENUS & GLUE' : 'MENU L1–L4 & GLUE'}</span>
                     <span className="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 tabular-nums">
                       {effectiveSelectedMenus.length}/25
                     </span>
                   </div>
                   <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate tabular-nums">
-                    {effectiveSelectedMenus.length} Sub-Menu v1.0 + 5 Glue
+                    {effectiveSelectedMenus.length} {lang === 'en' ? 'v1.0 Sub-Menus + 5 Glue' : 'Sub-Menu v1.0 + 5 Glue'}
                   </div>
                   <div className="font-mono text-[10px] font-bold text-emerald-900 dark:text-emerald-300 mt-0.5 truncate">
                     SYMBOL LOCK • Kahn DAG
@@ -6252,7 +6257,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         <section id="section-block-a" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-              ARSITEKTUR BISNIS // 01
+              {lang === 'en' ? 'BUSINESS ARCHITECTURE // 01' : 'ARSITEKTUR BISNIS // 01'}
             </span>
             <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-100">
               {t.blockA}
@@ -6350,7 +6355,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         <section id="section-block-b" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-              AKTOR & PLATFORM // 02
+              {lang === 'en' ? 'ACTORS & PLATFORMS // 02' : 'AKTOR & PLATFORM // 02'}
             </span>
             <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-100">
               {t.blockB}
@@ -6505,7 +6510,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         <section id="section-block-c" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-              FITUR, ALUR & DATA // 03
+              {lang === 'en' ? 'FEATURES, WORKFLOW & DATA // 03' : 'FITUR, ALUR & DATA // 03'}
             </span>
             <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-100">
               {t.blockC}
@@ -6680,7 +6685,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         <section id="section-block-d" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-              INTEGRASI & HOSTING // 04
+              {lang === 'en' ? 'INTEGRATIONS & HOSTING // 04' : 'INTEGRASI & HOSTING // 04'}
             </span>
             <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-100">
               {t.blockD}
@@ -6847,7 +6852,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         <section id="section-block-e" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-              TIMELINE & BATASAN // 05
+              {lang === 'en' ? 'TIMELINE & SCOPE BOUNDARIES // 05' : 'TIMELINE & BATASAN // 05'}
             </span>
             <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-100">
               {t.blockE}
@@ -7004,7 +7009,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         <section id="section-block-f" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-              PENGESAHAN PIC & KONTRAK // 06
+              {lang === 'en' ? 'PIC SIGN-OFF & CONTRACT // 06' : 'PENGESAHAN PIC & KONTRAK // 06'}
             </span>
             <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
               <Users className="w-5 h-5 text-emerald-500" />
@@ -7067,7 +7072,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 type="text"
                 value={formData.kisaranBudget}
                 onChange={(e) => updateField('kisaranBudget', e.target.value)}
-                placeholder={currentTrack === 'retail' ? "Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)" : "Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)"}
+                placeholder={currentTrack === 'retail' ? (lang === 'en' ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)' : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)') : (lang === 'en' ? '$1,000 - $2,500 (Growth Monolith)' : 'Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)')}
                 className={inputClass}
               />
             </div>

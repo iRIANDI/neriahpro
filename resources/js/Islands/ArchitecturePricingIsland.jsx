@@ -31,12 +31,15 @@ import {
   Cpu,
   CreditCard,
   ExternalLink,
-  ShoppingBag
+  ShoppingBag,
+  Search
 } from 'lucide-react';
 import {
   normalizeCountryZones,
   sanitizeStrictEmailInput,
   sanitizePhoneLocalDigitsInput,
+  formatRegionalNumberInput,
+  parseRegionalNumberInput,
   COUNTRY_ZONES_TEMPLATE,
 } from '../utils/inputHygiene';
 
@@ -240,7 +243,8 @@ export default function ArchitecturePricingIsland({
     company: authUser?.company || '',
     email: authUser?.email || '',
     country_code: '+62',
-    phone: authUser?.phone || '',
+    phone: authUser?.phone ? sanitizePhoneLocalDigitsInput(authUser.phone, '+62') : '',
+    estimated_budget_display: '',
     voucher_code: '',
     notes: '',
     honeypot: ''
@@ -253,8 +257,16 @@ export default function ArchitecturePricingIsland({
   const [paymentStatus, setPaymentStatus] = useState('idle'); // 'idle' | 'pending' | 'success' | 'error'
   const [agreeTerms, setAgreeTerms] = useState(false);
 
+  // Tab 04 Comparison Matrix & Tab 05 FAQ Search / Filter / Density States (v11.0 Paripurna)
+  const [matrixSearchQuery, setMatrixSearchQuery] = useState('');
+  const [matrixCategoryFilter, setMatrixCategoryFilter] = useState('ALL');
+  const [matrixDensity, setMatrixDensity] = useState('normal'); // 'compact' | 'normal' | 'relaxed'
+  const [faqSearchQuery, setFaqSearchQuery] = useState('');
+  const [faqCategoryFilter, setFaqCategoryFilter] = useState('ALL');
+  const [expandAllFaqs, setExpandAllFaqs] = useState(false);
+
   // FAQ Accordion State
-  const [openFaq, setOpenFaq] = useState(null);
+  const [openFaq, setOpenFaq] = useState(0);
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -449,6 +461,13 @@ export default function ArchitecturePricingIsland({
       }));
       return;
     }
+    if (name === 'estimated_budget_display') {
+      setFormData(prev => ({
+        ...prev,
+        estimated_budget_display: formatRegionalNumberInput(value, isEn ? 'en' : 'id'),
+      }));
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -542,6 +561,97 @@ export default function ArchitecturePricingIsland({
 
   const faqs = [
     {
+      category: 'SATU_PINTU',
+      q: isEn
+        ? 'Why does Satu Pintu Wizard v11.0 require selecting a SaaS License or Mitra Contract before unlocking full blueprints (No Unpaid Studio Bypass)?'
+        : 'Mengapa Satu Pintu Wizard v11.0 mengunci akses cetak biru penuh ke pemilihan Paket SaaS atau Kontrak Mitra (Tanpa Tombol Bypass Gratis)?',
+      a: isEn
+        ? 'To guarantee 100% commercial consistency between the Satu Pintu configurator and our official 7 Retail SaaS Tiers & 3 Mitra Studio Contracts below. In Satu Pintu v11.0, every left-panel selection (Step B 12 Sectors, Step C Stack Topology, Step D 36 Visual UI + 6 Scrollytelling Presets, Step E1 Persona Mode, Step E2 Tier-1 Regulation) dynamically updates the right-hand summary in real time and locks directly into Step F (your chosen SaaS License or Mitra Contract). Server-side validation in BlueprintController::create() also enforces entitlement so unpaid sessions cannot bypass paid Pro/Ultimate/Agency tiers.'
+        : 'Demi menjaga konsistensi komersial 100% antara konfigurator Satu Pintu di atas dengan daftar 7 Paket SaaS Retail & 3 Kontrak Mitra di bawahnya. Pada Satu Pintu v11.0, setiap pilihan di panel kiri (Langkah B 12 Sektor, Langkah C Topologi Stack, Langkah D 36 Visual UI + 6 Preset Scrollytelling, Langkah E1 Mode Persona, Langkah E2 Regulasi Tier-1) langsung memperbarui panel status kanan secara real-time dan dikunci ke Langkah F (pilihan Lisensi SaaS atau Kontrak Mitra). Proteksi server di BlueprintController::create() juga memblokir bypass URL langsung tanpa lisensi aktif.'
+    },
+    {
+      category: 'SATU_PINTU',
+      q: isEn
+        ? 'Why is "Impact & Non-Profit Grant (Yayasan, NGO, Rumah Ibadah & Riset)" priced at Rp 0 (Verified CSR), and who is eligible?'
+        : 'Mengapa paket "Hibah Yayasan, NGO, Rumah Ibadah & Riset" bertarif Rp 0 (Terverifikasi CSR) dan apa syarat wajibnya?',
+      a: isEn
+        ? 'Its real commercial value is Rp 1,490,000 (equivalent to Ultimate Architecture OS), which Neriah Pro subsidizes 100% to Rp 0 under our Corporate Social Responsibility (CSR) & Academic Impact program. It is STRICTLY reserved for non-commercial social foundations, places of worship (Mosques, Churches, Temples, Viharas), charity schools, and university research teams requiring ISAK 35 / PSAK 109 donor transparency. Applicants must upload or verify official legal standing (Akta Notaris Yayasan / SK Kemenkumham / Campus Research Letter). Commercial businesses (PT, CV, Stores, Startups) are NOT eligible and must choose Single-App UMKM Pass, Pro Agentic, or Ultimate OS.'
+        : 'Nilai komersial aslinya adalah Rp 1.490.000 (setara paket Ultimate Architecture OS), namun disubsidi 100% menjadi Rp 0 melalui program Tanggung Jawab Sosial (CSR) Neriah Pro. Paket ini KHUSUS diperuntukkan bagi entitas non-komersial: Yayasan Sosial/Kemanusiaan, Rumah Ibadah (Masjid, Gereja, Pura, Vihara), Sekolah Amal, dan Riset Akademik Kampus yang membutuhkan akuntabilitas dana umat/donatur sesuai standar ISAK 35 / PSAK 109. Pemohon WAJIB melampirkan verifikasi dokumen legalitas resmi (Akta Notaris Yayasan / SK Kemenkumham / Surat Tugas Riset Kampus). Bisnis komersial (PT, CV, Toko, Startup) TIDAK berhak mengklaim hibah ini dan wajib memilih Single-App Pass, Pro Agentic, atau Ultimate OS.'
+    },
+    {
+      category: 'UI_UX_12_SEKTOR',
+      q: isEn
+        ? 'How does Cross-Stage Causal Synergy work from Stage 1 (Sector & Visual UI) all the way to Stage 7 (BAST & 90-Day SLA)?'
+        : 'Bagaimana cara kerja Sinergi Kausal Lintas-Tahap (Cross-Stage Synergy) dari Tahap 1 (Sektor & Visual UI) hingga Tahap 7 (BAST & Garansi SLA 90 Hari)?',
+      a: isEn
+        ? 'Nothing in Project OS v11.0 is an isolated form! Changing your Sector (12 Taxonomies), Stack (M1/D1/S1), Internal Cockpit (Zone A: 36 Visual UIs), or Public Scrollytelling Preset (Zone B: 6 60fps Presets) in Stage 1 automatically recalculates: (Stage 2) PostgreSQL 16 Strict ULID tables & Dual-Persona Storyboard; (Stage 3) Algorithmic Man-Hours RAB, SHA-256 Scope Lock & Canary IP Watermark; (Stage 4) 7-Phase Prompt Sequencer & Living CVE Autopatch; (Stage 5) Schema.org Multi-Graph JSON-LD, /llms.txt GEO Citation, Offline Outbox PWA & UU PDP Blind Index; (Stage 6) Co-Design Alignment Room & Sector UAT Checklist; and (Stage 7) Digital BAST + 90-Day Post-BAST SLA Bug-Warranty.'
+        : 'Tidak ada satu pun fitur di Project OS v11.0 yang berdiri sendiri! Mengubah Sektor (12 Taksonomi), Stack (M1/D1/S1), Kokpit Internal (Zona A: 36 Visual UI), atau Preset Scrollytelling Publik (Zona B: 6 Preset 60fps) pada Tahap 1 secara otomatis menghitung ulang: (Tahap 2) Tabel PostgreSQL 16 Strict ULID & Storyboard Dual-Persona; (Tahap 3) RAB Jam Kerja Algoritmik, Segel Kontrak SHA-256 & Canary IP Watermark; (Tahap 4) 7-Fase Prompt AI & Living CVE Autopatch; (Tahap 5) Schema.org Multi-Graph JSON-LD, GEO /llms.txt, Offline Outbox PWA & Blind Index UU PDP; (Tahap 6) Co-Design Alignment Room & Checklist UAT Sektoral; hingga (Tahap 7) BAST Digital + Garansi Bug SLA 90 Hari.'
+    },
+    {
+      category: 'SEO_GEO_UU_PDP',
+      q: isEn
+        ? 'How does PRIMITIVE_SEO_GEO_AUTHORITY_ENGINE get our application cited in the Top 3 of ChatGPT Search, Perplexity, Claude, and Google AI Overviews?'
+        : 'Bagaimana PRIMITIVE_SEO_GEO_AUTHORITY_ENGINE membuat aplikasi kami dikutip di Top-3 ChatGPT Search, Perplexity, Claude, dan Google AI Overviews?',
+      a: isEn
+        ? 'Traditional SEO only targets blue links; Generative Engine Optimization (GEO) feeds structured facts directly to AI citation crawlers (OAI-SearchBot, PerplexityBot, ClaudeBot, Google-Extended). Project OS v11.0 compiles 5 automated GEO engines: (1) Multi-Graph Schema.org JSON-LD (@graph combining Organization, SoftwareApplication, FAQPage + Sector-Specific types like Product, LodgingBusiness, MedicalClinic, Course, Restaurant, Event, NGO); (2) Native /llms.txt and /llms-full.txt markdown indexes; (3) Semantic HTML Answer Capsules (50-word factual TL;DR + <table> comparison matrix); (4) IndexNow instant ping on save; and (5) Local 1200x630 OpenGraph & QR Citation Cards rendered via PHP GD/SVG with zero external CDN latency.'
+        : 'SEO lama hanya mengejar halaman pencarian biasa, sedangkan Generative Engine Optimization (GEO) menyuplai fakta terstruktur langsung ke mesin pencari AI (OAI-SearchBot, PerplexityBot, ClaudeBot, Google-Extended). Project OS v11.0 membekali 5 mesin otomatis: (1) Multi-Graph Schema.org JSON-LD (@graph berisi Organization, SoftwareApplication, FAQPage + tipe spesifik 12 sektor seperti Product, LodgingBusiness, MedicalClinic, Course, Restaurant, Event, NGO); (2) Endpoint native /llms.txt & /llms-full.txt; (3) Kapsul Jawaban Semantik (50 kata TL;DR faktual + tabel HTML <table>); (4) IndexNow Instant Ping saat halaman disimpan; dan (5) Kartu OpenGraph 1200x630 + QR lokal berbasis PHP GD/SVG tanpa latensi CDN luar.'
+    },
+    {
+      category: 'SEO_GEO_UU_PDP',
+      q: isEn
+        ? 'How does PRIMITIVE_UU_PDP_PRIVACY_VAULT comply with Indonesia UU PDP No. 27/2022 & GDPR without breaking database search or financial audit ledgers?'
+        : 'Bagaimana PRIMITIVE_UU_PDP_PRIVACY_VAULT mematuhi UU PDP No. 27/2022 & GDPR tanpa merusak fitur pencarian database maupun buku besar akuntansi?',
+      a: isEn
+        ? 'Encrypting NIK, Tax ID (NPWP), phone, or medical diagnoses with standard AES-256 makes SQL WHERE queries impossible without full-table decryption. Our HasEncryptedPiiWithBlindIndex trait pairs Laravel AES-256 encrypted casting with a deterministic 64-character HMAC-SHA256 blind index column (*_blind_index) derived from a dedicated pepper key—preserving O(1) exact-match B-Tree lookups while keeping raw database dumps unreadable. Furthermore, ExportAndRedactUserPiiAction provides 1-click JSON Data Portability (Article 31) and Ledger-Safe Right-to-Erasure (Article 34) that anonymizes personal identity into [REDACTED_UU_PDP_<ULID>] while strictly keeping financial Transaction rows intact for 10-year tax compliance.'
+        : 'Mengenkripsi NIK, NPWP, nomor telepon, atau rekam medis dengan AES-256 biasa membuat fitur pencarian SQL WHERE lumpuh. Trait HasEncryptedPiiWithBlindIndex kami menggabungkan enkripsi AES-256 dengan kolom indeks buta deterministik 64-karakter HMAC-SHA256 (*_blind_index)—sehingga pencarian exact-match tetap secepat O(1) sub-10ms namun isi tabel tetap terenkripsi rapat jika di-dump. Selain itu, ExportAndRedactUserPiiAction menyediakan Ekspor Portabilitas Data JSON 1-Klik (Pasal 31) dan Hak Penghapusan Aman-Akuntansi (Pasal 34) yang menyamarkan identitas menjadi [REDACTED_UU_PDP_<ULID>] tanpa menghapus baris transaksi jurnal keuangan (patuh retensi pajak 10 tahun).'
+    },
+    {
+      category: 'SEO_GEO_UU_PDP',
+      q: isEn
+        ? 'What happens when field staff, couriers, or cashiers lose internet connection (PRIMITIVE_OFFLINE_OUTBOX_PWA)?'
+        : 'Apa yang terjadi jika kurir lapangan, kasir POS, atau petugas gudang kehilangan sinyal internet (PRIMITIVE_OFFLINE_OUTBOX_PWA)?',
+      a: isEn
+        ? 'Operational transactions NEVER fail or duplicate on spotty 3G/basement Wi-Fi! When navigator.onLine drops, our OfflineOutboxQueue (IndexedDB + Service Worker /sw-offline-outbox.js) intercepts the mutation, mints a client-side 26-character ULID + X-Idempotency-Key, saves the payload in the local encrypted Outbox Queue, and displays an Amber [OFFLINE QUEUED — WILL SYNC AUTOMATICALLY] badge. The moment connectivity returns, Background Sync replays queued mutations in chronological ULID order while server-side idempotency locks prevent double billing or double stock deduction.'
+        : 'Transaksi operasional TIDAK AKAN hilang atau tercatat ganda meski sinyal hilang di basement/pelosok! Saat koneksi terputus, OfflineOutboxQueue (IndexedDB + Service Worker /sw-offline-outbox.js) menangkap transaksi, mencetak 26-karakter ULID + X-Idempotency-Key di sisi perangkat, menyimpannya di antrean Outbox lokal, dan menampilkan badge Amber [OFFLINE QUEUED — AKAN SINKRON OTOMATIS]. Begitu sinyal pulih, sistem menyinkronkan antrean secara berurutan tanpa risiko dobel bayar atau dobel potong stok.'
+    },
+    {
+      category: 'SLA_GARANSI_HUKUM',
+      q: isEn
+        ? 'How does the Post-BAST 90-Day Contractual SLA Bug-Warranty Tracker separate free bug fixes from paid Change Requests (v1.1)?'
+        : 'Bagaimana Pelacak Garansi Bug SLA 90 Hari Pasca-BAST memisahkan perbaikan bug gratis (Rp 0) dari tambahan fitur berbayar (Change Request v1.1)?',
+      a: isEn
+        ? 'The moment Digital BAST is signed, Project OS automatically activates a 90-day SLA warranty timer (sla_warranty_expires_at). When a client submits an issue in /customer/dashboard (with reproduction steps and stack trace), PosSlaAndSandboxEngineService compares the report against the SHA-256 Locked PRD Scope: (1) If it is a regression or defect within locked v1.0 modules during the 90-day window, it is classified as BUG_WARRANTY_COVERED (Rp 0 Free Repair + auto-generated Developer Bugfix Prompt); (2) If it requests a new module outside v1.0 or after 90 days, it routes cleanly to NEW_SCOPE_PAID_DELTA (Change Request v1.1) — eliminating post-handover disputes.'
+        : 'Begitu berita acara BAST Digital ditandatangani, Project OS otomatis mengaktifkan penghitung mundur Garansi SLA 90 Hari (sla_warranty_expires_at). Saat klien melapor kendala di /customer/dashboard, PosSlaAndSandboxEngineService mencocokkan laporan dengan Scope PRD bersegel SHA-256: (1) Jika merupakan error/bug pada modul v1.0 yang terkunci selama masa 90 hari, tiket diklasifikasikan sebagai BUG_WARRANTY_COVERED (Perbaikan Gratis Rp 0 + otomatis menerbitkan Developer Bugfix Prompt); (2) Jika merupakan permintaan fitur baru di luar kontrak v1.0, sistem mengarahkannya ke jalur NEW_SCOPE_PAID_DELTA (Addendum v1.1) secara adil tanpa debat kusir.'
+    },
+    {
+      category: 'SLA_GARANSI_HUKUM',
+      q: isEn
+        ? 'How do Pre-Migration Atomic Rollback (./deploy.sh rollback), Local Webhook Simulator, and Multi-Entity Holding Consolidation work?'
+        : 'Bagaimana cara kerja Pre-Migration Atomic Rollback (./deploy.sh rollback), Simulator Webhook Lokal, dan Konsolidasi Multi-Cabang/Holding?',
+      a: isEn
+        ? '(1) Zero-Fear Deployment: Every ./deploy.sh 2 run automatically captures a compressed pre-migration snapshot (storage/backups/pre_migrate_*.sql.gz, 7-day retention) before touching schemas; if anything fails, ./deploy.sh rollback (Scenario 7) restores code and database in seconds. (2) Chaos Sandbox Console: In non-production environments (APP_ENV !== "production"), developers can trigger simulated QRIS settlement, expired VA, and 3x concurrent duplicate webhook attacks with 1 click (strictly blocked 403 in production). (3) Multi-Entity Holding: PosOrganizationWorkspace supports self-referencing parent_organization_id ULID hierarchy for Holding -> Subsidiary -> Branch consolidation with inter-company journal elimination.'
+        : '(1) Deploy Tanpa Cemas: Setiap eksekusi ./deploy.sh 2 otomatis mencadangkan snapshot database terkompresi (storage/backups/pre_migrate_*.sql.gz, retensi 7 hari) sebelum migrasi; jika terjadi kendala, perintah ./deploy.sh rollback (Skenario 7) memulihkan kode dan database dalam hitungan detik. (2) Konsol Simulasi Webhook: Di lingkungan lokal/staging (APP_ENV !== "production"), developer dapat menguji simulasi lunas QRIS, VA kadaluarsa, hingga serangan 3x webhook paralel dengan 1 klik (otomatis diblokir 403 di produksi). (3) Multi-Cabang & Holding: PosOrganizationWorkspace mendukung hierarki ULID parent_organization_id (Induk Holding -> Anak Perusahaan -> Cabang) dengan eliminasi transaksi antar-entitas.'
+    },
+    {
+      category: 'AI_MCP_SECURITY',
+      q: isEn
+        ? 'How do NeriahPro AgentShield, Living CVE Autopatch, Canary IP Watermark, and the SHA-256 Cryptographic Audit Log protect our enterprise?'
+        : 'Bagaimana NeriahPro AgentShield, Living CVE Autopatch, Canary IP Watermark, dan Audit Log Kriptografi SHA-256 melindungi sistem enterprise kami?',
+      a: isEn
+        ? 'Project OS v9–v11 embeds military-grade governance: (1) AgentShield 3-Gate Firewall sanitizes RAG inputs against prompt injection, blocks unauthorized tool execution, and verifies Composer/NPM lockfiles against typosquatting; (2) Living CVE Autopatch monitors stack advisories and generates non-breaking upgrade playbooks; (3) Zero-Width Canary IP Watermark embeds invisible cryptographic provenance into generated artifacts to deter blueprint piracy; and (4) Every AI tool call, payment settlement, and PII erasure is recorded in an immutable SHA-256 hash-chained Audit Log exportable to 3-sheet CPA Excel (.xlsx).'
+        : 'Project OS v9–v11 menanamkan tata kelola keamanan berlapis: (1) Firewall 3-Gerbang AgentShield menyaring input RAG dari serangan Prompt Injection, mengunci izin eksekusi 44 tool AI, dan memvalidasi paket Composer/NPM dari bahaya typosquatting; (2) Living CVE Autopatch memantau celah keamanan stack dan menyiapkan panduan patch otomatis; (3) Zero-Width Canary IP Watermark menyisipkan tanda air kriptografi tak kasat mata untuk melacak kebocoran dokumen; serta (4) Seluruh aksi AI, pembayaran, dan penghapusan data tercatat dalam rantai hash Audit Log SHA-256 yang dapat diekspor ke Excel (.xlsx) 3-Sheet standar akuntan publik.'
+    },
+    {
+      category: 'UI_UX_12_SEKTOR',
+      q: isEn
+        ? 'What is the difference between Zone A (36 Internal Sector Cockpits) and Zone B (6 Public Scrollytelling Presets), plus Dual-Persona Studio Mode?'
+        : 'Apa perbedaan Zona A (36 Kokpit Operasional Internal) dengan Zona B (6 Preset Scrollytelling Publik), serta fitur Mode Studio Dual-Persona?',
+      a: isEn
+        ? 'Great applications require two distinct visual ergonomics: Zone A governs your internal back-office/operational dashboard (36 deterministic Clean Solid Brutalist cockpits across 12 sectors—zero decorative clutter, keyboard shortcuts, sticky headers, O(1) cursor pagination), while Zone B governs your public-facing landing/product showcase (6 60fps CSS Scroll-Driven Scrollytelling presets like Sticky Frame Scrubbing, Bento Perspective Grid, and Interactive Before/After Slider with automatic prefers-reduced-motion fallback). Furthermore, inside /blueprint/studio, non-technical founders can use 5-Step Business Storyboard Mode while engineers toggle seamlessly into 3-Pane Architect Mode and the Co-Design Alignment Room.'
+        : 'Aplikasi kelas dunia memisahkan dua zona visual secara tegas: Zona A mengatur kokpit kerja internal/back-office (36 tata letak Clean Solid Brutalism di 12 sektor—bebas dekorasi mengganggu, penuh shortcut keyboard, sticky header, dan cursor pagination O(1)), sedangkan Zona B mengatur halaman depan/publik (6 preset Scrollytelling 60fps berbasis CSS Scroll-Driven seperti Sticky Frame Scrubbing, Bento Perspective Grid, dan Before/After Slider lengkap dengan fallback prefers-reduced-motion). Di dalam /blueprint/studio, klien awam juga dapat memilih Mode Bisnis 5-Langkah sementara tim teknis menggunakan Mode Arsitek 3-Pane dan Co-Design Alignment Room.'
+    },
+    {
+      category: 'SATU_PINTU',
       q: isEn
         ? 'Why is Blueprint Advisory (Rp 2.5M) priced similarly to UMKM Starter (Rp 3.75M), even though Advisory includes NO coding?'
         : 'Mengapa harga Blueprint Advisory (Rp 2.5 Jt) mirip dengan UMKM Digital Starter (Rp 3.75 Jt), padahal Advisory tidak termasuk koding?',
@@ -550,152 +660,119 @@ export default function ArchitecturePricingIsland({
         : 'Perbedaan mendasarnya terletak pada SKALA SISTEM dan SIAPA YANG MENGODING! (1) Blueprint Advisory (Rp 2.5 Jt) dirancang untuk SISTEM KUSTOM ENTERPRISE BERSKALA BESAR (SaaS, platform marketplace, logistik, fintech) yang biaya pengembangannya mencapai Rp 50 Jt hingga ratusan juta rupiah. Pada skala ini, rancangan teknis (PRD 26 parameter, skema PostgreSQL Strict ULID O(1), WBS 5 sprint, dan sesi 1-on-1 Principal Architect) mutlak dibutuhkan agar developer klien tidak salah bangun dan rugi puluhan juta. Koding dilakukan oleh tim dev klien sendiri (atau biaya Rp 2.5 Jt ini otomatis memotong DP 50% jika lanjut dikodingkan Neriah Pro). (2) Sebaliknya, UMKM Digital Starter (Rp 3.75 Jt) adalah PROGRAM STIMULUS SUBSIDI 50% (dari normal Rp 7.5 Jt, kuota 2 usaha/bulan) KHUSUS TOKO RETAIL/LOKAL. Alur kerjanya terstandar (kasir POS, QRIS otomatis, database pelanggan, notifikasi WhatsApp) sehingga bisa dikodingkan dan dideploy cepat oleh Neriah Pro tanpa memerlukan perancangan arsitektur custom yang rumit.'
     },
     {
+      category: 'SATU_PINTU',
       q: isEn ? 'Are Instant Architectural Blueprint packages 100% self-service without Neriah Pro coding?' : 'Apakah paket Instant Architectural Blueprint 100% self-service tanpa keterlibatan koding Neriah Pro?',
       a: isEn
-        ? 'Yes, absolutely. Instant Architectural Blueprint packages (Spark, Starter, Pro Agentic, Enterprise) are pure digital architectural specifications and engineering deliverables (26-parameter PRD, PostgreSQL Strict ULID DDL SQL, Mermaid diagrams, Jira/Linear WBS, Decoupled 2026+ matrix, OpenAPI 3.1 contracts). They are designed for you, your in-house engineering team, freelancers, or AI coding agents to build the software independently. Neriah Pro does NOT write application code for these self-service packages. If you need Neriah Pro engineers to build, code, and deploy your software turnkey, select our Custom Engineering Studio contracts below (Full MVP Monolith or UMKM Starter).'
-        : 'Ya, benar 100%. Paket Instant Architectural Blueprint (Spark, Starter, Pro Agentic, Enterprise) adalah produk spesifikasi arsitektur digital mandiri (PRD 26 parameter, skema DDL PostgreSQL Strict ULID, Diagram Mermaid, WBS sprint Jira-ready, matriks Decoupled 2026+, dan kontrak OpenAPI 3.1). Seluruh aset ini diperuntukkan bagi Anda, tim programmer in-house, freelancer, atau AI coding agent Anda untuk membangun dan mengoding aplikasinya sendiri. Neriah Pro sama sekali TIDAK terlibat dalam penulisan koding untuk paket self-service ini. Apabila Anda membutuhkan tim arsitek dan engineer Neriah Pro untuk mengoding, menguji, dan mendeploy aplikasi sampai siap pakai di server VPS, silakan pilih Layanan Custom Engineering Studio kami di bawah (Full MVP Monolith atau UMKM Starter).'
+        ? 'Yes, absolutely. Instant Architectural Blueprint packages (Spark, Starter, Single-App Pass, Pro Agentic, Agency White-Label, Ultimate OS) are pure digital architectural specifications and engineering deliverables (26-parameter PRD, PostgreSQL Strict ULID DDL SQL, Mermaid diagrams, Jira/Linear WBS, Decoupled 2026+ matrix, OpenAPI 3.1 contracts, and 20 Paripurna Pillars). They are designed for you, your in-house engineering team, freelancers, or AI coding agents to build the software independently. Neriah Pro does NOT write application code for these self-service packages. If you need Neriah Pro engineers to build, code, and deploy your software turnkey, select our Custom Engineering Studio contracts (Full MVP Monolith or UMKM Starter).'
+        : 'Ya, benar 100%. Paket Instant Architectural Blueprint (Spark, Starter, Single-App Pass, Pro Agentic, Agency White-Label, Ultimate OS) adalah produk spesifikasi arsitektur digital mandiri (PRD 26 parameter, skema DDL PostgreSQL Strict ULID, Diagram Mermaid, WBS sprint Jira-ready, matriks Decoupled 2026+, kontrak OpenAPI 3.1, dan 20 Pilar Paripurna). Seluruh aset ini diperuntukkan bagi Anda, tim programmer in-house, freelancer, atau AI coding agent Anda untuk membangun dan mengoding aplikasinya sendiri. Neriah Pro sama sekali TIDAK terlibat dalam penulisan koding untuk paket self-service ini. Apabila Anda membutuhkan tim arsitek dan engineer Neriah Pro untuk mengoding, menguji, dan mendeploy aplikasi sampai siap pakai di server VPS, silakan pilih Layanan Custom Engineering Studio kami (Full MVP Monolith atau UMKM Starter).'
     },
     {
+      category: 'SATU_PINTU',
       q: isEn ? 'Do I need to log in to subscribe or use the Instant Blueprint packages?' : 'Apakah perlu login untuk berlangganan atau menggunakan paket Instant Blueprint?',
       a: isEn
-        ? 'For the Spark (Free) tier, NO login is required — you can generate quick idea audits instantly in Guest Mode without creating an account. For paid packages (Starter, Pro Agentic, Enterprise), logging in or creating a Neriah Pro account is mandatory. An account ensures your digital license, persistent PRD version history, lifetime download access, and AI re-prompt tokens are securely preserved.'
-        : 'Untuk paket Spark (Free), Anda TIDAK PERLU login sama sekali — Anda dapat langsung menggunakannya dalam Guest Mode tanpa registrasi ataupun kartu kredit. Namun untuk paket berbayar (Starter, Pro Agentic, dan Enterprise), Anda diwajibkan login atau mendaftar akun Neriah Pro terlebih dahulu. Kepemilikan akun ini diperlukan untuk mencatat lisensi digital resmi, mengamankan hak unduh seumur hidup (lifetime download), serta menyimpan riwayat versi dokumen PRD dan token regenerasi AI Anda.'
+        ? 'For the Spark (Free) tier, NO login is required — you can generate quick Phase 1–2 idea audits instantly in Guest Mode without creating an account. For paid packages (Starter, Single-App Pass, Pro Agentic, Agency, Ultimate) and verified CSR Grants, logging in or creating a Neriah Pro account is mandatory. An account ensures your digital license, persistent PRD version history, lifetime download access, and AI re-prompt tokens are securely preserved.'
+        : 'Untuk paket Spark (Free), Anda TIDAK PERLU login sama sekali — Anda dapat langsung menggunakannya dalam Guest Mode untuk audit konsep Fase 1–2 tanpa registrasi ataupun kartu kredit. Namun untuk paket berbayar (Starter, Single-App Pass, Pro Agentic, Agency, Ultimate) serta Hibah CSR Terverifikasi, Anda diwajibkan login atau mendaftar akun Neriah Pro terlebih dahulu. Kepemilikan akun ini diperlukan untuk mencatat lisensi digital resmi, mengamankan hak unduh seumur hidup (lifetime download), serta menyimpan riwayat versi dokumen PRD dan token regenerasi AI Anda.'
     },
     {
+      category: 'SATU_PINTU',
       q: isEn ? 'What are the usage limits and reset cycles for the free Spark package?' : 'Berapa batas kuota dan siklus reset untuk paket gratis (Spark)?',
       a: isEn
-        ? 'The free Spark tier includes 2 idea audits per month per guest session. This free quota automatically resets back to 2 credits on the 1st of every month (00:00 UTC). Unsaved guest sessions expire in 7 days, so we recommend downloading your Markdown or PDF summary immediately.'
-        : 'Paket gratis Spark memberikan kuota 2x audit ide & lean PRD per bulan per pengguna/perangkat. Kuota gratis ini otomatis di-reset kembali menjadi 2x kuota baru pada setiap tanggal 1 awal bulan baru (pukul 00:00 WIB). Sesi browser tamu aktif selama 7 hari, sehingga disarankan untuk segera mengekspor atau mengunduh ringkasan dokumen Markdown/PDF ke komputer atau ponsel Anda.'
+        ? 'The free Spark tier includes 2 idea audits (Phase 1–2) per month per guest session. This free quota automatically resets back to 2 credits on the 1st of every month (00:00 UTC). Unsaved guest sessions expire in 7 days, so we recommend downloading your Markdown or PDF summary immediately.'
+        : 'Paket gratis Spark memberikan kuota 2x audit ide & lean PRD (Fase 1–2) per bulan per pengguna/perangkat. Kuota gratis ini otomatis di-reset kembali menjadi 2x kuota baru pada setiap tanggal 1 awal bulan baru (pukul 00:00 WIB). Sesi browser tamu aktif selama 7 hari, sehingga disarankan untuk segera mengekspor atau mengunduh ringkasan dokumen Markdown/PDF ke komputer atau ponsel Anda.'
     },
     {
+      category: 'SLA_GARANSI_HUKUM',
       q: isEn ? 'What is the validity period and revision window for each package?' : 'Berapa lama masa berlaku akses dokumen dan jendela revisi untuk masing-masing paket?',
       a: isEn
-        ? 'All paid tiers (Starter, Pro Agentic, Enterprise) grant lifetime download and reading access to your generated blueprints. In addition: Lite provides a 30-day form parameter revision window; Pro provides a 6-month window for unlimited AI re-prompts, schema tweaks, and architecture regenerations; Ultimate provides 1 year of priority enterprise updates plus a 60-day window to schedule your 60-minute 1-on-1 Google Meet session with our Lead Architect. For custom development contracts, Full MVP includes a 3-month SLA bug warranty post-deployment.'
-        : 'Semua paket berbayar (Starter, Pro Agentic, Enterprise) memberikan hak akses dan unduh dokumen seumur hidup (Lifetime Download). Selain itu: Paket Lite memiliki jendela revisi form parameter selama 30 hari; Paket Pro menyediakan 6 bulan akses regenerasi AI sepuasnya (unlimited re-prompt) dan pembaruan arsitektur; Paket Ultimate mencakup 1 tahun prioritas pembaruan skema enterprise serta jendela 60 hari untuk memesan sesi Google Meet 60 menit bersama Lead Architect Neriah Pro. Untuk kontrak custom development, Full MVP dilengkapi 3 bulan garansi bug dan SLA prioritas pasca-peluncuran live.'
+        ? 'All paid tiers (Starter, Single-App Pass, Pro Agentic, Agency, Ultimate) grant lifetime download and reading access to your generated blueprints. In addition: Starter provides a 30-day form parameter revision window; Pro Agentic provides a 6-month window for unlimited AI re-prompts, schema tweaks, and architecture regenerations; Ultimate OS provides 1 year of priority enterprise updates plus a 60-day window to schedule your 60-minute 1-on-1 Google Meet session with our Lead Architect. For custom development contracts, Full MVP includes a 90-day (3-month) Post-BAST Contractual SLA bug warranty.'
+        : 'Semua paket berbayar (Starter, Single-App Pass, Pro Agentic, Agency, Ultimate) memberikan hak akses dan unduh dokumen seumur hidup (Lifetime Download). Selain itu: Paket Starter memiliki jendela revisi form parameter selama 30 hari; Paket Pro Agentic menyediakan 6 bulan akses regenerasi AI sepuasnya (unlimited re-prompt) dan pembaruan arsitektur; Paket Ultimate OS mencakup 1 tahun prioritas pembaruan skema enterprise serta jendela 60 hari untuk memesan sesi Google Meet 60 menit bersama Lead Architect Neriah Pro. Untuk kontrak custom development, Full MVP dilengkapi 90 hari (3 bulan) Garansi Bug SLA Kontraktual pasca-BAST Digital.'
     },
     {
+      category: 'SATU_PINTU',
       q: isEn ? 'Why should we pay Rp 2,500,000 for Advisory Blueprint if we already have in-house programmers?' : 'Mengapa butuh Jasa Blueprint Studio (Rp 2.500.000) jika kami sudah memiliki programmer in-house?',
       a: isEn
-        ? 'Most software projects fail not because programmers cannot code, but because of vague specifications, messy database schemas, and scope creep. The Advisory Blueprint gives your team a battle-tested technical roadmap (26-parameter PRD, PostgreSQL Strict ULID ERD, O(1) Keyset pagination, and 5 sprint work breakdowns) saving you months of costly re-engineering.'
-        : 'Sebagian besar proyek gagal bukan karena programmer tidak bisa coding, melainkan karena ketiadaan cetak biru arsitektur yang solid: skema database tidak terindeks dengan baik, spesifikasi fitur kabur, dan sprint berantakan. Paket Advisory Blueprint memberikan roadmap teknis siap eksekusi (PRD 26 parameter, skema PostgreSQL Strict ULID, arsitektur pagination O(1), dan WBS 5 sprint) sehingga tim Anda hemat ratusan jam revisi.'
+        ? 'Most software projects fail not because programmers cannot code, but because of vague specifications, messy database schemas, and scope creep. The Advisory Blueprint gives your team a battle-tested technical roadmap (26-parameter PRD, PostgreSQL Strict ULID ERD, O(1) Keyset pagination, and 5 sprint work breakdowns) saving you months of costly re-engineering—plus 100% of this fee deducts your 50% DP if you later upgrade to Full Turnkey MVP.'
+        : 'Sebagian besar proyek gagal bukan karena programmer tidak bisa coding, melainkan karena ketiadaan cetak biru arsitektur yang solid: skema database tidak terindeks dengan baik, spesifikasi fitur kabur, dan sprint berantakan. Paket Advisory Blueprint memberikan roadmap teknis siap eksekusi (PRD 26 parameter, skema PostgreSQL Strict ULID, arsitektur pagination O(1), dan WBS 5 sprint) sehingga tim Anda hemat ratusan jam revisi—serta 100% biayanya memotong DP 50% jika Anda lanjut ke Full Turnkey MVP.'
     },
     {
+      category: 'AI_MCP_SECURITY',
       q: isEn
-        ? 'What are the "10 Pillars of Software Factory OS" included in Neriah Pro Project OS?'
-        : 'Apa itu "10 Pilar Software Factory OS" yang menjadi standar rekayasa Project OS Neriah Pro?',
+        ? 'What are the "20 Pillars of Software Factory OS v11.0 Paripurna" included in Neriah Pro Project OS?'
+        : 'Apa itu "20 Pilar Software Factory OS v11.0 Paripurna" yang menjadi standar rekayasa Project OS Neriah Pro?',
       a: isEn
-        ? 'The 10 Pillars constitute our turnkey engineering operating system to eliminate software failure: (1) Brain & Contract Spec: 26-parameter PRD, Mermaid dataflows, OpenAPI 3.1 contracts, and ADR Suite. (2) Interface & UI/UX: Anti-AI-slop Clean Solid Brutalism with 100% dark/light mode fidelity, 4 core screen wireframes, and WCAG AAA micro-states. (3) Scaffold Container Stack: Production-ready Docker Compose (PHP 8.4, PostgreSQL 16, Redis 7, Nginx HTTP/2). (4) Synthetic Vital Data: Seeder engine with 100+ realistic records and stress benchmark scale mode. (5) AI Agent Intelligence: Strict directives (.cursorrules, AGENTS.md, CLAUDE.md) + Enhanced Context Engine (ECC) rules for zero-hallucination AI pair-programming. (6) QA Assurance & E2E: Automated Pest ApiContractTest suite + Playwright browser automation running 100% green. (7) Server CI/CD Expressway: GitHub Actions pipeline and zero-downtime deploy.sh across 6 production scenarios with smoke tests. (8) Observability & Telemetry: Health probes (/healthz, /livez, /readyz), structured Prometheus metrics, and error listeners. (9) Disaster Recovery & Zero-Data-Loss: Encrypted backup/restore drills (backup.sh, restore.sh) and recovery runbooks. (10) Living Contract & Interactive Docs: Scalar interactive API reference (/docs/api) and living architecture sync.'
-        : '10 Pilar Software Factory OS adalah sistem operasi rekayasa perangkat lunak enterprise Neriah Pro untuk mengeliminasi risiko kegagalan proyek: (1) Brain & Contract Spec: Dokumen PRD 26 parameter, diagram alur Mermaid, spesifikasi OpenAPI 3.1, dan ADR Suite. (2) Interface & UI/UX: Desain Clean Solid Brutalism anti-AI-slop, 100% Dark & Light Mode, wireframe 4 layar utama, dan 4 micro-states WCAG AAA. (3) Scaffold Container Stack: Docker Compose siap produksi (PHP 8.4, PostgreSQL 16, Redis 7, Nginx HTTP/2). (4) Synthetic Vital Data: Engine seeder 100+ baris data realistis siap uji dan mode benchmark beban. (5) AI Agent Intelligence: Aturan baku (.cursorrules, AGENTS.md, CLAUDE.md) + Enhanced Context Engine (ECC) untuk memandu AI coding agent tanpa halusinasi. (6) QA Assurance & E2E: Suite uji otomatis Pest ApiContractTest + otomasi browser Playwright yang lolos 100% hijau. (7) Server CI/CD Expressway: Pipeline GitHub Actions dan skrip deploy.sh 6 skenario tanpa downtime plus smoke test. (8) Observability & Telemetry: Health probes (/healthz, /livez, /readyz), metrik terstruktur, dan error listener. (9) Disaster Recovery & Zero-Data-Loss: Skrip backup/restore terenkripsi (backup.sh, restore.sh) dan runbook pemulihan bencana. (10) Living Contract & Interactive Docs: Dokumentasi interaktif Scalar (/docs/api) dan sinkronisasi arsitektur hidup.',
+        ? 'Project OS v11.0 expands our core 10 Pillars into 20 Paripurna Engineering Pillars: (1–10) 26-Parameter PRD, Clean Solid Brutalist UI/UX, Docker PHP 8.5/PG16/Redis Stack, 100+ Realistic ID Domain Seeders, AI Agent Directives (.cursorrules/AGENTS.md), Automated Pest/Playwright Contract Suite, GitHub Actions + deploy.sh CI/CD, Health Probes (/healthz), Encrypted Disaster Recovery Drills, and Scalar OpenAPI 3.1 Docs; PLUS (11–20) 12 Sectoral × 36 Visual UI Cockpits, Zone B 60fps Scrollytelling Presets, Dual-Persona Studio & Co-Design Room, 7-Phase Prompt Sequencer & CLI /init, Live 2-Way MCP Server Bridge, NeriahPro AgentShield & Living CVE Autopatch, Multi-Graph Schema.org + /llms.txt GEO Authority, UU PDP AES-256 + HMAC-SHA256 Blind Index Vault, Offline Outbox PWA Background Sync, and Post-BAST 90-Day SLA Triage + Multi-Entity Holding Consolidation.'
+        : 'Project OS v11.0 memperluas 10 Pilar inti menjadi 20 Pilar Rekayasa Paripurna: (1–10) PRD 26 Parameter, UI/UX Clean Solid Brutalism, Docker PHP 8.5/PG16/Redis, 100+ Seeder Data Realistis Indonesia, Direktif AI (.cursorrules/AGENTS.md), Suite Uji Kontrak Pest/Playwright, CI/CD GitHub Actions + deploy.sh, Health Probes (/healthz), Backup Terenkripsi & DR Runbook, serta Scalar OpenAPI 3.1; DITAMBAH (11–20) 12 Sektor × 36 Visual UI Kokpit, Zona B 6 Preset Scrollytelling 60fps, Dual-Persona Studio & Co-Design Room, 7-Fase Prompt & CLI /init, Jembatan Live MCP 2-Arah, NeriahPro AgentShield & Living CVE Autopatch, Schema.org Multi-Graph + GEO /llms.txt, Brankas Privasi UU PDP Blind Index HMAC-SHA256, Offline Outbox PWA Anti-Sinyal-Buruk, serta Garansi SLA 90 Hari Pasca-BAST + Konsolidasi Holding Multi-Cabang.'
     },
     {
+      category: 'UI_UX_12_SEKTOR',
       q: isEn
         ? 'Why does Project OS enforce PostgreSQL Strict ULID and Keyset Cursor Pagination O(1)?'
         : 'Mengapa Project OS mewajibkan arsitektur PostgreSQL Strict ULID dan Keyset Cursor Pagination O(1)?',
       a: isEn
-        ? 'To guarantee enterprise scalability for millions of records and concurrent users without performance degradation. Conventional AUTO_INCREMENT integers leak business volume, fail in distributed databases, and are vulnerable to enumeration attacks. ULIDs (Universally Unique Lexicographically Sortable Identifiers) provide 128-bit distributed uniqueness with sub-millisecond chronological sorting and zero lock contention. Furthermore, conventional OFFSET-based pagination degrades exponentially as page numbers grow (O(N) full-table scanning); Keyset Cursor Pagination guarantees constant O(1) sub-10ms response times even on tables with tens of millions of rows.'
-        : 'Untuk menjamin skalabilitas kelas enterprise yang mampu menangani jutaan data dan ribuan pengunjung bersamaan tanpa penurunan performa (anti-lemot). Primary key AUTO_INCREMENT tradisional membocorkan volume transaksi bisnis, rawan serangan enumerasi ID, dan rusak saat migrasi distributed database. Project OS menggunakan ULID (Universally Unique Lexicographically Sortable Identifier) yang aman, acak terdistribusi, namun tetap berurutan kronologis secara presisi. Selain itu, pagination konvensional berbasis OFFSET melambat drastis saat halaman membesar (O(N) scanning); Keyset Cursor Pagination O(1) menjamin kecepatan query stabil di bawah 10 milidetik bahkan pada tabel berisi puluhan juta data.'
+        ? 'To guarantee enterprise scalability for millions of records and concurrent users without performance degradation. Conventional AUTO_INCREMENT integers leak business volume, fail in distributed databases, and are vulnerable to enumeration attacks. ULIDs (Universally Unique Lexicographically Sortable Identifiers, VARCHAR(26) via ->ulid("id")->primary()) provide 128-bit distributed uniqueness with sub-millisecond chronological sorting and zero PostgreSQL UUID type-cast errors. Furthermore, Keyset Cursor Pagination guarantees constant O(1) sub-10ms response times even on tables with tens of millions of rows.'
+        : 'Untuk menjamin skalabilitas kelas enterprise yang mampu menangani jutaan data dan ribuan pengunjung bersamaan tanpa penurunan performa (anti-lemot). Primary key AUTO_INCREMENT tradisional membocorkan volume transaksi bisnis, rawan serangan enumerasi ID, dan rusak saat migrasi distributed database. Project OS menggunakan ULID 26-karakter (->ulid("id")->primary()) yang aman, terdistribusi, berurutan kronologis, dan bebas error tipe UUID PostgreSQL. Selain itu, Keyset Cursor Pagination O(1) menjamin kecepatan query stabil di bawah 10 milidetik bahkan pada tabel berisi puluhan juta data.'
     },
     {
+      category: 'SLA_GARANSI_HUKUM',
       q: isEn
         ? 'How do clients monitor development progress in real-time via Master Gantt Timeline & Customer Portal?'
         : 'Bagaimana cara klien memantau progres pengerjaan secara real-time via Master Gantt Timeline & Customer Portal?',
       a: isEn
-        ? 'Every client receives access to their dedicated Customer Portal (/customer/dashboard). Inside, an interactive Master Gantt Timeline powered by local Mermaid.js visualization tracks all 5 sprints in real-time. Clients can inspect sprint phases (Sprint 1: DB & Auth, Sprint 2: Core Business Engine, Sprint 3: Integrations & Payments, Sprint 4: QA & Contract Tests, Sprint 5: Hardening & Cloud Deploy), view active milestones, download intermediate deliverables, verify test statuses, and communicate directly with the Lead Architect without opaque "black box" development.'
-        : 'Setiap klien mendapatkan akun resmi di Customer Portal Neriah Pro (/customer/dashboard). Di dalamnya, terdapat Master Gantt Timeline interaktif ditenagai pustaka lokal Mermaid.js (zero CDN latency) yang memvisualisasikan seluruh 5 sprint secara real-time. Klien dapat memantau fase sprint (Sprint 1: Fondasi DB & Auth, Sprint 2: Core Engine & Transaksi, Sprint 3: Integrasi Pembayaran Midtrans, Sprint 4: QA & ApiContractTest, Sprint 5: VPS Hardening & Live Deploy), mengecek milestone aktif, mengunduh deliverable parsial, dan berkoordinasi transparan dengan Principal Architect tanpa ada proses "black box".'
+        ? 'Every client receives access to their dedicated Customer Portal (/customer/dashboard). Inside, an interactive Master Gantt Timeline powered by local Mermaid.js visualization tracks all 5 sprints in real-time alongside 9 transparency tabs (Deliverables, Payments, Legal Contracts, Change Requests, Co-Design Alignment, and Post-BAST 90-Day SLA & UU PDP Privacy Vault).'
+        : 'Setiap klien mendapatkan akun resmi di Customer Portal Neriah Pro (/customer/dashboard). Di dalamnya terdapat Master Gantt Timeline interaktif berbasis pustaka lokal Mermaid.js (zero CDN latency) yang memvisualisasikan seluruh 5 sprint secara real-time beserta 9 tab transparansi penuh (Deliverable, Pembayaran, Kontrak Legal SHA-256, Change Request, Co-Design Room, hingga Garansi SLA 90 Hari & Brankas Privasi UU PDP).'
     },
     {
+      category: 'SLA_GARANSI_HUKUM',
       q: isEn
         ? 'Why does Neriah Pro restrict sprint capacity (Managed Capacity) to max 2-3 parallel projects per batch?'
         : 'Mengapa Neriah Pro membatasi kapasitas sprint (Managed Capacity) maksimal 2–3 proyek per batch?',
       a: isEn
-        ? 'To preserve elite engineering craftsmanship and guarantee zero burnout or "AI-slop" code generation. Software development agencies that take on dozens of concurrent projects inevitably assign junior freelancers or deliver rushed, unstable code. Neriah Pro strictly limits intake to 2-3 projects per batch (Batch 1, Batch 2, Batch Q1). Once batch capacity is full, the schedule locks via our Anti-Collision Engine, ensuring our Senior Architects and Engineers give 100% dedicated, uninterrupted focus to your codebase until production deployment.'
-        : 'Demi menjaga standar rekayasa kelas atas (craftsmanship) dan menjamin kode yang dihasilkan bebas dari "AI-slop" atau bug tersembunyi. Agensi software tradisional sering menerima belasan proyek sekaligus hingga developer kelelahan (burnout) dan akhirnya melempar pekerjaan ke freelancer junior yang asal jadi. Neriah Pro secara ketat membatasi kapasitas maksimal 2–3 proyek per batch (Batch 1, Batch 2, Batch Q1). Ketika slot batch terisi, jadwal terkunci via Anti-Collision Engine sehingga tim Senior Architect dan Engineer kami fokus penuh 100% pada sistem Anda hingga live bergaransi di server produksi.'
+        ? 'To preserve elite engineering craftsmanship and guarantee zero burnout or "AI-slop" code generation. Neriah Pro strictly limits intake to 2-3 projects per batch (Batch 1, Batch 2, Batch Q1). Once batch capacity is full, the schedule locks via our Anti-Collision Engine, ensuring our Senior Architects and Engineers give 100% dedicated, uninterrupted focus to your codebase until production deployment.'
+        : 'Demi menjaga standar rekayasa kelas atas (craftsmanship) dan menjamin kode yang dihasilkan bebas dari "AI-slop" atau bug tersembunyi. Neriah Pro secara ketat membatasi kapasitas maksimal 2–3 proyek per batch (Batch 1, Batch 2, Batch Q1). Ketika slot batch terisi, jadwal terkunci via Anti-Collision Engine sehingga tim Senior Architect dan Engineer kami fokus penuh 100% pada sistem Anda hingga live bergaransi di server produksi.'
     },
     {
+      category: 'AI_MCP_SECURITY',
       q: isEn
         ? 'How do the AI Coding Directives (.cursorrules, AGENTS.md, CLAUDE.md) empower our team after handover?'
         : 'Bagaimana aturan agen AI (.cursorrules, AGENTS.md, CLAUDE.md) memberdayakan tim developer kami setelah serah terima?',
       a: isEn
-        ? 'Modern development heavily leverages AI assistants like Cursor, Windsurf, GitHub Copilot, and Claude Code. However, without strict architectural context, AI hallucinates legacy syntax, uses vulnerable packages, and introduces O(N) performance regressions. Our Project OS packages embed battle-tested directive files (.cursorrules, AGENTS.md, CLAUDE.md) tailored to your exact stack (Laravel 13, Filament v5, PostgreSQL ULID, Keyset Cursor). When your developers open your project in AI IDEs, the AI assistant immediately respects your architecture, coding conventions, and security rules without continuous re-prompting.'
-        : 'Pengembangan software modern kini mengandalkan AI coding tools seperti Cursor, Windsurf, GitHub Copilot, dan Claude Code. Namun tanpa panduan arsitektur yang ketat, AI sering berhalusinasi, menulis kode usang, atau merusak skema database dengan query yang lambat. Deliverable Project OS menyertakan berkas direktif siap pakai (.cursorrules, AGENTS.md, CLAUDE.md) yang disesuaikan persis dengan stack teknologi proyek Anda (Laravel 13, Filament v5, PostgreSQL ULID, Keyset Cursor O(1)). Ketika developer Anda membuka repositori, AI coding assistant akan otomatis mematuhi aturan arsitektur, konvensi penamaan, dan standar keamanan tanpa perlu berulang kali di-prompting manual.'
+        ? 'Our Project OS packages embed battle-tested directive files (.cursorrules, AGENTS.md, CLAUDE.md, SYMBOL_MANIFEST.json) tailored to your exact stack (Laravel 13, Filament v5, PostgreSQL ULID, Keyset Cursor). When your developers open your project in Cursor, Claude Code, Windsurf, or Antigravity IDE, the AI assistant immediately respects your architecture, coding conventions, and security rules without continuous re-prompting.'
+        : 'Deliverable Project OS menyertakan berkas direktif siap pakai (.cursorrules, AGENTS.md, CLAUDE.md, SYMBOL_MANIFEST.json) yang disesuaikan persis dengan stack teknologi proyek Anda (Laravel 13, Filament v5, PostgreSQL ULID, Keyset Cursor O(1)). Ketika developer Anda membuka repositori di Cursor, Claude Code, Windsurf, atau Antigravity IDE, asisten AI otomatis mematuhi aturan arsitektur, konvensi penamaan, dan standar keamanan tanpa perlu di-prompting manual berulang kali.'
     },
     {
-      q: isEn ? 'How does the 50% Down Payment (DP) work for Full MVP Development?' : 'Bagaimana skema pembayaran Uang Muka (DP) 50% untuk Full MVP?',
+      category: 'SLA_GARANSI_HUKUM',
+      q: isEn ? 'How does the Escrow Milestone / Down Payment (DP) work for Full MVP Development?' : 'Bagaimana skema pembayaran Escrow Bertahap / Uang Muka (DP) untuk Full MVP?',
       a: isEn
-        ? 'We enforce Scope Locking and Digital Legal Contracts. To kickstart the 5 sprints development, clients settle a 50% DP securely via Midtrans Snap or official Bank Transfer (Termin Pembayaran Bertahap). The remaining 50% is paid upon User Acceptance Testing (UAT) and successful deployment to production VPS.'
-        : 'Kami menerapkan transparansi penuh dengan Kontrak Hukum Digital dan Scope Locking. Untuk memulai pengerjaan 5 sprint, klien membayarkan DP 50% via Midtrans Snap atau Transfer Bank resmi dengan skema termin pembayaran bertahap. Sisa 50% dilunasi setelah User Acceptance Testing (UAT) tuntas dan sistem live di server produksi.'
+        ? 'We enforce Scope Locking and Digital Legal Contracts (SPK SHA-256). Clients can settle via 3-Stage Escrow Milestones (30% DP Kickoff [Phase 1–2], 50% Live Staging Verification [Phase 3–5], and 20% Final BAST Handover [Phase 6–7]) or 50%/50% Termin via Midtrans Snap / Official Bank Transfer.'
+        : 'Kami menerapkan transparansi penuh dengan Kontrak Hukum Digital (SPK SHA-256) dan Scope Locking. Klien dilindungi skema Escrow 3-Termin Bertahap (DP 30% Kickoff [Fase 1–2], Termin 50% Verifikasi Live Staging [Fase 3–5], dan Pelunasan 20% Serah Terima BAST [Fase 6–7]) atau skema 50%/50% via Midtrans Snap / Transfer Bank resmi.'
     },
     {
+      category: 'SLA_GARANSI_HUKUM',
       q: isEn ? 'Who owns the intellectual property and source code in Neriah Pro Studio contracts?' : 'Siapakah pemilik hak cipta dan source code aplikasi pada pengerjaan Neriah Pro Studio?',
       a: isEn
-        ? '100% Client Ownership. We transfer full source code, database dumps, server credentials, and documentation without vendor lock-in or recurring proprietary licensing.'
-        : '100% Hak Milik Klien. Seluruh kode sumber (Laravel 13, Filament v5, Livewire 4, React Islands), skema database, akun server VPS, dan dokumentasi PRD diserahkan penuh kepada Anda tanpa biaya lisensi tersembunyi.'
+        ? '100% Client Ownership. Upon final BAST settlement, we transfer full source code, database dumps, server credentials, and documentation without vendor lock-in or recurring proprietary licensing.'
+        : '100% Hak Milik Klien. Setelah pelunasan BAST, seluruh kode sumber (Laravel 13, Filament v5, Livewire 4, React Islands), skema database, akun server VPS, dan dokumentasi PRD diserahkan penuh kepada Anda tanpa biaya lisensi berulang atau vendor lock-in.'
     },
     {
-      q: isEn ? 'Can UMKM apply promotional vouchers for additional subsidies?' : 'Bagaimana cara UMKM mengklaim voucher subsidi 50%?',
-      a: isEn
-        ? 'Simply copy the voucher code UMKM-SUBSIDI-50 and enter it in our fast booking modal or WhatsApp chat. Our team will verify eligibility and apply the subsidy instantly.'
-        : 'Cukup salin kode voucher UMKM-SUBSIDI-50 di banner promosi atas, lalu tempelkan pada formulir pemesanan atau konsultasikan via WhatsApp kami. Tim kami akan memverifikasi unit usaha Anda dan memotong harga secara instan.'
-    },
-    {
-      q: isEn ? 'What is the estimated delivery timeline for Studio contracts?' : 'Berapa lama estimasi pengerjaan masing-masing paket Studio Neriah Pro?',
-      a: isEn
-        ? 'Advisory Blueprint PRD is generated and finalized within 24 - 48 hours. Full MVP Rapid Monolith takes 4 to 6 weeks spanning 5 structured sprints.'
-        : 'Paket Advisory Blueprint diselesaikan dalam 24 hingga 48 jam kerja setelah sesi discovery awal. Sedangkan Full MVP diselesaikan dalam rentang 4 hingga 6 minggu (5 sprint terstruktur).'
-    },
-    {
-      q: isEn ? 'Does Project OS support Decoupled / Headless architecture as well as Monolith?' : 'Apakah Project OS mendukung arsitektur Decoupled / Headless atau hanya Monolith?',
-      a: isEn
-        ? 'Yes, 100% supports both paradigms! Project OS evaluates your business domain: if your team requires independent frontends (Next.js 15 App Router / Nuxt 3) or mobile apps (Flutter / React Native) with headless APIs, it outputs a complete 2026+ Decoupled blueprint (Cloudflare Pages edge, Coolify VPS backend, Cloudflare R2 $0 egress, OpenAPI 3.1 & Scalar docs, X-Idempotency-Key guard, and Keyset O(1) pagination) with lean infrastructure costs.'
-        : 'Ya, 100% mendukung kedua paradigma! Project OS mengevaluasi domain bisnis Anda secara cerdas: jika tim Anda membutuhkan frontend independen (Next.js 15 App Router / Nuxt 3) atau mobile multi-platform (Flutter / React Native) dengan headless API, sistem otomatis menerbitkan cetak biru Decoupled 2026+ lengkap (Cloudflare Pages edge, Coolify VPS backend, Cloudflare R2 $0 egress, kontrak OpenAPI 3.1 & Scalar docs, proteksi X-Idempotency-Key, dan Keyset O(1) pagination) dengan biaya server yang sangat efisien.'
-    },
-    {
-      q: isEn ? 'What is the Refund Policy and Money-Back Guarantee for blueprints and custom development?' : 'Bagaimana kebijakan pengembalian dana (Refund Policy) dan garansi hasil pengerjaan?',
-      a: isEn
-        ? 'Self-service digital blueprints (Spark, Starter, Pro Agentic, Enterprise) deliver instant digital assets and are non-refundable once unlocked/downloaded, except in verified technical delivery failures reported within 7 days. For Custom Engineering Studio contracts, we provide a 30-Day SLA Bug Warranty post-deployment. If a client requests termination before sprint kickoff, the 50% Down Payment is refunded 100% (minus payment gateway administrative fees). Once sprints commence, refunds are evaluated proportionally against unstarted sprint milestones.'
-        : 'Produk blueprint digital mandiri (Spark, Starter, Pro Agentic, Enterprise) merupakan aset digital instan dan bersifat non-refundable setelah diunduh/dibuka, kecuali terdapat kendala teknis sistem yang terverifikasi dalam 7 hari kerja. Untuk kontrak Custom Engineering Studio, Neriah Pro memberikan Garansi SLA 30 Hari pasca-live di server VPS untuk perbaikan bug gratis. Apabila klien membatalkan proyek sebelum sprint dimulai, DP 50% dikembalikan 100% (dikurangi biaya admin payment gateway Midtrans). Jika pembatalan terjadi saat sprint berjalan, pengembalian dihitung proporsional terhadap milestone sprint yang belum dikerjakan.'
-    },
-    {
-      q: isEn ? 'How does Neriah Pro handle duplicate orders or double payments?' : 'Bagaimana Neriah Pro menangani pesanan ganda (double payment) atau kelebihan transfer?',
-      a: isEn
-        ? 'Our billing system features an Anti-Collision Engine with ULID order deduplication and Midtrans webhook idempotency. If your bank or e-wallet is debited twice due to a network glitch, our backend instantly detects the collision. The duplicate amount is either auto-refunded to your original payment source within 1-2 business days or credited toward your next sprint milestone balance upon your written consent.'
-        : 'Sistem pembayaran Neriah Pro dilengkapi Anti-Collision Engine dengan penomoran pesanan ULID unik dan verifikasi webhook Midtrans yang bersifat idempoten. Jika saldo atau kartu Anda terdebet ganda akibat kendala koneksi bank, sistem kami otomatis mendeteksi transaksi ganda tersebut. Dana lebih akan langsung diproses untuk refund 100% ke rekening asal dalam 1-2 hari kerja, atau dialokasikan sebagai kredit pemotong pelunasan termin berikutnya sesuai persetujuan tertulis Anda.'
-    },
-    {
-      q: isEn ? 'What is the order cancellation policy and procedure?' : 'Bagaimana syarat dan prosedur pembatalan pesanan (Order Cancellation)?',
-      a: isEn
-        ? 'Unpaid orders in "Awaiting Payment" status expire and cancel automatically after 24 hours without penalty. For active studio projects, cancellation requests must be submitted via email to support@neriahpro.com or through your project client portal before sprint development starts. Once sprint development commences, work completed and repository commits are frozen and handed over in full according to the contract scope.'
-        : 'Pesanan dengan status "Awaiting Payment" otomatis kadaluarsa dan dibatalkan secara sistem setelah 24 jam tanpa penalti. Untuk proyek studio aktif, permohonan pembatalan harus dikirimkan melalui email support@neriahpro.com atau portal klien sebelum sprint dimulai. Apabila pembatalan diajukan saat sprint tengah berlangsung, seluruh koding, skema database, dan dokumen yang telah diselesaikan akan diserahterimakan seutuhnya sesuai ruang lingkup termin yang berjalan.'
-    },
-    {
-      q: isEn ? 'How can I request changes (Change Request / Addendum) if the scope expands during development?' : 'Bagaimana jika saya ingin menambah fitur atau mengubah scope (Change Request) di tengah jalan?',
-      a: isEn
-        ? 'Neriah Pro implements a strict Scope Locking protocol. Any feature request outside the initially agreed PRD blueprint must be submitted formally via the "Change Request (CR) / Addendum" module in your Customer Portal Dashboard. We do not accept arbitrary scope changes via WhatsApp or Email. Once submitted, our Principal Architect will evaluate the CR and issue a supplementary Addendum invoice with an estimated timeline adjustment. Coding for the new feature will only begin after the Addendum is signed and paid.'
-        : 'Neriah Pro menerapkan protokol Scope Locking yang ketat untuk mencegah kelebihan beban kerja (scope creep). Seluruh permintaan fitur baru atau perubahan logika yang keluar dari spesifikasi dokumen PRD awal WAJIB diajukan secara resmi melalui modul "Change Request (CR) / Addendum" di Customer Portal Dashboard. Kami tidak menerima sisipan revisi dadakan via WhatsApp atau telepon. Setelah form diajukan, Principal Architect kami akan mengevaluasi CR tersebut dan menerbitkan Invoice Addendum beserta penyesuaian estimasi waktu. Pengerjaan fitur tambahan baru akan dimulai setelah Addendum disetujui dan dilunasi.'
-    },
-    {
+      category: 'UI_UX_12_SEKTOR',
       q: isEn ? 'Why does Project OS classify applications into 12 Sectoral Industrial UI/UX Archetypes instead of standard CRUD tables?' : 'Mengapa Project OS memetakan aplikasi ke 12 Sectoral Industrial UI/UX Archetypes dan melarang tabel CRUD generik?',
       a: isEn
         ? 'Real-world operational software fails when every industry is forced into the same generic CRUD table. A retail cashier needs a mouse-free 100vh Split POS Terminal (F1/F2/F8 shortcuts), a doctor needs a 3-Pane Clinical Cockpit (Queue + Allergy Banner | SOAP | FEFO Rx) with zero stacked modals, and an accountant needs a balanced Spreadsheet Ledger locking [Post Journal] until Debit == Credit. Project OS compiles exact industry ergonomics, keyboard shortcuts, and Indonesian Realistic Domain Seeders automatically.'
         : 'Aplikasi bisnis nyata gagal di lapangan jika seluruh industri dipaksa memakai tabel CRUD generik yang sama. Kasir toko membutuhkan Split POS Terminal 100vh bebas mouse (pintasan F1/F2/F8), dokter membutuhkan Clinical 3-Pane Cockpit (Antrean + Banner Alergi | SOAP | Resep FEFO) tanpa tumpukan modal, dan akuntan membutuhkan Spreadsheet Ledger yang mengunci tombol [Post Journal] hingga Debit == Kredit. Project OS mengompilasi ergonomi spesifik industri beserta Realistic Domain Seeder Indonesia secara otomatis.'
     },
     {
+      category: 'AI_MCP_SECURITY',
       q: isEn ? 'How do the Phased Prompt Sequencer (Phase 1–7), Brownfield Importer, and 1-Command CLI Bootstrapper work?' : 'Bagaimana cara kerja Phased Prompt Sequencer (Fase 1–7), Brownfield SQL Importer, dan 1-Command CLI Bootstrapper?',
       a: isEn
         ? 'Instead of dumping a massive 50-page PRD into an AI IDE at once (which triggers context-overflow and broken code), Project OS slices execution into 7 deterministic phases (.agents/prompts/01-foundation.md through 07-security-redteam.md), enforces TDD 100% green before UI, includes ./verify-blueprint.sh to catch UI slop, audits legacy SQL schemas for Zero-Data-Loss Shadow ULID migration, and initializes your entire repository in 3 seconds via curl -sL https://neriahpro.com/init/{ULID} | bash.'
         : 'Daripada menyuapi AI coding agent dengan satu dokumen raksasa sekaligus (yang menyebabkan context overflow dan halusinasi), Project OS memecah eksekusi ke dalam 7 fase deterministik (.agents/prompts/01-foundation.md s/d 07-security-redteam.md), mewajibkan 100% test hijau sebelum menyentuh UI, menyertakan ./verify-blueprint.sh pencegah UI slop, mengaudit database SQL warisan untuk migrasi Shadow ULID tanpa kehilangan data, serta menginisialisasi repositori dalam 3 detik cukup dengan satu perintah terminal: curl -sL https://neriahpro.com/init/{ULID} | bash.'
     },
     {
+      category: 'AI_MCP_SECURITY',
       q: isEn ? 'What happens at Day-30 or Day-90 when I want to add new features (v1.0 -> v1.1) without breaking my live production app?' : 'Apa yang terjadi pada Hari ke-30 atau ke-90 saat saya ingin menambah fitur baru (v1.0 -> v1.1) tanpa merusak kode produksi yang sudah jalan?',
       a: isEn
-        ? 'Project OS v4.0 includes an Iterative Change Request & Surgical Delta Generator. Instead of rewriting your application, it computes the exact delta between v1.0 and v1.1 and outputs ONLY additive strict-ULID migrations (zero DROP TABLE), graph.json diffs, Gemini tool deltas, and Zero-Regression tests. Plus, via the Live MCP Server Bridge (neriahpro-mcp .mcp.json), Claude Code, Cursor, and Antigravity IDE read your blueprint directly and mark phases Verified ✅ in real time.'
-        : 'Project OS v4.0 dilengkapi Iterative Change Request & Surgical Delta Generator (v1.0 -> v1.1). Alih-alih menulis ulang aplikasi dan berisiko merusak tabel yang sudah live, sistem menghitung selisih presisi dan HANYA menghasilkan migrasi ULID aditif (tanpa DROP TABLE), pembaruan graph.json, serta tes regresi otomatis. Ditambah lagi, melalui Live MCP Server Bridge (neriahpro-mcp .mcp.json), Claude Code, Cursor, dan Antigravity IDE terhubung langsung dua arah tanpa copy-paste manual.'
-    },
-    {
-      q: isEn ? 'How do the 3-Pane Architect Studio, Deterministic Decision Matrix match(), and Phase 7 Red-Team Suite prevent AI code slop?' : 'Bagaimana 3-Pane Architect Studio, Deterministic Decision Matrix match(), dan Fase 7 Red-Team mencegah kode AI Slop?',
-      a: isEn
-        ? 'Inside /blueprint/studio, complex multi-condition pricing/discount/penalty rules are modeled in a Spreadsheet Decision Matrix and compiled into deterministic PHP 8.4+ match() expressions with DECIMAL(19,4) HALF_UP rounding—eliminating spaghetti nested if-else blocks. Phase 7 automatically generates TenantIsolationSecurityTest.php to test cross-tenant IDOR (404), Livewire #[Locked] tampering, Private Disk unsigned URL leaks (403), and AI Copilot Prompt Injection before deployment.'
-        : 'Di dalam /blueprint/studio, aturan bisnis kompleks (diskon grosir bertingkat, denda keterlambatan, klaim split-bill) disusun dalam Spreadsheet Decision Matrix dan dikompilasi menjadi ekspresi PHP 8.4+ match() deterministik berpresisi DECIMAL(19,4) — membunuh tuntas kode spaghetti if-else bersarang. Fase 7 secara otomatis membangkitkan TenantIsolationSecurityTest.php untuk menguji kebocoran IDOR lintas-tenant (404), manipulasi Livewire #[Locked], kebocoran file Private Disk (403), dan serangan Prompt Injection sebelum rilis.'
+        ? 'Project OS includes an Iterative Change Request & Surgical Delta Generator. Instead of rewriting your application, it computes the exact delta between v1.0 and v1.1 and outputs ONLY additive strict-ULID migrations (zero DROP TABLE), graph.json diffs, Gemini tool deltas, and Zero-Regression tests. Plus, via the Live MCP Server Bridge (neriahpro-mcp .mcp.json), Claude Code, Cursor, and Antigravity IDE read your blueprint directly and mark phases Verified ✅ in real time.'
+        : 'Project OS dilengkapi Iterative Change Request & Surgical Delta Generator (v1.0 -> v1.1). Alih-alih menulis ulang aplikasi dan berisiko merusak tabel yang sudah live, sistem menghitung selisih presisi dan HANYA menghasilkan migrasi ULID aditif (tanpa DROP TABLE), pembaruan graph.json, serta tes regresi otomatis. Ditambah lagi, melalui Live MCP Server Bridge (neriahpro-mcp .mcp.json), Claude Code, Cursor, dan Antigravity IDE terhubung langsung dua arah tanpa copy-paste manual.'
     }
   ];
 
@@ -1087,7 +1164,7 @@ export default function ArchitecturePricingIsland({
                 const n = parseFloat(String(val ?? '').replace(/[^0-9.]+/g, ''));
                 return Number.isFinite(n) && n > 0 ? n : fallback;
               };
-              const formatIdrPlain = (num) => new Intl.NumberFormat('id-ID').format(Math.round(num));
+              const formatIdrPlain = (num) => formatRegionalNumberInput(Math.round(num), isEn ? 'en' : 'id');
 
               const sectorComplexityMap = [
                 { tables: 9, states: 7, locks: 3, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
@@ -1224,6 +1301,41 @@ export default function ArchitecturePricingIsland({
                 { key: 'umkm_starter', label: `${isEn ? 'UMKM Digital Starter (50% Subsidy)' : 'UMKM Digital Starter (Subsidi 50%)'} — Rp ${pricingSettings.umkm_price || '3.750.000'}` },
                 { key: 'blueprint_advisory', label: `${isEn ? '1-on-1 Principal Architect Advisory (100% DP Credit)' : '1-on-1 Advisory Blueprint (Potong DP 100%)'} — Rp ${pricingSettings.advisory_price || '2.500.000'}` },
               ];
+
+              const mitraPackageCatalog = {
+                full_mvp: {
+                  key: 'full_mvp',
+                  shortName: isEn ? 'Custom Full Turnkey MVP' : 'Custom Full Turnkey MVP',
+                  priceStr: `Rp ${formatIdrPlain(estimatedRabIdr)}`,
+                  priceSub: `${totalHours} ${isEn ? 'Man-Hours' : 'Jam Kerja'} (${workingDays} ${isEn ? 'Work Days' : 'Hari Kerja'})`,
+                  badge: isEn ? 'TURNKEY ESCROW SLA' : 'TERIMA BERES ESCROW',
+                  desc: isEn
+                    ? '100% Coded & Deployed by Neriah Pro Senior Team: 20 Paripurna Pillars, SPK SHA-256 Scope Lock, Live Staging & 90-Day Post-BAST SLA.'
+                    : '100% Dikodingkan & Dideploy Tim Senior Neriah Pro: 20 Pilar Paripurna, Kontrak SPK SHA-256, Live Staging & Garansi SLA 90 Hari.',
+                },
+                umkm_starter: {
+                  key: 'umkm_starter',
+                  shortName: isEn ? 'UMKM Digital Starter (50% Subsidy)' : 'UMKM Digital Starter (Subsidi 50%)',
+                  priceStr: `Rp ${pricingSettings.umkm_price || '3.750.000'}`,
+                  priceSub: isEn ? '2–3 Weeks (50% DP + 50% UAT)' : '2–3 Minggu (DP 50% + Pelunasan UAT 50%)',
+                  badge: isEn ? '50% UMKM SUBSIDY' : 'SUBSIDI UMKM 50%',
+                  desc: isEn
+                    ? 'Subsidized from normal Rp 7.5M (max 2 slots/month) for local stores & F&B: Turnkey POS/QRIS, Customer DB, WhatsApp receipt & 30-Day SLA.'
+                    : 'Subsidi 50% dari normal Rp 7,5 Jt (kuota 2 usaha/bulan) khusus toko ritel & F&B: Terima beres POS/QRIS, DB Pelanggan & Garansi 30 Hari.',
+                },
+                blueprint_advisory: {
+                  key: 'blueprint_advisory',
+                  shortName: isEn ? '1-on-1 Principal Architect Advisory' : '1-on-1 Advisory Blueprint Studio',
+                  priceStr: `Rp ${pricingSettings.advisory_price || '2.500.000'}`,
+                  priceSub: isEn ? '24–48 Hours • 100% Deducts MVP DP' : '24–48 Jam Kerja • Potong DP MVP 100%',
+                  badge: isEn ? '100% DP CREDIT' : 'POTONG DP 100%',
+                  desc: isEn
+                    ? '1-on-1 Principal Architect technical scoping, bespoke 26-Parameter PRD, Strict ULID DDL & WBS 5 Sprints. 100% credited if you proceed to Full MVP.'
+                    : 'Scoping teknis 1-on-1 bersama Principal Architect, PRD 26 Parameter kustom, DDL Strict ULID & WBS 5 Sprint. Memotong DP 50% Full MVP secara penuh.',
+                },
+              };
+
+              const activeMitraPkg = mitraPackageCatalog[wizardMitraTier] || mitraPackageCatalog['full_mvp'];
 
               const launchSatuPintuCheckout = (pkgKey) => {
                 const summaryLine = `[SATU PINTU v11.0 LOCKED] Sector=${wizardSector.code} | Stack=${wizardStackCode} | UI=${activeVisualUi.code} (${activeVisualUi.shell}) | Persona=${wizardPersonaMode} | Locale=${wizardOutputLocale.toUpperCase()}${wizardMode === 'MITRA_TURNKEY_PROJECT' ? ` | EstRAB=Rp ${formatIdrPlain(estimatedRabIdr)} (${totalHours}h)` : ''}`;
@@ -1670,22 +1782,39 @@ export default function ArchitecturePricingIsland({
                                   MITRA TURNKEY // ESCROW RAB V11.0
                                 </span>
                                 <span className="font-mono text-[10px] font-bold text-zinc-700 dark:text-zinc-300 tabular-nums">
-                                  Rp {formatIdrPlain(hourlyRate)}/jam &bull; {activeStack.mult}x
+                                  Rp {formatIdrPlain(hourlyRate)}/{isEn ? 'hr' : 'jam'} &bull; {activeStack.mult}x
                                 </span>
                               </div>
-                              <div>
+
+                              {/* 1. KOTAK KONTRAK MITRA TERPILIH (REAKTIF TERHADAP DROPDOWN LANGKAH F & PILIHAN KIRI) */}
+                              <div className="p-3 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-amber-500 space-y-1 rounded-none shadow-xs">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-mono text-[10px] font-black uppercase text-amber-900 dark:text-amber-300 tracking-wider">
+                                    {isEn ? 'CURRENTLY SELECTED MITRA CONTRACT:' : 'KONTRAK MITRA YANG ANDA PILIH:'}
+                                  </span>
+                                  <span className="px-1.5 py-0.5 bg-amber-500 text-zinc-950 font-mono text-[9px] font-black uppercase">
+                                    {activeMitraPkg.badge}
+                                  </span>
+                                </div>
                                 <div className="flex items-baseline justify-between gap-2">
-                                  <span className="text-xl sm:text-2xl font-black font-mono text-zinc-950 dark:text-white tabular-nums">
-                                    Rp {formatIdrPlain(estimatedRabIdr)}
-                                  </span>
-                                  <span className="font-mono text-[11px] font-black text-emerald-800 dark:text-emerald-400 tabular-nums">
-                                    {totalHours} Jam ({workingDays} Hari Kerja)
-                                  </span>
+                                  <div className="text-base sm:text-lg font-black font-mono text-zinc-950 dark:text-white">
+                                    {activeMitraPkg.shortName}
+                                  </div>
+                                  <div className="text-lg sm:text-xl font-black font-mono text-amber-900 dark:text-amber-300 tabular-nums">
+                                    {activeMitraPkg.priceStr}
+                                  </div>
                                 </div>
-                                <div className="text-[11px] font-mono text-zinc-700 dark:text-zinc-300 mt-1">
-                                  UI Terpilih: <strong>{activeVisualUi.code}</strong> &bull; SPK SHA-256 + Garansi SLA 90 Hari
+                                <div className="text-[11px] font-mono text-emerald-800 dark:text-emerald-400 font-bold tabular-nums">
+                                  {activeMitraPkg.priceSub}
                                 </div>
-                                <div className="mt-2 grid grid-cols-3 gap-1.5 font-mono text-[10px] tabular-nums">
+                                <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                                  {activeMitraPkg.desc}
+                                </p>
+                              </div>
+
+                              {/* 2. RINCIAN TERMIN ESCROW / PEMBAYARAN DINAMIS */}
+                              {wizardMitraTier === 'full_mvp' ? (
+                                <div className="grid grid-cols-3 gap-1.5 font-mono text-[10px] tabular-nums">
                                   <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
                                     <div className="text-zinc-600 dark:text-zinc-400 font-bold">{terminScheme === '50_50' ? 'DP 50%' : 'DP 30% [F1-2]'}</div>
                                     <div className="font-black text-zinc-950 dark:text-zinc-100">Rp {formatIdrPlain(dp30)}</div>
@@ -1699,7 +1828,49 @@ export default function ArchitecturePricingIsland({
                                     <div className="font-black text-emerald-800 dark:text-emerald-400">Rp {formatIdrPlain(finalBast)}</div>
                                   </div>
                                 </div>
+                              ) : wizardMitraTier === 'umkm_starter' ? (
+                                <div className="grid grid-cols-2 gap-1.5 font-mono text-[10px] tabular-nums">
+                                  <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
+                                    <div className="text-zinc-600 dark:text-zinc-400 font-bold">DP 50% (Kickoff)</div>
+                                    <div className="font-black text-zinc-950 dark:text-zinc-100">Rp {formatIdrPlain(1875000)}</div>
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
+                                    <div className="text-zinc-600 dark:text-zinc-400 font-bold">Pelunasan UAT 50%</div>
+                                    <div className="font-black text-emerald-800 dark:text-emerald-400">Rp {formatIdrPlain(1875000)}</div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="p-2 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px]">
+                                  ✅ {isEn ? '100% Advisory Fee (Rp 2.5M) automatically deducts your 50% DP if you proceed to Full Turnkey MVP.' : '100% Biaya Advisory (Rp 2,5 Jt) otomatis memotong DP 50% apabila Anda lanjut ke Full Turnkey MVP.'}
+                                </div>
+                              )}
+
+                              {/* 3. RINGKASAN SPESIFIKASI LIVE REAKTIF DARI PANEL KIRI */}
+                              <div className="p-2.5 bg-zinc-100/90 dark:bg-zinc-900/90 border border-zinc-300 dark:border-zinc-800 font-mono text-[10px] space-y-1.5">
+                                <div className="text-[10px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
+                                  <span>{isEn ? 'LIVE SPECIFICATION SYNC (FROM LEFT PANEL):' : 'SPESIFIKASI AKTIF (DARI PILIHAN SEBELAH KIRI):'}</span>
+                                  <span className="text-amber-900 dark:text-amber-300 font-black">● SPK SHA-256 SYNC</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-1.5 text-zinc-900 dark:text-zinc-100">
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Sector' : 'Sektor Bisnis (Langkah B)'}</span>
+                                    <strong className="truncate block font-black text-amber-950 dark:text-amber-300">{wizardSector.code.slice(7, 9)} &bull; {wizardSector.name}</strong>
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Architecture Topology' : 'Topologi Stack (Langkah C)'}</span>
+                                    <strong className="truncate block font-black">{activeStack.short}</strong>
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Frontend Visual UI' : 'Frontend Visual UI (Langkah D)'}</span>
+                                    <strong className="truncate block font-black text-cyan-900 dark:text-cyan-300">{activeVisualUi.code}</strong>
+                                  </div>
+                                  <div className="p-1.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                                    <span className="text-zinc-500 block text-[9px] uppercase font-bold">{isEn ? 'Post-BAST Warranty' : 'Garansi SLA & Pilar'}</span>
+                                    <strong className="truncate block font-black">SLA 90 Hari &bull; 20 Pilar</strong>
+                                  </div>
+                                </div>
                               </div>
+
                               <div className="space-y-2.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                                 <div>
                                   <label className="block font-mono text-[10px] font-black uppercase tracking-wider text-zinc-800 dark:text-zinc-200 mb-1">
@@ -1725,7 +1896,11 @@ export default function ArchitecturePricingIsland({
                                   onClick={() => launchSatuPintuCheckout(wizardMitraTier)}
                                   className="w-full py-2.5 px-3 bg-zinc-950 hover:bg-zinc-800 text-amber-300 dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 rounded-none transition cursor-pointer text-center"
                                 >
-                                  <span>{isEn ? '🗓️ Lock Sprint Slot & Mitra Contract →' : '🗓️ Kunci Slot Sprint & Kontrak Mitra →'}</span>
+                                  <span>
+                                    {isEn
+                                      ? `🗓️ Lock ${activeMitraPkg.shortName} (${activeMitraPkg.priceStr}) →`
+                                      : `🗓️ Kunci Kontrak ${activeMitraPkg.shortName} (${activeMitraPkg.priceStr}) →`}
+                                  </span>
                                 </button>
 
                                 <button
@@ -1755,35 +1930,35 @@ export default function ArchitecturePricingIsland({
                     id: 'retail',
                     num: '01',
                     title: isEn ? 'Retail Packages' : 'Paket Retail',
-                    sub: 'SELF-DEV V8.0',
+                    sub: '7 SAAS TIERS V11.0',
                     icon: ShoppingBag,
                   },
                   {
                     id: 'project',
                     num: '02',
                     title: isEn ? 'Mitra & Studio' : 'Mitra & Studio',
-                    sub: 'TURNKEY V8.0',
+                    sub: 'TURNKEY ESCROW V11.0',
                     icon: Rocket,
                   },
                   {
                     id: 'sectoral',
                     num: '03',
                     title: isEn ? '12-Sector 36 UI & OS' : '12 Sektor 36 UI & OS',
-                    sub: 'VISUAL UI V8.0',
+                    sub: '36 UI + 6 SCROLL V11.0',
                     icon: Terminal,
                   },
                   {
                     id: 'matrix',
                     num: '04',
                     title: isEn ? 'Comparison Matrix' : 'Matriks Perbandingan',
-                    sub: isEn ? '15 PILLARS V8.0' : '15 PILAR V8.0',
+                    sub: isEn ? '20 PILLARS V11.0' : '20 PILAR V11.0',
                     icon: Layers,
                   },
                   {
                     id: 'faq',
                     num: '05',
                     title: isEn ? 'Project OS FAQ' : 'FAQ Project OS',
-                    sub: `${faqs.length} ${isEn ? 'FAQS' : 'FAQ'}`,
+                    sub: `${faqs.length} ${isEn ? 'FAQS V11.0' : 'FAQ V11.0'}`,
                     icon: HelpCircle,
                   }
                 ].map((tab) => {
@@ -3448,754 +3623,695 @@ return match (true) {
             })()}
 
             {/* ========================================================================= */}
-            {/* TAB 4: TECHNICAL SPECIFICATION COMPARISON MATRIX                          */}
+            {/* TAB 4: TECHNICAL SPECIFICATION COMPARISON MATRIX (V11.0 20 PILLARS)       */}
             {/* ========================================================================= */}
-            {pricingSectionTab === 'matrix' && (
-              <motion.div
-                key="matrix-tab-content"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className="mb-16 border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-none shadow-xs"
-              >
-                <div className="mb-6">
-                  <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white flex items-center gap-2 font-sans">
-                    <Layers className="w-5 h-5 text-emerald-500" />
-                    <span>{isEn ? 'TECHNICAL COMPARISON MATRIX' : 'MATRIKS PERBANDINGAN FITUR & DELIVERABLE'}</span>
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-sans mt-1">
-                    {isEn ? 'Transparent side-by-side technical breakdown across self-service tools and engineering studio contracts.' : 'Perbandingan transparan parameter teknis antara generator mandiri (self-service) dan kontrak rekayasa penuh studio Neriah Pro.'}
-                  </p>
-                </div>
+            {pricingSectionTab === 'matrix' && (() => {
+              const matrixCategories = [
+                { id: 'ALL', label: isEn ? 'All 28 Parameters' : 'Semua 28 Parameter' },
+                { id: 'COMMERCIAL', label: isEn ? '1. Satu Pintu & Commercial' : '1. Satu Pintu & Lisensi' },
+                { id: 'ARCHITECTURE', label: isEn ? '2. DB ULID, Stack & Scale' : '2. DB ULID, Stack & Skala' },
+                { id: 'UI_UX', label: isEn ? '3. 12-Sector 36 UI & 6 Scroll' : '3. 12 Sektor 36 UI & 6 Scroll' },
+                { id: 'AI_SECURITY', label: isEn ? '4. AI 44 Tools, MCP & Shield' : '4. AI 44 Tool, MCP & Shield' },
+                { id: 'SEO_GEO_V11', label: isEn ? '5. SEO/GEO, UU PDP, PWA & SLA' : '5. SEO/GEO, UU PDP, PWA & SLA' },
+              ];
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs font-sans border-collapse">
-                    <thead>
-                      <tr className="border-b-2 border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 font-mono text-[11px] uppercase tracking-wider">
-                        <th className="py-3 px-3 font-bold text-zinc-600 dark:text-zinc-400">
-                          {isEn ? 'Evaluation Parameter' : 'Parameter Evaluasi'}
-                        </th>
-                        <th className="py-3 px-3 font-bold text-cyan-800 dark:text-cyan-400 bg-cyan-500/5">
-                          <div>Instant Blueprint</div>
-                          <div className="text-[9px] font-normal text-zinc-500">Spark / Lite / Pro / Ultimate</div>
-                        </th>
-                        <th className="py-3 px-3 font-bold text-zinc-900 dark:text-white">
-                          <div>Advisory Studio</div>
-                          <div className="text-[9px] font-normal text-zinc-500">Rp 2.500.000</div>
-                        </th>
-                        <th className="py-3 px-3 font-bold text-emerald-800 dark:text-emerald-400">
-                          <div>Full MVP Monolith</div>
-                          <div className="text-[9px] font-normal text-zinc-500">Custom Quotation (Enterprise)</div>
-                        </th>
-                        <th className="py-3 px-3 font-bold text-amber-800 dark:text-amber-400">
-                          <div>UMKM Starter</div>
-                          <div className="text-[9px] font-normal text-zinc-500">{isEn ? 'Rp 3.75 - 7.5 M' : 'Rp 3.75 - 7.5 Jt'}</div>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 font-sans">
-                      {/* 1. SIAPA YANG MELAKUKAN KODING */}
-                      <tr className="bg-amber-500/5 dark:bg-amber-500/10">
-                        <td className="py-3 px-3 font-bold text-zinc-900 dark:text-white font-mono">
-                          {isEn ? 'Who Executes Coding?' : 'Siapa yang Melakukan Koding?'}
-                        </td>
-                        <td className="py-3 px-3 text-cyan-700 dark:text-cyan-300 font-mono font-bold bg-cyan-500/5">
+              const matrixRows = [
+                {
+                  cat: 'COMMERCIAL',
+                  param: isEn ? '01. Who Executes Application Coding?' : '01. Siapa yang Melakukan Koding Aplikasi?',
+                  sparkGrant: isEn ? 'Spark: Self-Service (Phase 1–2) | CSR Grant: Non-Profit Dev Team (Subsidized Rp 0)' : 'Spark: Mandiri (Fase 1–2) | Hibah CSR: Tim Yayasan Non-Profit (Subsidi Rp 0)',
+                  starterPass: isEn ? '100% Self-Service by Your Team / AI IDE (Zero Neriah Pro Coding)' : '100% Mandiri oleh Tim Anda / AI IDE (Zero Neriah Pro Coding)',
+                  proAgencyUlt: isEn ? '100% Self-Service + 7-Phase Prompt Sequencer (Ultimate: +60m Call)' : '100% Mandiri + 7-Fase Prompt AI (Ultimate: +Sesi Telepon 60m)',
+                  advisoryUmkm: isEn ? 'Advisory: Client Dev Team | UMKM Starter: 100% Coded by Neriah Pro' : 'Advisory: Tim Dev Klien | UMKM Starter: 100% Dikodingkan Neriah Pro',
+                  fullMvp: isEn ? '✅ 100% Turnkey Coded, Tested & Deployed by Neriah Pro Senior Team' : '✅ 100% Dikodingkan, Diuji & Dideploy Penuh oleh Tim Senior Neriah Pro',
+                },
+                {
+                  cat: 'COMMERCIAL',
+                  param: isEn ? '02. Satu Pintu Commercial Gate & Entitlement Lock' : '02. Gerbang Satu Pintu & Kunci Lisensi Resmi',
+                  sparkGrant: isEn ? 'Spark: 2x/Mo Guest Quota | CSR Grant: Requires Akta / SK Kemenkumham Verification' : 'Spark: Kuota Tamu 2x/Bln | Hibah CSR: Wajib Verifikasi Akta / SK Kemenkumham',
+                  starterPass: isEn ? 'Starter (Rp 99K): Phase 1–3 | Single-App Pass (Rp 299K): 1 App Full Lock' : 'Starter (Rp 99rb): Fase 1–3 | Single-App Pass (Rp 299rb): Kunci Penuh 1 Aplikasi',
+                  proAgencyUlt: isEn ? 'Pro (Rp 399K) / Agency 5-Seat (Rp 990K) / Ultimate (Rp 1.49M): Full Unlock' : 'Pro (Rp 399rb) / Agency 5-Kursi (Rp 990rb) / Ultimate (Rp 1,49 Jt): Terbuka Penuh',
+                  advisoryUmkm: isEn ? 'Advisory (Rp 2.5M, 100% DP Credit) | UMKM Starter (Rp 3.75M, 50% Subsidy)' : 'Advisory (Rp 2,5 Jt, Potong DP 100%) | UMKM Starter (Rp 3,75 Jt, Subsidi 50%)',
+                  fullMvp: isEn ? '✅ Algorithmic Man-Hours Escrow (30% DP / 50% Staging / 20% BAST)' : '✅ Escrow Jam Kerja Algoritmik (DP 30% / Staging 50% / BAST 20%)',
+                },
+                {
+                  cat: 'COMMERCIAL',
+                  param: isEn ? '03. Managed Sprint Capacity & Anti-Collision Lock' : '03. Kapasitas Sprint Terkelola & Kunci Anti-Tabrakan',
+                  sparkGrant: isEn ? 'Instant Self-Service Cloud Compiler' : 'Kompilator Cloud Mandiri Instan',
+                  starterPass: isEn ? 'Instant Self-Service Cloud Compiler' : 'Kompilator Cloud Mandiri Instan',
+                  proAgencyUlt: isEn ? 'Instant Self-Service + Priority Queue (Ultimate: 1-on-1 Slot)' : 'Mandiri Instan + Antrean Prioritas (Ultimate: Slot 1-on-1)',
+                  advisoryUmkm: isEn ? 'Advisory: 24–48h | UMKM Starter: Capped 2 Businesses/Month' : 'Advisory: 24–48 Jam | UMKM Starter: Kuota Maks 2 Usaha/Bulan',
+                  fullMvp: isEn ? '✅ Strictly Capped 2–3 Parallel Projects/Batch (Zero Burnout / Zero Slop)' : '✅ Dibatasi Ketat Maks 2–3 Proyek/Batch (Fokus Penuh Tanpa AI-Slop)',
+                },
+                {
+                  cat: 'COMMERCIAL',
+                  param: isEn ? '04. Intellectual Property, Source Code & White-Label Rights' : '04. Hak Milik Intelektual, Source Code & White-Label',
+                  sparkGrant: isEn ? '100% Client / Non-Profit Foundation Ownership (ISAK 35 Compliant)' : '100% Hak Milik Pemohon / Yayasan (Kepatuhan ISAK 35 / PSAK 109)',
+                  starterPass: isEn ? '100% Client Ownership (Zero Vendor Lock-In)' : '100% Hak Milik Klien (Tanpa Vendor Lock-In)',
+                  proAgencyUlt: isEn ? '100% Client Ownership + Agency Tier Includes Custom Brand White-Label PDF' : '100% Milik Klien + Paket Agency Termasuk PDF White-Label Merek Sendiri',
+                  advisoryUmkm: isEn ? '100% Client Ownership (NDA Protected)' : '100% Hak Milik Klien (Dilindungi NDA Resmi)',
+                  fullMvp: isEn ? '✅ 100% Full Source Code, DB, Docker & VPS Handover Upon Final BAST' : '✅ 100% Serah Terima Penuh Source Code, DB, Docker & VPS Saat BAST',
+                },
+                {
+                  cat: 'ARCHITECTURE',
+                  param: isEn ? '05. 20 Pillars of Software Factory OS v11.0 Paripurna' : '05. Kelengkapan 20 Pilar Software Factory OS v11.0 Paripurna',
+                  sparkGrant: isEn ? 'Spark: Pillar 1–2 Audit | Verified CSR Grant: Complete 20 Pillars (Subsidized)' : 'Spark: Audit Pilar 1–2 | Hibah CSR Terverifikasi: Lengkap 20 Pilar (Subsidi)',
+                  starterPass: isEn ? 'Starter: 5 Core Pillars | Single-App UMKM Pass: 20 Pillars (1 App Scope)' : 'Starter: 5 Pilar Inti | Single-App UMKM Pass: 20 Pilar (1 Aplikasi)',
+                  proAgencyUlt: isEn ? '✅ Complete 20 Paripurna Pillars Specification & Export Bundle' : '✅ Spesifikasi & Ekspor Lengkap 20 Pilar Rekayasa Paripurna',
+                  advisoryUmkm: isEn ? 'Advisory: 20-Pillar Blueprint + WBS | UMKM: Core Transactional Pillars Live' : 'Advisory: Cetak Biru 20 Pilar + WBS | UMKM: Pilar Transaksi Inti Live',
+                  fullMvp: isEn ? '✅ 100% All 20 Paripurna Pillars Coded, Verified & Deployed to Production' : '✅ 100% Seluruh 20 Pilar Paripurna Dikodingkan & Live di Server Produksi',
+                },
+                {
+                  cat: 'ARCHITECTURE',
+                  param: isEn ? '06. PostgreSQL 16 Strict 26-Char ULID & Keyset Cursor O(1)' : '06. PostgreSQL 16 Strict ULID 26-Karakter & Keyset Cursor O(1)',
+                  sparkGrant: isEn ? 'Spark: Entity Summary | CSR Grant: Full Strict ULID DDL + O(1) Cursor Spec' : 'Spark: Ringkasan Entitas | Hibah CSR: DDL Strict ULID + Spesifikasi Cursor O(1)',
+                  starterPass: isEn ? 'Ready-to-Import Strict ULID SQL Schema (Zero UUID Cast Error)' : 'Skema SQL Strict ULID Siap Impor (Bebas Error Tipe UUID PostgreSQL)',
+                  proAgencyUlt: isEn ? '✅ Full Strict ULID DDL + Quarterly Range Partitioning + 0% N+1 Guard' : '✅ DDL Strict ULID + Partisi Kuartalan PG16 + Proteksi 0% N+1',
+                  advisoryUmkm: isEn ? 'Advisory: Bespoke ULID ERD | UMKM: Live ULID Transactional Database' : 'Advisory: ERD ULID Kustom | UMKM: Database Transaksional ULID Live',
+                  fullMvp: isEn ? '✅ Sub-10ms O(1) Keyset Cursor & Strict ULID Live on Production PG16' : '✅ Kecepatan Sub-10ms O(1) Keyset Cursor & Strict ULID Live di PG16',
+                },
+                {
+                  cat: 'ARCHITECTURE',
+                  param: isEn ? '07. 9 Stack Topology Adapters (Monolith M1, Decoupled D1, Polyglot S1)' : '07. 9 Adapter Topologi Tech Stack (Monolith M1, Decoupled D1, Polyglot S1)',
+                  sparkGrant: isEn ? 'Topology Recommendation & TCO Comparison' : 'Rekomendasi Topologi & Perbandingan Biaya Server (TCO)',
+                  starterPass: isEn ? '1 Selected Stack Adapter Locked per Project' : '1 Adapter Tech Stack Terkunci Sesuai Proyek',
+                  proAgencyUlt: isEn ? '✅ All 9 Stack Topologies (Laravel 13, Next.js 15, Go/Rust, OpenAPI 3.1)' : '✅ Bebas Pilih 9 Topologi (Laravel 13, Next.js 15, Go/Rust, OpenAPI 3.1)',
+                  advisoryUmkm: isEn ? 'Advisory: Full Topology Matrix | UMKM: M1 Laravel 13 + Filament v5' : 'Advisory: Matriks Topologi | UMKM: M1 Laravel 13 + Filament v5',
+                  fullMvp: isEn ? '✅ Turnkey M1 Monolith / D1 Headless / S1 Polyglot Coded to Spec' : '✅ Turnkey M1 Monolith / D1 Headless / S1 Polyglot Sesuai Kontrak',
+                },
+                {
+                  cat: 'ARCHITECTURE',
+                  param: isEn ? '08. Deterministic Decision Matrix match() & ACID Financial Ledger' : '08. Tabel Keputusan Deterministik match() & Buku Besar ACID DECIMAL(19,4)',
+                  sparkGrant: isEn ? 'CSR Grant: Balanced Donor/Fund Ledger Rules (ISAK 35)' : 'Hibah CSR: Aturan Jurnal Dana Umat/Donatur Seimbang (ISAK 35)',
+                  starterPass: isEn ? 'Single-App Pass: Deterministic Pricing/Discount match() Compiler' : 'Single-App Pass: Kompilator Aturan Diskon/Tarif match() Deterministik',
+                  proAgencyUlt: isEn ? '✅ Spreadsheet Decision Matrix -> PHP 8.4+ match() + Double-Entry Lock' : '✅ Spreadsheet Decision Matrix -> PHP 8.4+ match() + Kunci Debit==Kredit',
+                  advisoryUmkm: isEn ? 'Included in Financial & Inventory State Machine Spec' : 'Termasuk dalam Spesifikasi State Machine Keuangan & Stok',
+                  fullMvp: isEn ? '✅ 100% Implemented with Pessimistic Row Locking (SELECT FOR UPDATE)' : '✅ 100% Terimplementasi dengan Pessimistic Locking (SELECT FOR UPDATE)',
+                },
+                {
+                  cat: 'ARCHITECTURE',
+                  param: isEn ? '09. Brownfield Legacy SQL Importer & Zero-Data-Loss Shadow ULID' : '09. Impor Database SQL Lama (Brownfield) & Migrasi Shadow ULID',
+                  sparkGrant: isEn ? 'CSR Grant: Legacy Donor Spreadsheet/SQL Migration Guide' : 'Hibah CSR: Panduan Migrasi Data Donatur/Jemaat Lama',
+                  starterPass: isEn ? 'Single-App Pass: Legacy Schema Audit & Shadow ULID Plan' : 'Single-App Pass: Audit Skema Lama & Rencana Shadow ULID',
+                  proAgencyUlt: isEn ? '✅ Automated Legacy SQL Parser + Dual-Write Shadow ULID Migration Script' : '✅ Parser SQL Lama Otomatis + Skrip Migrasi Dual-Write Shadow ULID',
+                  advisoryUmkm: isEn ? 'Advisory: Architect-Guided Legacy Cutover Playbook' : 'Advisory: Playbook Cutover Sistem Lama Didampingi Arsitek',
+                  fullMvp: isEn ? '✅ Turnkey Legacy Data Migration & Reconciliation Verified by Engineers' : '✅ Migrasi Data Lama Terima Beres & Rekonsiliasi oleh Tim Engineer',
+                },
+                {
+                  cat: 'UI_UX',
+                  param: isEn ? '10. Zone A: 12 Functional Sectors × 36 Internal Operational UI Cockpits' : '10. Zona A: 12 Sektor Fungsional × 36 Kokpit UI Operasional Internal',
+                  sparkGrant: isEn ? 'Visual UI Preview + CSR Sector 12 Donor Transparency Cockpit' : 'Pratinjau Visual UI + Kokpit Transparansi Donatur Sektor 12',
+                  starterPass: isEn ? 'Locks Selected Sector Visual UI Variant (e.g. POS Split, Clinical 3-Pane)' : 'Mengunci Varian Visual UI Sektor Terpilih (POS Split, Klinis 3-Pane, dll.)',
+                  proAgencyUlt: isEn ? '✅ Full 36 Visual UI Blueprints + Keyboard Shortcuts + Realistic ID Seeder' : '✅ 36 Cetak Biru Visual UI + Shortcut Keyboard + Seeder Data Indonesia',
+                  advisoryUmkm: isEn ? 'Advisory: Ergonomic Spec | UMKM: Built Primary Sector Cockpit' : 'Advisory: Spesifikasi Ergonomi | UMKM: Kokpit Utama Sektor Terbangun',
+                  fullMvp: isEn ? '✅ 100% Custom Coded Multi-Pane Sector Cockpit + Hardware/Thermal Print' : '✅ 100% Dikodingkan Kokpit Multi-Pane Spesifik Industri + Cetak Thermal',
+                },
+                {
+                  cat: 'UI_UX',
+                  param: isEn ? '11. Zone B: 6 Public Scrollytelling 60fps Showcase Presets (scrolly_telling.md)' : '11. Zona B: 6 Preset Scrollytelling 60fps Halaman Publik (scrolly_telling.md)',
+                  sparkGrant: isEn ? 'CSR Grant: Story-Driven Donor Impact Scrollytelling Spec' : 'Hibah CSR: Spesifikasi Scrollytelling Laporan Dampak Sosial/Donasi',
+                  starterPass: isEn ? 'Single-App Pass: CSS Scroll-Driven Showcase Contract + Reduced-Motion Guard' : 'Single-App Pass: Kontrak Showcase CSS Scroll-Driven + Aksesibilitas',
+                  proAgencyUlt: isEn ? '✅ All 6 Scrollytelling Presets (Sticky Scrubbing, Bento 3D, Before/After)' : '✅ 6 Preset Scrollytelling (Sticky Scrubbing, Bento 3D, Before/After)',
+                  advisoryUmkm: isEn ? 'Included in Public Conversion Landing Architecture' : 'Termasuk dalam Arsitektur Landing Page Konversi Publik',
+                  fullMvp: isEn ? '✅ 60fps GPU-Accelerated Public Showcase Coded with >95 Lighthouse Score' : '✅ Halaman Publik 60fps Akselerasi GPU Dikodingkan (Skor Lighthouse >95)',
+                },
+                {
+                  cat: 'UI_UX',
+                  param: isEn ? '12. Adaptive Dual-Persona Studio (5-Step Business vs 3-Pane Architect)' : '12. Studio Dual-Persona Adaptif (Mode Bisnis 5-Langkah vs Arsitek 3-Pane)',
+                  sparkGrant: isEn ? '5-Step Business Storyboard Mode (Zero Jargon)' : 'Mode Bisnis / Awam 5-Langkah (Bebas Istilah Teknis Rumit)',
+                  starterPass: isEn ? 'Both 5-Step Business Mode & 3-Pane Architect Studio' : 'Mendukung Mode Bisnis 5-Langkah & Mode Arsitek 3-Pane',
+                  proAgencyUlt: isEn ? '✅ Instant Toggle + Co-Design Alignment Room (Business Intent <-> Tech Spec)' : '✅ Toggle Instan + Co-Design Alignment Room (Bahasa Bisnis <-> Teknis)',
+                  advisoryUmkm: isEn ? 'Live Co-Design Alignment Room with Principal Architect' : 'Ruang Kolaborasi Co-Design Langsung Bersama Principal Architect',
+                  fullMvp: isEn ? '✅ Full Co-Design Room + Annotated Visual Wireframe Sign-Off per Sprint' : '✅ Ruang Co-Design Penuh + Persetujuan Wireframe Visual per Sprint',
+                },
+                {
+                  cat: 'UI_UX',
+                  param: isEn ? '13. 6 Global Tier-1 Jurisdictions, Bilingual ID/EN & Logical RTL/LTR CSS' : '13. 6 Yurisdiksi Regulasi Global Tier-1, Dwibahasa ID/EN & CSS Logis RTL/LTR',
+                  sparkGrant: isEn ? 'ID (UU PDP / ISAK 35) & EN International Parity' : 'Paritas Bahasa Indonesia (UU PDP / ISAK 35) & Inggris (EN)',
+                  starterPass: isEn ? 'ID, EN, SG, EU, US, AR (RTL Logical CSS Properties Ready)' : 'Mendukung Regulasi ID, EN, SG, EU, US, AR (Siap CSS Logis RTL Arab)',
+                  proAgencyUlt: isEn ? '✅ All 6 Jurisdictions (UU PDP, PDPA, GDPR, HIPAA/SOC2, ZATCA RTL, PIPL)' : '✅ 6 Yurisdiksi Penuh (UU PDP, PDPA, GDPR, HIPAA/SOC2, ZATCA RTL, PIPL)',
+                  advisoryUmkm: isEn ? 'Tailored to Target Country Regulatory Compliance' : 'Disesuaikan dengan Regulasi Negara Target Operasi Klien',
+                  fullMvp: isEn ? '✅ TranslatableTabs ID/EN + Zero Page-Level LocaleSwitcher + Regional Inputs' : '✅ TranslatableTabs ID/EN + Tanpa Dropdown Bahasa Membingungkan',
+                },
+                {
+                  cat: 'UI_UX',
+                  param: isEn ? '14. Universal Input Hygiene (RFC Email, Regional Separator, E.164 Phone)' : '14. Standar Higienitas Input (Email RFC, Pemisah Ribuan, Telepon Zona Negara)',
+                  sparkGrant: isEn ? '✅ Enforced Across All Forms (Auto-Strips Leading 0 on Phone)' : '✅ Aktif di Seluruh Form (Otomatis Hapus Angka 0 di Depan Nomor HP)',
+                  starterPass: isEn ? '✅ Enforced + Exported in InputHygieneStandard.php & inputHygiene.js' : '✅ Aktif + Disertakan di InputHygieneStandard.php & inputHygiene.js',
+                  proAgencyUlt: isEn ? '✅ Enforced + Automated Pest Hygiene Contract Assertions' : '✅ Aktif + Pengujian Otomatis Kontrak Higienitas Input Pest',
+                  advisoryUmkm: isEn ? '✅ Standard in All Studio Forms & Checkout' : '✅ Standar Baku di Seluruh Form Studio & Kasir',
+                  fullMvp: isEn ? '✅ 100% Built into Every Filament v5, Livewire 4 & React Form' : '✅ 100% Terpasang di Seluruh Form Filament v5, Livewire 4 & React',
+                },
+                {
+                  cat: 'AI_SECURITY',
+                  param: isEn ? '15. Phased Prompt Sequencer (Phase 1–7), Kahn DAG & 3-Sec CLI /init/{ULID}' : '15. 7-Fase Prompt AI Berurutan, Kahn DAG Chunker & CLI 3-Detik /init/{ULID}',
+                  sparkGrant: isEn ? 'Spark: Phase 1–2 Only | CSR Grant: Full Phase 1–7 + CLI /init/{ULID}' : 'Spark: Hanya Fase 1–2 | Hibah CSR: Lengkap Fase 1–7 + CLI /init/{ULID}',
+                  starterPass: isEn ? 'Starter: Phase 1–3 | Single-App Pass: Full Phase 1–7 + ./verify-blueprint.sh' : 'Starter: Fase 1–3 | Single-App Pass: Lengkap Fase 1–7 + ./verify-blueprint.sh',
+                  proAgencyUlt: isEn ? '✅ Full Phase 1–7 + SYMBOL_MANIFEST.json + curl -sL /init/{ULID} | bash' : '✅ Lengkap Fase 1–7 + SYMBOL_MANIFEST.json + curl -sL /init/{ULID} | bash',
+                  advisoryUmkm: isEn ? 'Included for In-House Team Execution' : 'Disertakan untuk Eksekusi Tim Internal Klien',
+                  fullMvp: isEn ? '✅ Executed & Verified 100% Green by Neriah Pro Engineers' : '✅ Dieksekusi & Diverifikasi 100% Hijau oleh Tim Engineer Neriah Pro',
+                },
+                {
+                  cat: 'AI_SECURITY',
+                  param: isEn ? '16. 44 Native AI Tools (KAG + CAG + Hybrid RAG) & Live 2-Way MCP Bridge' : '16. 44 Native AI Tool Calling (KAG + CAG + RAG) & Jembatan Live MCP 2-Arah',
+                  sparkGrant: isEn ? 'CSR Grant: Live .mcp.json Bridge for Claude Code, Cursor & Antigravity' : 'Hibah CSR: Jembatan .mcp.json Live untuk Claude Code, Cursor & Antigravity',
+                  starterPass: isEn ? 'Single-App Pass: .mcp.json Bridge + SYNTAX_LOCK_2026.md Dictionary' : 'Single-App Pass: Jembatan .mcp.json + Kamus SYNTAX_LOCK_2026.md',
+                  proAgencyUlt: isEn ? '✅ Full 2-Way MCP Sync (pos_get_phase_prompt / pos_mark_phase_verified)' : '✅ Sinkronisasi 2-Arah MCP (pos_get_phase_prompt / pos_mark_phase_verified)',
+                  advisoryUmkm: isEn ? 'Advisory: AI Architecture Mapping | UMKM: Admin Copilot Ready' : 'Advisory: Pemetaan AI | UMKM: Siap Asisten Admin Copilot',
+                  fullMvp: isEn ? '✅ Full Backend Admin AI Agentic Engine (KAG, CAG, RAG & 44 Tools)' : '✅ Engine AI Agentic Backend Admin Penuh (KAG, CAG, RAG & 44 Tool)',
+                },
+                {
+                  cat: 'AI_SECURITY',
+                  param: isEn ? '17. NeriahPro AgentShield (3-Gate Firewall), Living CVE & Red-Team Suite' : '17. NeriahPro AgentShield (Firewall 3-Gerbang), Living CVE & Red-Team Suite',
+                  sparkGrant: isEn ? 'CSR Grant: Full AgentShield & TenantIsolationSecurityTest.php' : 'Hibah CSR: Proteksi AgentShield & TenantIsolationSecurityTest.php',
+                  starterPass: isEn ? 'Single-App Pass: Phase 7 Red-Team IDOR/Prompt-Injection Test Suite' : 'Single-App Pass: Suite Uji Red-Team Fase 7 (Anti-IDOR & Prompt Injection)',
+                  proAgencyUlt: isEn ? '✅ AgentShield Firewall + Living CVE Autopatch + Composer/NPM Lock Guard' : '✅ Firewall AgentShield + Living CVE Autopatch + Kunci Paket Aman',
+                  advisoryUmkm: isEn ? 'Security Threat Modeling & OWASP Top 10 Hardening' : 'Pemodelan Ancaman Keamanan & Hardening OWASP Top 10',
+                  fullMvp: isEn ? '✅ Pen-Tested & Hardened with CSP, Honeypot, Rate Limiter & AgentShield' : '✅ Lolos Uji Penetrasi dengan CSP Ketat, Honeypot, Rate Limit & AgentShield',
+                },
+                {
+                  cat: 'AI_SECURITY',
+                  param: isEn ? '18. Zero-Width Canary IP Watermark & SHA-256 Cryptographic Audit Log (.xlsx)' : '18. Segel Canary IP Tak Kasat Mata & Audit Log Kriptografi SHA-256 (.xlsx)',
+                  sparkGrant: isEn ? 'Cryptographic Provenance Hash Seal' : 'Segel Hash Keaslian Dokumen Kriptografi',
+                  starterPass: isEn ? 'Canary IP Watermark + Immutable SHA-256 Scope Hash' : 'Tanda Air Canary IP + Segel Hash Scope SHA-256 Anti-Manipulasi',
+                  proAgencyUlt: isEn ? '✅ Canary IP + SHA-256 Hash-Chain Audit Log + 3-Sheet CPA Excel Export' : '✅ Canary IP + Rantai Hash Audit Log SHA-256 + Ekspor Excel Akuntan 3-Sheet',
+                  advisoryUmkm: isEn ? 'Tamper-Proof SPK Contract SHA-256 Signature' : 'Tanda Tangan Kontrak SPK Bersegel SHA-256 Anti-Sengketa',
+                  fullMvp: isEn ? '✅ Full Forensic Audit Log Explorer + 1-Click CPA Excel (.xlsx) in Admin' : '✅ Penjelajah Audit Log Forensik + Ekspor Excel (.xlsx) 1-Klik di Admin',
+                },
+                {
+                  cat: 'SEO_GEO_V11',
+                  param: isEn ? '19. Multi-Graph Schema.org JSON-LD (@graph Across All 12 Sectors)' : '19. Multi-Graph Schema.org JSON-LD (@graph Spesifik 12 Sektor Industri)',
+                  sparkGrant: isEn ? 'CSR Grant: NGO, DonateAction, Project & MonetaryGrant Schema Graph' : 'Hibah CSR: Skema JSON-LD NGO, DonateAction, Project & MonetaryGrant',
+                  starterPass: isEn ? 'Single-App Pass: Organization, SoftwareApplication, FAQPage & Sector Graph' : 'Single-App Pass: Graph Organization, SoftwareApplication, FAQPage & Sektor',
+                  proAgencyUlt: isEn ? '✅ Full 12-Sector @graph (Product, Lodging, MedicalClinic, Course, Menu, Event)' : '✅ @graph 12 Sektor (Product, Lodging, MedicalClinic, Course, Menu, Event)',
+                  advisoryUmkm: isEn ? 'LocalBusiness / Store / Restaurant Schema.org JSON-LD Configured' : 'Terpasang Schema.org JSON-LD LocalBusiness / Toko / Restoran',
+                  fullMvp: isEn ? '✅ Dynamic Admin-Editable Schema.org + Cache::rememberForever() Auto-Flush' : '✅ Schema.org Dinamis via Admin + Cache::rememberForever() Auto-Flush',
+                },
+                {
+                  cat: 'SEO_GEO_V11',
+                  param: isEn ? '20. GEO Citation Authority (/llms.txt, /llms-full.txt & 50-Word Answer Capsules)' : '20. Otoritas Sitasi AI GEO (/llms.txt, /llms-full.txt & Kapsul Jawaban 50 Kata)',
+                  sparkGrant: isEn ? 'CSR Grant: Public Impact Citation Feed for AI Search Engines' : 'Hibah CSR: Umpan Sitasi Dampak Sosial untuk Mesin Pencari AI',
+                  starterPass: isEn ? 'Single-App Pass: Auto-Generated /llms.txt & Semantic HTML Comparison Table' : 'Single-App Pass: Generator Otomatis /llms.txt & Tabel HTML Semantik',
+                  proAgencyUlt: isEn ? '✅ Top-3 AI Citation Engine (ChatGPT Search, Perplexity, Claude, Gemini)' : '✅ Mesin Sitasi Top-3 AI (ChatGPT Search, Perplexity, Claude, Gemini)',
+                  advisoryUmkm: isEn ? 'Included in Public SEO/GEO Discovery Blueprint' : 'Termasuk dalam Cetak Biru Penemuan SEO/GEO Publik',
+                  fullMvp: isEn ? '✅ Live /llms.txt, /llms-full.txt & Semantic Answer Capsules on Production' : '✅ Endpoint /llms.txt, /llms-full.txt & Kapsul Jawaban Semantik Aktif Live',
+                },
+                {
+                  cat: 'SEO_GEO_V11',
+                  param: isEn ? '21. IndexNow Instant Ping, AI Crawler robots.txt & Local 1200×630 OG Card' : '21. IndexNow Instant Ping, robots.txt Bot AI & Kartu OG 1200×630 Lokal',
+                  sparkGrant: isEn ? 'CSR Grant: Local PHP GD/SVG OpenGraph & QR Verification Card' : 'Hibah CSR: Kartu OpenGraph 1200×630 & QR Lokal Berbasis PHP GD/SVG',
+                  starterPass: isEn ? 'Single-App Pass: IndexNow Key + OAI-SearchBot/PerplexityBot Allowlist' : 'Single-App Pass: Kunci IndexNow + Whitelist Bot AI di robots.txt',
+                  proAgencyUlt: isEn ? '✅ Zero-CDN Local 1200×630 OG PNG/SVG + IndexNow Ping on Model Save' : '✅ Kartu OG 1200×630 Lokal (Zero CDN) + Ping IndexNow Otomatis',
+                  advisoryUmkm: isEn ? 'Automated Sitemap.xml & Social Share Preview Cards' : 'Sitemap.xml Otomatis & Kartu Pratinjau Share Media Sosial',
+                  fullMvp: isEn ? '✅ 1-Click IndexNow Trigger in Admin Health Pulse + Local OG Generator' : '✅ Tombol Ping IndexNow 1-Klik di Admin Health Pulse + Generator OG Lokal',
+                },
+                {
+                  cat: 'SEO_GEO_V11',
+                  param: isEn ? '22. UU PDP No. 27/2022 Privacy Vault (AES-256 + HMAC-SHA256 Blind Index O(1))' : '22. Brankas Privasi UU PDP No. 27/2022 (AES-256 + Blind Index HMAC-SHA256 O(1))',
+                  sparkGrant: isEn ? 'CSR Grant: Encrypted Donor/Patient NIK & Phone with O(1) Blind Index' : 'Hibah CSR: Enkripsi NIK/HP Donatur & Pasien dengan Blind Index O(1)',
+                  starterPass: isEn ? 'Single-App Pass: HasEncryptedPiiWithBlindIndex Trait Included' : 'Single-App Pass: Disertakan Trait HasEncryptedPiiWithBlindIndex',
+                  proAgencyUlt: isEn ? '✅ 64-Char HMAC-SHA256 Blind Index + 1-Click JSON Portability & Safe Erasure' : '✅ Blind Index 64-Karakter + Ekspor JSON 1-Klik & Anonimisasi Aman-Jurnal',
+                  advisoryUmkm: isEn ? 'UU PDP Compliance Architecture & Consent Banner' : 'Arsitektur Kepatuhan UU PDP & Banner Persetujuan Privasi',
+                  fullMvp: isEn ? '✅ Live Self-Service Privacy Vault in /customer/dashboard (Preserves Ledger)' : '✅ Brankas Privasi Mandiri Aktif di /customer/dashboard (Jurnal Utuh)',
+                },
+                {
+                  cat: 'SEO_GEO_V11',
+                  param: isEn ? '23. Bad-Signal Offline Resilience (IndexedDB ULID Outbox + PWA Background Sync)' : '23. Ketahanan Sinyal Buruk (IndexedDB ULID Outbox + Sinkronisasi Latar PWA)',
+                  sparkGrant: isEn ? 'CSR Grant: Field Relief/Donation Offline Queue with X-Idempotency-Key' : 'Hibah CSR: Antrean Offline Relawan Lapangan Berproteksi X-Idempotency-Key',
+                  starterPass: isEn ? 'Single-App Pass: /sw-offline-outbox.js + offlineOutboxQueue.js Bundle' : 'Single-App Pass: Paket /sw-offline-outbox.js + offlineOutboxQueue.js',
+                  proAgencyUlt: isEn ? '✅ Client-Side 26-Char ULID Minting + Auto Background Replay on Reconnect' : '✅ Cetak ULID 26-Karakter di Lokal + Sinkronisasi Otomatis Saat Sinyal Pulih',
+                  advisoryUmkm: isEn ? 'UMKM Cashier & Courier Spotty-Signal Protection' : 'Proteksi Kasir & Kurir Saat Sinyal Internet Tidak Stabil',
+                  fullMvp: isEn ? '✅ Zero-Duplicate Offline-First Mutation Engine Verified Under Chaos Test' : '✅ Engine Transaksi Anti-Putus & Anti-Dobel Teruji Simulasi Chaos',
+                },
+                {
+                  cat: 'SEO_GEO_V11',
+                  param: isEn ? '24. Post-BAST 90-Day Contractual SLA Bug-Warranty vs Paid Delta v1.1 Triage' : '24. Triase Garansi Bug SLA 90 Hari Pasca-BAST vs Tambahan Fitur Berbayar v1.1',
+                  sparkGrant: isEn ? 'Self-Service Iterative Delta Generator (v1.0 -> v1.1)' : 'Generator Delta Iteratif Mandiri (v1.0 -> v1.1)',
+                  starterPass: isEn ? '30-Day Parameter Revision Window + Surgical Delta Spec' : 'Jendela Revisi Parameter 30 Hari + Spesifikasi Delta Aditif',
+                  proAgencyUlt: isEn ? '6–12 Months AI Re-Prompt & Additive Schema Delta (Zero DROP TABLE)' : '6–12 Bulan Regenerasi AI & Delta Skema Aditif (Tanpa DROP TABLE)',
+                  advisoryUmkm: isEn ? 'UMKM Starter: 30-Day Post-Live SLA Bug Warranty' : 'UMKM Starter: Garansi Bug SLA 30 Hari Pasca-Live',
+                  fullMvp: isEn ? '✅ Auto 90-Day SLA Timer + Free Bugfix Prompt vs Paid CR v1.1 Triage' : '✅ Timer SLA 90 Hari Otomatis + Triase Perbaikan Bug Rp 0 vs Addendum v1.1',
+                },
+                {
+                  cat: 'SEO_GEO_V11',
+                  param: isEn ? '25. Pre-Migration Atomic pg_dump Snapshot & 1-Command ./deploy.sh rollback' : '25. Snapshot Database pg_dump Pra-Migrasi & Rollback 1-Perintah (./deploy.sh rollback)',
+                  sparkGrant: isEn ? 'CSR Grant: Safe Deployment & Backup Runbook' : 'Hibah CSR: Panduan Deployment Aman & Runbook Backup',
+                  starterPass: isEn ? 'Single-App Pass: 7-Scenario deploy.sh Script Included' : 'Single-App Pass: Disertakan Skrip deploy.sh 7 Skenario',
+                  proAgencyUlt: isEn ? '✅ Pre-Migrate .sql.gz Auto-Snapshot (7-Day Retention) + Scenario 7 Rollback' : '✅ Snapshot Otomatis .sql.gz Pra-Migrasi (Retensi 7 Hari) + Rollback Skenario 7',
+                  advisoryUmkm: isEn ? 'Automated Daily Cloud VPS Backups' : 'Backup Harian Otomatis di Server Cloud VPS',
+                  fullMvp: isEn ? '✅ Zero-Downtime CI/CD + Instant Atomic Code & DB Rollback Verified' : '✅ CI/CD Tanpa Downtime + Pemulihan Instan Kode & DB Terverifikasi',
+                },
+                {
+                  cat: 'SEO_GEO_V11',
+                  param: isEn ? '26. Local Webhook Chaos Simulator (APP_ENV !== "production") & Idempotency' : '26. Simulator Chaos Webhook Lokal (Non-Produksi) & Idempotensi Pembayaran',
+                  sparkGrant: isEn ? 'Idempotent Webhook Signature Verification Spec' : 'Spesifikasi Verifikasi Signature Webhook Idempoten',
+                  starterPass: isEn ? 'Single-App Pass: QRIS/VA Webhook Simulator Script (Blocked 403 in Prod)' : 'Single-App Pass: Simulator Webhook QRIS/VA (Otomatis Diblokir 403 di Prod)',
+                  proAgencyUlt: isEn ? '✅ 1-Click Simulate QRIS Success, Expired VA & 3x Duplicate Attack' : '✅ Simulasi 1-Klik Lunas QRIS, VA Kadaluarsa & Serangan 3x Webhook Ganda',
+                  advisoryUmkm: isEn ? 'Midtrans QRIS & Virtual Account Anti-Double-Pay Guard' : 'Proteksi Anti-Dobel Bayar Midtrans QRIS & Virtual Account',
+                  fullMvp: isEn ? '✅ Live Chaos Sandbox Console in Admin Health Pulse + Auto-Refund/Credit' : '✅ Konsol Simulasi Chaos di Admin Health Pulse + Proteksi Dobel Bayar',
+                },
+                {
+                  cat: 'SEO_GEO_V11',
+                  param: isEn ? '27. Multi-Entity Holding, Subsidiary & Branch Consolidation (parent_organization_id)' : '27. Konsolidasi Holding, Anak Perusahaan & Multi-Cabang (parent_organization_id)',
+                  sparkGrant: isEn ? 'CSR Grant: Central Foundation -> Regional Chapter Consolidation' : 'Hibah CSR: Konsolidasi Yayasan Pusat -> Cabang Daerah',
+                  starterPass: isEn ? 'Single-Organization Workspace Isolation' : 'Isolasi Workspace Organisasi Tunggal',
+                  proAgencyUlt: isEn ? '✅ Self-Referencing ULID Hierarchy + Inter-Company Elimination Spec' : '✅ Hierarki ULID Induk-Cabang + Spesifikasi Eliminasi Jurnal Antar-Cabang',
+                  advisoryUmkm: isEn ? 'Advisory: Holding Consolidation Blueprint | UMKM: Multi-Outlet Ready' : 'Advisory: Cetak Biru Holding | UMKM: Siap Ekspansi Multi-Cabang',
+                  fullMvp: isEn ? '✅ Live Holding -> Subsidiary -> Branch Rollup & Eliminated P&L Reports' : '✅ Konsolidasi Holding -> Anak -> Cabang & Laporan Laba-Rugi Tereliminasi',
+                },
+                {
+                  cat: 'AI_SECURITY',
+                  param: isEn ? '28. Role-Based Smart Guide Backend Admin & Printable A4 BAST SOP Manual' : '28. Smart Guide Backend Admin Berbasis Peran & Buku SOP A4 Siap Cetak BAST',
+                  sparkGrant: isEn ? 'CSR Grant: Volunteer & Treasurer Onboarding SOP Guide' : 'Hibah CSR: Buku Panduan SOP Relawan & Bendahara Yayasan',
+                  starterPass: isEn ? 'Single-App Pass: Auto-Generated CLIENT_SOP_AND_TRAINING_MANUAL.md' : 'Single-App Pass: Generator Otomatis CLIENT_SOP_AND_TRAINING_MANUAL.md',
+                  proAgencyUlt: isEn ? '✅ Interactive Filament v5 SmartGuidePage (18 Sections ID/EN) + A4 SOP Pack' : '✅ SmartGuidePage Filament v5 Interaktif (18 Bab ID/EN) + Buku SOP A4',
+                  advisoryUmkm: isEn ? 'Staff Training Guide & Video/Document Handover' : 'Panduan Pelatihan Staf & Dokumen Serah Terima Operasional',
+                  fullMvp: isEn ? '✅ Live Role-Filtered Smart Guide + Signed Digital BAST & Training Session' : '✅ Smart Guide Sesuai Role RBAC + BAST Digital & Sesi Pelatihan Tim',
+                },
+              ];
+
+              const filteredMatrixRows = matrixRows.filter((row) => {
+                const matchCat = matrixCategoryFilter === 'ALL' || row.cat === matrixCategoryFilter;
+                if (!matchCat) return false;
+                if (!matrixSearchQuery.trim()) return true;
+                const q = matrixSearchQuery.toLowerCase();
+                return (
+                  row.param.toLowerCase().includes(q) ||
+                  row.sparkGrant.toLowerCase().includes(q) ||
+                  row.starterPass.toLowerCase().includes(q) ||
+                  row.proAgencyUlt.toLowerCase().includes(q) ||
+                  row.advisoryUmkm.toLowerCase().includes(q) ||
+                  row.fullMvp.toLowerCase().includes(q)
+                );
+              });
+
+              const cellPad = matrixDensity === 'compact' ? 'py-2 px-2.5 text-[11px]' : matrixDensity === 'relaxed' ? 'py-4 px-4 text-xs' : 'py-3 px-3 text-xs';
+
+              const twentyPillarsComparison = [
+                { no: '01', name: isEn ? 'Intake & Legacy SQL' : 'Intake & Impor SQL Lama', slop: isEn ? 'Manual copy-paste, loses legacy FKs' : 'Copy-paste manual, relasi tabel lama rusak', pos: isEn ? 'MarkItDown OCR + Shadow ULID Zero-Loss Cutover' : 'MarkItDown OCR + Migrasi Shadow ULID Tanpa Hilang Data' },
+                { no: '02', name: isEn ? '26-Parameter PRD & WBS' : 'PRD 26 Parameter & WBS', slop: isEn ? 'Vague 1-page chat summary' : 'Ringkasan chat 1 halaman yang kabur', pos: isEn ? '26-Param PRD, Mermaid Gantt & OpenAPI 3.1 Contract' : 'PRD 26 Parameter, Mermaid Gantt & Kontrak OpenAPI 3.1' },
+                { no: '03', name: isEn ? 'PG16 Strict ULID & O(1)' : 'PG16 Strict ULID & Cursor O(1)', slop: isEn ? 'AUTO_INCREMENT + slow OFFSET paginate()' : 'AUTO_INCREMENT + paginate() OFFSET yang lambat', pos: isEn ? '26-Char ULID PK + Sub-10ms Keyset cursorPaginate()' : 'ULID 26-Karakter + Keyset cursorPaginate() O(1) <10ms' },
+                { no: '04', name: isEn ? '12 Sectors × 36 Visual UI' : '12 Sektor × 36 Visual UI', slop: isEn ? 'Generic CRUD tables for every industry' : 'Tabel CRUD generik yang sama untuk semua bisnis', pos: isEn ? '36 Deterministic Sector Cockpits + Keyboard Shortcuts' : '36 Kokpit Spesifik Industri + Pintasan Keyboard' },
+                { no: '05', name: isEn ? 'Zone B 60fps Scrollytelling' : 'Zona B Scrollytelling 60fps', slop: isEn ? 'Heavy JS libraries & gaudy gradients' : 'Animasi berat bikin lag & gradien murahan', pos: isEn ? '6 CSS Scroll-Driven 60fps Presets + Reduced-Motion' : '6 Preset CSS Scroll-Driven 60fps + Aksesibilitas' },
+                { no: '06', name: isEn ? 'Dual-Persona & Co-Design' : 'Dual-Persona & Co-Design', slop: isEn ? 'Clients confused by raw code/SQL' : 'Klien awam bingung melihat kode/SQL mentah', pos: isEn ? '5-Step Business Mode <-> 3-Pane Architect + Co-Design' : 'Mode Bisnis 5-Langkah <-> Arsitek 3-Pane + Co-Design' },
+                { no: '07', name: isEn ? 'Decision Matrix match()' : 'Tabel Keputusan match()', slop: isEn ? 'Spaghetti nested if/else & float bugs' : 'Kode spaghetti if-else bersarang & salah hitung koma', pos: isEn ? 'Deterministic PHP 8.4+ match() + DECIMAL(19,4) ACID' : 'Kompilasi PHP 8.4+ match() + Akuntansi DECIMAL(19,4)' },
+                { no: '08', name: isEn ? '7-Phase Prompts & /init' : '7-Fase Prompt & CLI /init', slop: isEn ? 'Single giant prompt -> AI context overflow' : 'Satu prompt raksasa -> AI halusinasi & error', pos: isEn ? '7 Kahn-Sorted Phases + 3-Sec curl /init/{ULID} | bash' : '7 Fase Terurut Kahn DAG + Inisialisasi CLI 3 Detik' },
+                { no: '09', name: isEn ? 'Live 2-Way MCP Bridge' : 'Jembatan Live MCP 2-Arah', slop: isEn ? 'Zero IDE awareness of blueprint state' : 'IDE tidak tahu status progres cetak biru', pos: isEn ? 'Live .mcp.json + 44 Native AI Tools (KAG/CAG/RAG)' : 'Sinkronisasi .mcp.json + 44 Tool AI (KAG/CAG/RAG)' },
+                { no: '10', name: isEn ? 'AgentShield & Living CVE' : 'AgentShield & Living CVE', slop: isEn ? 'Vulnerable to Prompt Injection & IDOR' : 'Rawan kebocoran IDOR & serangan Prompt Injection', pos: isEn ? '3-Gate AgentShield + Phase 7 Red-Team + CVE Autopatch' : 'Firewall AgentShield + Uji Red-Team Fase 7 + Patch CVE' },
+                { no: '11', name: isEn ? 'Canary IP & SHA-256 Audit' : 'Canary IP & Audit SHA-256', slop: isEn ? 'Mutable logs & unprotected documents' : 'Log mudah dihapus & dokumen rawan dibajak', pos: isEn ? 'Zero-Width Canary IP + SHA-256 Hash Chain (.xlsx)' : 'Tanda Air Canary IP + Rantai Hash SHA-256 (.xlsx)' },
+                { no: '12', name: isEn ? 'Satu Pintu Commercial Gate' : 'Gerbang Komersial Satu Pintu', slop: isEn ? 'Inconsistent free bypass vs pricing cards' : 'Tombol loncat gratis tidak sinkron dengan tabel harga', pos: isEn ? 'Unified Step A–F Configurator + Backend Entitlement Lock' : 'Konfigurator Terpadu Langkah A–F + Kunci Lisensi Server' },
+                { no: '13', name: isEn ? 'CSR Non-Profit Grant (Rp 0)' : 'Hibah Sosial CSR (Rp 0)', slop: isEn ? 'Ambiguous Rp 0 pricing abused by commercial' : 'Harga Rp 0 ambigu & disalahgunakan bisnis komersial', pos: isEn ? 'Rp 1.49M Subsidized 100% -> Rp 0 (Mandatory Akta Check)' : 'Nilai Rp 1,49 Jt Disubsidi 100% -> Rp 0 (Wajib Akta/SK)' },
+                { no: '14', name: isEn ? '12-Sector Schema.org @graph' : 'Schema.org @graph 12 Sektor', slop: isEn ? 'Missing or generic WebPage JSON-LD' : 'Tanpa JSON-LD atau hanya WebPage generik', pos: isEn ? 'Multi-Graph @graph Tailored to All 12 Industry Sectors' : 'Multi-Graph @graph Spesifik 12 Sektor Industri' },
+                { no: '15', name: isEn ? 'GEO /llms.txt & OG Cards' : 'GEO /llms.txt & Kartu OG', slop: isEn ? 'Invisible to ChatGPT, Perplexity & Claude' : 'Tidak terbaca oleh ChatGPT Search, Perplexity & Claude', pos: isEn ? '/llms.txt + 50-Word Capsules + IndexNow + Local OG' : '/llms.txt + Kapsul 50 Kata + IndexNow + OG Lokal' },
+                { no: '16', name: isEn ? 'UU PDP Blind Index Vault' : 'Brankas Blind Index UU PDP', slop: isEn ? 'Plaintext NIK/Phone or broken WHERE search' : 'NIK/HP teks telanjang atau pencarian SQL lumpuh', pos: isEn ? 'AES-256 + 64-Char HMAC-SHA256 Blind Index O(1) + Redact' : 'AES-256 + Blind Index HMAC-SHA256 O(1) + Anonimisasi' },
+                { no: '17', name: isEn ? 'Offline Outbox PWA Sync' : 'Offline Outbox PWA Anti-Putus', slop: isEn ? 'Lost transactions & double-submit on 3G' : 'Transaksi hilang atau tercatat ganda saat sinyal buruk', pos: isEn ? 'IndexedDB 26-Char ULID Outbox + X-Idempotency-Key Sync' : 'Antrean Outbox ULID IndexedDB + Sinkronisasi Idempoten' },
+                { no: '18', name: isEn ? 'Post-BAST 90-Day SLA Triage' : 'Triase SLA 90 Hari Pasca-BAST', slop: isEn ? 'Endless WhatsApp arguments over bugs vs CR' : 'Debat kusir via WA antara perbaikan bug vs fitur baru', pos: isEn ? 'Auto 90-Day Timer: Free Bugfix Prompt vs Paid Delta v1.1' : 'Timer 90 Hari: Perbaikan Bug Rp 0 vs Addendum v1.1' },
+                { no: '19', name: isEn ? 'Atomic pg_dump & Rollback' : 'Snapshot pg_dump & Rollback', slop: isEn ? 'Broken migration corrupts live production DB' : 'Migrasi gagal merusak database produksi tanpa backup', pos: isEn ? 'Auto pre_migrate_*.sql.gz + 1-Command ./deploy.sh rollback' : 'Snapshot Otomatis .sql.gz + ./deploy.sh rollback Instan' },
+                { no: '20', name: isEn ? 'Chaos Sandbox & Holding' : 'Chaos Sandbox & Holding', slop: isEn ? 'Untested webhooks & single-branch lock-in' : 'Webhook tidak teruji & mentok di satu cabang saja', pos: isEn ? 'Local Webhook Simulator + Multi-Entity Holding Rollup' : 'Simulator Webhook Lokal + Konsolidasi Induk-Cabang' },
+              ];
+
+              return (
+                <motion.div
+                  key="matrix-tab-content"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="mb-16 space-y-8"
+                >
+                  {/* PART A: 28-PARAMETER PACKAGE & CONTRACT COMPARISON MATRIX */}
+                  <div className="border-2 border-zinc-900 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-5 sm:p-8 rounded-none shadow-xs">
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6 pb-4 border-b-2 border-zinc-200 dark:border-zinc-800">
+                      <div>
+                        <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-zinc-950 text-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 border border-zinc-800 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
+                          <span>PROJECT OS V11.0 PARIPURNA</span>
+                          <span>&bull;</span>
+                          <span>{isEn ? '28 EVALUATION PARAMETERS × 20 PILLARS' : '28 PARAMETER EVALUASI × 20 PILAR REKAYASA'}</span>
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-950 dark:text-white flex items-center gap-2 font-sans">
+                          <Layers className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span>{isEn ? 'COMPREHENSIVE TECHNICAL & COMMERCIAL COMPARISON MATRIX' : 'MATRIKS PERBANDINGAN LENGKAP: 7 PAKET RETAIL SAAS VS 3 KONTRAK MITRA STUDIO'}</span>
+                        </h3>
+                        <p className="text-xs text-zinc-700 dark:text-zinc-300 font-sans mt-1">
                           {isEn
-                            ? '100% Self-Service by You / Your Team (Zero Neriah Pro Coding)'
-                            : '100% Mandiri oleh Developer / Tim Anda (Zero Neriah Pro Coding)'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 font-mono">
-                          {isEn ? 'Client Dev Team (Guided by Scoping)' : 'Tim Klien Sendiri (Didampingi Scoping)'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-mono font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? '100% Executed by Neriah Pro' : '100% Dikerjakan Neriah Pro'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-amber-600 dark:text-amber-400 font-mono font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                            <span>{isEn ? '100% Executed by Neriah Pro' : '100% Dikerjakan Neriah Pro'}</span>
-                          </span>
-                        </td>
-                      </tr>
+                            ? '100% transparent side-by-side breakdown across all 7 Self-Service Retail SaaS Tiers (including Verified CSR Grant Rp 0) and 3 Turnkey Mitra Engineering Contracts.'
+                            : 'Perbandingan transparan 28 parameter teknis, keamanan, SEO/GEO, UU PDP, dan komersial di seluruh 7 Paket Lisensi SaaS Retail (termasuk Hibah CSR Rp 0) serta 3 Kontrak Mitra Studio.'}
+                        </p>
+                      </div>
 
-                      {/* 2. PERSYARATAN AKUN & LOGIN */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {isEn ? 'Account & Login Requirements' : 'Persyaratan Akun & Login'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                          {isEn ? (
-                            <>Spark: <strong>Guest Mode (No Login)</strong><br />Starter, Pro Agentic, Enterprise: <strong>Verified Account Required</strong></>
-                          ) : (
-                            <>Spark: <strong>Guest Mode (Tanpa Login)</strong><br />Starter, Pro Agentic, Enterprise: <strong>Wajib Login Akun</strong></>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                          {isEn ? 'Official Client Registration Required' : 'Wajib Registrasi Akun Klien Resmi'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-800 dark:text-zinc-200 font-semibold">
-                          {isEn ? 'Digital Contract & Corporate Account' : 'Kontrak Legal & Akun Korporat'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                          {isEn ? 'Business Client Registration' : 'Registrasi Akun Klien UMKM'}
-                        </td>
-                      </tr>
-
-                      {/* 3. BATAS KUOTA & SIKLUS RESET */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {isEn ? 'Quota Limit & Reset Cycle' : 'Batas Kuota & Siklus Reset'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                          {isEn ? (
-                            <>Spark: <strong>2 Audits/Mo (Resets on 1st)</strong><br />Starter/Pro Agentic/Enterprise: <strong>1 Project per License</strong></>
-                          ) : (
-                            <>Spark: <strong>2x Audit/Bulan (Reset tiap tgl 1)</strong><br />Starter/Pro Agentic/Enterprise: <strong>1 Proyek per Lisensi</strong></>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                          {isEn ? '1 Focused Specification Project' : '1 Proyek Spesifikasi Terfokus'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-800 dark:text-zinc-200 font-semibold">
-                          {isEn ? '1 Dedicated Enterprise Build (Batch Lock)' : '1 Proyek Enterprise Penuh (Kunci Slot Batch)'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                          {isEn ? '1 Business System (Monthly Subsidy)' : '1 Sistem Usaha (Alokasi Subsidi Bulanan)'}
-                        </td>
-                      </tr>
-
-                      {/* 3B. KAPASITAS TERKELOLA & ANTI-TABRAKAN JADWAL */}
-                      <tr className="bg-emerald-500/5 dark:bg-emerald-500/10">
-                        <td className="py-3 px-3 font-bold text-zinc-900 dark:text-white font-mono">
-                          {isEn ? 'Managed Capacity & Anti-Collision' : 'Kapasitas Terkelola & Anti-Tabrakan'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500 font-mono bg-cyan-500/5">
-                          {isEn ? 'Instant Self-Service' : 'Mandiri Instan'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 font-mono">
-                          {isEn ? 'Flexible Scheduling' : 'Jadwal Fleksibel'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-mono font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Batch 1, 2, Q1 (Max 2-3/Batch, Anti-Collision Lock)' : 'Batch 1, 2, Q1 (Maks 2-3/Batch, Kunci Anti-Tabrakan)'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-amber-600 dark:text-amber-400 font-mono">
-                          {isEn ? 'Quota 2 Slots / Month' : 'Kuota 2 Slot / Bulan'}
-                        </td>
-                      </tr>
-
-                      {/* 3C. KELENGKAPAN 10 PILAR SOFTWARE FACTORY OS */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200 font-mono">
-                          {formatPillar(isEn ? '10 Pillars of Software Factory OS' : '10 Pilar Software Factory OS')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                          {isEn ? 'Spark: 1 | Starter: 2 | Pro Agentic: 5 | Enterprise: Complete 10' : 'Spark: 1 | Starter: 2 | Pro Agentic: 5 | Enterprise: Lengkap 10'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                          {formatPillar(isEn ? 'Pillar 1 (PRD & DDL) + WBS 5 Sprints' : 'Pilar 1 (PRD & DDL) + WBS 5 Sprint')}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{formatPillar(isEn ? '100% Complete 10 Pillars Coded & Live' : '100% Seluruh 10 Pilar Dikodingkan sampai Live')}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400 text-[11px]">
-                          {isEn ? 'Core Monolith + Filament v5' : 'Engine Transaksi + Filament v5'}
-                        </td>
-                      </tr>
-
-                      {/* 3D. MASTER GANTT TIMELINE & CUSTOMER PORTAL */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200 font-mono">
-                          {isEn ? 'Master Gantt & Customer Portal' : 'Master Gantt & Customer Portal'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                          {isEn ? 'Mermaid Gantt Diagram Code' : 'Kode Diagram Mermaid Gantt'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                          {isEn ? 'WBS 5-Sprint Gantt Blueprint' : 'Cetak Biru WBS 5 Sprint Gantt'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Interactive Gantt + Customer Portal Live' : 'Interactive Gantt + Akses Customer Portal'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400 text-[11px]">
-                          {isEn ? 'Standard Milestone Tracking' : 'Pelacakan Milestone Standar'}
-                        </td>
-                      </tr>
-
-                      {/* 4. MASA BERLAKU & JENDELA REVISI */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {isEn ? 'Validity Period & Revision Window' : 'Masa Berlaku & Jendela Revisi'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                          {isEn ? (
-                            <>Spark: 7-Day Guest Session<br />Starter: Lifetime Download + 30-Day Revisions<br />Pro Agentic: Lifetime Download + 6-Mo AI Regen<br />Enterprise: Lifetime + 1-Yr Updates + 60-Day Meet</>
-                          ) : (
-                            <>Spark: 7hr Guest Session<br />Starter: Unduh Selamanya + 30hr Revisi<br />Pro Agentic: Unduh Selamanya + 6bln AI Regen<br />Enterprise: Selamanya + 1th Update + 60hr Meet</>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                          {isEn ? 'Lifetime Document + 7-Day Revision Support' : 'Dokumen Selamanya + 7 Hari Pendampingan Revisi'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                          {isEn ? '3-Month Bug Warranty & Post-Live SLA' : '3 Bulan Garansi Bug & SLA Maintenance Pasca Live'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300">
-                          {isEn ? '1-Month Bug Warranty & Operations Guide' : '1 Bulan Garansi Bug & Panduan Operasional'}
-                        </td>
-                      </tr>
-
-                      {/* 5. TARGET PERSONA */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {isEn ? 'Target Persona' : 'Target Persona'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400 bg-cyan-500/5">
-                          {isEn ? 'Solo Devs, Tech Leads, Founders, In-House Teams' : 'Solo Dev, Tech Lead, Founder, Agensi yang Koding Sendiri'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400">
-                          {isEn ? 'CTOs & Founders with Internal Dev Teams' : 'CTO & Founder dengan Tim Dev Internal'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-800 dark:text-zinc-200 font-semibold">
-                          {isEn ? 'Scale-Ups, Enterprises, Investor-Ready Startups' : 'Scale-Up, Korporasi, Investor Ready'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-600 dark:text-zinc-400">
-                          {isEn ? 'Local Businesses, Retail Shops, Services & F&B' : 'UMKM, Toko Retail, Usaha Jasa & F&B'}
-                        </td>
-                      </tr>
-
-                      {/* 6. WAKTU PENGERJAAN */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {isEn ? 'Delivery Timeline' : 'Waktu Pengerjaan'}
-                        </td>
-                        <td className="py-3 px-3 font-mono text-cyan-600 dark:text-cyan-400 font-bold bg-cyan-500/5">
-                          {isEn ? 'Instant (Seconds via AI)' : 'Instan (Hitungan Detik via AI)'}
-                        </td>
-                        <td className="py-3 px-3 font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                          {isEn ? '24 - 48 Business Hours' : '24 - 48 Jam Kerja'}
-                        </td>
-                        <td className="py-3 px-3 font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                          {isEn ? '4 - 6 Weeks (5 Sprints)' : '4 - 6 Minggu (5 Sprint)'}
-                        </td>
-                        <td className="py-3 px-3 font-mono text-zinc-600 dark:text-zinc-400">
-                          {isEn ? '2 - 3 Weeks (2 Sprints)' : '2 - 3 Minggu (2 Sprint)'}
-                        </td>
-                      </tr>
-
-                      {/* 7. PRD 26 PARAMETER */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {formatPillar(isEn ? '26-Parameter PRD (Pillar 1)' : 'PRD 26 Parameter (Pilar 1)')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                          {isEn ? (
-                            <>Spark: Lean 5 Features<br />Starter, Pro Agentic, Enterprise: <strong>Full (JSON & MD)</strong></>
-                          ) : (
-                            <>Spark: Lean 5 Fitur<br />Starter, Pro Agentic, Enterprise: <strong>Lengkap (JSON & MD)</strong></>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Full (JSON & Markdown)' : 'Lengkap (JSON & Markdown)'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Full + Fully Implemented' : 'Lengkap + Terimplementasi'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500">
-                          {isEn ? 'Lean (Core Business Workflow)' : 'Sederhana (Alur Inti Usaha)'}
-                        </td>
-                      </tr>
-
-                      {/* 8. POSTGRESQL STRICT ULID DDL */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {formatPillar(isEn ? 'Strict ULID Schema & Docker (Pillar 3)' : 'Skema Strict ULID & Docker (Pilar 3)')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                          {isEn ? (
-                            <>Starter, Pro Agentic, Enterprise: <strong>Ready-to-Import SQL DDL</strong></>
-                          ) : (
-                            <>Starter, Pro Agentic, Enterprise: <strong>DDL SQL Siap Import</strong></>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Ready-to-Import DDL Script' : 'DDL Script Siap Import'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Live on Production VPS Server' : 'Live di Server VPS'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Live Transactional Database' : 'Database Transaksional'}</span>
-                          </span>
-                        </td>
-                      </tr>
-
-                      {/* 9. CETAK BIRU DECOUPLED 2026+ */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {formatPillar(isEn ? 'UI Tokens & Wireframes (Pillar 2)' : 'Design Tokens & Wireframe (Pilar 2)')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5">
-                          {isEn ? (
-                            <>Pro & Enterprise: <strong>Next.js 15, Cloudflare, OpenAPI 3.1</strong></>
-                          ) : (
-                            <>Pro & Enterprise: <strong>Next.js 15, Cloudflare, OpenAPI 3.1</strong></>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>Tools Matrix, Server Topology, OpenAPI 3.1</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Isolated API Resources (Headless-Ready)' : 'API Resources Terisolasi (Siap Headless)'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500">
-                          {isEn ? 'Standardized QRIS & WhatsApp Webhooks' : 'API Webhook QRIS & WhatsApp Terstandar'}
-                        </td>
-                      </tr>
-
-                      {/* 9B. SYNTHETIC DATA SEEDER (PILAR 4) */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {formatPillar(isEn ? 'Synthetic Data Seeder (Pillar 4)' : 'Synthetic Data Seeder (Pilar 4)')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                          {isEn ? 'Pro/Enterprise: Blueprint Seeder Script' : 'Pro/Enterprise: Cetak Biru Seeder Sintetis'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                          {isEn ? 'Data Dictionary & Mock Specs' : 'Kamus Data & Spesifikasi Mock'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? '100+ Realistic Records Seeded Live' : '100+ Baris Data Sintetis Di-seed Live'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500 text-[11px]">
-                          {isEn ? 'Sample Catalog & Initial Records' : 'Katalog Awal & Data Contoh Toko'}
-                        </td>
-                      </tr>
-
-                      {/* 9C. ATURAN KODING AGEN AI (PILAR 5) */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {formatPillar(isEn ? 'AI Coding Directives (Pillar 5)' : 'Aturan Koding Agen AI (Pilar 5)')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                          {isEn ? 'Pro/Enterprise: .cursorrules & AGENTS.md' : 'Pro/Enterprise: .cursorrules & AGENTS.md'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                          {isEn ? 'Architecture Rules for Client Team' : 'Template Aturan AI Khusus Tim Klien'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Repository-Tailored AI Directives' : 'Ruleset Khusus (.cursorrules, AGENTS.md)'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500 text-[11px]">
-                          {isEn ? 'Standard Operations Manual' : 'Buku Panduan Operasional Standar'}
-                        </td>
-                      </tr>
-
-                      {/* 9D. AUTOMATED CONTRACT TESTS (PILAR 6) */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {formatPillar(isEn ? 'Contract-First Tests (Pillar 6)' : 'Uji Kontrak Otomatis (Pilar 6)')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                          {isEn ? 'Enterprise: ApiContractTest Specs' : 'Enterprise: Spesifikasi ApiContractTest'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                          {isEn ? 'Acceptance Criteria & Test Matrix' : 'Kriteria UAT & Matriks Skenario Uji'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Automated Pest/PHPUnit Suite (100% Green)' : 'Suite Uji Otomatis Pest (100% Lolos)'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500 text-[11px]">
-                          {isEn ? 'End-to-End Payment & Order UAT' : 'Verifikasi UAT Alur Transaksi & QRIS'}
-                        </td>
-                      </tr>
-
-                      {/* 9E. CLOUD CI/CD & DEPLOY.SH (PILAR 7) */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {formatPillar(isEn ? 'Cloud CI/CD & deploy.sh (Pillar 7)' : 'Cloud CI/CD & deploy.sh (Pilar 7)')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                          {isEn ? 'Enterprise: GitHub Actions & deploy.sh Code' : 'Enterprise: GitHub Actions & deploy.sh'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                          {isEn ? 'VPS Topology & Hardening Guide' : 'Panduan Topologi VPS & Hardening'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Live CI/CD Pipeline + deploy.sh 6 Scenarios' : 'Pipeline CI/CD Aktif + deploy.sh 6 Skenario'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500 text-[11px]">
-                          {isEn ? 'Cloud VPS Hosting + Auto SSL HTTPS' : 'Hosting Cloud VPS + SSL HTTPS Otomatis'}
-                        </td>
-                      </tr>
-
-                      {/* 9F. TELEMETRY & HEALTH PROBES (PILAR 8) */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {formatPillar(isEn ? 'Health Probes & Telemetry (Pillar 8)' : 'Health Probes & Telemetri (Pilar 8)')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                          {isEn ? 'Enterprise: HealthProbeController & /healthz' : 'Enterprise: HealthProbeController & /healthz'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                          {isEn ? 'SLA Metrics Architecture' : 'Arsitektur Metrik SLA'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Live /healthz, /livez & /readyz Probes' : 'Endpoint /healthz, /livez & /readyz Aktif'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500 text-[11px]">
-                          {isEn ? 'Standard Uptime Health Check' : 'Cek Status Server Standar'}
-                        </td>
-                      </tr>
-
-                      {/* 9G. DISASTER RECOVERY & ZERO DATA LOSS (PILAR 9) */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {formatPillar(isEn ? 'Disaster Recovery & Drills (Pillar 9)' : 'Pemulihan Bencana & Backup (Pilar 9)')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                          {isEn ? 'Enterprise: backup.sh & restore.sh Drills' : 'Enterprise: Skrip backup.sh & restore.sh'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                          {isEn ? 'Database Backup Guide' : 'Panduan Backup Database'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Automated Encrypted Backups & Runbooks' : 'Backup Terenkripsi Otomatis & Runbook SOP'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500 text-[11px]">
-                          {isEn ? 'Manual Database Dumps' : 'Dump Database Manual'}
-                        </td>
-                      </tr>
-
-                      {/* 9H. LIVING CONTRACT & INTERACTIVE DOCS (PILAR 10) */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {formatPillar(isEn ? 'Living Contract & API Docs (Pillar 10)' : 'Dokumentasi Interaktif & API (Pilar 10)')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                          {isEn ? 'Enterprise: Scalar OpenAPI /docs/api' : 'Enterprise: Scalar OpenAPI /docs/api'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                          {isEn ? 'Swagger UI Reference' : 'Referensi Swagger UI'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Interactive Scalar Documentation Live' : 'Dokumentasi Interaktif Scalar Aktif'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500 text-[11px]">
-                          {isEn ? 'Postman Collection Export' : 'Ekspor Koleksi Postman'}
-                        </td>
-                      </tr>
-
-                      {/* 9I. CHANGE REQUEST (CR) / ADDENDUM */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {formatPillar(isEn ? 'Change Request (CR) / Addendum' : 'Change Request (CR) / Addendum')}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                          {isEn ? 'Pro/Enterprise: Official Request Form' : 'Pro/Enterprise: Form Pengajuan Terintegrasi'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                          {isEn ? 'Manual SLA Revision System' : 'Sistem Revisi SLA Manual'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Automated CR Dashboard (No Email/WA)' : 'Dashboard CR Resmi (Tanpa Email/WA)'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Included in Warranty SLA' : 'Termasuk dalam Garansi SLA'}</span>
-                          </span>
-                        </td>
-                      </tr>
-
-                      {/* 9G. PROTEKSI TRANSAKSI IDEMPOTEN */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {isEn ? 'Idempotent Payment Engine' : 'Proteksi Transaksi Idempoten'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 bg-cyan-500/5 text-[11px]">
-                          {isEn ? 'Instant License Delivery' : 'Pengiriman Lisensi Digital Instan'}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                          {isEn ? 'Idempotent Webhook Architecture' : 'Arsitektur Webhook Anti-Tabrakan'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? 'Midtrans Snap + Anti-Double Payment Guard' : 'Midtrans Snap + Proteksi Dobel Bayar'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500 text-[11px]">
-                          {isEn ? 'Automated Midtrans QRIS & VA' : 'QRIS & Virtual Account Otomatis'}
-                        </td>
-                      </tr>
-
-                      {/* 10. MEKANISME PEMBAYARAN */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {isEn ? 'Payment Structure' : 'Mekanisme Pembayaran'}
-                        </td>
-                        <td className="py-3 px-3 font-mono bg-cyan-500/5">
-                          {isEn ? 'Spark: $0 | Paid: 100% One-Time' : 'Spark: Rp 0 | Berbayar: 100% Sekali Bayar'}
-                        </td>
-                        <td className="py-3 px-4 font-mono">
-                          {isEn ? '100% Upfront (Deducts 50% DP)' : '100% di Muka (Memotong DP 50%)'}
-                        </td>
-                        <td className="py-3 px-4 font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                          {isEn ? '50% DP + 50% Upon UAT Live' : 'DP 50% + Pelunasan UAT 50%'}
-                        </td>
-                        <td className="py-3 px-4 font-mono">
-                          {isEn ? '50% DP + 50% Upon UAT Live' : 'DP 50% + Pelunasan UAT 50%'}
-                        </td>
-                      </tr>
-
-                      {/* 11. 12 SECTORAL INDUSTRIAL UI/UX ARCHETYPES & REALISTIC SEEDER */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-900 dark:text-zinc-100">
-                          {isEn ? '12 Sectoral Industrial UI/UX Cockpits & Realistic ID Seeder' : '12 Arketipe UI/UX Spesifik Industri & Seeder Data Indonesia'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-800 dark:text-emerald-300 font-bold bg-cyan-500/5">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>{isEn ? 'UI_UX_CONTRACT.md + RealisticSectorSeeder.php' : 'UI_UX_CONTRACT.md + RealisticSectorSeeder.php'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
-                          {isEn ? 'Included (Ergonomic Audit)' : 'Termasuk (Audit Ergonomi Sektor)'}
-                        </td>
-                        <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>{isEn ? '100% Built Multi-Pane Cockpit + Shortcuts' : '100% Dibangun Multi-Pane Cockpit + Shortcut'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
-                          {isEn ? 'Primary Sector Layout' : 'Sesuai Sektor Utama'}
-                        </td>
-                      </tr>
-
-                      {/* 12. 9 CURATED TECH STACK ADAPTERS (M1-M4, D1-D3, S1-S2) */}
-                      <tr className="bg-zinc-50/70 dark:bg-zinc-950/60">
-                        <td className="py-3 px-3 font-bold text-zinc-900 dark:text-zinc-100">
-                          {isEn ? '9 Curated Stack Topology Adapters (M1–S2)' : '9 Adapter Topologi & Tech Stack Terkurasi (M1–S2)'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-800 dark:text-emerald-300 font-bold bg-cyan-500/5">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>{isEn ? 'All 9 Stacks (Monolith, Headless, Microservices)' : 'Bebas Pilih 9 Stack (Laravel, Go, Next.js, Temporal)'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
-                          {isEn ? 'Topology Advisory Matrix' : 'Rekomendasi Topologi & TCO'}
-                        </td>
-                        <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>{isEn ? 'Turnkey M1 Monolith / Custom Stack' : 'Turnkey M1 Laravel 13 / Sesuai Kontrak'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
-                          M1 Monolith (PG16 ULID)
-                        </td>
-                      </tr>
-
-                      {/* 13. 7 KILLER ORCHESTRATION ENGINES */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-900 dark:text-zinc-100">
-                          {isEn ? 'Phased Prompts (1–7 + Red-Team), Brownfield SQL Audit & CLI /init/{ULID}' : '7 Fase Prompt (+Fase 7 Red-Team), Impor SQL Lama & CLI /init/{ULID}'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-800 dark:text-emerald-300 font-bold bg-cyan-500/5">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>{isEn ? '100% Active + ./verify-blueprint.sh' : '100% Aktif + ./verify-blueprint.sh'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
-                          {isEn ? 'Includes Shadow ULID Plan' : 'Termasuk Rencana Shadow ULID'}
-                        </td>
-                        <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>{isEn ? 'Executed End-to-End by Senior Team' : 'Dieksekusi Penuh oleh Senior Architect'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
-                          {isEn ? 'Includes verify-blueprint.sh' : 'Termasuk verify-blueprint.sh'}
-                        </td>
-                      </tr>
-
-                      {/* 14. DAY-30 TO DAY-365 LIFECYCLE, MCP BRIDGE & 3-PANE STUDIO */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-900 dark:text-zinc-100">
-                          {isEn ? 'Day-30+ Delta CR (v1.0 → v1.1), Live MCP Bridge (.mcp.json) & Decision Matrix match()' : 'Evolusi Delta v1.1, Live MCP IDE (.mcp.json), Decision Matrix match() & pos:check-env'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-800 dark:text-emerald-300 font-bold bg-cyan-500/5">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>{isEn ? '3-Pane Studio + Unlimited Delta Sync' : '3-Pane Studio + Sinkronisasi MCP'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
-                          {isEn ? 'Includes .env.blueprint & Red-Team Spec' : 'Termasuk .env.blueprint & Red-Team'}
-                        </td>
-                        <td className="py-3 px-4 text-emerald-800 dark:text-emerald-300 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>{isEn ? 'Full Lifecycle Retainer & MCP Verified' : 'Garansi Siklus Hidup & Terverifikasi MCP'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-zinc-800 dark:text-zinc-200 font-medium">
-                          {isEn ? 'Studio Preview + .env.blueprint' : 'Akses 3-Pane Studio + .env.blueprint'}
-                        </td>
-                      </tr>
-
-                      {/* 15. HAK MILIK SOURCE CODE */}
-                      <tr>
-                        <td className="py-3 px-3 font-bold text-zinc-800 dark:text-zinc-200">
-                          {isEn ? 'Document & Code Ownership' : 'Hak Milik Dokumen / Kode'}
-                        </td>
-                        <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold bg-cyan-500/5">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? '100% Client Ownership' : '100% Milik Klien'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? '100% Client (NDA)' : '100% Klien (NDA)'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? '100% Client (No Lock-in)' : '100% Klien (No Lock-in)'}</span>
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
-                          <span className="inline-flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{isEn ? '100% Client' : '100% Klien'}</span>
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* TAB 4: FREQUENTLY ASKED QUESTIONS (FAQ) ACCORDION                         */}
-            {/* ========================================================================= */}
-            {pricingSectionTab === 'faq' && (
-              <motion.div
-                key="faq-tab-content"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className="max-w-4xl mx-auto mb-16"
-              >
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                    {isEn ? 'FREQUENTLY ASKED QUESTIONS' : 'PERTANYAAN YANG SERING DIAJUKAN (FAQ)'}
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-sans mt-1">
-                    {isEn ? 'Everything you need to know about our pricing and engagement models.' : 'Jawaban lugas seputar model kerjasama, mekanisme pembayaran, dan hak cipta proyek.'}
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  {faqs.map((faq, idx) => (
-                    <div
-                      key={idx}
-                      className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-none overflow-hidden transition"
-                    >
-                      <button
-                        onClick={() => toggleFaq(idx)}
-                        className="w-full py-4 px-5 text-left flex items-center justify-between gap-4 font-sans font-bold text-xs sm:text-sm text-zinc-900 dark:text-white hover:text-emerald-500 dark:hover:text-emerald-400 transition"
-                      >
-                        <span>{faq.q}</span>
-                        {openFaq === idx ? (
-                          <ChevronUp className="w-4 h-4 text-emerald-500 shrink-0" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-zinc-400 shrink-0" />
-                        )}
-                      </button>
-
-                      <AnimatePresence>
-                        {openFaq === idx && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="px-5 pb-4 text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed border-t border-zinc-100 dark:border-zinc-800 pt-3"
+                      {/* Density Switcher */}
+                      <div className="flex items-center gap-1 self-start lg:self-end bg-zinc-100 dark:bg-zinc-950 p-1 border border-zinc-300 dark:border-zinc-800 font-mono text-[10px]">
+                        <span className="px-2 py-1 text-zinc-600 dark:text-zinc-400 font-bold uppercase">{isEn ? 'Density:' : 'Kerapatan:'}</span>
+                        {[
+                          { id: 'compact', label: 'Compact' },
+                          { id: 'normal', label: 'Normal' },
+                          { id: 'relaxed', label: 'Relaxed' },
+                        ].map((d) => (
+                          <button
+                            key={d.id}
+                            type="button"
+                            onClick={() => setMatrixDensity(d.id)}
+                            className={`px-2 py-1 font-black uppercase rounded-none cursor-pointer transition ${matrixDensity === d.id
+                              ? 'bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950'
+                              : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                              }`}
                           >
-                            {faq.a}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                            {d.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
+
+                    {/* Search Bar with Instant "X" Clear + Category Filter Pills */}
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 mb-5">
+                      <div className="relative flex-1 max-w-md">
+                        <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={matrixSearchQuery}
+                          onChange={(e) => setMatrixSearchQuery(e.target.value)}
+                          placeholder={isEn ? 'Search 28 parameters (e.g. ULID, CSR, llms.txt, UU PDP, SLA)...' : 'Cari dari 28 parameter (mis: ULID, CSR, llms.txt, UU PDP, SLA)...'}
+                          className="w-full pl-8 pr-8 py-2 bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-xs rounded-none focus:border-emerald-500 outline-none"
+                        />
+                        {matrixSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setMatrixSearchQuery('')}
+                            title={isEn ? 'Clear search' : 'Hapus pencarian'}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-mono text-[10px] font-black rounded-none cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {matrixCategories.map((cat) => {
+                          const active = matrixCategoryFilter === cat.id;
+                          return (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => setMatrixCategoryFilter(cat.id)}
+                              className={`px-2.5 py-1.5 font-mono text-[10px] font-black uppercase border rounded-none cursor-pointer transition ${active
+                                ? 'bg-zinc-950 text-emerald-400 border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-500'
+                                : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-800 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+                                }`}
+                            >
+                              {cat.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto border border-zinc-300 dark:border-zinc-800">
+                      <table className="w-full text-left font-sans border-collapse">
+                        <thead className="sticky top-0 z-20 bg-zinc-100/95 dark:bg-zinc-950/95 backdrop-blur-md border-b-2 border-zinc-400 dark:border-zinc-700 font-mono text-[10px] uppercase tracking-wider">
+                          <tr>
+                            <th className="py-3.5 px-3 font-black text-zinc-900 dark:text-zinc-100 min-w-[210px] bg-zinc-100 dark:bg-zinc-950">
+                              <div>{isEn ? 'Evaluation Parameter (28)' : 'Parameter Evaluasi (28)'}</div>
+                              <div className="text-[9px] font-bold text-zinc-600 dark:text-zinc-400 mt-0.5">
+                                {isEn ? 'Showing ' : 'Menampilkan '} {filteredMatrixRows.length} / {matrixRows.length}
+                              </div>
+                            </th>
+                            <th className="py-3.5 px-3 font-black text-amber-950 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-950/40 min-w-[185px]">
+                              <div>Spark &amp; Hibah CSR</div>
+                              <div className="text-[9px] font-bold text-amber-900 dark:text-amber-200 mt-0.5">
+                                Rp 0 ({isEn ? 'Guest 2x / Verified NGO' : 'Tamu 2x / Yayasan Akta'})
+                              </div>
+                            </th>
+                            <th className="py-3.5 px-3 font-black text-cyan-950 dark:text-cyan-300 bg-cyan-100/60 dark:bg-cyan-950/40 min-w-[195px]">
+                              <div>Starter &amp; UMKM Pass</div>
+                              <div className="text-[9px] font-bold text-cyan-900 dark:text-cyan-200 mt-0.5">
+                                Rp {pricingSettings.retail_lite_price || '99.000'} / Rp {pricingSettings.single_app_pass_price || '299.000'}
+                              </div>
+                            </th>
+                            <th className="py-3.5 px-3 font-black text-emerald-950 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/50 min-w-[210px]">
+                              <div>Pro / Agency / Ultimate</div>
+                              <div className="text-[9px] font-bold text-emerald-900 dark:text-emerald-200 mt-0.5">
+                                Rp {pricingSettings.retail_pro_price || '399.000'} – Rp {pricingSettings.retail_ultimate_price || '1.490.000'}
+                              </div>
+                            </th>
+                            <th className="py-3.5 px-3 font-black text-zinc-950 dark:text-zinc-100 bg-zinc-200/70 dark:bg-zinc-900 min-w-[195px]">
+                              <div>Advisory &amp; UMKM Studio</div>
+                              <div className="text-[9px] font-bold text-zinc-700 dark:text-zinc-300 mt-0.5">
+                                Rp {pricingSettings.advisory_price || '2.500.000'} / Rp {pricingSettings.umkm_price || '3.750.000'}
+                              </div>
+                            </th>
+                            <th className="py-3.5 px-3 font-black text-emerald-950 dark:text-emerald-200 bg-emerald-200/70 dark:bg-emerald-950/80 min-w-[220px]">
+                              <div>Full Turnkey MVP (Mitra)</div>
+                              <div className="text-[9px] font-bold text-emerald-900 dark:text-emerald-300 mt-0.5">
+                                {isEn ? 'Escrow RAB + 90-Day SLA' : 'Escrow RAB + Garansi SLA 90 Hari'}
+                              </div>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                          {filteredMatrixRows.map((r, rIdx) => (
+                            <tr
+                              key={r.param}
+                              className={`${rIdx % 2 === 0 ? 'bg-white dark:bg-zinc-950' : 'bg-zinc-50/70 dark:bg-zinc-900/50'} hover:bg-zinc-100/90 dark:hover:bg-zinc-800/70 transition`}
+                            >
+                              <td className={`${cellPad} font-bold text-zinc-950 dark:text-white font-mono border-r border-zinc-200 dark:border-zinc-800`}>
+                                {r.param}
+                              </td>
+                              <td className={`${cellPad} text-zinc-800 dark:text-zinc-200 border-r border-zinc-200 dark:border-zinc-800`}>
+                                {r.sparkGrant}
+                              </td>
+                              <td className={`${cellPad} text-zinc-800 dark:text-zinc-200 border-r border-zinc-200 dark:border-zinc-800`}>
+                                {r.starterPass}
+                              </td>
+                              <td className={`${cellPad} text-emerald-950 dark:text-emerald-200 font-semibold bg-emerald-50/40 dark:bg-emerald-950/20 border-r border-zinc-200 dark:border-zinc-800`}>
+                                {r.proAgencyUlt}
+                              </td>
+                              <td className={`${cellPad} text-zinc-800 dark:text-zinc-200 border-r border-zinc-200 dark:border-zinc-800`}>
+                                {r.advisoryUmkm}
+                              </td>
+                              <td className={`${cellPad} text-emerald-950 dark:text-emerald-200 font-bold bg-emerald-100/40 dark:bg-emerald-950/40`}>
+                                {r.fullMvp}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* PART B: 20-PILLAR PARIPURNA ARCHITECTURAL SUPERIORITY MATRIX (RAW AI SLOP VS PROJECT OS V11.0) */}
+                  <div className="border-2 border-zinc-900 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 p-5 sm:p-8 rounded-none shadow-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                      <div>
+                        <span className="px-2 py-0.5 bg-emerald-600 text-white font-mono text-[10px] font-black uppercase">
+                          20 PILAR PARIPURNA V11.0 // ZERO-FAILURE GUARANTEE
+                        </span>
+                        <h4 className="text-lg sm:text-xl font-black uppercase text-zinc-950 dark:text-white font-sans mt-1">
+                          {isEn
+                            ? 'WHY RAW PROMPTING & CONVENTIONAL AGENCIES FAIL VS NERIAHPRO PROJECT OS V11.0'
+                            : 'MENGAPA PROMPT AI BIASA & AGENSI KONVENSIONAL GAGAL VS NERIAHPRO PROJECT OS V11.0'}
+                        </h4>
+                      </div>
+                      <span className="font-mono text-[11px] font-bold text-emerald-900 dark:text-emerald-300">
+                        {isEn ? 'All 20 Pillars Locked End-to-End' : 'Seluruh 20 Pilar Terkunci dari Hulu ke Hilir'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                      {twentyPillarsComparison.map((p) => (
+                        <div
+                          key={p.no}
+                          className="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-emerald-600 dark:hover:border-emerald-500 transition flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-1.5">
+                              <span className="px-1.5 py-0.5 bg-zinc-950 text-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 border border-zinc-800 dark:border-emerald-700 font-mono text-[9px] font-black">
+                                PILAR {p.no}
+                              </span>
+                              <span className="font-mono text-[9px] font-black text-emerald-800 dark:text-emerald-400">
+                                100% LOCKED
+                              </span>
+                            </div>
+                            <div className="font-mono text-xs font-black text-zinc-950 dark:text-white mb-2">
+                              {p.name}
+                            </div>
+                            <div className="p-1.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-[10px] text-rose-950 dark:text-rose-200 mb-1.5 leading-snug">
+                              <strong className="font-mono uppercase block text-[9px]">✕ {isEn ? 'Raw AI / Old Agency:' : 'AI Biasa / Agensi Lama:'}</strong>
+                              {p.slop}
+                            </div>
+                          </div>
+                          <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-[10px] text-emerald-950 dark:text-emerald-200 font-semibold leading-snug">
+                            <strong className="font-mono uppercase block text-[9px]">✓ Project OS v11.0:</strong>
+                            {p.pos}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })()}
+
+            {/* ========================================================================= */}
+            {/* TAB 5: FREQUENTLY ASKED QUESTIONS (FAQ) ACCORDION V11.0                   */}
+            {/* ========================================================================= */}
+            {pricingSectionTab === 'faq' && (() => {
+              const faqCategories = [
+                { id: 'ALL', label: isEn ? `All (${faqs.length})` : `Semua (${faqs.length})` },
+                { id: 'SATU_PINTU', label: isEn ? 'Satu Pintu & CSR Rp 0' : 'Satu Pintu & Hibah CSR Rp 0' },
+                { id: 'UI_UX_12_SEKTOR', label: isEn ? '12 Sectors, 36 UI & Scrollytelling' : '12 Sektor, 36 UI & Scrollytelling' },
+                { id: 'SEO_GEO_UU_PDP', label: isEn ? 'SEO/GEO, UU PDP & Offline PWA' : 'SEO/GEO, UU PDP & Offline PWA' },
+                { id: 'AI_MCP_SECURITY', label: isEn ? 'AI 44 Tools, MCP & AgentShield' : 'AI 44 Tool, MCP & AgentShield' },
+                { id: 'SLA_GARANSI_HUKUM', label: isEn ? 'Escrow, 90-Day SLA & Rollback' : 'Escrow, Garansi SLA 90 Hari & Rollback' },
+              ];
+
+              const filteredFaqs = faqs
+                .map((item, originalIdx) => ({ ...item, originalIdx }))
+                .filter((item) => {
+                  const matchCat = faqCategoryFilter === 'ALL' || item.category === faqCategoryFilter;
+                  if (!matchCat) return false;
+                  if (!faqSearchQuery.trim()) return true;
+                  const q = faqSearchQuery.toLowerCase();
+                  return item.q.toLowerCase().includes(q) || item.a.toLowerCase().includes(q);
+                });
+
+              const categoryBadgeLabel = {
+                SATU_PINTU: isEn ? 'SATU PINTU & COMMERCIAL' : 'SATU PINTU & KOMERSIAL',
+                UI_UX_12_SEKTOR: isEn ? '12 SECTORS & DUAL-ZONE UI' : '12 SEKTOR & DUAL-ZONE UI',
+                SEO_GEO_UU_PDP: isEn ? 'SEO/GEO, UU PDP & PWA' : 'SEO/GEO, UU PDP & PWA',
+                AI_MCP_SECURITY: isEn ? 'AI, MCP & AGENTSHIELD' : 'AI, MCP & AGENTSHIELD',
+                SLA_GARANSI_HUKUM: isEn ? 'ESCROW, 90-DAY SLA & OPS' : 'ESCROW, SLA 90 HARI & OPS',
+              };
+
+              return (
+                <motion.div
+                  key="faq-tab-content"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="max-w-5xl mx-auto mb-16"
+                >
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-zinc-950 text-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 border border-zinc-800 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
+                      <span>KNOWLEDGE BASE &amp; FAQ V11.0 PARIPURNA</span>
+                      <span>&bull;</span>
+                      <span>{faqs.length} {isEn ? 'VERIFIED ANSWERS' : 'JAWABAN TERVERIFIKASI'}</span>
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-zinc-950 dark:text-white font-sans">
+                      {isEn ? 'FREQUENTLY ASKED QUESTIONS (PROJECT OS V11.0)' : 'PERTANYAAN YANG SERING DIAJUKAN (FAQ PROJECT OS V11.0)'}
+                    </h3>
+                    <p className="text-xs text-zinc-700 dark:text-zinc-300 font-sans mt-1 max-w-2xl mx-auto">
+                      {isEn
+                        ? 'Complete answers covering Satu Pintu commercial lock, CSR Non-Profit Grant verification, 12 Sectors × 36 Visual UIs, SEO/GEO /llms.txt, UU PDP Blind Index, Offline Outbox PWA, and 90-Day Post-BAST SLA.'
+                        : 'Jawaban tuntas mengenai Gerbang Satu Pintu, syarat Hibah CSR Rp 0, 12 Sektor × 36 Visual UI, SEO/GEO /llms.txt, Blind Index UU PDP, Offline Outbox PWA, hingga Garansi Bug SLA 90 Hari Pasca-BAST.'}
+                    </p>
+                  </div>
+
+                  {/* FAQ Search + Expand All Toggle + Category Filter Pills */}
+                  <div className="p-4 bg-zinc-100 dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 mb-6 space-y-3">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                      <div className="relative flex-1">
+                        <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={faqSearchQuery}
+                          onChange={(e) => setFaqSearchQuery(e.target.value)}
+                          placeholder={isEn ? 'Search FAQ (e.g. CSR Rp 0, Satu Pintu, llms.txt, UU PDP, Offline, SLA 90)...' : 'Cari pertanyaan FAQ (mis: CSR Rp 0, Satu Pintu, llms.txt, UU PDP, Offline, SLA 90)...'}
+                          className="w-full pl-8 pr-8 py-2 bg-white dark:bg-zinc-950 border-2 border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-xs rounded-none focus:border-emerald-500 outline-none"
+                        />
+                        {faqSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setFaqSearchQuery('')}
+                            title={isEn ? 'Clear search' : 'Hapus pencarian'}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-mono text-[10px] font-black rounded-none cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setExpandAllFaqs((v) => !v)}
+                        className="px-3 py-2 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-950 font-mono text-[10px] font-black uppercase tracking-wider rounded-none cursor-pointer shrink-0 transition"
+                      >
+                        {expandAllFaqs
+                          ? (isEn ? '▲ Collapse All Answers' : '▲ Tutup Semua Jawaban')
+                          : (isEn ? '▼ Expand All Answers' : '▼ Buka Semua Jawaban')}
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {faqCategories.map((cat) => {
+                        const active = faqCategoryFilter === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setFaqCategoryFilter(cat.id)}
+                            className={`px-2.5 py-1 font-mono text-[10px] font-black uppercase border rounded-none cursor-pointer transition ${active
+                              ? 'bg-emerald-600 text-white border-emerald-600 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-500'
+                              : 'bg-white hover:bg-zinc-50 text-zinc-800 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+                              }`}
+                          >
+                            {cat.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {filteredFaqs.map((faq) => {
+                      const isExpanded = expandAllFaqs || openFaq === faq.originalIdx;
+                      return (
+                        <div
+                          key={faq.originalIdx}
+                          className="border-2 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-white dark:bg-zinc-900 rounded-none overflow-hidden transition"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => toggleFaq(faq.originalIdx)}
+                            className="w-full py-4 px-5 text-left flex items-start justify-between gap-4 font-sans font-bold text-xs sm:text-sm text-zinc-950 dark:text-white hover:text-emerald-700 dark:hover:text-emerald-400 transition cursor-pointer"
+                          >
+                            <div className="space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="px-1.5 py-0.5 bg-zinc-900 text-emerald-400 dark:bg-zinc-800 dark:text-emerald-300 font-mono text-[9px] font-black">
+                                  Q{String(faq.originalIdx + 1).padStart(2, '0')}
+                                </span>
+                                {faq.category && (
+                                  <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black uppercase">
+                                    {categoryBadgeLabel[faq.category] || faq.category}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="leading-snug">{faq.q}</div>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-1" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-zinc-500 shrink-0 mt-1" />
+                            )}
+                          </button>
+
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="px-5 pb-4 text-xs text-zinc-800 dark:text-zinc-200 font-sans leading-relaxed border-t border-zinc-200 dark:border-zinc-800 pt-3 bg-zinc-50/60 dark:bg-zinc-950/50"
+                              >
+                                {faq.a}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              );
+            })()}
 
             {/* 5. BOTTOM FAST CONTACT CALLOUT */}
             <div className="p-8 sm:p-10 bg-zinc-900 dark:bg-zinc-900/90 border-2 border-zinc-800 text-white text-center rounded-none shadow-xl relative overflow-hidden">
@@ -4840,19 +4956,35 @@ return match (true) {
                     </div>
                   </div>
 
-                  {/* Kode Voucher (Private / Partner Referral) */}
-                  <div>
-                    <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
-                      {isEn ? 'Promo Code / Partner Voucher (Optional)' : 'Kode Promo / Voucher Partner (Opsional)'}
-                    </label>
-                    <input
-                      type="text"
-                      name="voucher_code"
-                      value={formData.voucher_code}
-                      onChange={(e) => setFormData(prev => ({ ...prev, voucher_code: e.target.value.toUpperCase() }))}
-                      placeholder={isEn ? 'Enter partner referral code if available' : 'Masukkan jika memiliki kode partner khusus'}
-                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-mono"
-                    />
+                  {/* Kode Voucher & Estimasi Pagu Anggaran (Regional Thousand Separator) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
+                        {isEn ? 'Promo Code / Partner Voucher (Optional)' : 'Kode Promo / Voucher Partner (Opsional)'}
+                      </label>
+                      <input
+                        type="text"
+                        name="voucher_code"
+                        value={formData.voucher_code}
+                        onChange={(e) => setFormData(prev => ({ ...prev, voucher_code: e.target.value.toUpperCase() }))}
+                        placeholder={isEn ? 'Enter partner referral code' : 'Masukkan jika memiliki kode'}
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase mb-1">
+                        {isEn ? 'Target Budget IDR (Optional • Regional Format)' : 'Estimasi Anggaran IDR (Opsional • Pemisah Ribuan)'}
+                      </label>
+                      <input
+                        type="text"
+                        name="estimated_budget_display"
+                        value={formData.estimated_budget_display || ''}
+                        onChange={handleInputChange}
+                        inputMode="numeric"
+                        placeholder={isEn ? 'e.g. 50,000,000' : 'Mis: 50.000.000'}
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2 text-xs text-zinc-900 dark:text-white rounded-none focus:border-emerald-500 focus:outline-hidden font-mono tabular-nums"
+                      />
+                    </div>
                   </div>
 
                   {/* Persetujuan Syarat & Ketentuan serta Kebijakan Refund */}

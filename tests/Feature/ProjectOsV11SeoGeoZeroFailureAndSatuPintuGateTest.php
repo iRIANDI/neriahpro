@@ -86,10 +86,14 @@ class ProjectOsV11SeoGeoZeroFailureAndSatuPintuGateTest extends TestCase
         $this->get('/blueprint?track=retail&tier=retail_spark&sector=SECTOR_08_PROFESSIONAL_AGENCY')
             ->assertOk();
 
-        // 4. ArchitecturePricingIsland.jsx enforces LANGKAH F SaaS Package Picker + launchSatuPintuCheckout() with zero unpaid /blueprint/studio bypass links
+        // 4. ArchitecturePricingIsland.jsx enforces LANGKAH F SaaS Package Picker + reactive right panes + updated Tab 04 & Tab 05 with zero unpaid /blueprint/studio bypass links
         $jsxContent = (string) file_get_contents(resource_path('js/Islands/ArchitecturePricingIsland.jsx'));
         $this->assertStringContainsString('launchSatuPintuCheckout', $jsxContent);
         $this->assertStringContainsString('LANGKAH F', $jsxContent);
+        $this->assertStringContainsString('activeRetailPkg', $jsxContent);
+        $this->assertStringContainsString('activeMitraPkg', $jsxContent);
+        $this->assertStringContainsString('28 PARAMETER EVALUASI × 20 PILAR REKAYASA', $jsxContent);
+        $this->assertStringContainsString('KNOWLEDGE BASE &amp; FAQ V11.0 PARIPURNA', $jsxContent);
         $this->assertStringNotContainsString('href={`/blueprint/studio?', $jsxContent);
         $this->assertStringNotContainsString('1. MULAI WIZARD BARU BERSIH', $jsxContent);
         $this->assertStringNotContainsString('1. BUKA STUDIO MITRA', $jsxContent);
@@ -105,6 +109,13 @@ class ProjectOsV11SeoGeoZeroFailureAndSatuPintuGateTest extends TestCase
             $this->assertNotEmpty($entry['statutory_standards'], "Sector {$sectorCode} missing statutory standards");
             $this->assertNotEmpty($entry['tldr']['id']);
             $this->assertNotEmpty($entry['tldr']['en']);
+
+            $graph = GeoAuthorityGeneratorService::generateSchemaGraph(['sector_code' => $sectorCode]);
+            $graphJson = json_encode($graph, JSON_UNESCAPED_SLASHES);
+            $this->assertStringContainsString('CollectionPage', (string) $graphJson);
+            foreach ($entry['schema_types'] as $expectedSchemaType) {
+                $this->assertStringContainsString($expectedSchemaType, (string) $graphJson);
+            }
         }
 
         // 2. Native /llms.txt & /llms-full.txt endpoints return text/plain UTF-8 with all 12 sectors

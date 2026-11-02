@@ -102,25 +102,35 @@ class GeoAuthorityGeneratorService
                 ],
             ];
 
+            // Inject CollectionPage node for Programmatic Architecture Library (/explore) & SEO/GEO Discovery
+            $graph[] = [
+                '@type' => 'CollectionPage',
+                '@id' => ($context['url'] ?? ($siteUrl.'/explore')).'#collection-page',
+                'name' => (string) ($context['headline'] ?? 'NeriahPro Programmatic Architecture Library (12 Functional Sectors)'),
+                'description' => $capsule['tldr_text'],
+                'url' => (string) ($context['url'] ?? ($siteUrl.'/explore')),
+                'isPartOf' => ['@id' => $siteUrl.'/#organization'],
+            ];
+
             // Inject Sector-Specific Schema.org nodes for any of the 12 Functional Sectors
             if ($sectorCode !== 'ALL' && $sectorCode !== '') {
-                $primaryType = $capsule['schema_types'][0] ?? 'Service';
+                $sectorTypes = array_values(array_unique($capsule['schema_types'] ?? ['Service']));
                 $sectorUrl = $context['url'] ?? ($siteUrl.'/explore/'.strtolower($sectorCode));
                 $graph[] = [
-                    '@type' => $primaryType,
+                    '@type' => count($sectorTypes) === 1 ? $sectorTypes[0] : $sectorTypes,
                     '@id' => $sectorUrl.'#sector-authority',
                     'name' => (string) ($context['headline'] ?? ('NeriahPro '.$sectorCode.' Enterprise Blueprint')),
                     'description' => $capsule['tldr_text'],
                     'url' => $sectorUrl,
                     'additionalType' => array_map(
                         static fn (string $t): string => 'https://schema.org/'.$t,
-                        $capsule['schema_types']
+                        $sectorTypes
                     ),
                     'provider' => ['@id' => $siteUrl.'/#organization'],
                 ];
             }
 
-            // Inject FAQPage node for Answer-First GEO Extraction
+            // Inject FAQPage node for Answer-First GEO Extraction (Synchronized with Tab 05 FAQ Project OS v11.0)
             $graph[] = [
                 '@type' => 'FAQPage',
                 '@id' => ($context['url'] ?? $siteUrl.'/explore').'#geo-faq',
@@ -145,8 +155,20 @@ class GeoAuthorityGeneratorService
                         'acceptedAnswer' => [
                             '@type' => 'Answer',
                             'text' => $locale === 'en'
-                                ? 'Retail SaaS tiers (Spark Free 2x/mo Audit, Starter Rp 99,000, UMKM Pass Rp 299,000, Pro Agentic Rp 399,000, Agency 5-Seat Rp 990,000, Ultimate Rp 1,490,000) provide instant architecture blueprints and AI prompts for your own developers; Mitra Turnkey builds and deploys the entire application under a SHA-256 Scope Lock, Escrow Milestones, Digital BAST, and 90-day Bug Warranty.'
-                                : 'Paket SaaS Retail (Spark Gratis 2x/bln, Starter Rp 99.000, UMKM Pass Rp 299.000, Pro Agentic Rp 399.000, Agency 5-Seat Rp 990.000, Ultimate Rp 1.490.000) menerbitkan cetak biru arsitektur instan untuk tim developer Anda; sedangkan Mitra Proyek mengerjakan aplikasi 100% terima beres dengan kunci kontrak SHA-256, Termin Escrow, BAST Digital, dan Garansi Bug SLA 90 hari.',
+                                ? 'Retail SaaS tiers (Spark Free 2x/mo Audit, Starter Rp 99,000, UMKM Pass Rp 299,000, Pro Agentic Rp 399,000, Agency 5-Seat Rp 990,000, Ultimate Rp 1,490,000, CSR Grant Rp 0 Verified) provide instant architecture blueprints and AI prompts for your own developers; Mitra Turnkey builds and deploys the entire application under a SHA-256 Scope Lock, Escrow Milestones, Digital BAST, and 90-day Bug Warranty.'
+                                : 'Paket SaaS Retail (Spark Gratis 2x/bln, Starter Rp 99.000, UMKM Pass Rp 299.000, Pro Agentic Rp 399.000, Agency 5-Seat Rp 990.000, Ultimate Rp 1.490.000, Hibah CSR Rp 0 Terverifikasi) menerbitkan cetak biru arsitektur instan untuk tim developer Anda; sedangkan Mitra Proyek mengerjakan aplikasi 100% terima beres dengan kunci kontrak SHA-256, Termin Escrow, BAST Digital, dan Garansi Bug SLA 90 hari.',
+                        ],
+                    ],
+                    [
+                        '@type' => 'Question',
+                        'name' => $locale === 'en'
+                            ? 'How does Project OS v11.0 comply with Indonesian UU PDP No. 27/2022 and handle offline field operations?'
+                            : 'Bagaimana Project OS v11.0 mematuhi UU PDP No. 27/2022 serta menangani operasional lapangan saat sinyal buruk?',
+                        'acceptedAnswer' => [
+                            '@type' => 'Answer',
+                            'text' => $locale === 'en'
+                                ? 'Sensitive PII columns (NIK, medical diagnosis, bank accounts, phone numbers) use AES-256-CBC field-level encryption paired with deterministic 64-char HMAC-SHA256 blind indexes for O(1) lookups and Ledger-Safe Right-to-Erasure redaction. Field terminals (POS, Courier PoD, Event Gate, NGO Survey) use an offline-first IndexedDB 26-char ULID Outbox Queue with Background Sync and X-Idempotency-Key.'
+                                : 'Kolom data pribadi sensitif (NIK, rekam medis, rekening, telepon) dienkripsi menggunakan AES-256-CBC berdampingan dengan Blind Index HMAC-SHA256 64-karakter untuk pencarian cepat O(1) serta Redaksi Aman Buku Besar. Operasional lapangan (Kasir POS, Kurir PoD, Gate Konser, Relawan Yayasan) menggunakan antrean lokal IndexedDB ULID Outbox yang otomatis menyinkronkan transaksi ber-X-Idempotency-Key saat sinyal kembali.',
                         ],
                     ],
                 ],
@@ -350,7 +372,7 @@ class GeoAuthorityGeneratorService
   <rect width="1200" height="630" fill="#09090b"/>
   <rect x="32" y="32" width="1136" height="566" fill="#09090b" stroke="#3f3f46" stroke-width="2"/>
   <rect x="32" y="32" width="1136" height="8" fill="#10b981"/>
-  <text x="72" y="102" fill="#10b981" font-family="monospace" font-size="20" font-weight="bold">NERIAHPRO PROJECT OS v11.0 // ZERO-ASSUMPTION 100% VERIFIED</text>
+  <text x="72" y="102" fill="#10b981" font-family="monospace" font-size="20" font-weight="bold">NERIAHPRO PROJECT OS v11.0 // VERIFIED ARCHITECTURE RECEIPT (ZERO-ASSUMPTION 100%)</text>
   <text x="72" y="178" fill="#fafafa" font-family="sans-serif" font-size="42" font-weight="bold">{$safeBadge}</text>
   <text x="72" y="232" fill="#a1a1aa" font-family="monospace" font-size="21">Zone A Operational UI : {$safeOp}</text>
   <text x="72" y="268" fill="#d4d4d8" font-family="monospace" font-size="21">Zone B Public UX      : {$safeUx}</text>

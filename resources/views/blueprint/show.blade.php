@@ -1892,7 +1892,6 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         setTimeout(() => { if (window.reRenderActiveMermaid) window.reRenderActiveMermaid(); }, 120);
                     }
                 },
-                },
                 getActiveSectionNumber() {
                     const numbers = {
                         'section-1': '01',

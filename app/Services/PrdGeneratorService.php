@@ -28,8 +28,13 @@ class PrdGeneratorService
         // Parse actors into structured array with intelligent role inference & RBAC normalization
         $actorItems = self::parseActors($aktor, $businessName, $audiens);
 
-        // Parse MVP Features
-        $mvpItems = self::parseItems($fiturWajib);
+        // Detect domain for intelligent feature crafting & schema topology
+        $domain = BlueprintDiscoveryService::detectDomain(
+            $businessName . ' ' . $masalah . ' ' . $tujuan . ' ' . $fiturWajib . ' ' . $fiturTambahan
+        );
+
+        // Parse MVP Features with automatic crafting of conversational raw items
+        $mvpItems = self::parseItems($fiturWajib, $domain);
         if (empty($mvpItems)) {
             $mvpItems = [
                 ['title' => 'Autentikasi & RBAC', 'desc' => 'Login aman dengan Role-Based Access Control dan ULID identifiers.'],
@@ -40,7 +45,7 @@ class PrdGeneratorService
         }
 
         // Parse Phase 2 Features
-        $phase2Items = self::parseItems($fiturTambahan);
+        $phase2Items = self::parseItems($fiturTambahan, $domain);
 
         // Compile 12-Sector Composable Matrix & Universal Blueprint Schema v1.0 (Zero-Assumption Engine)
         $universalSchema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
@@ -418,7 +423,7 @@ class PrdGeneratorService
     /**
      * Parse multiline text or comma-separated text into structured items.
      */
-    protected static function parseItems(string $text): array
+    protected static function parseItems(string $text, string $domain = 'custom_portal', bool $isEn = false): array
     {
         $lines = preg_split('/[\r\n]+/', trim($text));
         if (count($lines) === 1 && str_contains($lines[0], ',')) {
@@ -430,6 +435,29 @@ class PrdGeneratorService
             $line = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
             if (empty($line)) {
                 continue;
+            }
+
+            // Check if line contains casual conversation or raw conversational bullet points
+            $lower = mb_strtolower($line);
+            $hasConversationalMarker = str_contains($lower, 'berdasarkan') || 
+                                       str_contains($lower, 'poin no') || 
+                                       str_contains($lower, 'ada juga') || 
+                                       str_contains($lower, 'saya mau') || 
+                                       str_contains($lower, 'kami ingin') || 
+                                       str_contains($lower, 'tolong buatkan') ||
+                                       str_contains($lower, 'sediakan fitur') ||
+                                       str_contains($lower, 'alias wisata');
+
+            if ($hasConversationalMarker || (!str_contains($line, ':') && !str_contains($line, ' - '))) {
+                $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($line, $domain, $isEn);
+                if (str_contains($crafted, ':')) {
+                    [$title, $desc] = explode(':', $crafted, 2);
+                    $items[] = [
+                        'title' => trim($title),
+                        'desc' => trim($desc),
+                    ];
+                    continue;
+                }
             }
 
             // Check if there's a colon or dash separator for title vs description

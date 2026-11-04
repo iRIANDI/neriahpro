@@ -672,6 +672,23 @@ class BlueprintController extends Controller
 
         // Ensure PRD content is populated or regenerate if requested and scope is not locked
         if (empty($blueprint->prd_content) || ! isset($blueprint->prd_content['engineering_specs']) || (request()->has('regenerate') && ! $isScopeLocked)) {
+            if (!empty($blueprint->fitur_wajib)) {
+                $dom = BlueprintDiscoveryService::detectDomain(
+                    $blueprint->nama_bisnis . ' ' . $blueprint->masalah_utama . ' ' . $blueprint->fitur_wajib . ' ' . $blueprint->fitur_tambahan
+                );
+                $lines = preg_split('/[\r\n]+/', trim($blueprint->fitur_wajib));
+                $craftedLines = [];
+                foreach ($lines as $idx => $line) {
+                    $trimmed = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
+                    if (empty($trimmed)) continue;
+                    $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $dom, false);
+                    $craftedLines[] = ($idx + 1) . '. ' . $crafted;
+                }
+                if (!empty($craftedLines)) {
+                    $blueprint->fitur_wajib = implode("\n", $craftedLines);
+                    $blueprint->save();
+                }
+            }
             $blueprint->generateAndSavePrd();
             $blueprint->refresh();
         }
@@ -788,6 +805,126 @@ class BlueprintController extends Controller
 
         return redirect()->route('blueprint.show', ['slug' => $slug])
             ->with('status', 'Analisis kelayakan bisnis dan ROI telah diperbarui sesuai visi proyek.');
+    }
+
+    /**
+     * Regenerate Full PRD, Architecture Specs, ERD & Diagrams (API Endpoint).
+     */
+    public function regenerateFullBlueprint(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        if ($blueprint->signed_agreement || $blueprint->isDpConfirmed() || $blueprint->isRetailLicense()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Scope blueprint telah terkunci oleh kontrak atau lisensi. Perubahan spesifikasi harus melalui prosedur Request Addendum.',
+            ], 422);
+        }
+
+        // 1. Detect Domain accurately
+        $domain = BlueprintDiscoveryService::detectDomain(
+            $blueprint->nama_bisnis . ' ' . $blueprint->masalah_utama . ' ' . $blueprint->fitur_wajib . ' ' . $blueprint->fitur_tambahan
+        );
+
+        // 2. Re-craft raw user feature inputs into formal blueprint items
+        if (!empty($blueprint->fitur_wajib)) {
+            $lines = preg_split('/[\r\n]+/', trim($blueprint->fitur_wajib));
+            $craftedLines = [];
+            foreach ($lines as $idx => $line) {
+                $trimmed = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
+                if (empty($trimmed)) continue;
+                $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, false);
+                $craftedLines[] = ($idx + 1) . '. ' . $crafted;
+            }
+            if (!empty($craftedLines)) {
+                $blueprint->fitur_wajib = implode("\n", $craftedLines);
+            }
+        }
+
+        if (!empty($blueprint->fitur_tambahan)) {
+            $lines = preg_split('/[\r\n]+/', trim($blueprint->fitur_tambahan));
+            $craftedLines = [];
+            foreach ($lines as $idx => $line) {
+                $trimmed = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
+                if (empty($trimmed)) continue;
+                $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, false);
+                $craftedLines[] = ($idx + 1) . '. ' . $crafted;
+            }
+            if (!empty($craftedLines)) {
+                $blueprint->fitur_tambahan = implode("\n", $craftedLines);
+            }
+        }
+
+        $blueprint->save();
+
+        // 3. Generate and Save Complete PRD
+        $prd = $blueprint->generateAndSavePrd();
+        $blueprint->refresh();
+        $blueprint->document_sha256 = $blueprint->calculatePrdHash();
+        $blueprint->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Spesifikasi PRD, diagram arsitektur, ERD, dan formula ROI berhasil disintesis ulang dengan standar enterprise!',
+            'data' => [
+                'sha256' => $blueprint->document_sha256,
+                'domain' => $domain,
+                'features_count' => count($prd['engineering_specs']['mvp_phase_1']['items'] ?? []),
+            ],
+        ]);
+    }
+
+    /**
+     * Web redirect fallback for full regeneration.
+     */
+    public function regenerateFullBlueprintRedirect(Request $request, string $slug)
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        if (!$blueprint->signed_agreement && !$blueprint->isDpConfirmed() && !$blueprint->isRetailLicense()) {
+            $domain = BlueprintDiscoveryService::detectDomain(
+                $blueprint->nama_bisnis . ' ' . $blueprint->masalah_utama . ' ' . $blueprint->fitur_wajib . ' ' . $blueprint->fitur_tambahan
+            );
+
+            if (!empty($blueprint->fitur_wajib)) {
+                $lines = preg_split('/[\r\n]+/', trim($blueprint->fitur_wajib));
+                $craftedLines = [];
+                foreach ($lines as $idx => $line) {
+                    $trimmed = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
+                    if (empty($trimmed)) continue;
+                    $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, false);
+                    $craftedLines[] = ($idx + 1) . '. ' . $crafted;
+                }
+                if (!empty($craftedLines)) {
+                    $blueprint->fitur_wajib = implode("\n", $craftedLines);
+                }
+            }
+
+            if (!empty($blueprint->fitur_tambahan)) {
+                $lines = preg_split('/[\r\n]+/', trim($blueprint->fitur_tambahan));
+                $craftedLines = [];
+                foreach ($lines as $idx => $line) {
+                    $trimmed = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
+                    if (empty($trimmed)) continue;
+                    $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, false);
+                    $craftedLines[] = ($idx + 1) . '. ' . $crafted;
+                }
+                if (!empty($craftedLines)) {
+                    $blueprint->fitur_tambahan = implode("\n", $craftedLines);
+                }
+            }
+
+            $blueprint->save();
+            $blueprint->generateAndSavePrd();
+            $blueprint->refresh();
+            $blueprint->document_sha256 = $blueprint->calculatePrdHash();
+            $blueprint->save();
+        }
+
+        return redirect()->route('blueprint.show', ['slug' => $slug])
+            ->with('status', 'Spesifikasi PRD dan seluruh diagram arsitektur telah disintesis ulang dengan standar enterprise.');
     }
 
     /**

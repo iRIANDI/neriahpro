@@ -121,6 +121,11 @@
             .no-print, [class*="no-print"], header, aside, footer, #goog-gt-tt, .skiptranslate, .goog-te-banner-frame, .fixed {
                 display: none !important;
             }
+            .accordion-body, .accordion-body [x-show] {
+                display: block !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
             html, body {
                 background: #ffffff !important;
                 background-color: #ffffff !important;
@@ -856,6 +861,95 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             return {
                 blueprintSlug: '{{ $blueprint->slug }}',
                 roiRecalculating: false,
+                fullRegenerating: false,
+                sectionCollapses: {
+                    'section-1': false,
+                    'section-1-5': false,
+                    'section-2': false,
+                    'section-3': false,
+                    'section-3-5': false,
+                    'section-3-8': false,
+                    'section-4': false,
+                    'section-5': false,
+                    'section-6': false,
+                    'section-7': false,
+                    'section-8': false,
+                    'section-9': false,
+                    'section-10': false,
+                },
+                toggleSection(id) {
+                    this.sectionCollapses[id] = !this.sectionCollapses[id];
+                    if (!this.sectionCollapses[id]) {
+                        if (id === 'section-3-8' || id === 'section-4' || id === 'section-5') {
+                            setTimeout(() => { if (window.reRenderActiveMermaid) window.reRenderActiveMermaid(); }, 120);
+                        }
+                    }
+                },
+                expandAllSections() {
+                    for (const sec in this.sectionCollapses) {
+                        this.sectionCollapses[sec] = false;
+                    }
+                    setTimeout(() => { if (window.reRenderActiveMermaid) window.reRenderActiveMermaid(); }, 150);
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: 'SELURUH SEKSI DIBUKA',
+                            message: '13 seksi arsitektur kini ditampilkan penuh.'
+                        });
+                    }
+                },
+                collapseAllSections() {
+                    for (const sec in this.sectionCollapses) {
+                        this.sectionCollapses[sec] = true;
+                    }
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: 'SELURUH SEKSI DICIUTKAN',
+                            message: 'Seluruh seksi telah diciutkan untuk mempermudah navigasi ringkas.'
+                        });
+                    }
+                },
+                async regenerateFullBlueprint() {
+                    if (this.fullRegenerating) return;
+                    this.fullRegenerating = true;
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const res = await fetch('/api/blueprint/' + this.blueprintSlug + '/regenerate-prd', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token || ''
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: 'PRD & ARSITEKTUR DISINTESIS ULANG',
+                                    message: data.message || 'Seluruh spesifikasi dan visual chart telah diselaraskan dengan standar enterprise.'
+                                });
+                            }
+                            setTimeout(() => {
+                                window.location.href = window.location.pathname + '?regenerated=1';
+                            }, 800);
+                        } else {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'error',
+                                    title: 'GAGAL MENSINTESIS ULANG',
+                                    message: data.message || 'Terjadi kesalahan sistem saat memproses regenerasi.'
+                                });
+                            }
+                            this.fullRegenerating = false;
+                        }
+                    } catch (err) {
+                        console.error('Regenerate PRD error:', err);
+                        window.location.href = '/blueprint/' + this.blueprintSlug + '/regenerate-full';
+                    }
+                },
                 async recalculateRoi() {
                     if (this.roiRecalculating) return;
                     this.roiRecalculating = true;
@@ -1769,6 +1863,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     this.accordionGroups.infra = true;
                     this.accordionGroups.legal = true;
                     this.autoSyncAccordion = false;
+                    this.expandAllSections();
                 },
                 collapseAllGroups() {
                     this.accordionGroups.scope = false;
@@ -1776,6 +1871,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     this.accordionGroups.infra = false;
                     this.accordionGroups.legal = false;
                     this.autoSyncAccordion = false;
+                    this.collapseAllSections();
                 },
                 toggleAutoSync() {
                     this.autoSyncAccordion = !this.autoSyncAccordion;
@@ -1784,11 +1880,18 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     }
                 },
                 jumpTo(id) {
+                    if (this.sectionCollapses && this.sectionCollapses[id]) {
+                        this.sectionCollapses[id] = false;
+                    }
                     window.jumpToSection(id);
                     this.activeSectionId = id;
                     this.autoSyncAccordion = true;
                     this.syncAccordionToSection(id);
                     this.floatingIndexOpen = false;
+                    if (id === 'section-3-8' || id === 'section-4' || id === 'section-5') {
+                        setTimeout(() => { if (window.reRenderActiveMermaid) window.reRenderActiveMermaid(); }, 120);
+                    }
+                },
                 },
                 getActiveSectionNumber() {
                     const numbers = {
@@ -1957,6 +2060,20 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     <span class="hidden sm:inline">EXPORT SCAFFOLD</span>
                     <span class="sm:hidden">SCAFFOLD</span>
                 </button>
+
+                <!-- Accordion View Controls (Expand / Collapse All Sections) -->
+                <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
+                    <button type="button" @click="expandAllSections()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Buka Seluruh 13 Seksi PRD">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <span class="hidden xl:inline">BUKA SEMUA</span>
+                        <span class="xl:hidden">BUKA</span>
+                    </button>
+                    <button type="button" @click="collapseAllSections()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Ciutkan Seluruh Seksi PRD">
+                        <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                        <span class="hidden xl:inline">TUTUP SEMUA</span>
+                        <span class="xl:hidden">TUTUP</span>
+                    </button>
+                </div>
 
                 <!-- Unified Document Actions: Print, PDF, MD, .cursorrules -->
                 <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
@@ -3184,19 +3301,82 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 </div>
             </div>
 
+            <!-- GLOBAL DOCUMENT SECTION ACCORDION CONTROLS (EXPAND ALL / COLLAPSE ALL / REGENERATE) -->
+            <div class="mb-8 p-4 sm:p-5 bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-none no-print">
+                <div class="flex items-center gap-3">
+                    <span class="w-3 h-3 bg-emerald-500 rounded-none animate-pulse"></span>
+                    <div>
+                        <div class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                            <span>DOKUMEN SPESIFIKASI ARSITEKTUR &amp; PRD SISTEM</span>
+                            <span class="text-[10px] font-mono px-2 py-0.5 bg-emerald-100 text-emerald-950 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-black">13 SEKSI</span>
+                        </div>
+                        <div class="text-xs text-zinc-600 dark:text-zinc-400 font-sans mt-0.5">
+                            Setiap seksi di bawah dilengkapi fitur <strong>Accordion</strong> untuk dibuka-tutup secara mandiri agar nyaman dibaca dan tidak overwhelming.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-2 font-mono text-xs shrink-0">
+                    <button 
+                        type="button" 
+                        @click="expandAllSections()" 
+                        class="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        title="Buka seluruh 13 seksi arsitektur"
+                    >
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <span>BUKA SEMUA (EXPAND)</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="collapseAllSections()" 
+                        class="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        title="Ciutkan seluruh seksi menjadi ringkasan judul & badge"
+                    >
+                        <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                        <span>TUTUP SEMUA (COLLAPSE)</span>
+                    </button>
+                    @if(!($isLocked ?? false))
+                    <button 
+                        type="button" 
+                        @click="regenerateFullBlueprint()" 
+                        :disabled="fullRegenerating"
+                        class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        title="Crafting ulang ide casual menjadi spesifikasi blueprint profesional dan generate ulang diagram visual"
+                    >
+                        <svg class="w-3.5 h-3.5" :class="fullRegenerating ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span x-text="fullRegenerating ? 'MENSINTESIS...' : '🔄 REGENERATE PRD & ARSITEKTUR'">🔄 REGENERATE PRD &amp; ARSITEKTUR</span>
+                    </button>
+                    @endif
+                </div>
+            </div>
+
             <!-- SECTION 1: EXECUTIVE TECHNICAL DISCOVERY -->
             @php $isExecutiveImpacted = in_array('executive_summary', $prd['_impacted_segments'] ?? []); @endphp
             <section id="section-1" class="bg-white dark:bg-zinc-900 border {{ $isExecutiveImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target transition-all">
                 <div class="flex flex-col gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                    <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center justify-between gap-2 cursor-pointer select-none" @click="toggleSection('section-1')">
                         <div class="flex items-center gap-2">
                             <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01</span>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Executive Technical Discovery</h2>
+                            <div>
+                                <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Executive Technical Discovery</h2>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">26 Parameter Arsitektur &amp; Analisis Kebutuhan Bisnis</p>
+                            </div>
                         </div>
-                        <button @click="openTweakModal('executive_summary', 'Executive Technical Discovery')" class="px-3 py-1.5 border {{ $isExecutiveImpacted ? 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }} font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                            TWEAK
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button @click.stop="openTweakModal('executive_summary', 'Executive Technical Discovery')" class="px-3 py-1.5 border {{ $isExecutiveImpacted ? 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }} font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                TWEAK
+                            </button>
+                            <button 
+                                type="button" 
+                                @click.stop="toggleSection('section-1')" 
+                                class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"
+                                :title="sectionCollapses['section-1'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                            >
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-1'] ? 'BUKA' : 'CIUTKAN'"></span>
+                                <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-1'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                        </div>
                     </div>
                     @if($isExecutiveImpacted)
                     <div class="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-mono text-amber-700 dark:text-amber-400 mt-1">
@@ -3205,6 +3385,17 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
                     @endif
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-1']" @click="toggleSection('section-1')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mt-2">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 01 diciutkan (26 Parameter Discovery). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-1']" x-transition class="accordion-body">
 
                 <div class="grid md:grid-cols-2 gap-4 mb-6">
                     <div class="bg-zinc-50 dark:bg-zinc-950 p-5 border border-zinc-200 dark:border-zinc-800 rounded-none">
@@ -3280,6 +3471,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     </div>
                 </div>
+                </div>
             </section>
 
             <!-- SECTION 1.5: ANALISIS KELAYAKAN BISNIS, PROYEKSI ROI & 5 GARANSI BEBAS PENYESALAN -->
@@ -3302,7 +3494,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             @endphp
             <section id="section-1-5" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-4">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 cursor-pointer select-none" @click="toggleSection('section-1-5')">
                         <span class="w-8 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01.5</span>
                         <div>
                             <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
@@ -3332,8 +3524,28 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold uppercase">
                             {{ $businessRoi['domain_badge'] ?? 'HIGH_TICKET' }}
                         </span>
+                        <button 
+                            type="button" 
+                            @click.stop="toggleSection('section-1-5')" 
+                            class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"
+                            :title="sectionCollapses['section-1-5'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                        >
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-1-5'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-1-5'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
                     </div>
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-1-5']" @click="toggleSection('section-1-5')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 01.5 diciutkan (Analisis Kelayakan Bisnis, Formula Balik Modal &amp; 5 Garansi Bebas Penyesalan). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-1-5']" x-transition class="accordion-body">
 
                 <!-- TOP BENCHMARK SUMMARY STRIP -->
                 <div class="mb-6 p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs font-mono">
@@ -3489,28 +3701,43 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         @endforeach
                     </div>
                 </div>
+                </div>
             </section>
 
             <!-- SECTION 2: PENGGUNA & HAK AKSES (RBAC) -->
             @php $isActorsImpacted = in_array('system_actors', $prd['_impacted_segments'] ?? []); @endphp
             <section id="section-2" class="bg-white dark:bg-zinc-900 border {{ $isActorsImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target transition-all">
                 <div class="flex flex-col gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                    <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center justify-between gap-2 cursor-pointer select-none" @click="toggleSection('section-2')">
                         <div class="flex items-center gap-2">
                             <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">02</span>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Pengguna & Hak Akses (Aktor / RBAC)</h2>
+                            <div>
+                                <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Pengguna & Hak Akses (Aktor / RBAC)</h2>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Aktor Sistem, Peran Pengguna &amp; Batasan Otoritas</p>
+                            </div>
                         </div>
-                        @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
+                        <div class="flex items-center gap-2">
+                            @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
+                                <button 
+                                    type="button" 
+                                    @click.stop="openTweakModal('system_actors', 'Pengguna & Hak Akses (Aktor / RBAC)')" 
+                                    class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
+                                    title="Sinkronkan dan perdalam peran serta matriks izin RBAC dari Dokumen Acuan Proyek"
+                                >
+                                    <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    <span>PERDALAM DARI DOKUMEN ACUAN</span>
+                                </button>
+                            @endif
                             <button 
                                 type="button" 
-                                @click="openTweakModal('system_actors', 'Pengguna & Hak Akses (Aktor / RBAC)')" 
-                                class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
-                                title="Sinkronkan dan perdalam peran serta matriks izin RBAC dari Dokumen Acuan Proyek"
+                                @click.stop="toggleSection('section-2')" 
+                                class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"
+                                :title="sectionCollapses['section-2'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
                             >
-                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                <span>PERDALAM DARI DOKUMEN ACUAN</span>
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-2'] ? 'BUKA' : 'CIUTKAN'"></span>
+                                <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-2'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
-                        @endif
+                        </div>
                     </div>
                     @if($isActorsImpacted)
                     <div class="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-mono text-amber-700 dark:text-amber-400 mt-1">
@@ -3519,6 +3746,17 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
                     @endif
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-2']" @click="toggleSection('section-2')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 02 diciutkan (Pengguna &amp; Hak Akses RBAC). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-2']" x-transition class="accordion-body">
                 <div class="mb-4 text-xs font-mono text-zinc-500 dark:text-zinc-400">
                     TARGET_AUDIENCE: <span class="text-zinc-900 dark:text-zinc-100 font-bold">{{ $blueprint->target_audiens ?? ($prd['executive_summary']['target_audience'] ?? '-') }}</span>
                 </div>
@@ -3560,12 +3798,13 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     @endforeach
                 </div>
+                </div>
             </section>
 
             <!-- SECTION 3: SPESIFIKASI REKAYASA FITUR (DEEP VERTICAL SLICES & AGENT DIRECTIVE) -->
             <section id="section-3" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-6">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 cursor-pointer select-none" @click="toggleSection('section-3')">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">03</span>
                         <div>
                             <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Spesifikasi Rekayasa Fitur & Agent Task Matrix</h2>
@@ -3597,8 +3836,28 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                             <span>SALIN SEMUA PROMPT AGENT</span>
                         </button>
+                        <button 
+                            type="button" 
+                            @click.stop="toggleSection('section-3')" 
+                            class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"
+                            :title="sectionCollapses['section-3'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                        >
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-3'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-3'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
                     </div>
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-3']" @click="toggleSection('section-3')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 03 diciutkan (Spesifikasi Rekayasa Fitur &amp; Agent Task Matrix). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-3']" x-transition class="accordion-body">
 
                 <!-- High-Level MVP Scope Summary -->
                 <div class="grid md:grid-cols-2 gap-4 mb-8">
@@ -4107,12 +4366,13 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         @endforeach
                     </div>
                 @endif
+                </div>
             </section>
 
             <!-- SECTION 3.5: PUSAT ORKESTRASI & SPRINT COCKPIT AI CODING AGENT -->
             <section id="section-3-5" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500/50 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-4">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 cursor-pointer select-none" @click="toggleSection('section-3-5')">
                         <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">04</span>
                         <div>
                             <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
@@ -4122,10 +4382,32 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Panduan taktis membimbing AI Agent (Cursor Composer, Claude Code CLI, Windsurf Cascade, Devin, Antigravity IDE) membaca PRD per fitur vertikal secara terpandu sampai tuntas.</p>
                         </div>
                     </div>
-                    <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
-                        VERTICAL SLICE ENGINE // O(1) CONTEXT
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
+                            VERTICAL SLICE ENGINE // O(1) CONTEXT
+                        </span>
+                        <button 
+                            type="button" 
+                            @click.stop="toggleSection('section-3-5')" 
+                            class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"
+                            :title="sectionCollapses['section-3-5'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                        >
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-3-5'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-3-5'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-3-5']" @click="toggleSection('section-3-5')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 04 diciutkan (Pusat Edukasi Developer AI &amp; Interactive Sprint Cockpit). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-3-5']" x-transition class="accordion-body">
 
                 <!-- Executive Warning & Rationale Against Prompt Dumping -->
                 <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs mb-6 text-zinc-800 dark:text-zinc-300 space-y-4">
@@ -4849,6 +5131,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     </div>
                 </div>
+                </div>
             </section>
 
             <!-- SECTION 3.8: VIRTUAL ARCHITECTURE STUDIO (THE 4 VIRTUAL CHARTS COMMAND CENTER) -->
@@ -4912,8 +5195,28 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         >
                             <span>6. MOBILE &amp; SYNC</span>
                         </button>
+                        <button 
+                            type="button" 
+                            @click.stop="toggleSection('section-3-8')" 
+                            class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
+                            :title="sectionCollapses['section-3-8'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                        >
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-3-8'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-3-8'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
                     </div>
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-3-8']" @click="toggleSection('section-3-8')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-sky-600 dark:hover:text-sky-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 05 diciutkan (Virtual Architecture Studio - 6 Diagram Visual). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-3-8']" x-transition class="accordion-body">
 
                 <!-- Chart 1: Workflow State Machine -->
                 <div x-show="chartStudioTab === 'workflow'" class="space-y-4">
@@ -5160,6 +5463,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     </div>
                 </div>
+                </div>
             </section>
 
             <!-- SECTION 4: ALUR KERJA (USER FLOW) -->
@@ -5204,10 +5508,13 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             @php $isFlowImpacted = in_array('alurs_kerja', $prd['_impacted_segments'] ?? []); @endphp
             <section id="section-4" class="bg-white dark:bg-zinc-900 border {{ $isFlowImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target transition-all">
                 <div class="flex flex-col gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none" @click="toggleSection('section-4')">
                         <div class="flex items-center gap-2">
                             <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Alur Kerja Utama (User Flow)</h2>
+                            <div>
+                                <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Alur Kerja Utama (User Flow)</h2>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Diagram Alur Transaksi, Interaksi Visual &amp; Validasi Bisnis</p>
+                            </div>
                         </div>
 
                         <!-- Actions & Tabs -->
@@ -5215,7 +5522,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <!-- Flow View Tabs -->
                             <div class="flex items-center gap-1 font-mono text-xs">
                                 <button 
-                                    @click="flowTab = 'visual'" 
+                                    @click.stop="flowTab = 'visual'" 
                                     :class="flowTab === 'visual' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
                                     class="px-3 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                                 >
@@ -5223,7 +5530,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     <span>VISUAL PIPELINE</span>
                                 </button>
                                 <button 
-                                    @click="flowTab = 'mermaid'; $nextTick(() => window.renderMermaidDiagram('mermaid-flow-target', 'mermaid-flow-source'))" 
+                                    @click.stop="flowTab = 'mermaid'; $nextTick(() => window.renderMermaidDiagram('mermaid-flow-target', 'mermaid-flow-source'))" 
                                     :class="flowTab === 'mermaid' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
                                     class="px-3 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5"
                                 >
@@ -5235,7 +5542,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                                 <button 
                                     type="button" 
-                                    @click="openTweakModal('alurs_kerja', 'Alur Kerja Utama (User Flow)')" 
+                                    @click.stop="openTweakModal('alurs_kerja', 'Alur Kerja Utama (User Flow)')" 
                                     class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
                                     title="Perluas percabangan dan exception flow dari Dokumen Acuan Proyek"
                                 >
@@ -5243,6 +5550,16 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     <span>PERDALAM ALUR KERJA DARI DOKUMEN ACUAN</span>
                                 </button>
                             @endif
+
+                            <button 
+                                type="button" 
+                                @click.stop="toggleSection('section-4')" 
+                                class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
+                                :title="sectionCollapses['section-4'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                            >
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-4'] ? 'BUKA' : 'CIUTKAN'"></span>
+                                <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-4'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
                         </div>
                     </div>
                     @if($isFlowImpacted)
@@ -5252,6 +5569,17 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
                     @endif
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-4']" @click="toggleSection('section-4')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 06 diciutkan (Alur Kerja Utama / User Flow). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-4']" x-transition class="accordion-body">
 
                 <!-- 1. Interactive Visual Flowchart (Pipeline Nodes & Connectors) -->
                 <div x-show="flowTab === 'visual'" class="mb-6">
@@ -5401,28 +5729,43 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     @endforeach
                 </div>
+                </div>
             </section>
 
             <!-- SECTION 5: ENTERPRISE DATABASE ERD & SCHEMA BLUEPRINT -->
             @php $isErdImpacted = in_array('database_erd', $prd['_impacted_segments'] ?? []); @endphp
             <section id="section-5" class="bg-white dark:bg-zinc-900 border {{ $isErdImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target transition-all">
                 <div class="flex flex-col gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none" @click="toggleSection('section-5')">
                         <div class="flex items-center gap-2">
                             <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">07</span>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Database ERD &amp; Skema Relasi (PostgreSQL Strict ULID)</h2>
+                            <div>
+                                <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Database ERD &amp; Skema Relasi (PostgreSQL Strict ULID)</h2>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Topologi Basis Data Relasional, Entitas Kunci &amp; Foreign Key Constraints</p>
+                            </div>
                         </div>
-                        @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
+                        <div class="flex items-center gap-2">
+                            @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
+                                <button 
+                                    type="button" 
+                                    @click.stop="openTweakModal('database_erd', 'Database ERD (PostgreSQL Strict ULID)')" 
+                                    class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
+                                    title="Sinkronkan dan perdalam skema tabel serta relasi ERD dari Dokumen Acuan Proyek"
+                                >
+                                    <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    <span>PERDALAM ERD DARI DOKUMEN ACUAN</span>
+                                </button>
+                            @endif
                             <button 
                                 type="button" 
-                                @click="openTweakModal('database_erd', 'Database ERD (PostgreSQL Strict ULID)')" 
-                                class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
-                                title="Sinkronkan dan perdalam skema tabel serta relasi ERD dari Dokumen Acuan Proyek"
+                                @click.stop="toggleSection('section-5')" 
+                                class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
+                                :title="sectionCollapses['section-5'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
                             >
-                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                <span>PERDALAM ERD DARI DOKUMEN ACUAN</span>
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-5'] ? 'BUKA' : 'CIUTKAN'"></span>
+                                <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-5'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
-                        @endif
+                        </div>
                     </div>
                     @if($isErdImpacted)
                     <div class="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs font-mono text-amber-700 dark:text-amber-400 mt-1">
@@ -5431,6 +5774,17 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </div>
                     @endif
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-5']" @click="toggleSection('section-5')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 07 diciutkan (Database ERD &amp; Skema Relasi). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-5']" x-transition class="accordion-body">
 
                     <!-- ERD Tabs & Multi-Language Selector -->
                     <div class="flex flex-wrap items-center gap-2 font-mono text-xs no-print">
@@ -5787,6 +6141,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     @endforeach
                 </div>
+                </div>
             </section>
 
             <!-- SECTION 06: EVALUASI ARSITEKTUR & REKOMENDASI INFRASTRUKTUR (HOSTING, POLA SISTEM & AI DATABASE) -->
@@ -5800,15 +6155,40 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 );
             @endphp
             <section id="section-6" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
-                <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3 cursor-pointer select-none" @click="toggleSection('section-6')">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">08</span>
-                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Evaluasi Arsitektur &amp; Infrastruktur (AI Database Ready)</h2>
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Evaluasi Arsitektur &amp; Infrastruktur (AI Database Ready)</h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Spesifikasi Cloud VPS, AI Database, Redis Cache &amp; Keamanan</p>
+                        </div>
                     </div>
-                    <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
-                        HIGH INTEGRITY ARCHITECTURE
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800 hidden sm:inline">
+                            HIGH INTEGRITY ARCHITECTURE
+                        </span>
+                        <button 
+                            type="button" 
+                            @click.stop="toggleSection('section-6')" 
+                            class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
+                            :title="sectionCollapses['section-6'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                        >
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-6'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-6'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-6']" @click="toggleSection('section-6')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 08 diciutkan (Evaluasi Arsitektur &amp; Infrastruktur Cloud). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-6']" x-transition class="accordion-body">
 
                 <!-- Client Architectural Parameters Summary -->
                 <div class="mb-8 p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs">
@@ -8320,11 +8700,12 @@ class ProcessSecureDataset implements ShouldQueue
                         </div>
                     </div>
                 </div>
+                </div>
             </section>
 
             <!-- SECTION 09: OPSI VELOCITY PENGERJAAN & AKSESORIS AI GEMINI ULTRA (PRICING & SPRINT SELECTION) -->
             <section id="section-7" class="bg-white dark:bg-zinc-900 border-2 border-emerald-500 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6 cursor-pointer select-none" @click="toggleSection('section-7')">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
                             <span class="w-6 h-6 bg-emerald-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">09</span>
@@ -8337,10 +8718,32 @@ class ProcessSecureDataset implements ShouldQueue
                             Pilih kecepatan penyelesaian sistem. Kecepatan akselerasi melibatkan alokasi komputasi cloud Swarm AI Gemini Ultra dan paralel engineering squad.
                         </p>
                     </div>
-                    <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 border border-emerald-300 dark:border-emerald-800 self-start sm:self-auto">
-                        PILIH PAKET UNTUK KONTRAK
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 border border-emerald-300 dark:border-emerald-800 self-start sm:self-auto hidden sm:inline">
+                            PILIH PAKET UNTUK KONTRAK
+                        </span>
+                        <button 
+                            type="button" 
+                            @click.stop="toggleSection('section-7')" 
+                            class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
+                            :title="sectionCollapses['section-7'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                        >
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-7'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-7'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-7']" @click="toggleSection('section-7')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 09 diciutkan (Opsi Velocity Pengerjaan &amp; Pricing Tiers). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-7']" x-transition class="accordion-body">
 
                 <!-- Mathematical Cost Formula Breakdown Banner -->
                 <div class="mb-6 p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-xs">
@@ -8469,19 +8872,45 @@ class ProcessSecureDataset implements ShouldQueue
                         </div>
                     @endforeach
                 </div>
+                </div>
             </section>
 
             <!-- SECTION 10: TIMELINE & GANTT MILESTONE (ALIGNED TO VELOCITY) -->
             <section id="section-8" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
-                <div class="flex items-center justify-between gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div class="flex items-center justify-between gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3 cursor-pointer select-none" @click="toggleSection('section-8')">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">10</span>
-                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Timeline &amp; Milestone Proyek (Velocity Aligned)</h2>
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Timeline &amp; Milestone Proyek (Velocity Aligned)</h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Alokasi Hari Pengerjaan per Sprint dari Kickoff sampai Delivery</p>
+                        </div>
                     </div>
-                    <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
-                        Target: <span x-text="tierAmounts[selectedTier]?.days || '-'"></span>
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800 hidden sm:inline">
+                            Target: <span x-text="tierAmounts[selectedTier]?.days || '-'"></span>
+                        </span>
+                        <button 
+                            type="button" 
+                            @click.stop="toggleSection('section-8')" 
+                            class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
+                            :title="sectionCollapses['section-8'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                        >
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-8'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-8'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-8']" @click="toggleSection('section-8')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 10 diciutkan (Timeline Sprint &amp; Milestone). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-8']" x-transition class="accordion-body">
 
                 <div class="space-y-2.5 font-mono text-xs">
                     <div class="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none">
@@ -8513,19 +8942,45 @@ class ProcessSecureDataset implements ShouldQueue
                         <span class="text-emerald-500 font-bold" x-text="'Hari ' + (Math.round(parseInt(tierAmounts[selectedTier]?.days || 14) * 0.85) + 1) + ' - ' + (tierAmounts[selectedTier]?.days || 'Selesai')"></span>
                     </div>
                 </div>
+                </div> <!-- end accordion-body section-8 -->
             </section>
 
             <!-- SECTION 11: STANDAR TATA KELOLA, KUALITAS & SLA SERAH TERIMA (GOVERNANCE & SLA) -->
             <section id="section-9" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
-                <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div class="flex items-center justify-between gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3 cursor-pointer select-none" @click="toggleSection('section-9')">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">11</span>
-                        <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Tata Kelola, Kualitas &amp; SLA Serah Terima</h2>
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Tata Kelola, Kualitas &amp; SLA Serah Terima</h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Enterprise Service Level Agreement, DoD, &amp; Klausul Garansi</p>
+                        </div>
                     </div>
-                    <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800">
-                        ENTERPRISE SERVICE LEVEL AGREEMENT
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800 hidden sm:inline">
+                            SLA ENTERPRISE
+                        </span>
+                        <button 
+                            type="button" 
+                            @click.stop="toggleSection('section-9')" 
+                            class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
+                            :title="sectionCollapses['section-9'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                        >
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-9'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-9'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-9']" @click="toggleSection('section-9')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 11 diciutkan (Tata Kelola, Kualitas &amp; SLA). Klik untuk membuka...</span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-9']" x-transition class="accordion-body">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs mb-6">
                     <!-- 1. Definition of Done (DoD) -->
@@ -8603,10 +9058,47 @@ class ProcessSecureDataset implements ShouldQueue
                         </p>
                     </div>
                 </div>
+                </div> <!-- end accordion-body section-9 -->
             </section>
 
             <!-- SECTION 10: SCOPE FREEZE, DIGITAL CONTRACT & DP MIDTRANS (CRUCIAL) -->
             <section id="section-10" class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-2 border-emerald-600 dark:border-emerald-500 p-6 sm:p-8 mb-8 rounded-none prd-scroll-target shadow-sm">
+                <!-- Section 12 Header Accordion Bar -->
+                <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3 cursor-pointer select-none" @click="toggleSection('section-10')">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 bg-emerald-600 text-white font-mono font-bold text-xs flex items-center justify-center rounded-none">12</span>
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Kunci Scope, Digital Contract &amp; Pembayaran DP / Lisensi</h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">SHA-256 Scope Seal, Midtrans Instant Snap &amp; Dedicated Engineer Slot</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 border border-emerald-300 dark:border-emerald-800 hidden sm:inline">
+                            EKSEKUSI PROYEK
+                        </span>
+                        <button 
+                            type="button" 
+                            @click.stop="toggleSection('section-10')" 
+                            class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
+                            :title="sectionCollapses['section-10'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                        >
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-10'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-10'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collapsed Preview -->
+                <div x-show="sectionCollapses['section-10']" @click="toggleSection('section-10')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-emerald-500/40 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Seksi 12 diciutkan (Kunci Scope &amp; Pembayaran DP/Lisensi). Klik untuk membuka formulir pembayaran...</span>
+                    </span>
+                    <span class="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold">[ + EXPAND &amp; CHECKOUT ]</span>
+                </div>
+
+                <div x-show="!sectionCollapses['section-10']" x-transition class="accordion-body">
+
                 <!-- Staging Sandbox Environment Banner (If Provisioned) -->
                 @if($blueprint->staging_url)
                     <div class="mb-6 p-4 sm:p-5 bg-emerald-500/10 dark:bg-zinc-950 border border-emerald-500/40 text-zinc-800 dark:text-zinc-200">
@@ -9205,6 +9697,7 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
                 @endif
                 </div> <!-- END TRACK CONTENT B (STUDIO) -->
+                </div> <!-- END ACCORDION BODY SECTION-10 -->
             </section>
 
             <!-- FLOATING QUICK-ACCESS DOCK & SCROLL-SPY NAVIGATOR -->

@@ -1019,7 +1019,7 @@ class BlueprintDiscoveryService
         ];
     }
 
-    protected function detectDomain(string $text, array $brief = []): string
+    public static function detectDomain(string $text, array $brief = []): string
     {
         $combinedText = strtolower($text);
         if (!empty($brief)) {
@@ -1529,7 +1529,7 @@ class BlueprintDiscoveryService
     /**
      * Craft conversational raw user points into polished architectural blueprint features.
      */
-    protected function craftFeatureFromRawItem(string $rawItem, string $domain, bool $isEn): string
+    public static function craftFeatureFromRawItem(string $rawItem, string $domain, bool $isEn = false): string
     {
         $cleaned = trim($rawItem);
         // Strip common conversational artifacts like "berdasarkan poin no. 2, ada juga sediakan", "saya mau buat", etc.
@@ -1586,6 +1586,16 @@ class BlueprintDiscoveryService
 
         $title = ucwords(implode(' ', array_slice($words, 0, 4)));
         return $title . ': ' . ucfirst($cleaned) . '.';
+    }
+
+    public function craftFeature(string $rawItem, string $domain, bool $isEn = false): string
+    {
+        return self::craftFeatureFromRawItem($rawItem, $domain, $isEn);
+    }
+
+    public function detectDomainCategory(string $text, bool $isEn = false): string
+    {
+        return self::detectDomain($text, []);
     }
 
     protected function synthesizeRoadmapFeatures(string $corpus, string $domain, bool $isEn): string

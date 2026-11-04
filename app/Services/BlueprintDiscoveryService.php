@@ -1027,6 +1027,15 @@ class BlueprintDiscoveryService
         }
 
         $patterns = [
+            'tourism_travel' => [
+                'tour and travel', 'tour & travel', 'tour travel', 'biro perjalanan', 'agen perjalanan',
+                'paket wisata', 'day tour', 'wisata bali', 'wisata jawa timur', 'overland tour', 'overland',
+                'transfer in', 'transfer out', 'antar jemput bandara', 'ngurah rai', 'bandara denpasar',
+                'gunung bromo', 'gunung ijen', 'bromo', 'ijen', 'itinerary', 'daftar itinerary',
+                'wish list wisata', 'wishlist wisata', 'wish list', 'trip', 'private trip', 'open trip',
+                'sewa mobil wisata', 'armada wisata', 'destinasi wisata', 'objek wisata', 'liburan',
+                'travel agency', 'tour operator', 'bali tour', 'tour guide', 'driver wisata', 'wisata'
+            ],
             'api_gateway_messaging' => ['openwa', 'open-wa', 'baileys', 'whatsapp gateway', 'wa gateway', 'api gateway', 'message broker', 'rabbitmq', 'kafka', 'socket.io', 'webhook dispatcher', 'rate limiter', 'multi-tenant api', 'blast message', 'sms gateway', 'telegram bot', 'pesan otomatis whatsapp', 'broadcast whatsapp', 'session whatsapp', 'qr whatsapp', 'whatsapp api'],
             'game_3d_simulation' => ['video game', 'game 3d', 'game pesawat', 'flight simulator', 'aircraft', 'three.js', 'threejs', 'webgl', 'webgpu', 'babylon.js', 'godot', 'unity', 'game loop', 'physics engine', 'gltf', 'mesh', 'shader', 'multiplayer websocket', 'canvas 3d', 'kokpit pesawat', 'cockpit', 'aerodinamika', 'aerodynamics', 'flight controls'],
             'decoupled_saas' => ['headless', 'decoupled', 'microservices', 'nextjs', 'next.js', 'nuxt', 'fastapi', 'nestjs', 'go gin', 'grpc', 'frontend terpisah', 'separated frontend', 'backend terpisah'],
@@ -1060,13 +1069,21 @@ class BlueprintDiscoveryService
             foreach ($keywords as $kw) {
                 $count = substr_count($combinedText, $kw);
                 if ($count > 0) {
-                    $multiplier = str_contains($kw, ' ') ? 3 : 1;
+                    $multiplier = str_contains($kw, ' ') ? 4 : 1;
                     $score += min($count, 30) * $multiplier;
                 }
             }
             if ($score > 0) {
                 $scores[$domain] = $score;
             }
+        }
+
+        // Disambiguation: If travel/tour keywords are clearly present and 'hotel' is mentioned only as a pickup/dropoff place,
+        // prevent false-positive scoring on 'property'.
+        $hasTravelContext = (bool) preg_match('/(?:tour|travel|wisata|itinerary|overland|transfer\s+in|transfer\s+out|ngurah\s+rai|bromo|ijen)/i', $combinedText);
+        $hasExplicitPropertyContext = (bool) preg_match('/(?:villa|perumahan|apartemen|kost|kontrakan|tanah|kavling|real\s+estate|listing\s+properti|booking\s+villa)/i', $combinedText);
+        if ($hasTravelContext && !$hasExplicitPropertyContext && isset($scores['property'])) {
+            unset($scores['property']);
         }
 
         if (!empty($scores)) {
@@ -1079,6 +1096,34 @@ class BlueprintDiscoveryService
 
     protected function extractProjectName(string $corpus, string $domain, bool $isEn): string
     {
+        // 0. Try extracting Indonesian corporate & commercial patterns: "atas nama PT. [Name]" or "PT. [Name]"
+        if (preg_match('/atas\s+nama\s+((?:PT\.?|CV\.?|pt\.?|cv\.?)?\s*["\']?[A-Z0-9][A-Za-z0-9\s&\'\.-]{2,40}?["\']?)(?=[,.\n\r]|\s+(?:dan|yang|di|dengan|selama|sejak|karena|konsep)|$)/iu', $corpus, $m)) {
+            $entityName = trim(rtrim($m[1], ".,\n\r\"' "));
+            if (mb_strlen($entityName) >= 3) {
+                if (preg_match('/(?:berupa|tentang|jenis|kategori)\s+["\']([^"\'\n\r]{3,40})["\']/iu', $corpus, $tm)) {
+                    $portalType = trim($tm[1]);
+                    return $isEn ? "{$entityName} - {$portalType} Platform" : "{$entityName} - Platform {$portalType}";
+                }
+                return $entityName;
+            }
+        }
+
+        if (preg_match('/(?:^|\s)(PT\.?\s+[A-Z0-9][A-Za-z0-9\s&\'\.-]{2,35}|CV\.?\s+[A-Z0-9][A-Za-z0-9\s&\'\.-]{2,35})(?=[,.\n\r]|\s+(?:dan|yang|di|dengan|selama|sejak|karena|konsep)|$)/m', $corpus, $m)) {
+            $entityName = trim(rtrim($m[1], ".,\n\r\"' "));
+            if (mb_strlen($entityName) >= 3) {
+                if (preg_match('/(?:berupa|tentang|jenis|kategori)\s+["\']([^"\'\n\r]{3,40})["\']/iu', $corpus, $tm)) {
+                    $portalType = trim($tm[1]);
+                    return $isEn ? "{$entityName} - {$portalType} Platform" : "{$entityName} - Platform {$portalType}";
+                }
+                return $entityName;
+            }
+        }
+
+        if (preg_match('/(?:website|aplikasi|platform|sistem)\s+(?:berupa|tentang|untuk)\s+["\']([^"\'\n\r]{3,50})["\']/iu', $corpus, $m)) {
+            $portalType = trim($m[1]);
+            return $isEn ? "{$portalType} Digital Platform" : "Platform {$portalType} Terpadu";
+        }
+
         // 1. Try extracting explicit key-value name
         if (preg_match('/(?:nama\s*(?:proyek|bisnis|aplikasi|platform|usaha|katering|toko|bengkel)|project\s*name)\s*[:=\t]\s*([^\n\r,.]+)/i', $corpus, $m)) {
             $name = trim($m[1]);
@@ -1120,6 +1165,7 @@ class BlueprintDiscoveryService
 
         // Domain-tailored defaults
         $defaultsId = [
+            'tourism_travel' => 'Platform Reservasi Tour, Travel & Itinerary Cerdas Terpadu',
             'api_gateway_messaging' => 'SaaS WhatsApp API Gateway & High-Throughput Message Dispatcher',
             'game_3d_simulation' => 'FlightSim 3D - High-Fidelity WebGL Aircraft Flight Simulator',
             'decoupled_saas' => 'Decoupled Enterprise SaaS Platform (Edge Next.js + Headless API Engine)',
@@ -1137,6 +1183,7 @@ class BlueprintDiscoveryService
         ];
 
         $defaultsEn = [
+            'tourism_travel' => 'Integrated Tour, Travel & Smart Itinerary Reservation Platform',
             'api_gateway_messaging' => 'Enterprise WhatsApp API Gateway & Multi-Tenant Messaging SaaS',
             'game_3d_simulation' => '3D Aircraft Flight Simulator & Aerial Combat WebGL Game',
             'decoupled_saas' => 'Decoupled Multi-Tier Enterprise Platform (Next.js Edge + Headless API)',
@@ -1187,6 +1234,7 @@ class BlueprintDiscoveryService
             'game_3d_simulation' => "1. Keterbatasan Komputasi & Latensi Rendering Web: Kesulitan menjalankan simulasi penerbangan 3D dengan model aerodinamika nyata (lift, drag, thrust, gravity) pada 60 FPS stabil di browser pengguna tanpa instalasi software berat.\n2. Latensi Jaringan Sinkronisasi Multiplayer: Delay dan desinkronisasi posisi pesawat antarpemain pada kecepatan tinggi (Mach 1+) tanpa algoritma client-side prediction, dead reckoning, dan lag compensation.\n3. Manajemen Aset 3D Berat (GLTF/GLB) & Bandwidth: Ukuran file tekstur 4K dan mesh 3D pesawat yang besar memperlambat loading awal (First Contentful Paint) dan menghabiskan memori GPU browser (WebGL Context Loss).\n4. Presisi Kontrol Flight Stick & Sensor: Ketiadaan integrasi responsif terhadap input keyboard, joystick/gamepad HOTAS (Gamepad API), dan sensor akselerometer perangkat mobile.",
             'decoupled_saas' => "1. Keterikatan Monolitik yang Membatasi Skala Frontend: Kecepatan iterasi UI/UX terhambat karena siklus rilis frontend dan backend menyatu, serta tidak dapat memanfaatkan edge caching global (Cloudflare Pages/Vercel).\n2. Latensi Global untuk Pengguna Internasional: Pengguna di berbagai belahan dunia mengalami TTFB lambat jika seluruh rendering SSR dilakukan dari satu server terpusat.\n3. Ambang Beban API yang Tidak Terisolasi: Lonjakan traffic pada halaman publik dapat mengganggu kinerja proses background dan mutasi data database inti jika tidak dipisahkan arsitekturnya.",
             'education_adventist' => "1. Fragmentasi Tata Kelola 4 Moda Sekolah (Day School, Boarding Campuses, Sekolah Hibrida, dan Lembaga Terakreditasi) di bawah naungan Konferens/Uni GMAHK yang masih dikelola terpisah tanpa integrasi data terpusat.\n2. Beban Regulasi & Akreditasi Ganda: Kewajiban mematuhi regulasi nasional Kemendikdasmen (Dapodik, Kurikulum Merdeka) sekaligus standar denominasi global AAA (Adventist Accrediting Association) dan Kurikulum Alkitab Encounter.\n3. Kepatuhan Audit Keuangan Khusus Denominasi: Kebutuhan integrasi buku besar ke standar SunPlus GCAS (General Conference Auditing Service) dan pelaporan nirlaba ISAK 35.\n4. Manajemen Karakter & Siklus Sabat: Pengelolaan jam kerja siswa (Work-Study) sebagai pengurang SPP, sistem perizinan asrama (Digital Exeat Pass), serta otomatisasi sistem hening (Shabbat Mode) pada hari Sabat.",
+            'tourism_travel' => "1. Fragmentasi Pemesanan Transfer Bandara & Day Tour: Wisatawan dan tamu hotel kesulitan memesan transportasi transfer in/out (Bandara Ngurah Rai - Hotel) dan paket wisata harian Bali secara terpadu dengan transparansi jenis armada, kapasitas, dan tarif pasti.\n2. Ketiadaan Mesin AI Itinerary Cerdas Berbasis Data Nyata: Klien yang memiliki wish list destinasi impian (wisata Bali dan overland Jawa Timur seperti Bromo & Ijen) harus menunggu berjam-jam untuk rekap manual admin tanpa kalkulasi rute, durasi, dan estimasi biaya otomatis dari database.\n3. Kendala Alokasi Jadwal & Armada: Risiko bentrok jadwal pengemudi antara antar-jemput bandara terjadwal dengan rute tour privat harian atau overland jarak jauh.",
             'fnb_culinary' => 'Pencatatan pesanan katering dan langganan makanan harian saat ini masih manual via chat WhatsApp dan catatan buku fisik, rentan salah alamat pengiriman, pesanan tercatat ganda, dan rekap porsi dapur berantakan.',
             'services_workshop' => 'Penjadwalan antrean servis dan riwayat perawatan kendaraan pelanggan masih dicatat manual, menyebabkan antrean menumpuk di bengkel, stok suku cadang tidak termonitor akurat, dan riwayat servis kendaraan hilang.',
             'logistics' => 'Pencatatan manifes, status pengiriman armada, dan pelacakan surat jalan saat ini masih manual via spreadsheet dan pesan instan, menyebabkan lambatnya rekonsiliasi dan risiko kehilangan bukti serah terima.',
@@ -1209,6 +1257,7 @@ class BlueprintDiscoveryService
             'game_3d_simulation' => "1. Computational & Web Rendering Bottlenecks: Delivering a high-fidelity 3D flight simulation with real aerodynamic formulas (lift, drag, thrust, gravity) maintaining solid 60 FPS in browsers without native downloads.\n2. High-Speed Multiplayer Network Desync: Aircraft positional desynchronization and jitter at high airspeeds without client-side prediction, dead reckoning, and lag compensation.\n3. Heavy 3D Asset & Mesh Bandwidth Overhead: Large 4K textures and GLTF aircraft meshes degrading initial load times and risking WebGL context losses.\n4. Input Control Fidelity & Sensor Precision: Integrating multi-axis flight controls across Keyboard, Gamepad API (HOTAS flight sticks), and mobile touch sensors.",
             'decoupled_saas' => "1. Monolithic Deployment Couplings: Frontend release velocity hindered by unified backend cycles, missing out on global edge distribution (Cloudflare Pages/Vercel).\n2. Geographic Edge Latency: International users experiencing slow TTFB when rendering pages from a single centralized origin server.\n3. Unisolated Public Traffic Spikes: Public marketing traffic surges impacting critical background jobs and database write pipelines.",
             'education_adventist' => "1. Operational fragmentation across 4 Adventist educational modalities (Day School, Boarding Campuses, Hybrid, and Accredited Institutions) under Conference/Union governance without unified data integration.\n2. Dual accreditation and compliance burdens: Meeting national Ministry of Education standards (Dapodik) alongside denomination-wide AAA accreditation and Encounter Bible Curriculum.\n3. Denominational financial auditing mandates: Incompatibility of commercial school software with SunPlus GCAS chart of accounts and ISAK 35 non-profit compliance.\n4. Character governance & Sabbath enforcement: Vocational student Work-Study tracking for tuition credits, boarding Digital Exeat pass management, and automated Sabbath transactional quietness.",
+            'tourism_travel' => "1. Fragmented Airport Transfers & Day Tour Bookings: Travelers and hotel guests struggle to coordinate airport transfer in/out (Ngurah Rai Airport - Hotels) and Bali day tours seamlessly with upfront vehicle capacities and guaranteed transparent rates.\n2. Absence of a Zero-Assumption Database AI Itinerary Engine: Clients with custom destination wish lists (Bali spots and East Java overland trips to Mount Bromo & Mount Ijen) wait hours for manual administrative quoting without automated route feasibility, travel time calculation, and verified database pricing.\n3. Fleet Scheduling & Driver Dispatch Bottlenecks: High risk of scheduling collisions between fixed airport pickup timetables, private full-day island tours, and multi-day long-haul overland excursions.",
             'fnb_culinary' => 'Catering orders and meal subscriptions are managed manually via chat and physical paper ledgers, causing delivery address mix-ups, duplicate billing, and disorganized kitchen portion batching.',
             'services_workshop' => 'Workshop service appointment queues and vehicle maintenance histories are recorded manually, resulting in physical queue congestion, untracked parts, and missing maintenance logs.',
             'logistics' => 'Manifest logging, shipment status tracking, and delivery receipts are managed manually through disconnected spreadsheets, leading to delayed reconciliation and lost records.',
@@ -1256,6 +1305,7 @@ class BlueprintDiscoveryService
             'game_3d_simulation' => "1. Rendering 60 FPS Stabil & Realisme Grafis: Menghasilkan visual penerbangan 3D interaktif pada 60 FPS stabil menggunakan Three.js/WebGL dengan pencahayaan PBR dan volumetric clouds.\n2. Model Fisika Aerodinamika Presisi: Simulasi kalkulasi 6-DOF (Six Degrees of Freedom: Pitch, Roll, Yaw, Lift, Drag, Thrust, Stall, Gravitasi) dengan respon kemudi realistis.\n3. Sub-50ms Multiplayer Synchronization: Sinkronisasi posisi dan orientasi pesawat antarpemain dengan WebSockets + Dead Reckoning pada latensi jaringan <50ms.\n4. Asset Streaming Cepat & Web Vitals: Waktu muat awal 3D asset <3 detik melalui kompresi Draco/Meshopt dan edge CDN caching.",
             'decoupled_saas' => "1. Kecepatan Global Sub-20ms TTFB: Mengoptimalkan rendering halaman publik via Cloudflare Pages / Vercel Edge SSR untuk performa SEO Web Vitals sempurna.\n2. Isolasi Beban Backend & Keamanan: Memisahkan traffic publik dari Core API Engine dan Background Worker sehingga lonjakan visitor tidak mempengaruhi stabilitas transaksi.\n3. Modularitas Rilis Independen: Tim frontend dan backend dapat mendeploy pembaruan secara mandiri melalui kontrak OpenAPI 3.1 yang divalidasi secara otomatis.",
             'education_adventist' => "1. Sentralisasi Tata Kelola Multi-Tenant: Mengintegrasikan seluruh jenjang pendidikan (TK, SD, SMP, SMA/SMK) di wilayah Uni (UIKB/UIKT) dalam satu cloud modern monolith terproteksi.\n2. Smart Billing & Integrasi SunPlus: Otomatisasi penagihan SPP, pemotongan kredit Work-Study siswa asrama, rekonsiliasi pembayaran online VA/QRIS, dan ekspor jurnal akuntansi SunPlus & ISAK 35.\n3. Pembelajaran Holistik Tiga Segi (Kepala, Hati, Tangan): LMS berstandar Kurikulum Merdeka & IFL (Integrasi Iman dan Pembelajaran), penilaian spiritual journey, dan bank soal CBT terenkripsi.\n4. Shabbat Automation Gate: Otomatisasi penguncian transaksi finansial dan asesmen akademik mulai terbenam matahari hari Jumat hingga matahari terbenam hari Sabtu.",
+            'tourism_travel' => "1. Otomatisasi reservasi online 24/7 untuk layanan transportasi transfer in/out (Bandara Ngurah Rai - Hotel) dan paket day tour Bali dengan kalkulasi tarif instan.\n2. Mesin AI Itinerary Generator cerdas yang memproses wish list klien tanpa asumsi, mencocokkan rute dan harga database untuk menghasilkan jadwal perjalanan harian resmi.\n3. Dasbor terpusat manajemen armada (pilihan jenis kendaraan, kapasitas penumpang) dan penugasan pengemudi untuk tour Bali serta overland Jawa Timur (Bromo & Ijen).",
             'fnb_culinary' => "1. Digitalisasi alur pemesanan dan paket langganan katering harian/mingguan hingga 100% tersistem.\n2. Otomatisasi rekap porsi dapur dan pembuatan nota pesanan digital seketika.\n3. Integrasi notifikasi WhatsApp rincian pesanan dan rute antar langsung ke kurir katering.",
             'services_workshop' => "1. Mengurangi antrean fisik di bengkel dengan sistem booking reservasi servis online berjadwal.\n2. Sentralisasi buku riwayat servis (service logbook) dan estimasi biaya transparan bagi pelanggan.\n3. Otomatisasi pengingat servis berkala (service reminder) via pesan WhatsApp.",
             'logistics' => '1. Otomatisasi pencatatan resi dan pelacakan armada hingga 100% digital.\n2. Waktu rekonsiliasi laporan pengiriman dipangkas dari 3 hari menjadi real-time.\n3. Akses visibilitas langsung bagi pelanggan untuk memeriksa posisi kiriman.',
@@ -1278,6 +1328,7 @@ class BlueprintDiscoveryService
             'game_3d_simulation' => "1. 60 FPS Visual Fidelity: Deliver silky smooth 60 FPS 3D interactive graphics using Three.js/WebGL with PBR lighting and volumetric cloud shaders.\n2. Comprehensive 6-DOF Flight Physics: Realistic aerodynamics simulation (Pitch, Roll, Yaw, Lift, Drag, Thrust, Stall, G-Forces) with authentic handling feedback.\n3. Sub-50ms Multiplayer Synchronization: High-speed multiplayer synchronization via WebSockets + Dead Reckoning maintaining client positions under 50ms latency.\n4. Fast Asset Streaming & Optimized Web Vitals: Initial 3D bundle load times under 3 seconds through Draco/Meshopt mesh compression and global edge CDN caching.",
             'decoupled_saas' => "1. Sub-20ms Global TTFB: Maximize public web speed via Cloudflare Pages / Vercel Edge SSR for flawless Core Web Vitals and SEO rankings.\n2. Backend Isolation & Security: Fully isolate public consumer web traffic from the Core API Engine and async workers so traffic spikes never compromise transactional integrity.\n3. Independent Modular Releases: Enable frontend and backend engineering teams to deploy autonomously against strictly validated OpenAPI 3.1 contracts.",
             'education_adventist' => "1. Multi-Tenant Centralized Governance: Unify all educational levels across Union territories (UIKB/UIKT) within a single hardened cloud monolith.\n2. Smart Billing & SunPlus Integration: Automated tuition invoices, boarding student Work-Study credit deductions, online VA/QRIS reconciliation, and automated export of SunPlus & ISAK 35 accounting ledgers.\n3. Holistic Head-Heart-Hand Learning: Curriculum LMS integrated with Faith-Learning Integration (IFL), spiritual journey portfolios, and encrypted CBT examinations.\n4. Shabbat Automation Gate: Automated quiet-mode locking financial transactions and academic submissions from Friday sunset through Saturday sunset.",
+            'tourism_travel' => "1. Automated 24/7 online booking for Ngurah Rai airport transfer in/out and customized Bali day tour packages.\n2. Smart AI-driven itinerary generator that converts client travel wish lists into verified daily itineraries and transparent price quotes.\n3. Unified fleet management dashboard for vehicle capacity selection (MPV, HiAce, Alphard) and East Java overland tour dispatch (Mount Bromo & Mount Ijen).",
             'fnb_culinary' => "1. 100% digitization of meal subscription workflows and scheduled daily orders.\n2. Automated kitchen batch portioning and instant digital order receipts.\n3. Automated WhatsApp dispatch integration alerting delivery drivers and customers.",
             'services_workshop' => "1. Reduce physical workshop waiting congestion with scheduled online service reservations.\n2. Centralized digital service passport and transparent repair estimates for vehicle owners.\n3. Automated proactive service maintenance reminders via WhatsApp.",
             'logistics' => '1. 100% digitization of manifests and automated dispatch logging.\n2. Reduction of delivery audit time from 3 days to real-time.\n3. Direct live tracking visibility for enterprise clients.',
@@ -1305,6 +1356,7 @@ class BlueprintDiscoveryService
             'api_gateway_messaging' => 'Developer perangkat lunak, penyedia solusi SaaS, pengelola bisnis e-commerce/retail, admin tim customer support, dan manajer DevOps/infrastruktur integrasi API WhatsApp.',
             'game_3d_simulation' => 'Pemain game simulasi penerbangan, penggemar aviasi & 3D WebGL game, pengembang game indie, kompetitor leaderboard global, dan admin turnamen komunitas.',
             'decoupled_saas' => 'Pengguna frontend web & mobile, developer integrasi pihak ketiga (API consumers), product manager, tim operasional bisnis, dan system administrator.',
+            'tourism_travel' => 'Wisatawan domestik dan mancanegara, tamu hotel yang membutuhkan antar-jemput bandara Ngurah Rai, keluarga/grup outing yang memesan day tour Bali, serta wisatawan minat khusus untuk overland tour Jawa Timur (Gunung Bromo & Kawah Ijen).',
             'fnb_culinary' => 'Pelanggan individu, karyawan perkantoran (B2B catering), tim operasional dapur, dan kurir pengantaran.',
             'services_workshop' => 'Pemilik kendaraan bermotor, service advisor, mekanik teknisi, dan manajer operasional bengkel.',
             'logistics' => 'Klien korporat (B2B), manajer pengiriman, staf operasional logistik, dan pengemudi/vendor armada.',
@@ -1327,6 +1379,7 @@ class BlueprintDiscoveryService
             'api_gateway_messaging' => 'Software engineers, SaaS product builders, e-commerce & retail marketing automation teams, customer service supervisors, and DevOps messaging infrastructure architects.',
             'game_3d_simulation' => 'Flight simulation enthusiasts, browser-based 3D WebGL gamers, indie game developers, competitive leaderboard challengers, and aviation community tournament hosts.',
             'decoupled_saas' => 'Modern web & mobile end-users, third-party API integration developers, product managers, business operations teams, and system administrators.',
+            'tourism_travel' => 'Domestic and international tourists, hotel guests requiring airport transfers, families and corporate groups booking Bali day tours, and travelers embarking on East Java overland tours (Mount Bromo & Mount Ijen).',
             'fnb_culinary' => 'Individual meal subscribers, corporate office workers (B2B catering), kitchen culinary staff, and delivery couriers.',
             'services_workshop' => 'Vehicle owners, workshop service advisors, certified mechanics, and operations managers.',
             'logistics' => 'Corporate B2B clients, freight managers, dispatch operators, and fleet drivers/contractors.',
@@ -1354,6 +1407,7 @@ class BlueprintDiscoveryService
             'api_gateway_messaging' => "1. Superadmin (Platform Master): Manajemen multi-tenant, kuota pengiriman pesan, pemantauan status worker pool, dan rotasi master API key.\n2. Tenant / Developer (API Consumer): Pembuatan token API, konfigurasi webhook URL & secret HMAC, pemindaian QR code sesi WhatsApp, dan pemantauan delivery log.\n3. Support Agent / CS Dispatcher: Mengirim pesan blast broadcast, merespons pesan masuk via shared inbox, dan mengelola kontak kontak pelanggan.\n4. Automated Consumer System (Client App / Backend): Melakukan pemanggilan RESTful API endpoint untuk mengirim OTP, notifikasi tagihan, atau media dokumen secara programmatic.",
             'game_3d_simulation' => "1. Player / Pilot (End-User): Mengendalikan pesawat dengan kontrol 6-DOF (pitch, roll, yaw, throttle), menyelesaikan misi penerbangan, dan mencetak skor kecepatan/manuver.\n2. Competitive Challenger: Memantau leaderboard global, menonton replay penerbangan, dan menantang rekor pemain lain.\n3. Superadmin / Game Master: Manajemen parameter aerodinamika pesawat, kurasi medan peta 3D, pengelolaan event misi musiman, dan moderasi leaderboard anti-cheat.\n4. Spectator / Guest: Menonton simulasi penerbangan langsung via camera orbital 3D tanpa perlu login.",
             'decoupled_saas' => "1. Superadmin (Tenant Master): Mengelola konfigurasi headless backend, hak akses RBAC granular, dan audit trail keamanan.\n2. Frontend End-User: Berinteraksi dengan antarmuka SPA modern (Vite/Next.js), melakukan transaksi, dan melihat data real-time via REST/GraphQL API.\n3. API Developer / Integrator: Memanfaatkan dokumentasi OpenAPI/Swagger publik, sandbox testing, dan mengintegrasikan webhook event bisnis.\n4. Operations Specialist: Mengelola data bisnis harian melalui antarmuka dasbor headless yang terisolasi.",
+            'tourism_travel' => "1. Super Admin / Direktur Operasional Tour: Kendali penuh master data armada kendaraan, tarif rute/destinasi, penugasan pengemudi, dan laporan finansial.\n2. Dispatcher & Operator Reservasi: Mengelola verifikasi pesanan transfer bandara, jadwal day tour, dan memvalidasi rute overland Jawa Timur.\n3. Pengemudi Armada & Pemandu Wisata (Mobile Companion): Menerima penugasan transfer/tour harian, update status penjemputan (in-transit/completed), dan checklist armada.\n4. Wisatawan / Klien Pelanggan: Memilih paket day tour, mengajukan wish list destinasi untuk dianalisis AI menjadi itinerary resmi, serta menerima e-voucher QR Code.",
             'fnb_culinary' => "1. Superadmin (Pemilik Katering / Resto): Kontrol penuh master menu, paket langganan, dan rekap penjualan.\n2. Tim Dapur (Chef / Kitchen Head): Memantau daftar pesanan siap masak dan rekap porsi harian.\n3. Kurir Pengantaran: Menerima rincian alamat antar dan nomor kontak pemesan via WhatsApp.\n4. Pelanggan (Individu / Perkantoran): Memilih menu mingguan, langganan harian, dan menerima nota otomatis.",
             'services_workshop' => "1. Superadmin (Owner / Kepala Bengkel): Manajemen master layanan jasa, tarif servis, dan stok sparepart.\n2. Service Advisor / Front Desk: Pendaftaran antrean servis, input Work Order (WO), dan verifikasi keluhan.\n3. Mekanik / Teknisi: Memperbarui progres servis dan mencatat suku cadang yang digunakan.\n4. Pelanggan: Booking jadwal servis online, pantau status pengerjaan, dan cek riwayat servis kendaraan.",
             'logistics' => "1. Superadmin: Mengendalikan master data armada, tarif wilayah, dan hak akses staf.\n2. Staff Dispatcher: Menginput manifes, menugaskan pengemudi, dan memverifikasi status jalan.\n3. Driver / Vendor: Memperbarui titik lokasi, unggah foto bukti serah terima (POD).\n4. Klien / Customer: Memantau status pengiriman live dan mengunduh invoice/e-POD.",
@@ -1380,6 +1434,7 @@ class BlueprintDiscoveryService
             'hr' => "1. Superadmin: Company roles and access policy control.\n2. HR Recruiter: Job vacancy posting, candidate resume screening, and interview scheduling.\n3. Hiring Manager: Reviews candidates, submits evaluation notes, approves hires.\n4. Candidate: Profile submission, CV upload, and application status tracking.",
             'education' => "1. Superadmin: Academic calendar, user credentials, and curriculum control.\n2. Instructor: Uploads study materials, creates assignments, records student grades.\n3. Student: Reviews course materials, submits homework, checks academic report cards.",
             'property' => "1. Superadmin (Villa Manager / Broker): Full administration over villa inventory, HD media curation via Curator, pricing tiers, and WhatsApp routing.\n2. Web Visitor (Prospective Tenant / Buyer): Explores catalog, applies location/amenity filters, and initiates survey chats via WhatsApp.\n3. Field Host / Staff: Receives direct inquiry appointments and coordinates physical property walkthroughs.",
+            'tourism_travel' => "1. Super Admin / Operations Director: Full master data control over fleet vehicles, destination route pricing matrices, driver dispatch, and financial ledgers.\n2. Reservation Operator & Dispatcher: Verifies Ngurah Rai airport transfer bookings, organizes Bali day tour schedules, and validates East Java overland itineraries.\n3. Fleet Drivers & Tour Guides (Mobile Companion): Receives daily pickup itineraries, logs transit milestones (in-transit/completed), and performs vehicle readiness checks.\n4. Traveler / Customer: Books day tours, submits custom destination wish lists for AI itinerary synthesis with transparent pricing, and receives digital QR e-vouchers.",
             'custom_portal' => "1. Superadmin: Full master administration, security audit trails, and configuration.\n2. Operational Staff: Day-to-day transaction input and verification.\n3. Supervisor / Approver: Multi-tier approval workflow authorization.\n4. External Client: Self-service submission and real-time status tracker.",
         ];
 
@@ -1388,6 +1443,39 @@ class BlueprintDiscoveryService
 
     protected function synthesizeMvpFeatures(string $corpus, string $domain, bool $isEn): string
     {
+        // Zero-Loss Extraction: Check if user provided explicit numbered list of requirements (1. ... 2. ...)
+        $extractedItems = [];
+        if (preg_match_all('/(?:^|\n)\s*(\d+)[\.\)]\s*([^\n\r]+)/u', $corpus, $numMatches, PREG_SET_ORDER)) {
+            foreach ($numMatches as $nm) {
+                $itemText = trim($nm[2]);
+                // Filter out non-feature lines (like phone numbers, dates, pricing, or simple meta lines)
+                if (mb_strlen($itemText) >= 12 && !preg_match('/^(?:08|\+?62|\d+\s*hari|\d+\s*minggu|\d+\s*bulan|tahap|rp|budget|fase|termin)/i', $itemText)) {
+                    $extractedItems[] = $itemText;
+                }
+            }
+        }
+
+        if (count($extractedItems) >= 2) {
+            $formattedFeatures = [];
+            foreach ($extractedItems as $idx => $rawItem) {
+                $formattedFeatures[] = ($idx + 1) . '. ' . $rawItem;
+            }
+            // If fewer than 6, append enterprise operations and voucher issuance
+            if (count($formattedFeatures) < 5) {
+                $nextNum = count($formattedFeatures) + 1;
+                $formattedFeatures[] = $nextNum . ($isEn
+                    ? '. Operations Control Center & Fleet Dispatcher (Filament v5): Real-time resource scheduling, status milestone logging, and administrative oversight.'
+                    : '. Dasbor Pusat Operasional & Dispatcher Armada (Filament v5): Penjadwalan real-time unit layanan/armada, monitoring status pengerjaan, dan audit transaksi.');
+            }
+            if (count($formattedFeatures) < 6) {
+                $nextNum = count($formattedFeatures) + 1;
+                $formattedFeatures[] = $nextNum . ($isEn
+                    ? '. QR E-Vouchers & WhatsApp Automation: Automated digital booking confirmations, QR-coded receipts, and instant WhatsApp customer alerts.'
+                    : '. Penerbitan E-Voucher QR Code & Notifikasi WhatsApp: Tiket digital resmi ber-QR Code dan konfirmasi reservasi instan via WhatsApp.');
+            }
+            return implode("\n", $formattedFeatures);
+        }
+
         $featuresId = [
             'bioinformatics_genomics' => "1. Mesin Ingesti Data Sekuensing Genom (FASTA/FASTQ/BAM): Pipeline asinkron berbasis Python/Rust untuk upload batch sampel, pembersihan data mentah, dan validasi checksum SHA-256.\n2. Pencarian Varian Genetik Terindeks Keyset O(1): Query instan jutaan varian kromosom, mutasi patogenik, dan anotasi VCF menggunakan PostgreSQL 16 Strict ULID dan indeks B-Tree.\n3. Perancang Target Panduan CRISPR (sgRNA Design): Algoritma scoring efisiensi on-target dan mitigasi off-target dengan visualisasi posisi PAM.\n4. Antrean Komputasi Terdistribusi (Nextflow & Celery): Orkestrasi job komputasi bioinformatika intensif dengan isolasi worker pool dan laporan telemetri real-time.\n5. Genome Browser Interaktif (IGV.js / WebGL): Visualisasi lintasan kromosom, cakupan pembacaan (depth of coverage), dan variasi struktural langsung di browser.\n6. Vault Kepatuhan HIPAA & Audit Forensik: Manajemen akses ketat data biologis terenkripsi dengan log audit forensik permanen.",
             'fintech_ledger_banking' => "1. Mesin Pembukuan Berpasangan (Double-Entry Ledger): Eksekusi transaksi atomik debit-kredit dengan isolasi Strict Serializable dan zero-loss consistency.\n2. Rekonsiliasi Multi-Gateway & Batch Settlement: Pencocokan otomatis mutasi payment gateway (Midtrans, BI-FAST, QRIS) dengan toleransi selisih nol.\n3. Rekening Koran Keyset Cursor O(1): Penarikan riwayat mutasi jutaan baris tanpa degradasi performa menggunakan kursor stabil Strict ULID.\n4. Manajemen Akun & Chart of Accounts (COA): Hierarki akun finansial berstandar PSAK/IFRS dengan saldo terkunci dan reserved balance.\n5. Audit Vault Kriptografis Finansial: Log mutasi saldo tidak dapat diubah (immutable) dengan hash chaining untuk kepatuhan regulasi OJK & BI.\n6. Idempotency Key Gateway: Pencegahan transaksi ganda (double-spend/double-charge) melalui validasi kunci idempoten seketika.",
@@ -1406,6 +1494,7 @@ class BlueprintDiscoveryService
             'clinic' => "1. Modul Autentikasi & Hak Akses Medis: Akses terisolasi untuk Resepsionis, Dokter, dan Apoteker.\n2. Pendaftaran Pasien & Antrean: Input data pasien dengan nomor rekam medis unik dan antrean digital poli.\n3. Rekam Medis Elektronik (RME): Form pencatatan keluhan, anamnesis, diagnosis standar ICD-10, dan resep obat digital.\n4. Manajemen Stok Apotek: Pencatatan otomatis pengurangan stok saat obat diresepkan serta peringatan stok menipis.\n5. Dasbor Manajemen & Kasir: Perhitungan total billing perawatan obat dan cetak kuitansi pembayaran.\n6. Laporan Medis & Keuangan: Ekspor data kunjungan pasien dan rekapitulasi penjualan farmasi ke PDF/Excel.",
             'finance' => "1. Autentikasi Finansial & Audit Trail: Hak akses ketat untuk Operator Keuangan dan Auditor dengan logging aktivitas.\n2. Pembuat Faktur Komersial: Pembuatan invoice dinamis dengan perhitungan PPN, diskon, dan skema termin bertahap.\n3. Gateway Pembayaran Terotomatisasi: Integrasi Midtrans Virtual Account dan QRIS dengan rekonsiliasi seketika.\n4. Portal Pembayaran Klien: Halaman khusus bagi klien untuk melihat rincian faktur dan melakukan pembayaran langsung.\n5. Dasbor Piutang & Aging Schedule: Pemantauan tagihan belum terbayar, jatuh tempo, dan metrik kas masuk.\n6. Ekspor Rekonsiliasi Akuntansi: Ekspor data jurnal transaksi siap import ke software akuntansi dalam format CSV dan PDF.",
             'property' => "1. Autentikasi Pengguna & Dasbor Pengelola (Filament v5): Manajemen unit villa, upload galeri foto resolusi tinggi via Curator Picker, update tarif sewa/jual, dan status ketersediaan.\n2. Katalog Listing Villa Interaktif: Filter pencarian cepat berdasarkan lokasi di Bali, jumlah kamar, fasilitas unggulan, dan kategori (Sewa Harian/Bulanan/Tahunan atau Beli Hak Milik/Leasehold).\n3. Halaman Detail Villa Responsif: Tampilan galeri foto HD swipeable di HP, spesifikasi lengkap unit, fasilitas, harga transparan, dan sematan peta interaktif (Google Maps Embed).\n4. Direct WhatsApp Inquiry & Booking Lead: Tombol Click-to-Chat WhatsApp otomatis membawa detail nama villa, tanggal estimasi survei/sewa langsung ke broker/owner.\n5. Optimasi Mobile-First & Kecepatan Akses: Desain bersih ultra-cepat dibuka dari browser smartphone dengan O(1) query performa tanpa lag.\n6. Manajemen Pertanyaan & Status Prospek: Pencatatan ringkasan leads masuk dari pengunjung untuk evaluasi efektivitas listing.",
+            'tourism_travel' => "1. Sistem Manajemen Transfer Bandara & Hotel (Transfer In/Out): Penjadwalan penjemputan bandara Ngurah Rai Denpasar ke hotel/villa dengan nomor penerbangan, estimasi kedatangan, dan status driver.\n2. Katalog & Reservasi Paket Day Tour Bali: Pilihan paket wisata harian dengan filter jenis kendaraan (Avanza, Innova, HiAce), kapasitas penumpang, rute destinasi, dan kalkulasi tarif transparan.\n3. Mesin Wishlist Klien & Generator Itinerary AI: Form wish list destinasi impian klien yang dianalisis oleh AI secara presisi berbasis master data database untuk menyusun rencana perjalanan lengkap beserta estimasi harga instan.\n4. Modul Reservasi Overland Tour Jawa Timur: Pemesanan paket wisata luar pulau Bali (Kawah Ijen Banyuwangi, Gunung Bromo, dan Malang) mencakup tiket penyeberangan feri, penginapan transit, dan sewa Jeep 4x4.\n5. Dasbor Dispatcher & Manajemen Armada (Filament v5): Pusat kendali penjadwalan supir, pelacakan ketersediaan unit mobil, inspeksi kelayakan armada, dan laporan pendapatan harian.\n6. Penerbitan E-Voucher & Notifikasi WhatsApp: Pengiriman tiket reservasi digital ber-QR Code dan konfirmasi jadwal instan ke nomor WhatsApp klien.",
             'custom_portal' => "1. Autentikasi Modern & RBAC: Pengelolaan peran pengguna dengan ULID primary keys untuk skalabilitas jutaan data.\n2. Formulir Intake & Validasi Data: Input data terstruktur dengan validasi ketat dan proteksi Anti-Spam berjenjang.\n3. Dasbor Administrasi Filament v5: Pusat manajemen data dengan filter canggih, metrik analitik, dan tabel dinamis kilat.\n4. Alur Kerja Persetujuan (Workflow): Mekanisme review data bertingkat dengan pencatatan riwayat audit (audit trail).\n5. Sistem Notifikasi Terpadu: Notifikasi status via sistem internal dan template email resmi.\n6. Modul Laporan & Ekspor: Ekspor rekonsiliasi data komprehensif ke format PDF siap cetak dan spreadsheet Excel.",
         ];
 
@@ -1427,6 +1516,7 @@ class BlueprintDiscoveryService
             'clinic' => "1. Role-Segregated Clinical Auth: Isolated portals for Receptionists, Physicians, and Pharmacists.\n2. Patient Intake & Queue Management: Patient registration with automated medical record numbers.\n3. Electronic Medical Records (EMR): Diagnostic documentation, anamnesis logs, and digital prescription issuance.\n4. Pharmacy Dispensary & Inventory Sync: Automated real-time deduction upon prescription dispensing with low-stock alerts.\n5. Cashier & Billing Hub: Aggregated billing calculation and instant invoice receipt generation.\n6. Clinical & Revenue Analytics: Exportable patient visit metrics and pharmacy ledger in PDF and Excel formats.",
             'finance' => "1. Financial-Grade RBAC & Audit Trails: Timestamped activity logging for billing officers and auditors.\n2. Commercial Invoice Generator: Dynamic billing engine with multi-currency, tax calculation, and milestone stages.\n3. Automated Payment Gateway: Midtrans Virtual Account & QRIS webhooks with instant ledger reconciliation.\n4. Client Payment Hub: Direct client portal for invoice review and instant payment settlement.\n5. Accounts Receivable & Aging Dashboard: Overdue tracking, aging buckets, and cash inflow analytics.\n6. Financial Export Suite: Downloadable transaction audit journals in Excel and printable PDF formats.",
             'property' => "1. Property Manager Admin Hub (Filament v5): Villa inventory management, HD media curation via Curator Picker, dynamic pricing (rental & sales), and live availability toggling.\n2. Interactive Villa Catalog & Listing: High-speed mobile filters by Bali location, bedroom count, luxury amenities, and transaction type (Daily/Monthly/Yearly Rent vs Freehold/Leasehold Sale).\n3. Responsive Property Showcase: Swipeable HD photo gallery, full architectural specs, transparent pricing, and Google Maps location embed.\n4. Direct WhatsApp Inquiry & Survey Leads: 1-click WhatsApp Click-to-Chat pre-filling villa name and prospective dates directly to the broker/owner.\n5. Ultra-Fast Mobile Optimization: Clean responsive layout optimized for mobile browsers with sub-second page loads.\n6. Lead Activity Logging: Basic prospective tenant inquiry tracking for marketing conversion visibility.",
+            'tourism_travel' => "1. Airport & Hotel Transfer Management (Transfer In/Out Engine): Scheduled pickups between Ngurah Rai International Airport and hotels/villas with flight tracking, arrival sync, and driver status.\n2. Interactive Bali Day Tour Catalog & Booking: Flexible day tour reservations configurable by vehicle model (Avanza, Innova, HiAce), passenger count, customized route, and transparent pricing.\n3. AI-Powered Client Wishlist & Itinerary Engine: Client destination wishlist analyzed by AI against database points of interest to automatically generate structured travel itineraries with verified pricing.\n4. East Java Overland Tour Module: Multi-day excursion bookings for outbound Bali destinations (Mount Bromo, Ijen Crater) including ferry tickets, transit lodging, and 4x4 Jeep coordination.\n5. Fleet Dispatcher & Operations Command Center (Filament v5): Centralized driver assignment, vehicle availability tracking, vehicle maintenance checklist, and daily revenue reports.\n6. Digital QR E-Vouchers & WhatsApp Automation: Automated issuance of QR-coded digital boarding vouchers and instant booking confirmations dispatched via WhatsApp.",
             'custom_portal' => "1. Modern Authentication & RBAC: Role-based control with distributed PostgreSQL ULID identifiers.\n2. Structured Data Intake & Validation: Robust form validation with multi-layer anti-spam protection.\n3. Filament v5 Enterprise Dashboard: Instant filterable data tables, metric widgets, and bulk processing.\n4. Multi-Tier Approval Workflow: Step-by-step verification pipeline with complete audit trails.\n5. Unified Notification Engine: Email and in-app status updates for critical milestones.\n6. Reporting & Export Suite: Instant export of filtered data into standardized PDF reports and Excel workbooks.",
         ];
 
@@ -1453,6 +1543,7 @@ class BlueprintDiscoveryService
             'clinic' => "1. Integrasi SatuSehat Kemenkes: Penyelarasan data riwayat medis pasien dengan platform SatuSehat nasional.\n2. Notifikasi Pengingat Kontrol WhatsApp: Pengingat otomatis jadwal kontrol ulang pasien dan resep rutin.\n3. Portal Pasien Mandiri (PWA): Pasien dapat melihat riwayat hasil lab dan mengunduh resep digital sendiri.",
             'finance' => "1. Auto-Debit Recurring Billing: Tagihan langganan otomatis via kartu kredit dan e-wallet.\n2. Rekonsiliasi Bank Otomatis (Open Finance API): Penarikan mutasi rekening koran BCA/Mandiri secara otomatis.\n3. Analisis Prediksi Arus Kas (AI Cashflow Forecast): Proyeksi potensi piutang macet berdasarkan riwayat pembayaran klien.",
             'property' => "1. Integrasi Kalender Reservasi Real-Time (iCal Sync): Sinkronisasi ketersediaan unit otomatis dengan Airbnb, Booking.com, dan VRBO.\n2. Virtual Tour 360 Derajat: Penjelajahan unit villa interaktif 3D panoramic langsung dari browser calon penyewa.\n3. Multi-Currency & Multi-Language Toggle: Konversi mata uang otomatis (IDR, USD, AUD, EUR) dan dukungan multibahasa untuk wisman mancanegara.\n4. Integrasi Payment Gateway Booking Fee: Opsi pembayaran DP/booking fee otomatis jika di kemudian hari pemilik ingin menerima pembayaran online.",
+            'tourism_travel' => "1. Pelacakan GPS Armada Real-Time: Integrasi alat pelacak GPS untuk memantau posisi unit mobil dan estimasi waktu penjemputan (ETA) langsung di peta klien.\n2. AI Audio Tour Guide & Pemandu Wisata Multibahasa: Panduan narasi audio otomatis berbasis geolokasi ponsel saat wisatawan melintasi objek wisata bersejarah.\n3. Portal Kemitraan B2B Agen Travel & Hotel: Akun khusus bagi resepsionis hotel dan agen travel rekanan untuk memesan transfer dengan komisi otomatis.",
             'custom_portal' => "1. Integrasi WhatsApp Cloud API: Otomatisasi pengiriman notifikasi dan alert transaksi penting ke ponsel klien.\n2. Aplikasi Mobile PWA Offline-Sync: Akses aplikasi cepat untuk operator lapangan dengan sinkronisasi otomatis saat online.\n3. AI Agentic Decision Engine: Analisis prediktif dan asisten cerdas untuk merangkum anomali data operasional.",
         ];
 
@@ -1474,6 +1565,7 @@ class BlueprintDiscoveryService
             'clinic' => "1. SatuSehat Ministry of Health Compliance: Bi-directional EMR synchronization with national health services.\n2. Automated WhatsApp Check-up Reminders: Proactive appointment reminders for recurring patient checkups.\n3. Patient Self-Service Portal (PWA): Direct access for patients to view test results and digital prescription history.",
             'finance' => "1. Automated Recurring Billing: Subscription auto-debit via credit cards and digital wallets.\n2. Open Finance Bank Feed Sync: Automated daily bank account statement ingestion and reconciliation.\n3. AI Predictive Cashflow Analytics: Automated risk scoring and payment delay probability indicators.",
             'property' => "1. Real-Time Calendar Sync (iCal Engine): Two-way calendar synchronization with Airbnb, Booking.com, and VRBO to prevent double booking.\n2. 360-Degree Interactive Virtual Tour: Immersive 3D panoramic walkthroughs directly accessible within mobile browsers.\n3. Multi-Currency & Dual-Language Toggle: Real-time currency conversions (IDR, USD, AUD, EUR) and localized copy for international expatriates.\n4. Online Booking Fee Payment Gateway: Automated reservation deposit processing when the owner decides to enable direct digital checkout.",
+            'tourism_travel' => "1. Real-Time Fleet GPS Tracking: GPS hardware telemetry integration streaming live vehicle positions and accurate passenger pickup ETAs directly onto mobile maps.\n2. Multilingual AI Audio Tour Guide: Geolocation-triggered cultural storytelling and historical points-of-interest audio guide delivered via mobile browser.\n3. B2B Travel Agency & Hotel Concierge Portal: Dedicated partner login for hotel front desks and tour brokers to book transfers with automated commission payouts.",
             'custom_portal' => "1. WhatsApp Cloud API Webhooks: Automated delivery of high-priority operational alerts and status reports.\n2. PWA Offline-First Engine: Progressive web application with background synchronization for field workers.\n3. AI Agentic Decision Intelligence: Automated anomaly detection and executive summary generation.",
         ];
 
@@ -1500,6 +1592,7 @@ class BlueprintDiscoveryService
             'clinic' => "1. Pasien mendaftar online atau melalui staf resepsionis di lokasi klinik.\n2. Pasien dipanggil menuju ruang dokter sesuai nomor antrean digital.\n3. Dokter memeriksa pasien dan menginput diagnosis serta resep langsung di Rekam Medis Elektronik.\n4. Apotek menerima resep secara real-time dan menyiapkan obat.\n5. Pasien melakukan pembayaran di kasir dan menerima obat beserta kuitansi resmi.",
             'finance' => "1. Tim finance menyusun draf faktur dan menetapkan tanggal jatuh tempo.\n2. Invoice dikirim otomatis ke email dan WhatsApp klien dengan link pembayaran unik.\n3. Klien membuka portal faktur dan membayar melalui channel pembayaran pilihan.\n4. Sistem payment gateway mengirimkan callback dan status faktur berubah menjadi 'Lunas' seketika.\n5. Sistem mencatat jurnal pelunasan dan menghasilkan kuitansi pembayaran resmi.",
             'property' => "1. Calon penyewa / investor membuka katalog web villa di browser smartphone atau desktop.\n2. Pengunjung memfilter properti berdasarkan lokasi di Bali, rentang harga, atau opsi sewa vs beli.\n3. Pengunjung membuka halaman detail villa untuk melihat foto HD, fasilitas, dan sematan Google Maps.\n4. Pengunjung menekan tombol 'Inquiry via WhatsApp' untuk langsung terhubung dengan tim broker/pengelola dengan pesan otomatis terisi detail villa.\n5. Pengelola villa / admin login ke dasbor Filament untuk memperbarui unit yang tersewa/terjual atau menambahkan listing baru.",
+            'tourism_travel' => "1. Wisatawan membuka web portal dan memilih jenis layanan (Transfer Bandara Ngurah Rai, Day Tour Bali, Overland Jawa Timur, atau Input Wishlist Liburan).\n2. Wisatawan menentukan tanggal, jumlah orang, preferensi armada (Avanza/Innova/HiAce), dan menginput nomor penerbangan atau daftar destinasi impian.\n3. Sistem AI menganalisis wishlist berdasarkan database wisata dan langsung menyusun rekomendasi itinerary terstruktur beserta kalkulasi tarif total.\n4. Wisatawan melakukan pemesanan; sistem menerbitkan nomor invoice dan e-voucher reservasi ber-QR Code dengan notifikasi WhatsApp konfirmasi.\n5. Dispatcher di dasbor admin memverifikasi pesanan dan menugaskan supir serta unit armada yang tersedia.\n6. Supir menjemput wisatawan di bandara/hotel tepat waktu dan memperbarui status perjalanan hingga tur selesai.",
             'custom_portal' => "1. Pengguna mengakses portal dan mengisi data transaksi pada formulir terstruktur.\n2. Sistem memvalidasi data dan menyimpan rekaman dengan identifier unik terenkripsi.\n3. Staf / Operator menerima notifikasi dan melakukan verifikasi kelengkapan data di dasbor Filament.\n4. Supervisor menyetujui transaksi melalui alur persetujuan berjenjang.\n5. Sistem menghasilkan dokumen bukti resmi (PDF) dan memperbarui analitik operasional secara real-time.",
         ];
 
@@ -1521,6 +1614,7 @@ class BlueprintDiscoveryService
             'clinic' => "1. Patient checks in online or via front-desk registration.\n2. Patient is queued and routed to physician examination room.\n3. Physician records examination notes, diagnosis, and digital prescriptions in EMR.\n4. Dispensary receives prescription instantly and prepares medication packages.\n5. Patient completes billing settlement at checkout and receives dispensed medicine.",
             'finance' => "1. Finance team drafts invoice and configures due dates and milestones.\n2. Invoice dispatches automatically to client via email and WhatsApp with a direct payment link.\n3. Client reviews itemized breakdown and completes checkout.\n4. Webhook callback verifies payment, instantly marking invoice as 'Paid'.\n5. System reconciles accounts receivable and issues official payment receipt.",
             'property' => "1. Prospective tenant/investor opens the responsive villa catalog on mobile or desktop.\n2. Visitor filters listings by Bali region, budget range, and rent vs purchase requirements.\n3. Visitor inspects the detail showcase, reviewing HD galleries, amenities, and Google Maps pin.\n4. Visitor clicks 'Inquiry via WhatsApp', launching an instant WhatsApp chat with broker pre-populated with villa details.\n5. Villa manager logs into the Filament control panel to update availability, adjust rates, or add new listings.",
+            'tourism_travel' => "1. Traveler accesses the portal and selects service type (Airport Transfer, Bali Day Tour, East Java Overland, or Custom Wishlist Trip).\n2. Traveler configures dates, passenger count, vehicle choice (Avanza/Innova/HiAce), and inputs flight details or custom destination wish list.\n3. AI analyzes the wishlist against database points of interest, instantly synthesizing a structured day-by-day itinerary with exact transparent pricing.\n4. Traveler submits booking; system issues a QR-coded reservation e-voucher with an automated WhatsApp confirmation.\n5. Dispatcher in the Filament admin dashboard validates the reservation and assigns driver and vehicle.\n6. Driver picks up traveler at airport/hotel on schedule, logging transit milestones until the journey completes.",
             'custom_portal' => "1. User submits transaction data through the structured form.\n2. System validates payload and persists record with encrypted ULID identifiers.\n3. Operational staff receives alert and inspects data in the Filament control panel.\n4. Supervisor reviews and authorizes record through multi-tier workflow.\n5. System generates official PDF summary and updates real-time analytics dashboards.",
         ];
 
@@ -1547,6 +1641,7 @@ class BlueprintDiscoveryService
             'clinic' => 'SatuSehat Kemenkes API, Midtrans QRIS/VA, WhatsApp Gateway Pengingat Pasien, Cloud Backup Storage.',
             'finance' => 'Midtrans Core API (VA & QRIS), WhatsApp Notification Gateway, Mailgun Transactional Email, Jurnal/Xero Export API.',
             'property' => 'WhatsApp Click-to-Chat API, Google Maps Embed, Cloudflare R2 / S3 Storage (Optimasi Foto HD), Mailgun Inquiry Notification.',
+            'tourism_travel' => 'Google Maps Route Matrix & Places API, WhatsApp Business Cloud API, Midtrans Payment Gateway (VA & QRIS), Flight Status Tracker API (Bandara Ngurah Rai DPS), Cloudflare R2 (Foto Destinasi HD), Mailgun SMTP.',
             'custom_portal' => 'Midtrans Payment Gateway, WhatsApp Cloud API, Mailgun SMTP, Cloudflare Object Storage R2.',
         ];
 
@@ -1568,6 +1663,7 @@ class BlueprintDiscoveryService
             'clinic' => 'SatuSehat MOH API, Midtrans QRIS/VA, Patient WhatsApp Dispatcher, Encrypted Cloud Storage.',
             'finance' => 'Midtrans Core API (VA & QRIS), WhatsApp Notification Gateway, Mailgun SMTP, Accounting Export Webhooks.',
             'property' => 'WhatsApp Click-to-Chat API, Google Maps Embed API, Cloudflare R2 Storage (HD Photo CDN), Mailgun Notification Webhooks.',
+            'tourism_travel' => 'Google Maps Route Matrix & Places API, WhatsApp Business Cloud API, Midtrans Payment Gateway (Virtual Account & QRIS), Flight Status Tracker API (Ngurah Rai DPS), Cloudflare R2 Storage (HD Tour Photos), Mailgun SMTP.',
             'custom_portal' => 'Midtrans Payment Gateway, WhatsApp Cloud API, Mailgun Transactional SMTP, Cloudflare R2.',
         ];
 
@@ -1594,6 +1690,7 @@ class BlueprintDiscoveryService
             'clinic' => "1. Tidak menyediakan integrasi mesin radiologi / PACS imaging langsung di Fase 1 (fokus pada data rekam medis teks, diagnosa, dan laboratorium).\n2. Tidak mencakup aplikasi native mobile pasien di Google Play / App Store pada tahap MVP.\n3. Tidak melakukan pemotongan klaim BPJS otomatis secara langsung sebelum bridging resmi tersedia.",
             'finance' => "1. Tidak menyediakan software akuntansi full double-entry internal (fokus pada billing, invoicing, penagihan, dan ekspor jurnal).\n2. Tidak melayani fungsi perbankan simpan pinjam komersial.",
             'property' => "1. Tidak mencakup integrasi payment gateway atau transaksi kartu kredit di Fase 1 (fokus pada katalog cepat dan direct inquiry WhatsApp).\n2. Tidak membangun aplikasi native Play Store / App Store khusus (fokus pada Progressive Web Application responsif yang ringan dibuka di browser smartphone).\n3. Tidak mengelola perizinan legalitas sertifikat tanah/IMB secara langsung (tanggung jawab pihak notaris dan broker rekanan).",
+            'tourism_travel' => "1. Tidak menyediakan penjualan tiket pesawat komersial internasional/domestik langsung di dalam sistem (fokus pada layanan darat transfer, day tour, dan overland).\n2. Tidak mengelola reservasi kamar hotel pihak ketiga secara langsung (akomodasi transit overland dikoordinasikan via mitra rekanan).\n3. Tidak menanggung klaim asuransi perjalanan internasional di luar polis asuransi armada standar.\n4. Tidak membangun aplikasi native mobile store Android/iOS di Fase 1 (fokus pada Progressive Web App responsif mobile yang ultra-cepat dibuka dari browser HP).",
             'custom_portal' => "1. Tidak membangun aplikasi native mobile iOS/Android mandiri di Fase 1 MVP (difokuskan pada Progressive Web App berperforma tinggi dan responsif di semua perangkat).\n2. Tidak mencakup integrasi perangkat keras fisik Bluetooth/Thermal khusus tanpa API standar.\n3. Fitur di luar spesifikasi yang disetujui akan diakomodasi melalui Change Request (CR) terpisah.",
         ];
 
@@ -1615,6 +1712,7 @@ class BlueprintDiscoveryService
             'clinic' => "1. Excludes direct integration with physical radiology / PACS machinery in Phase 1 MVP (focus on text clinical records, diagnoses, and lab results).\n2. Excludes native mobile patient app store distribution in MVP release.\n3. Excludes direct unbridged national health insurance (BPJS) claim underwriting.",
             'finance' => "1. Excludes full internal double-entry ledger bookkeeping replacement (focuses on invoicing, automated receivables, and journal exports).\n2. Does not function as a licensed banking deposit/loan custodian.",
             'property' => "1. No online payment gateway or credit card processing in Phase 1 (leads and bookings are routed directly to WhatsApp and bank transfer).\n2. No native iOS/Android binary store apps in Phase 1 (delivered as an ultra-fast responsive Web Application).\n3. Platform does not provide legal title underwriting or notary licensing services.",
+            'tourism_travel' => "1. Excludes direct commercial airline flight ticket issuance (focused strictly on ground transportation, day tours, and overland excursions).\n2. Excludes standalone third-party hotel room inventory management (transit accommodations are arranged through partner vendors).\n3. Excludes international travel insurance underwriting outside standard vehicle passenger coverage.\n4. No native mobile app store binaries in Phase 1 MVP (delivered as an ultra-fast responsive Web Application / PWA).",
             'custom_portal' => "1. No native mobile app store application development in Phase 1 MVP (focused on high-performance Responsive Web PWA).\n2. No direct proprietary physical hardware interfacing without standard web protocols.\n3. Any additions outside this scope will be accommodated through a formal Change Request (CR).",
         ];
 
@@ -1855,6 +1953,34 @@ class BlueprintDiscoveryService
                 'desc' => $isEn ? 'Interactive panorama viewer and HD video walkthrough for immersive remote property inspection.' : 'Penyematan tur panorama 360 derajat dan video walkthrough HD untuk inspeksi properti jarak jauh.',
                 'target_field' => 'fiturWajib',
                 'addition' => 'Modul Tur Virtual Interaktif Panorama 360° & Video Walkthrough HD',
+                'badge' => 'Fitur MVP',
+            ];
+        } elseif ($domain === 'tourism_travel') {
+            $domainSuggestions['ai_itinerary'] = [
+                'id' => 'ai_itinerary_engine',
+                'category' => 'feature',
+                'title' => $isEn ? 'AI Wishlist Itinerary Generator' : 'Generator Itinerary & Wishlist AI',
+                'desc' => $isEn ? 'Analyzes client custom wishlists against database attractions to synthesize optimized travel schedules with transparent pricing.' : 'Menganalisis wishlist destinasi impian klien berdasarkan database wisata aplikasi untuk menghasilkan itinerary terstruktur dan daftar harga akurat tanpa asumsi.',
+                'target_field' => 'fiturWajib',
+                'addition' => $isEn ? 'AI Wishlist Itinerary Synthesis: Algorithmic route and schedule optimizer calculating real costs from database catalogs.' : 'Generator Itinerary Berbasis AI: Algoritma penyusunan rute otomatis dari database untuk menghitung durasi dan estimasi biaya riil tanpa asumsi.',
+                'badge' => 'Fitur MVP',
+            ];
+            $domainSuggestions['flight_tracker'] = [
+                'id' => 'flight_tracker_api',
+                'category' => 'integration',
+                'title' => $isEn ? 'Airport Flight Delay Tracker API' : 'Integrasi Pelacak Delay Penerbangan Bandara',
+                'desc' => $isEn ? 'Automatically synchronize Ngurah Rai airport pickup times with live airline flight arrival schedules.' : 'Sinkronisasi otomatis jadwal penjemputan bandara Ngurah Rai dengan jadwal kedatangan pesawat live untuk mengantisipasi delay.',
+                'target_field' => 'kebutuhanIntegrasi',
+                'addition' => 'Flight Status Radar API (Sinkronisasi Otomatis Kedatangan Pesawat Bandara Ngurah Rai)',
+                'badge' => 'Integrasi API',
+            ];
+            $domainSuggestions['pax_calculator'] = [
+                'id' => 'pax_capacity_calc',
+                'category' => 'feature',
+                'title' => $isEn ? 'Passenger & Luggage Vehicle Recommender' : 'Kalkulator Kapasitas Penumpang & Bagasi',
+                'desc' => $isEn ? 'Smart recommendation suggesting vehicle types (Avanza/Innova/HiAce) based on passenger count and luggage volume.' : 'Rekomendasi otomatis jenis armada (Avanza/Innova/HiAce) berdasarkan jumlah orang dan kapasitas koper/bagasi tamu.',
+                'target_field' => 'fiturWajib',
+                'addition' => $isEn ? 'Smart Vehicle & Luggage Recommender: Automated fleet suggestion based on passenger headcounts and luggage size.' : 'Kalkulator Kapasitas Armada: Rekomendasi pintar tipe mobil berdasarkan jumlah rombongan dan dimensi bagasi.',
                 'badge' => 'Fitur MVP',
             ];
         } elseif ($domain === 'logistics') {

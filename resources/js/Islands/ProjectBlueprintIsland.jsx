@@ -828,6 +828,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [convertedMarkdown, setConvertedMarkdown] = useState(() => initialData?._meta?.converted_markdown || '');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState('');
+  const [analysisStepIndex, setAnalysisStepIndex] = useState(1);
   const [analysisError, setAnalysisError] = useState(null);
   const [copySuccess, setCopySuccess] = useState(false);
 
@@ -2530,11 +2531,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     });
 
     setIsAnalyzing(true);
+    setAnalysisStepIndex(1);
     setAnalysisStep(attachedFiles.length > 0
       ? (hasOnlyMdOrTxt
-        ? (lang === 'en' ? 'Reading specification files & mapping architecture...' : 'Membaca berkas spesifikasi & memetakan arsitektur...')
+        ? (lang === 'en' ? 'Step 1/3: Reading specification files & mapping architecture...' : 'Langkah 1/3: Membaca berkas spesifikasi & memetakan arsitektur...')
         : t.step1)
-      : t.step2);
+      : (lang === 'en' ? 'Step 1/3: Ingesting idea & extracting system requirements...' : 'Langkah 1/3: Ingesti ide & ekstraksi kebutuhan sistem...'));
+
+    let timer1 = null;
+    let timer2 = null;
 
     try {
       const token = csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -2564,9 +2569,19 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         formDataUpload.append('files[]', file);
       });
 
-      const timer = setTimeout(() => {
-        setAnalysisStep(t.step3);
-      }, 1400);
+      timer1 = setTimeout(() => {
+        setAnalysisStepIndex(2);
+        setAnalysisStep(lang === 'en'
+          ? 'Step 2/3: Modeling domain architecture, RBAC roles & tech stack...'
+          : 'Langkah 2/3: Pemodelan domain bisnis, peran RBAC & arsitektur...');
+      }, 1500);
+
+      timer2 = setTimeout(() => {
+        setAnalysisStepIndex(3);
+        setAnalysisStep(lang === 'en'
+          ? 'Step 3/3: Auto-filling all 26 Blueprint parameters & scope boundaries...'
+          : 'Langkah 3/3: Mengisi otomatis seluruh 26 parameter Blueprint & batasan scope...');
+      }, 3500);
 
       const response = await fetch('/api/blueprint/analyze-idea', {
         method: 'POST',
@@ -2577,7 +2592,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         body: formDataUpload
       });
 
-      clearTimeout(timer);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
 
       const result = await response.json();
 
@@ -2644,8 +2660,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     } catch (err) {
       setAnalysisError(err.message || (lang === 'en' ? 'An error occurred. Please try again.' : 'Terjadi kendala. Silakan coba lagi.'));
     } finally {
+      if (timer1) clearTimeout(timer1);
+      if (timer2) clearTimeout(timer2);
       setIsAnalyzing(false);
       setAnalysisStep('');
+      setAnalysisStepIndex(1);
     }
   };
 
@@ -4559,20 +4578,132 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
               type="button"
               onClick={handleAnalyzeIdea}
               disabled={isAnalyzing}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-wider py-4 px-6 rounded-none text-center flex items-center justify-center gap-2 transition disabled:opacity-50 text-sm font-mono"
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-wider py-4 px-6 rounded-none text-center flex items-center justify-center gap-2 transition disabled:opacity-50 text-sm font-mono shadow-md"
             >
               {isAnalyzing ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{analysisStep || t.synthesizingBtn}</span>
+                  <Loader2 className="w-4 h-4 animate-spin text-black" />
+                  <span className="font-black text-black">{analysisStep || t.synthesizingBtn}</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4 text-black" />
                   <span>{t.synthesizeBtn}</span>
                 </>
               )}
             </button>
+
+            {/* LIVE AI SYNTHESIS STATUS & HELPER CARD */}
+            {isAnalyzing ? (
+              <div className="mt-4 p-5 bg-zinc-900 border-2 border-emerald-500 text-white rounded-none shadow-xl font-mono">
+                <div className="flex items-center justify-between border-b border-zinc-800 pb-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
+                      {lang === 'en' ? 'AI ARCHITECTURAL SYNTHESIS IN PROGRESS' : 'AI SEDANG MENSINTESIS ARSITEKTUR SISTEM'}
+                    </span>
+                  </div>
+                  <span className="text-[11px] px-2 py-0.5 bg-emerald-950 text-emerald-300 border border-emerald-700 font-bold">
+                    {analysisStepIndex}/3
+                  </span>
+                </div>
+
+                <div className="mb-4">
+                  <div className="text-sm font-bold text-zinc-100 flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                    <span>{analysisStep || (lang === 'en' ? 'Analyzing your project requirements...' : 'Menganalisis kebutuhan proyek Anda...')}</span>
+                  </div>
+                  <p className="text-xs text-zinc-400 mt-1 font-sans">
+                    {lang === 'en'
+                      ? 'The AI engine is synthesizing your vision into 26 enterprise architectural parameters with zero loss. Please wait a moment.'
+                      : 'Mesin AI sedang memetakan visi Anda menjadi 26 parameter arsitektur enterprise tanpa kehilangan detail. Mohon tunggu beberapa detik.'}
+                  </p>
+                </div>
+
+                {/* 3 Progressive Milestones */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-2 border-t border-zinc-800 text-xs">
+                  {/* Step 1 */}
+                  <div className={`p-2.5 border ${analysisStepIndex >= 1 ? 'bg-zinc-800/80 border-emerald-500/80 text-zinc-100' : 'bg-zinc-950/60 border-zinc-800 text-zinc-500'}`}>
+                    <div className="flex items-center gap-1.5 font-bold mb-1">
+                      {analysisStepIndex > 1 ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      ) : (
+                        <span className="w-3.5 h-3.5 rounded-none bg-emerald-500 text-black flex items-center justify-center text-[10px] font-black shrink-0">1</span>
+                      )}
+                      <span className={analysisStepIndex >= 1 ? 'text-emerald-400' : ''}>
+                        {lang === 'en' ? 'Zero-Loss Intake' : 'Ingesti & Ekstraksi'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400 font-sans leading-snug">
+                      {lang === 'en'
+                        ? 'Capturing client features, operational points, and attachments.'
+                        : 'Mengekstrak poin-poin ide bisnis, kebutuhan armada/fitur, dan dokumen.'}
+                    </p>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className={`p-2.5 border ${analysisStepIndex >= 2 ? 'bg-zinc-800/80 border-emerald-500/80 text-zinc-100' : 'bg-zinc-950/60 border-zinc-800 text-zinc-500'}`}>
+                    <div className="flex items-center gap-1.5 font-bold mb-1">
+                      {analysisStepIndex > 2 ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      ) : (
+                        <span className={`w-3.5 h-3.5 rounded-none flex items-center justify-center text-[10px] font-black shrink-0 ${analysisStepIndex === 2 ? 'bg-emerald-500 text-black' : 'bg-zinc-700 text-zinc-300'}`}>2</span>
+                      )}
+                      <span className={analysisStepIndex >= 2 ? 'text-emerald-400' : ''}>
+                        {lang === 'en' ? 'Domain & RBAC' : 'Domain & Aktor RBAC'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400 font-sans leading-snug">
+                      {lang === 'en'
+                        ? 'Determining industry domain, actors, and tech stack topology.'
+                        : 'Menentukan sektor industri, hak akses peran (Superadmin, Operator, Driver, Klien).'}
+                    </p>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className={`p-2.5 border ${analysisStepIndex >= 3 ? 'bg-zinc-800/80 border-emerald-500/80 text-zinc-100' : 'bg-zinc-950/60 border-zinc-800 text-zinc-500'}`}>
+                    <div className="flex items-center gap-1.5 font-bold mb-1">
+                      <span className={`w-3.5 h-3.5 rounded-none flex items-center justify-center text-[10px] font-black shrink-0 ${analysisStepIndex === 3 ? 'bg-emerald-500 text-black' : 'bg-zinc-700 text-zinc-300'}`}>3</span>
+                      <span className={analysisStepIndex >= 3 ? 'text-emerald-400' : ''}>
+                        {lang === 'en' ? 'Auto-Fill 26 Fields' : 'Isi 26 Parameter'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400 font-sans leading-snug">
+                      {lang === 'en'
+                        ? 'Populating Blocks A-F: KPIs, MVP features, workflows, and scope.'
+                        : 'Mengisi Blok A-F: Masalah, KPI, Fitur MVP, Alur Kerja, Integrasi, dan Scope.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer notification */}
+                <div className="mt-3 pt-2.5 border-t border-zinc-800/80 flex items-center gap-2 text-[11px] text-zinc-300 font-sans">
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>
+                    {lang === 'en'
+                      ? 'Once complete, the page will automatically scroll down to Block A so you can inspect and adjust the results.'
+                      : 'Setelah proses selesai, halaman akan otomatis bergulir ke Blok A di bawah untuk Anda tinjau dan sesuaikan.'}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-2.5 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-sans flex items-start gap-2.5">
+                <Lightbulb className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <strong className="font-semibold text-zinc-900 dark:text-zinc-100">
+                    {lang === 'en' ? 'How Auto-Fill Works: ' : 'Cara Kerja Tombol Sintesis: '}
+                  </strong>
+                  <span>
+                    {lang === 'en'
+                      ? 'Clicking this button triggers AI to analyze your idea and auto-populate all 26 parameters below (Blocks A through F). You retain 100% control to review, edit, or customize any field afterwards.'
+                      : 'Menekan tombol di atas akan mengaktifkan AI untuk menganalisis narasi/dokumen Anda dan otomatis mengisi seluruh 26 kolom formulir di bawah (Blok A s/d Blok F). Anda tetap memiliki kendali penuh untuk meninjau, mengubah, atau menyempurnakan setiap kolom hasil sintesis.'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </section>

@@ -19,52 +19,64 @@ class CmsGlobalSetting extends Model
         'value' => 'array',
     ];
 
+    protected static ?\Illuminate\Support\Collection $runtimeCache = null;
+
     public static function getAllCached(): \Illuminate\Support\Collection
     {
-        // 1. Purge legacy or corrupted __PHP_Incomplete_Class cache
+        if (static::$runtimeCache !== null) {
+            return static::$runtimeCache;
+        }
+
         try {
-            $legacy = \Illuminate\Support\Facades\Cache::get('cms_global_settings');
-            if ($legacy instanceof \__PHP_Incomplete_Class || ($legacy instanceof \Illuminate\Support\Collection && $legacy->first() instanceof \__PHP_Incomplete_Class)) {
-                \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
-            }
-        } catch (\Throwable) {
-            \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
-        }
-
-        // 2. Cache raw attribute arrays only (primitives) to prevent __PHP_Incomplete_Class
-        $rawAttributes = \Illuminate\Support\Facades\Cache::rememberForever('cms_global_settings_data', function () {
+            // 1. Purge legacy or corrupted __PHP_Incomplete_Class cache
             try {
-                return static::all()->mapWithKeys(function ($item) {
-                    return [$item->key => $item->getAttributes()];
-                })->toArray();
+                $legacy = \Illuminate\Support\Facades\Cache::get('cms_global_settings');
+                if ($legacy instanceof \__PHP_Incomplete_Class || ($legacy instanceof \Illuminate\Support\Collection && $legacy->first() instanceof \__PHP_Incomplete_Class)) {
+                    \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
+                }
             } catch (\Throwable) {
-                return [];
+                try { \Illuminate\Support\Facades\Cache::forget('cms_global_settings'); } catch (\Throwable) {}
             }
-        });
 
-        // 3. Defensive check against corrupt cache value
-        if (! is_array($rawAttributes) || $rawAttributes instanceof \__PHP_Incomplete_Class) {
-            \Illuminate\Support\Facades\Cache::forget('cms_global_settings_data');
-            \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
-            try {
-                $rawAttributes = static::all()->mapWithKeys(function ($item) {
-                    return [$item->key => $item->getAttributes()];
-                })->toArray();
-                \Illuminate\Support\Facades\Cache::forever('cms_global_settings_data', $rawAttributes);
-            } catch (\Throwable) {
-                $rawAttributes = [];
+            // 2. Cache raw attribute arrays only (primitives) to prevent __PHP_Incomplete_Class
+            $rawAttributes = \Illuminate\Support\Facades\Cache::rememberForever('cms_global_settings_data', function () {
+                try {
+                    return static::all()->mapWithKeys(function ($item) {
+                        return [$item->key => $item->getAttributes()];
+                    })->toArray();
+                } catch (\Throwable) {
+                    return [];
+                }
+            });
+
+            // 3. Defensive check against corrupt cache value
+            if (! is_array($rawAttributes) || $rawAttributes instanceof \__PHP_Incomplete_Class) {
+                try { \Illuminate\Support\Facades\Cache::forget('cms_global_settings_data'); } catch (\Throwable) {}
+                try { \Illuminate\Support\Facades\Cache::forget('cms_global_settings'); } catch (\Throwable) {}
+                try {
+                    $rawAttributes = static::all()->mapWithKeys(function ($item) {
+                        return [$item->key => $item->getAttributes()];
+                    })->toArray();
+                    \Illuminate\Support\Facades\Cache::forever('cms_global_settings_data', $rawAttributes);
+                } catch (\Throwable) {
+                    $rawAttributes = [];
+                }
             }
+
+            // 4. Reconstitute models in active request lifecycle
+            $collection = collect();
+            foreach ($rawAttributes as $key => $attrs) {
+                if (is_array($attrs)) {
+                    $collection->put($key, (new static)->newFromBuilder($attrs));
+                }
+            }
+
+            static::$runtimeCache = $collection;
+            return $collection;
+        } catch (\Throwable $e) {
+            static::$runtimeCache = collect();
+            return static::$runtimeCache;
         }
-
-        // 4. Reconstitute models in active request lifecycle
-        $collection = collect();
-        foreach ($rawAttributes as $key => $attrs) {
-            if (is_array($attrs)) {
-                $collection->put($key, (new static)->newFromBuilder($attrs));
-            }
-        }
-
-        return $collection;
     }
 
     /**

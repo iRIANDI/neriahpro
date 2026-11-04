@@ -9,28 +9,40 @@ use Illuminate\Support\Facades\Log;
 
 class MultiAiModelManager
 {
+    protected static ?array $settingsCache = null;
+
+    protected static function getCachedSetting(string $key): ?string
+    {
+        if (self::$settingsCache !== null) {
+            return self::$settingsCache[$key] ?? null;
+        }
+
+        try {
+            self::$settingsCache = CmsGlobalSetting::pluck('value', 'key')->all();
+            return self::$settingsCache[$key] ?? null;
+        } catch (\Throwable) {
+            self::$settingsCache = [];
+            return null;
+        }
+    }
+
     /**
      * Get configured API key for a specific provider.
      * Prioritizes Admin Panel (CmsGlobalSetting) over environment variables.
      */
     public static function getApiKey(string $provider): ?string
     {
-        try {
-            $settingKey = "ai_{$provider}_api_key";
-            $dbKey = CmsGlobalSetting::where('key', $settingKey)->value('value');
-            if (!empty($dbKey) && is_string($dbKey) && trim($dbKey) !== '') {
-                return trim($dbKey);
-            }
+        $dbKey = self::getCachedSetting("ai_{$provider}_api_key");
+        if (!empty($dbKey) && is_string($dbKey) && trim($dbKey) !== '') {
+            return trim($dbKey);
+        }
 
-            // Also check alternate alias if provider is xai / grok
-            if ($provider === 'xai') {
-                $grokKey = CmsGlobalSetting::where('key', 'ai_grok_api_key')->value('value');
-                if (!empty($grokKey) && is_string($grokKey) && trim($grokKey) !== '') {
-                    return trim($grokKey);
-                }
+        // Also check alternate alias if provider is xai / grok
+        if ($provider === 'xai') {
+            $grokKey = self::getCachedSetting('ai_grok_api_key');
+            if (!empty($grokKey) && is_string($grokKey) && trim($grokKey) !== '') {
+                return trim($grokKey);
             }
-        } catch (\Throwable $e) {
-            // Database might be during migration or cached
         }
 
         $envKey = config("ai.providers.{$provider}.api_key");
@@ -42,12 +54,10 @@ class MultiAiModelManager
      */
     public static function getModel(string $provider, string $tier = 'discovery'): string
     {
-        try {
-            $dbModel = CmsGlobalSetting::where('key', "ai_{$provider}_{$tier}_model")->value('value');
-            if (!empty($dbModel) && is_string($dbModel) && trim($dbModel) !== '') {
-                return trim($dbModel);
-            }
-        } catch (\Throwable) {}
+        $dbModel = self::getCachedSetting("ai_{$provider}_{$tier}_model");
+        if (!empty($dbModel) && is_string($dbModel) && trim($dbModel) !== '') {
+            return trim($dbModel);
+        }
 
         $providerConfig = config("ai.providers.{$provider}");
         return $providerConfig['models'][$tier] ?? ($providerConfig['models']['discovery'] ?? 'default');
@@ -58,12 +68,10 @@ class MultiAiModelManager
      */
     public static function getBaseUrl(string $provider): string
     {
-        try {
-            $dbUrl = CmsGlobalSetting::where('key', "ai_{$provider}_base_url")->value('value');
-            if (!empty($dbUrl) && is_string($dbUrl) && trim($dbUrl) !== '') {
-                return rtrim(trim($dbUrl), '/');
-            }
-        } catch (\Throwable) {}
+        $dbUrl = self::getCachedSetting("ai_{$provider}_base_url");
+        if (!empty($dbUrl) && is_string($dbUrl) && trim($dbUrl) !== '') {
+            return rtrim(trim($dbUrl), '/');
+        }
 
         $config = config("ai.providers.{$provider}");
         return rtrim($config['base_url'] ?? 'https://api.openai.com/v1', '/');
@@ -80,7 +88,10 @@ class MultiAiModelManager
         foreach ($providers as $key => $info) {
             $apiKey = self::getApiKey($key);
             $hasKey = !empty($apiKey);
-            $cachedStatus = Cache::get("ai_model_status_{$key}");
+            $cachedStatus = null;
+            try {
+                $cachedStatus = Cache::get("ai_model_status_{$key}");
+            } catch (\Throwable) {}
 
             // STRICT RULE: If NO API Key is configured in backend admin, it is UNCONFIGURED.
             // Under NO circumstance can a provider be 'healthy' or 'ready' without an API key!
@@ -104,10 +115,12 @@ class MultiAiModelManager
 
             $cooldownSec = 0;
             if ($status === 'exhausted') {
-                $cooldownUntil = Cache::get("ai_cooldown_until_{$key}");
-                if ($cooldownUntil) {
-                    $cooldownSec = max(0, $cooldownUntil - time());
-                }
+                try {
+                    $cooldownUntil = Cache::get("ai_cooldown_until_{$key}");
+                    if ($cooldownUntil) {
+                        $cooldownSec = max(0, $cooldownUntil - time());
+                    }
+                } catch (\Throwable) {}
             }
 
             $catalog[$key] = [
@@ -149,17 +162,19 @@ class MultiAiModelManager
     {
         Log::warning("AI Provider [{$provider}] failed with code {$statusCode}: {$error}");
 
-        $cooldownMinutes = (int) config('ai.cooldown_minutes', 15);
-        $cooldownUntil = time() + ($cooldownMinutes * 60);
+        try {
+            $cooldownMinutes = (int) config('ai.cooldown_minutes', 15);
+            $cooldownUntil = time() + ($cooldownMinutes * 60);
 
-        // 429 = Rate Limit Exceeded, 402/403 = Quota / Balance Exhausted
-        if ($statusCode === 429 || $statusCode === 402 || $statusCode === 403 || str_contains(strtolower($error), 'quota') || str_contains(strtolower($error), 'rate')) {
-            Cache::put("ai_model_status_{$provider}", 'exhausted', now()->addMinutes($cooldownMinutes));
-            Cache::put("ai_cooldown_until_{$provider}", $cooldownUntil, now()->addMinutes($cooldownMinutes));
-        } else {
-            // General failure, mark as warning
-            Cache::put("ai_model_status_{$provider}", 'warning', now()->addMinutes(5));
-        }
+            // 429 = Rate Limit Exceeded, 402/403 = Quota / Balance Exhausted
+            if ($statusCode === 429 || $statusCode === 402 || $statusCode === 403 || str_contains(strtolower($error), 'quota') || str_contains(strtolower($error), 'rate')) {
+                Cache::put("ai_model_status_{$provider}", 'exhausted', now()->addMinutes($cooldownMinutes));
+                Cache::put("ai_cooldown_until_{$provider}", $cooldownUntil, now()->addMinutes($cooldownMinutes));
+            } else {
+                // General failure, mark as warning
+                Cache::put("ai_model_status_{$provider}", 'warning', now()->addMinutes(5));
+            }
+        } catch (\Throwable) {}
     }
 
     /**
@@ -167,8 +182,10 @@ class MultiAiModelManager
      */
     public static function recordSuccess(string $provider): void
     {
-        Cache::put("ai_model_status_{$provider}", 'healthy', now()->addHours(1));
-        Cache::forget("ai_cooldown_until_{$provider}");
+        try {
+            Cache::put("ai_model_status_{$provider}", 'healthy', now()->addHours(1));
+            Cache::forget("ai_cooldown_until_{$provider}");
+        } catch (\Throwable) {}
     }
 
     /**
@@ -188,12 +205,10 @@ class MultiAiModelManager
     ): array {
         // Auto-detect preferred provider from backend admin settings if not explicitly passed
         if (empty($preferredProvider) || $preferredProvider === 'auto') {
-            try {
-                $savedDefault = CmsGlobalSetting::where('key', 'ai_default_provider')->value('value');
-                if (!empty($savedDefault) && $savedDefault !== 'auto') {
-                    $preferredProvider = $savedDefault;
-                }
-            } catch (\Throwable) {}
+            $savedDefault = self::getCachedSetting('ai_default_provider');
+            if (!empty($savedDefault) && $savedDefault !== 'auto') {
+                $preferredProvider = $savedDefault;
+            }
         }
 
         $defaultChain = config('ai.failover_chain', ['deepseek', 'gemini', 'anthropic', 'openai', 'relayrouter', 'xai', 'groq', 'openrouter']);
@@ -230,7 +245,11 @@ class MultiAiModelManager
         }
 
         foreach ($chain as $provider) {
-            $status = Cache::get("ai_model_status_{$provider}");
+            $status = null;
+            try {
+                $status = Cache::get("ai_model_status_{$provider}");
+            } catch (\Throwable) {}
+
             if ($status === 'exhausted') {
                 $failedAttempts[] = [
                     'provider' => $provider,
@@ -312,6 +331,9 @@ class MultiAiModelManager
     {
         $maxTokens = $tier === 'prd' ? 8192 : 4000;
         $cleanModel = ltrim($model, 'models/');
+        if (str_contains($cleanModel, '2.5') || str_contains($cleanModel, '3.6')) {
+            $cleanModel = 'gemini-3.8-flash';
+        }
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$cleanModel}:generateContent?key={$apiKey}";
 
         $payload = [

@@ -197,7 +197,15 @@ class ProjectOsMatrixCatalog
                     'State machine status kesiapan unit fisik (CLEAN, DIRTY, OCCUPIED, MAINTENANCE)',
                 ],
                 'default_compliance_standards' => ['UU PDP No. 27/2022', 'PSAK 73 (Sewa)', 'Pajak Daerah Perhotelan/Hiburan (PB1)', 'OWASP ASVS L2'],
-                'detection_keywords' => ['hotel', 'villa', 'resort', 'penginapan', 'sewa lapangan', 'booking lapangan', 'lapangan', 'klub olahraga', 'klub badminton', 'gor', 'court', 'per jam', 'badminton', 'padel', 'futsal', 'tennis', 'coworking', 'rental mobil', 'alat berat', 'booking', 'reservasi', 'venue', 'gedung', 'properti'],
+                'detection_keywords' => [
+                    'hotel', 'villa', 'resort', 'penginapan', 'tour and travel', 'tour & travel', 'tour travel',
+                    'paket wisata', 'day tour', 'wisata bali', 'wisata jawa timur', 'overland tour', 'overland',
+                    'transfer in', 'transfer out', 'antar jemput bandara', 'ngurah rai', 'bandara denpasar',
+                    'gunung bromo', 'gunung ijen', 'bromo', 'ijen', 'itinerary', 'daftar itinerary', 'wishlist wisata',
+                    'sewa lapangan', 'booking lapangan', 'lapangan', 'klub olahraga', 'klub badminton', 'gor', 'court',
+                    'per jam', 'badminton', 'padel', 'futsal', 'tennis', 'coworking', 'rental mobil', 'alat berat',
+                    'booking', 'reservasi', 'venue', 'gedung', 'properti', 'wisata', 'tour', 'travel'
+                ],
                 'is_active' => true,
                 'mandatory_primitives' => ['PRIMITIVE_TIME_SLOT_ENGINE'],
                 'optional_primitives' => ['PRIMITIVE_DOUBLE_ENTRY_LEDGER', 'PRIMITIVE_SUBSCRIPTION_COHORT', 'PRIMITIVE_CATALOG_SKU', 'PRIMITIVE_INVENTORY_LEDGER'],

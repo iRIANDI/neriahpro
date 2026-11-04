@@ -378,5 +378,54 @@ return [
                 ['method' => 'GET', 'path' => '/api/v1/tenants/me', 'name' => 'Fetch Authenticated Tenant Context'],
             ],
         ],
+
+        'tourism_travel' => [
+            'id' => 'tourism_travel',
+            'title' => [
+                'id' => 'Platform Reservasi Tour, Travel & Itinerary Cerdas Terpadu',
+                'en' => 'Integrated Tour, Travel & Smart Itinerary Reservation Platform',
+            ],
+            'keywords' => [
+                'tour and travel', 'tour & travel', 'tour travel', 'biro perjalanan', 'agen perjalanan',
+                'day tour', 'paket wisata', 'wisata bali', 'wisata jawa timur', 'overland tour', 'overland',
+                'transfer in', 'transfer out', 'antar jemput bandara', 'ngurah rai', 'bandara denpasar',
+                'gunung bromo', 'gunung ijen', 'bromo', 'ijen', 'itinerary', 'daftar itinerary',
+                'wish list wisata', 'wishlist wisata', 'wish list', 'trip', 'private trip', 'open trip',
+                'sewa mobil wisata', 'armada wisata', 'destinasi wisata', 'objek wisata', 'liburan',
+                'travel agency', 'tour operator', 'bali tour', 'tour guide', 'driver wisata'
+            ],
+            'recommended_stack' => [
+                'primary_language' => 'PHP 8.4+ / Node.js 22',
+                'framework' => 'Laravel 13 Modern Monolith / Livewire 4',
+                'database' => 'PostgreSQL 16 Strict ULID (B-Tree Keyset O(1))',
+                'message_broker' => 'Redis Streams / Queue Workers',
+                'frontend' => 'React 19 Islands + Filament v5 Admin Cockpit',
+                'paradigm' => 'smart_reservation_fleet_dispatch',
+            ],
+            'core_entities' => [
+                'tour_packages' => [
+                    'columns' => ['id', 'package_code', 'title', 'region', 'duration_days', 'base_price', 'included_routes_json', 'status'],
+                    'indexes' => ['package_code', 'region', 'status'],
+                ],
+                'fleet_vehicles' => [
+                    'columns' => ['id', 'vehicle_model', 'license_plate', 'capacity_pax', 'luggage_capacity', 'operational_status'],
+                    'indexes' => ['vehicle_model', 'operational_status'],
+                ],
+                'transfer_bookings' => [
+                    'columns' => ['id', 'booking_ref', 'client_id', 'service_type', 'pickup_point', 'dropoff_point', 'flight_number', 'pickup_at', 'total_amount', 'booking_status'],
+                    'indexes' => ['booking_ref', 'booking_status', 'pickup_at'],
+                ],
+                'itinerary_wishes' => [
+                    'columns' => ['id', 'client_id', 'raw_wish_json', 'analyzed_routes_json', 'estimated_cost', 'ai_confidence_score', 'status'],
+                    'indexes' => ['client_id', 'status'],
+                ],
+            ],
+            'key_endpoints' => [
+                ['method' => 'GET', 'path' => '/api/v1/tours/packages', 'name' => 'Keyset Cursor Tour Packages Catalog'],
+                ['method' => 'POST', 'path' => '/api/v1/transfers/book-airport', 'name' => 'Instant Airport Transfer In/Out Booking'],
+                ['method' => 'POST', 'path' => '/api/v1/itineraries/generate-smart', 'name' => 'Zero-Assumption AI Itinerary Generator from Wish List'],
+                ['method' => 'GET', 'path' => '/api/v1/fleet/availability', 'name' => 'Real-Time Vehicle & Driver Availability Check'],
+            ],
+        ],
     ],
 ];

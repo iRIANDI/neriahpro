@@ -1214,13 +1214,15 @@ class BlueprintDiscoveryService
         // 1. Try extracting explicit conversational pain points (e.g. "selama ini orderan cuma lewat WA dan buku tulis...")
         if (preg_match('/(?:selama\s*ini|kendala(?:nya)?|masalah(?:nya)?|susahnya|sering(?:kali)?|kesulitan)\s*[:=\s,]+([^.\n\r]+(?:\.[^.\n\r]+)?)/iu', $corpus, $pm)) {
             $extractedPain = trim($pm[0]);
-            if (mb_strlen($extractedPain) >= 20 && mb_strlen($extractedPain) <= 350) {
+            if (mb_strlen($extractedPain) >= 20 && mb_strlen($extractedPain) <= 350 && !preg_match('/(?:saya\s*mau|ingin\s*buat|buat\s*website|bikin\s*aplikasi)/i', $extractedPain)) {
                 return ucfirst($extractedPain);
             }
         }
 
         $firstParagraph = trim(preg_split('/\n\s*\n/', $corpus)[0] ?? '');
-        if (mb_strlen($firstParagraph) > 40 && mb_strlen($firstParagraph) < 400 && !str_contains($firstParagraph, '###')) {
+        // Do NOT use raw paragraph if it is conversational prompt ("saya mau buat website", "konsep antara lain", etc.)
+        $isConversational = (bool) preg_match('/(?:saya\s*mau|saya\s*ingin|bikin\s*website|buat\s*website|konsep\s*antara\s*lain|atas\s*nama|website\s*berupa|tolong\s*buatkan)/i', $firstParagraph);
+        if (!$isConversational && mb_strlen($firstParagraph) > 40 && mb_strlen($firstParagraph) < 400 && !str_contains($firstParagraph, '###')) {
             return $firstParagraph;
         }
 
@@ -1458,7 +1460,8 @@ class BlueprintDiscoveryService
         if (count($extractedItems) >= 2) {
             $formattedFeatures = [];
             foreach ($extractedItems as $idx => $rawItem) {
-                $formattedFeatures[] = ($idx + 1) . '. ' . $rawItem;
+                $crafted = $this->craftFeatureFromRawItem($rawItem, $domain, $isEn);
+                $formattedFeatures[] = ($idx + 1) . '. ' . $crafted;
             }
             // If fewer than 6, append enterprise operations and voucher issuance
             if (count($formattedFeatures) < 5) {
@@ -1521,6 +1524,68 @@ class BlueprintDiscoveryService
         ];
 
         return $isEn ? ($featuresEn[$domain] ?? $featuresEn['custom_portal']) : ($featuresId[$domain] ?? $featuresId['custom_portal']);
+    }
+
+    /**
+     * Craft conversational raw user points into polished architectural blueprint features.
+     */
+    protected function craftFeatureFromRawItem(string $rawItem, string $domain, bool $isEn): string
+    {
+        $cleaned = trim($rawItem);
+        // Strip common conversational artifacts like "berdasarkan poin no. 2, ada juga sediakan", "saya mau buat", etc.
+        $cleaned = preg_replace('/^(?:berdasarkan\s+poin\s+no\.?\s*\d+[,;\s]*)+(?:ada\s+juga\s+sediakan|sediakan\s+juga|sediakan|fitur|buatkan)?/iu', '', $cleaned);
+        $cleaned = preg_replace('/^(?:saya\s*mau\s*buat|kami\s*ingin|kami\s*membutuhkan|tolong\s*buatkan|sediakan\s*fitur|fitur|ada\s*fitur)\s+/iu', '', $cleaned);
+        $cleaned = trim($cleaned, " \t\n\r\0\x0B.,-:");
+
+        $lower = mb_strtolower($cleaned);
+
+        // Domain-specific or keyword-specific high-polish architectural feature mappings
+        // 1. Airport Transfer / In-Out Ngurah Rai
+        if (str_contains($lower, 'transfer') || (str_contains($lower, 'bandara') && str_contains($lower, 'hotel')) || str_contains($lower, 'ngurah rai')) {
+            return $isEn
+                ? 'Airport & Hotel Transfer Dispatch Engine (Transfer In/Out): High-precision flight arrival tracking, driver dispatch coordination, automated schedule sync, and customer flight milestone notifications.'
+                : 'Sistem Reservasi & Dispatch Transfer Bandara (Transfer In/Out Ngurah Rai): Penjadwalan antar-jemput bandara dan hotel secara presisi dengan integrasi nomor penerbangan, pelacakan armada, dan notifikasi otomatis.';
+        }
+
+        // 2. Day Tour / Custom Vehicle / Passenger count / Route
+        if ((str_contains($lower, 'day tour') || str_contains($lower, 'paket wisata')) && (str_contains($lower, 'kendaraan') || str_contains($lower, 'rute') || str_contains($lower, 'armada') || str_contains($lower, 'orang') || str_contains($lower, 'pilihan'))) {
+            return $isEn
+                ? 'Interactive Day Tour Catalog & Fleet Configurator: Dynamic tour package reservations with configurable vehicle options (Avanza/Innova/HiAce), passenger & luggage capacity validator, transparent destination route calculation, and real-time pricing.'
+                : 'Katalog Paket Day Tour & Pilihan Armada Fleksibel: Manajemen reservasi tour harian di Bali dengan konfigurasi armada (Avanza/Innova/HiAce), kapasitas penumpang, rute destinasi, dan kalkulasi harga dinamis.';
+        }
+
+        // 3. AI Wishlist & Itinerary Generator without assumptions
+        if (str_contains($lower, 'wish') || (str_contains($lower, 'itinerary') && (str_contains($lower, 'ai') || str_contains($lower, 'database')))) {
+            return $isEn
+                ? 'AI-Powered Wishlist & Itinerary Generator (Zero-Assumption Engine): Algorithmic synthesis analyzing client custom travel wishlists against database attractions to construct optimized day-by-day travel schedules, transit times, and verified cost breakdowns.'
+                : 'Generator Itinerary Cerdas Berbasis AI & Database (Zero-Assumption Wishlist): Analisis preferensi dan wishlist klien secara presisi berbasis master data atraksi wisata untuk menyusun jadwal perjalanan teroptimasi, estimasi durasi, dan rincian harga transparan.';
+        }
+
+        // 4. Overland Tour / Out-of-Bali / Bromo / Ijen
+        if (str_contains($lower, 'overland') || str_contains($lower, 'ijen') || str_contains($lower, 'bromo') || str_contains($lower, 'luar bali') || str_contains($lower, 'jawa timur')) {
+            return $isEn
+                ? 'Multi-Day Overland Tour & Inter-Island Excursion Hub: Long-distance outbound tour package management (Mount Bromo, Ijen Crater, East Java) including ferry logistics, 4x4 Jeep coordination, transit lodgings, and structured expedition milestones.'
+                : 'Modul Reservasi Overland Tour Lintas Wilayah (Jawa Timur / Bromo-Ijen): Manajemen paket ekspedisi wisata jarak jauh ke luar Bali dengan alokasi armada multi-hari, akomodasi transit, tiket ferry, dan jadwal penjemputan terstruktur.';
+        }
+
+        // If it already has "Title: Description" format, keep it with capitalization
+        if (str_contains($cleaned, ':')) {
+            $parts = explode(':', $cleaned, 2);
+            return ucfirst(trim($parts[0])) . ': ' . ucfirst(trim($parts[1]));
+        }
+
+        // Otherwise create Title: Description from the cleaned phrase
+        $words = explode(' ', $cleaned);
+        if (count($words) <= 4) {
+            $title = ucwords($cleaned);
+            $desc = $isEn
+                ? 'Enterprise module providing end-to-end data lifecycle management, audit validation, and operational workflow control.'
+                : 'Modul enterprise untuk manajemen siklus data terpadu, validasi audit, dan kontrol alur kerja operasional.';
+            return $title . ': ' . $desc;
+        }
+
+        $title = ucwords(implode(' ', array_slice($words, 0, 4)));
+        return $title . ': ' . ucfirst($cleaned) . '.';
     }
 
     protected function synthesizeRoadmapFeatures(string $corpus, string $domain, bool $isEn): string

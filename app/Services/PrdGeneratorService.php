@@ -1970,28 +1970,47 @@ PROMPT;
         $dpInvestasi = (float) ($itemizedEstimation['standard_dp'] ?? ($totalInvestasi * 0.50));
 
         // Detect Domain
-        $isProperty = str_contains($corpus, 'villa') || str_contains($corpus, 'properti') || str_contains($corpus, 'property') ||
-                      str_contains($corpus, 'sewa') || str_contains($corpus, 'rental') || str_contains($corpus, 'tanah') ||
-                      str_contains($corpus, 'land') || str_contains($corpus, 'leasehold') || str_contains($corpus, 'sanur') ||
-                      str_contains($corpus, 'bali') || str_contains($corpus, 'canggu') || str_contains($corpus, 'ubud') ||
-                      str_contains($corpus, 'kavling') || str_contains($corpus, 'broker') || str_contains($corpus, 'arebi') ||
-                      str_contains($corpus, 'listing');
+        $isTravel = str_contains($corpus, 'tour') || str_contains($corpus, 'travel') || str_contains($corpus, 'wisata') ||
+                    str_contains($corpus, 'itinerary') || str_contains($corpus, 'trip') || str_contains($corpus, 'overland') ||
+                    str_contains($corpus, 'ngurah rai') || str_contains($corpus, 'gayabalical') || str_contains($corpus, 'day tour') ||
+                    str_contains($corpus, 'transfer in') || str_contains($corpus, 'transfer out') || str_contains($corpus, 'bandara');
+
+        $isProperty = !$isTravel && (
+                      str_contains($corpus, 'villa') || str_contains($corpus, 'properti') || str_contains($corpus, 'property') ||
+                      str_contains($corpus, 'sewa villa') || str_contains($corpus, 'sewa properti') || str_contains($corpus, 'rental villa') ||
+                      str_contains($corpus, 'tanah') || str_contains($corpus, 'land') || str_contains($corpus, 'leasehold') ||
+                      str_contains($corpus, 'kavling') || str_contains($corpus, 'broker properti') || str_contains($corpus, 'arebi') ||
+                      str_contains($corpus, 'listing properti') || str_contains($corpus, 'real estate'));
 
         $isClinic = str_contains($corpus, 'klinik') || str_contains($corpus, 'pasien') || str_contains($corpus, 'dokter') ||
                     str_contains($corpus, 'rekam medis') || str_contains($corpus, 'obat') || str_contains($corpus, 'apotek') ||
                     str_contains($corpus, 'antrean') || str_contains($corpus, 'kesehatan');
 
-        $isLogistics = str_contains($corpus, 'logistik') || str_contains($corpus, 'ekspedisi') || str_contains($corpus, 'armada') ||
-                       str_contains($corpus, 'truk') || str_contains($corpus, 'kontainer') || str_contains($corpus, 'pengiriman') ||
-                       str_contains($corpus, 'resi') || str_contains($corpus, 'tracking') || str_contains($corpus, 'kurir');
+        $isLogistics = str_contains($corpus, 'logistik') || str_contains($corpus, 'ekspedisi') || str_contains($corpus, 'armada truk') ||
+                       str_contains($corpus, 'truk kontainer') || str_contains($corpus, 'kontainer') || str_contains($corpus, 'pengiriman kargo') ||
+                       str_contains($corpus, 'surat jalan') || str_contains($corpus, 'resi ekspedisi') || str_contains($corpus, 'waybill');
 
         $isChurch = str_contains($corpus, 'gereja') || str_contains($corpus, 'jemaat') || str_contains($corpus, 'ibadah') ||
                     str_contains($corpus, 'warta') || str_contains($corpus, 'doa') || str_contains($corpus, 'persembahan');
 
-        $isCommerce = str_contains($corpus, 'marketplace') || str_contains($corpus, 'toko online') || str_contains($corpus, 'katalog') ||
-                      str_contains($corpus, 'keranjang') || str_contains($corpus, 'checkout') || str_contains($corpus, 'ecommerce');
+        $isCommerce = str_contains($corpus, 'marketplace') || str_contains($corpus, 'toko online') || str_contains($corpus, 'ecommerce') ||
+                      str_contains($corpus, 'keranjang belanja') || str_contains($corpus, 'checkout produk');
 
-        if ($isProperty) {
+        if ($isTravel) {
+            $domainCategory = 'Tour & Travel, Ground Transport & Smart Itinerary Hub';
+            $domainBadge = 'HIGH_VOLUME_TOURISM_EXPERIENCE';
+            $ticketBenchmark = 'Rp 650.000 - Rp 18.500.000 / paket tour & sewa armada';
+            $roiHeadline = 'Otomatisasi Booking Langsung Bebas Komisi OTA (15-25%) = Balik Modal dalam 1-2 Bulan Musim Liburan!';
+            $roiFormula = 'Hemat Potongan OTA 20% + Efisiensi Armada & Itinerary AI = Rp 12.000.000 - Rp 35.000.000 / bulan';
+            $roiNarrative = 'Dalam industri pariwisata Bali & Jawa Timur, platform OTA pihak ketiga (seperti Traveloka, Viator, Klook) memotong komisi 15% s/d 25% untuk setiap pemesanan. Dengan memiliki platform reservasi mandiri terpadu (' . $businessName . '), setiap pemesanan transfer bandara Ngurah Rai, paket day tour Bali, dan overland Bromo/Ijen langsung masuk 100% ke kas perusahaan. Fitur Wish List Itinerary AI mempercepat penutupan booking wisatawan dari hitungan hari menjadi hitungan menit, melunasi total investasi sistem (Rp ' . number_format($totalInvestasi, 0, ',', '.') . ') hanya dari 15-25 transaksi reservasi tour pertama.';
+            $projectedAnnualRoi = '380% - 950% dari penghematan komisi OTA dan lonjakan closing booking wisatawan';
+            $inactionRisks = [
+                'Kehilangan Wisatawan Mancanegara & Domestik: Turis menuntut katalog online dengan pilihan jenis kendaraan, kapasitas penumpang/bagasi, dan harga transparan. Ketiadaan website profesional membuat calon klien beralih ke biro perjalanan lain.',
+                'Proses Penyusunan Itinerary Manual Sangat Lambat: Menghitung rute, jarak, dan harga overland Jawa Timur secara manual membuat calon wisatawan menunggu berjam-jam hingga akhirnya memesan di tempat lain.',
+                'Risiko Jadwal Bentrok & No-Show: Tanpa sistem pencatatan armada terpadu dan pembayaran uang muka (DP) otomatis, risiko jadwal supir bentrok dan pembatalan sepihak merugikan operasional harian.',
+            ];
+            $phasedStrategy = 'Mulai dengan Fase 1 Turnkey MVP (Reservasi Transfer Bandara, Paket Day Tour Bali, Overland Bromo-Ijen, Generator Wish List AI, Integrasi WhatsApp, & Dasbor Armada Filament v5) dengan termin 50/50. Sistem siap go-live dalam 14-21 hari kerja.';
+        } elseif ($isProperty) {
             $domainCategory = 'Villa Rental & Real Estate Agency';
             $domainBadge = 'HIGH_TICKET_COMMERCIAL';
             $ticketBenchmark = 'Rp 180.000.000 - Rp 650.000.000 / transaksi sewa/jual';

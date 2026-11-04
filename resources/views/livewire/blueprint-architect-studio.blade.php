@@ -309,7 +309,7 @@
 
         <!-- Collapsible System Alerts & Staged Execution Drawer -->
         @if($hasAlerts)
-            <div x-show="showSystemAlerts" x-collapse class="border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 space-y-2">
+            <div x-show="showSystemAlerts" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1" class="border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 space-y-2">
                 <!-- 1. Anti-Over-Planning Scope Freeze -->
                 @if(!empty($scopeParalysisGuard['execution_stages']))
                     <div class="p-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-400 dark:border-amber-700/60 flex flex-wrap items-center justify-between gap-2 text-xs">

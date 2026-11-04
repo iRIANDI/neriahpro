@@ -1946,48 +1946,65 @@ class BlueprintController extends Controller
      */
     public function updatePresence(Request $request, string $slug): JsonResponse
     {
-        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
-
-        $clientId = $request->input('client_id') ?: session()->getId();
-        $isArchitect = auth()->user()?->isSuperAdmin() || (auth()->user() && str_contains(auth()->user()->email, 'neriahpro'));
-        $defaultName = auth()->check() ? auth()->user()->name : 'Tamu / Reviewer';
-        $name = $request->input('name') ?: $defaultName;
-        $role = $request->input('role') ?: ($isArchitect ? 'Lead Architect (Neriah Pro)' : (auth()->check() ? 'Klien / Stakeholder' : 'Tamu'));
-        $x = (float) $request->input('x', 0);
-        $y = (float) $request->input('y', 0);
-        $section = $request->input('section', 'Section 01');
-
-        $cacheKey = "blueprint_presence_{$blueprint->slug}";
-        $presenceList = Cache::get($cacheKey, []);
-
-        // Update current collaborator's state
-        $presenceList[$clientId] = [
-            'id' => $clientId,
-            'name' => $name,
-            'role' => $role,
-            'x' => $x,
-            'y' => $y,
-            'section' => $section,
-            'is_architect' => auth()->user()?->isSuperAdmin() || str_contains($role, 'Architect'),
-            'last_seen' => now()->timestamp,
-        ];
-
-        // Purge expired participants (inactive > 12 seconds)
-        $now = now()->timestamp;
-        foreach ($presenceList as $id => $p) {
-            if (($now - ($p['last_seen'] ?? 0)) > 12) {
-                unset($presenceList[$id]);
+        try {
+            $blueprint = VisionBlueprint::where('slug', $slug)->first();
+            if (!$blueprint) {
+                return response()->json([
+                    'success' => false,
+                    'slug' => $slug,
+                    'collaborators' => [],
+                    'timestamp' => now()->timestamp,
+                ], 200);
             }
+
+            $clientId = $request->input('client_id') ?: session()->getId();
+            $isArchitect = auth()->user()?->isSuperAdmin() || (auth()->user() && str_contains(auth()->user()->email, 'neriahpro'));
+            $defaultName = auth()->check() ? auth()->user()->name : 'Tamu / Reviewer';
+            $name = $request->input('name') ?: $defaultName;
+            $role = $request->input('role') ?: ($isArchitect ? 'Lead Architect (Neriah Pro)' : (auth()->check() ? 'Klien / Stakeholder' : 'Tamu'));
+            $x = (float) $request->input('x', 0);
+            $y = (float) $request->input('y', 0);
+            $section = $request->input('section', 'Section 01');
+
+            $cacheKey = "blueprint_presence_{$blueprint->slug}";
+            $presenceList = Cache::get($cacheKey, []);
+
+            // Update current collaborator's state
+            $presenceList[$clientId] = [
+                'id' => $clientId,
+                'name' => $name,
+                'role' => $role,
+                'x' => $x,
+                'y' => $y,
+                'section' => $section,
+                'is_architect' => auth()->user()?->isSuperAdmin() || str_contains($role, 'Architect'),
+                'last_seen' => now()->timestamp,
+            ];
+
+            // Purge expired participants (inactive > 12 seconds)
+            $now = now()->timestamp;
+            foreach ($presenceList as $id => $p) {
+                if (($now - ($p['last_seen'] ?? 0)) > 12) {
+                    unset($presenceList[$id]);
+                }
+            }
+
+            Cache::put($cacheKey, $presenceList, now()->addMinutes(5));
+
+            return response()->json([
+                'success' => true,
+                'slug' => $blueprint->slug,
+                'collaborators' => array_values($presenceList),
+                'timestamp' => now()->timestamp,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'slug' => $slug,
+                'collaborators' => [],
+                'timestamp' => now()->timestamp,
+            ], 200);
         }
-
-        Cache::put($cacheKey, $presenceList, now()->addMinutes(5));
-
-        return response()->json([
-            'success' => true,
-            'slug' => $blueprint->slug,
-            'collaborators' => array_values($presenceList),
-            'timestamp' => now()->timestamp,
-        ]);
     }
 
     /**
@@ -1995,23 +2012,41 @@ class BlueprintController extends Controller
      */
     public function getPresence(string $slug): JsonResponse
     {
-        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
-        $cacheKey = "blueprint_presence_{$blueprint->slug}";
-        $presenceList = Cache::get($cacheKey, []);
-
-        $now = now()->timestamp;
-        foreach ($presenceList as $id => $p) {
-            if (($now - ($p['last_seen'] ?? 0)) > 12) {
-                unset($presenceList[$id]);
+        try {
+            $blueprint = VisionBlueprint::where('slug', $slug)->first();
+            if (!$blueprint) {
+                return response()->json([
+                    'success' => false,
+                    'slug' => $slug,
+                    'collaborators' => [],
+                    'timestamp' => now()->timestamp,
+                ], 200);
             }
-        }
 
-        return response()->json([
-            'success' => true,
-            'slug' => $blueprint->slug,
-            'collaborators' => array_values($presenceList),
-            'timestamp' => now()->timestamp,
-        ]);
+            $cacheKey = "blueprint_presence_{$blueprint->slug}";
+            $presenceList = Cache::get($cacheKey, []);
+
+            $now = now()->timestamp;
+            foreach ($presenceList as $id => $p) {
+                if (($now - ($p['last_seen'] ?? 0)) > 12) {
+                    unset($presenceList[$id]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'slug' => $blueprint->slug,
+                'collaborators' => array_values($presenceList),
+                'timestamp' => now()->timestamp,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'slug' => $slug,
+                'collaborators' => [],
+                'timestamp' => now()->timestamp,
+            ], 200);
+        }
     }
 
     /**

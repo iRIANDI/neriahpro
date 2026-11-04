@@ -663,6 +663,11 @@
                 const code = source.textContent.trim();
                 const { svg } = await mermaid.render(id, code);
                 container.innerHTML = svg;
+                const renderedSvg = container.querySelector('svg');
+                if (renderedSvg) {
+                    renderedSvg.style.maxWidth = 'none';
+                    renderedSvg.style.height = 'auto';
+                }
             } catch (err) {
                 console.warn('Mermaid rendering notice for ' + containerId + ':', err);
                 container.innerHTML = `
@@ -981,7 +986,116 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     }
                 },
                 scaffoldModalOpen: false,
-                
+                crModalOpen: false,
+                prdData: @json($prd),
+
+                // Diagram Interactive Viewer State (Zoom, Pan, Fullscreen Modal)
+                fullscreenDiagramModal: false,
+                fullscreenDiagramTitle: '',
+                fullscreenDiagramSourceId: '',
+                fullscreenDiagramZoom: 1,
+                fullscreenDiagramPanX: 0,
+                fullscreenDiagramPanY: 0,
+                fullscreenDiagramDragging: false,
+                fsDragStartX: 0,
+                fsDragStartY: 0,
+
+                zoomDiagram(targetId, delta) {
+                    const el = document.getElementById(targetId);
+                    if (!el) return;
+                    let currentZoom = parseFloat(el.getAttribute('data-zoom') || '1');
+                    currentZoom = Math.min(3.5, Math.max(0.4, +(currentZoom + delta).toFixed(2)));
+                    el.setAttribute('data-zoom', currentZoom);
+                    this.applyDiagramTransform(targetId);
+                },
+                resetDiagram(targetId) {
+                    const el = document.getElementById(targetId);
+                    if (!el) return;
+                    el.setAttribute('data-zoom', '1');
+                    el.setAttribute('data-pan-x', '0');
+                    el.setAttribute('data-pan-y', '0');
+                    this.applyDiagramTransform(targetId);
+                },
+                applyDiagramTransform(targetId) {
+                    const el = document.getElementById(targetId);
+                    if (!el) return;
+                    const zoom = parseFloat(el.getAttribute('data-zoom') || '1');
+                    const px = parseFloat(el.getAttribute('data-pan-x') || '0');
+                    const py = parseFloat(el.getAttribute('data-pan-y') || '0');
+                    const svg = el.querySelector('svg');
+                    if (svg) {
+                        svg.style.transform = `translate(${px}px, ${py}px) scale(${zoom})`;
+                        svg.style.transformOrigin = 'center center';
+                        svg.style.transition = el.getAttribute('data-dragging') === 'true' ? 'none' : 'transform 0.15s ease-out';
+                        svg.style.maxWidth = 'none';
+                    }
+                },
+                startDiagramDrag(targetId, e) {
+                    const el = document.getElementById(targetId);
+                    if (!el) return;
+                    el.setAttribute('data-dragging', 'true');
+                    const px = parseFloat(el.getAttribute('data-pan-x') || '0');
+                    const py = parseFloat(el.getAttribute('data-pan-y') || '0');
+                    el.setAttribute('data-start-x', e.clientX - px);
+                    el.setAttribute('data-start-y', e.clientY - py);
+                },
+                onDiagramDrag(targetId, e) {
+                    const el = document.getElementById(targetId);
+                    if (!el || el.getAttribute('data-dragging') !== 'true') return;
+                    const startX = parseFloat(el.getAttribute('data-start-x') || '0');
+                    const startY = parseFloat(el.getAttribute('data-start-y') || '0');
+                    el.setAttribute('data-pan-x', e.clientX - startX);
+                    el.setAttribute('data-pan-y', e.clientY - startY);
+                    this.applyDiagramTransform(targetId);
+                },
+                stopDiagramDrag(targetId) {
+                    const el = document.getElementById(targetId);
+                    if (!el) return;
+                    el.setAttribute('data-dragging', 'false');
+                    this.applyDiagramTransform(targetId);
+                },
+                openDiagramFullscreen(title, sourceId) {
+                    this.fullscreenDiagramTitle = title;
+                    this.fullscreenDiagramSourceId = sourceId;
+                    this.fullscreenDiagramZoom = 1;
+                    this.fullscreenDiagramPanX = 0;
+                    this.fullscreenDiagramPanY = 0;
+                    this.fullscreenDiagramModal = true;
+                    this.$nextTick(async () => {
+                        const fsTarget = document.getElementById('mermaid-fullscreen-target');
+                        if (fsTarget) {
+                            fsTarget.innerHTML = '<div class="text-zinc-400 text-xs font-mono animate-pulse">Rendering diagram fullscreen...</div>';
+                            await window.renderMermaidDiagram('mermaid-fullscreen-target', sourceId, true);
+                            const svg = fsTarget.querySelector('svg');
+                            if (svg) {
+                                svg.style.maxWidth = 'none';
+                                svg.style.maxHeight = 'none';
+                            }
+                        }
+                    });
+                },
+                zoomFullscreenDiagram(delta) {
+                    this.fullscreenDiagramZoom = Math.min(4.0, Math.max(0.3, +(this.fullscreenDiagramZoom + delta).toFixed(2)));
+                },
+                resetFullscreenDiagram() {
+                    this.fullscreenDiagramZoom = 1;
+                    this.fullscreenDiagramPanX = 0;
+                    this.fullscreenDiagramPanY = 0;
+                },
+                startFullscreenDrag(e) {
+                    this.fullscreenDiagramDragging = true;
+                    this.fsDragStartX = e.clientX - this.fullscreenDiagramPanX;
+                    this.fsDragStartY = e.clientY - this.fullscreenDiagramPanY;
+                },
+                onFullscreenDrag(e) {
+                    if (!this.fullscreenDiagramDragging) return;
+                    this.fullscreenDiagramPanX = e.clientX - this.fsDragStartX;
+                    this.fullscreenDiagramPanY = e.clientY - this.fsDragStartY;
+                },
+                stopFullscreenDrag() {
+                    this.fullscreenDiagramDragging = false;
+                },
+
                 // Tweak & Grounded AI Deepener Feature
                 tweakModalOpen: false,
                 tweakSegmentKey: '',
@@ -1010,12 +1124,39 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         this.sourceCorpusLoading = false;
                     }
                 },
-                openTweakModal(key, title, content, featureId = null, specIndex = null) {
+                openTweakFeature(featKey, specIdx, customTitle = null) {
+                    let spec = null;
+                    if (this.prdData?.engineering_specs?.mvp_specs?.[specIdx]) {
+                        spec = this.prdData.engineering_specs.mvp_specs[specIdx];
+                    } else if (this.prdData?.features?.[featKey]?.[specIdx]) {
+                        spec = this.prdData.features[featKey][specIdx];
+                    } else if (Array.isArray(this.prdData?.features) && this.prdData.features[specIdx]) {
+                        spec = this.prdData.features[specIdx];
+                    }
+                    const title = customTitle || (spec?.title ? ('Fitur: ' + spec.title) : 'Perdalam Fitur');
+                    this.openTweakModal('feature_single', title, spec || {}, featKey, specIdx);
+                },
+                openTweakModal(key, title, content = null, featureId = null, specIndex = null) {
                     if ({{ ($isScopeLocked ?? false) ? 'true' : 'false' }} && '{{ $blueprint->project_status }}' !== 'Retail License' && !{{ auth()->user()?->isSuperAdmin() ? 'true' : 'false' }}) {
                         if (window.showToast) {
                             window.showToast({ type: 'warning', title: 'AKSES DITOLAK', message: 'Dokumen berada dalam status Scope Lock (Kontrak Studio).' });
                         }
                         return;
+                    }
+                    if (content === null || content === undefined) {
+                        if (key === 'system_actors') {
+                            content = this.prdData?.system_actors ?? [];
+                        } else if (key === 'features') {
+                            content = this.prdData?.engineering_specs?.mvp_specs ?? (this.prdData?.features?.mvp_phase1 ?? (this.prdData?.features ?? []));
+                        } else if (key === 'alurs_kerja') {
+                            content = this.prdData?.alurs_kerja ?? [];
+                        } else if (key === 'database_erd') {
+                            content = this.prdData?.erd_schema?.tables ?? (this.prdData?.database_erd ?? []);
+                        } else if (key === 'executive_summary') {
+                            content = this.prdData?.executive_summary ?? [];
+                        } else if (key === 'custom_ai_agent_rules') {
+                            content = this.prdData?.custom_ai_agent_rules ?? '';
+                        }
                     }
                     this.tweakSegmentKey = key;
                     this.tweakSegmentTitle = title;
@@ -3010,7 +3151,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01</span>
                             <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Executive Technical Discovery</h2>
                         </div>
-                        <button @click="openTweakModal('executive_summary', 'Executive Technical Discovery', {{ json_encode($prd['executive_summary'] ?? []) }})" class="px-3 py-1.5 border {{ $isExecutiveImpacted ? 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }} font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0">
+                        <button @click="openTweakModal('executive_summary', 'Executive Technical Discovery')" class="px-3 py-1.5 border {{ $isExecutiveImpacted ? 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40' : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400' }} font-bold uppercase text-[10px] flex items-center gap-1.5 transition shrink-0">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                             TWEAK
                         </button>
@@ -3297,7 +3438,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                             <button 
                                 type="button" 
-                                @click="openTweakModal('system_actors', 'Pengguna & Hak Akses (Aktor / RBAC)', {{ json_encode($prd['system_actors'] ?? []) }})" 
+                                @click="openTweakModal('system_actors', 'Pengguna & Hak Akses (Aktor / RBAC)')" 
                                 class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
                                 title="Sinkronkan dan perdalam peran serta matriks izin RBAC dari Dokumen Acuan Proyek"
                             >
@@ -3370,7 +3511,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                             <button 
                                 type="button" 
-                                @click="openTweakModal('features', 'Seluruh Fitur MVP (Fase 1)', {{ json_encode($prd['engineering_specs']['mvp_specs'] ?? ($prd['features']['mvp_phase1'] ?? [])) }})" 
+                                @click="openTweakModal('features', 'Seluruh Fitur MVP (Fase 1)')" 
                                 class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition cursor-pointer"
                                 title="Perdalam dan sinkronkan seluruh fitur dari Dokumen Acuan Proyek (MarkItDown Corpus)"
                             >
@@ -3448,7 +3589,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 {{ $isEn ? 'Project already in progress or scope frozen? Request additional features anytime. Neriah Pro Team will estimate Story Points (SP) and issue a mini-SPK.' : 'Proyek sudah berjalan atau scope terkunci? Jangan khawatir. Anda bisa meminta fitur tambahan (Addendum) kapan saja. Tim Neriah Pro akan menghitung estimasi Story Points (SP) dan menerbitkan mini-SPK.' }}
                             </p>
                         </div>
-                        <button type="button" onclick="document.getElementById('modal-cr').style.display='flex'" class="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-xs transition border border-amber-600 shadow-[2px_2px_0px_#b45309] active:shadow-[0px_0px_0px_#b45309] active:translate-y-[2px] whitespace-nowrap">
+                        <button type="button" @click="crModalOpen = true" class="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-xs transition border border-amber-600 shadow-[2px_2px_0px_#b45309] active:shadow-[0px_0px_0px_#b45309] active:translate-y-[2px] whitespace-nowrap cursor-pointer">
                             {{ $isEn ? '+ REQUEST ADDENDUM' : '+ AJUKAN FITUR TAMBAHAN' }}
                         </button>
                     </div>
@@ -3552,7 +3693,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                         @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                                             <button 
                                                 type="button" 
-                                                @click="openTweakModal('feature_single', 'Fitur: {{ addslashes($spec['title'] ?? '') }}', {{ json_encode($spec) }}, '{{ $featKey }}', {{ $specIdx }})" 
+                                                @click="openTweakFeature('{{ $featKey }}', {{ $specIdx }})" 
                                                 class="px-2.5 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 text-xs font-mono font-bold border border-sky-500/30 flex items-center gap-1 transition cursor-pointer"
                                                 title="Perdalam rincian Gherkin, edge cases, dan Acceptance Criteria fitur ini dari Dokumen Acuan"
                                             >
@@ -4711,23 +4852,40 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 1: Workflow State Machine -->
                 <div x-show="chartStudioTab === 'workflow'" class="space-y-4">
-                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
-                            <span class="text-sky-600 dark:text-sky-400 font-bold uppercase">DIAGRAM 1: ALUR KERJA SISTEM (WORKFLOW STATE MACHINE)</span>
-                            <button 
-                                type="button"
-                                onclick="window.copyMermaidCode('mermaid-studio-flow-source', this)"
-                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
-                            >
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
-                            </button>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sky-600 dark:text-sky-400 font-bold uppercase">DIAGRAM 1: ALUR KERJA SISTEM (WORKFLOW STATE MACHINE)</span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-flow-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-flow-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-flow-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
+                                <button type="button" @click="openDiagramFullscreen('Diagram 1: Alur Kerja Sistem (Workflow)', 'mermaid-studio-flow-source')" class="px-2.5 py-0.5 bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                    <span>LAYAR PENUH</span>
+                                </button>
+                                <button type="button" onclick="window.copyMermaidCode('mermaid-studio-flow-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span>SALIN KODE</span>
+                                </button>
+                            </div>
                         </div>
                         <script type="text/plain" id="mermaid-studio-flow-source">{!! $prd['virtual_charts']['workflow_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-flow-target" class="overflow-x-auto min-h-[160px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
-                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-none bg-sky-500 animate-ping"></span>
-                                <span>Memuat visualisasi alur kerja Mermaid...</span>
+                        <div 
+                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            @mousedown="startDiagramDrag('mermaid-studio-flow-target', $event)"
+                            @mousemove="onDiagramDrag('mermaid-studio-flow-target', $event)"
+                            @mouseup="stopDiagramDrag('mermaid-studio-flow-target')"
+                            @mouseleave="stopDiagramDrag('mermaid-studio-flow-target')"
+                            @wheel.prevent="zoomDiagram('mermaid-studio-flow-target', $event.deltaY < 0 ? 0.2 : -0.2)"
+                        >
+                            <div id="mermaid-studio-flow-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                                <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-none bg-sky-500 animate-ping"></span>
+                                    <span>Memuat visualisasi alur kerja Mermaid...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4735,23 +4893,40 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 2: Database ERD Topology -->
                 <div x-show="chartStudioTab === 'erd'" x-cloak class="space-y-4">
-                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
-                            <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">DIAGRAM 2: SKEMA BASIS DATA RELASIONAL (POSTGRESQL STRICT ULID)</span>
-                            <button 
-                                type="button"
-                                onclick="window.copyMermaidCode('mermaid-studio-erd-source', this)"
-                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
-                            >
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
-                            </button>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <div class="flex items-center gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">DIAGRAM 2: SKEMA BASIS DATA RELASIONAL (POSTGRESQL STRICT ULID)</span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-erd-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-erd-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-erd-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
+                                <button type="button" @click="openDiagramFullscreen('Diagram 2: Skema Basis Data Relasional (ERD)', 'mermaid-studio-erd-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                    <span>LAYAR PENUH</span>
+                                </button>
+                                <button type="button" onclick="window.copyMermaidCode('mermaid-studio-erd-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span>SALIN KODE</span>
+                                </button>
+                            </div>
                         </div>
                         <script type="text/plain" id="mermaid-studio-erd-source">{!! $prd['virtual_charts']['erd_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-erd-target" class="overflow-x-auto min-h-[220px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
-                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
-                                <span>Memuat topologi ERD Mermaid...</span>
+                        <div 
+                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            @mousedown="startDiagramDrag('mermaid-studio-erd-target', $event)"
+                            @mousemove="onDiagramDrag('mermaid-studio-erd-target', $event)"
+                            @mouseup="stopDiagramDrag('mermaid-studio-erd-target')"
+                            @mouseleave="stopDiagramDrag('mermaid-studio-erd-target')"
+                            @wheel.prevent="zoomDiagram('mermaid-studio-erd-target', $event.deltaY < 0 ? 0.2 : -0.2)"
+                        >
+                            <div id="mermaid-studio-erd-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                                <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
+                                    <span>Memuat topologi ERD Mermaid...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4759,23 +4934,40 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 3: Feature & Entity Dependency Graph -->
                 <div x-show="chartStudioTab === 'feature_dep'" x-cloak class="space-y-4">
-                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
-                            <span class="text-amber-600 dark:text-amber-400 font-bold uppercase">DIAGRAM 3: PETA KETERGANTUNGAN (AKTOR &rarr; FITUR &rarr; ENTITAS BASIS DATA)</span>
-                            <button 
-                                type="button"
-                                onclick="window.copyMermaidCode('mermaid-studio-featdep-source', this)"
-                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
-                            >
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
-                            </button>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <div class="flex items-center gap-2">
+                                <span class="text-amber-600 dark:text-amber-400 font-bold uppercase">DIAGRAM 3: PETA KETERGANTUNGAN (AKTOR &rarr; FITUR &rarr; ENTITAS BASIS DATA)</span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-featdep-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-featdep-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-featdep-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
+                                <button type="button" @click="openDiagramFullscreen('Diagram 3: Peta Ketergantungan Fitur', 'mermaid-studio-featdep-source')" class="px-2.5 py-0.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                    <span>LAYAR PENUH</span>
+                                </button>
+                                <button type="button" onclick="window.copyMermaidCode('mermaid-studio-featdep-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span>SALIN KODE</span>
+                                </button>
+                            </div>
                         </div>
                         <script type="text/plain" id="mermaid-studio-featdep-source">{!! $prd['virtual_charts']['feature_dependency_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-featdep-target" class="overflow-x-auto min-h-[180px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
-                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-none bg-amber-500 animate-ping"></span>
-                                <span>Memuat peta ketergantungan fitur Mermaid...</span>
+                        <div 
+                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            @mousedown="startDiagramDrag('mermaid-studio-featdep-target', $event)"
+                            @mousemove="onDiagramDrag('mermaid-studio-featdep-target', $event)"
+                            @mouseup="stopDiagramDrag('mermaid-studio-featdep-target')"
+                            @mouseleave="stopDiagramDrag('mermaid-studio-featdep-target')"
+                            @wheel.prevent="zoomDiagram('mermaid-studio-featdep-target', $event.deltaY < 0 ? 0.2 : -0.2)"
+                        >
+                            <div id="mermaid-studio-featdep-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                                <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-none bg-amber-500 animate-ping"></span>
+                                    <span>Memuat peta ketergantungan fitur Mermaid...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4783,23 +4975,40 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 4: Sprint Delivery Roadmap (Gantt Timeline) -->
                 <div x-show="chartStudioTab === 'gantt'" x-cloak class="space-y-4">
-                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
-                            <span class="text-rose-600 dark:text-rose-400 font-bold uppercase">DIAGRAM 4: ROADMAP EKSEKUSI &amp; TIMELINE SPRINT (GANTT CHART)</span>
-                            <button 
-                                type="button"
-                                onclick="window.copyMermaidCode('mermaid-studio-gantt-source', this)"
-                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
-                            >
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
-                            </button>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <div class="flex items-center gap-2">
+                                <span class="text-rose-600 dark:text-rose-400 font-bold uppercase">DIAGRAM 4: ROADMAP EKSEKUSI &amp; TIMELINE SPRINT (GANTT CHART)</span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-gantt-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-gantt-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-gantt-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
+                                <button type="button" @click="openDiagramFullscreen('Diagram 4: Timeline Roadmap & Gantt Chart', 'mermaid-studio-gantt-source')" class="px-2.5 py-0.5 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                    <span>LAYAR PENUH</span>
+                                </button>
+                                <button type="button" onclick="window.copyMermaidCode('mermaid-studio-gantt-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span>SALIN KODE</span>
+                                </button>
+                            </div>
                         </div>
                         <script type="text/plain" id="mermaid-studio-gantt-source">{!! $prd['virtual_charts']['sprint_gantt_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-gantt-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
-                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-none bg-rose-500 animate-ping"></span>
-                                <span>Memuat timeline roadmap Mermaid...</span>
+                        <div 
+                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            @mousedown="startDiagramDrag('mermaid-studio-gantt-target', $event)"
+                            @mousemove="onDiagramDrag('mermaid-studio-gantt-target', $event)"
+                            @mouseup="stopDiagramDrag('mermaid-studio-gantt-target')"
+                            @mouseleave="stopDiagramDrag('mermaid-studio-gantt-target')"
+                            @wheel.prevent="zoomDiagram('mermaid-studio-gantt-target', $event.deltaY < 0 ? 0.2 : -0.2)"
+                        >
+                            <div id="mermaid-studio-gantt-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                                <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-none bg-rose-500 animate-ping"></span>
+                                    <span>Memuat timeline roadmap Mermaid...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4807,23 +5016,40 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 5: Infrastructure, Security & Hosting Topology -->
                 <div x-show="chartStudioTab === 'infra'" x-cloak class="space-y-4">
-                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
-                            <span class="text-violet-600 dark:text-violet-400 font-bold uppercase">DIAGRAM 5: TOPOLOGI INFRASTRUKTUR, KEAMANAN &amp; HOSTING</span>
-                            <button 
-                                type="button"
-                                onclick="window.copyMermaidCode('mermaid-studio-infra-source', this)"
-                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-violet-500 hover:text-white dark:hover:bg-violet-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
-                            >
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
-                            </button>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <div class="flex items-center gap-2">
+                                <span class="text-violet-600 dark:text-violet-400 font-bold uppercase">DIAGRAM 5: TOPOLOGI INFRASTRUKTUR, KEAMANAN &amp; HOSTING</span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-infra-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-infra-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-infra-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
+                                <button type="button" @click="openDiagramFullscreen('Diagram 5: Topologi Infrastruktur & Keamanan', 'mermaid-studio-infra-source')" class="px-2.5 py-0.5 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                    <span>LAYAR PENUH</span>
+                                </button>
+                                <button type="button" onclick="window.copyMermaidCode('mermaid-studio-infra-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-violet-500 hover:text-white dark:hover:bg-violet-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span>SALIN KODE</span>
+                                </button>
+                            </div>
                         </div>
                         <script type="text/plain" id="mermaid-studio-infra-source">{!! $prd['virtual_charts']['infrastructure_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-infra-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
-                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-none bg-violet-500 animate-ping"></span>
-                                <span>Memuat topologi infrastruktur Mermaid...</span>
+                        <div 
+                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            @mousedown="startDiagramDrag('mermaid-studio-infra-target', $event)"
+                            @mousemove="onDiagramDrag('mermaid-studio-infra-target', $event)"
+                            @mouseup="stopDiagramDrag('mermaid-studio-infra-target')"
+                            @mouseleave="stopDiagramDrag('mermaid-studio-infra-target')"
+                            @wheel.prevent="zoomDiagram('mermaid-studio-infra-target', $event.deltaY < 0 ? 0.2 : -0.2)"
+                        >
+                            <div id="mermaid-studio-infra-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                                <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-none bg-violet-500 animate-ping"></span>
+                                    <span>Memuat topologi infrastruktur Mermaid...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4831,23 +5057,40 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- Chart 6: Mobile App & Local SQLite Sync Sequence -->
                 <div x-show="chartStudioTab === 'mobile_sync'" x-cloak class="space-y-4">
-                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
-                            <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">DIAGRAM 6: ALUR SINKRONISASI MOBILE &amp; LOCAL SQLITE (OFFLINE-FIRST)</span>
-                            <button 
-                                type="button"
-                                onclick="window.copyMermaidCode('mermaid-studio-mobilesync-source', this)"
-                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
-                            >
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                <span>SALIN KODE MERMAID UNTUK AI AGENT</span>
-                            </button>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <div class="flex items-center gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">DIAGRAM 6: ALUR SINKRONISASI MOBILE &amp; LOCAL SQLITE (OFFLINE-FIRST)</span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-mobilesync-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-mobilesync-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-mobilesync-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
+                                <button type="button" @click="openDiagramFullscreen('Diagram 6: Sinkronisasi Mobile & Local SQLite', 'mermaid-studio-mobilesync-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                    <span>LAYAR PENUH</span>
+                                </button>
+                                <button type="button" onclick="window.copyMermaidCode('mermaid-studio-mobilesync-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span>SALIN KODE</span>
+                                </button>
+                            </div>
                         </div>
                         <script type="text/plain" id="mermaid-studio-mobilesync-source">{!! $prd['virtual_charts']['mobile_sync_mermaid'] ?? '' !!}</script>
-                        <div id="mermaid-studio-mobilesync-target" class="overflow-x-auto min-h-[200px] flex items-center justify-center p-2 text-center text-zinc-800 dark:text-zinc-200">
-                            <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
-                                <span>Memuat topologi sinkronisasi Mobile &amp; SQLite Mermaid...</span>
+                        <div 
+                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            @mousedown="startDiagramDrag('mermaid-studio-mobilesync-target', $event)"
+                            @mousemove="onDiagramDrag('mermaid-studio-mobilesync-target', $event)"
+                            @mouseup="stopDiagramDrag('mermaid-studio-mobilesync-target')"
+                            @mouseleave="stopDiagramDrag('mermaid-studio-mobilesync-target')"
+                            @wheel.prevent="zoomDiagram('mermaid-studio-mobilesync-target', $event.deltaY < 0 ? 0.2 : -0.2)"
+                        >
+                            <div id="mermaid-studio-mobilesync-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                                <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
+                                    <span>Memuat topologi sinkronisasi Mobile &amp; SQLite Mermaid...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4927,7 +5170,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                                 <button 
                                     type="button" 
-                                    @click="openTweakModal('alurs_kerja', 'Alur Kerja Utama (User Flow)', {{ json_encode($prd['alurs_kerja'] ?? []) }})" 
+                                    @click="openTweakModal('alurs_kerja', 'Alur Kerja Utama (User Flow)')" 
                                     class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
                                     title="Perluas percabangan dan exception flow dari Dokumen Acuan Proyek"
                                 >
@@ -5107,7 +5350,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                             <button 
                                 type="button" 
-                                @click="openTweakModal('database_erd', 'Database ERD (PostgreSQL Strict ULID)', {{ json_encode($prd['erd_schema']['tables'] ?? ($prd['database_erd'] ?? [])) }})" 
+                                @click="openTweakModal('database_erd', 'Database ERD (PostgreSQL Strict ULID)')" 
                                 class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
                                 title="Sinkronkan dan perdalam skema tabel serta relasi ERD dari Dokumen Acuan Proyek"
                             >
@@ -5295,17 +5538,25 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- 2. Mermaid ERD Diagram View (Safe Render with Dynamic Relations) -->
                 <div x-show="erdTab === 'mermaid'" x-cloak class="mb-6">
-                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
-                            <span class="text-zinc-500 font-bold uppercase">SKEMA BASIS DATA MERMAID (POSTGRESQL STRICT ERD)</span>
-                            <button 
-                                type="button"
-                                onclick="window.copyMermaidCode('mermaid-erd-source', this)"
-                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
-                            >
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                <span>SALIN KODE MERMAID ERD</span>
-                            </button>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <div class="flex items-center gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">SKEMA BASIS DATA MERMAID (POSTGRESQL STRICT ERD)</span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" @click="zoomDiagram('mermaid-erd-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-erd-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="zoomDiagram('mermaid-erd-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
+                                <button type="button" @click="openDiagramFullscreen('Skema Basis Data Relasional (PostgreSQL Strict ERD)', 'mermaid-erd-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                    <span>LAYAR PENUH</span>
+                                </button>
+                                <button type="button" onclick="window.copyMermaidCode('mermaid-erd-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span>SALIN KODE MERMAID ERD</span>
+                                </button>
+                            </div>
                         </div>
 
                         <script type="text/plain" id="mermaid-erd-source">erDiagram
@@ -5323,10 +5574,19 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 @endforeach
                         </script>
 
-                        <div id="mermaid-erd-target" class="overflow-x-auto min-h-[260px] flex items-center justify-center p-2 text-center">
-                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
-                                <span>Memuat skema relasi database Mermaid...</span>
+                        <div 
+                            class="overflow-hidden min-h-[260px] max-h-[600px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            @mousedown="startDiagramDrag('mermaid-erd-target', $event)"
+                            @mousemove="onDiagramDrag('mermaid-erd-target', $event)"
+                            @mouseup="stopDiagramDrag('mermaid-erd-target')"
+                            @mouseleave="stopDiagramDrag('mermaid-erd-target')"
+                            @wheel.prevent="zoomDiagram('mermaid-erd-target', $event.deltaY < 0 ? 0.2 : -0.2)"
+                        >
+                            <div id="mermaid-erd-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                                <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
+                                    <span>Memuat skema relasi database Mermaid...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -6712,7 +6972,7 @@ class ProcessSecureDataset implements ShouldQueue
                                 <svg class="w-4 h-4 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 <span>EXECUTION.MD</span>
                             </a>
-                            <button type="button" @click="openTweakModal('custom_ai_agent_rules', 'AI Coding Agent Directives (Custom Rules)', {{ json_encode($blueprint->prd_content['custom_ai_agent_rules'] ?? '') }})" class="w-full sm:w-auto px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase transition flex items-center justify-center gap-2">
+                            <button type="button" @click="openTweakModal('custom_ai_agent_rules', 'AI Coding Agent Directives (Custom Rules)')" class="w-full sm:w-auto px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase transition flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 <span>TWEAK</span>
                             </button>
@@ -9932,11 +10192,17 @@ class ProcessSecureDataset implements ShouldQueue
         x-show="scaffoldModalOpen" 
         x-cloak 
         @keydown.escape.window="scaffoldModalOpen = false"
-        class="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4 print:hidden"
+        class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 print:hidden"
+        style="display: none;"
     >
+        <!-- Backdrop Overlay -->
+        <div class="fixed inset-0 bg-black/85 backdrop-blur-md" @click="scaffoldModalOpen = false" x-transition.opacity></div>
+
+        <!-- Modal Dialog Card (Click events stopped from propagating to backdrop) -->
         <div 
-            @click.outside="scaffoldModalOpen = false" 
-            class="bg-zinc-950 border-2 border-emerald-500 w-full max-w-5xl rounded-none shadow-2xl p-4 sm:p-6 relative flex flex-col h-[90vh] max-h-[90vh] overflow-hidden"
+            @click.stop
+            class="relative z-10 bg-zinc-950 border-2 border-emerald-500 w-full max-w-5xl rounded-none shadow-2xl p-4 sm:p-6 flex flex-col h-[90vh] max-h-[90vh] overflow-hidden"
+            x-transition
         >
             <!-- Modal Header -->
             <div class="flex items-center justify-between border-b border-zinc-800 pb-3 mb-3 shrink-0">
@@ -10547,9 +10813,10 @@ class ProcessSecureDataset implements ShouldQueue
     </script>
 
     <!-- MODULE: CHANGE REQUEST MODAL -->
-    <div id="modal-cr" style="display: none;" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-zinc-950 border-2 border-amber-500 w-full max-w-2xl rounded-none shadow-2xl relative">
-            <button type="button" onclick="document.getElementById('modal-cr').style.display='none'" class="absolute top-4 right-4 text-zinc-500 hover:text-white bg-zinc-100 dark:bg-zinc-900 px-3 py-1 text-xs font-bold font-mono transition">X</button>
+    <div id="modal-cr" x-show="crModalOpen" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="display: none;">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" @click="crModalOpen = false" x-transition.opacity></div>
+        <div class="relative z-10 bg-white dark:bg-zinc-950 border-2 border-amber-500 w-full max-w-2xl rounded-none shadow-2xl" x-transition @click.stop>
+            <button type="button" @click="crModalOpen = false" class="absolute top-4 right-4 text-zinc-500 hover:text-white bg-zinc-100 dark:bg-zinc-900 px-3 py-1 text-xs font-bold font-mono transition cursor-pointer">X</button>
             <div class="p-6 border-b border-zinc-200 dark:border-zinc-800 bg-amber-500/10">
                 <h3 class="font-black text-amber-600 dark:text-amber-500 text-lg uppercase font-mono">Request Change / Addendum Fitur Baru</h3>
                 <p class="text-zinc-600 dark:text-zinc-400 text-xs mt-1 font-sans">Jelaskan fitur tambahan atau perubahan scope yang Anda inginkan. Kami akan mengestimasi ulang Story Points (SP) dan biaya tambahannya.</p>
@@ -10564,8 +10831,8 @@ class ProcessSecureDataset implements ShouldQueue
                     <textarea name="description" required rows="4" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 p-2.5 text-sm text-zinc-900 dark:text-white rounded-none focus:outline-none focus:border-amber-500 transition" placeholder="Jelaskan cara kerja fitur ini, apa saja tombolnya, dan output apa yang diharapkan..."></textarea>
                 </div>
                 <div class="pt-4 flex items-center justify-end gap-3 border-t border-zinc-200 dark:border-zinc-800">
-                    <button type="button" onclick="document.getElementById('modal-cr').style.display='none'" class="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold uppercase text-xs hover:bg-zinc-300 dark:hover:bg-zinc-700 transition">Batal</button>
-                    <button type="submit" class="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-xs transition border border-amber-600 shadow-[2px_2px_0px_#b45309] active:translate-y-[2px] active:shadow-none">Kirim Request Addendum</button>
+                    <button type="button" @click="crModalOpen = false" class="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold uppercase text-xs hover:bg-zinc-300 dark:hover:bg-zinc-700 transition cursor-pointer">Batal</button>
+                    <button type="submit" class="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-xs transition border border-amber-600 shadow-[2px_2px_0px_#b45309] active:translate-y-[2px] active:shadow-none cursor-pointer">Kirim Request Addendum</button>
                 </div>
             </form>
         </div>
@@ -10723,7 +10990,7 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
 
                     <!-- Collapsible Corpus Preview -->
-                    <div x-show="sourceCorpusExpanded" x-collapse class="mt-3 pt-3 border-t border-zinc-300 dark:border-zinc-700 space-y-2">
+                    <div x-show="sourceCorpusExpanded" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1" class="mt-3 pt-3 border-t border-zinc-300 dark:border-zinc-700 space-y-2">
                         <template x-if="sourceCorpusData && sourceCorpusData.source_files">
                             <div class="flex flex-wrap gap-1.5 mb-2">
                                 <template x-for="f in sourceCorpusData.source_files" :key="f.name">
@@ -10868,5 +11135,60 @@ class ProcessSecureDataset implements ShouldQueue
         </div>
     </div>
     @endif
+
+    <!-- Centralized Interactive Fullscreen Diagram Modal -->
+    <div 
+        x-show="fullscreenDiagramModal" 
+        x-cloak 
+        @keydown.escape.window="fullscreenDiagramModal = false"
+        class="fixed inset-0 z-[120] flex flex-col bg-zinc-950/95 backdrop-blur-md p-2 sm:p-4 print:hidden select-none"
+        style="display: none;"
+    >
+        <!-- Fullscreen Header / Toolbar -->
+        <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-zinc-900 border border-zinc-800 text-white shrink-0 font-mono text-xs">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-none inline-block animate-pulse"></span>
+                <span class="font-black text-emerald-400 uppercase tracking-wide" x-text="fullscreenDiagramTitle || 'DIAGRAM FULLSCREEN VIEWER'"></span>
+                <span class="text-[10px] text-zinc-400 hidden md:inline">&bull; Drag mouse untuk menggeser (Pan) &bull; Scroll roda mouse untuk Zoom</span>
+            </div>
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <!-- Zoom Controls -->
+                <button type="button" @click="zoomFullscreenDiagram(-0.25)" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold transition rounded-none cursor-pointer" title="Zoom Out (-)">
+                    -
+                </button>
+                <span class="px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 text-emerald-400 text-[11px] font-bold tabular-nums" x-text="Math.round(fullscreenDiagramZoom * 100) + '%'">100%</span>
+                <button type="button" @click="zoomFullscreenDiagram(0.25)" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold transition rounded-none cursor-pointer" title="Zoom In (+)">
+                    +
+                </button>
+                <button type="button" @click="resetFullscreenDiagram()" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom & Pan">
+                    1:1 RESET
+                </button>
+                <button type="button" @click="window.copyMermaidCode(fullscreenDiagramSourceId, this)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-black text-[10px] font-black uppercase transition rounded-none cursor-pointer flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <span>SALIN MERMAID</span>
+                </button>
+                <button type="button" @click="fullscreenDiagramModal = false" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-black uppercase transition rounded-none cursor-pointer ml-1">
+                    &times; TUTUP (ESC)
+                </button>
+            </div>
+        </div>
+
+        <!-- Fullscreen Canvas Area -->
+        <div 
+            class="flex-1 w-full h-full overflow-hidden bg-black/60 border-x border-b border-zinc-800 flex items-center justify-center p-4 relative cursor-grab active:cursor-grabbing"
+            @wheel.prevent="zoomFullscreenDiagram($event.deltaY < 0 ? 0.2 : -0.2)"
+            @mousedown="startFullscreenDrag($event)"
+            @mousemove="onFullscreenDrag($event)"
+            @mouseup="stopFullscreenDrag()"
+            @mouseleave="stopFullscreenDrag()"
+        >
+            <div 
+                id="mermaid-fullscreen-target" 
+                :style="`transform: translate(${fullscreenDiagramPanX}px, ${fullscreenDiagramPanY}px) scale(${fullscreenDiagramZoom}); transform-origin: center center; transition: ${fullscreenDiagramDragging ? 'none' : 'transform 0.12s ease-out'};`"
+                class="w-full h-full flex items-center justify-center text-center text-zinc-100 pointer-events-none"
+            >
+            </div>
+        </div>
+    </div>
 </body>
 </html>

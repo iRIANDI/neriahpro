@@ -935,6 +935,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [isCoPilotLoading, setIsCoPilotLoading] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [pendingPaymentSuggestion, setPendingPaymentSuggestion] = useState(null);
+  const [selectedPaymentRailIds, setSelectedPaymentRailIds] = useState(() => new Set(['qris_national']));
 
   // In-Card Interactive Add Helpers
   const [activeAddKey, setActiveAddKey] = useState(null);
@@ -2806,14 +2807,29 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
   // Apply Proactive Suggestion Chip
   const handleApplySuggestion = (suggestion) => {
-    if (appliedSuggestionIds.has(suggestion.id)) return;
+    const isPaymentSelector = suggestion.is_payment_selector || suggestion.id === 'payment_multi_rail' || suggestion.id.startsWith('payment_');
 
-    // Interactive selector for payment rails (allowing user to select BRI, BNI, Stripe, Wise, PayPal, QRIS, or No Gateway)
-    if (suggestion.is_payment_selector || suggestion.id === 'payment_multi_rail' || suggestion.id.startsWith('payment_')) {
+    // Interactive selector for payment rails (allowing user to multi-select BRI, BNI, Stripe, Wise, PayPal, QRIS, or No Gateway)
+    if (isPaymentSelector) {
       setPendingPaymentSuggestion(suggestion);
+      // Pre-populate selected rails from current form data if present
+      const currentIntegrations = formData.kebutuhanIntegrasi || '';
+      const matchedIds = new Set();
+      PAYMENT_RAIL_OPTIONS.forEach(opt => {
+        if (currentIntegrations.includes(opt.name) || currentIntegrations.includes(opt.text)) {
+          matchedIds.add(opt.id);
+        }
+      });
+      if (matchedIds.size > 0) {
+        setSelectedPaymentRailIds(matchedIds);
+      } else if (selectedPaymentRailIds.size === 0) {
+        setSelectedPaymentRailIds(new Set(['qris_national']));
+      }
       setPaymentModalOpen(true);
       return;
     }
+
+    if (appliedSuggestionIds.has(suggestion.id)) return;
 
     applySuggestionDirectly(suggestion, suggestion.addition);
   };
@@ -2841,12 +2857,49 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     showLocalToast('success', `${suggestion.title} ${lang === 'en' ? 'added to blueprint!' : 'berhasil ditambahkan ke blueprint!'}`, 'SARAN PROAKTIF');
   };
 
-  const handleSelectPaymentRail = (rail) => {
-    if (pendingPaymentSuggestion) {
-      applySuggestionDirectly(pendingPaymentSuggestion, rail.text);
+  const handleTogglePaymentRail = (railId) => {
+    setSelectedPaymentRailIds(prev => {
+      const next = new Set(prev);
+      if (next.has(railId)) {
+        next.delete(railId);
+      } else {
+        next.add(railId);
+      }
+      return next;
+    });
+  };
+
+  const handleApplySelectedPaymentRails = () => {
+    if (selectedPaymentRailIds.size === 0) {
+      showLocalToast('warning', lang === 'en' ? 'Please select at least 1 payment rail.' : 'Silakan pilih minimal 1 rel pembayaran.', 'PERINGATAN');
+      return;
     }
+
+    const selectedRails = PAYMENT_RAIL_OPTIONS.filter(o => selectedPaymentRailIds.has(o.id));
+    const selectedTexts = selectedRails.map(o => o.text);
+
+    setFormData(prev => {
+      // Get current items, remove old payment rail texts to prevent stale/duplicate stacking
+      const currentItems = parseCommaList(prev.kebutuhanIntegrasi || '');
+      const nonPaymentItems = currentItems.filter(item => {
+        return !PAYMENT_RAIL_OPTIONS.some(o => o.text === item || (o.name && item.includes(o.name)));
+      });
+      const merged = [...nonPaymentItems, ...selectedTexts];
+      const next = { ...prev, kebutuhanIntegrasi: stringifyCommaList(merged) };
+      triggerAutoSave(next);
+      return next;
+    });
+
+    if (pendingPaymentSuggestion) {
+      setAppliedSuggestionIds(prev => new Set([...prev, pendingPaymentSuggestion.id]));
+    }
+    showLocalToast('success', `${selectedRails.length} ${lang === 'en' ? 'payment rails applied to Integrations!' : 'rel pembayaran berhasil disematkan ke Integrasi!'}`, 'REL PEMBAYARAN');
     setPaymentModalOpen(false);
     setPendingPaymentSuggestion(null);
+  };
+
+  const handleSelectPaymentRail = (rail) => {
+    handleTogglePaymentRail(rail.id);
   };
 
   // In-Card: Add item to a numbered list
@@ -4737,35 +4790,49 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
             {proactiveSuggestions.map((sug) => {
+              const isPaymentSelector = sug.is_payment_selector || sug.id === 'payment_multi_rail' || sug.id.startsWith('payment_');
               const isApplied = appliedSuggestionIds.has(sug.id);
+              const isDisabled = isApplied && !isPaymentSelector;
+
               return (
                 <button
                   key={sug.id}
                   type="button"
                   onClick={() => handleApplySuggestion(sug)}
-                  disabled={isApplied}
-                  className={`p-3 text-left border rounded-none transition flex flex-col justify-between ${isApplied
-                    ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 opacity-80 cursor-default'
-                    : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200'
-                    }`}
+                  disabled={isDisabled}
+                  className={`p-3 text-left border rounded-none transition flex flex-col justify-between ${
+                    isApplied
+                      ? isPaymentSelector
+                        ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-950 dark:text-emerald-200 hover:border-emerald-600 cursor-pointer shadow-xs'
+                        : 'bg-emerald-500/10 border-emerald-500/40 text-emerald-800 dark:text-emerald-300 opacity-90 cursor-default'
+                      : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 cursor-pointer'
+                  }`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-1 mb-1">
-                      <span className="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold">
+                      <span className="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold">
                         {sug.badge}
                       </span>
                       {isApplied && (
-                        <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
-                          <Check className="w-3 h-3" /> {lang === 'en' ? 'Added' : 'Ditambahkan'}
+                        <span className="text-[10px] font-mono text-emerald-800 dark:text-emerald-300 font-black flex items-center gap-0.5">
+                          <Check className="w-3 h-3 stroke-[2.5]" />
+                          {isPaymentSelector
+                            ? (lang === 'en' ? `✓ Added (${selectedPaymentRailIds.size} Rails)` : `✓ Terpasang (${selectedPaymentRailIds.size} Rel)`)
+                            : (lang === 'en' ? 'Added' : 'Ditambahkan')}
                         </span>
                       )}
                     </div>
-                    <span className="text-xs font-bold block mb-1 font-sans">{sug.title}</span>
-                    <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block line-clamp-2 font-sans">{sug.desc}</span>
+                    <span className="text-xs font-bold block mb-1 font-sans text-zinc-950 dark:text-zinc-100">{sug.title}</span>
+                    <span className="text-[11px] text-zinc-600 dark:text-zinc-400 block line-clamp-2 font-sans">{sug.desc}</span>
                   </div>
                   {!isApplied && (
-                    <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold mt-2 flex items-center gap-1">
-                      <Plus className="w-3 h-3" /> {lang === 'en' ? 'Apply to Form' : 'Pasang ke Form'}
+                    <span className="text-[10px] font-mono text-emerald-800 dark:text-emerald-300 font-black mt-2 flex items-center gap-1">
+                      <Plus className="w-3 h-3 stroke-[2.5]" /> {lang === 'en' ? 'Apply to Form' : 'Pasang ke Form'}
+                    </span>
+                  )}
+                  {isApplied && isPaymentSelector && (
+                    <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 font-bold mt-2 flex items-center gap-1 hover:underline">
+                      ✎ {lang === 'en' ? 'Click to Reconfigure Rails' : 'Klik untuk Ubah / Tambah Rel'}
                     </span>
                   )}
                 </button>
@@ -7502,23 +7569,28 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
       </form>
 
-      {/* Dynamic Payment Rails Selection Modal */}
+      {/* Dynamic Payment Rails Selection Modal (Multi-Select Supported) */}
       {paymentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl rounded-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+          <div className="bg-white dark:bg-zinc-900 border-2 border-emerald-600 dark:border-emerald-500 w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl rounded-none">
             {/* Modal Header */}
-            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-start justify-between bg-zinc-50 dark:bg-zinc-950">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold uppercase">
-                    ARUS KEUANGAN & PEMBAYARAN
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black uppercase">
+                    ARUS KEUANGAN &amp; PEMBAYARAN (MULTI-SELECT)
                   </span>
-                  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 font-mono">
-                    Pilih Rel Pembayaran yang Sesuai dengan Proyek Anda
-                  </h3>
+                  <span className="text-[11px] font-mono font-bold text-emerald-800 dark:text-emerald-300">
+                    {selectedPaymentRailIds.size} Rel Dipilih
+                  </span>
                 </div>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                  Sistem tidak memaksakan satu vendor. Silakan pilih integrasi direct banking (BRI/BNI), kartu global (Stripe), valas (Wise), e-wallet (PayPal), atau tanpa gateway:
+                <h3 className="text-sm font-black text-zinc-950 dark:text-zinc-100 font-mono">
+                  {lang === 'en' ? 'Select Payment Rails (Multi-Select Supported)' : 'Pilih Rel Pembayaran Proyek Anda (Bisa Lebih Dari Satu)'}
+                </h3>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
+                  {lang === 'en'
+                    ? 'Click each payment rail you want to support. You can combine Direct Bank API (BRI/BNI), QRIS Dinamis, and Global Gateways (Stripe/Wise/PayPal).'
+                    : 'Klik untuk memilih atau membatalkan pilihan rel pembayaran. Anda dapat menggabungkan Direct Bank API (BRI/BNI), QRIS Dinamis Nasional, dan Gateway Global (Stripe/Wise/PayPal) sekaligus.'}
                 </p>
               </div>
               <button
@@ -7527,59 +7599,140 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                   setPaymentModalOpen(false);
                   setPendingPaymentSuggestion(null);
                 }}
-                className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                className="p-1.5 text-zinc-500 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Content / Options List */}
-            <div className="p-4 overflow-y-auto space-y-2 flex-1">
-              {PAYMENT_RAIL_OPTIONS.map((opt) => (
+            {/* Quick Selection Helpers */}
+            <div className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800/60 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
+              <span className="text-zinc-600 dark:text-zinc-400 font-bold">
+                Pilihan Cepat:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
                 <button
-                  key={opt.id}
                   type="button"
-                  onClick={() => handleSelectPaymentRail(opt)}
-                  className="w-full p-3 text-left border border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 bg-zinc-50 dark:bg-zinc-950 transition flex items-start justify-between gap-3 group cursor-pointer"
+                  onClick={() => setSelectedPaymentRailIds(new Set(['bri_api', 'bni_api', 'qris_national']))}
+                  className="px-2 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold cursor-pointer"
                 >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold font-mono text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
-                        {opt.name}
-                      </span>
-                      <span className={`text-[9px] font-mono px-1.5 py-0.2 border ${opt.badgeClass} font-bold uppercase`}>
-                        {opt.badge}
+                  Domestik (BRI + BNI + QRIS)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPaymentRailIds(new Set(['qris_national', 'stripe', 'wise']))}
+                  className="px-2 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold cursor-pointer"
+                >
+                  Hybrid Tour &amp; Travel (QRIS + Stripe + Wise)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPaymentRailIds(new Set(PAYMENT_RAIL_OPTIONS.filter(o => o.id !== 'no_gateway').map(o => o.id)))}
+                  className="px-2 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold cursor-pointer"
+                >
+                  Pilih Semua
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPaymentRailIds(new Set())}
+                  className="px-2 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:border-red-500 text-red-600 dark:text-red-400 text-[10px] font-bold cursor-pointer"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content / Options List */}
+            <div className="p-4 overflow-y-auto space-y-2 flex-1 studio-scroll">
+              {PAYMENT_RAIL_OPTIONS.map((opt) => {
+                const isSelected = selectedPaymentRailIds.has(opt.id);
+                return (
+                  <div
+                    key={opt.id}
+                    onClick={() => handleTogglePaymentRail(opt.id)}
+                    className={`w-full p-3 text-left border rounded-none transition flex items-start justify-between gap-3 cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-500/10 border-emerald-500 ring-1 ring-emerald-500 text-zinc-950 dark:text-zinc-50'
+                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200'
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5 min-w-0">
+                      {/* Custom Checkbox */}
+                      <div
+                        className={`mt-0.5 w-4 h-4 shrink-0 flex items-center justify-center border transition ${
+                          isSelected
+                            ? 'bg-emerald-600 border-emerald-600 text-white'
+                            : 'border-zinc-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-xs font-black font-mono text-zinc-950 dark:text-zinc-100">
+                            {opt.name}
+                          </span>
+                          <span className={`text-[9px] font-mono px-1.5 py-0.5 border ${opt.badgeClass} font-bold uppercase`}>
+                            {opt.badge}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-tight font-sans">
+                          {opt.desc}
+                        </p>
+                        <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 mt-1 block truncate">
+                          → {opt.text}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 flex items-center">
+                      <span
+                        className={`text-[10px] font-mono px-2 py-1 border font-bold uppercase transition ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white border-emerald-600'
+                            : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700'
+                        }`}
+                      >
+                        {isSelected ? '✓ Terpilih' : '+ Pilih'}
                       </span>
                     </div>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-tight">
-                      {opt.desc}
-                    </p>
-                    <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 mt-1 block truncate">
-                      → {opt.text}
-                    </span>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0 font-bold group-hover:bg-emerald-500 group-hover:text-black transition">
-                    + Pasang Rel Ini
-                  </span>
-                </button>
-              ))}
+                );
+              })}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-between">
-              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
-                Pilihan akan otomatis disematkan ke field <strong>Kebutuhan Integrasi</strong>.
+            <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex flex-col sm:flex-row items-center justify-between gap-2">
+              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-mono">
+                <strong>{selectedPaymentRailIds.size} rel</strong> akan disematkan ke field <strong>Kebutuhan Integrasi</strong>.
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setPaymentModalOpen(false);
-                  setPendingPaymentSuggestion(null);
-                }}
-                className="px-4 py-1.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 cursor-pointer"
-              >
-                Tutup
-              </button>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentModalOpen(false);
+                    setPendingPaymentSuggestion(null);
+                  }}
+                  className="px-3 py-1.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-xs font-mono font-bold text-zinc-800 dark:text-zinc-200 rounded-none cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  disabled={selectedPaymentRailIds.size === 0}
+                  onClick={handleApplySelectedPaymentRails}
+                  className={`px-4 py-1.5 font-mono text-xs font-black rounded-none cursor-pointer uppercase transition ${
+                    selectedPaymentRailIds.size > 0
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs'
+                      : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                  }`}
+                >
+                  {selectedPaymentRailIds.size > 0
+                    ? `Terapkan ${selectedPaymentRailIds.size} Rel Pembayaran →`
+                    : 'Pilih Minimal 1 Rel'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

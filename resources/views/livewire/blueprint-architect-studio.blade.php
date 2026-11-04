@@ -31,6 +31,20 @@
 
 <div
     x-data="{
+        showSystemAlerts: false,
+        showLeftPane: true,
+        showRightPane: true,
+        viewAllTabs: false,
+        activeHub: '{{ in_array($centerTab, ['proposal_wow', 'commercial_mitra', 'codesign_room']) ? 'business' : (in_array($centerTab, ['schema', 'states', 'decisions', 'menus_glue']) ? 'architecture' : (in_array($centerTab, ['ui_print', 'inclusive_security_v8', 'seo_geo_v11']) ? 'ui_security' : 'execution')) }}',
+        toggleFullCanvas() {
+            if (!this.showLeftPane && !this.showRightPane) {
+                this.showLeftPane = true;
+                this.showRightPane = true;
+            } else {
+                this.showLeftPane = false;
+                this.showRightPane = false;
+            }
+        },
         copyStudioBuffer() {
             const el = document.getElementById('studio-right-compiler-code');
             if (!el) return;
@@ -139,8 +153,6 @@
                 <option value="PRO_RETAIL" @selected($entitlementTier === 'PRO_RETAIL')>{{ $isEnLoc ? '⚡ Tier: Pro Agentic / CSR ($25 / Rp 399k)' : '⚡ Tier: Pro Agentic / CSR (Rp 399rb)' }}</option>
                 <option value="AGENCY_PARTNER" @selected($entitlementTier === 'AGENCY_PARTNER')>{{ $isEnLoc ? '👑 Tier: Agency White-Label ($65+ / Rp 990k+)' : '👑 Tier: Agency White-Label (Rp 990rb+)' }}</option>
                 <option value="MITRA_TURNKEY" @selected($entitlementTier === 'MITRA_TURNKEY')>{{ $isEnLoc ? '🤝 Tier: Mitra Turnkey Project (Contract)' : '🤝 Tier: Mitra Proyek Turnkey (SPK)' }}</option>
-            </select>
-                <option value="MITRA_TURNKEY" @selected($entitlementTier === 'MITRA_TURNKEY')>🤝 Tier: Mitra Proyek Turnkey (SPK)</option>
             </select>
         </div>
 
@@ -251,94 +263,117 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- CROSS-STAGE LIVE CAUSALITY RIBBON (v7.0 — 15 PILLAR FREEZE)         -->
+    <!-- UNIFIED ARCHITECTURAL STATUS & ACTION RIBBON (PROGRESSIVE DISCLOSURE)-->
     <!-- =================================================================== -->
-    <div class="shrink-0 bg-emerald-50/70 dark:bg-zinc-900/90 border-b border-emerald-300 dark:border-zinc-800 px-3 py-1 flex items-center justify-between gap-2 overflow-x-auto font-mono text-[10px] tabular-nums">
-        <div class="flex items-center gap-1.5 whitespace-nowrap">
-            <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black">{{ $isEnLoc ? 'CAUSAL CHAIN v7.0:' : 'RANTAI KAUSAL v7.0:' }}</span>
-            <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ count($enterpriseMenuMatrix['v1_mvp_menus'] ?? []) }}/25 {{ $isEnLoc ? 'Menus' : 'Menu' }}</span>
-            <span class="text-emerald-700 dark:text-emerald-400">&rarr;</span>
-            <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $hwContract['active_bridges_count'] ?? 1 }} HW Bridge &bull; {{ count($wsContract['channels'] ?? []) }} WS Zero-Poll</span>
-            <span class="text-emerald-700 dark:text-emerald-400">&rarr;</span>
-            <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ count($tables) }} ULID PG16 &bull; {{ count($subParts ?? []) }} DAG Parts</span>
-            <span class="text-emerald-700 dark:text-emerald-400">&rarr;</span>
-            <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $sopContract['role_count'] ?? 4 }} Role SOP</span>
-            <span class="text-emerald-700 dark:text-emerald-400">&rarr;</span>
-            <span class="text-emerald-900 dark:text-emerald-300 font-black">{{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }} ({{ $commercialQuotation['scope_hash_short'] ?? '-' }})</span>
-        </div>
-        <button type="button" wire:click="$set('centerTab', 'runtime_sop_v7')" class="whitespace-nowrap px-2 py-0.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black cursor-pointer">
-            {{ $isEnLoc ? '15 Pillars Freeze (100%)' : '15 Pilar Freeze (100%)' }} &rarr;
-        </button>
-    </div>
+    @php
+        $hasAlerts = !empty($doctor['findings']) || !empty($enterpriseUpscaleAdvisor) || !empty($scopeParalysisGuard['execution_stages']);
+        $alertCount = (!empty($doctor['findings']) ? 1 : 0) + (!empty($enterpriseUpscaleAdvisor) ? 1 : 0) + (count($scopeParalysisGuard['execution_stages'] ?? []) > 0 ? 1 : 0);
+    @endphp
+    <div class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+        <!-- Compact Summary Row -->
+        <div class="px-3 py-1 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] tabular-nums">
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black">
+                    {{ $isEnLoc ? 'CAUSAL CHAIN v7.0' : 'RANTAI KAUSAL v7.0' }}
+                </span>
+                <span class="text-zinc-800 dark:text-zinc-200 font-bold">
+                    {{ count($enterpriseMenuMatrix['v1_mvp_menus'] ?? []) }}/25 {{ $isEnLoc ? 'Menus' : 'Menu' }} &bull;
+                    {{ count($tables) }} ULID PG16 &bull;
+                    {{ $sopContract['role_count'] ?? 4 }} Role SOP &bull;
+                    <span class="text-emerald-800 dark:text-emerald-300 font-black">{{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }}</span>
+                    <span class="text-zinc-500">({{ $commercialQuotation['scope_hash_short'] ?? '-' }})</span>
+                </span>
+            </div>
 
-    <!-- =================================================================== -->
-    <!-- V12.0 MANDATORY ANTI-OVER-PLANNING (SCOPE PARALYSIS GUARD) RIBBON   -->
-    <!-- =================================================================== -->
-    <div class="shrink-0 bg-amber-100/95 dark:bg-amber-950/60 border-b-2 border-amber-500 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-        <div class="flex flex-wrap items-center gap-2 font-sans">
-            <span class="px-1.5 py-0.5 bg-zinc-950 text-amber-300 font-mono text-[9px] font-black uppercase">
-                {{ $scopeFreezeActive ? ($isEnLoc ? '🔒 SCOPE FREEZE ACTIVE (100% READY)' : '🔒 SCOPE FREEZE AKTIF (100% READY)') : ($isEnLoc ? '🛡️ ANTI-OVER-PLANNING PROTECTION' : '🛡️ PROTEKSI ANTI-OVER-PLANNING') }}
-            </span>
-            <strong class="font-mono text-amber-950 dark:text-amber-200">
-                {{ $locVal($scopeParalysisGuard['warning_title'] ?? $scopeParalysisGuard['title'] ?? null, $isEnLoc ? 'Critical Warning: Danger of Over-Planning (Scope Paralysis)' : 'Peringatan Penting: Bahaya Over-Planning (Scope Paralysis)') }}:
-            </strong>
-            <span class="text-zinc-900 dark:text-zinc-100">
-                @if($isEnLoc)
-                    Blueprint has reached 100%. Stop adding concepts on paper (<strong>SCOPE FREEZE</strong>) &amp; begin staged execution:
-                @else
-                    Blueprint telah mencapai 100%. Berhenti menambah konsep di atas kertas (<strong>SCOPE FREEZE</strong>) &amp; mulai eksekusi bertahap:
+            <div class="flex items-center gap-1.5">
+                <!-- Action to Expand System Alerts Drawer -->
+                @if($hasAlerts)
+                    <button
+                        type="button"
+                        @click="showSystemAlerts = !showSystemAlerts"
+                        class="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 dark:bg-amber-950 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-700 font-black rounded-none cursor-pointer transition flex items-center gap-1"
+                    >
+                        <span>⚠️ {{ $isEnLoc ? 'Architecture Notes & Staged Execution' : 'Catatan Arsitektur & Tahap Eksekusi' }} ({{ $alertCount }})</span>
+                        <span x-text="showSystemAlerts ? '▲' : '▼'"></span>
+                    </button>
                 @endif
-            </span>
-        </div>
-        <div class="flex flex-wrap items-center gap-1 font-mono text-[9px]">
-            @foreach(($scopeParalysisGuard['execution_stages'] ?? []) as $execSt)
                 <button
                     type="button"
-                    wire:click="activateScopeFreezeAndExecuteStage('{{ $execSt['stage_key'] }}')"
-                    class="px-2 py-0.5 border cursor-pointer transition rounded-none {{ $activeExecutionStageKey === $execSt['stage_key'] ? 'bg-zinc-950 text-emerald-400 border-zinc-950 font-black' : 'bg-white hover:bg-zinc-950 text-zinc-950 hover:text-amber-300 dark:bg-zinc-900 dark:text-zinc-100 border-zinc-900 dark:border-amber-500 font-bold' }}"
-                    title="{{ $execSt['query'] }}"
+                    wire:click="$set('centerTab', 'runtime_sop_v7')"
+                    class="px-2 py-0.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black cursor-pointer hover:opacity-90"
                 >
-                    ⚡ {{ $isEnLoc ? 'Stage' : 'Tahap' }} {{ $execSt['stage_number'] }}: {{ $execSt['stage_number'] === 1 ? ($isEnLoc ? 'ULID Migration' : 'Migrasi ULID') : ($execSt['stage_number'] === 2 ? ($isEnLoc ? '12 Sectors Seeder' : 'Seeder 12 Sektor') : ($isEnLoc ? 'SYMBOL_MANIFEST Compiler' : 'Compiler SYMBOL_MANIFEST')) }}
+                    {{ $isEnLoc ? '15 Pillars Freeze (100%)' : '15 Pilar Freeze (100%)' }} &rarr;
                 </button>
-            @endforeach
+            </div>
         </div>
+
+        <!-- Collapsible System Alerts & Staged Execution Drawer -->
+        @if($hasAlerts)
+            <div x-show="showSystemAlerts" x-collapse class="border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 space-y-2">
+                <!-- 1. Anti-Over-Planning Scope Freeze -->
+                @if(!empty($scopeParalysisGuard['execution_stages']))
+                    <div class="p-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-400 dark:border-amber-700/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-1.5 text-amber-950 dark:text-amber-200">
+                            <span class="px-1.5 py-0.5 bg-zinc-950 text-amber-300 font-mono text-[9px] font-black uppercase">
+                                {{ $scopeFreezeActive ? ($isEnLoc ? '🔒 SCOPE FREEZE ACTIVE' : '🔒 SCOPE FREEZE AKTIF') : ($isEnLoc ? '🛡️ ANTI-OVER-PLANNING' : '🛡️ ANTI OVER-PLANNING') }}
+                            </span>
+                            <span class="font-sans text-[11px]">
+                                {{ $isEnLoc ? 'Blueprint has reached 100%. Stop adding paper concepts & proceed with staged execution:' : 'Blueprint telah 100% siap. Hentikan penambahan konsep di atas kertas & mulai eksekusi bertahap:' }}
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1 font-mono text-[9px]">
+                            @foreach(($scopeParalysisGuard['execution_stages'] ?? []) as $execSt)
+                                <button
+                                    type="button"
+                                    wire:click="activateScopeFreezeAndExecuteStage('{{ $execSt['stage_key'] }}')"
+                                    class="px-2 py-0.5 border cursor-pointer transition rounded-none {{ $activeExecutionStageKey === $execSt['stage_key'] ? 'bg-zinc-950 text-emerald-400 border-zinc-950 font-black' : 'bg-white hover:bg-zinc-950 text-zinc-950 hover:text-amber-300 dark:bg-zinc-900 dark:text-zinc-100 border-zinc-400 dark:border-zinc-700 font-bold' }}"
+                                    title="{{ $execSt['query'] }}"
+                                >
+                                    ⚡ {{ $isEnLoc ? 'Stage' : 'Tahap' }} {{ $execSt['stage_number'] }}: {{ $execSt['stage_number'] === 1 ? ($isEnLoc ? 'ULID Migration' : 'Migrasi ULID') : ($execSt['stage_number'] === 2 ? ($isEnLoc ? '12 Sectors Seeder' : 'Seeder 12 Sektor') : ($isEnLoc ? 'SYMBOL_MANIFEST Compiler' : 'Compiler SYMBOL_MANIFEST')) }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                <!-- 2. Enterprise Upscale Advisor Banner -->
+                @if(!empty($enterpriseUpscaleAdvisor))
+                    <div class="p-2 bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-400 dark:border-cyan-700/60 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                        <div class="text-cyan-950 dark:text-cyan-200">
+                            <strong>{{ $enterpriseUpscaleAdvisor['badge'] }}:</strong>
+                            <span class="font-sans text-[11px]">{{ $enterpriseUpscaleAdvisor['title'] }} {{ $enterpriseUpscaleAdvisor['recommendation'] }}</span>
+                        </div>
+                        <button
+                            type="button"
+                            wire:click="$set('centerTab', 'seo_geo_v11')"
+                            class="px-2 py-0.5 bg-zinc-950 text-cyan-300 font-black text-[10px] rounded-none cursor-pointer"
+                        >
+                            {{ $isEnLoc ? 'Activate Enterprise Module' : 'Aktifkan Modul Enterprise' }} &rarr;
+                        </button>
+                    </div>
+                @endif
+
+                <!-- 3. Blueprint Doctor Warning Banner -->
+                @if(!empty($doctor['findings']))
+                    <div class="p-2 bg-amber-100 dark:bg-amber-950/80 border border-amber-400 dark:border-amber-700 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-950 dark:text-amber-100">
+                        <div class="font-mono font-bold">
+                            {{ $locVal($doctor['findings'][0]['title'], $isEnLoc ? 'Blueprint Doctor Warning' : 'Peringatan Blueprint Doctor') }} —
+                            <span class="font-sans font-normal text-[11px]">{{ $locVal($doctor['findings'][0]['message']) }}</span>
+                        </div>
+                        @if(!empty($doctor['one_click_auto_fix']['has_fixes']))
+                            <button
+                                type="button"
+                                wire:click="applyDoctorAutoFix"
+                                class="px-2.5 py-0.5 bg-zinc-950 text-white dark:bg-amber-300 dark:text-zinc-950 font-mono text-[10px] font-black uppercase rounded-none cursor-pointer"
+                            >
+                                {{ $isEnLoc ? '[ + Auto-Resolve & Lock 100% ]' : '[ + Buat Otomatis & Kunci 100% ]' }}
+                            </button>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        @endif
     </div>
-
-    <!-- V12.0 Enterprise Upscale Advisor Banner (>18 ULID Tables) -->
-    @if(!empty($enterpriseUpscaleAdvisor))
-        <div class="shrink-0 bg-cyan-100/90 dark:bg-cyan-950/60 border-b border-cyan-500 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
-            <div class="text-cyan-950 dark:text-cyan-200">
-                <strong>{{ $enterpriseUpscaleAdvisor['badge'] }}:</strong>
-                <span class="font-sans">{{ $enterpriseUpscaleAdvisor['title'] }} {{ $enterpriseUpscaleAdvisor['recommendation'] }}</span>
-            </div>
-            <button
-                type="button"
-                wire:click="$set('centerTab', 'seo_geo_v11')"
-                class="px-2 py-0.5 bg-zinc-950 text-cyan-300 font-black text-[10px] rounded-none cursor-pointer"
-            >
-                {{ $isEnLoc ? 'Activate Enterprise Module' : 'Aktifkan Modul Enterprise' }} &rarr;
-            </button>
-        </div>
-    @endif
-
-    <!-- Optional Blueprint Doctor Warning Banner when Assumption Gap Exists -->
-    @if(!empty($doctor['findings']))
-        <div class="shrink-0 bg-amber-100 dark:bg-amber-950/90 border-b border-amber-400 dark:border-amber-700 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-950 dark:text-amber-100">
-            <div class="font-mono font-bold">
-                {{ $locVal($doctor['findings'][0]['title'], $isEnLoc ? 'Blueprint Doctor Warning' : 'Peringatan Blueprint Doctor') }} —
-                <span class="font-sans font-normal">{{ $locVal($doctor['findings'][0]['message']) }}</span>
-            </div>
-            @if(!empty($doctor['one_click_auto_fix']['has_fixes']))
-                <button
-                    type="button"
-                    wire:click="applyDoctorAutoFix"
-                    class="px-2.5 py-0.5 bg-zinc-950 text-white dark:bg-amber-300 dark:text-zinc-950 font-mono text-[10px] font-black uppercase rounded-none cursor-pointer"
-                >
-                    {{ $isEnLoc ? '[ + Auto-Resolve & Lock 100% ]' : '[ + Buat Otomatis & Kunci 100% ]' }}
-                </button>
-            @endif
-        </div>
-    @endif
 
     <!-- =================================================================== -->
     <!-- MAIN 3-PANE IDE WORKBENCH (LEFT 3 | CENTER 5 | RIGHT 4)             -->
@@ -348,7 +383,11 @@
         <!-- =============================================================== -->
         <!-- LEFT PANE (col-span-3): ARCHITECTURE EXPLORER TREE              -->
         <!-- =============================================================== -->
-        <aside class="lg:col-span-3 bg-white dark:bg-zinc-950 flex flex-col lg:overflow-y-auto studio-scroll p-3 space-y-3">
+        <aside
+            x-show="showLeftPane"
+            :class="showRightPane ? 'lg:col-span-3' : 'lg:col-span-4'"
+            class="bg-white dark:bg-zinc-950 flex flex-col lg:overflow-y-auto studio-scroll p-3 space-y-3"
+        >
             <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
                 <span class="font-mono text-[10px] font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-400">
                     ARCHITECTURE EXPLORER
@@ -451,37 +490,348 @@
         </aside>
 
         <!-- =============================================================== -->
-        <!-- CENTER CANVAS (col-span-5): INTERACTIVE BLUEPRINT WORKBENCH     -->
+        <!-- CENTER CANVAS: INTERACTIVE BLUEPRINT WORKBENCH                 -->
         <!-- =============================================================== -->
-        <section class="lg:col-span-5 bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:overflow-hidden" @if(($jurisdictionProfile['direction'] ?? 'ltr') === 'rtl') dir="rtl" @endif>
-            <!-- Center Tabs -->
-            <div class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-2.5 py-2 flex flex-wrap gap-1 font-mono text-[11px]">
-                @php
-                    $centerTabsList = [
-                        'proposal_wow' => $isEnLoc ? '0. 🏛️ Business Proposal (WOW View)' : '0. 🏛️ Proposal Bisnis (WOW View)',
-                        'schema' => '1. Schema & Locks',
-                        'states' => $isEnLoc ? '2. State Machine' : '2. State Machine',
-                        'ui_print' => $isEnLoc ? '3. 36 Visual UI & Print' : '3. 36 Visual UI & Print',
-                        'decisions' => $isEnLoc ? '4. Decision Matrix' : '4. Decision Matrix',
-                        'delta_verify' => $isEnLoc ? '5. Delta v1.1 & Verify' : '5. Delta v1.1 & Verify',
-                        'commercial_mitra' => $isEnLoc ? '6. Contract, Cost & Handover' : '6. Kontrak, RAB & BAST',
-                        'menus_glue' => $isEnLoc ? '7. L1–L4 Menu (25) & 5 Glue' : '7. L1–L4 Menu (25) & 5 Glue',
-                        'runtime_sop_v7' => $isEnLoc ? '8. ⚡ 5 Runtime, SOP & 15 Pillars' : '8. ⚡ 5 Runtime, SOP & 15 Pilar',
-                        'inclusive_security_v8' => $isEnLoc ? '9. 🛡️ CVE, White-Label & IP' : '9. 🛡️ CVE, White-Label & IP',
-                        'codesign_room' => $isEnLoc ? '10. 🤝 Co-Design & Sign-Off' : '10. 🤝 Co-Design & Sign-Off',
-                        'agentshield_tasks' => $isEnLoc ? '11. 🧱 AgentShield & 5-Sprint' : '11. 🧱 AgentShield & 5-Sprint',
-                        'seo_geo_v11' => $isEnLoc ? '12. 🌐 SEO/GEO, Data Privacy & Sandbox' : '12. 🌐 SEO/GEO, UU PDP & Sandbox',
-                    ];
-                @endphp
-                @foreach($centerTabsList as $tabKey => $tabLabel)
-                    <button
-                        type="button"
-                        wire:click="$set('centerTab', '{{ $tabKey }}')"
-                        class="px-2.5 py-1 border rounded-xs cursor-pointer transition {{ $centerTab === $tabKey ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black' : ($tabKey === 'commercial_mitra' && $engagementMode === 'MITRA_TURNKEY_PROJECT' ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 dark:border-zinc-700 font-bold') }}"
-                    >
-                        {{ $tabLabel }}
-                    </button>
-                @endforeach
+        <section
+            :class="{
+                'lg:col-span-12': !showLeftPane && !showRightPane,
+                'lg:col-span-9': showLeftPane && !showRightPane,
+                'lg:col-span-8': !showLeftPane && showRightPane,
+                'lg:col-span-5': showLeftPane && showRightPane
+            }"
+            class="bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:overflow-hidden transition-all duration-150"
+            @if(($jurisdictionProfile['direction'] ?? 'ltr') === 'rtl') dir="rtl" @endif
+        >
+            @php
+                $tabHubs = [
+                    'business' => [
+                        'id' => 'business',
+                        'icon' => '💼',
+                        'label' => $isEnLoc ? '1. Business & Contract' : '1. Bisnis & Kontrak',
+                        'short_name' => $isEnLoc ? 'Business' : 'Bisnis',
+                        'default_tab' => 'commercial_mitra',
+                        'tabs' => [
+                            'commercial_mitra' => [
+                                'label' => $isEnLoc ? '6. Contract, RAB & BAST' : '6. Kontrak, RAB & BAST',
+                                'badge' => $engagementMode === 'MITRA_TURNKEY_PROJECT' ? ($commercialQuotation['formatted_quotation_idr'] ?? 'SPK') : null,
+                                'title' => $isEnLoc ? 'RAB Cost Quotation & SPK Contract' : 'Estimasi RAB & Surat Perjanjian Kerja (SPK)',
+                                'explain' => $isEnLoc
+                                    ? 'Transparent breakdown of software engineering hours, sprint deliverables, and formal SPK work contract with zero hidden costs.'
+                                    : 'Rincian transparan perhitungan jam kerja rekayasa perangkat lunak, deliverable per sprint, dan surat perjanjian kerja resmi (SPK) 100% bebas biaya tersembunyi.',
+                                'action' => $isEnLoc
+                                    ? 'Review the timeline and cost calculation, then proceed to sign-off or reserve sprint capacity.'
+                                    : 'Periksa jadwal pengerjaan dan estimasi biaya, lalu lakukan penguncian slot sprint pengerjaan.',
+                            ],
+                            'proposal_wow' => [
+                                'label' => $isEnLoc ? '0. Executive Proposal (WOW)' : '0. Proposal Bisnis (WOW)',
+                                'title' => $isEnLoc ? 'Interactive Executive Business Proposal' : 'Proposal Bisnis Interaktif Siap Presentasi',
+                                'explain' => $isEnLoc
+                                    ? 'Presentation-ready executive deck summarizing project goals, architectural foundation, and business outcomes for stakeholders.'
+                                    : 'Dokumen visual siap presentasi untuk stakeholder atau klien. Merangkum nilai investasi, fondasi arsitektur, dan dampak bisnis dalam satu tampilan elegan.',
+                                'action' => $isEnLoc
+                                    ? 'Share with stakeholders or use as an executive overview before technical deep-dive.'
+                                    : 'Gunakan untuk presentasi ke direksi atau mitra sebelum masuk ke rincian teknis mendalam.',
+                            ],
+                            'codesign_room' => [
+                                'label' => $isEnLoc ? '10. Co-Design & Sign-Off' : '10. Co-Design & TTD',
+                                'title' => $isEnLoc ? 'Bilateral Architecture Co-Design & Formal Sign-Off' : 'Ruang Persetujuan Arsitektur Bersama (Co-Design & Sign-Off)',
+                                'explain' => $isEnLoc
+                                    ? 'Two-party verification room where Client PIC and Lead Architect lock the technical specification and mutual commitments.'
+                                    : 'Ruang persetujuan dua pihak antara PIC Klien dan Lead Architect NeriahPro untuk mengunci komitmen pengerjaan dan spesifikasi.',
+                                'action' => $isEnLoc
+                                    ? 'Confirm PIC identity and affix digital signature to lock scope.'
+                                    : 'Konfirmasi identitas PIC dan bubuhkan tanda tangan digital untuk mengesahkan dokumen.',
+                            ],
+                        ],
+                    ],
+                    'architecture' => [
+                        'id' => 'architecture',
+                        'icon' => '🗄️',
+                        'label' => $isEnLoc ? '2. Database & Schema' : '2. Database & Skema',
+                        'short_name' => $isEnLoc ? 'Database' : 'Database',
+                        'default_tab' => 'schema',
+                        'tabs' => [
+                            'schema' => [
+                                'label' => '1. Schema & Locks',
+                                'title' => $isEnLoc ? 'PostgreSQL 16 Strict ULID Schema & Concurrency Locks' : 'Skema Database PostgreSQL Strict ULID & Kunci Transaksi',
+                                'explain' => $isEnLoc
+                                    ? 'Enterprise-grade data dictionary with CHAR(26) ULIDs, Keyset Cursor Pagination O(1), and pessimistic row locking to prevent race conditions.'
+                                    : 'Kamus data enterprise berkecepatan tinggi dengan ULID CHAR(26), Keyset Cursor Pagination O(1), dan kunci transaksi untuk mencegah benturan data jutaan pengguna.',
+                                'action' => $isEnLoc
+                                    ? 'Inspect table columns, relationships, and concurrency locks.'
+                                    : 'Tinjau struktur tabel, relasi foreign key, dan kunci konkurensi data.',
+                            ],
+                            'states' => [
+                                'label' => '2. State Machine',
+                                'title' => $isEnLoc ? 'Finite State Machine & Workflow Integrity' : 'State Machine & Validasi Transisi Status',
+                                'explain' => $isEnLoc
+                                    ? 'Guarantees valid transitions for transactions, invoices, and orders (e.g., Draft → Issued → Paid → Settled) with zero illegal state jumps.'
+                                    : 'Menjamin perubahan status pesanan atau transaksi berjalan teratur (Draft → Terbit → Bayar → Selesai) tanpa celah kecurangan atau lompatan status ilegal.',
+                                'action' => $isEnLoc
+                                    ? 'Verify lifecycle transitions for core business entities.'
+                                    : 'Pastikan seluruh alur siklus hidup entitas bisnis telah terlindungi.',
+                            ],
+                            'decisions' => [
+                                'label' => '4. Decision Matrix',
+                                'title' => $isEnLoc ? 'Automated Decision Matrix & Business Policies' : 'Matriks Keputusan & Aturan Bisnis Otomatis',
+                                'explain' => $isEnLoc
+                                    ? 'Deterministic business rules (discounts, tiered approvals, SLA escalations) executed automatically without human intervention.'
+                                    : 'Aturan bisnis otomatis (diskon bertingkat, batas approval manajer, eskalasi SLA) yang dieksekusi sistem secara deterministik.',
+                                'action' => $isEnLoc
+                                    ? 'Review and simulate policy rules or add custom conditional formulas.'
+                                    : 'Tinjau simulasi aturan kebijakan atau tambahkan formula kondisional baru.',
+                            ],
+                            'menus_glue' => [
+                                'label' => $isEnLoc ? '7. Menus (25) & Glue' : '7. Menu (25) & Glue',
+                                'title' => $isEnLoc ? 'Operational Menu Matrix & 5 Enterprise Glue Primitives' : 'Peta 25 Menu Operasional & 5 Enterprise Glue',
+                                'explain' => $isEnLoc
+                                    ? 'Structured navigation mapping across user tiers (Cashier, Admin, Finance, Director) connected by 5 enterprise architectural glue modules.'
+                                    : 'Peta navigasi 25 menu operasional untuk setiap peran pengguna (Kasir, Admin, Keuangan, Direktur) yang disatukan oleh modul enterprise glue.',
+                                'action' => $isEnLoc
+                                    ? 'Customize active menu modules according to company organization.'
+                                    : 'Sesuaikan modul menu aktif sesuai struktur organisasi perusahaan.',
+                            ],
+                        ],
+                    ],
+                    'ui_security' => [
+                        'id' => 'ui_security',
+                        'icon' => '🎨',
+                        'label' => $isEnLoc ? '3. UI Shell & Security' : '3. UI Shell & Keamanan',
+                        'short_name' => $isEnLoc ? 'UI & Security' : 'Tampilan & Keamanan',
+                        'default_tab' => 'ui_print',
+                        'tabs' => [
+                            'ui_print' => [
+                                'label' => '3. 36 Visual UI & Print',
+                                'title' => $isEnLoc ? '36 Sectoral UI Archetypes & Print Contract' : '36 Varian Desain Antarmuka & Mesin Cetak PDF/Thermal',
+                                'explain' => $isEnLoc
+                                    ? 'Tailored UI themes with high-contrast typography, mobile responsive layout, and ESC/POS thermal receipt & A4 invoice generation.'
+                                    : 'Pilihan antarmuka pengguna responsif (desktop & mobile) berstandar WCAG AAA serta generator struk kasir thermal dan faktur resmi A4.',
+                                'action' => $isEnLoc
+                                    ? 'Select the visual shell variant matching your brand identity.'
+                                    : 'Pilih varian tampilan visual yang sesuai dengan identitas bisnis Anda.',
+                            ],
+                            'inclusive_security_v8' => [
+                                'label' => '9. CVE, White-Label & IP',
+                                'title' => $isEnLoc ? 'Vulnerability Shield (CVE), White-Labeling & Intellectual Property' : 'Proteksi Kerentanan (CVE), White-Label & Hak Cipta',
+                                'explain' => $isEnLoc
+                                    ? 'Automated security scan against OWASP top 10, source code copyright preservation, and agency re-branding configuration.'
+                                    : 'Pemindaian celah keamanan sistem (OWASP Top 10), perlindungan hak cipta kode sumber (IP), dan pengaturan brand agency rekanan.',
+                                'action' => $isEnLoc
+                                    ? 'Enable agency white-label settings or inspect vulnerability shields.'
+                                    : 'Aktifkan identitas white-label agency atau periksa perisai keamanan.',
+                            ],
+                            'seo_geo_v11' => [
+                                'label' => $isEnLoc ? '12. SEO/GEO & Privacy' : '12. SEO/GEO & UU PDP',
+                                'title' => $isEnLoc ? 'Search Engine Optimization, Geo-Targeting & UU PDP Compliance' : 'Optimasi SEO/GEO, Privasi Data UU PDP & Sandbox Lokal',
+                                'explain' => $isEnLoc
+                                    ? 'Schema.org JSON-LD generation, geographic indexing, Indonesian Personal Data Protection compliance, and webhook testing sandbox.'
+                                    : 'Struktur data Schema.org untuk Google, penyesuaian regulasi Undang-Undang Perlindungan Data Pribadi (UU PDP), dan simulator webhook transaksi.',
+                                'action' => $isEnLoc
+                                    ? 'Simulate sandbox payment webhooks or test SEO metadata structures.'
+                                    : 'Lakukan uji coba simulasi webhook atau tinjau struktur metadata SEO.',
+                            ],
+                        ],
+                    ],
+                    'execution' => [
+                        'id' => 'execution',
+                        'icon' => '⚙️',
+                        'label' => $isEnLoc ? '4. Execution & Audit' : '4. Eksekusi & Audit',
+                        'short_name' => $isEnLoc ? 'Execution' : 'Eksekusi & Audit',
+                        'default_tab' => 'delta_verify',
+                        'tabs' => [
+                            'delta_verify' => [
+                                'label' => '5. Delta v1.1 & Verify',
+                                'title' => $isEnLoc ? 'Delta Change Request & Code Drift Verification' : 'Audit Permintaan Perubahan (Delta) & Verifikasi Kode',
+                                'explain' => $isEnLoc
+                                    ? 'Strict scope-locking system preventing cost overruns, paired with real-time verification of architectural invariants.'
+                                    : 'Sistem penguncian ruang lingkup untuk mencegah pembengkakan biaya (anti-scope creep) serta verifikasi kesesuaian kode saat proses build.',
+                                'action' => $isEnLoc
+                                    ? 'Submit change request addenda or verify architectural invariants.'
+                                    : 'Ajukan addendum perubahan lingkup kerja atau jalankan verifikasi arsitektur.',
+                            ],
+                            'runtime_sop_v7' => [
+                                'label' => $isEnLoc ? '8. Runtime & 15 Pillars' : '8. Runtime & 15 Pilar',
+                                'title' => $isEnLoc ? '5 Runtime Engines & 15-Pillar Software Factory OS SOP' : '5 Runtime Engine & SOP 15 Pilar Software Factory OS',
+                                'explain' => $isEnLoc
+                                    ? 'Standard Operating Procedures covering hardware bridge latency (<30ms), WebSocket zero-poll events, and fail-safe database recovery.'
+                                    : 'Standar operasional prosedur (SOP) runtime aplikasi, koneksi hardware printer, event websocket instan, dan failover pemulihan data.',
+                                'action' => $isEnLoc
+                                    ? 'Review runtime readiness criteria and client operational procedures.'
+                                    : 'Tinjau kesiapan runtime sistem dan prosedur operasional staf.',
+                            ],
+                            'agentshield_tasks' => [
+                                'label' => '11. AgentShield & 5-Sprint',
+                                'title' => $isEnLoc ? 'AgentShield Defense & 5-Sprint Engineering Task Schedule' : 'AgentShield Defense & Jadwal Pengerjaan 5 Sprint',
+                                'explain' => $isEnLoc
+                                    ? 'Granular 5-sprint work breakdown executed by dedicated senior engineers with AI sandbox guardrails and cryptographic commit logs.'
+                                    : 'Rencana kerja terstruktur 5 sprint yang dikerjakan langsung oleh tim engineer senior dengan perlindungan kode dan pengujian ketat.',
+                                'action' => $isEnLoc
+                                    ? 'Inspect sprint milestones, deliverables, and role assignments.'
+                                    : 'Tinjau capaian target per sprint dan alokasi tanggung jawab engineer.',
+                            ],
+                        ],
+                    ],
+                ];
+
+                // Flat tabs map for viewAllTabs mode
+                $centerTabsList = [
+                    'proposal_wow' => $isEnLoc ? '0. 🏛️ Business Proposal (WOW View)' : '0. 🏛️ Proposal Bisnis (WOW View)',
+                    'schema' => '1. Schema & Locks',
+                    'states' => '2. State Machine',
+                    'ui_print' => '3. 36 Visual UI & Print',
+                    'decisions' => '4. Decision Matrix',
+                    'delta_verify' => '5. Delta v1.1 & Verify',
+                    'commercial_mitra' => $isEnLoc ? '6. Contract, Cost & Handover' : '6. Kontrak, RAB & BAST',
+                    'menus_glue' => $isEnLoc ? '7. L1–L4 Menu (25) & 5 Glue' : '7. L1–L4 Menu (25) & 5 Glue',
+                    'runtime_sop_v7' => $isEnLoc ? '8. ⚡ 5 Runtime, SOP & 15 Pillars' : '8. ⚡ 5 Runtime, SOP & 15 Pilar',
+                    'inclusive_security_v8' => '9. 🛡️ CVE, White-Label & IP',
+                    'codesign_room' => '10. 🤝 Co-Design & Sign-Off',
+                    'agentshield_tasks' => '11. 🧱 AgentShield & 5-Sprint',
+                    'seo_geo_v11' => $isEnLoc ? '12. 🌐 SEO/GEO, Data Privacy & Sandbox' : '12. 🌐 SEO/GEO, UU PDP & Sandbox',
+                ];
+
+                // Detect active hub from $centerTab
+                $activeHubKey = 'business';
+                $currentTabMeta = null;
+                foreach ($tabHubs as $hKey => $hubData) {
+                    if (isset($hubData['tabs'][$centerTab])) {
+                        $activeHubKey = $hKey;
+                        $currentTabMeta = $hubData['tabs'][$centerTab];
+                        break;
+                    }
+                }
+                if (!$currentTabMeta) {
+                    $currentTabMeta = $tabHubs['business']['tabs']['commercial_mitra'];
+                }
+            @endphp
+
+            <!-- Center Workbench Header: 4 Hubs + Workspace Pane Controls -->
+            <div class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-3 py-2 space-y-2">
+                <!-- Level 1: 4 Logical Hubs + Layout Controls -->
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center gap-1 font-mono text-[11px]">
+                        @foreach($tabHubs as $hubKey => $hub)
+                            @php
+                                $isHubActive = ($activeHubKey === $hubKey);
+                            @endphp
+                            <button
+                                type="button"
+                                @click="activeHub = '{{ $hubKey }}'"
+                                wire:click="$set('centerTab', '{{ $hub['default_tab'] }}')"
+                                class="px-2.5 py-1 border transition cursor-pointer flex items-center gap-1 rounded-none {{ $isHubActive ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black shadow-xs' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 dark:border-zinc-700 font-bold' }}"
+                            >
+                                <span>{{ $hub['icon'] }}</span>
+                                <span>{{ $hub['label'] }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+
+                    <!-- Right Controls: View All Tabs Toggle + Pane Visibility Controls -->
+                    <div class="flex items-center gap-1 font-mono text-[10px]">
+                        <button
+                            type="button"
+                            @click="viewAllTabs = !viewAllTabs"
+                            class="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 font-bold cursor-pointer"
+                            title="{{ $isEnLoc ? 'Toggle between 4 Hub view and all 13 tabs' : 'Ganti tampilan antara 4 Hub dan seluruh 13 tab' }}"
+                        >
+                            <span x-text="viewAllTabs ? '{{ $isEnLoc ? '📋 4 Hub View' : '📋 Mode 4 Hub' }}' : '{{ $isEnLoc ? '📑 Show All (13)' : '📑 Lihat Semua (13)' }}'"></span>
+                        </button>
+
+                        <div class="hidden sm:flex items-center gap-0.5 border border-zinc-300 dark:border-zinc-700 p-0.5 bg-zinc-50 dark:bg-zinc-950">
+                            <button
+                                type="button"
+                                @click="showLeftPane = !showLeftPane"
+                                class="px-1.5 py-0.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 font-bold cursor-pointer"
+                                :class="{ 'bg-zinc-200 dark:bg-zinc-800 font-black': showLeftPane }"
+                                title="{{ $isEnLoc ? 'Toggle Left Explorer Pane' : 'Sembunyikan/Tampilkan Panel Explorer Kiri' }}"
+                            >
+                                ◧ <span class="hidden md:inline">{{ $isEnLoc ? 'Explorer' : 'Kiri' }}</span>
+                            </button>
+                            <button
+                                type="button"
+                                @click="toggleFullCanvas()"
+                                class="px-1.5 py-0.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 font-bold cursor-pointer"
+                                :class="{ 'bg-emerald-600 text-white font-black': !showLeftPane && !showRightPane }"
+                                title="{{ $isEnLoc ? 'Toggle Full Width Focus Mode' : 'Mode Fokus / Lebar Penuh Tanpa Distraksi' }}"
+                            >
+                                ⛶ <span class="hidden md:inline">{{ $isEnLoc ? 'Focus' : 'Fokus' }}</span>
+                            </button>
+                            <button
+                                type="button"
+                                @click="showRightPane = !showRightPane"
+                                class="px-1.5 py-0.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 font-bold cursor-pointer"
+                                :class="{ 'bg-zinc-200 dark:bg-zinc-800 font-black': showRightPane }"
+                                title="{{ $isEnLoc ? 'Toggle Right Compiler Dock' : 'Sembunyikan/Tampilkan Panel Compiler Kanan' }}"
+                            >
+                                <span class="hidden md:inline">{{ $isEnLoc ? 'Dock' : 'Kanan' }}</span> ◨
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Level 2: Sub-tabs of Active Hub (Default) OR All 13 Tabs (if viewAllTabs is true) -->
+                <div x-show="!viewAllTabs" class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-zinc-100 dark:border-zinc-800 font-mono text-[11px]">
+                    <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mr-1">
+                        {{ $tabHubs[$activeHubKey]['icon'] }} {{ $tabHubs[$activeHubKey]['short_name'] ?? $tabHubs[$activeHubKey]['label'] }}:
+                    </span>
+                    @foreach($tabHubs[$activeHubKey]['tabs'] as $subKey => $subMeta)
+                        <button
+                            type="button"
+                            wire:click="$set('centerTab', '{{ $subKey }}')"
+                            class="px-2.5 py-1 border transition cursor-pointer flex items-center gap-1.5 rounded-none {{ $centerTab === $subKey ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black' : ($subKey === 'commercial_mitra' && $engagementMode === 'MITRA_TURNKEY_PROJECT' ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 dark:border-zinc-700 font-bold') }}"
+                        >
+                            <span>{{ $subMeta['label'] }}</span>
+                            @if(!empty($subMeta['badge']))
+                                <span class="px-1.5 py-0.2 bg-emerald-600 text-white text-[9px] font-black uppercase">
+                                    {{ $subMeta['badge'] }}
+                                </span>
+                            @endif
+                        </button>
+                    @endforeach
+                </div>
+
+                <!-- All 13 Tabs View (Available when user clicks 'Lihat Semua (13)') -->
+                <div x-show="viewAllTabs" class="flex flex-wrap gap-1 pt-1 border-t border-zinc-100 dark:border-zinc-800 font-mono text-[10px]">
+                    @foreach($centerTabsList as $tabKey => $tabLabel)
+                        <button
+                            type="button"
+                            wire:click="$set('centerTab', '{{ $tabKey }}')"
+                            class="px-2 py-0.5 border rounded-none cursor-pointer transition {{ $centerTab === $tabKey ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400 font-black' : ($tabKey === 'commercial_mitra' && $engagementMode === 'MITRA_TURNKEY_PROJECT' ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 dark:border-zinc-700 font-bold') }}"
+                        >
+                            {{ $tabLabel }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Educational Guidance Card (Bilingual, High Contrast, Collapsible) -->
+            <div x-data="{ guideOpen: true }" class="shrink-0 px-3 pt-2">
+                <div class="p-2.5 bg-white dark:bg-zinc-900 border-l-4 border-emerald-500 border border-zinc-200 dark:border-zinc-800 shadow-xs">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-mono text-[9px] font-black uppercase">
+                                💡 {{ $isEnLoc ? 'EXECUTIVE GUIDE' : 'PANDUAN EDUKATIF' }}
+                            </span>
+                            <span class="font-bold text-xs text-zinc-950 dark:text-zinc-100 font-mono">
+                                {{ $currentTabMeta['title'] ?? '' }}
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            @click="guideOpen = !guideOpen"
+                            class="text-[10px] font-mono text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-0.5 cursor-pointer"
+                        >
+                            <span x-text="guideOpen ? '{{ $isEnLoc ? 'Hide ▲' : 'Tutup ▲' }}' : '{{ $isEnLoc ? 'Help ▼' : 'Bantuan ▼' }}'"></span>
+                        </button>
+                    </div>
+                    <div x-show="guideOpen" class="mt-1.5 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans space-y-1">
+                        <p>{{ $currentTabMeta['explain'] ?? '' }}</p>
+                        <div class="flex items-center gap-1.5 text-[11px] font-mono text-emerald-900 dark:text-emerald-300 font-bold pt-0.5">
+                            <span>→ {{ $isEnLoc ? 'Recommended Action:' : 'Langkah Selanjutnya:' }}</span>
+                            <span class="text-zinc-800 dark:text-zinc-200 font-sans font-medium">{{ $currentTabMeta['action'] ?? '' }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Scrollable Canvas Body -->
@@ -2083,7 +2433,11 @@
         <!-- =============================================================== -->
         <!-- RIGHT PANE (col-span-4): LIVE COMPILER & 7-PHASE PROMPT DOCK    -->
         <!-- =============================================================== -->
-        <aside class="lg:col-span-4 bg-white dark:bg-zinc-950 flex flex-col lg:overflow-hidden">
+        <aside
+            x-show="showRightPane"
+            :class="showLeftPane ? 'lg:col-span-4' : 'lg:col-span-4'"
+            class="bg-white dark:bg-zinc-950 flex flex-col lg:overflow-hidden"
+        >
             <!-- Artifact Switcher -->
             <div class="shrink-0 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-2.5 py-2 space-y-2">
                 <div class="flex flex-wrap items-center justify-between gap-1">
